@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1410">
+<title>Gain Controller</title>
+<style>
+  :root{
+    --bg:#1a1410; --panel:#241c16; --ink:#f3ede4; --muted:#a8998a;
+    --accent:#c98a3c; --accent2:#3c7a5a; --line:#3a2f26; --row:#2c231b;
+    --warn:#e0b070; --dark:#d98a8a; --light:#9ab8e0;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.45;padding:16px;max-width:560px;margin:0 auto;
+    padding-bottom:40px}
+  h1{font-size:19px;margin:0}
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .nav{display:flex;gap:6px}
+  .nav button{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;
+    padding:6px 11px;font-size:13px;font-weight:600;cursor:pointer}
+  .nav button.on{background:var(--panel);color:var(--ink);border-color:var(--accent)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+  label.fld{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);
+    margin-bottom:5px;font-weight:600}
+  select,input[type=number],input[type=text]{width:100%;background:#15100b;border:1px solid var(--line);
+    color:var(--ink);border-radius:9px;padding:11px 12px;font-size:16px;color-scheme:dark}
+  select:focus,input:focus{outline:none;border-color:var(--accent)}
+  .row2{display:flex;gap:10px}.row2>div{flex:1}
+  .target{display:flex;gap:10px;margin-top:12px}
+  .tchip{flex:1;background:#15100b;border:1px solid var(--line);border-radius:9px;padding:10px;text-align:center}
+  .tchip .n{font-size:22px;font-weight:700;color:var(--accent)}
+  .tchip .l{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  .note{margin-top:10px;font-size:13px;color:var(--warn);background:#221a10;border:1px solid var(--line);
+    border-radius:9px;padding:9px 11px}
+  .btn{display:block;width:100%;border:none;border-radius:12px;padding:16px;font-size:17px;font-weight:700;
+    cursor:pointer;background:var(--accent);color:#1a1410}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:600;font-size:15px;padding:13px}
+  .btn:active{transform:scale(.99)}
+  .btn:disabled{opacity:.4}
+  /* roast view */
+  .timer{font-size:64px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:1px;
+    margin:6px 0 2px}
+  .subtimes{display:flex;justify-content:center;gap:18px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;margin-bottom:14px}
+  .subtimes b{color:var(--ink)}
+  .bigbtn{display:block;width:100%;border:none;border-radius:16px;padding:26px 16px;font-size:22px;font-weight:800;
+    cursor:pointer;background:var(--accent);color:#1a1410;letter-spacing:.5px}
+  .bigbtn.fc{background:var(--dark);color:#1a1410}
+  .bigbtn.a1{background:var(--accent2);color:#0e1712}
+  .bigbtn.finish{background:#3a2f26;color:var(--ink);border:1px solid var(--line)}
+  .bigbtn:active{transform:scale(.98)}
+  .stagehint{text-align:center;color:var(--muted);font-size:13px;margin:12px 0 6px;min-height:18px}
+  .pred{margin-top:14px}
+  .predrow{display:flex;gap:10px;margin-bottom:10px}
+  .predbox{flex:1;background:#15100b;border:1px solid var(--line);border-radius:11px;padding:12px;text-align:center}
+  .predbox .n{font-size:30px;font-weight:800}
+  .predbox .l{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  .predbox.on .n{color:var(--accent2)} .predbox.dark .n{color:var(--dark)} .predbox.light .n{color:var(--light)}
+  .donow{border-radius:11px;padding:13px 14px;font-size:15px;font-weight:700;text-align:center;margin-bottom:10px}
+  .donow.on{background:#16261c;border:1px solid var(--accent2);color:#bfe3cf}
+  .donow.dark{background:#2a1717;border:1px solid var(--dark);color:#f0c4c4}
+  .donow.light{background:#161e2a;border:1px solid var(--light);color:#cfe0f0}
+  .taste{font-size:13px;color:var(--muted);background:#15100b;border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+  .taste b{color:var(--ink)}
+  /* history */
+  .stat{display:flex;gap:10px;margin-bottom:12px}
+  .stat .s{flex:1;background:#15100b;border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
+  .stat .s .n{font-size:20px;font-weight:700;color:var(--accent)}
+  .stat .s .l{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  td input.act{width:54px;padding:6px;text-align:center;font-size:14px}
+  .err{color:var(--dark);font-size:12px;padding:2px 0}
+  .hide{display:none}
+  .small{font-size:12px;color:var(--muted)}
+  .settings-grp{font-size:12px;color:var(--muted);margin:2px 0 10px}
+  .delx{background:none;border:none;color:var(--dark);font-size:16px;cursor:pointer;padding:2px 6px}
+</style>
+</head>
+<body>
+  <div class="top">
+    <h1>Gain Controller <span class="small" style="font-weight:400">v1</span></h1>
+    <div class="nav">
+      <button id="navRoast" class="on" onclick="show('roast')">Roast</button>
+      <button id="navHist" onclick="show('hist')">History</button>
+      <button id="navSet" onclick="show('set')">Settings</button>
+    </div>
+  </div>
+
+  <!-- ROAST: setup sub-panel -->
+  <div id="view-roast">
+    <div id="setup">
+      <div class="card">
+        <label class="fld" for="bean">Coffee</label>
+        <select id="bean"></select>
+        <div class="row2" style="margin-top:12px">
+          <div>
+            <label class="fld" for="equip">Machine</label>
+            <select id="equip"><option value="Bullet">Bullet</option><option value="HSR15">HSR15</option></select>
+          </div>
+        </div>
+        <div class="target">
+          <div class="tchip"><div class="n" id="tgtAg">-</div><div class="l">Target Agtron</div></div>
+          <div class="tchip"><div class="n" id="tgtRec" style="font-size:14px">-</div><div class="l">Recipe</div></div>
+        </div>
+        <div class="note hide" id="beanNote"></div>
+      </div>
+      <button class="btn" onclick="beginSession()">Start session</button>
+    </div>
+
+    <!-- live roast -->
+    <div id="live" class="hide">
+      <div class="card">
+        <div class="small" id="liveBean" style="text-align:center;margin-bottom:4px"></div>
+        <div class="timer" id="timer">0:00</div>
+        <div class="subtimes">
+          <div>FC: <b id="ttfc">-</b></div>
+          <div>A0&rarr;A1: <b id="gap">-</b></div>
+        </div>
+        <div class="stagehint" id="hint">Tap START when the roast begins.</div>
+        <button class="bigbtn" id="bigbtn" onclick="stageTap()">START</button>
+
+        <div class="pred hide" id="predPanel">
+          <div class="predrow">
+            <div class="predbox" id="pbAg"><div class="n">-</div><div class="l">Predicted Agtron</div></div>
+            <div class="predbox" id="pbDelta"><div class="n">-</div><div class="l">vs Target</div></div>
+          </div>
+          <div class="donow" id="donow"></div>
+          <div class="taste" id="taste"></div>
+        </div>
+
+        <button class="btn finish bigbtn hide" id="finishBtn" style="margin-top:12px" onclick="finishRoast()">FINISH &amp; SAVE</button>
+        <button class="btn ghost hide" id="cancelBtn" style="margin-top:8px" onclick="cancelRoast()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="view-hist" class="hide">
+    <div class="stat">
+      <div class="s"><div class="n" id="stCount">0</div><div class="l">Roasts</div></div>
+      <div class="s"><div class="n" id="stErr">-</div><div class="l">Avg pred error</div></div>
+      <div class="s"><div class="n" id="stSpread">-</div><div class="l">Actual vs target</div></div>
+    </div>
+    <div class="card" style="overflow-x:auto">
+      <table id="logTbl">
+        <thead><tr><th>Date</th><th>Coffee</th><th class="num">Tgt</th><th class="num">Pred</th><th>Actual</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="small hide" id="emptyLog" style="padding:10px 2px">No roasts logged yet.</div>
+    </div>
+    <button class="btn ghost" onclick="exportLog()">Download log CSV</button>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="view-set" class="hide">
+    <div class="card">
+      <div class="settings-grp">Prediction rule (transparent &amp; tunable). Calibrate against your own roasts.<br>
+        <code>predicted = target + sensitivity &times; (A0&rarr;A1 gap &minus; reference gap)</code></div>
+      <label class="fld" for="sRef">Reference A0&rarr;A1 gap (seconds) - lands on target</label>
+      <input type="number" id="sRef" step="1" min="1">
+      <label class="fld" for="sSens" style="margin-top:12px">Sensitivity (Agtron points per second of gap)</label>
+      <input type="number" id="sSens" step="0.05">
+      <div class="small" style="margin-top:4px">Positive = longer gap roasts lighter (higher Agtron). Set negative to flip.</div>
+      <label class="fld" for="sTol" style="margin-top:12px">On-target tolerance (Agtron)</label>
+      <input type="number" id="sTol" step="1" min="0">
+    </div>
+    <button class="btn" onclick="saveSettings()">Save settings</button>
+    <button class="btn ghost" style="margin-top:8px" onclick="resetSettings()">Reset to defaults</button>
+  </div>
+
+<script>
+// ---------- recipes (coffee -> per-machine recipe, target Agtron = the "##A", + note) ----------
+const RECIPES=[
+  {match:["yaye","cocoa"],  bullet:"-P2 / B1 / 45s / 95A",  hsr:"-P2 / B1 / 70s / 95A",  name:"Yaye Natural / Cocoa"},
+  {match:["yaye","fruity"], bullet:"-P3 / A2 / 35s / 105A", hsr:"-P3 / A2 / 55s / 105A", name:"Yaye Natural / Fruity"},
+  {match:["turk"],          bullet:"-P2 / A1 / 45s / 105A", hsr:"-P2 / A1 / 60s / 105A", name:"Türk Kahvesi"},
+  {match:["harman"],        bullet:"-P2 / B0 / 60s / 95A",  hsr:"-P2 / B0 / 100s / 95A", name:"Harman"},
+  {match:["bittersweet"],   bullet:"-P3 / C2 / 120s / 78A", hsr:"-P3 / C2 / 162s / 78A", name:"BitterSweet", note:"MAKE IT LIKE ITALIANS"},
+  {match:["bochesa"],       bullet:"-P3 / A1 / 25s / 105A", hsr:"-P3 / A1 / 35s / 105A", name:"Bochesa"},
+  {match:["rumudamo"],      bullet:"-P1 / A2 / 30s / 110A", hsr:"-P1 / A2 / 60s / 110A", name:"Rumudamo", note:"HARD TO CRACK, PLAY HARD"},
+  {match:["chirripo"],      bullet:"-P1 / B0 / 40s / 105A", hsr:"-P1 / B0 / 70s / 105A", name:"Chirripo", note:"TOO MANY QUAKERS, UNEVEN ROAST PARAMETERS, STICK TO SOUND GAIN!"},
+  {match:["peach"],         bullet:"-P2 / A1 / 30s / 110A", hsr:"-P2 / A1 / 30s / 110A", name:"Peach"},
+  {match:["coocentral"],    bullet:"-P2 / B1 / 70s / 100A", hsr:"-P2 / B1 / 90s / 100A", name:"Coocentral", note:"IT'S OK TO BE A LITTLE DARKER!"},
+  {match:["dukamo"],        bullet:"-P3 / B1 / 60s / 100A", hsr:"-P3 / B1 / 85s / 100A", name:"Dukamo", note:"YOU DON'T HAVE TO PLAY SAFE ROAST A FEW AGTRONS DARKER"},
+  {match:["wanrich"],       bullet:"-P3 / A2 / 50s / 105A", hsr:"-P3 / A2 / 80s / 105A", name:"Wanrich"},
+  {match:["killenso"],      bullet:"-P1 / B0 / 45s / 105A", hsr:"-P1 / B0 / 75s / 105A", name:"Killenso"},
+  {match:["uraga"],         bullet:"-P1 / B0 / 40s / 95A",  hsr:"-P1 / B0 / 60s / 95A",  name:"Uraga", note:"HARD TO CRACK"},
+  {match:["wamena"],        bullet:"-P2 / B0 / 40s / 100A", hsr:"-P2 / B0 / 60s / 100A", name:"Wamena", note:"BE CAUITOUS BEFORE FC!"},
+  {match:["cielo"],         bullet:"45s / 95A",             hsr:"-",                     name:"Cielo Geisha"},
+  {match:["hambela"],       bullet:"35s / 105A",            hsr:"-",                     name:"Hambela"},
+  {match:["papayo"],        bullet:"35s / 93A",             hsr:"-",                     name:"Papayo"},
+  {match:["past crop"],     bullet:"-P1 / A2 / 40s / 96A",  hsr:"-P1 / A2 / 60s / 96A",  name:"Past Crop"},
+  {match:["jaguar"],        bullet:"-P1 / A2 / 40s / 96A",  hsr:"-P1 / A2 / 60s / 96A",  name:"Jaguar"},
+  {match:["rio minas"],     bullet:"-P1 / B0 / 35s / 108A", hsr:"-P1 / B0 / 55s / 108A", name:"Rio Minas"},
+  {match:["robusta"],       bullet:"-P1 / B0 / 60s / 96A",  hsr:"-P1 / B0 / 80s / 96A",  name:"Robusta"}
+];
+function recipeStr(r,eq){ return eq==='Bullet'?r.bullet:r.hsr; }
+function agOf(r,eq){ const s=recipeStr(r,eq); const m=s&&s.match(/(\d+)\s*A\s*$/); return m?parseInt(m[1],10):null; }
+
+// ---------- settings (tunable rule engine) ----------
+const DEF={ref:60, sens:0.2, tol:3};
+function loadSettings(){ try{return Object.assign({},DEF,JSON.parse(localStorage.getItem("gcSettings")||"{}"));}catch(e){return {...DEF};} }
+let S=loadSettings();
+function saveSettings(){
+  S={ref:parseFloat(sRef.value)||DEF.ref, sens:parseFloat(sSens.value), tol:parseFloat(sTol.value)};
+  if(isNaN(S.sens))S.sens=DEF.sens; if(isNaN(S.tol))S.tol=DEF.tol;
+  localStorage.setItem("gcSettings",JSON.stringify(S));
+  flash("Saved"); if(state.phase==='predicting') computePrediction();
+}
+function resetSettings(){ S={...DEF}; localStorage.setItem("gcSettings",JSON.stringify(S)); fillSettings(); flash("Reset"); }
+function fillSettings(){ sRef.value=S.ref; sSens.value=S.sens; sTol.value=S.tol; }
+
+// ---------- prediction engine ----------
+function predictAgtron(target, gapSec){
+  let p = target + S.sens*(gapSec - S.ref);
+  return Math.max(0, Math.min(130, Math.round(p)));
+}
+function tasteFor(r, eq, predicted){
+  const target=agOf(r,eq);
+  const baseNote = r.note ? r.note : 'to profile';
+  if(target==null) return 'No target set for this machine.';
+  const d = predicted - target;
+  if(Math.abs(d) <= S.tol) return `<b>On profile (≈${target} Agtron):</b> ${baseNote}. Balanced acidity, body and sweetness as intended.`;
+  if(d > S.tol)  return `<b>Lighter than target (+${d}):</b> brighter, more acidity and fruit/floral; watch for underdevelopment (grassy, sharp).`;
+  return `<b>Darker than target (${d}):</b> fuller body, lower acidity, more cocoa/roast; watch for bitterness and flattened origin character.`;
+}
+function guidanceFor(predicted, target){
+  const d = predicted - target;
+  if(Math.abs(d) <= S.tol) return {cls:'on',  txt:`On track — ride the gain to your drop.`};
+  if(d < -S.tol)          return {cls:'dark', txt:`Trending ~${Math.abs(d)} pts DARK — ease the gain / drop heat.`};
+  return {cls:'light', txt:`~${d} pts LIGHT — you have room, hold the gain a touch longer.`};
+}
+
+// ---------- roast state ----------
+let state={ phase:'idle', tStart:0, tA0:0, tA1:0, bean:null, equip:'Bullet', predicted:null, target:null };
+let tick=null, wakeLock=null;
+
+function curRecipe(){ return RECIPES.find(r=>r.name===bean.value); }
+function refreshTarget(){
+  const r=curRecipe(), eq=equip.value, a=agOf(r,eq);
+  tgtAg.textContent = a!=null? a : '-';
+  tgtRec.textContent = recipeStr(r,eq) || '-';
+  if(r.note){ beanNote.textContent='🔔 '+r.note; beanNote.classList.remove('hide'); } else beanNote.classList.add('hide');
+}
+function beginSession(){
+  const r=curRecipe(), eq=equip.value;
+  if(agOf(r,eq)==null){ flash('No '+eq+' target for '+r.name); return; }
+  state={ phase:'idle', tStart:0, tA0:0, tA1:0, bean:r.name, equip:eq, predicted:null, target:agOf(r,eq) };
+  liveBean.textContent = r.name + '  ·  ' + eq + '  ·  target ' + state.target;
+  setup.classList.add('hide'); live.classList.remove('hide');
+  predPanel.classList.add('hide'); finishBtn.classList.add('hide'); cancelBtn.classList.add('hide');
+  renderStage(); requestWake();
+}
+function stageTap(){
+  const now=Date.now();
+  if(state.phase==='idle'){ state.phase='roasting'; state.tStart=now; cancelBtn.classList.remove('hide'); startTick(); }
+  else if(state.phase==='roasting'){ state.phase='postFC'; state.tA0=now; }
+  else if(state.phase==='postFC'){ state.phase='predicting'; state.tA1=now; computePrediction(); finishBtn.classList.remove('hide'); }
+  renderStage();
+}
+function startTick(){ stopTick(); tick=setInterval(updateTimer,100); updateTimer(); }
+function stopTick(){ if(tick){clearInterval(tick);tick=null;} }
+function fmtT(ms){ if(ms<0)ms=0; const s=Math.floor(ms/1000); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+function updateTimer(){
+  const now = (state.phase==='idle')?state.tStart:Date.now();
+  timer.textContent = state.tStart? fmtT(now-state.tStart) : '0:00';
+  ttfc.textContent = state.tA0? fmtT(state.tA0-state.tStart) : '-';
+  if(state.tA0) gap.textContent = (state.tA1? fmtT(state.tA1-state.tA0) : fmtT(Date.now()-state.tA0));
+}
+function renderStage(){
+  const b=bigbtn;
+  b.className='bigbtn';
+  if(state.phase==='idle'){ b.textContent='START'; hint.textContent='Tap START when the roast begins.'; }
+  else if(state.phase==='roasting'){ b.textContent='A0 · FIRST CRACK'; b.classList.add('fc'); hint.textContent='Listening for First Crack — tap A0 when it cracks.'; }
+  else if(state.phase==='postFC'){ b.textContent='A1 · FIRST GAIN RISE'; b.classList.add('a1'); hint.textContent='FC marked. Tap A1 at the first gain rise after FC.'; }
+  else if(state.phase==='predicting'){ b.textContent='— roasting —'; b.disabled=true; b.style.opacity=.5; hint.textContent='Prediction live. Finish & save when you drop.'; }
+}
+function computePrediction(){
+  stopTick(); updateTimer();
+  const gapSec=(state.tA1-state.tA0)/1000;
+  const r=RECIPES.find(x=>x.name===state.bean);
+  state.predicted = predictAgtron(state.target, gapSec);
+  const d = state.predicted - state.target;
+  pbAg.querySelector('.n').textContent = state.predicted;
+  const dn = pbDelta.querySelector('.n'); dn.textContent = (d>0?'+':'')+d;
+  const cls = Math.abs(d)<=S.tol?'on':(d<0?'dark':'light');
+  pbAg.className='predbox '+cls; pbDelta.className='predbox '+cls;
+  const g=guidanceFor(state.predicted, state.target);
+  donow.className='donow '+g.cls; donow.textContent=g.txt;
+  taste.innerHTML = tasteFor(r, state.equip, state.predicted);
+  predPanel.classList.remove('hide');
+}
+
+// ---------- log ----------
+function loadLog(){ try{return JSON.parse(localStorage.getItem("gcLog")||"[]");}catch(e){return [];} }
+function saveLog(l){ localStorage.setItem("gcLog",JSON.stringify(l)); }
+function finishRoast(){
+  const rec={ id:Date.now(), date:new Date().toISOString().slice(0,10), bean:state.bean, equip:state.equip,
+    ttfc:Math.round((state.tA0-state.tStart)/1000), gap:Math.round((state.tA1-state.tA0)/1000),
+    target:state.target, predicted:state.predicted, actual:'' };
+  const l=loadLog(); l.unshift(rec); saveLog(l);
+  releaseWake();
+  flash('Roast saved'); live.classList.add('hide'); setup.classList.remove('hide');
+  renderLog();
+}
+function cancelRoast(){ stopTick(); releaseWake(); live.classList.add('hide'); setup.classList.remove('hide'); }
+function renderLog(){
+  const l=loadLog(); const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
+  emptyLog.classList.toggle('hide', l.length>0);
+  let errs=[], spreads=[];
+  l.forEach(rec=>{
+    const tr=document.createElement('tr');
+    const act = rec.actual!==''&&rec.actual!=null ? rec.actual : '';
+    tr.innerHTML = `<td>${rec.date}</td><td>${esc(rec.bean)}<div class="small">${rec.equip} · A0→A1 ${rec.gap}s</div></td>`+
+      `<td class="num">${rec.target}</td><td class="num">${rec.predicted}</td>`+
+      `<td><input class="act" type="number" inputmode="numeric" value="${act}" data-id="${rec.id}" placeholder="—"></td>`+
+      `<td><button class="delx" data-del="${rec.id}">×</button></td>`;
+    tb.appendChild(tr);
+    if(act!==''){ errs.push(Math.abs(rec.predicted-rec.actual)); spreads.push(Math.abs(rec.actual-rec.target)); }
+  });
+  tb.querySelectorAll('input.act').forEach(i=>i.addEventListener('change',e=>{
+    const id=+e.target.dataset.id, v=e.target.value===''?'':parseFloat(e.target.value);
+    const ll=loadLog(); const it=ll.find(x=>x.id===id); if(it){it.actual=v; saveLog(ll); renderLog();}
+  }));
+  tb.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',e=>{
+    const id=+e.target.dataset.del; saveLog(loadLog().filter(x=>x.id!==id)); renderLog();
+  }));
+  stCount.textContent=l.length;
+  stErr.textContent = errs.length? (errs.reduce((a,b)=>a+b,0)/errs.length).toFixed(1) : '-';
+  stSpread.textContent = spreads.length? (spreads.reduce((a,b)=>a+b,0)/spreads.length).toFixed(1) : '-';
+}
+function exportLog(){
+  const l=loadLog(); const rows=[["Date","Coffee","Machine","Time to FC (s)","A0-A1 gap (s)","Target Agtron","Predicted Agtron","Actual Agtron"]];
+  l.forEach(r=>rows.push([r.date,r.bean,r.equip,r.ttfc,r.gap,r.target,r.predicted,r.actual]));
+  const csv=rows.map(r=>r.map(c=>{c=String(c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(",")).join("\n");
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8"}));
+  a.download="gain-controller-log.csv"; a.click();
+}
+
+// ---------- views, wake lock, misc ----------
+function show(v){
+  ['roast','hist','set'].forEach(x=>{
+    document.getElementById('view-'+x).classList.toggle('hide', x!==v);
+    document.getElementById('nav'+(x==='roast'?'Roast':x==='hist'?'Hist':'Set')).classList.toggle('on', x===v);
+  });
+  if(v==='hist') renderLog();
+  if(v==='set') fillSettings();
+}
+async function requestWake(){ try{ if('wakeLock' in navigator){ wakeLock=await navigator.wakeLock.request('screen'); } }catch(e){} }
+function releaseWake(){ try{ if(wakeLock){wakeLock.release();wakeLock=null;} }catch(e){} }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && state.phase!=='idle' && live && !live.classList.contains('hide')) requestWake(); });
+function esc(s){return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
+let flashT=null;
+function flash(msg){ const b=document.getElementById('navRoast'); /* lightweight toast */
+  let t=document.getElementById('toast'); if(!t){ t=document.createElement('div'); t.id='toast';
+    t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2c231b;border:1px solid var(--accent);color:var(--ink);padding:9px 16px;border-radius:10px;font-size:14px;z-index:99;box-shadow:0 6px 20px rgba(0,0,0,.5)'; document.body.appendChild(t);}
+  t.textContent=msg; t.style.opacity='1'; clearTimeout(flashT); flashT=setTimeout(()=>t.style.opacity='0',1300);
+}
+
+// ---------- init ----------
+(function init(){
+  RECIPES.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(r=>{
+    const o=document.createElement('option'); o.value=r.name; o.textContent=r.name; bean.appendChild(o);
+  });
+  bean.addEventListener('change',refreshTarget);
+  equip.addEventListener('change',refreshTarget);
+  fillSettings(); refreshTarget(); renderLog();
+})();
+</script>
+</body>
+</html>
