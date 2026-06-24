@@ -111,8 +111,8 @@
         <button class="btn ghost" id="cancel" style="margin-top:8px" onclick="reset()">Back</button>
         <!-- TEST ONLY: delete this block when done testing -->
         <div id="testpanel" style="margin-top:12px;border:1px dashed var(--line);border-radius:9px;padding:9px;display:flex;align-items:center;gap:10px;justify-content:center">
-          <span class="small">⏩ TEST speed</span>
-          <button class="spd" id="spdBtn" onclick="toggleSpeed()">60×</button>
+          <button class="spd" id="spd30" onclick="toggleSpeed(30)">30×</button>
+          <button class="spd" id="spd60" onclick="toggleSpeed(60)">60×</button>
         </div>
       </div>
     </div>
@@ -240,8 +240,8 @@ let st=null, tick=null, wake=null;
 let SPEED=1, vAnchorReal=Date.now(), vAnchorVirt=0;   // TEST: continuous virtual clock, adjustable mid-roast
 function vnow(){ return vAnchorVirt + (Date.now()-vAnchorReal)*SPEED; }
 function setSpeed(v){ vAnchorVirt=vnow(); vAnchorReal=Date.now(); SPEED=Math.max(1,+v||1);
-  if(typeof spdBtn!=='undefined'&&spdBtn){ spdBtn.classList.toggle('on',SPEED===60); } }
-function toggleSpeed(){ setSpeed(SPEED===60?1:60); }
+  if(typeof spd30!=='undefined'&&spd30){ spd30.classList.toggle('on',SPEED===30); spd60.classList.toggle('on',SPEED===60); } }
+function toggleSpeed(v){ setSpeed(SPEED===v?1:v); }
 function secSince(ms){ return (vnow()-ms)/1000; }     // virtual seconds since a virtual timestamp
 function cur(){ return RECIPES.find(r=>r.name===bean.value); }
 function fmt(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
@@ -347,9 +347,9 @@ function draw(){
     if(isTargetNext()){ bb.textContent='DROP / FINISH'; bb.classList.add('drop'); ph='You are at your drop stage ('+st.target+').'; sub='Tap to drop and finish.'; cnt=countLine('DROP',rem); }
     else { bb.textContent=stg.label; bb.classList.add('crack'); ph='Developing - next is '+stg.code+'.'; sub='Expected at A0 +'+fmt(projOff(stg.code)); cnt=countLine(stg.code,rem); }
     top=fmt(eA0); bot='since first crack';
-  } else { bb.textContent='New roast'; bb.onclick=reset; top='done'; bot=''; ph='Roast finished and learned.'; sub='Enter the actual Agtron in History.'; cnt=''; rem=1; }
+  } else { bb.textContent='New roast'; bb.onclick=reset; top='done'; bot=''; ph='Roast finished and learned.'; sub='Enter the actual Agtron in <a href="#" onclick="show(\'hist\');return false;" style="color:var(--accent);text-decoration:underline">History</a>.'; cnt=''; rem=1; }
   gauge.innerHTML = renderGauge(uNow(now), nextU, dropU, top, bot);
-  phase.textContent=ph; psub.textContent=sub;
+  phase.textContent=ph; psub.innerHTML=sub;
   pcount.textContent=cnt; pcount.style.color = rem<0 ? 'var(--warn)' : 'var(--accent)';
 }
 function reset(){ stopTick(); releaseWake(); live.classList.add('hide'); setup.classList.remove('hide'); refresh(); }
