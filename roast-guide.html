@@ -49,6 +49,7 @@
   td.num{text-align:right;font-variant-numeric:tabular-nums}
   td input.act{width:54px;padding:6px;text-align:center;font-size:14px}
   .tgtag{color:var(--muted);font-variant-numeric:tabular-nums}
+  #logTbl th,#logTbl td{text-align:center}
   tr.logrow{cursor:pointer}
   .carot{color:var(--muted);font-size:10px;display:inline-block;width:12px}
   tr.detail td{background:#1d1610;color:var(--muted);font-size:12px;padding:8px 12px;font-variant-numeric:tabular-nums}
@@ -326,7 +327,7 @@ async function finishRoast(now){
   STAGES.forEach(s=>{ if(s.off!=null && s.code!=='A0' && st.taps[s.code]!=null && st.tA0){ offs[s.code]=Math.round(st.tapClock[s.code]? (st.tapClock[s.code]-st.tA0)/1000 : 0); } });
   const tcode=st.target; if(st.tA0 && stIdx(tcode)>=2){ offs[tcode]=Math.round(secSince(st.tA0)); }
   const rec={ id:'local-'+Date.now(), date:new Date().toISOString().slice(0,10), bean:st.name, eq:st.eq, fc:st.fc, target:tcode, targetAg:(st.targetAg!=null?st.targetAg:null),
-    toTarget: st.tA0? Math.round(secSince(st.tA0)) : null, offs, agtron:'' };
+    toTarget: st.tA0? Math.round(secSince(st.tA0)) : null, offs, agtron:(st.targetAg!=null?st.targetAg:'') };
   LOG.unshift(rec); cacheLog(); recomputeLearning();
   st.phase='done'; draw(); renderLog();
   // persist the log to the server; learning is recomputed from logs, nothing else to save
@@ -431,13 +432,19 @@ document.getElementById('imp').addEventListener('change',e=>{ const f=e.target.f
 
 // ===================== history tab =====================
 function offsLine(r){ const parts=[]; STAGES.forEach(s=>{ if(s.off!=null && r.offs && r.offs[s.code]!=null) parts.push(s.code+' +'+r.offs[s.code]+'s'); }); return 'FC '+fmt(r.fc)+(parts.length? '  ·  after first crack:  '+parts.join('   ') : '  ·  no stage timings recorded'); }
+const SEC_PER_AG=4;  // starting estimate: seconds of development change per 1 Agtron point. Calibratable from your own logs later.
+function corrLine(r){ const t=r.targetAg, a=(r.agtron===''||r.agtron==null?null:Number(r.agtron)); if(t==null||a==null||isNaN(a)) return '';
+  const gap=Math.round(a-t); if(Math.abs(gap)<=2) return 'On target ('+a+' vs '+t+').';
+  const secs=Math.round(Math.abs(gap)*SEC_PER_AG);
+  return gap>0 ? ('Ran '+gap+' pts light ('+a+' vs '+t+').  Next time develop ~'+secs+'s longer / drop later to reach '+t+'.')
+              : ('Ran '+(-gap)+' pts dark ('+a+' vs '+t+').  Next time drop ~'+secs+'s earlier to reach '+t+'.'); }
 function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
   emptyLog.classList.toggle('hide', LOG.length>0);
   LOG.forEach(r=>{ const tr=document.createElement('tr'); tr.className='logrow'; tr.dataset.row=r.id;
     tr.innerHTML=`<td><span class="carot">▸</span> ${r.date}</td><td>${esc(r.bean)}<div class="small">${r.eq}</div></td><td>${r.target}</td><td class="num">${r.toTarget!=null?fmt(r.toTarget):'-'}</td>`+
       `<td><span class="tgtag">${r.targetAg!=null?r.targetAg:'—'}</span> → <input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${r.agtron!==''&&r.agtron!=null?r.agtron:''}" data-id="${r.id}" placeholder="—"></td>`+
       `<td><button class="delx" data-del="${r.id}">×</button></td>`; tb.appendChild(tr);
-    const dt=document.createElement('tr'); dt.className='detail hide'; dt.dataset.detail=r.id; dt.innerHTML=`<td colspan="6">${offsLine(r)}</td>`; tb.appendChild(dt); });
+    const dt=document.createElement('tr'); dt.className='detail hide'; dt.dataset.detail=r.id; dt.innerHTML=`<td colspan="6">${offsLine(r)}${corrLine(r)?('<br><span style="color:var(--accent)">↳ '+corrLine(r)+'</span>'):''}</td>`; tb.appendChild(dt); });
   tb.querySelectorAll('tr.logrow').forEach(tr=>tr.addEventListener('click',e=>{ if(e.target.closest('input,button')) return; const d=tb.querySelector('tr[data-detail="'+tr.dataset.row+'"]'); if(d){ const hid=d.classList.toggle('hide'); const c=tr.querySelector('.carot'); if(c) c.textContent=hid?'▸':'▾'; } }));
   tb.querySelectorAll('input.act').forEach(i=>i.addEventListener('change',async e=>{ const id=e.target.dataset.id; let v=e.target.value===''?'':parseFloat(e.target.value); if(v!==''){ v=isNaN(v)?'':Math.max(0,Math.min(150,v)); e.target.value=v; } const it=LOG.find(x=>String(x.id)===id); if(it){ it.agtron=v; cacheLog(); if(sb && !id.startsWith('local-')){ const r=await sb.from('roast_logs').update({agtron:(v===''?null:v)}).eq('id',id); if(r&&r.error) console.warn('agtron update',r.error); } } }));
   tb.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{ const id=b.dataset.del; LOG=LOG.filter(x=>String(x.id)!==id); cacheLog(); recomputeLearning(); renderLog(); if(sb && !id.startsWith('local-')){ const r=await sb.from('roast_logs').delete().eq('id',id); if(r&&r.error) console.warn('log delete',r.error); } });
