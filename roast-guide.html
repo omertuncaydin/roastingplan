@@ -60,7 +60,7 @@
 </style>
 </head>
 <body>
-  <div id="loginOverlay" class="hide" style="position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div id="loginOverlay" style="position:fixed;inset:0;background:var(--bg);z-index:50;display:none;align-items:center;justify-content:center;padding:20px">
     <div class="card" style="max-width:360px;width:100%">
       <h1 style="margin-top:0">Roast Guide</h1>
       <div class="small" style="margin-bottom:14px">Sign in to load your recipes.</div>
@@ -420,8 +420,8 @@ function esc(s){ return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','
 function buildBeans(){ const cur=bean.value; bean.innerHTML=''; getRecipes().filter(r=>r.active).sort((a,b)=>a.name.localeCompare(b.name)).forEach(r=>{ const o=document.createElement('option'); o.value=r.name; o.textContent=r.name; bean.appendChild(o); }); if(cur&&getRecipes().some(r=>r.name===cur&&r.active)) bean.value=cur; refresh(); }
 
 // ===================== auth + server load =====================
-function showLogin(){ loginOverlay.classList.remove('hide'); }
-function hideLogin(){ loginOverlay.classList.add('hide'); }
+function showLogin(){ loginOverlay.style.display='flex'; }
+function hideLogin(){ loginOverlay.style.display='none'; }
 async function doLogin(){
   if(!sb){ loginMsg.textContent='No connection to server.'; return; }
   loginMsg.textContent='Signing in...';
