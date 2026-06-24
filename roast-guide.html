@@ -230,10 +230,29 @@ function renderGauge(u, nextU, dropU, top, bot){
     `<text x="${cx}" y="${cy+24}" text-anchor="middle" font-size="11" fill="#a8998a">${bot}</text></svg>`;
 }
 
-// ===================== learning store (per bean+machine) =====================
-function learnKey(name,eq){ return 'gLearn_'+name+'_'+eq; }
-function getLearned(name,eq){ try{return JSON.parse(localStorage.getItem(learnKey(name,eq))||'null');}catch(e){return null;} }
-function saveLearned(name,eq,offs){ localStorage.setItem(learnKey(name,eq), JSON.stringify(offs)); }
+// ===================== history + learning: server-backed (Supabase) + offline cache =====================
+let MYUID=null, LOG=[], LEARN={};
+const LOG_CACHE='gLog_cache', LEARN_CACHE='gLearn_cache', LOG_PENDING='gLog_pending';
+function lkey(name,eq){ return name+'|'+eq; }
+function getLearned(name,eq){ return LEARN[lkey(name,eq)]||null; }
+function cacheLearn(){ try{localStorage.setItem(LEARN_CACHE,JSON.stringify(LEARN));}catch(e){} }
+function cacheLog(){ try{localStorage.setItem(LOG_CACHE,JSON.stringify(LOG));}catch(e){} }
+function loadLearnCache(){ try{const o=JSON.parse(localStorage.getItem(LEARN_CACHE)||'null'); if(o&&typeof o==='object') return o;}catch(e){} return {}; }
+function loadLogCache(){ try{const a=JSON.parse(localStorage.getItem(LOG_CACHE)||'null'); if(Array.isArray(a)) return a;}catch(e){} return []; }
+function rowToLog(d){ return {id:d.id, date:d.date, bean:d.bean, eq:d.eq, fc:d.fc, target:d.target, toTarget:d.to_target, offs:d.offs||{}, agtron:(d.agtron==null?'':d.agtron)}; }
+function toLogPayload(r){ return {user_id:MYUID, date:r.date, bean:r.bean, eq:r.eq, fc:r.fc, target:r.target, to_target:r.toTarget, offs:r.offs, agtron:(r.agtron===''||r.agtron==null?null:r.agtron)}; }
+function loadPending(){ try{const a=JSON.parse(localStorage.getItem(LOG_PENDING)||'null'); if(Array.isArray(a)) return a;}catch(e){} return []; }
+function addPending(r){ const p=loadPending(); p.push(r); try{localStorage.setItem(LOG_PENDING,JSON.stringify(p));}catch(e){} }
+async function flushPending(){ if(!sb) return; const p=loadPending(); if(!p.length) return;
+  const res=await sb.from('roast_logs').insert(p.map(toLogPayload)).select('*'); if(res&&!res.error) localStorage.removeItem(LOG_PENDING); }
+async function loadServerData(){
+  if(!sb){ LOG=loadLogCache(); LEARN=loadLearnCache(); return; }
+  try{ const u=await sb.auth.getUser(); MYUID=u&&u.data&&u.data.user? u.data.user.id : null; }catch(e){}
+  await flushPending();
+  const [lr,ln]=await Promise.all([ sb.from('roast_logs').select('*').order('created_at',{ascending:false}), sb.from('learning').select('*') ]);
+  if(lr&&!lr.error){ LOG=lr.data.map(rowToLog); cacheLog(); } else { console.warn('logs',lr&&lr.error); LOG=loadLogCache(); }
+  if(ln&&!ln.error){ LEARN={}; ln.data.forEach(d=>{ LEARN[lkey(d.bean,d.eq)]=d.offs||{}; }); cacheLearn(); } else { console.warn('learn',ln&&ln.error); LEARN=loadLearnCache(); }
+}
 
 // ===================== roast state =====================
 let st=null, tick=null, wake=null;
@@ -288,19 +307,24 @@ function tap(){
   draw();
 }
 function startRoast(now){ st.phase='pre'; st.tStart=now; st.ptr=0; undoBtn.classList.add('hide'); }
-function finishRoast(now){
+async function finishRoast(now){
   stopTick(); releaseWake();
   // learned offsets = actual seconds after A0 for each post stage tapped (incl target)
   const offs={};
   STAGES.forEach(s=>{ if(s.off!=null && s.code!=='A0' && st.taps[s.code]!=null && st.tA0){ offs[s.code]=Math.round(st.tapClock[s.code]? (st.tapClock[s.code]-st.tA0)/1000 : 0); } });
-  // include the target stage (tapped as DROP)
   const tcode=st.target; if(st.tA0 && stIdx(tcode)>=2){ offs[tcode]=Math.round(secSince(st.tA0)); }
-  if(Object.keys(offs).length) saveLearned(st.name, st.eq, Object.assign({}, st.learned, offs));
-  // log
-  const rec={ id:Date.now(), date:new Date().toISOString().slice(0,10), bean:st.name, eq:st.eq, fc:st.fc, target:tcode,
+  const merged=Object.assign({}, getLearned(st.name,st.eq)||{}, offs);
+  if(Object.keys(offs).length){ LEARN[lkey(st.name,st.eq)]=merged; cacheLearn(); }
+  const rec={ id:'local-'+Date.now(), date:new Date().toISOString().slice(0,10), bean:st.name, eq:st.eq, fc:st.fc, target:tcode,
     toTarget: st.tA0? Math.round(secSince(st.tA0)) : null, offs, agtron:'' };
-  const l=loadLog(); l.unshift(rec); saveLog(l);
+  LOG.unshift(rec); cacheLog();
   st.phase='done'; draw(); renderLog();
+  // persist to server in the background; on failure keep a pending copy to retry next load
+  if(sb){
+    const lr=await sb.from('roast_logs').insert(toLogPayload(rec)).select('*').single();
+    if(lr&&!lr.error){ rec.id=lr.data.id; cacheLog(); renderLog(); } else { console.warn('log insert',lr&&lr.error); addPending(rec); }
+    if(Object.keys(offs).length){ const ur=await sb.from('learning').upsert({user_id:MYUID, bean:st.name, eq:st.eq, offs:merged}, {onConflict:'user_id,bean,eq'}); if(ur&&ur.error) console.warn('learn upsert',ur.error); }
+  } else { addPending(rec); }
 }
 function undoMark(){
   if(st.ptr===0) return;
@@ -397,19 +421,17 @@ document.getElementById('imp').addEventListener('change',e=>{ const f=e.target.f
   rd.onload=ev=>{ try{ const a=JSON.parse(ev.target.result); if(!Array.isArray(a))throw 0; if(!confirm('Replace recipes with '+a.length+' imported?'))return; saveRecipes(a); RECIPES=a; renderRecipes(); buildBeans(); }catch(x){ alert('Import failed'); } }; rd.readAsText(f); e.target.value=''; });
 
 // ===================== history tab =====================
-function loadLog(){ try{return JSON.parse(localStorage.getItem('gLog')||'[]');}catch(e){return [];} }
-function saveLog(l){ localStorage.setItem('gLog',JSON.stringify(l)); }
-function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML=''; const l=loadLog();
-  emptyLog.classList.toggle('hide', l.length>0);
-  l.forEach(r=>{ const tr=document.createElement('tr');
+function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
+  emptyLog.classList.toggle('hide', LOG.length>0);
+  LOG.forEach(r=>{ const tr=document.createElement('tr');
     tr.innerHTML=`<td>${r.date}</td><td>${esc(r.bean)}<div class="small">${r.eq}</div></td><td>${r.target}</td><td class="num">${r.toTarget!=null?fmt(r.toTarget):'-'}</td>`+
       `<td><input class="act" type="number" inputmode="numeric" value="${r.agtron!==''&&r.agtron!=null?r.agtron:''}" data-id="${r.id}" placeholder="—"></td>`+
       `<td><button class="delx" data-del="${r.id}">×</button></td>`; tb.appendChild(tr); });
-  tb.querySelectorAll('input.act').forEach(i=>i.addEventListener('change',e=>{ const id=+e.target.dataset.id,v=e.target.value===''?'':parseFloat(e.target.value); const ll=loadLog(); const it=ll.find(x=>x.id===id); if(it){it.agtron=v; saveLog(ll);} }));
-  tb.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ saveLog(loadLog().filter(x=>x.id!==+b.dataset.del)); renderLog(); });
+  tb.querySelectorAll('input.act').forEach(i=>i.addEventListener('change',async e=>{ const id=e.target.dataset.id, v=e.target.value===''?'':parseFloat(e.target.value); const it=LOG.find(x=>String(x.id)===id); if(it){ it.agtron=v; cacheLog(); if(sb && !id.startsWith('local-')){ const r=await sb.from('roast_logs').update({agtron:(v===''?null:v)}).eq('id',id); if(r&&r.error) console.warn('agtron update',r.error); } } }));
+  tb.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{ const id=b.dataset.del; LOG=LOG.filter(x=>String(x.id)!==id); cacheLog(); renderLog(); if(sb && !id.startsWith('local-')){ const r=await sb.from('roast_logs').delete().eq('id',id); if(r&&r.error) console.warn('log delete',r.error); } });
 }
-function exportLog(){ const l=loadLog(); const rows=[['Date','Coffee','Machine','FC(s)','Drop stage','A0->target(s)','Actual Agtron']];
-  l.forEach(r=>rows.push([r.date,r.bean,r.eq,r.fc,r.target,r.toTarget,r.agtron]));
+function exportLog(){ const rows=[['Date','Coffee','Machine','FC(s)','Drop stage','A0->target(s)','Actual Agtron']];
+  LOG.forEach(r=>rows.push([r.date,r.bean,r.eq,r.fc,r.target,r.toTarget,r.agtron]));
   const csv=rows.map(r=>r.map(c=>{c=String(c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(',')).join('\n');
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'})); a.download='roast-guide-log.csv'; a.click(); }
 
@@ -430,7 +452,7 @@ async function doLogin(){
   loginMsg.textContent=''; hideLogin(); loadFromServer();
 }
 async function doLogout(){ try{ if(sb) await sb.auth.signOut(); }catch(e){} location.reload(); }
-function afterRecipes(){ buildBeans(); renderRecipes(); }
+async function afterRecipes(){ await loadServerData(); buildBeans(); renderRecipes(); renderLog(); }
 async function loadFromServer(){
   if(!sb){ RECIPES=loadCache(); afterRecipes(); return; }
   const res=await sb.from('recipes').select('*').order('name');
