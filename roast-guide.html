@@ -210,6 +210,7 @@
       <button class="btn" onclick="saveRules()">Save rules</button>
       <button class="btn" style="margin-top:8px;background:var(--accent2);color:#fff" onclick="saveAsDefaults()">Save as defaults</button>
       <button class="btn ghost" style="margin-top:8px" onclick="resetRules()">Reset to defaults</button>
+      <button class="btn ghost" style="margin-top:16px;border-color:var(--accent2);color:var(--accent2)" onclick="deepCalibration()">Deep Calibration Learning</button>
     </div>
     <div class="small" id="rulesMsg" style="margin-top:10px;color:var(--accent2)"></div>
     <div class="small" id="rulesNote" style="margin-top:8px"></div>
@@ -237,6 +238,7 @@ function rstr(r,eq){ return eq==='Bullet'?r.bullet:r.hsr; }
 function parseFc(s){ const m=s&&s.match(/(\d+):([0-5]?\d)/); return m? parseInt(m[1],10)*60+parseInt(m[2],10) : 420; }
 function parseStage(s){ const m=s&&s.match(/\b([ABC][0-2])\b/); return m? m[1] : 'B0'; }
 function parseAg(s){ const m=s&&s.match(/(\d+)\s*A\s*$/); return m? parseInt(m[1],10) : null; }
+function parseDev(s){ const m=s&&s.match(/(\d+)\s*s\b/i); return m? parseInt(m[1],10) : 60; }   // development time token (e.g. "60s"); drop = A0 + dev x scale x pace
 
 // ===================== stages =====================
 // base offsets are seconds AFTER first crack (A0) on a 7-min FC roast; scaled by FC time.
@@ -329,69 +331,48 @@ function refresh(){
   const s=rstr(r,equip.value);
   tFc.textContent=fmt(fcActual(parseFc(s))); tStage.textContent=parseStage(s); tAg.textContent=parseAg(s)!=null?parseAg(s):'-';
   if(r.note){ beanNote.textContent='🔔 '+r.note; beanNote.classList.remove('hide'); } else beanNote.classList.add('hide');
-  const L=getLearned(r.name,equip.value);
-  if(L){ learnNote.textContent='Learned from your roasts: '+Object.keys(L).map(k=>k+' +'+L[k]+'s').join(', '); learnNote.classList.remove('hide'); }
+  const L=getLearned(r.name,equip.value); const lp=[];
+  if(L){ if(L.cinToA0!=null) lp.push('cinnamon→A0 ~'+L.cinToA0+'s'); if(L.dev!=null) lp.push('dev ~'+L.dev+'s'); }
+  if(lp.length){ learnNote.textContent='Your roasts average: '+lp.join(', '); learnNote.classList.remove('hide'); }
   else learnNote.classList.add('hide');
 }
 function begin(){
   const r=cur(); if(!r){ alert('Pick a coffee'); return; }
   const s=rstr(r,equip.value), fc=parseFc(s), target=parseStage(s);
-  st={ name:r.name, eq:equip.value, fc, scale:fcScale(fc), target, targetIdx:stIdx(target), targetAg:parseAg(s),
-       learned:getLearned(r.name,equip.value)||{}, phase:'idle', tStart:0, tA0:0,
-       ptr:0, taps:{}, tapClock:{}, pace:1 };
+  st={ name:r.name, eq:equip.value, fc, scale:fcScale(fc), target, targetAg:parseAg(s), dev:parseDev(s),
+       learned:getLearned(r.name,equip.value)||{}, phase:'idle', tStart:0, tCin:0, tA0:0, pace:1, cinToA0Actual:0 };
   liveBean.textContent = r.name+'  ·  '+equip.value+'  ·  FC '+fmt(fcActual(fc))+'  ·  drop at '+target+(parseAg(s)!=null?'  ('+parseAg(s)+'A)':'');
   setup.classList.add('hide'); live.classList.remove('hide'); undoBtn.classList.add('hide');
   draw(); requestWake();
 }
-// effective offset (sec, after A0) for a post stage
-function effOff(code){ if(st.learned[code]!=null) return st.learned[code]; const b=STAGES.find(s=>s.code===code).off; return b*st.scale; }
-function projOff(code){ return effOff(code)*st.pace; }
-function curStage(){ return STAGES[st.ptr]; }
-function isTargetNext(){ return curStage().code===st.target; }
+function targetU(){ const t=STAGES.find(s=>s.code===st.target); return t?t.u:0.73; }
+function expCinToA0(){ return RULES.cinToA0 * st.scale; }                    // expected cinnamon->A0 (scaled)
+function dropOffset(){ return st.dev * st.scale * st.pace; }                 // predicted A0->drop: dev time, FC-scaled, paced by cinnamon->A0
+function devCues(){ const ti=stIdx(st.target), drop=dropOffset();           // intermediate stage cues that fall before the drop
+  return STAGES.filter(s=>s.off!=null && s.code!=='A0' && stIdx(s.code)<ti).map(s=>({code:s.code, t:s.off*st.scale*st.pace})).filter(c=>c.t<drop-1); }
 
 function tap(){
-  const now=vnow(); const stg=curStage();
-  st.taps[stg.code]= st.tStart? secSince(st.tStart):0;
-  st.tapClock[stg.code]=now;
-  if(stg.code==='A0'){ st.tA0=now; st.phase='post'; }
-  if(stg.code==='CINNAMON' && st.phase==='idle'){ /* shouldn't happen */ }
-  // if this is the START (idle), special-case below
-  if(st.phase==='idle' && stg.code==='CINNAMON'){ /* handled in pre logic */ }
-
-  if(isTargetNext()){ finishRoast(now); return; }   // dropping at target stage
-  // advance
-  st.ptr++;
-  // recalibrate pace from the just-tapped POST stage (A1 onward)
-  if(stg.off!=null && stg.code!=='A0'){ const actual=secSince(st.tA0); const exp=effOff(stg.code); if(exp>0) st.pace=actual/exp; }
-  undoBtn.classList.toggle('hide', st.ptr===0);
-  draw();
+  const now=vnow();
+  if(st.phase==='pre0'){ st.tCin=now; st.phase='pre1'; undoBtn.classList.remove('hide'); draw(); return; }   // mark cinnamon
+  if(st.phase==='pre1'){ st.tA0=now; st.cinToA0Actual=Math.max(0.1, secSince(st.tCin)); const exp=expCinToA0(); st.pace = exp>0 ? st.cinToA0Actual/exp : 1; st.phase='dev'; draw(); return; }   // mark A0, set pace from cinnamon->A0
+  if(st.phase==='dev'){ finishRoast(now); return; }   // observed target stage -> drop
 }
-function startRoast(now){ st.phase='pre'; st.tStart=now; st.ptr=0; undoBtn.classList.add('hide'); }
+function startRoast(now){ st.phase='pre0'; st.tStart=now; undoBtn.classList.add('hide'); }
 async function finishRoast(now){
   stopTick(); releaseWake();
-  // learned offsets = actual seconds after A0 for each post stage tapped (incl target)
-  const offs={};
-  STAGES.forEach(s=>{ if(s.off!=null && s.code!=='A0' && st.taps[s.code]!=null && st.tA0){ offs[s.code]=Math.round(st.tapClock[s.code]? (st.tapClock[s.code]-st.tA0)/1000 : 0); } });
-  const tcode=st.target; if(st.tA0 && stIdx(tcode)>=2){ offs[tcode]=Math.round(secSince(st.tA0)); }
-  const rec={ id:'local-'+Date.now(), date:new Date().toISOString().slice(0,10), bean:st.name, eq:st.eq, fc:st.fc, target:tcode, targetAg:(st.targetAg!=null?st.targetAg:null),
-    toTarget: st.tA0? Math.round(secSince(st.tA0)) : null, offs, agtron:(st.targetAg!=null?st.targetAg:'') };
+  const devActual = st.tA0 ? Math.round(secSince(st.tA0)) : null;   // actual A0->drop (development time)
+  const cinA0 = Math.round(st.cinToA0Actual||0);                    // actual cinnamon->A0
+  const offs={}; if(cinA0) offs.cinToA0=cinA0; if(devActual!=null) offs.dev=devActual;
+  const rec={ id:'local-'+Date.now(), date:new Date().toISOString().slice(0,10), bean:st.name, eq:st.eq, fc:st.fc, target:st.target, targetAg:(st.targetAg!=null?st.targetAg:null),
+    toTarget: devActual, offs, agtron:(st.targetAg!=null?st.targetAg:'') };
   LOG.unshift(rec); cacheLog(); recomputeLearning();
   st.phase='done'; draw(); renderLog();
-  // persist the log to the server; learning is recomputed from logs, nothing else to save
-  if(sb){
-    const lr=await sb.from('roast_logs').insert(toLogPayload(rec)).select('*').single();
-    if(lr&&!lr.error){ rec.id=lr.data.id; cacheLog(); renderLog(); } else { console.warn('log insert',lr&&lr.error); addPending(rec); }
-  } else { addPending(rec); }
+  if(sb){ const lr=await sb.from('roast_logs').insert(toLogPayload(rec)).select('*').single(); if(lr&&!lr.error){ rec.id=lr.data.id; cacheLog(); renderLog(); } else { console.warn('log insert',lr&&lr.error); addPending(rec); } } else { addPending(rec); }
 }
 function undoMark(){
-  if(st.ptr===0) return;
-  st.ptr--; const stg=curStage();
-  delete st.taps[stg.code]; delete st.tapClock[stg.code];
-  if(stg.code==='A0'){ st.tA0=0; st.phase='pre'; }
-  // recompute pace from previous post stage
-  st.pace=1;
-  for(let i=2;i<st.ptr;i++){ const c=STAGES[i].code; if(st.taps[c]!=null && st.tA0){ const a=(st.tapClock[c]-st.tA0)/1000; const e=effOff(c); if(e>0) st.pace=a/e; } }
-  undoBtn.classList.toggle('hide', st.ptr===0);
+  if(st.phase==='pre1'){ st.phase='pre0'; st.tCin=0; }
+  else if(st.phase==='dev'){ st.phase='pre1'; st.tA0=0; st.pace=1; st.cinToA0Actual=0; }
+  undoBtn.classList.toggle('hide', st.phase==='idle'||st.phase==='pre0');
   draw();
 }
 function startTick(){ stopTick(); tick=setInterval(draw,120); }
@@ -399,36 +380,24 @@ function stopTick(){ if(tick){clearInterval(tick);tick=null;} }
 
 function uNow(now){
   if(st.phase==='idle') return 0;
-  if(st.phase==='done'){ return STAGES.find(s=>s.code===st.target).u; }
-  if(st.phase==='pre'){
-    if(st.ptr===0){ const e=secSince(st.tStart); return Math.min(0.52, 0.50*(e/st.fc)); }      // -> CINNAMON(0.50) at FC time
-    const lastT=st.tapClock['CINNAMON']||st.tStart; const e=secSince(lastT); return 0.50+0.05*Math.min(1.2, e/(RULES.cinToA0*st.scale)); // CINNAMON->A0 (scales with FC)
-  }
-  // post: from last tapped stage's u/time toward next stage's projected time
-  const li=st.ptr-1, lc=STAGES[li].code, lu=STAGES[li].u, lt=st.tapClock[lc]||st.tA0;
-  const nc=STAGES[st.ptr].code, nu=STAGES[st.ptr].u;
-  const segDur=Math.max(1,(projOff(nc)-(STAGES[li].off!=null? projOff(lc):0)));
-  const e=secSince(lt); const f=Math.min(1.2, e/segDur);
-  return lu + (nu-lu)*f;
+  if(st.phase==='done') return targetU();
+  if(st.phase==='pre0'){ const e=secSince(st.tStart); return Math.min(0.52, 0.50*(e/st.fc)); }                 // -> cinnamon (0.50) at recipe time
+  if(st.phase==='pre1'){ const e=secSince(st.tCin); return 0.50+0.05*Math.min(1.2, e/expCinToA0()); }           // cinnamon -> A0 (0.55)
+  const du=targetU(), drop=dropOffset(), e=secSince(st.tA0); return 0.55 + (du-0.55)*Math.min(1.1, e/(drop||1)); // A0 -> drop
 }
 function fmtAbs(s){ s=Math.round(Math.abs(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 function countLine(label, rem){ return rem>=0 ? '→ '+label+' expected in '+fmtAbs(rem) : '→ '+label+' expected now  (+'+fmtAbs(rem)+')'; }
 function draw(){
   const now=vnow(); let bb=bigbtn; bb.className='bigbtn'; bb.onclick=tap;
-  let top='',bot='',ph='',sub='', cnt='', rem=0, nextU=null, dropU=STAGES.find(s=>s.code===st.target).u;
-  if(st.phase==='idle'){ bb.textContent='START'; top='0:00'; bot='ready'; ph='Tap START when the roast begins.'; nextU=0.50; cnt=''; rem=1;
+  const du=targetU(); let top='',bot='',ph='',sub='',cnt='',rem=1,nextU=null,dropU=du;
+  if(st.phase==='idle'){ bb.textContent='START'; top='0:00'; bot='ready'; ph='Tap START when the roast begins.'; nextU=0.50;
     bb.onclick=()=>{ startRoast(vnow()); startTick(); draw(); }; }
-  else if(st.phase==='pre'){
-    const e=secSince(st.tStart);
-    if(st.ptr===0){ bb.textContent='CINNAMON'; top=fmt(e); bot='since start'; ph='Building toward cinnamon.'; sub='Tap CINNAMON when the beans turn cinnamon.'; nextU=0.50; rem=st.fc-e; cnt=countLine('CINNAMON',rem); }
-    else { bb.textContent='FIRST CRACK (A0)'; bb.classList.add('crack'); top=fmt(e); bot='since start'; ph='Cinnamon marked.'; sub='Tap the moment first crack starts.'; nextU=0.55; rem=(RULES.cinToA0*st.scale)-secSince(st.tapClock['CINNAMON']||now); cnt=countLine('FIRST CRACK (A0)',rem); }
-  } else if(st.phase==='post'){
-    const stg=curStage(); const eA0=secSince(st.tA0);
-    nextU=stg.u; rem=projOff(stg.code)-eA0;
-    if(isTargetNext()){ bb.textContent='DROP / FINISH'; bb.classList.add('drop'); ph='You are at your drop stage ('+st.target+').'; sub='Tap to drop and finish.'; cnt=countLine('DROP',rem); }
-    else { bb.textContent=stg.label; bb.classList.add('crack'); ph='Developing - next is '+stg.code+'.'; sub='Expected at A0 +'+fmt(projOff(stg.code)); cnt=countLine(stg.code,rem); }
-    top=fmt(eA0); bot='since first crack';
-  } else { bb.textContent='New roast'; bb.onclick=reset; top='done'; bot=''; ph='Roast finished and learned.'; sub='Enter the actual Agtron in <a href="#" onclick="show(\'hist\');return false;" style="color:var(--accent);text-decoration:underline">History</a>.'; cnt=''; rem=1; }
+  else if(st.phase==='pre0'){ const e=secSince(st.tStart); bb.textContent='CINNAMON'; top=fmt(e); bot='since start'; ph='Building toward cinnamon.'; sub='Tap CINNAMON when the beans turn cinnamon.'; nextU=0.50; rem=st.fc-e; cnt=countLine('CINNAMON',rem); }
+  else if(st.phase==='pre1'){ const e=secSince(st.tStart); bb.textContent='FIRST CRACK (A0)'; bb.classList.add('crack'); top=fmt(e); bot='since start'; ph='Cinnamon marked.'; sub='Tap the moment first crack starts.'; nextU=0.55; rem=expCinToA0()-secSince(st.tCin); cnt=countLine('FIRST CRACK (A0)',rem); }
+  else if(st.phase==='dev'){ const eA0=secSince(st.tA0), drop=dropOffset(); bb.textContent='DROP / FINISH'; bb.classList.add('drop'); top=fmt(eA0); bot='since first crack'; nextU=du; rem=drop-eA0; cnt=countLine('DROP',rem); ph='Developing toward '+st.target+' - drop when you reach it.';
+    let s2=''; for(const c of devCues()){ if(eA0<c.t){ s2='next cue: '+c.code+' ~ '+fmtAbs(c.t-eA0); break; } if(eA0<c.t+4){ s2=c.code+' around now'; break; } }
+    sub = s2 || ('drop target: '+st.target+(st.targetAg!=null?' ('+st.targetAg+'A)':'')); }
+  else { bb.textContent='New roast'; bb.onclick=reset; top='done'; bot=''; ph='Roast finished and learned.'; sub='Enter the actual Agtron in <a href="#" onclick="show(\'hist\');return false;" style="color:var(--accent);text-decoration:underline">History</a>.'; }
   gauge.innerHTML = renderGauge(uNow(now), nextU, dropU, top, bot);
   phase.textContent=ph; psub.innerHTML=sub;
   pcount.textContent=cnt; pcount.style.color = rem<0 ? 'var(--warn)' : 'var(--accent)';
@@ -493,7 +462,10 @@ document.getElementById('imp').addEventListener('change',e=>{ const f=e.target.f
 
 // ===================== history tab =====================
 function openHx(id){ const r=LOG.find(x=>String(x.id)===String(id)); if(!r) return;
-  let stages=''; STAGES.forEach(s=>{ if(s.off!=null && r.offs && r.offs[s.code]!=null) stages+=`<div class="hxrow"><span>${s.label}</span><span class="tgtval">A0 +${r.offs[s.code]}s</span></div>`; });
+  let stages=''; const o=r.offs||{};
+  if(o.cinToA0!=null) stages+=`<div class="hxrow"><span>Cinnamon → first crack</span><span class="tgtval">${o.cinToA0}s</span></div>`;
+  if(o.dev!=null) stages+=`<div class="hxrow"><span>Development (A0 → drop)</span><span class="tgtval">${o.dev}s</span></div>`;
+  STAGES.forEach(s=>{ if(s.off!=null && o[s.code]!=null) stages+=`<div class="hxrow"><span>${s.label}</span><span class="tgtval">A0 +${o[s.code]}s</span></div>`; });
   if(!stages) stages='<div class="small">No stage timings recorded.</div>';
   const corr=corrLine(r);
   hxBox.innerHTML=`<h1 style="margin:0 0 4px;font-size:18px">Heuristics</h1>`+
@@ -561,6 +533,7 @@ async function saveAsDefaults(){ if(!IS_ADMIN) return;
   if(sb){ const r=await sb.from('settings').upsert({id:1, rules:nr, defaults:nr, updated_at:new Date().toISOString()},{onConflict:'id'}).select(); if(r&&r.error){ rulesMsg.textContent='Save failed: '+r.error.message; return; } }
   renderRules(); rulesMsg.textContent='Saved as defaults. This is now the baseline and the live rule set.'; }
 function resetRules(){ RULES=JSON.parse(JSON.stringify(SAVED_DEFAULTS)); applyRules(); renderRules(); rulesMsg.textContent='Reset to saved defaults - tap Save rules to apply them live.'; }
+function deepCalibration(){ /* placeholder - sample-roast calibration to learn a bean's full stage map. Not built yet. */ rulesMsg.textContent='Deep Calibration Learning: placeholder - not built yet.'; }
 function esc(s){ return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 function buildBeans(){ const cur=bean.value; bean.innerHTML=''; getRecipes().filter(r=>r.active).forEach(r=>{ const o=document.createElement('option'); o.value=r.name; o.textContent=r.name; bean.appendChild(o); }); if(cur&&getRecipes().some(r=>r.name===cur&&r.active)) bean.value=cur; refresh(); }
 
