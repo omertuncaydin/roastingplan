@@ -203,7 +203,7 @@
         <label>FC doubles at (min)<input type="number" id="ru_fcDouble"></label>
         <label>Sec / Agtron pt<input type="number" id="ru_secPerAg"></label>
         <label>Learn last N<input type="number" id="ru_learnN"></label>
-        <label>Cinnamon→A0 (s)<input type="number" id="ru_cinToA0"></label>
+        <label>Cinnamon→A0 @ base (s)<input type="number" id="ru_cinToA0"></label>
       </div>
     </div>
     <div id="ruleActions">
@@ -401,7 +401,7 @@ function uNow(now){
   if(st.phase==='done'){ return STAGES.find(s=>s.code===st.target).u; }
   if(st.phase==='pre'){
     if(st.ptr===0){ const e=secSince(st.tStart); return Math.min(0.52, 0.50*(e/st.fc)); }      // -> CINNAMON(0.50) at FC time
-    const lastT=st.tapClock['CINNAMON']||st.tStart; const e=secSince(lastT); return 0.50+0.05*Math.min(1.2, e/RULES.cinToA0); // CINNAMON->A0
+    const lastT=st.tapClock['CINNAMON']||st.tStart; const e=secSince(lastT); return 0.50+0.05*Math.min(1.2, e/(RULES.cinToA0*st.scale)); // CINNAMON->A0 (scales with FC)
   }
   // post: from last tapped stage's u/time toward next stage's projected time
   const li=st.ptr-1, lc=STAGES[li].code, lu=STAGES[li].u, lt=st.tapClock[lc]||st.tA0;
@@ -420,7 +420,7 @@ function draw(){
   else if(st.phase==='pre'){
     const e=secSince(st.tStart);
     if(st.ptr===0){ bb.textContent='CINNAMON'; top=fmt(e); bot='since start'; ph='Building toward cinnamon.'; sub='Tap CINNAMON when the beans turn cinnamon.'; nextU=0.50; rem=st.fc-e; cnt=countLine('CINNAMON',rem); }
-    else { bb.textContent='FIRST CRACK (A0)'; bb.classList.add('crack'); top=fmt(e); bot='since start'; ph='Cinnamon marked.'; sub='Tap the moment first crack starts.'; nextU=0.55; rem=RULES.cinToA0-secSince(st.tapClock['CINNAMON']||now); cnt=countLine('FIRST CRACK (A0)',rem); }
+    else { bb.textContent='FIRST CRACK (A0)'; bb.classList.add('crack'); top=fmt(e); bot='since start'; ph='Cinnamon marked.'; sub='Tap the moment first crack starts.'; nextU=0.55; rem=(RULES.cinToA0*st.scale)-secSince(st.tapClock['CINNAMON']||now); cnt=countLine('FIRST CRACK (A0)',rem); }
   } else if(st.phase==='post'){
     const stg=curStage(); const eA0=secSince(st.tA0);
     nextU=stg.u; rem=projOff(stg.code)-eA0;
