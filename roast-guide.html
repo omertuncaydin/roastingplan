@@ -55,10 +55,11 @@
   .step:active{background:var(--accent);color:#1a1410}
   input.act::-webkit-outer-spin-button,input.act::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   input.act{-moz-appearance:textfield;appearance:textfield}
-  .agrow td{padding:6px 12px 12px;text-align:left;background:#1f1812}
+  .agrow td{padding:8px 12px 4px;text-align:left;background:#1f1812}
+  .agrow.slide td{padding:2px 12px 12px}
   .agrow2{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .aglbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;white-space:nowrap}
-  .agslider{flex:1;min-width:130px;accent-color:var(--accent)}
+  .agslider{width:100%;accent-color:var(--accent)}
   tr.logrow{cursor:pointer}
   .carot{color:var(--muted);font-size:10px;display:inline-block;width:12px}
   tr.detail td{background:#1d1610;color:var(--muted);font-size:12px;padding:8px 12px;font-variant-numeric:tabular-nums;text-align:left}
@@ -465,7 +466,8 @@ function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
       `<td><span class="tgtag">${r.targetAg!=null?r.targetAg:'—'}</span></td>`+
       `<td><button class="delx" data-del="${r.id}">×</button></td>`; tb.appendChild(tr);
     const av=(r.agtron!==''&&r.agtron!=null)?r.agtron:''; const sv=av!==''?av:(r.targetAg!=null?r.targetAg:100);
-    const ar=document.createElement('tr'); ar.className='agrow'; ar.innerHTML=`<td colspan="6"><div class="agrow2"><span class="aglbl">Actual Agtron</span><input type="range" class="agslider" min="40" max="130" step="1" value="${sv}" data-rng="${r.id}"><div class="agwrap"><button class="step" data-dec="${r.id}">−</button><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}"><button class="step" data-inc="${r.id}">+</button></div></div></td>`; tb.appendChild(ar);
+    const ar=document.createElement('tr'); ar.className='agrow'; ar.innerHTML=`<td colspan="6"><div class="agrow2"><span class="aglbl">Actual Agtron</span><div class="agwrap"><button class="step" data-dec="${r.id}">−</button><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}"><button class="step" data-inc="${r.id}">+</button></div></div></td>`; tb.appendChild(ar);
+    const sr=document.createElement('tr'); sr.className='agrow slide'; sr.innerHTML=`<td colspan="6"><input type="range" class="agslider" min="40" max="130" step="1" value="${sv}" data-rng="${r.id}"></td>`; tb.appendChild(sr);
     const corr=corrLine(r); const cr=document.createElement('tr'); cr.className='corr'+(corr?'':' hide'); cr.dataset.corr=r.id; cr.innerHTML=`<td colspan="6">${corr?('↳ '+corr):''}</td>`; tb.appendChild(cr);
     const dt=document.createElement('tr'); dt.className='detail hide'; dt.dataset.detail=r.id; dt.innerHTML=`<td colspan="6">${offsLine(r)}</td>`; tb.appendChild(dt); });
   tb.querySelectorAll('tr.logrow').forEach(tr=>tr.addEventListener('click',e=>{ if(e.target.closest('input,button')) return; const d=tb.querySelector('tr[data-detail="'+tr.dataset.row+'"]'); if(d){ const hid=d.classList.toggle('hide'); const c=tr.querySelector('.carot'); if(c) c.textContent=hid?'▸':'▾'; } }));
