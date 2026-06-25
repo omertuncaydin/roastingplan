@@ -59,6 +59,7 @@
   .agrow.slide td{padding:2px 12px 12px}
   .agrow2{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .aglbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;white-space:nowrap}
+  .tgtval{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
   .agslider{width:100%;accent-color:var(--accent)}
   tr.logrow{cursor:pointer}
   .carot{color:var(--muted);font-size:10px;display:inline-block;width:12px}
@@ -161,7 +162,7 @@
   <!-- HISTORY -->
   <div id="view-hist" class="hide">
     <div class="card" style="overflow-x:auto">
-      <table id="logTbl"><thead><tr><th>Date</th><th>Coffee</th><th>Drop</th><th>Dev Time</th><th>Target Ag</th><th></th></tr></thead><tbody></tbody></table>
+      <table id="logTbl"><thead><tr><th>Date</th><th>Coffee</th><th>Drop</th><th>Dev Time</th><th></th></tr></thead><tbody></tbody></table>
       <div class="small hide" id="emptyLog" style="padding:10px 2px">No roasts logged yet.</div>
     </div>
     <button class="btn ghost" onclick="exportLog()">Download log CSV</button>
@@ -471,13 +472,12 @@ function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
   emptyLog.classList.toggle('hide', LOG.length>0);
   LOG.forEach(r=>{ const tr=document.createElement('tr'); tr.className='logrow'; tr.dataset.row=r.id;
     tr.innerHTML=`<td><span class="carot">▸</span> ${r.date}</td><td>${esc(r.bean)}<div class="small">${r.eq}</div></td><td>${r.target}</td><td class="num">${r.toTarget!=null?fmt(r.toTarget):'-'}</td>`+
-      `<td><span class="tgtag">${r.targetAg!=null?r.targetAg:'—'}</span></td>`+
       `<td><button class="delx" data-del="${r.id}">×</button></td>`; tb.appendChild(tr);
     const av=(r.agtron!==''&&r.agtron!=null)?r.agtron:''; const sv=av!==''?av:(r.targetAg!=null?r.targetAg:100);
-    const ar=document.createElement('tr'); ar.className='agrow'; ar.innerHTML=`<td colspan="6"><div class="agrow2"><span class="aglbl">Actual Agtron</span><div class="agwrap"><button class="step" data-dec="${r.id}">−</button><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}"><button class="step" data-inc="${r.id}">+</button></div></div></td>`; tb.appendChild(ar);
-    const sr=document.createElement('tr'); sr.className='agrow slide'; sr.innerHTML=`<td colspan="6"><input type="range" class="agslider" min="40" max="130" step="1" value="${sv}" data-rng="${r.id}"></td>`; tb.appendChild(sr);
-    const corr=corrLine(r); const cr=document.createElement('tr'); cr.className='corr'+(corr?'':' hide'); cr.dataset.corr=r.id; cr.innerHTML=`<td colspan="6">${corr?('↳ '+corr):''}</td>`; tb.appendChild(cr);
-    const dt=document.createElement('tr'); dt.className='detail hide'; dt.dataset.detail=r.id; dt.innerHTML=`<td colspan="6">${offsLine(r)}</td>`; tb.appendChild(dt); });
+    const ar=document.createElement('tr'); ar.className='agrow'; ar.innerHTML=`<td colspan="5"><div class="agrow2"><span class="aglbl">Target AG</span><b class="tgtval">${r.targetAg!=null?r.targetAg:'—'}</b><span class="aglbl" style="margin-left:14px">Actual AG</span><div class="agwrap"><button class="step" data-dec="${r.id}">−</button><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}"><button class="step" data-inc="${r.id}">+</button></div></div></td>`; tb.appendChild(ar);
+    const sr=document.createElement('tr'); sr.className='agrow slide'; sr.innerHTML=`<td colspan="5"><input type="range" class="agslider" min="40" max="130" step="1" value="${sv}" data-rng="${r.id}"></td>`; tb.appendChild(sr);
+    const corr=corrLine(r); const cr=document.createElement('tr'); cr.className='corr'+(corr?'':' hide'); cr.dataset.corr=r.id; cr.innerHTML=`<td colspan="5">${corr?('↳ '+corr):''}</td>`; tb.appendChild(cr);
+    const dt=document.createElement('tr'); dt.className='detail hide'; dt.dataset.detail=r.id; dt.innerHTML=`<td colspan="5">${offsLine(r)}</td>`; tb.appendChild(dt); });
   tb.querySelectorAll('tr.logrow').forEach(tr=>tr.addEventListener('click',e=>{ if(e.target.closest('input,button')) return; const d=tb.querySelector('tr[data-detail="'+tr.dataset.row+'"]'); if(d){ const hid=d.classList.toggle('hide'); const c=tr.querySelector('.carot'); if(c) c.textContent=hid?'▸':'▾'; } }));
   tb.querySelectorAll('input.act').forEach(i=>i.addEventListener('input',e=>setAgtron(e.target.dataset.id, e.target.value)));
   tb.querySelectorAll('input.agslider').forEach(s=>s.addEventListener('input',e=>setAgtron(e.target.dataset.rng, e.target.value)));
