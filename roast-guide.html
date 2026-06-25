@@ -210,7 +210,6 @@
       <button class="btn" onclick="saveRules()">Save rules</button>
       <button class="btn" style="margin-top:8px;background:var(--accent2);color:#fff" onclick="saveAsDefaults()">Save as defaults</button>
       <button class="btn ghost" style="margin-top:8px" onclick="resetRules()">Reset to defaults</button>
-      <button class="btn ghost" style="margin-top:16px;border-color:var(--dark);color:var(--dark)" onclick="reformatRecipes()">Reformat all recipes (one-time, -1:30)</button>
     </div>
     <div class="small" id="rulesMsg" style="margin-top:10px;color:var(--accent2)"></div>
     <div class="small" id="rulesNote" style="margin-top:8px"></div>
@@ -562,15 +561,6 @@ async function saveAsDefaults(){ if(!IS_ADMIN) return;
   if(sb){ const r=await sb.from('settings').upsert({id:1, rules:nr, defaults:nr, updated_at:new Date().toISOString()},{onConflict:'id'}).select(); if(r&&r.error){ rulesMsg.textContent='Save failed: '+r.error.message; return; } }
   renderRules(); rulesMsg.textContent='Saved as defaults. This is now the baseline and the live rule set.'; }
 function resetRules(){ RULES=JSON.parse(JSON.stringify(SAVED_DEFAULTS)); applyRules(); renderRules(); rulesMsg.textContent='Reset to saved defaults - tap Save rules to apply them live.'; }
-function shiftRecipeStr(str){ const m=str&&str.match(/(\d+):([0-5]?\d)/); if(!m) return str;   // no time token (e.g. "-") -> unchanged
-  let secs=parseInt(m[1],10)*60+parseInt(m[2],10)-90; if(secs<0) secs=0;   // 1:30 earlier
-  const nt=Math.floor(secs/60)+':'+String(secs%60).padStart(2,'0');
-  const parts=str.split('/').map(p=>p.trim()).filter(p=>p&&p!==m[0]);       // drop the time from its old spot
-  return nt+' / '+parts.join(' / '); }                                      // prepend adjusted time
-async function reformatRecipes(){ if(!IS_ADMIN) return;
-  if(!confirm('Reformat ALL recipes now?\n\nMoves the time token to the front and shifts each time 1:30 earlier (e.g. "-P1 / 6:00 / B1 / 60s / 100A" becomes "4:30 / -P1 / B1 / 60s / 100A").\n\nRun this ONCE - running again would shift another 1:30.')) return;
-  for(const r of RECIPES){ const nb=shiftRecipeStr(r.bullet), nh=shiftRecipeStr(r.hsr); r.bullet=nb; r.hsr=nh; if(sb&&r.id){ const res=await sb.from('recipes').update({bullet:nb,hsr:nh}).eq('id',r.id); if(res&&res.error) console.warn('reformat',res.error); } }
-  cacheRecipes(); renderRecipes(); buildBeans(); rulesMsg.textContent='All recipes reformatted and saved. Do NOT run again - it would shift another 1:30.'; }
 function esc(s){ return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 function buildBeans(){ const cur=bean.value; bean.innerHTML=''; getRecipes().filter(r=>r.active).forEach(r=>{ const o=document.createElement('option'); o.value=r.name; o.textContent=r.name; bean.appendChild(o); }); if(cur&&getRecipes().some(r=>r.name===cur&&r.active)) bean.value=cur; refresh(); }
 
