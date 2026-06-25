@@ -110,7 +110,7 @@
       <button id="nav-roast" class="on" onclick="show('roast')">Roast</button>
       <button id="nav-recipes" onclick="show('recipes')">Recipes</button>
       <button id="nav-hist" onclick="show('hist')">History</button>
-      <button id="nav-rules" class="hide" onclick="show('rules')">Rules</button>
+      <button id="nav-rules" onclick="show('rules')">Rules</button>
     </div>
   </div>
 
@@ -206,10 +206,12 @@
         <label>Cinnamon→A0 (s)<input type="number" id="ru_cinToA0"></label>
       </div>
     </div>
-    <button class="btn" onclick="saveRules()">Save rules</button>
-    <button class="btn ghost" style="margin-top:8px" onclick="resetRules()">Reset to defaults</button>
+    <div id="ruleActions">
+      <button class="btn" onclick="saveRules()">Save rules</button>
+      <button class="btn ghost" style="margin-top:8px" onclick="resetRules()">Reset to defaults</button>
+    </div>
     <div class="small" id="rulesMsg" style="margin-top:10px;color:var(--accent2)"></div>
-    <div class="small" style="margin-top:8px">Admin only. These apply to every account using the app.</div>
+    <div class="small" id="rulesNote" style="margin-top:8px"></div>
   </div>
 
 <script>
@@ -251,7 +253,7 @@ function stIdx(code){ return STAGES.findIndex(s=>s.code===code); }
 // ---- editable rule set (admin sets globally; everyone roasts by it) ----
 const ADMIN_EMAIL="omer_aydin@coffeenutz.net";
 const DEFAULT_RULES={ offs:{A1:15,B0:30,B1:45,C0:60,C1:75,C2:100}, fcBase:7, fcDouble:12, secPerAg:4, learnN:5, cinToA0:15 };
-let RULES=JSON.parse(JSON.stringify(DEFAULT_RULES));
+let RULES=JSON.parse(JSON.stringify(DEFAULT_RULES)); let IS_ADMIN=false;
 function applyRules(){ STAGES.forEach(s=>{ if(RULES.offs[s.code]!=null) s.off=RULES.offs[s.code]; }); }
 function fcScale(fcSec){ const span=(RULES.fcDouble-RULES.fcBase)||5; return 1 + ((fcSec/60) - RULES.fcBase)/span; }
 
@@ -301,7 +303,7 @@ async function flushPending(){ if(!sb) return; const p=loadPending(); if(!p.leng
   const res=await sb.from('roast_logs').insert(p.map(toLogPayload)).select('*'); if(res&&!res.error) localStorage.removeItem(LOG_PENDING); }
 async function loadServerData(){
   if(!sb){ LOG=loadLogCache(); applyRules(); recomputeLearning(); return; }
-  try{ const u=await sb.auth.getUser(); MYUID=u&&u.data&&u.data.user? u.data.user.id : null; const email=u&&u.data&&u.data.user? u.data.user.email : ''; if(email===ADMIN_EMAIL){ const nr=document.getElementById('nav-rules'); if(nr) nr.classList.remove('hide'); } }catch(e){}
+  try{ const u=await sb.auth.getUser(); MYUID=u&&u.data&&u.data.user? u.data.user.id : null; const email=u&&u.data&&u.data.user? u.data.user.email : ''; IS_ADMIN=(email===ADMIN_EMAIL); }catch(e){}
   try{ const sr=await sb.from('settings').select('rules').eq('id',1).maybeSingle(); if(sr&&!sr.error&&sr.data&&sr.data.rules){ const d=sr.data.rules; RULES={ offs:Object.assign({},DEFAULT_RULES.offs,d.offs||{}), fcBase:d.fcBase??7, fcDouble:d.fcDouble??12, secPerAg:d.secPerAg??4, learnN:d.learnN??5, cinToA0:d.cinToA0??15 }; } }catch(e){}
   applyRules();
   await flushPending();
@@ -540,7 +542,11 @@ function exportLog(){ const rows=[['Date','Coffee','Machine','FC(s)','Drop stage
 // ===================== views =====================
 function show(v){ ['roast','recipes','hist','rules'].forEach(x=>{ document.getElementById('view-'+x).classList.toggle('hide',x!==v); document.getElementById('nav-'+x).classList.toggle('on',x===v); });
   if(v==='recipes') renderRecipes(); if(v==='hist') renderLog(); if(v==='rules') renderRules(); }
-function renderRules(){ ['A1','B0','B1','C0','C1','C2'].forEach(c=>{ const el=document.getElementById('ru_'+c); if(el) el.value=RULES.offs[c]; }); ['fcBase','fcDouble','secPerAg','learnN','cinToA0'].forEach(k=>{ const el=document.getElementById('ru_'+k); if(el) el.value=RULES[k]; }); }
+function renderRules(){ const ids=['ru_A1','ru_B0','ru_B1','ru_C0','ru_C1','ru_C2','ru_fcBase','ru_fcDouble','ru_secPerAg','ru_learnN','ru_cinToA0'];
+  ['A1','B0','B1','C0','C1','C2'].forEach(c=>{ const el=document.getElementById('ru_'+c); if(el) el.value=RULES.offs[c]; }); ['fcBase','fcDouble','secPerAg','learnN','cinToA0'].forEach(k=>{ const el=document.getElementById('ru_'+k); if(el) el.value=RULES[k]; });
+  ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!IS_ADMIN; });
+  const act=document.getElementById('ruleActions'); if(act) act.style.display=IS_ADMIN?'block':'none';
+  const note=document.getElementById('rulesNote'); if(note) note.textContent=IS_ADMIN? 'Admin: these apply to every account using the app.' : 'Read-only. These are the rules the guide runs on, set by CoffeeNutz.'; }
 async function saveRules(){ const offs={}; ['A1','B0','B1','C0','C1','C2'].forEach(c=>{ const v=Number(document.getElementById('ru_'+c).value); offs[c]=isNaN(v)?DEFAULT_RULES.offs[c]:v; });
   const nr={ offs, fcBase:Number(ru_fcBase.value)||7, fcDouble:Number(ru_fcDouble.value)||12, secPerAg:Number(ru_secPerAg.value)||4, learnN:Math.max(1,Number(ru_learnN.value)||5), cinToA0:Number(ru_cinToA0.value)||15 };
   RULES=nr; applyRules(); recomputeLearning();
