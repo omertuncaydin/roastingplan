@@ -71,6 +71,8 @@
   .ritem .rn{font-weight:700;font-size:14px}
   .ritem .rmeta{font-size:11px;color:var(--muted);margin-top:2px}
   .iconbtn{background:#15100b;border:1px solid var(--line);color:var(--muted);border-radius:7px;padding:5px 8px;font-size:12px;font-weight:600;cursor:pointer}
+  .iconbtn.mv{padding:2px 8px;font-size:11px;line-height:1.15}
+  .iconbtn:disabled{opacity:.3;cursor:default}
   .actv{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
   input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent2)}
 </style>
@@ -201,7 +203,7 @@ let sb=null, RECIPES=[];
 function getRecipes(){ return RECIPES; }
 function cacheRecipes(){ try{localStorage.setItem(CACHE_KEY, JSON.stringify(RECIPES));}catch(e){} }
 function loadCache(){ try{const a=JSON.parse(localStorage.getItem(CACHE_KEY)||'null'); if(Array.isArray(a)&&a.length) return a;}catch(e){} return DEFAULT_RECIPES.slice(); }
-function rowToRecipe(d){ return {id:d.id, name:d.name, match:d.match||[], bullet:d.bullet||'', hsr:d.hsr||'-', note:d.note||'', active:!!d.active}; }
+function rowToRecipe(d){ return {id:d.id, name:d.name, match:d.match||[], bullet:d.bullet||'', hsr:d.hsr||'-', note:d.note||'', active:!!d.active, sortOrder:(d.sort_order==null?null:d.sort_order)}; }
 function saveRecipes(a){ RECIPES=a; cacheRecipes(); }   // local-cache writer (used by import)
 
 function rstr(r,eq){ return eq==='Bullet'?r.bullet:r.hsr; }
@@ -404,12 +406,18 @@ document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==
 
 // ===================== recipes tab =====================
 let editIdx=-1;
+async function ensureOrder(){ let changed=[]; RECIPES.forEach((r,i)=>{ if(r.sortOrder!==i){ r.sortOrder=i; changed.push(r); } });
+  if(changed.length){ cacheRecipes(); if(sb){ await Promise.all(changed.filter(r=>r.id).map(r=>sb.from('recipes').update({sort_order:r.sortOrder}).eq('id',r.id))); } } }
+function moveRecipe(i,dir){ const j=i+dir; if(j<0||j>=RECIPES.length) return; const t=RECIPES[i]; RECIPES[i]=RECIPES[j]; RECIPES[j]=t; ensureOrder(); renderRecipes(); buildBeans(); }
 function renderRecipes(){ const el=document.getElementById('rlist'); el.innerHTML=''; const list=getRecipes();
   list.forEach((r,i)=>{ const d=document.createElement('div'); d.className='ritem';
-    d.innerHTML=`<div style="flex:1"><div class="rn">${esc(r.name)} ${r.active?'<span style="color:var(--accent2)">●</span>':'<span style="color:var(--muted)">○</span>'}</div>`+
+    d.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px;margin-right:6px"><button class="iconbtn mv" data-up="${i}" ${i===0?'disabled':''}>▲</button><button class="iconbtn mv" data-down="${i}" ${i===list.length-1?'disabled':''}>▼</button></div>`+
+      `<div style="flex:1"><div class="rn">${esc(r.name)} ${r.active?'<span style="color:var(--accent2)">●</span>':'<span style="color:var(--muted)">○</span>'}</div>`+
       `<div class="rmeta">B: ${esc(r.bullet||'-')}</div>${r.note?`<div class="rmeta" style="color:var(--warn)">🔔 ${esc(r.note)}</div>`:''}</div>`+
       `<div style="display:flex;gap:4px"><button class="iconbtn" data-e="${i}">Edit</button><button class="iconbtn" data-d="${i}">Del</button></div>`;
     el.appendChild(d); });
+  el.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>moveRecipe(+b.dataset.up,-1));
+  el.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>moveRecipe(+b.dataset.down,1));
   el.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>editRecipe(+b.dataset.e));
   el.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{ const i=+b.dataset.d, r=RECIPES[i]; if(!confirm('Delete '+r.name+'?'))return;
     if(r.id && sb){ const res=await sb.from('recipes').delete().eq('id',r.id); if(res.error){ alert('Delete failed (offline?)'); return; } }
@@ -418,7 +426,7 @@ function renderRecipes(){ const el=document.getElementById('rlist'); el.innerHTM
 }
 async function upsertRecipe(rec){
   if(!sb) return null;
-  const payload={ name:rec.name, match:rec.match, bullet:rec.bullet, hsr:rec.hsr, note:rec.note, active:rec.active };
+  const payload={ name:rec.name, match:rec.match, bullet:rec.bullet, hsr:rec.hsr, note:rec.note, active:rec.active, sort_order:(rec.sortOrder==null?null:rec.sortOrder) };
   let res = rec.id ? await sb.from('recipes').update(payload).eq('id',rec.id).select().single()
                    : await sb.from('recipes').insert(payload).select().single();
   if(res.error){ console.warn('upsert',res.error); return null; }
@@ -430,10 +438,10 @@ function closeForm(){ document.getElementById('rform').classList.add('hide'); }
 async function saveRecipe(){ const name=rfName.value.trim(); if(!name){alert('Name required');return;}
   const rec={name, match:rfMatch.value.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean), bullet:rfBullet.value.trim(), hsr:rfHsr.value.trim()||'-', note:rfNote.value.trim(), active:rfActive.checked};
   if(!rec.match.length) rec.match=[name.toLowerCase()];
-  if(editIdx>=0) rec.id=RECIPES[editIdx].id;
+  if(editIdx>=0){ rec.id=RECIPES[editIdx].id; rec.sortOrder=RECIPES[editIdx].sortOrder; } else { rec.sortOrder=RECIPES.length; }
   const saved=await upsertRecipe(rec);
   if(editIdx>=0) RECIPES[editIdx]=saved||rec; else RECIPES.push(saved||rec);
-  RECIPES.sort((a,b)=>a.name.localeCompare(b.name)); cacheRecipes();
+  cacheRecipes();
   if(!saved && sb) alert('Saved on this device only - sync failed (offline?). Re-save when back online.');
   closeForm(); renderRecipes(); buildBeans();
 }
@@ -486,7 +494,7 @@ function exportLog(){ const rows=[['Date','Coffee','Machine','FC(s)','Drop stage
 function show(v){ ['roast','recipes','hist'].forEach(x=>{ document.getElementById('view-'+x).classList.toggle('hide',x!==v); document.getElementById('nav-'+x).classList.toggle('on',x===v); });
   if(v==='recipes') renderRecipes(); if(v==='hist') renderLog(); }
 function esc(s){ return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
-function buildBeans(){ const cur=bean.value; bean.innerHTML=''; getRecipes().filter(r=>r.active).sort((a,b)=>a.name.localeCompare(b.name)).forEach(r=>{ const o=document.createElement('option'); o.value=r.name; o.textContent=r.name; bean.appendChild(o); }); if(cur&&getRecipes().some(r=>r.name===cur&&r.active)) bean.value=cur; refresh(); }
+function buildBeans(){ const cur=bean.value; bean.innerHTML=''; getRecipes().filter(r=>r.active).forEach(r=>{ const o=document.createElement('option'); o.value=r.name; o.textContent=r.name; bean.appendChild(o); }); if(cur&&getRecipes().some(r=>r.name===cur&&r.active)) bean.value=cur; refresh(); }
 
 // ===================== auth + server load =====================
 function showLogin(){ loginOverlay.style.display='flex'; }
@@ -502,13 +510,13 @@ async function doLogout(){ try{ if(sb) await sb.auth.signOut(); }catch(e){} loca
 async function afterRecipes(){ await loadServerData(); buildBeans(); renderRecipes(); renderLog(); }
 async function loadFromServer(){
   if(!sb){ RECIPES=loadCache(); afterRecipes(); return; }
-  const res=await sb.from('recipes').select('*').order('name');
+  const res=await sb.from('recipes').select('*').order('sort_order',{ascending:true,nullsFirst:false}).order('name');
   if(res.error){ console.warn('load',res.error); RECIPES=loadCache(); afterRecipes(); return; }
   if(!res.data.length){ await seedServer(); return; }
-  RECIPES=res.data.map(rowToRecipe); cacheRecipes(); afterRecipes();
+  RECIPES=res.data.map(rowToRecipe); cacheRecipes(); await ensureOrder(); afterRecipes();
 }
 async function seedServer(){
-  const payload=DEFAULT_RECIPES.map(r=>({ name:r.name, match:r.match, bullet:r.bullet, hsr:r.hsr, note:r.note, active:r.active }));
+  const payload=DEFAULT_RECIPES.map((r,i)=>({ name:r.name, match:r.match, bullet:r.bullet, hsr:r.hsr, note:r.note, active:r.active, sort_order:i }));
   const res=await sb.from('recipes').insert(payload).select('*');
   if(res.error){ console.warn('seed',res.error); RECIPES=loadCache(); } else { RECIPES=res.data.map(rowToRecipe); cacheRecipes(); }
   afterRecipes();
