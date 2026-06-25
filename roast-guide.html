@@ -65,7 +65,8 @@
   .agslider{flex:1;min-width:0;accent-color:var(--accent)}
   tr.logrow{cursor:pointer}
   .carot{color:var(--muted);font-size:10px;display:inline-block;width:12px}
-  .exlbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-top:2px}
+  .exlbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-top:3px;cursor:pointer;display:inline-block}
+  .hxrow{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}
   tr.detail td{background:#1d1610;color:var(--muted);font-size:12px;padding:8px 12px;font-variant-numeric:tabular-nums;text-align:left}
   tr.corr td{background:#241a0f;color:var(--accent);font-size:12.5px;line-height:1.45;padding:8px 12px;text-align:left;border-left:3px solid var(--accent)}
   .delx{background:none;border:none;color:var(--dark);font-size:16px;cursor:pointer;padding:2px 6px}
@@ -94,6 +95,10 @@
       <button class="btn" style="margin-top:14px" onclick="doLogin()">Log in</button>
       <div class="small" id="loginMsg" style="margin-top:10px;color:var(--warn)"></div>
     </div>
+  </div>
+
+  <div id="hxModal" onclick="if(event.target===this)closeHx()" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:none;align-items:center;justify-content:center;padding:20px">
+    <div class="card" id="hxBox" style="max-width:420px;width:100%"></div>
   </div>
 
   <div class="top">
@@ -444,6 +449,18 @@ document.getElementById('imp').addEventListener('change',e=>{ const f=e.target.f
   rd.onload=ev=>{ try{ const a=JSON.parse(ev.target.result); if(!Array.isArray(a))throw 0; if(!confirm('Replace recipes with '+a.length+' imported?'))return; saveRecipes(a); RECIPES=a; renderRecipes(); buildBeans(); }catch(x){ alert('Import failed'); } }; rd.readAsText(f); e.target.value=''; });
 
 // ===================== history tab =====================
+function openHx(id){ const r=LOG.find(x=>String(x.id)===String(id)); if(!r) return;
+  let stages=''; STAGES.forEach(s=>{ if(s.off!=null && r.offs && r.offs[s.code]!=null) stages+=`<div class="hxrow"><span>${s.label}</span><span class="tgtval">A0 +${r.offs[s.code]}s</span></div>`; });
+  if(!stages) stages='<div class="small">No stage timings recorded.</div>';
+  const corr=corrLine(r);
+  hxBox.innerHTML=`<h1 style="margin:0 0 4px;font-size:18px">Heuristics</h1>`+
+    `<div class="small" style="margin-bottom:10px">${esc(r.bean)} · ${r.eq} · ${r.date}</div>`+
+    `<div class="small" style="margin-bottom:10px">FC ${fmt(r.fc)} · drop ${r.target}${r.targetAg!=null?(' · target '+r.targetAg+'A'):''}${(r.agtron!==''&&r.agtron!=null)?(' · actual '+r.agtron+'A'):''}</div>`+
+    stages+
+    (corr?`<div style="margin-top:12px;color:var(--accent);font-size:13px;line-height:1.5">↳ ${corr}</div>`:'')+
+    `<button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`;
+  hxModal.style.display='flex'; }
+function closeHx(){ hxModal.style.display='none'; }
 function offsLine(r){ const parts=[]; STAGES.forEach(s=>{ if(s.off!=null && r.offs && r.offs[s.code]!=null) parts.push(s.code+' +'+r.offs[s.code]+'s'); }); return 'FC '+fmt(r.fc)+(parts.length? '  ·  after first crack:  '+parts.join('   ') : '  ·  no stage timings recorded'); }
 const SEC_PER_AG=4;  // starting estimate: seconds of development change per 1 Agtron point. Calibratable from your own logs later.
 function corrLine(r){ const t=r.targetAg, a=(r.agtron===''||r.agtron==null?null:Number(r.agtron)); if(t==null||a==null||isNaN(a)) return '';
@@ -464,14 +481,13 @@ function setAgtron(id,raw){ let v=(raw===''||raw==null)?'':parseFloat(raw); if(v
 function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
   emptyLog.classList.toggle('hide', LOG.length>0);
   LOG.forEach(r=>{ const tr=document.createElement('tr'); tr.className='logrow'; tr.dataset.row=r.id;
-    tr.innerHTML=`<td><span class="carot">▸</span> ${r.date}<div class="exlbl">Heuristics</div></td><td>${esc(r.bean)}<div class="small">${r.eq}</div></td><td>${r.target}</td><td class="num">${r.toTarget!=null?fmt(r.toTarget):'-'}</td>`+
+    tr.innerHTML=`<td>${r.date}<div class="exlbl" data-hx="${r.id}">Heuristics</div></td><td>${esc(r.bean)}<div class="small">${r.eq}</div></td><td>${r.target}</td><td class="num">${r.toTarget!=null?fmt(r.toTarget):'-'}</td>`+
       `<td><button class="delx" data-del="${r.id}">×</button></td>`; tb.appendChild(tr);
     const av=(r.agtron!==''&&r.agtron!=null)?r.agtron:''; const sv=av!==''?av:(r.targetAg!=null?r.targetAg:100);
     const ar=document.createElement('tr'); ar.className='agrow'; ar.innerHTML=`<td colspan="5"><div class="agrow2"><div class="agtgt"><span class="aglbl">Target AG</span><b class="tgtval">${r.targetAg!=null?r.targetAg:'—'}</b></div><div class="agact"><span class="aglbl">Actual AG</span><div class="agwrap"><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}"></div></div></div></td>`; tb.appendChild(ar);
     const sr=document.createElement('tr'); sr.className='agrow slide'; sr.innerHTML=`<td colspan="5"><div class="slidewrap"><button class="step" data-dec="${r.id}">−</button><input type="range" class="agslider" min="40" max="130" step="1" value="${sv}" data-rng="${r.id}"><button class="step" data-inc="${r.id}">+</button></div></td>`; tb.appendChild(sr);
-    const corr=corrLine(r); const cr=document.createElement('tr'); cr.className='corr'+(corr?'':' hide'); cr.dataset.corr=r.id; cr.innerHTML=`<td colspan="5">${corr?('↳ '+corr):''}</td>`; tb.appendChild(cr);
-    const dt=document.createElement('tr'); dt.className='detail hide'; dt.dataset.detail=r.id; dt.innerHTML=`<td colspan="5">${offsLine(r)}</td>`; tb.appendChild(dt); });
-  tb.querySelectorAll('tr.logrow').forEach(tr=>tr.addEventListener('click',e=>{ if(e.target.closest('input,button')) return; const d=tb.querySelector('tr[data-detail="'+tr.dataset.row+'"]'); if(d){ const hid=d.classList.toggle('hide'); const c=tr.querySelector('.carot'); if(c) c.textContent=hid?'▸':'▾'; } }));
+    const corr=corrLine(r); const cr=document.createElement('tr'); cr.className='corr'+(corr?'':' hide'); cr.dataset.corr=r.id; cr.innerHTML=`<td colspan="5">${corr?('↳ '+corr):''}</td>`; tb.appendChild(cr); });
+  tb.querySelectorAll('[data-hx]').forEach(b=>b.onclick=()=>openHx(b.dataset.hx));
   tb.querySelectorAll('input.act').forEach(i=>i.addEventListener('input',e=>setAgtron(e.target.dataset.id, e.target.value)));
   tb.querySelectorAll('input.agslider').forEach(s=>s.addEventListener('input',e=>setAgtron(e.target.dataset.rng, e.target.value)));
   tb.querySelectorAll('[data-inc]').forEach(b=>b.onclick=()=>{ const id=b.dataset.inc, it=LOG.find(x=>String(x.id)===String(id)); const c=(it&&it.agtron!==''&&it.agtron!=null)?Number(it.agtron):(it&&it.targetAg!=null?it.targetAg:100); setAgtron(id,c+1); });
