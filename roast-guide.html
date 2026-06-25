@@ -172,29 +172,9 @@
 <script>
 // ===================== recipe store (v2: + active, FC in string, stage code) =====================
 const RKEY="cnRecipes_v2";
+// Neutral sample only - real recipes live server-side per account (copy-proofing). A fresh/empty account seeds just this.
 const DEFAULT_RECIPES=[
-  {name:"BitterSweet",  match:["bittersweet"], bullet:"-P3 / 8:00 / C2 / 120s / 78A", hsr:"-P3 / 8:00 / C2 / 162s / 78A", note:"MAKE IT LIKE ITALIANS", active:true},
-  {name:"Bochesa",      match:["bochesa"],     bullet:"-P3 / 8:00 / A1 / 25s / 105A", hsr:"-P3 / 7:30 / A1 / 35s / 105A", note:"", active:true},
-  {name:"Chirripo",     match:["chirripo"],    bullet:"-P1 / 7:00 / B0 / 40s / 105A", hsr:"-P1 / 7:00 / B0 / 70s / 105A", note:"TOO MANY QUAKERS, UNEVEN ROAST PARAMETERS, STICK TO SOUND GAIN!", active:false},
-  {name:"Cielo Geisha", match:["cielo"],       bullet:"45s / 7:00 / 95A", hsr:"-", note:"", active:false},
-  {name:"Coocentral",   match:["coocentral"],  bullet:"-P2 / 7:30 / B1 / 70s / 100A", hsr:"-P2 / 7:30 / B1 / 90s / 100A", note:"IT'S OK TO BE A LITTLE DARKER!", active:false},
-  {name:"Dukamo",       match:["dukamo"],      bullet:"-P3 / 8:00 / B1 / 60s / 100A", hsr:"-P3 / 8:00 / B1 / 85s / 100A", note:"YOU DON'T HAVE TO PLAY SAFE ROAST A FEW AGTRONS DARKER", active:true},
-  {name:"Hambela",      match:["hambela"],     bullet:"35s / 7:00 / 105A", hsr:"-", note:"", active:false},
-  {name:"Harman",       match:["harman"],      bullet:"-P2 / 7:30 / B0 / 60s / 95A", hsr:"-P2 / 7:30 / B0 / 100s / 95A", note:"", active:true},
-  {name:"Jaguar",       match:["jaguar"],      bullet:"-P1 / 7:00 / B0 / 40s / 96A", hsr:"-P1 / 7:00 / B0 / 60s / 96A", note:"", active:true},
-  {name:"Killenso",     match:["killenso"],    bullet:"-P1 / 7:00 / B0 / 45s / 105A", hsr:"-P1 / 7:00 / B0 / 75s / 105A", note:"", active:true},
-  {name:"Papayo",       match:["papayo"],      bullet:"35s / 7:00 / 93A", hsr:"-", note:"", active:false},
-  {name:"Past Crop",    match:["past crop"],   bullet:"-P1 / 7:00 / B0 / 40s / 96A", hsr:"-P1 / 7:00 / B0 / 60s / 96A", note:"", active:true},
-  {name:"Peach",        match:["peach"],       bullet:"-P2 / 7:30 / A1 / 30s / 110A", hsr:"-P2 / 7:30 / A1 / 30s / 110A", note:"", active:true},
-  {name:"Rio Minas",    match:["rio minas"],   bullet:"-P1 / 7:00 / B0 / 35s / 108A", hsr:"-P1 / 7:00 / B0 / 55s / 108A", note:"", active:true},
-  {name:"Robusta",      match:["robusta"],     bullet:"-P1 / 7:00 / B0 / 60s / 96A", hsr:"-P1 / 7:00 / B0 / 80s / 96A", note:"", active:true},
-  {name:"Rumudamo",     match:["rumudamo"],    bullet:"-P1 / 7:00 / B0 / 30s / 110A", hsr:"-P1 / 7:00 / B0 / 60s / 110A", note:"HARD TO CRACK, PLAY HARD", active:true},
-  {name:"Türk Kahvesi", match:["turk"],        bullet:"-P2 / 7:30 / A1 / 45s / 105A", hsr:"-P2 / 7:30 / A1 / 60s / 105A", note:"", active:true},
-  {name:"Uraga",        match:["uraga"],       bullet:"-P1 / 7:00 / B0 / 40s / 95A", hsr:"-P1 / 7:00 / B0 / 60s / 95A", note:"HARD TO CRACK", active:true},
-  {name:"Wamena",       match:["wamena"],      bullet:"-P2 / 7:30 / B0 / 40s / 100A", hsr:"-P2 / 7:30 / B0 / 60s / 100A", note:"BE CAUITOUS BEFORE FC!", active:false},
-  {name:"Wanrich",      match:["wanrich"],     bullet:"-P3 / 8:00 / B0 / 50s / 105A", hsr:"-P3 / 8:00 / B0 / 80s / 105A", note:"", active:true},
-  {name:"Yaye: Cocoa",  match:["yaye","cocoa"],bullet:"-P2 / 7:30 / B1 / 45s / 95A", hsr:"-P2 / 7:30 / B1 / 70s / 95A", note:"", active:true},
-  {name:"Yaye: Fruity", match:["yaye","fruity"],bullet:"-P3 / 8:00 / B0 / 35s / 105A", hsr:"-P3 / 8:00 / B0 / 55s / 105A", note:"", active:true}
+  {name:"Sample Coffee", match:["sample"], bullet:"-P2 / 7:00 / B0 / 60s / 100A", hsr:"-P2 / 7:00 / B0 / 90s / 100A", note:"This is a sample. Edit or delete it, then add your own recipes with + Add.", active:true}
 ];
 // ---- Supabase backend: recipes live server-side; local cache keeps roasts working offline ----
 const SUPA_URL="https://efjvfggwnhqkunjvoyjb.supabase.co";
@@ -506,7 +486,7 @@ async function doLogin(){
   if(res.error){ loginMsg.textContent=res.error.message; return; }
   loginMsg.textContent=''; hideLogin(); loadFromServer();
 }
-async function doLogout(){ try{ if(sb) await sb.auth.signOut(); }catch(e){} location.reload(); }
+async function doLogout(){ try{ if(sb) await sb.auth.signOut(); }catch(e){} try{ ['cnRecipes_cache','gLog_cache','gLearn_cache','gLog_pending'].forEach(k=>localStorage.removeItem(k)); }catch(e){} location.reload(); }
 async function afterRecipes(){ await loadServerData(); buildBeans(); renderRecipes(); renderLog(); }
 async function loadFromServer(){
   if(!sb){ RECIPES=loadCache(); afterRecipes(); return; }
