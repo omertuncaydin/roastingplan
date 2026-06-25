@@ -50,6 +50,11 @@
   td input.act{width:54px;padding:6px;text-align:center;font-size:14px}
   .tgtag{color:var(--muted);font-variant-numeric:tabular-nums}
   #logTbl th,#logTbl td{text-align:center}
+  .agwrap{display:inline-flex;align-items:center;gap:5px;justify-content:center}
+  .step{width:32px;height:34px;border:1px solid var(--line);background:#15100b;color:var(--ink);border-radius:7px;font-size:18px;font-weight:700;line-height:1;cursor:pointer;padding:0}
+  .step:active{background:var(--accent);color:#1a1410}
+  input.act::-webkit-outer-spin-button,input.act::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input.act{-moz-appearance:textfield}
   tr.logrow{cursor:pointer}
   .carot{color:var(--muted);font-size:10px;display:inline-block;width:12px}
   tr.detail td{background:#1d1610;color:var(--muted);font-size:12px;padding:8px 12px;font-variant-numeric:tabular-nums;text-align:left}
@@ -440,17 +445,27 @@ function corrLine(r){ const t=r.targetAg, a=(r.agtron===''||r.agtron==null?null:
   if(gap>0){ const next=(ti>=0&&STAGES[ti+1])?STAGES[ti+1].code:'a darker drop';
     return 'Ran '+gap+' pts light ('+a+' vs '+t+'). Make sure the gain was '+r.target+' next time, or develop more and drop closer to '+next+' to reach '+t+' (this may require approximately '+secs+'s more).'; }
   const prev=(ti>0&&STAGES[ti-1])?STAGES[ti-1].code:'an earlier point';
-  return 'Ran '+(-gap)+' pts dark ('+a+' vs '+t+'). The gain may have passed '+r.target+', so next time drop closer to '+prev+' / a touch earlier to reach '+t+' (this may save approximately '+secs+'s).'; }
+  return 'Ran '+(-gap)+' pts dark ('+a+' vs '+t+'). The gain may have passed '+r.target+', so next time drop closer to '+prev+' / a touch earlier to reach '+t+' (this may require approximately '+secs+'s less).'; }
+let agSaveTimers={};
+function pushAgtron(id,v){ if(!sb || String(id).startsWith('local-')) return; clearTimeout(agSaveTimers[id]); agSaveTimers[id]=setTimeout(async()=>{ const r=await sb.from('roast_logs').update({agtron:(v===''||v==null?null:v)}).eq('id',id); if(r&&r.error) console.warn('agtron update',r.error); },700); }
+function updateCorrRow(id,r){ const main=logTbl.querySelector('tr.logrow[data-row="'+id+'"]'); if(!main) return; let cr=logTbl.querySelector('tr.corr[data-corr="'+id+'"]'); const corr=corrLine(r);
+  if(corr){ if(!cr){ cr=document.createElement('tr'); cr.className='corr'; cr.dataset.corr=id; main.insertAdjacentElement('afterend',cr); } cr.innerHTML='<td colspan="6">↳ '+corr+'</td>'; } else if(cr){ cr.remove(); } }
+function setAgtron(id,raw){ let v=(raw===''||raw==null)?'':parseFloat(raw); if(v!==''){ v=isNaN(v)?'':Math.max(0,Math.min(150,Math.round(v))); }
+  const it=LOG.find(x=>String(x.id)===String(id)); if(!it) return; it.agtron=v; cacheLog();
+  const inp=logTbl.querySelector('input.act[data-id="'+id+'"]'); if(inp && String(inp.value)!==String(v)) inp.value=v;
+  updateCorrRow(id,it); pushAgtron(id,v); }
 function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
   emptyLog.classList.toggle('hide', LOG.length>0);
   LOG.forEach(r=>{ const tr=document.createElement('tr'); tr.className='logrow'; tr.dataset.row=r.id;
     tr.innerHTML=`<td><span class="carot">▸</span> ${r.date}</td><td>${esc(r.bean)}<div class="small">${r.eq}</div></td><td>${r.target}</td><td class="num">${r.toTarget!=null?fmt(r.toTarget):'-'}</td>`+
-      `<td><span class="tgtag">${r.targetAg!=null?r.targetAg:'—'}</span> → <input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${r.agtron!==''&&r.agtron!=null?r.agtron:''}" data-id="${r.id}" placeholder="—"></td>`+
+      `<td><div class="agwrap"><span class="tgtag">${r.targetAg!=null?r.targetAg:'—'}</span> →<button class="step" data-dec="${r.id}">−</button><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${r.agtron!==''&&r.agtron!=null?r.agtron:''}" data-id="${r.id}" placeholder="—"><button class="step" data-inc="${r.id}">+</button></div></td>`+
       `<td><button class="delx" data-del="${r.id}">×</button></td>`; tb.appendChild(tr);
-    const corr=corrLine(r); if(corr){ const cr=document.createElement('tr'); cr.className='corr'; cr.innerHTML=`<td colspan="6">↳ ${corr}</td>`; tb.appendChild(cr); }
+    const corr=corrLine(r); if(corr){ const cr=document.createElement('tr'); cr.className='corr'; cr.dataset.corr=r.id; cr.innerHTML=`<td colspan="6">↳ ${corr}</td>`; tb.appendChild(cr); }
     const dt=document.createElement('tr'); dt.className='detail hide'; dt.dataset.detail=r.id; dt.innerHTML=`<td colspan="6">${offsLine(r)}</td>`; tb.appendChild(dt); });
   tb.querySelectorAll('tr.logrow').forEach(tr=>tr.addEventListener('click',e=>{ if(e.target.closest('input,button')) return; const d=tb.querySelector('tr[data-detail="'+tr.dataset.row+'"]'); if(d){ const hid=d.classList.toggle('hide'); const c=tr.querySelector('.carot'); if(c) c.textContent=hid?'▸':'▾'; } }));
-  tb.querySelectorAll('input.act').forEach(i=>i.addEventListener('change',async e=>{ const id=e.target.dataset.id; let v=e.target.value===''?'':parseFloat(e.target.value); if(v!==''){ v=isNaN(v)?'':Math.max(0,Math.min(150,v)); e.target.value=v; } const it=LOG.find(x=>String(x.id)===id); if(it){ it.agtron=v; cacheLog(); if(sb && !id.startsWith('local-')){ const r=await sb.from('roast_logs').update({agtron:(v===''?null:v)}).eq('id',id); if(r&&r.error) console.warn('agtron update',r.error); } } }));
+  tb.querySelectorAll('input.act').forEach(i=>i.addEventListener('input',e=>setAgtron(e.target.dataset.id, e.target.value)));
+  tb.querySelectorAll('[data-inc]').forEach(b=>b.onclick=()=>{ const id=b.dataset.inc, it=LOG.find(x=>String(x.id)===String(id)); const c=(it&&it.agtron!==''&&it.agtron!=null)?Number(it.agtron):(it&&it.targetAg!=null?it.targetAg:100); setAgtron(id,c+1); });
+  tb.querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>{ const id=b.dataset.dec, it=LOG.find(x=>String(x.id)===String(id)); const c=(it&&it.agtron!==''&&it.agtron!=null)?Number(it.agtron):(it&&it.targetAg!=null?it.targetAg:100); setAgtron(id,c-1); });
   tb.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{ const id=b.dataset.del; LOG=LOG.filter(x=>String(x.id)!==id); cacheLog(); recomputeLearning(); renderLog(); if(sb && !id.startsWith('local-')){ const r=await sb.from('roast_logs').delete().eq('id',id); if(r&&r.error) console.warn('log delete',r.error); } });
 }
 function exportLog(){ const rows=[['Date','Coffee','Machine','FC(s)','Drop stage','Dev Time (s)','Target Agtron','Actual Agtron']];
