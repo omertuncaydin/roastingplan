@@ -65,6 +65,7 @@
   .agslider{flex:1;min-width:0;accent-color:var(--accent)}
   tr.logrow{cursor:pointer}
   .carot{color:var(--muted);font-size:10px;display:inline-block;width:12px}
+  .exlbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-top:2px}
   tr.detail td{background:#1d1610;color:var(--muted);font-size:12px;padding:8px 12px;font-variant-numeric:tabular-nums;text-align:left}
   tr.corr td{background:#241a0f;color:var(--accent);font-size:12.5px;line-height:1.45;padding:8px 12px;text-align:left;border-left:3px solid var(--accent)}
   .delx{background:none;border:none;color:var(--dark);font-size:16px;cursor:pointer;padding:2px 6px}
@@ -463,7 +464,7 @@ function setAgtron(id,raw){ let v=(raw===''||raw==null)?'':parseFloat(raw); if(v
 function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
   emptyLog.classList.toggle('hide', LOG.length>0);
   LOG.forEach(r=>{ const tr=document.createElement('tr'); tr.className='logrow'; tr.dataset.row=r.id;
-    tr.innerHTML=`<td><span class="carot">▸</span> ${r.date}</td><td>${esc(r.bean)}<div class="small">${r.eq}</div></td><td>${r.target}</td><td class="num">${r.toTarget!=null?fmt(r.toTarget):'-'}</td>`+
+    tr.innerHTML=`<td><span class="carot">▸</span> ${r.date}<div class="exlbl">Heuristics</div></td><td>${esc(r.bean)}<div class="small">${r.eq}</div></td><td>${r.target}</td><td class="num">${r.toTarget!=null?fmt(r.toTarget):'-'}</td>`+
       `<td><button class="delx" data-del="${r.id}">×</button></td>`; tb.appendChild(tr);
     const av=(r.agtron!==''&&r.agtron!=null)?r.agtron:''; const sv=av!==''?av:(r.targetAg!=null?r.targetAg:100);
     const ar=document.createElement('tr'); ar.className='agrow'; ar.innerHTML=`<td colspan="5"><div class="agrow2"><div class="agtgt"><span class="aglbl">Target AG</span><b class="tgtval">${r.targetAg!=null?r.targetAg:'—'}</b></div><div class="agact"><span class="aglbl">Actual AG</span><div class="agwrap"><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}"></div></div></div></td>`; tb.appendChild(ar);
