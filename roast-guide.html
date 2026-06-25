@@ -148,7 +148,7 @@
   <!-- HISTORY -->
   <div id="view-hist" class="hide">
     <div class="card" style="overflow-x:auto">
-      <table id="logTbl"><thead><tr><th>Date</th><th>Coffee</th><th>Drop</th><th>Actual A0-target</th><th>Agtron tgt → act</th><th></th></tr></thead><tbody></tbody></table>
+      <table id="logTbl"><thead><tr><th>Date</th><th>Coffee</th><th>Drop</th><th>Dev Time</th><th>Agtron tgt → act</th><th></th></tr></thead><tbody></tbody></table>
       <div class="small hide" id="emptyLog" style="padding:10px 2px">No roasts logged yet.</div>
     </div>
     <button class="btn ghost" onclick="exportLog()">Download log CSV</button>
@@ -449,8 +449,8 @@ function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
   tb.querySelectorAll('input.act').forEach(i=>i.addEventListener('change',async e=>{ const id=e.target.dataset.id; let v=e.target.value===''?'':parseFloat(e.target.value); if(v!==''){ v=isNaN(v)?'':Math.max(0,Math.min(150,v)); e.target.value=v; } const it=LOG.find(x=>String(x.id)===id); if(it){ it.agtron=v; cacheLog(); if(sb && !id.startsWith('local-')){ const r=await sb.from('roast_logs').update({agtron:(v===''?null:v)}).eq('id',id); if(r&&r.error) console.warn('agtron update',r.error); } } }));
   tb.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{ const id=b.dataset.del; LOG=LOG.filter(x=>String(x.id)!==id); cacheLog(); recomputeLearning(); renderLog(); if(sb && !id.startsWith('local-')){ const r=await sb.from('roast_logs').delete().eq('id',id); if(r&&r.error) console.warn('log delete',r.error); } });
 }
-function exportLog(){ const rows=[['Date','Coffee','Machine','FC(s)','Drop stage','A0->target(s)','Actual Agtron']];
-  LOG.forEach(r=>rows.push([r.date,r.bean,r.eq,r.fc,r.target,r.toTarget,r.agtron]));
+function exportLog(){ const rows=[['Date','Coffee','Machine','FC(s)','Drop stage','Dev Time (s)','Target Agtron','Actual Agtron']];
+  LOG.forEach(r=>rows.push([r.date,r.bean,r.eq,r.fc,r.target,r.toTarget,r.targetAg,r.agtron]));
   const csv=rows.map(r=>r.map(c=>{c=String(c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(',')).join('\n');
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'})); a.download='roast-guide-log.csv'; a.click(); }
 
