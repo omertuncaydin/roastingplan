@@ -398,7 +398,8 @@ document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==
 
 // ===================== recipes tab =====================
 let editIdx=-1, dragIdx=null;
-async function ensureOrder(){ let changed=[]; RECIPES.forEach((r,i)=>{ if(r.sortOrder!==i){ r.sortOrder=i; changed.push(r); } });
+async function ensureOrder(){ RECIPES.sort((a,b)=>((a.active?0:1)-(b.active?0:1)));   // active first, inactive pinned to bottom (stable sort keeps manual order within each group)
+  let changed=[]; RECIPES.forEach((r,i)=>{ if(r.sortOrder!==i){ r.sortOrder=i; changed.push(r); } });
   if(changed.length){ cacheRecipes(); if(sb){ await Promise.all(changed.filter(r=>r.id).map(r=>sb.from('recipes').update({sort_order:r.sortOrder}).eq('id',r.id))); } } }
 function moveRecipe(i,dir){ const j=i+dir; if(j<0||j>=RECIPES.length) return; const t=RECIPES[i]; RECIPES[i]=RECIPES[j]; RECIPES[j]=t; ensureOrder(); renderRecipes(); buildBeans(); }
 function renderRecipes(){ const el=document.getElementById('rlist'); el.innerHTML=''; const list=getRecipes();
@@ -440,7 +441,7 @@ async function saveRecipe(){ const name=rfName.value.trim(); if(!name){alert('Na
   if(editIdx>=0){ rec.id=RECIPES[editIdx].id; rec.sortOrder=RECIPES[editIdx].sortOrder; } else { rec.sortOrder=RECIPES.length; }
   const saved=await upsertRecipe(rec);
   if(editIdx>=0) RECIPES[editIdx]=saved||rec; else RECIPES.push(saved||rec);
-  cacheRecipes();
+  cacheRecipes(); await ensureOrder();
   if(!saved && sb) alert('Saved on this device only - sync failed (offline?). Re-save when back online.');
   closeForm(); renderRecipes(); buildBeans();
 }
