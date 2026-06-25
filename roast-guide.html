@@ -75,6 +75,9 @@
   .iconbtn{background:#15100b;border:1px solid var(--line);color:var(--muted);border-radius:7px;padding:5px 8px;font-size:12px;font-weight:600;cursor:pointer}
   .iconbtn.mv{padding:2px 8px;font-size:11px;line-height:1.15}
   .iconbtn:disabled{opacity:.3;cursor:default}
+  .grip{cursor:grab;color:var(--muted);font-size:15px;line-height:1;user-select:none}
+  .ritem.dragging{opacity:.4}
+  .ritem.dropon{box-shadow:inset 0 2px 0 var(--accent)}
   .actv{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
   input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent2)}
 </style>
@@ -387,19 +390,26 @@ function releaseWake(){ try{ if(wake){wake.release();wake=null;} }catch(e){} }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&st&&st.phase!=='idle'&&st.phase!=='done'&&live&&!live.classList.contains('hide')) requestWake(); });
 
 // ===================== recipes tab =====================
-let editIdx=-1;
+let editIdx=-1, dragIdx=null;
 async function ensureOrder(){ let changed=[]; RECIPES.forEach((r,i)=>{ if(r.sortOrder!==i){ r.sortOrder=i; changed.push(r); } });
   if(changed.length){ cacheRecipes(); if(sb){ await Promise.all(changed.filter(r=>r.id).map(r=>sb.from('recipes').update({sort_order:r.sortOrder}).eq('id',r.id))); } } }
 function moveRecipe(i,dir){ const j=i+dir; if(j<0||j>=RECIPES.length) return; const t=RECIPES[i]; RECIPES[i]=RECIPES[j]; RECIPES[j]=t; ensureOrder(); renderRecipes(); buildBeans(); }
 function renderRecipes(){ const el=document.getElementById('rlist'); el.innerHTML=''; const list=getRecipes();
-  list.forEach((r,i)=>{ const d=document.createElement('div'); d.className='ritem';
-    d.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px;margin-right:6px"><button class="iconbtn mv" data-up="${i}" ${i===0?'disabled':''}>▲</button><button class="iconbtn mv" data-down="${i}" ${i===list.length-1?'disabled':''}>▼</button></div>`+
+  list.forEach((r,i)=>{ const d=document.createElement('div'); d.className='ritem'; d.dataset.idx=i;
+    d.innerHTML=`<div style="display:flex;flex-direction:column;gap:3px;align-items:center;margin-right:8px"><span class="grip" draggable="true" title="Drag to reorder">⠿</span><button class="iconbtn mv" data-up="${i}" ${i===0?'disabled':''}>▲</button><button class="iconbtn mv" data-down="${i}" ${i===list.length-1?'disabled':''}>▼</button></div>`+
       `<div style="flex:1"><div class="rn">${esc(r.name)} ${r.active?'<span style="color:var(--accent2)">●</span>':'<span style="color:var(--muted)">○</span>'}</div>`+
       `<div class="rmeta">B: ${esc(r.bullet||'-')}</div>${r.note?`<div class="rmeta" style="color:var(--warn)">🔔 ${esc(r.note)}</div>`:''}</div>`+
       `<div style="display:flex;gap:4px"><button class="iconbtn" data-e="${i}">Edit</button><button class="iconbtn" data-d="${i}">Del</button></div>`;
     el.appendChild(d); });
   el.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>moveRecipe(+b.dataset.up,-1));
   el.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>moveRecipe(+b.dataset.down,1));
+  el.querySelectorAll('.grip').forEach(g=>{ const item=g.closest('.ritem');
+    g.addEventListener('dragstart',e=>{ dragIdx=+item.dataset.idx; e.dataTransfer.effectAllowed='move'; item.classList.add('dragging'); });
+    g.addEventListener('dragend',()=>{ dragIdx=null; el.querySelectorAll('.ritem').forEach(x=>x.classList.remove('dragging','dropon')); }); });
+  el.querySelectorAll('.ritem').forEach(item=>{
+    item.addEventListener('dragover',e=>{ if(dragIdx==null)return; e.preventDefault(); item.classList.add('dropon'); });
+    item.addEventListener('dragleave',()=>item.classList.remove('dropon'));
+    item.addEventListener('drop',e=>{ e.preventDefault(); item.classList.remove('dropon'); const to=+item.dataset.idx; if(dragIdx==null||to===dragIdx)return; const moved=RECIPES.splice(dragIdx,1)[0]; RECIPES.splice(to,0,moved); ensureOrder(); renderRecipes(); buildBeans(); }); });
   el.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>editRecipe(+b.dataset.e));
   el.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{ const i=+b.dataset.d, r=RECIPES[i]; if(!confirm('Delete '+r.name+'?'))return;
     if(r.id && sb){ const res=await sb.from('recipes').delete().eq('id',r.id); if(res.error){ alert('Delete failed (offline?)'); return; } }
