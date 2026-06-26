@@ -25,7 +25,8 @@
   .nav{display:flex;gap:6px}
   .nav button{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 11px;font-size:13px;font-weight:600;cursor:pointer}
   .nav button.on{background:var(--panel);color:var(--ink);border-color:var(--accent)}
-  .nav button{min-width:40px;text-align:center}
+  .nav{gap:4px}
+  .nav button{min-width:28px;padding:6px 0;text-align:center}
   .subnav{display:flex;gap:6px;margin:-4px 0 14px;flex-wrap:wrap}
   .subnav button{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:5px 13px;font-size:12.5px;font-weight:600;cursor:pointer}
   .subnav button.on{background:#1f1812;color:var(--ink);border-color:var(--accent2)}
@@ -179,10 +180,10 @@
   <div class="top">
     <a href="https://www.coffeenutz.net/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="logoName" style="font-size:22px"><span class="lr">CoffeeNutz<sup class="rmark">®</sup></span> <span class="lg">Guide</span></div></a>
     <div class="nav">
-      <button id="m-roast" class="on" onclick="show('roast')" title="Roast">Roast</button>
-      <button id="m-cup" onclick="show('cup')" title="Cup">Cup</button>
-      <button id="m-grade" onclick="show('grade')" title="Grade">Grade</button>
-      <button id="m-value" onclick="show('value')" title="Value Assessment">Value</button>
+      <button id="m-roast" class="on" onclick="show('roast')" title="Roast">R</button>
+      <button id="m-cup" onclick="show('cup')" title="Cup">C</button>
+      <button id="m-grade" onclick="show('grade')" title="Grade">G</button>
+      <button id="m-value" onclick="show('value')" title="Value Assessment">V</button>
     </div>
   </div>
   <div class="subnav hide" id="subnav">
