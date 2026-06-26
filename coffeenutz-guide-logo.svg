@@ -1,0 +1,8 @@
+<svg viewBox="0 0 360 96" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CoffeeNutz Guide - Roast, Cup, Grade">
+  <text x="6" y="50" textLength="348" lengthAdjust="spacing"
+        font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-style="italic" font-weight="900" font-size="42" letter-spacing="-1">
+    <tspan fill="#BE4636">CoffeeNutz</tspan><tspan fill="#F3EDE4"> Guide</tspan>
+  </text>
+  <text x="6" y="78" textLength="348" lengthAdjust="spacing"
+        font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif" font-weight="600" font-size="12" fill="#A8998A">ROAST · CUP · GRADE</text>
+</svg>

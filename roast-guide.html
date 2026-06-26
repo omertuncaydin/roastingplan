@@ -15,6 +15,12 @@
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45;padding:16px;max-width:560px;margin:0 auto;padding-bottom:40px}
   .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
   h1{font-size:19px;margin:0}
+  @font-face{font-family:'Aardvark';src:url('AardvarkBold.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+  .logoName{font-family:'Aardvark','Arial Black',Helvetica,sans-serif;line-height:1;white-space:nowrap;text-shadow:1px 1px 0 #8A2A25,2px 2px 0 #6E171C,3px 3px 0 #5E1418,4px 4px 0 #4A0F13}
+  .logoName .lr{color:#D8453B}.logoName .lg{color:#F3EDE4}
+  .rmark{font-family:Helvetica,Arial,sans-serif;font-size:0.36em;font-weight:700;vertical-align:super}
+  .pagelogo{text-align:center;margin:30px 0 12px;opacity:.85}
+  .logoSub{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#A8998A;font-weight:600;letter-spacing:5px;font-size:11px;margin-top:6px}
   .nav{display:flex;gap:6px}
   .nav button{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 11px;font-size:13px;font-weight:600;cursor:pointer}
   .nav button.on{background:var(--panel);color:var(--ink);border-color:var(--accent)}
@@ -91,7 +97,11 @@
 <body>
   <div id="loginOverlay" style="position:fixed;inset:0;background:var(--bg);z-index:50;display:none;align-items:center;justify-content:center;padding:20px">
     <div class="card" style="max-width:360px;width:100%">
-      <h1 style="margin-top:0">Roast Guide</h1>
+      <div style="margin-bottom:12px;text-align:center">
+        <img src="coffeenutz-turtle.png" alt="CoffeeNutz" style="width:88px;height:88px;display:block;margin:0 auto 12px">
+        <div class="logoName" style="font-size:34px"><span class="lr">CoffeeNutz<sup class="rmark">®</sup></span> <span class="lg">Guide</span></div>
+        <div class="logoSub">ROAST · CUP · GRADE</div>
+      </div>
       <div class="small" style="margin-bottom:14px">Sign in to load your recipes.</div>
       <label class="fld" for="loginEmail">Email</label><input type="email" id="loginEmail" autocomplete="username">
       <label class="fld" for="loginPass" style="margin-top:8px">Password</label><input type="password" id="loginPass" autocomplete="current-password">
@@ -105,7 +115,7 @@
   </div>
 
   <div class="top">
-    <h1>Roast Guide <span class="small" style="font-weight:400">v2</span></h1>
+    <div class="logoName" style="font-size:22px"><span class="lr">CoffeeNutz<sup class="rmark">®</sup></span> <span class="lg">Guide</span></div>
     <div class="nav">
       <button id="nav-roast" class="on" onclick="show('roast')">Roast</button>
       <button id="nav-recipes" onclick="show('recipes')">Recipes</button>
@@ -215,6 +225,8 @@
     <div class="small" id="rulesMsg" style="margin-top:10px;color:var(--accent2)"></div>
     <div class="small" id="rulesNote" style="margin-top:8px"></div>
   </div>
+
+  <div class="pagelogo"><img src="coffeenutz-turtle.png" alt="CoffeeNutz" width="46" height="46"></div>
 
 <script>
 // ===================== recipe store (v2: + active, FC in string, stage code) =====================
