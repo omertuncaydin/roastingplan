@@ -92,6 +92,62 @@
   .ritem.dropon{box-shadow:inset 0 2px 0 var(--accent)}
   .actv{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
   input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent2)}
+  /* ---- Cup / Grade / Value ---- */
+  .scorebar{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#241c16 0%,#241c16 78%,rgba(36,28,22,0));padding:10px 0 14px;margin:-4px 0 6px;display:flex;align-items:baseline;justify-content:center;gap:10px}
+  .scorebar .sv{font-size:38px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1}
+  .scorebar .sl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+  .sec{border-bottom:1px solid var(--line);padding:13px 0}
+  .sec:last-child{border-bottom:none}
+  .sechd{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+  .secname{font-size:15px;font-weight:700}
+  .ival{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .iwrap{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+  .iwrap .scale{font-size:9px;color:var(--muted);width:34px;text-transform:uppercase;letter-spacing:.4px}
+  .islider{flex:1;min-width:0;accent-color:var(--accent)}
+  .seg{display:flex;gap:4px;flex-wrap:wrap}
+  .seg button{flex:1;min-width:30px;background:#15100b;border:1px solid var(--line);color:var(--muted);border-radius:7px;padding:8px 0;font-size:14px;font-weight:700;cursor:pointer;font-variant-numeric:tabular-nums}
+  .seg button.on{background:var(--accent);color:#1a1410;border-color:var(--accent)}
+  .seglbl{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:5px 1px 0}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .chip{background:#15100b;border:1px solid var(--line);color:var(--muted);border-radius:20px;padding:6px 12px;font-size:12.5px;cursor:pointer;font-weight:600}
+  .chip.on{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+  .chip.sub{font-size:11px;padding:5px 10px;opacity:.92}
+  .cgrp{margin-top:8px}
+  .cgrplbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);font-weight:700;margin-bottom:2px}
+  .nudge{margin-top:10px;font-size:12.5px;color:var(--warn);background:#221a10;border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+  .cuprow{display:flex;gap:8px;align-items:center;margin-top:4px}
+  .cupbox{display:flex;gap:6px}
+  .cupbox button{width:30px;height:30px;border:1px solid var(--line);background:#15100b;color:var(--muted);border-radius:7px;font-weight:700;cursor:pointer}
+  .cupbox button.on{background:var(--dark);color:#1a1410;border-color:var(--dark)}
+  .defgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .defcard{background:#15100b;border:1px solid var(--line);border-radius:11px;padding:8px;text-align:center}
+  .defcard.hit{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  .defcard img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;display:block;background:#241c16}
+  .defcard .dn{font-size:11.5px;font-weight:700;margin:6px 0 1px;line-height:1.2}
+  .defcard .dr{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+  .defctl{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:7px}
+  .defctl button{width:30px;height:30px;border:1px solid var(--line);background:#241c16;color:var(--ink);border-radius:7px;font-size:18px;font-weight:700;cursor:pointer;line-height:1}
+  .defctl .dc{font-size:17px;font-weight:800;min-width:20px;font-variant-numeric:tabular-nums}
+  .verdict{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:11px;font-weight:800;font-size:15px}
+  .verdict.ok{background:#15281a;border:1px solid var(--accent2);color:#9fe0b5}
+  .verdict.no{background:#2a1614;border:1px solid var(--dark);color:#e6a9a9}
+  .vmeta{font-size:11px;font-weight:600;color:var(--muted)}
+  .colorgrid{display:flex;flex-wrap:wrap;gap:6px}
+  .pillar{display:flex;align-items:flex-start;gap:11px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .pillar:last-child{border-bottom:none}
+  .pdot{width:11px;height:11px;border-radius:50%;margin-top:5px;flex:none;background:var(--line)}
+  .pdot.full{background:var(--accent2)}
+  .pname{font-size:13px;font-weight:700}
+  .pbody{font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.45}
+  .twowin{display:flex;gap:10px;margin:4px 0 2px}
+  .twowin .w{flex:1;background:#15100b;border:1px solid var(--line);border-radius:11px;padding:13px}
+  .twowin .wl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+  .twowin .wv{font-size:26px;font-weight:800;margin-top:4px;line-height:1.05}
+  .twowin .fit .wv{color:var(--gold)}
+  .twowin .dis .wv{font-size:15px;color:var(--accent);font-weight:700}
+  .twowin .wsub{font-size:11px;color:var(--muted);margin-top:4px}
+  .nullbtn{display:block;width:100%;border:1px dashed var(--line);border-radius:12px;padding:13px;font-size:13px;font-weight:600;cursor:default;background:transparent;color:var(--muted);margin-top:10px}
+  .seedlist{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 </style>
 </head>
 <body>
@@ -118,6 +174,9 @@
     <a href="https://www.coffeenutz.net/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="logoName" style="font-size:22px"><span class="lr">CoffeeNutz<sup class="rmark">®</sup></span> <span class="lg">Guide</span></div></a>
     <div class="nav">
       <button id="nav-roast" class="on" onclick="show('roast')">Roast</button>
+      <button id="nav-cup" onclick="show('cup')">Cup</button>
+      <button id="nav-grade" onclick="show('grade')">Grade</button>
+      <button id="nav-value" onclick="show('value')">Value</button>
       <button id="nav-recipes" onclick="show('recipes')">Recipes</button>
       <button id="nav-hist" onclick="show('hist')">History</button>
       <button id="nav-rules" onclick="show('rules')">Rules</button>
@@ -224,6 +283,90 @@
     </div>
     <div class="small" id="rulesMsg" style="margin-top:10px;color:var(--accent2)"></div>
     <div class="small" id="rulesNote" style="margin-top:8px"></div>
+  </div>
+
+  <!-- CUP (CVA combined: descriptive + affective) -->
+  <div id="view-cup" class="hide">
+    <div class="scorebar"><span class="sv" id="cupSV">79.00</span><span class="sl">cupping<br>score</span></div>
+    <div class="card">
+      <label class="fld" for="cupSample">Sample / coffee</label>
+      <input type="text" id="cupSample" placeholder="e.g. Ethiopia Guji - washed" oninput="cup.sample=this.value">
+      <div class="seedlist" id="cupSeeds"></div>
+    </div>
+    <div class="card" id="cupSecs"></div>
+    <div class="card">
+      <div class="secname" style="margin-bottom:8px">Uniformity &amp; defects</div>
+      <div class="cgrplbl">Non-uniform cups</div>
+      <div class="cuprow"><div class="cupbox" id="cupNU"></div></div>
+      <div class="cgrplbl" style="margin-top:12px">Defective cups</div>
+      <div class="cuprow"><div class="cupbox" id="cupDF"></div></div>
+      <div class="cgrplbl" style="margin-top:12px">Defect type</div>
+      <div class="chips" id="cupDefType"></div>
+      <div class="small" style="margin-top:8px">Each non-uniform cup costs 2 points, each defective cup 4.</div>
+    </div>
+    <div class="card">
+      <div class="cgrplbl">Roast level</div>
+      <div class="chips" id="cupRoast"></div>
+    </div>
+    <div id="cupNudge"></div>
+    <button class="btn" onclick="saveCup()">Save cupping</button>
+    <button class="nullbtn" title="Coming in the next version">Class Mode &nbsp;·&nbsp; aggregate a class on one coffee &nbsp;·&nbsp; coming soon</button>
+    <div class="small" id="cupMsg" style="margin-top:10px;color:var(--accent2)"></div>
+    <div class="card" style="margin-top:12px"><div class="cgrplbl">Saved cuppings</div><div id="cupList"></div></div>
+  </div>
+
+  <!-- GRADE (CVA physical / green grading) -->
+  <div id="view-grade" class="hide">
+    <div class="card">
+      <label class="fld" for="grSample">Sample / coffee</label>
+      <input type="text" id="grSample" placeholder="e.g. Ethiopia Guji - washed" oninput="grade.sample=this.value">
+      <div class="seedlist" id="grSeeds"></div>
+    </div>
+    <div class="card"><div id="grVerdict"></div></div>
+    <div class="card">
+      <div class="secname" style="margin-bottom:9px">Green color</div>
+      <div class="colorgrid" id="grColors"></div>
+      <div class="cuprow" style="margin-top:14px;gap:14px;flex-wrap:wrap">
+        <div style="flex:1;min-width:120px"><label class="fld" for="grMoist">Moisture %</label><input type="number" id="grMoist" step="0.1" inputmode="decimal" placeholder="10.0-12.0" oninput="grade.moisture=this.value;updateGradeVerdict()"></div>
+        <div style="flex:1;min-width:120px"><label class="fld" for="grAw">Water activity (Aw)</label><input type="number" id="grAw" step="0.01" inputmode="decimal" placeholder="< 0.70" oninput="grade.aw=this.value;updateGradeVerdict()"></div>
+      </div>
+      <div style="margin-top:12px"><label class="fld" for="grScreen">Bean size / screen (note)</label><input type="text" id="grScreen" placeholder="e.g. 15/16 screen, even" oninput="grade.screen=this.value"></div>
+    </div>
+    <div class="card">
+      <div class="secname">Category 1 defects</div>
+      <div class="small" style="margin:3px 0 11px">Zero allowed for specialty. Tap the photo that matches your bean.</div>
+      <div class="defgrid" id="grCat1"></div>
+    </div>
+    <div class="card">
+      <div class="secname">Category 2 defects</div>
+      <div class="small" style="margin:3px 0 11px">Up to 5 full-defect equivalents allowed for specialty.</div>
+      <div class="defgrid" id="grCat2"></div>
+    </div>
+    <div class="card">
+      <div class="secname" style="margin-bottom:9px">Extrinsic (information value)</div>
+      <div class="cgrplbl">Origin</div>
+      <input type="text" id="grOrigin" placeholder="Country / region / farm / producer" style="margin-top:5px" oninput="grade.origin=this.value">
+      <label class="fld" for="grVariety" style="margin-top:10px">Variety</label><input type="text" id="grVariety" oninput="grade.variety=this.value">
+      <div class="cgrplbl" style="margin-top:12px">Process</div>
+      <div class="chips" id="grProcess"></div>
+      <div class="cgrplbl" style="margin-top:12px">Certifications</div>
+      <div class="chips" id="grCerts"></div>
+      <label class="fld" for="grExNote" style="margin-top:12px">Other relevant information</label><input type="text" id="grExNote" oninput="grade.exnote=this.value">
+    </div>
+    <button class="btn" onclick="saveGrade()">Save grading</button>
+    <div class="small" id="grMsg" style="margin-top:10px;color:var(--accent2)"></div>
+    <div class="small" style="margin-top:8px">Reference photos: SCA Washed Arabica Green Coffee Defect Guide (Ed. 3). Visual set is washed-arabica specific.</div>
+    <div class="card" style="margin-top:12px"><div class="cgrplbl">Saved gradings</div><div id="grList"></div></div>
+  </div>
+
+  <!-- VALUE ASSESSMENT (the holistic identity card) -->
+  <div id="view-value" class="hide">
+    <div class="card">
+      <label class="fld" for="valSample">Coffee</label>
+      <select id="valSample" onchange="renderValueCard()"></select>
+      <div class="small hide" id="valEmpty" style="margin-top:10px">No cuppings or gradings saved yet. Build a coffee's record in the Cup and Grade tabs, then it appears here.</div>
+    </div>
+    <div id="valCard"></div>
   </div>
 
   <div class="pagelogo"><a href="https://www.coffeenutz.net/" target="_blank" rel="noopener"><img src="coffeenutz-turtle.png" alt="CoffeeNutz" width="46" height="46"></a></div>
@@ -525,9 +668,160 @@ function exportLog(){ const rows=[['Date','Coffee','Machine','FC(s)','Drop stage
   const csv=rows.map(r=>r.map(c=>{c=String(c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(',')).join('\n');
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'})); a.download='roast-guide-log.csv'; a.click(); }
 
+// ===================== Cup / Grade / Value (CVA modules) =====================
+const CUPS_CACHE='cnCups_cache', GRADES_CACHE='cnGrades_cache';
+let CUPS=[], GRADES=[];
+// CVA lexicon (Descriptive form CATA lists)
+const OLF=[['Floral'],['Fruity','Berry','Dried Fruit','Citrus Fruit'],['Sour/Fermented','Sour','Fermented'],['Green/Vegetative'],['Other','Chemical','Musty/Earthy','Woody'],['Roasted','Cereal','Burnt','Tobacco'],['Nutty/Cocoa','Nutty','Cocoa'],['Spice'],['Sweet','Vanilla/Vanillin','Brown Sugar']];
+const MAIN_TASTES=['Salty','Sour','Sweet','Bitter','Umami'];
+const MOUTH=[['Rough','Gritty','Chalky','Sandy'],['Metallic'],['Oily'],['Smooth','Velvety','Silky','Syrupy'],['Mouth-Drying']];
+const ROASTS=['Very Light','Light','Medium-Light','Medium','Medium-Dark','Dark'];
+const DEFECT_TYPES=['None','Moldy','Phenolic','Potato'];
+const CUP_SECS=[
+ {k:'fragrance',l:'Fragrance',i:true},
+ {k:'aroma',l:'Aroma',i:true,cata:'olf',cataKey:'fragAroma',cataLbl:'Fragrance & aroma descriptors (up to 5)'},
+ {k:'flavor',l:'Flavor',i:true},
+ {k:'aftertaste',l:'Aftertaste',i:true,cata:'olf',cataKey:'flavAfter',cataLbl:'Flavor & aftertaste descriptors (up to 5)',main:true},
+ {k:'acidity',l:'Acidity',i:true},
+ {k:'sweetness',l:'Sweetness',i:true},
+ {k:'mouthfeel',l:'Mouthfeel',i:true,cata:'mouth',cataKey:'mouth',cataLbl:'Mouthfeel quality (up to 2)'},
+ {k:'overall',l:'Overall',i:false}
+];
+const SCORE_KEYS=['fragrance','aroma','flavor','aftertaste','acidity','sweetness','mouthfeel','overall'];
+function blankCup(){ return {id:null,date:new Date().toISOString().slice(0,10),sample:'',intens:{},score:{},cata:{fragAroma:[],flavAfter:[],main:[],mouth:[]},roast:'',nonuniform:0,defective:0,defect:'None',distinctive:''}; }
+let cup=blankCup();
+// SCA cupping score: anchors 79 (all 5s) and 100 (all 9s); -2 per non-uniform cup, -4 per defective cup; round to 0.25
+function cupTotal(c){ c=c||cup; let sum=0; SCORE_KEYS.forEach(k=>sum+=(c.score[k]!=null?c.score[k]:5)); let S=0.65625*sum+52.75-2*(c.nonuniform||0)-4*(c.defective||0); return Math.round(S/0.25)*0.25; }
+function updateCupScore(){ const v=cupTotal(); if(typeof cupSV!=='undefined'&&cupSV) cupSV.textContent=v.toFixed(2); checkCalib(); }
+function buildSeeds(elId,cb){ const el=document.getElementById(elId); if(!el) return; const names=getRecipes().filter(r=>r.active).map(r=>r.name).slice(0,8);
+  el.innerHTML=names.map((n,i)=>`<span class="chip sub" data-seed="${i}">${esc(n)}</span>`).join(''); el.querySelectorAll('[data-seed]').forEach(c=>c.onclick=()=>cb(names[+c.dataset.seed])); }
+function olfChips(key){ return `<div class="chips">`+OLF.map(g=>g.map((t,i)=>`<span class="chip ${i>0?'sub':''} ${cup.cata[key].includes(t)?'on':''}" data-ol="${esc(t)}" data-key="${key}">${esc(t)}</span>`).join('')).join('')+`</div>`; }
+function renderCup(){
+  buildSeeds('cupSeeds',s=>{ cup.sample=s; cupSample.value=s; });
+  cupSample.value=cup.sample||'';
+  let h='';
+  CUP_SECS.forEach(sec=>{ const iv=cup.intens[sec.k]; const sc=cup.score[sec.k]!=null?cup.score[sec.k]:5;
+    h+=`<div class="sec"><div class="sechd"><span class="secname">${sec.l}</span>`+(sec.i?`<span class="ival" id="iv_${sec.k}">${iv!=null?('intensity '+iv):'intensity -'}</span>`:`<span class="ival">affective only</span>`)+`</div>`;
+    if(sec.i) h+=`<div class="iwrap"><span class="scale">Low</span><input type="range" class="islider" min="0" max="15" step="1" value="${iv!=null?iv:7}" data-int="${sec.k}"><span class="scale" style="text-align:right">High</span></div>`;
+    h+=`<div class="seg">`; for(let n=1;n<=9;n++) h+=`<button data-sc="${sec.k}" data-n="${n}" class="${sc===n?'on':''}">${n}</button>`; h+=`</div>`;
+    h+=`<div class="seglbl"><span>1 extremely low</span><span>5 neither</span><span>9 extremely high</span></div>`;
+    if(sec.cata==='olf'){ h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div>`+olfChips(sec.cataKey)+`</div>`;
+      if(sec.main) h+=`<div class="cgrp"><div class="cgrplbl">Main tastes (up to 2)</div><div class="chips">`+MAIN_TASTES.map(t=>`<span class="chip ${cup.cata.main.includes(t)?'on':''}" data-mt="${t}">${t}</span>`).join('')+`</div></div>`; }
+    if(sec.cata==='mouth') h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div><div class="chips">`+MOUTH.map(g=>g.map((t,i)=>`<span class="chip ${i>0?'sub':''} ${cup.cata.mouth.includes(t)?'on':''}" data-mo="${esc(t)}">${esc(t)}</span>`).join('')).join('')+`</div></div>`;
+    h+=`</div>`; });
+  cupSecs.innerHTML=h;
+  cupNU.innerHTML=''; cupDF.innerHTML='';
+  for(let i=1;i<=5;i++){ cupNU.innerHTML+=`<button data-nu="${i}" class="${i<=cup.nonuniform?'on':''}">${i}</button>`; cupDF.innerHTML+=`<button data-df="${i}" class="${i<=cup.defective?'on':''}">${i}</button>`; }
+  cupDefType.innerHTML=DEFECT_TYPES.map(t=>`<span class="chip ${cup.defect===t?'on':''}" data-dt="${t}">${t}</span>`).join('');
+  cupRoast.innerHTML=ROASTS.map(t=>`<span class="chip ${cup.roast===t?'on':''}" data-ro="${esc(t)}">${esc(t)}</span>`).join('');
+  bindCup(); updateCupScore(); renderCupList();
+}
+function bindCup(){
+  cupSecs.querySelectorAll('input[data-int]').forEach(s=>s.addEventListener('input',e=>{ const k=e.target.dataset.int; cup.intens[k]=+e.target.value; const lb=document.getElementById('iv_'+k); if(lb) lb.textContent='intensity '+cup.intens[k]; checkCalib(); }));
+  cupSecs.querySelectorAll('button[data-sc]').forEach(b=>b.onclick=()=>{ const k=b.dataset.sc,n=+b.dataset.n; cup.score[k]=n; cupSecs.querySelectorAll('button[data-sc="'+k+'"]').forEach(x=>x.classList.toggle('on',+x.dataset.n===n)); updateCupScore(); });
+  cupSecs.querySelectorAll('[data-ol]').forEach(c=>c.onclick=()=>toggleCata(cup.cata[c.dataset.key],c.dataset.ol,c,5));
+  cupSecs.querySelectorAll('[data-mt]').forEach(c=>c.onclick=()=>toggleCata(cup.cata.main,c.dataset.mt,c,2));
+  cupSecs.querySelectorAll('[data-mo]').forEach(c=>c.onclick=()=>toggleCata(cup.cata.mouth,c.dataset.mo,c,2));
+  cupNU.querySelectorAll('[data-nu]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.nu; cup.nonuniform=(cup.nonuniform===i?i-1:i); renderCupCups(); updateCupScore(); });
+  cupDF.querySelectorAll('[data-df]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.df; cup.defective=(cup.defective===i?i-1:i); renderCupCups(); updateCupScore(); });
+  cupDefType.querySelectorAll('[data-dt]').forEach(c=>c.onclick=()=>{ cup.defect=c.dataset.dt; cupDefType.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x.dataset.dt===cup.defect)); });
+  cupRoast.querySelectorAll('[data-ro]').forEach(c=>c.onclick=()=>{ cup.roast=c.dataset.ro; cupRoast.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x.dataset.ro===cup.roast)); });
+}
+function renderCupCups(){ cupNU.querySelectorAll('[data-nu]').forEach(b=>b.classList.toggle('on',+b.dataset.nu<=cup.nonuniform)); cupDF.querySelectorAll('[data-df]').forEach(b=>b.classList.toggle('on',+b.dataset.df<=cup.defective)); }
+function toggleCata(arr,val,el,max){ const i=arr.indexOf(val); if(i>=0){ arr.splice(i,1); el.classList.remove('on'); } else { if(arr.length>=max) return; arr.push(val); el.classList.add('on'); } }
+function checkCalib(){ const all=Object.values(cup.intens).filter(v=>v!=null); let msg=''; if(all.length>=4){ const spread=Math.max(...all)-Math.min(...all); if(spread<=3) msg='You are scoring intensity in a narrow band. When the coffee calls for it, reach toward the ends of the scale - the exam rewards confident full-range use, not safe middles.'; } if(typeof cupNudge!=='undefined'&&cupNudge) cupNudge.innerHTML=msg?`<div class="nudge">${msg}</div>`:''; }
+async function saveCup(){ if(!cup.sample.trim()){ cupMsg.textContent='Name the sample first.'; return; }
+  const rec=JSON.parse(JSON.stringify(cup)); rec.total=cupTotal(rec); rec.id='local-'+Date.now();
+  CUPS.unshift(rec); cacheCG(); cupMsg.textContent='Saved: '+rec.sample+' · '+rec.total.toFixed(2);
+  cup=blankCup(); renderCup();
+  if(sb){ try{ const r=await sb.from('cuppings').insert(toCupPayload(rec)).select('*').single(); if(r&&!r.error){ const ix=CUPS.findIndex(c=>c.id===rec.id); if(ix>=0){ CUPS[ix].id=r.data.id; cacheCG(); } } }catch(e){} } }
+function renderCupList(){ if(!CUPS.length){ cupList.innerHTML='<div class="small">None yet.</div>'; return; } cupList.innerHTML=CUPS.map(c=>`<div class="hxrow"><span>${esc(c.sample)} <span class="small">${c.date}</span></span><span class="tgtval">${(c.total||0).toFixed(2)} <button class="delx" data-delcup="${c.id}">×</button></span></div>`).join(''); cupList.querySelectorAll('[data-delcup]').forEach(b=>b.onclick=()=>delCup(b.dataset.delcup)); }
+async function delCup(id){ CUPS=CUPS.filter(c=>String(c.id)!==String(id)); cacheCG(); renderCupList(); if(sb&&!String(id).startsWith('local-')){ try{ await sb.from('cuppings').delete().eq('id',id); }catch(e){} } }
+
+// ---- Grade (Physical) ----
+const CAT1=[['fullblack','Full Black',1,'full-black'],['fullsour','Full Sour',1,'full-sour'],['driedcherry','Dried Cherry',1,'dried-cherry'],['fungus','Fungus Damage',1,'fungus'],['foreign','Foreign Matter',1,'foreign-matter'],['severeinsect','Severe Insect',5,'severe-insect']];
+const CAT2=[['partialblack','Partial Black',3,'partial-black'],['partialsour','Partial Sour',3,'partial-sour'],['parchment','Parchment',5,'parchment'],['floater','Floater',5,'floater'],['immature','Immature / Unripe',5,'immature'],['withered','Withered',5,'withered'],['shell','Shell',5,'shell'],['broken','Broken / Cut',5,'broken'],['hullhusk','Hull / Husk',5,'hull-husk'],['slightinsect','Slight Insect',10,'slight-insect']];
+const GR_COLORS=['Blue-Green','Bluish-Green','Green','Greenish','Yellow-Green','Pale Yellow','Yellowish','Brownish'];
+const GR_PROC=['Washed','Natural','Honey','Anaerobic','Decaf','Other'];
+const GR_CERTS=['4C','Fair Trade','Organic','Rainforest Alliance','Food Safety'];
+function blankGrade(){ return {id:null,date:new Date().toISOString().slice(0,10),sample:'',color:'',moisture:'',aw:'',screen:'',counts:{},origin:'',variety:'',process:[],certs:[],exnote:''}; }
+let grade=blankGrade();
+function defFull(list){ let f=0; list.forEach(d=>{ f+=(grade.counts[d[0]]||0)/d[2]; }); return f; }
+function gradeVerdict(){ const c1=defFull(CAT1),c2=defFull(CAT2); const m=parseFloat(grade.moisture),aw=parseFloat(grade.aw);
+  const okMoist=isNaN(m)||(m>=10&&m<=12), okAw=isNaN(aw)||aw<0.70; return {c1,c2,ok:(c1<1&&c2<=5&&okMoist&&okAw),okMoist,okAw}; }
+function defCard(d){ const [k,l,ratio,img]=d; const n=grade.counts[k]||0; return `<div class="defcard ${n>0?'hit':''}"><img src="defects/${img}.jpg" alt="${esc(l)}" loading="lazy"><div class="dn">${esc(l)}</div><div class="dr">${ratio} bean${ratio>1?'s':''} = 1 defect</div><div class="defctl"><button data-gd="${k}">−</button><span class="dc" id="dc_${k}">${n}</span><button data-gi="${k}">+</button></div></div>`; }
+function renderGrade(){
+  buildSeeds('grSeeds',s=>{ grade.sample=s; grSample.value=s; });
+  grSample.value=grade.sample||''; grMoist.value=grade.moisture||''; grAw.value=grade.aw||''; grScreen.value=grade.screen||''; grOrigin.value=grade.origin||''; grVariety.value=grade.variety||''; grExNote.value=grade.exnote||'';
+  grColors.innerHTML=GR_COLORS.map(c=>`<span class="chip ${grade.color===c?'on':''}" data-col="${esc(c)}">${esc(c)}</span>`).join('');
+  grProcess.innerHTML=GR_PROC.map(p=>`<span class="chip ${grade.process.includes(p)?'on':''}" data-pr="${esc(p)}">${esc(p)}</span>`).join('');
+  grCerts.innerHTML=GR_CERTS.map(p=>`<span class="chip ${grade.certs.includes(p)?'on':''}" data-ce="${esc(p)}">${esc(p)}</span>`).join('');
+  grCat1.innerHTML=CAT1.map(defCard).join(''); grCat2.innerHTML=CAT2.map(defCard).join('');
+  bindGrade(); updateGradeVerdict(); renderGrList();
+}
+function bindGrade(){
+  grColors.querySelectorAll('[data-col]').forEach(c=>c.onclick=()=>{ grade.color=c.dataset.col; grColors.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x.dataset.col===grade.color)); });
+  grProcess.querySelectorAll('[data-pr]').forEach(c=>c.onclick=()=>{ toggleCata(grade.process,c.dataset.pr,c,99); });
+  grCerts.querySelectorAll('[data-ce]').forEach(c=>c.onclick=()=>{ toggleCata(grade.certs,c.dataset.ce,c,99); });
+  document.querySelectorAll('[data-gi]').forEach(b=>b.onclick=()=>bumpDef(b.dataset.gi,1));
+  document.querySelectorAll('[data-gd]').forEach(b=>b.onclick=()=>bumpDef(b.dataset.gd,-1));
+}
+function bumpDef(k,d){ const n=Math.max(0,(grade.counts[k]||0)+d); grade.counts[k]=n; const el=document.getElementById('dc_'+k); if(el){ el.textContent=n; el.closest('.defcard').classList.toggle('hit',n>0); } updateGradeVerdict(); }
+function updateGradeVerdict(){ const v=gradeVerdict(); const flags=[]; if(!v.okMoist) flags.push('moisture out of 10-12%'); if(!v.okAw) flags.push('Aw ≥ 0.70');
+  grVerdict.className=v.ok?'verdict ok':'verdict no';
+  grVerdict.innerHTML=`<span>${v.ok?'Specialty grade':'Below specialty'}</span><span class="vmeta">Cat 1: ${v.c1.toFixed(2)} · Cat 2: ${v.c2.toFixed(2)}${flags.length?' · '+flags.join(', '):''}</span>`; }
+async function saveGrade(){ if(!grade.sample.trim()){ grMsg.textContent='Name the sample first.'; return; }
+  const rec=JSON.parse(JSON.stringify(grade)); rec.id='local-'+Date.now();
+  GRADES.unshift(rec); cacheCG(); grMsg.textContent='Saved grading: '+rec.sample;
+  grade=blankGrade(); renderGrade();
+  if(sb){ try{ const r=await sb.from('green_grades').insert(toGradePayload(rec)).select('*').single(); if(r&&!r.error){ const ix=GRADES.findIndex(g=>g.id===rec.id); if(ix>=0){ GRADES[ix].id=r.data.id; cacheCG(); } } }catch(e){} } }
+function renderGrList(){ if(!GRADES.length){ grList.innerHTML='<div class="small">None yet.</div>'; return; } grList.innerHTML=GRADES.map(g=>{ const v=gradeVerdictFor(g); return `<div class="hxrow"><span>${esc(g.sample)} <span class="small">${g.date}</span></span><span class="tgtval" style="color:${v.ok?'var(--accent2)':'var(--dark)'}">${v.ok?'Specialty':'Below'} <button class="delx" data-delgr="${g.id}">×</button></span></div>`; }).join(''); grList.querySelectorAll('[data-delgr]').forEach(b=>b.onclick=()=>delGrade(b.dataset.delgr)); }
+function gradeVerdictFor(g){ const c1=CAT1.reduce((a,d)=>a+(g.counts[d[0]]||0)/d[2],0), c2=CAT2.reduce((a,d)=>a+(g.counts[d[0]]||0)/d[2],0); const m=parseFloat(g.moisture),aw=parseFloat(g.aw); return {c1,c2,ok:(c1<1&&c2<=5&&(isNaN(m)||(m>=10&&m<=12))&&(isNaN(aw)||aw<0.70))}; }
+async function delGrade(id){ GRADES=GRADES.filter(g=>String(g.id)!==String(id)); cacheCG(); renderGrList(); if(sb&&!String(id).startsWith('local-')){ try{ await sb.from('green_grades').delete().eq('id',id); }catch(e){} } }
+
+// ---- Value Assessment (holistic identity card) ----
+function valSamples(){ const s=[]; CUPS.forEach(c=>c.sample&&!s.includes(c.sample)&&s.push(c.sample)); GRADES.forEach(g=>g.sample&&!s.includes(g.sample)&&s.push(g.sample)); return s; }
+function renderValue(){ const arr=valSamples(),cur=valSample.value; valSample.innerHTML=arr.map(s=>`<option>${esc(s)}</option>`).join(''); if(arr.includes(cur)) valSample.value=cur; valEmpty.classList.toggle('hide',arr.length>0); valCard.innerHTML=''; if(arr.length) renderValueCard(); }
+function topScored(c){ return SCORE_KEYS.map(k=>({k,v:c.score[k]!=null?c.score[k]:5})).sort((a,b)=>b.v-a.v).slice(0,2).map(x=>x.k+' '+x.v).join(', '); }
+function distinctDescriptors(c){ const subs=[]; (c.cata.fragAroma||[]).concat(c.cata.flavAfter||[]).forEach(t=>{ if(!OLF.some(g=>g[0]===t)&&!subs.includes(t)) subs.push(t); }); return subs; }
+function renderValueCard(){ const s=valSample.value; const c=CUPS.find(x=>x.sample===s); const g=GRADES.find(x=>x.sample===s);
+  const desc=c?distinctDescriptors(c):[]; const fit=c?(c.total||cupTotal(c)).toFixed(2):'—';
+  const dot=on=>`<span class="pdot ${on?'full':''}"></span>`;
+  let h='<div class="card">';
+  h+=`<div class="twowin"><div class="w fit"><div class="wl">Fit</div><div class="wv">${fit}</div><div class="wsub">cupping score · how well it suits a target palate</div></div>`;
+  h+=`<div class="w dis"><div class="wl">Distinctiveness</div><div class="wv">${c&&c.distinctive?esc(c.distinctive):'<span style="color:var(--muted);font-size:13px">name it below</span>'}</div><div class="wsub">${desc.length?desc.length+' distinct descriptor'+(desc.length>1?'s':''):'what sets it apart'}</div></div></div>`;
+  h+=`<div class="cgrplbl" style="margin-top:14px">The distinctive attribute</div><div class="small" style="margin-bottom:6px">In one line: what does this coffee do that another would not? This, not the score, is what makes it worth more.</div>`;
+  h+=`<input type="text" id="valDist" placeholder="e.g. jasmine top note that holds into a tea-like cool finish" value="${c?esc(c.distinctive||''):''}" ${c?'':'disabled'}>`;
+  h+='</div>';
+  // pillars
+  h+='<div class="card"><div class="secname" style="margin-bottom:4px">Identity card</div>';
+  h+=`<div class="pillar">${dot(!!g)}<div><div class="pname">Physical</div><div class="pbody">${g?(`${g.color||'color —'} · moisture ${g.moisture||'—'}% · ${gradeVerdictFor(g).ok?'specialty grade':'below specialty'}`):'Not graded yet. Open Grade.'}</div></div></div>`;
+  h+=`<div class="pillar">${dot(desc.length>0||(c&&((c.cata.fragAroma||[]).length||(c.cata.flavAfter||[]).length)))}<div><div class="pname">Descriptive</div><div class="pbody">${c?((c.cata.fragAroma||[]).concat(c.cata.flavAfter||[]).join(', ')||'no descriptors marked'):'Not cupped yet. Open Cup.'}</div></div></div>`;
+  h+=`<div class="pillar">${dot(!!c)}<div><div class="pname">Affective</div><div class="pbody">${c?(`score ${fit} · strongest: ${topScored(c)}`):'Not cupped yet. Open Cup.'}</div></div></div>`;
+  const ex=g?[g.origin,g.variety,(g.process||[]).join('/'),(g.certs||[]).join('/')].filter(Boolean).join(' · '):'';
+  h+=`<div class="pillar">${dot(!!ex)}<div><div class="pname">Extrinsic</div><div class="pbody">${ex||'No origin / process info yet. Add it in Grade.'}</div></div></div>`;
+  h+='</div>';
+  h+=`<button class="nullbtn" title="Coming in the next version">Roast-Phase Tasting &nbsp;·&nbsp; cup A0/A1/B1/C samples against this roast &nbsp;·&nbsp; coming soon</button>`;
+  valCard.innerHTML=h;
+  const di=document.getElementById('valDist'); if(di&&c) di.addEventListener('change',e=>{ c.distinctive=e.target.value; cacheCG(); if(sb&&!String(c.id).startsWith('local-')){ try{ sb.from('cuppings').update({data:toCupPayload(c).data}).eq('id',c.id); }catch(e2){} } renderValueCard(); });
+}
+
+// ---- Cup/Grade persistence (local cache + best-effort Supabase) ----
+function cacheCG(){ try{ localStorage.setItem(CUPS_CACHE,JSON.stringify(CUPS)); localStorage.setItem(GRADES_CACHE,JSON.stringify(GRADES)); }catch(e){} }
+function loadCGCache(){ try{ CUPS=JSON.parse(localStorage.getItem(CUPS_CACHE)||'[]')||[]; }catch(e){ CUPS=[]; } try{ GRADES=JSON.parse(localStorage.getItem(GRADES_CACHE)||'[]')||[]; }catch(e){ GRADES=[]; } }
+function toCupPayload(r){ return {user_id:MYUID,sample:r.sample,date:r.date,total:r.total,data:{intens:r.intens,score:r.score,cata:r.cata,roast:r.roast,nonuniform:r.nonuniform,defective:r.defective,defect:r.defect,distinctive:r.distinctive}}; }
+function rowToCup(d){ const x=d.data||{}; return {id:d.id,date:d.date,sample:d.sample,total:(d.total!=null?+d.total:0),intens:x.intens||{},score:x.score||{},cata:x.cata||{fragAroma:[],flavAfter:[],main:[],mouth:[]},roast:x.roast||'',nonuniform:x.nonuniform||0,defective:x.defective||0,defect:x.defect||'None',distinctive:x.distinctive||''}; }
+function toGradePayload(r){ return {user_id:MYUID,sample:r.sample,date:r.date,data:{color:r.color,moisture:r.moisture,aw:r.aw,screen:r.screen,counts:r.counts,origin:r.origin,variety:r.variety,process:r.process,certs:r.certs,exnote:r.exnote}}; }
+function rowToGrade(d){ const x=d.data||{}; return {id:d.id,date:d.date,sample:d.sample,color:x.color||'',moisture:x.moisture||'',aw:x.aw||'',screen:x.screen||'',counts:x.counts||{},origin:x.origin||'',variety:x.variety||'',process:x.process||[],certs:x.certs||[],exnote:x.exnote||''}; }
+async function loadCupGrade(){ loadCGCache(); if(!sb) return;
+  try{ const cr=await sb.from('cuppings').select('*').order('created_at',{ascending:false}); if(cr&&!cr.error&&cr.data) CUPS=cr.data.map(rowToCup); }catch(e){}
+  try{ const gr=await sb.from('green_grades').select('*').order('created_at',{ascending:false}); if(gr&&!gr.error&&gr.data) GRADES=gr.data.map(rowToGrade); }catch(e){}
+  cacheCG(); }
+
 // ===================== views =====================
-function show(v){ ['roast','recipes','hist','rules'].forEach(x=>{ document.getElementById('view-'+x).classList.toggle('hide',x!==v); document.getElementById('nav-'+x).classList.toggle('on',x===v); });
-  if(v==='recipes') renderRecipes(); if(v==='hist') renderLog(); if(v==='rules') renderRules(); }
+function show(v){ ['roast','cup','grade','value','recipes','hist','rules'].forEach(x=>{ document.getElementById('view-'+x).classList.toggle('hide',x!==v); document.getElementById('nav-'+x).classList.toggle('on',x===v); });
+  if(v==='recipes') renderRecipes(); if(v==='hist') renderLog(); if(v==='rules') renderRules();
+  if(v==='cup') renderCup(); if(v==='grade') renderGrade(); if(v==='value') renderValue(); }
 function renderRules(){ const ids=['ru_A1','ru_B0','ru_B1','ru_C0','ru_C1','ru_C2','ru_fcBase','ru_fcDouble','ru_secPerAg','ru_learnN','ru_cinToA0'];
   ['A1','B0','B1','C0','C1','C2'].forEach(c=>{ const el=document.getElementById('ru_'+c); if(el) el.value=RULES.offs[c]; }); ['fcBase','fcDouble','secPerAg','learnN','cinToA0'].forEach(k=>{ const el=document.getElementById('ru_'+k); if(el) el.value=RULES[k]; });
   ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!IS_ADMIN; });
@@ -559,8 +853,8 @@ async function doLogin(){
   if(res.error){ loginMsg.textContent=res.error.message; return; }
   loginMsg.textContent=''; hideLogin(); loadFromServer();
 }
-async function doLogout(){ try{ if(sb) await sb.auth.signOut(); }catch(e){} try{ ['cnRecipes_cache','gLog_cache','gLearn_cache','gLog_pending'].forEach(k=>localStorage.removeItem(k)); }catch(e){} location.reload(); }
-async function afterRecipes(){ await loadServerData(); buildBeans(); renderRecipes(); renderLog(); }
+async function doLogout(){ try{ if(sb) await sb.auth.signOut(); }catch(e){} try{ ['cnRecipes_cache','gLog_cache','gLearn_cache','gLog_pending','cnCups_cache','cnGrades_cache'].forEach(k=>localStorage.removeItem(k)); }catch(e){} location.reload(); }
+async function afterRecipes(){ await loadServerData(); await loadCupGrade(); buildBeans(); renderRecipes(); renderLog(); }
 async function loadFromServer(){
   if(!sb){ RECIPES=loadCache(); afterRecipes(); return; }
   const res=await sb.from('recipes').select('*').order('sort_order',{ascending:true,nullsFirst:false}).order('name');
