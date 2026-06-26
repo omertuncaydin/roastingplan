@@ -16,7 +16,7 @@
   .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
   h1{font-size:19px;margin:0}
   @font-face{font-family:'Aardvark';src:url('AardvarkBold.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
-  .logoName{font-family:'Aardvark','Arial Black',Helvetica,sans-serif;line-height:1;white-space:nowrap;text-shadow:1px 1px 0 #8A2A25,2px 2px 0 #6E171C,3px 3px 0 #5E1418,4px 4px 0 #4A0F13}
+  .logoName{font-family:'Aardvark','Arial Black',Helvetica,sans-serif;line-height:1;white-space:nowrap}
   .logoName .lr{color:#D8453B}.logoName .lg{color:#F3EDE4}
   .rmark{font-family:Helvetica,Arial,sans-serif;font-size:0.36em;font-weight:700;vertical-align:super}
   .pagelogo{text-align:center;margin:30px 0 12px;opacity:.85}
@@ -97,11 +97,11 @@
 <body>
   <div id="loginOverlay" style="position:fixed;inset:0;background:var(--bg);z-index:50;display:none;align-items:center;justify-content:center;padding:20px">
     <div class="card" style="max-width:360px;width:100%">
-      <div style="margin-bottom:12px;text-align:center">
+      <a href="https://www.coffeenutz.net/" target="_blank" rel="noopener" style="display:block;margin-bottom:12px;text-align:center;text-decoration:none;color:inherit">
         <img src="coffeenutz-turtle.png" alt="CoffeeNutz" style="width:88px;height:88px;display:block;margin:0 auto 12px">
         <div class="logoName" style="font-size:34px"><span class="lr">CoffeeNutz<sup class="rmark">®</sup></span> <span class="lg">Guide</span></div>
         <div class="logoSub">ROAST · CUP · GRADE</div>
-      </div>
+      </a>
       <div class="small" style="margin-bottom:14px">Sign in to load your recipes.</div>
       <label class="fld" for="loginEmail">Email</label><input type="email" id="loginEmail" autocomplete="username">
       <label class="fld" for="loginPass" style="margin-top:8px">Password</label><input type="password" id="loginPass" autocomplete="current-password">
@@ -115,7 +115,7 @@
   </div>
 
   <div class="top">
-    <div class="logoName" style="font-size:22px"><span class="lr">CoffeeNutz<sup class="rmark">®</sup></span> <span class="lg">Guide</span></div>
+    <a href="https://www.coffeenutz.net/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="logoName" style="font-size:22px"><span class="lr">CoffeeNutz<sup class="rmark">®</sup></span> <span class="lg">Guide</span></div></a>
     <div class="nav">
       <button id="nav-roast" class="on" onclick="show('roast')">Roast</button>
       <button id="nav-recipes" onclick="show('recipes')">Recipes</button>
@@ -226,7 +226,7 @@
     <div class="small" id="rulesNote" style="margin-top:8px"></div>
   </div>
 
-  <div class="pagelogo"><img src="coffeenutz-turtle.png" alt="CoffeeNutz" width="46" height="46"></div>
+  <div class="pagelogo"><a href="https://www.coffeenutz.net/" target="_blank" rel="noopener"><img src="coffeenutz-turtle.png" alt="CoffeeNutz" width="46" height="46"></a></div>
 
 <script>
 // ===================== recipe store (v2: + active, FC in string, stage code) =====================
