@@ -181,7 +181,7 @@
   </div>
 
   <div class="top">
-    <a href="https://www.coffeenutz.net/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="logoName" style="font-size:22px"><span class="lr">CoffeeNutz<sup class="rmark">®</sup></span> <span class="lg">Guide</span></div></a>
+    <a href="#" onclick="show('account');return false;" style="text-decoration:none;color:inherit;cursor:pointer" title="Account"><div class="logoName" style="font-size:22px"><span class="lr">CoffeeNutz<sup class="rmark">®</sup></span> <span class="lg">Guide</span></div></a>
     <div class="nav">
       <button id="m-roast" class="on" onclick="show('roast')" title="Roast">R</button>
       <button id="m-cup" onclick="show('cup')" title="Cup">C</button>
@@ -253,7 +253,6 @@
       <div style="display:flex;gap:10px;margin-top:12px"><button class="btn" onclick="saveRecipe()">Save</button><button class="btn ghost" onclick="closeForm()">Cancel</button></div>
     </div>
     <div class="card"><div id="rlist"></div></div>
-    <div class="small" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px"><span id="acctLine"></span><button class="iconbtn" onclick="doLogout()">Log out</button></div>
     <div class="small">Recipe = machine string carrying FC time, drop stage (A0-C2), dev, Agtron. Stages: A0 first crack, A1 intense, B0 increasing, B1 peak, C0 ending, C1 end, C2 midway.</div>
   </div>
 
@@ -301,7 +300,7 @@
 
   <!-- CUP (CVA combined: descriptive + affective) -->
   <div id="view-cup" class="hide">
-    <div class="scorebar"><span class="sv" id="cupSV">79.00</span><span class="sl">cupping<br>score</span></div>
+    <div class="scorebar"><span class="sv" id="cupSV">79.00</span><span class="sl">cupping<br>score <span class="info" onclick="showScoreInfo()">&#9432;</span></span></div>
     <div class="card">
       <label class="fld" for="cupSample">Sample / coffee</label>
       <input type="text" id="cupSample" placeholder="e.g. Ethiopia Guji - washed" oninput="cup.sample=this.value">
@@ -336,13 +335,13 @@
       <input type="text" id="grSample" placeholder="e.g. Ethiopia Guji - washed" oninput="grade.sample=this.value">
       <div class="seedlist" id="grSeeds"></div>
     </div>
-    <div class="card"><div id="grVerdict"></div></div>
+    <div class="card"><div class="cgrplbl" style="margin-bottom:6px">Grade <span class="info" onclick="showGradeInfo()">&#9432;</span></div><div id="grVerdict"></div></div>
     <div class="card">
       <div class="secname" style="margin-bottom:9px">Green color</div>
       <div class="colorgrid" id="grColors"></div>
       <div class="cuprow" style="margin-top:14px;gap:14px;flex-wrap:wrap">
         <div style="flex:1;min-width:120px"><label class="fld" for="grMoist">Moisture %</label><input type="number" id="grMoist" step="0.1" inputmode="decimal" placeholder="10.0-12.0" oninput="grade.moisture=this.value;updateGradeVerdict()"></div>
-        <div style="flex:1;min-width:120px"><label class="fld" for="grAw">Water activity (Aw)</label><input type="number" id="grAw" step="0.01" inputmode="decimal" placeholder="< 0.70" oninput="grade.aw=this.value;updateGradeVerdict()"></div>
+        <div style="flex:1;min-width:120px;opacity:.55"><label class="fld" for="grAw">Water activity (Aw) <span class="info" onclick="showAwInfo()">&#9432;</span></label><input type="number" id="grAw" step="0.01" inputmode="decimal" placeholder="not on the form yet" oninput="grade.aw=this.value"></div>
       </div>
       <div style="margin-top:12px"><label class="fld" for="grScreen">Bean size / screen (note)</label><input type="text" id="grScreen" placeholder="e.g. 15/16 screen, even" oninput="grade.screen=this.value"></div>
     </div>
@@ -381,6 +380,26 @@
       <div class="small hide" id="valEmpty" style="margin-top:10px">No cuppings or gradings saved yet. Build a coffee's record in the Cup and Grade tabs, then it appears here.</div>
     </div>
     <div id="valCard"></div>
+  </div>
+
+  <!-- ACCOUNT (opened from the wordmark) -->
+  <div id="view-account" class="hide">
+    <div class="card">
+      <div class="secname" style="margin-bottom:10px">Your membership</div>
+      <div class="hxrow"><span>Email</span><span class="tgtval" id="acEmail">-</span></div>
+      <div class="hxrow"><span>Member since</span><span class="tgtval" id="acSince">-</span></div>
+      <div class="hxrow" style="border-bottom:none"><span>Plan</span><span class="tgtval">CoffeeNutz Guide</span></div>
+    </div>
+    <div class="card">
+      <div class="cgrplbl">Change password</div>
+      <div class="small" style="margin:3px 0 8px">Keep your account yours. Pick something only you know.</div>
+      <label class="fld" for="acPass1">New password</label><input type="password" id="acPass1" autocomplete="new-password">
+      <label class="fld" for="acPass2" style="margin-top:8px">Confirm new password</label><input type="password" id="acPass2" autocomplete="new-password">
+      <button class="btn" style="margin-top:12px" onclick="changePassword()">Update password</button>
+      <div class="small" id="acPassMsg" style="margin-top:8px"></div>
+    </div>
+    <button class="btn ghost" onclick="doLogout()">Log out</button>
+    <div class="small" style="margin-top:10px">Your recipes, roast history, cuppings and gradings are private to this account. Nobody else can see them.</div>
   </div>
 
   <div class="pagelogo"><a href="https://www.coffeenutz.net/" target="_blank" rel="noopener"><img src="coffeenutz-turtle.png" alt="CoffeeNutz" width="46" height="46"></a></div>
@@ -602,7 +621,6 @@ function renderRecipes(){ const el=document.getElementById('rlist'); el.innerHTM
   el.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{ const i=+b.dataset.d, r=RECIPES[i]; if(!confirm('Delete '+r.name+'?'))return;
     if(r.id && sb){ const res=await sb.from('recipes').delete().eq('id',r.id); if(res.error){ alert('Delete failed (offline?)'); return; } }
     RECIPES.splice(i,1); cacheRecipes(); renderRecipes(); buildBeans(); });
-  if(typeof sb!=='undefined'&&sb) sb.auth.getUser().then(({data})=>{ if(acctLine) acctLine.textContent = data&&data.user? ('Signed in: '+data.user.email):''; });
 }
 async function upsertRecipe(rec){
   if(!sb) return null;
@@ -761,8 +779,8 @@ const GR_CERTS=['4C','Fair Trade','Organic','Rainforest Alliance','Food Safety']
 function blankGrade(){ return {id:null,date:new Date().toISOString().slice(0,10),sample:'',color:'',moisture:'',aw:'',screen:'',counts:{},origin:'',variety:'',process:[],certs:[],exnote:''}; }
 let grade=blankGrade();
 function defFull(list){ let f=0; list.forEach(d=>{ f+=(grade.counts[d[0]]||0)/d[2]; }); return f; }
-function gradeVerdict(){ const c1=defFull(CAT1),c2=defFull(CAT2); const m=parseFloat(grade.moisture),aw=parseFloat(grade.aw);
-  const okMoist=isNaN(m)||(m>=10&&m<=12), okAw=isNaN(aw)||aw<0.70; return {c1,c2,ok:(c1<1&&c2<=5&&okMoist&&okAw),okMoist,okAw}; }
+function gradeVerdict(){ const c1=defFull(CAT1),c2=defFull(CAT2); const m=parseFloat(grade.moisture);
+  const okMoist=isNaN(m)||(m>=10&&m<=12); return {c1,c2,ok:(c1<1&&c2<=5&&okMoist),okMoist}; }   // Aw not gated: not on the SCA CVA form (yet)
 function defCard(d){ const [k,l,ratio,img]=d; const n=grade.counts[k]||0; return `<div class="defcard ${n>0?'hit':''}"><img src="defects/${img}.jpg" alt="${esc(l)}" loading="lazy"><div class="dn">${esc(l)}</div><div class="dr">${ratio} bean${ratio>1?'s':''} = 1 defect</div><div class="defctl"><button data-gd="${k}">−</button><span class="dc" id="dc_${k}">${n}</span><button data-gi="${k}">+</button></div></div>`; }
 function renderGrade(){
   buildSeeds('grSeeds',s=>{ grade.sample=s; grSample.value=s; });
@@ -781,7 +799,7 @@ function bindGrade(){
   document.querySelectorAll('[data-gd]').forEach(b=>b.onclick=()=>bumpDef(b.dataset.gd,-1));
 }
 function bumpDef(k,d){ const n=Math.max(0,(grade.counts[k]||0)+d); grade.counts[k]=n; const el=document.getElementById('dc_'+k); if(el){ el.textContent=n; el.closest('.defcard').classList.toggle('hit',n>0); } updateGradeVerdict(); }
-function updateGradeVerdict(){ const v=gradeVerdict(); const flags=[]; if(!v.okMoist) flags.push('moisture out of 10-12%'); if(!v.okAw) flags.push('Aw ≥ 0.70');
+function updateGradeVerdict(){ const v=gradeVerdict(); const flags=[]; if(!v.okMoist) flags.push('moisture out of 10-12%');
   grVerdict.className=v.ok?'verdict ok':'verdict no';
   grVerdict.innerHTML=`<span>${v.ok?'Specialty grade':'Below specialty'}</span><span class="vmeta">Cat 1: ${v.c1.toFixed(2)} · Cat 2: ${v.c2.toFixed(2)}${flags.length?' · '+flags.join(', '):''}</span>`; }
 async function saveGrade(){ if(!grade.sample.trim()){ grMsg.textContent='Name the sample first.'; return; }
@@ -790,7 +808,7 @@ async function saveGrade(){ if(!grade.sample.trim()){ grMsg.textContent='Name th
   grade=blankGrade(); renderGrade();
   if(sb){ try{ const r=await sb.from('green_grades').insert(toGradePayload(rec)).select('*').single(); if(r&&!r.error){ const ix=GRADES.findIndex(g=>g.id===rec.id); if(ix>=0){ GRADES[ix].id=r.data.id; cacheCG(); } } }catch(e){} } }
 function renderGrList(){ if(!GRADES.length){ grList.innerHTML='<div class="small">None yet.</div>'; return; } grList.innerHTML=GRADES.map(g=>{ const v=gradeVerdictFor(g); return `<div class="hxrow"><span>${esc(g.sample)} <span class="small">${g.date}</span></span><span class="tgtval" style="color:${v.ok?'var(--accent2)':'var(--dark)'}">${v.ok?'Specialty':'Below'} <button class="delx" data-delgr="${g.id}">×</button></span></div>`; }).join(''); grList.querySelectorAll('[data-delgr]').forEach(b=>b.onclick=()=>delGrade(b.dataset.delgr)); }
-function gradeVerdictFor(g){ const c1=CAT1.reduce((a,d)=>a+(g.counts[d[0]]||0)/d[2],0), c2=CAT2.reduce((a,d)=>a+(g.counts[d[0]]||0)/d[2],0); const m=parseFloat(g.moisture),aw=parseFloat(g.aw); return {c1,c2,ok:(c1<1&&c2<=5&&(isNaN(m)||(m>=10&&m<=12))&&(isNaN(aw)||aw<0.70))}; }
+function gradeVerdictFor(g){ const c1=CAT1.reduce((a,d)=>a+(g.counts[d[0]]||0)/d[2],0), c2=CAT2.reduce((a,d)=>a+(g.counts[d[0]]||0)/d[2],0); const m=parseFloat(g.moisture); return {c1,c2,ok:(c1<1&&c2<=5&&(isNaN(m)||(m>=10&&m<=12)))}; }
 async function delGrade(id){ GRADES=GRADES.filter(g=>String(g.id)!==String(id)); cacheCG(); renderGrList(); if(sb&&!String(id).startsWith('local-')){ try{ await sb.from('green_grades').delete().eq('id',id); }catch(e){} } }
 
 // ---- Value Assessment (holistic identity card) ----
@@ -868,19 +886,46 @@ async function loadCupGrade(){ loadCGCache(); if(!sb) return;
   try{ const gr=await sb.from('green_grades').select('*').order('created_at',{ascending:false}); if(gr&&!gr.error&&gr.data) GRADES=gr.data.map(rowToGrade); }catch(e){}
   cacheCG(); }
 
+// ---- reasoning popups (craft logic, not operating instructions) ----
+function infoModal(title,body){ hxBox.innerHTML=`<h1 style="margin:0 0 8px;font-size:18px">${title}</h1><div class="small" style="line-height:1.6">${body}</div><button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`; hxModal.style.display='flex'; }
+function showScoreInfo(){ infoModal('How the cupping score works',
+  `Score = 0.65625 &times; (sum of the eight 1-9 impression scores) + 52.75, then minus 2 for each non-uniform cup and minus 4 for each defective cup, rounded to the nearest 0.25.<br><br>`+
+  `<b>Anchors:</b> every section at 5 (neither high nor low) lands at <b>79.00</b>; every section at 9 lands at <b>100.00</b>.<br><br>`+
+  `Score each section honestly, one at a time. Do not pick a target total and work backward to it - that is reverse cupping, and it is exactly what this split form is built to stop.`); }
+function showGradeInfo(){ infoModal('SCA specialty green grade',
+  `For washed arabica on a 350g sample: <b>0</b> Category 1 full defects, <b>no more than 5</b> Category 2 full defects, and moisture <b>10-12%</b>.<br><br>`+
+  `<b>Full-defect equivalents:</b> a defect counts as a fraction by its ratio. 3 partial-black beans = 1 full defect, 5 broken = 1, 10 slight-insect = 1, and so on. The app sums these for you live.<br><br>`+
+  `Color and bean size are recorded for reference, not pass/fail. Water activity (&lt; 0.70) is part of the green standard but not yet on the CVA form - see the Aw note.`); }
+function showAwInfo(){ infoModal('Water activity (Aw)',
+  `Aw tracks the <i>free</i> moisture in the bean, and it predicts mold risk and shelf stability better than moisture content alone.<br><br>`+
+  `The SCA green standard already calls for Aw below 0.70. Yet the CVA Physical form still does not ask you to record it. So we left the spot grey and ready.<br><br>`+
+  `Your move, SCA ;)`); }
+async function renderAccount(){
+  if(sb){ try{ const u=await sb.auth.getUser(); const usr=u&&u.data&&u.data.user; if(usr){ acEmail.textContent=usr.email||'-'; acSince.textContent=usr.created_at?usr.created_at.slice(0,10):'-'; } }catch(e){} }
+  else { acEmail.textContent='offline'; acSince.textContent='-'; }
+}
+async function changePassword(){ const p1=acPass1.value, p2=acPass2.value;
+  if((p1||'').length<6){ acPassMsg.style.color='var(--warn)'; acPassMsg.textContent='Use at least 6 characters.'; return; }
+  if(p1!==p2){ acPassMsg.style.color='var(--warn)'; acPassMsg.textContent='The two passwords do not match.'; return; }
+  if(!sb){ acPassMsg.style.color='var(--warn)'; acPassMsg.textContent='No connection to the server.'; return; }
+  acPassMsg.style.color='var(--muted)'; acPassMsg.textContent='Updating...';
+  const r=await sb.auth.updateUser({password:p1});
+  if(r&&r.error){ acPassMsg.style.color='var(--warn)'; acPassMsg.textContent=r.error.message; return; }
+  acPass1.value=acPass2.value=''; acPassMsg.style.color='var(--accent2)'; acPassMsg.textContent='Password updated.'; }
+
 // ===================== views =====================
 const ROAST_GROUP=['roast','recipes','hist','rules'];
-const SEC_INFO={ roast:['Roast','first crack to drop, guided'], cup:['Cup','sensory · CVA descriptive + affective'], grade:['Grade','green physical · CVA defect grading'], value:['Value Assessment','Fit + Distinctiveness · the identity card'] };
+const SEC_INFO={ roast:['Roast','first crack to drop, guided'], cup:['Cup','sensory · CVA descriptive + affective'], grade:['Grade','green physical · CVA defect grading'], value:['Value Assessment','Fit + Distinctiveness · the identity card'], account:['Account','your membership & privacy'] };
 function groupOf(v){ return ROAST_GROUP.includes(v)?'roast':v; }
 function show(v){
-  ['roast','cup','grade','value','recipes','hist','rules'].forEach(x=>document.getElementById('view-'+x).classList.toggle('hide',x!==v));
+  ['roast','cup','grade','value','recipes','hist','rules','account'].forEach(x=>document.getElementById('view-'+x).classList.toggle('hide',x!==v));
   const g=groupOf(v);
   [['m-roast','roast'],['m-cup','cup'],['m-grade','grade'],['m-value','value']].forEach(([id,grp])=>{ const b=document.getElementById(id); if(b) b.classList.toggle('on',grp===g); });
   const st=document.getElementById('secTitle'), info=SEC_INFO[g]; if(st&&info) st.innerHTML=`<span class="st">${info[0]}</span><span class="ss">${info[1]}</span>`;   // full section name = what the letter stands for
   const sub=document.getElementById('subnav'); if(sub) sub.classList.toggle('hide',g!=='roast');   // sub-tabs only emerge under Roast
   ROAST_GROUP.forEach(x=>{ const b=document.getElementById('nav-'+x); if(b) b.classList.toggle('on',x===v); });
   if(v==='recipes') renderRecipes(); if(v==='hist') renderLog(); if(v==='rules') renderRules();
-  if(v==='cup') renderCup(); if(v==='grade') renderGrade(); if(v==='value') renderValue(); }
+  if(v==='cup') renderCup(); if(v==='grade') renderGrade(); if(v==='value') renderValue(); if(v==='account') renderAccount(); }
 function renderRules(){ const ids=['ru_A1','ru_B0','ru_B1','ru_C0','ru_C1','ru_C2','ru_fcBase','ru_fcDouble','ru_secPerAg','ru_learnN','ru_cinToA0'];
   ['A1','B0','B1','C0','C1','C2'].forEach(c=>{ const el=document.getElementById('ru_'+c); if(el) el.value=RULES.offs[c]; }); ['fcBase','fcDouble','secPerAg','learnN','cinToA0'].forEach(k=>{ const el=document.getElementById('ru_'+k); if(el) el.value=RULES[k]; });
   ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!IS_ADMIN; });
