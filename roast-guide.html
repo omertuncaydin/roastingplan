@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- CoffeeNutz Guide. (c) 2026 Omer Aydin / CoffeeNutz. All rights reserved. Proprietary - not for redistribution. See LICENSE. -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -24,6 +25,10 @@
   .nav{display:flex;gap:6px}
   .nav button{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 11px;font-size:13px;font-weight:600;cursor:pointer}
   .nav button.on{background:var(--panel);color:var(--ink);border-color:var(--accent)}
+  .nav button{min-width:40px;text-align:center}
+  .subnav{display:flex;gap:6px;margin:-4px 0 14px;flex-wrap:wrap}
+  .subnav button{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:5px 13px;font-size:12.5px;font-weight:600;cursor:pointer}
+  .subnav button.on{background:#1f1812;color:var(--ink);border-color:var(--accent2)}
   .spd{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 16px;font-size:14px;font-weight:700;cursor:pointer}
   .spd.on{background:var(--accent);color:#1a1410;border-color:var(--accent)}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
@@ -146,6 +151,7 @@
   .twowin .fit .wv{color:var(--gold)}
   .twowin .dis .wv{font-size:15px;color:var(--accent);font-weight:700}
   .twowin .wsub{font-size:11px;color:var(--muted);margin-top:4px}
+  .info{display:inline-block;cursor:pointer;color:var(--accent);font-weight:700;font-size:12px;margin-left:3px}
   .nullbtn{display:block;width:100%;border:1px dashed var(--line);border-radius:12px;padding:13px;font-size:13px;font-weight:600;cursor:default;background:transparent;color:var(--muted);margin-top:10px}
   .seedlist{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 </style>
@@ -173,14 +179,17 @@
   <div class="top">
     <a href="https://www.coffeenutz.net/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="logoName" style="font-size:22px"><span class="lr">CoffeeNutz<sup class="rmark">®</sup></span> <span class="lg">Guide</span></div></a>
     <div class="nav">
-      <button id="nav-roast" class="on" onclick="show('roast')">Roast</button>
-      <button id="nav-cup" onclick="show('cup')">Cup</button>
-      <button id="nav-grade" onclick="show('grade')">Grade</button>
-      <button id="nav-value" onclick="show('value')">Value</button>
-      <button id="nav-recipes" onclick="show('recipes')">Recipes</button>
-      <button id="nav-hist" onclick="show('hist')">History</button>
-      <button id="nav-rules" onclick="show('rules')">Rules</button>
+      <button id="m-roast" class="on" onclick="show('roast')" title="Roast">R</button>
+      <button id="m-cup" onclick="show('cup')" title="Cup">C</button>
+      <button id="m-grade" onclick="show('grade')" title="Grade">G</button>
+      <button id="m-value" onclick="show('value')" title="Value Assessment">VA</button>
     </div>
+  </div>
+  <div class="subnav hide" id="subnav">
+    <button id="nav-roast" class="on" onclick="show('roast')">Guide</button>
+    <button id="nav-recipes" onclick="show('recipes')">Recipes</button>
+    <button id="nav-hist" onclick="show('hist')">History</button>
+    <button id="nav-rules" onclick="show('rules')">Rules</button>
   </div>
 
   <!-- ROAST -->
@@ -784,12 +793,48 @@ function valSamples(){ const s=[]; CUPS.forEach(c=>c.sample&&!s.includes(c.sampl
 function renderValue(){ const arr=valSamples(),cur=valSample.value; valSample.innerHTML=arr.map(s=>`<option>${esc(s)}</option>`).join(''); if(arr.includes(cur)) valSample.value=cur; valEmpty.classList.toggle('hide',arr.length>0); valCard.innerHTML=''; if(arr.length) renderValueCard(); }
 function topScored(c){ return SCORE_KEYS.map(k=>({k,v:c.score[k]!=null?c.score[k]:5})).sort((a,b)=>b.v-a.v).slice(0,2).map(x=>x.k+' '+x.v).join(', '); }
 function distinctDescriptors(c){ const subs=[]; (c.cata.fragAroma||[]).concat(c.cata.flavAfter||[]).forEach(t=>{ if(!OLF.some(g=>g[0]===t)&&!subs.includes(t)) subs.push(t); }); return subs; }
+const OLF_HEADS=OLF.map(g=>g[0]);
+// Distinctiveness: shape + rarity, orthogonal to Fit (the score). Derived from the same assessments.
+function distinctiveness(c){
+  const descs=(c.cata.fragAroma||[]).concat(c.cata.flavAfter||[]);
+  const subs=descs.filter(d=>!OLF_HEADS.includes(d));                       // 1 specificity: second-tier descriptors
+  const specificity=Math.min(1,subs.length/5);
+  const iv=Object.values(c.intens||{}).filter(v=>typeof v==='number');      // 2 peakedness: spread of intensities
+  const peak=iv.length>=3?Math.min(1,(Math.max(...iv)-Math.min(...iv))/9):0;
+  const secK=['fragrance','aroma','flavor','aftertaste','acidity','sweetness','mouthfeel'];
+  const sec=secK.map(k=>c.score[k]!=null?c.score[k]:5); const overall=c.score.overall!=null?c.score.overall:5;
+  const standout=Math.max(0,Math.min(1,(Math.max(...sec)-overall)/4));      // 3 standout: a section outshines overall
+  const others=CUPS.filter(x=>x.id!==c.id && x.sample!==c.sample); const haveLib=others.length>=3;   // 4 rarity vs own library
+  let rarity=0, rare={d:null,f:2};
+  if(haveLib&&descs.length){ let sum=0; descs.forEach(d=>{ const f=others.filter(o=>(o.cata.fragAroma||[]).concat(o.cata.flavAfter||[]).includes(d)).length/others.length; sum+=(1-f); if(f<rare.f) rare={d,f}; }); rarity=sum/descs.length; }
+  let parts=haveLib?[['rarity',rarity,0.35],['specificity',specificity,0.25],['peakedness',peak,0.20],['standout',standout,0.20]]
+                   :[['specificity',specificity,0.38],['peakedness',peak,0.31],['standout',standout,0.31]];
+  const index=Math.round(parts.reduce((a,p)=>a+p[1]*p[2],0)*100);
+  const level=index>=66?'High':index>=33?'Medium':'Low';
+  parts.sort((a,b)=>b[1]*b[2]-a[1]*a[2]); const top=parts[0][0]; let driver='';
+  if(index<=0) driver='mark descriptors and intensities to read this';
+  else if(top==='rarity'&&rare.d) driver=esc(rare.d)+' appears in '+Math.round(rare.f*others.length)+' of your '+others.length+' other coffees';
+  else if(top==='specificity') driver=subs.length?('specific notes: '+subs.slice(0,3).map(esc).join(', ')):'add more specific descriptors';
+  else if(top==='peakedness') driver='a standout intensity peak above a level profile';
+  else { const mi=sec.indexOf(Math.max(...sec)); driver=secK[mi]+' outshines the overall'; }
+  if(!haveLib&&index>0) driver+=' · rarity unlocks after 3+ saved coffees';
+  return {index,level,driver};
+}
+function showDistInfo(){ hxBox.innerHTML=`<h1 style="margin:0 0 8px;font-size:18px">How Distinctiveness is read</h1>`+
+  `<div class="small" style="line-height:1.6">Fit is a level: how much a target palate will like it. Distinctiveness is shape and rarity: how differentiated the coffee is. A clean 88 can be ordinary; a spiky 84 can be unforgettable. The index blends four signals from your own assessments:<br><br>`+
+  `<b>Specificity</b> - how many precise, second-tier descriptors you marked (Jasmine, Bergamot) over generic ones (Fruity, Floral).<br>`+
+  `<b>Peakedness</b> - how much one or two intensities rise above the rest. A flat profile is unremarkable; a peak is a signature.<br>`+
+  `<b>Standout</b> - when a single section outscores the whole cup, that section is the attribute.<br>`+
+  `<b>Rarity</b> - how uncommon these notes are across your own saved coffees. This is your edge: it sharpens as your library grows, and no one else has your history.<br><br>`+
+  `The number finds the candidate. <b>You name it.</b> The one-line attribute on top is the apex call and it takes a trained evaluator. The index supports that judgement, it does not replace it.</div>`+
+  `<button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`;
+  hxModal.style.display='flex'; }
 function renderValueCard(){ const s=valSample.value; const c=CUPS.find(x=>x.sample===s); const g=GRADES.find(x=>x.sample===s);
-  const desc=c?distinctDescriptors(c):[]; const fit=c?(c.total||cupTotal(c)).toFixed(2):'—';
+  const desc=c?distinctDescriptors(c):[]; const fit=c?(c.total||cupTotal(c)).toFixed(2):'—'; const D=c?distinctiveness(c):null;
   const dot=on=>`<span class="pdot ${on?'full':''}"></span>`;
   let h='<div class="card">';
   h+=`<div class="twowin"><div class="w fit"><div class="wl">Fit</div><div class="wv">${fit}</div><div class="wsub">cupping score · how well it suits a target palate</div></div>`;
-  h+=`<div class="w dis"><div class="wl">Distinctiveness</div><div class="wv">${c&&c.distinctive?esc(c.distinctive):'<span style="color:var(--muted);font-size:13px">name it below</span>'}</div><div class="wsub">${desc.length?desc.length+' distinct descriptor'+(desc.length>1?'s':''):'what sets it apart'}</div></div></div>`;
+  h+=`<div class="w dis"><div class="wl">Distinctiveness <span class="info" onclick="showDistInfo()">&#9432;</span></div><div class="wv">${c&&c.distinctive?esc(c.distinctive):(D?D.level:'<span style="color:var(--muted);font-size:13px">cup it first</span>')}</div><div class="wsub">${D?(D.level+' · '+D.index+' · '+D.driver):'what sets it apart'}</div></div></div>`;
   h+=`<div class="cgrplbl" style="margin-top:14px">The distinctive attribute</div><div class="small" style="margin-bottom:6px">In one line: what does this coffee do that another would not? This, not the score, is what makes it worth more.</div>`;
   h+=`<input type="text" id="valDist" placeholder="e.g. jasmine top note that holds into a tea-like cool finish" value="${c?esc(c.distinctive||''):''}" ${c?'':'disabled'}>`;
   h+='</div>';
@@ -819,7 +864,14 @@ async function loadCupGrade(){ loadCGCache(); if(!sb) return;
   cacheCG(); }
 
 // ===================== views =====================
-function show(v){ ['roast','cup','grade','value','recipes','hist','rules'].forEach(x=>{ document.getElementById('view-'+x).classList.toggle('hide',x!==v); document.getElementById('nav-'+x).classList.toggle('on',x===v); });
+const ROAST_GROUP=['roast','recipes','hist','rules'];
+function groupOf(v){ return ROAST_GROUP.includes(v)?'roast':v; }
+function show(v){
+  ['roast','cup','grade','value','recipes','hist','rules'].forEach(x=>document.getElementById('view-'+x).classList.toggle('hide',x!==v));
+  const g=groupOf(v);
+  [['m-roast','roast'],['m-cup','cup'],['m-grade','grade'],['m-value','value']].forEach(([id,grp])=>{ const b=document.getElementById(id); if(b) b.classList.toggle('on',grp===g); });
+  const sub=document.getElementById('subnav'); if(sub) sub.classList.toggle('hide',g!=='roast');   // sub-tabs only emerge under Roast
+  ROAST_GROUP.forEach(x=>{ const b=document.getElementById('nav-'+x); if(b) b.classList.toggle('on',x===v); });
   if(v==='recipes') renderRecipes(); if(v==='hist') renderLog(); if(v==='rules') renderRules();
   if(v==='cup') renderCup(); if(v==='grade') renderGrade(); if(v==='value') renderValue(); }
 function renderRules(){ const ids=['ru_A1','ru_B0','ru_B1','ru_C0','ru_C1','ru_C2','ru_fcBase','ru_fcDouble','ru_secPerAg','ru_learnN','ru_cinToA0'];
@@ -871,6 +923,7 @@ async function seedServer(){
 function initApp(){
   try{ if(typeof supabase!=='undefined') sb=supabase.createClient(SUPA_URL, SUPA_KEY); }catch(e){ console.warn('sb init',e); }
   bean.addEventListener('change',refresh); equip.addEventListener('change',refresh);
+  show('roast');   // set main/sub nav state (subnav emerges under Roast)
   if(!sb){ RECIPES=loadCache(); afterRecipes(); return; }   // offline / library blocked -> cache mode
   sb.auth.getSession().then(({data})=>{ if(data.session){ hideLogin(); loadFromServer(); } else { showLogin(); } });
 }
