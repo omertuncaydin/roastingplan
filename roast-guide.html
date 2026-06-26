@@ -27,7 +27,10 @@
   .nav button.on{background:var(--panel);color:var(--ink);border-color:var(--accent)}
   .nav{gap:4px}
   .nav button{min-width:28px;padding:6px 0;text-align:center}
-  .subnav{display:flex;gap:6px;margin:-4px 0 14px;flex-wrap:wrap}
+  .sectitle{margin:2px 0 10px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .sectitle .st{font-size:16px;font-weight:800;color:var(--ink)}
+  .sectitle .ss{font-size:11px;color:var(--muted);letter-spacing:.3px}
+  .subnav{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap}
   .subnav button{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:5px 13px;font-size:12.5px;font-weight:600;cursor:pointer}
   .subnav button.on{background:#1f1812;color:var(--ink);border-color:var(--accent2)}
   .spd{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 16px;font-size:14px;font-weight:700;cursor:pointer}
@@ -186,6 +189,7 @@
       <button id="m-value" onclick="show('value')" title="Value Assessment">V</button>
     </div>
   </div>
+  <div class="sectitle" id="secTitle"></div>
   <div class="subnav hide" id="subnav">
     <button id="nav-roast" class="on" onclick="show('roast')">Guide</button>
     <button id="nav-recipes" onclick="show('recipes')">Recipes</button>
@@ -866,11 +870,13 @@ async function loadCupGrade(){ loadCGCache(); if(!sb) return;
 
 // ===================== views =====================
 const ROAST_GROUP=['roast','recipes','hist','rules'];
+const SEC_INFO={ roast:['Roast','first crack to drop, guided'], cup:['Cup','sensory · CVA descriptive + affective'], grade:['Grade','green physical · CVA defect grading'], value:['Value Assessment','Fit + Distinctiveness · the identity card'] };
 function groupOf(v){ return ROAST_GROUP.includes(v)?'roast':v; }
 function show(v){
   ['roast','cup','grade','value','recipes','hist','rules'].forEach(x=>document.getElementById('view-'+x).classList.toggle('hide',x!==v));
   const g=groupOf(v);
   [['m-roast','roast'],['m-cup','cup'],['m-grade','grade'],['m-value','value']].forEach(([id,grp])=>{ const b=document.getElementById(id); if(b) b.classList.toggle('on',grp===g); });
+  const st=document.getElementById('secTitle'), info=SEC_INFO[g]; if(st&&info) st.innerHTML=`<span class="st">${info[0]}</span><span class="ss">${info[1]}</span>`;   // full section name = what the letter stands for
   const sub=document.getElementById('subnav'); if(sub) sub.classList.toggle('hide',g!=='roast');   // sub-tabs only emerge under Roast
   ROAST_GROUP.forEach(x=>{ const b=document.getElementById('nav-'+x); if(b) b.classList.toggle('on',x===v); });
   if(v==='recipes') renderRecipes(); if(v==='hist') renderLog(); if(v==='rules') renderRules();
