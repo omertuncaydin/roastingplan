@@ -293,8 +293,8 @@
       <button class="btn" onclick="saveRules()">Save rules</button>
       <button class="btn" style="margin-top:8px;background:var(--accent2);color:#fff" onclick="saveAsDefaults()">Save as defaults</button>
       <button class="btn ghost" style="margin-top:8px" onclick="resetRules()">Reset to defaults</button>
-      <button class="btn ghost" style="margin-top:16px;border-color:var(--accent2);color:var(--accent2)" onclick="deepCalibration()">Deep Calibration Learning</button>
     </div>
+    <button class="btn ghost" style="margin-top:16px;border-color:var(--accent2);color:var(--accent2)" onclick="deepCalibration()">Deep Calibration Learning</button>
     <div class="small" id="rulesMsg" style="margin-top:10px;color:var(--accent2)"></div>
     <div class="small" id="rulesNote" style="margin-top:8px"></div>
   </div>
@@ -401,6 +401,7 @@
       <button class="btn" style="margin-top:12px" onclick="changePassword()">Update password</button>
       <div class="small" id="acPassMsg" style="margin-top:8px"></div>
     </div>
+    <button class="btn ghost" onclick="doLogout()">Log out</button>
     <div class="card hide" id="memberCard">
       <div class="secname" style="margin-bottom:6px">Member access</div>
       <div class="small" style="margin-bottom:10px">Assign a plan to a learner by email. Works even before they sign up. No plan = Lite (use and see, cannot keep).</div>
@@ -412,7 +413,6 @@
       <div class="cgrplbl" style="margin-top:14px">Provisioned members</div>
       <div id="entList"></div>
     </div>
-    <button class="btn ghost" onclick="doLogout()">Log out</button>
     <div class="small" style="margin-top:10px">Your recipes, roast history, cuppings and gradings are private to this account. Nobody else can see them.</div>
   </div>
 
