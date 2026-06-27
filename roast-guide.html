@@ -568,7 +568,7 @@ async function finishRoast(now){
   const offs={}; if(cinA0) offs.cinToA0=cinA0; if(devActual!=null) offs.dev=devActual;
   const rec={ id:'local-'+Date.now(), date:new Date().toISOString().slice(0,10), bean:st.name, eq:st.eq, fc:st.fc, target:st.target, targetAg:(st.targetAg!=null?st.targetAg:null),
     toTarget: devActual, offs, agtron:(st.targetAg!=null?st.targetAg:'') };
-  if(canSave('roast')){ LOG.unshift(rec); cacheLog(); recomputeLearning(); }
+  if(canSave('roast')){ LOG.unshift(rec); cacheLog(); recomputeLearning(); ensureBean(rec.bean); }
   st.phase='done'; draw(); renderLog();
   if(canSave('roast')){ if(sb){ const lr=await sb.from('roast_logs').insert(toLogPayload(rec)).select('*').single(); if(lr&&!lr.error){ rec.id=lr.data.id; cacheLog(); renderLog(); } else { console.warn('log insert',lr&&lr.error); addPending(rec); } } else { addPending(rec); } }
 }
@@ -600,7 +600,7 @@ function draw(){
   else if(st.phase==='dev'){ const eA0=secSince(st.tA0), drop=dropOffset(); bb.textContent='DROP / FINISH'; bb.classList.add('drop'); top=fmt(eA0); bot='since first crack'; nextU=du; rem=drop-eA0; cnt=countLine('DROP',rem); ph='Developing toward '+st.target+' - drop when you reach it.';
     let s2=''; for(const c of devCues()){ if(eA0<c.t){ s2='next cue: '+c.code+' ~ '+fmtAbs(c.t-eA0); break; } if(eA0<c.t+4){ s2=c.code+' around now'; break; } }
     sub = s2 || ('drop target: '+st.target+(st.targetAg!=null?' ('+st.targetAg+'A)':'')); }
-  else { bb.textContent='New roast'; bb.onclick=reset; top='done'; bot=''; ph='Roast finished and learned.'; sub='Enter the actual Agtron in <a href="#" onclick="show(\'hist\');return false;" style="color:var(--accent);text-decoration:underline">History</a>.'; }
+  else { bb.textContent='New roast'; bb.onclick=reset; top='done'; bot=''; ph='Roast finished and learned.'; sub='Enter the actual Agtron in <a href="#" onclick="show(\'hist\');return false;" style="color:var(--accent);text-decoration:underline">History</a>. &nbsp;·&nbsp; <a href="#" onclick="cupThisRoast();return false;" style="color:var(--accent2);text-decoration:underline">Cup this coffee</a>'; }
   gauge.innerHTML = renderGauge(uNow(now), nextU, dropU, top, bot);
   phase.textContent=ph; psub.innerHTML=sub;
   pcount.textContent=cnt; pcount.style.color = rem<0 ? 'var(--warn)' : 'var(--accent)';
@@ -781,7 +781,7 @@ function checkCalib(){ const all=Object.values(cup.intens).filter(v=>v!=null); l
 async function saveCup(){ if(!canSave('cup')){ cupMsg.style.color='var(--accent2)'; cupMsg.textContent=enrollPrompt('cupping'); return; }
   cupMsg.style.color='var(--accent2)'; if(!cup.sample.trim()){ cupMsg.style.color='var(--warn)'; cupMsg.textContent='Name the sample first.'; return; }
   const rec=JSON.parse(JSON.stringify(cup)); rec.total=cupTotal(rec); rec.id='local-'+Date.now();
-  CUPS.unshift(rec); cacheCG(); cupMsg.textContent='Saved: '+rec.sample+' · '+rec.total.toFixed(2);
+  CUPS.unshift(rec); cacheCG(); ensureBean(rec.sample); cupMsg.textContent='Saved: '+rec.sample+' · '+rec.total.toFixed(2);
   cup=blankCup(); renderCup();
   if(sb){ try{ const r=await sb.from('cuppings').insert(toCupPayload(rec)).select('*').single(); if(r&&!r.error){ const ix=CUPS.findIndex(c=>c.id===rec.id); if(ix>=0){ CUPS[ix].id=r.data.id; cacheCG(); } } }catch(e){} } }
 function renderCupList(){ if(!CUPS.length){ cupList.innerHTML='<div class="small">None yet.</div>'; return; } cupList.innerHTML=CUPS.map(c=>`<div class="hxrow"><span>${esc(c.sample)} <span class="small">${c.date}</span></span><span class="tgtval">${(c.total||0).toFixed(2)} <button class="delx" data-delcup="${c.id}">×</button></span></div>`).join(''); cupList.querySelectorAll('[data-delcup]').forEach(b=>b.onclick=()=>delCup(b.dataset.delcup)); }
@@ -823,7 +823,7 @@ function updateGradeVerdict(){ const v=gradeVerdict(); const flags=[]; if(!v.okM
 async function saveGrade(){ if(!canSave('grade')){ grMsg.style.color='var(--accent2)'; grMsg.textContent=enrollPrompt('grading'); return; }
   grMsg.style.color='var(--accent2)'; if(!grade.sample.trim()){ grMsg.style.color='var(--warn)'; grMsg.textContent='Name the sample first.'; return; }
   const rec=JSON.parse(JSON.stringify(grade)); rec.id='local-'+Date.now();
-  GRADES.unshift(rec); cacheCG(); grMsg.textContent='Saved grading: '+rec.sample;
+  GRADES.unshift(rec); cacheCG(); ensureBean(rec.sample,{origin:rec.origin,variety:rec.variety,process:(rec.process||[]).join(', ')}); grMsg.textContent='Saved grading: '+rec.sample;
   grade=blankGrade(); renderGrade();
   if(sb){ try{ const r=await sb.from('green_grades').insert(toGradePayload(rec)).select('*').single(); if(r&&!r.error){ const ix=GRADES.findIndex(g=>g.id===rec.id); if(ix>=0){ GRADES[ix].id=r.data.id; cacheCG(); } } }catch(e){} } }
 function renderGrList(){ if(!GRADES.length){ grList.innerHTML='<div class="small">None yet.</div>'; return; } grList.innerHTML=GRADES.map(g=>{ const v=gradeVerdictFor(g); return `<div class="hxrow"><span>${esc(g.sample)} <span class="small">${g.date}</span></span><span class="tgtval" style="color:${v.ok?'var(--accent2)':'var(--dark)'}">${v.ok?'Specialty':'Below'} <button class="delx" data-delgr="${g.id}">×</button></span></div>`; }).join(''); grList.querySelectorAll('[data-delgr]').forEach(b=>b.onclick=()=>delGrade(b.dataset.delgr)); }
@@ -831,7 +831,7 @@ function gradeVerdictFor(g){ const c1=CAT1.reduce((a,d)=>a+(g.counts[d[0]]||0)/d
 async function delGrade(id){ GRADES=GRADES.filter(g=>String(g.id)!==String(id)); cacheCG(); renderGrList(); if(sb&&!String(id).startsWith('local-')){ try{ await sb.from('green_grades').delete().eq('id',id); }catch(e){} } }
 
 // ---- Value Assessment (holistic identity card) ----
-function valSamples(){ const s=[]; CUPS.forEach(c=>c.sample&&!s.includes(c.sample)&&s.push(c.sample)); GRADES.forEach(g=>g.sample&&!s.includes(g.sample)&&s.push(g.sample)); return s; }
+function valSamples(){ const s=[]; const add=n=>{ if(n&&!s.includes(n)) s.push(n); }; BEANS.forEach(b=>add(b.name)); CUPS.forEach(c=>add(c.sample)); GRADES.forEach(g=>add(g.sample)); LOG.forEach(l=>add(l.bean)); return s; }
 function renderValue(){ const arr=valSamples(),cur=valSample.value; valSample.innerHTML=arr.map(s=>`<option>${esc(s)}</option>`).join(''); if(arr.includes(cur)) valSample.value=cur; valEmpty.classList.toggle('hide',arr.length>0); valCard.innerHTML=''; if(arr.length) renderValueCard(); }
 function topScored(c){ return SCORE_KEYS.map(k=>({k,v:c.score[k]!=null?c.score[k]:5})).sort((a,b)=>b.v-a.v).slice(0,2).map(x=>x.k+' '+x.v).join(', '); }
 function distinctDescriptors(c){ const subs=[]; (c.cata.fragAroma||[]).concat(c.cata.flavAfter||[]).forEach(t=>{ if(!OLF.some(g=>g[0]===t)&&!subs.includes(t)) subs.push(t); }); return subs; }
@@ -881,12 +881,17 @@ function renderValueCard(){ const s=valSample.value; const c=CUPS.find(x=>x.samp
   h+=`<input type="text" id="valDist" placeholder="e.g. jasmine top note that holds into a tea-like cool finish" value="${c?esc(c.distinctive||''):''}" ${(c&&canSave('value'))?'':'disabled'}>`;
   if(c&&!canSave('value')) h+=`<div class="small" style="margin-top:6px;color:var(--accent2)">Lite access: naming and saving the distinctive attribute unlocks when you enroll to your class.</div>`;
   h+='</div>';
-  // pillars
+  // pillars (lifecycle order: green grade -> roast -> cup -> value)
+  const bean=BEANS.find(b=>b.name===s); const roasts=LOG.filter(l=>l.bean===s);
   h+='<div class="card"><div class="secname" style="margin-bottom:4px">Identity card</div>';
-  h+=`<div class="pillar">${dot(!!g)}<div><div class="pname">Physical</div><div class="pbody">${g?(`${g.color||'color —'} · moisture ${g.moisture||'—'}% · ${gradeVerdictFor(g).ok?'specialty grade':'below specialty'}`):'Not graded yet. Open Grade.'}</div></div></div>`;
+  h+=`<div class="pillar">${dot(!!g)}<div><div class="pname">Physical (green)</div><div class="pbody">${g?(`${g.color||'color —'} · moisture ${g.moisture||'—'}% · ${gradeVerdictFor(g).ok?'specialty grade':'below specialty'}`):'Not graded yet. Open Grade.'}</div></div></div>`;
+  let roastBody='Not roasted in the guide yet. Open Roast.';
+  if(roasts.length){ const last=roasts[0]; roastBody=roasts.length+' roast'+(roasts.length>1?'s':'')+' · last '+last.date+' · drop '+last.target+((last.agtron!==''&&last.agtron!=null)?(' · '+last.agtron+'A'):(last.targetAg!=null?(' · target '+last.targetAg+'A'):'')); }
+  h+=`<div class="pillar">${dot(roasts.length>0)}<div><div class="pname">Roast</div><div class="pbody">${roastBody}</div></div></div>`;
   h+=`<div class="pillar">${dot(desc.length>0||(c&&((c.cata.fragAroma||[]).length||(c.cata.flavAfter||[]).length)))}<div><div class="pname">Descriptive</div><div class="pbody">${c?((c.cata.fragAroma||[]).concat(c.cata.flavAfter||[]).join(', ')||'no descriptors marked'):'Not cupped yet. Open Cup.'}</div></div></div>`;
   h+=`<div class="pillar">${dot(!!c)}<div><div class="pname">Affective</div><div class="pbody">${c?(`score ${fit} · strongest: ${topScored(c)}`):'Not cupped yet. Open Cup.'}</div></div></div>`;
-  const ex=g?[g.origin,g.variety,(g.process||[]).join('/'),(g.certs||[]).join('/')].filter(Boolean).join(' · '):'';
+  let ex=g?[g.origin,g.variety,(g.process||[]).join('/'),(g.certs||[]).join('/')].filter(Boolean).join(' · '):'';
+  if(!ex && bean) ex=[bean.origin,bean.variety,bean.process].filter(Boolean).join(' · ');
   h+=`<div class="pillar">${dot(!!ex)}<div><div class="pname">Extrinsic</div><div class="pbody">${ex||'No origin / process info yet. Add it in Grade.'}</div></div></div>`;
   h+='</div>';
   h+=`<button class="nullbtn" title="Coming soon">&#9733; Bonus round &nbsp;·&nbsp; Think you really know your beans? Cup A0 / A1 / B1 / C samples from one roast and watch the cup change. Get in the game. Unlocking soon.</button>`;
@@ -905,6 +910,21 @@ async function loadCupGrade(){ loadCGCache(); if(!sb) return;
   try{ const cr=await sb.from('cuppings').select('*').order('created_at',{ascending:false}); if(cr&&!cr.error&&cr.data) CUPS=cr.data.map(rowToCup); }catch(e){}
   try{ const gr=await sb.from('green_grades').select('*').order('created_at',{ascending:false}); if(gr&&!gr.error&&gr.data) GRADES=gr.data.map(rowToGrade); }catch(e){}
   cacheCG(); }
+
+// ---- beans: the shared spine. Roast, Cup, Grade, Value all hang off a bean (keyed by coffee name) ----
+let BEANS=[]; const BEANS_CACHE='cnBeans_cache';
+function cacheBeans(){ try{ localStorage.setItem(BEANS_CACHE,JSON.stringify(BEANS)); }catch(e){} }
+function beanByName(n){ return BEANS.find(b=>b.name===n); }
+async function loadBeans(){ try{ const a=JSON.parse(localStorage.getItem(BEANS_CACHE)||'[]'); BEANS=Array.isArray(a)?a:[]; }catch(e){ BEANS=[]; }
+  if(!sb) return; try{ const r=await sb.from('beans').select('*').order('name'); if(r&&!r.error&&r.data) BEANS=r.data; cacheBeans(); }catch(e){} }
+async function ensureBean(name, extra){ name=(name||'').trim(); if(!name) return null; const f=extra||{}; let b=beanByName(name);
+  if(b){ const upd={}; ['origin','process','variety'].forEach(k=>{ if(f[k]&&!b[k]) upd[k]=f[k]; });
+    if(Object.keys(upd).length){ Object.assign(b,upd); cacheBeans(); if(sb&&b.id&&!String(b.id).startsWith('local-')){ try{ await sb.from('beans').update(upd).eq('id',b.id); }catch(e){} } }
+    return b; }
+  b={ id:'local-'+Date.now(), name, origin:f.origin||null, process:f.process||null, variety:f.variety||null }; BEANS.push(b); cacheBeans();
+  if(sb){ try{ const r=await sb.from('beans').insert({name,origin:b.origin,process:b.process,variety:b.variety}).select('*').single(); if(r&&!r.error){ b.id=r.data.id; cacheBeans(); } }catch(e){} }
+  return b; }
+function cupThisRoast(){ const n=st&&st.name; cup=blankCup(); cup.sample=n||''; show('cup'); }   // roast-finish handoff
 
 // ---- access / entitlements (gate SAVE per module; admin sets per learner) ----
 const MODULES=['roast','cup','grade','value'];
@@ -1011,8 +1031,8 @@ async function doLogin(){
   if(res.error){ loginMsg.textContent=res.error.message; return; }
   loginMsg.textContent=''; hideLogin(); loadFromServer();
 }
-async function doLogout(){ try{ if(sb) await sb.auth.signOut(); }catch(e){} try{ ['cnRecipes_cache','gLog_cache','gLearn_cache','gLog_pending','cnCups_cache','cnGrades_cache'].forEach(k=>localStorage.removeItem(k)); }catch(e){} location.reload(); }
-async function afterRecipes(){ await loadServerData(); await loadCupGrade(); buildBeans(); renderRecipes(); renderLog(); }
+async function doLogout(){ try{ if(sb) await sb.auth.signOut(); }catch(e){} try{ ['cnRecipes_cache','gLog_cache','gLearn_cache','gLog_pending','cnCups_cache','cnGrades_cache','cnBeans_cache'].forEach(k=>localStorage.removeItem(k)); }catch(e){} location.reload(); }
+async function afterRecipes(){ await loadServerData(); await loadCupGrade(); await loadBeans(); buildBeans(); renderRecipes(); renderLog(); }
 async function loadFromServer(){
   if(!sb){ RECIPES=loadCache(); afterRecipes(); return; }
   const res=await sb.from('recipes').select('*').order('sort_order',{ascending:true,nullsFirst:false}).order('name');
