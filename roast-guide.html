@@ -889,7 +889,7 @@ function renderValueCard(){ const s=valSample.value; const c=CUPS.find(x=>x.samp
   const ex=g?[g.origin,g.variety,(g.process||[]).join('/'),(g.certs||[]).join('/')].filter(Boolean).join(' · '):'';
   h+=`<div class="pillar">${dot(!!ex)}<div><div class="pname">Extrinsic</div><div class="pbody">${ex||'No origin / process info yet. Add it in Grade.'}</div></div></div>`;
   h+='</div>';
-  h+=`<button class="nullbtn" title="Coming in the next version">Roast-Phase Tasting &nbsp;·&nbsp; cup A0/A1/B1/C samples against this roast &nbsp;·&nbsp; coming soon</button>`;
+  h+=`<button class="nullbtn" title="Coming soon">&#9733; Bonus round &nbsp;·&nbsp; Think you really know your beans? Cup A0 / A1 / B1 / C samples from one roast and watch the cup change. Get in the game. Unlocking soon.</button>`;
   valCard.innerHTML=h;
   const di=document.getElementById('valDist'); if(di&&c&&canSave('value')) di.addEventListener('change',e=>{ c.distinctive=e.target.value; cacheCG(); if(sb&&!String(c.id).startsWith('local-')){ try{ sb.from('cuppings').update({data:toCupPayload(c).data}).eq('id',c.id); }catch(e2){} } renderValueCard(); });
 }
