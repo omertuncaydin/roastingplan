@@ -2,7 +2,7 @@
 
 # CoffeeNutz Guide - Turkish mirror (tr-strings)
 
-EN is the source of truth; the app is designed in English. This file holds the Turkish equivalent of every user-facing string, kept current as the app changes, so a TR toggle can be wired later without re-translation. No language selector is built yet (by design). Brand names (CoffeeNutz, CoffeeNutz Guide) stay untranslated. No em dashes.
+EN is the source of truth; the app is designed in English. This file holds the Turkish equivalent of every user-facing string. A TR/EN toggle is now live in the app (at login and on the Account page); it reads from a `DICT.tr` map inside `roast-guide.html` that currently covers the chrome (login, nav, sub-tabs, section headings, roast home). This mirror is the full reference; expand `DICT.tr` from here each step so more surfaces flip. The CVA assessment lexicon (Fragrance, Floral, defect names, the 9-point internals) intentionally stays English, as it is taught. Brand names (CoffeeNutz, CoffeeNutz Guide) stay untranslated. No em dashes.
 
 ## Contents
 - [Website launch banner](#website-launch-banner)
