@@ -175,7 +175,7 @@
       <label class="fld" for="loginPass" style="margin-top:8px" data-i18n="Password">Password</label><input type="password" id="loginPass" autocomplete="current-password">
       <button class="btn" style="margin-top:14px" onclick="doLogin()" data-i18n="Log in">Log in</button>
       <div class="small" id="loginMsg" style="margin-top:10px;color:var(--warn)"></div>
-      <div class="small" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><span data-i18n="If you are a former student, please apply for your account by emailing">If you are a former student, please apply for your account by emailing</span> <a href="mailto:info@coffeenutz.net" style="color:var(--accent);text-decoration:underline">info@coffeenutz.net</a>.</div>
+      <div class="small" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><span data-i18n="If you are a former student, copy this address and email us for your account:">If you are a former student, copy this address and email us for your account:</span> <a href="mailto:info@coffeenutz.net" style="color:var(--accent);text-decoration:underline">info@coffeenutz.net</a></div>
     </div>
   </div>
 
@@ -1009,17 +1009,55 @@ async function changePassword(){ const p1=acPass1.value, p2=acPass2.value;
 
 // ---- language: EN is source, TR from the mirror. Toggle swaps tagged chrome + re-renders. CVA lexicon stays EN by design. ----
 let LANG='en', CURVIEW='roast';
+// Full string inventory. TR-translated entries flip live where wired; entries kept in English on purpose
+// (the CVA lexicon: descriptors, defects, roast levels) carry their EN text so they show in the editor and can be translated later.
 const DICT={ tr:{
+ // login + chrome
  "Sign in to load your recipes.":"Reçetelerinizi yüklemek için giriş yapın.",
  "Email":"E-posta","Password":"Şifre","Log in":"Giriş yap",
- "If you are a former student, please apply for your account by emailing":"Eski bir öğrenciyseniz, hesabınız için şu adrese e-posta gönderin:",
+ "If you are a former student, copy this address and email us for your account:":"Eski bir öğrenciyseniz, bu adresi kopyalayıp hesabınız için bize e-posta gönderin:",
  "Guide":"Rehber","Recipes":"Reçeteler","History":"Geçmiş","Rules":"Kurallar",
- "Coffee (active)":"Kahve (aktif)","Machine":"Makine","FC time":"FC zamanı","Drop at":"Boşaltma","Agtron":"Agtron","Open the guide":"Rehberi aç",
  "Roast":"Kavurma","first crack to drop, guided":"ilk çıtırtıdan boşaltmaya, rehberli",
  "Cup":"Tadım","sensory · CVA descriptive + affective":"duyusal · CVA tanımlayıcı + duyuşsal",
  "Grade":"Sınıflandırma","green physical · CVA defect grading":"fiziksel (yeşil) · CVA kusur sınıflandırması",
  "Value Assessment":"Değerlendirme","Fit + Distinctiveness · the identity card":"Uyum + Ayırt Edicilik · kimlik kartı",
- "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz"
+ "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz",
+ // roast
+ "Coffee (active)":"Kahve (aktif)","Machine":"Makine","FC time":"FC zamanı","Drop at":"Boşaltma","Agtron":"Agtron","Open the guide":"Rehberi aç",
+ "START":"BAŞLA","CINNAMON":"TARÇIN","FIRST CRACK (A0)":"İLK ÇITIRTI (A0)","DROP / FINISH":"BOŞALT / BİTİR","New roast":"Yeni kavurma",
+ "Tap START when the roast begins.":"Kavurma başladığında BAŞLA'ya dokun.","Roast finished and learned.":"Kavurma bitti ve öğrenildi.",
+ "Cup this coffee":"Bu kahveyi tadımla","Deep Calibration Learning":"Derin Kalibrasyon Öğrenmesi",
+ "Save rules":"Kuralları kaydet","Save as defaults":"Varsayılan olarak kaydet","Reset to defaults":"Varsayılanlara dön",
+ // cup
+ "Sample / coffee":"Numune / kahve","cupping score":"tadım puanı",
+ "Fragrance":"Koku (kuru)","Aroma":"Aroma","Flavor":"Tat","Aftertaste":"Bitiş tadı","Acidity":"Asidite","Sweetness":"Tatlılık","Mouthfeel":"Ağız hissi","Overall":"Genel",
+ "Main tastes (up to 2)":"Ana tatlar (en fazla 2)","Uniformity & defects":"Tekdüzelik ve kusurlar","Non-uniform cups":"Tekdüze olmayan fincanlar",
+ "Defective cups":"Kusurlu fincanlar","Defect type":"Kusur türü","Roast level":"Kavurma derecesi","Save cupping":"Tadımı kaydet",
+ // grade
+ "Green color":"Yeşil renk","Moisture %":"Nem %","Water activity (Aw)":"Su aktivitesi (Aw)","Category 1 defects":"Kategori 1 kusurları","Category 2 defects":"Kategori 2 kusurları",
+ "Specialty grade":"Spesiyalite sınıfı","Below specialty":"Spesiyalite altı","Save grading":"Sınıflandırmayı kaydet",
+ "Extrinsic (information value)":"Dışsal (bilgi değeri)","Origin":"Menşe","Variety":"Çeşit","Process":"İşleme","Certifications":"Sertifikalar",
+ // value
+ "Fit":"Uyum","Distinctiveness":"Ayırt Edicilik","The distinctive attribute":"Ayırt edici özellik","Identity card":"Kimlik kartı",
+ "Physical (green)":"Fiziksel (yeşil)","Descriptive":"Tanımlayıcı","Affective":"Duyuşsal","Extrinsic":"Dışsal",
+ // account
+ "Your membership":"Üyeliğiniz","Member since":"Üyelik tarihi","Plan":"Plan","Change password":"Şifre değiştir","New password":"Yeni şifre",
+ "Confirm new password":"Yeni şifreyi onayla","Update password":"Şifreyi güncelle","Log out":"Çıkış yap","Member access":"Üye erişimi",
+ "Learner email":"Öğrenci e-postası","Save plan":"Planı kaydet","Provisioned members":"Tanımlı üyeler",
+ "Roaster Plan":"Kavurucu Planı","Roaster & Cupper Plan":"Kavurucu ve Tadımcı Planı","Admin":"Yönetici",
+ // CVA lexicon - kept English on purpose (edit here to translate)
+ "Floral":"Floral","Fruity":"Fruity","Berry":"Berry","Dried Fruit":"Dried Fruit","Citrus Fruit":"Citrus Fruit","Sour/Fermented":"Sour/Fermented",
+ "Sour":"Sour","Fermented":"Fermented","Green/Vegetative":"Green/Vegetative","Other":"Other","Chemical":"Chemical","Musty/Earthy":"Musty/Earthy","Woody":"Woody",
+ "Roasted":"Roasted","Cereal":"Cereal","Burnt":"Burnt","Tobacco":"Tobacco","Nutty/Cocoa":"Nutty/Cocoa","Nutty":"Nutty","Cocoa":"Cocoa","Spice":"Spice",
+ "Sweet":"Sweet","Vanilla/Vanillin":"Vanilla/Vanillin","Brown Sugar":"Brown Sugar",
+ "Salty":"Salty","Bitter":"Bitter","Umami":"Umami",
+ "Rough":"Rough","Gritty":"Gritty","Chalky":"Chalky","Sandy":"Sandy","Metallic":"Metallic","Oily":"Oily","Smooth":"Smooth","Velvety":"Velvety","Silky":"Silky","Syrupy":"Syrupy","Mouth-Drying":"Mouth-Drying",
+ "Very Light":"Very Light","Light":"Light","Medium-Light":"Medium-Light","Medium":"Medium","Medium-Dark":"Medium-Dark","Dark":"Dark",
+ "None":"None","Moldy":"Moldy","Phenolic":"Phenolic","Potato":"Potato",
+ "Blue-Green":"Blue-Green","Bluish-Green":"Bluish-Green","Greenish":"Greenish","Yellow-Green":"Yellow-Green","Pale Yellow":"Pale Yellow","Yellowish":"Yellowish","Brownish":"Brownish",
+ "Washed":"Washed","Honey":"Honey","Anaerobic":"Anaerobic","Decaf":"Decaf",
+ "Full Black":"Full Black","Full Sour":"Full Sour","Dried Cherry":"Dried Cherry","Fungus Damage":"Fungus Damage","Foreign Matter":"Foreign Matter","Severe Insect":"Severe Insect",
+ "Partial Black":"Partial Black","Partial Sour":"Partial Sour","Parchment":"Parchment","Floater":"Floater","Immature / Unripe":"Immature / Unripe","Withered":"Withered","Shell":"Shell","Broken / Cut":"Broken / Cut","Hull / Husk":"Hull / Husk","Slight Insect":"Slight Insect"
 }};
 function T(s){ return (LANG==='tr' && DICT.tr[s]) ? DICT.tr[s] : s; }
 function applyLang(){ try{ localStorage.setItem('cnLang',LANG); }catch(e){}
