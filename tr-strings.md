@@ -17,13 +17,14 @@ EN is the source of truth; the app is designed in English. This file holds the T
 
 ## Website launch banner
 - CoffeeNutz Guide is live... → "CoffeeNutz Guide yayında. Kavurmadan tadıma, planlamadan değerlendirmeye, kahvenizin tüm yolculuğunu tek yerden yönetin. Tüm öğrencilerimiz davetli."
-- Former students access line (login page) → "Eski öğrencilerimiz: giriş bilgileriniz için [e-posta/adres] yazın."
+- Former students access line (login page) → see Login section ("Eski bir öğrenciyseniz, hesabınız için info@coffeenutz.net adresine e-posta gönderin.")
 
 ## Login
 - Sign in to load your recipes. → "Reçetelerinizi yüklemek için giriş yapın."
 - Email → "E-posta"
 - Password → "Şifre"
 - Log in → "Giriş yap"
+- If you are a former student, please apply for your account by emailing info@coffeenutz.net → "Eski bir öğrenciyseniz, hesabınız için info@coffeenutz.net adresine e-posta gönderin."
 
 ## Navigation
 - Roast → "Kavurma"
