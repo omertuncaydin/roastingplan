@@ -416,6 +416,13 @@
       <div class="cgrplbl" style="margin-top:14px">Provisioned members</div>
       <div id="entList"></div>
     </div>
+    <div class="card hide" id="trCard">
+      <div class="secname" style="margin-bottom:6px">Translations (EN &rarr; TR)</div>
+      <div class="small" style="margin-bottom:10px">Edit the Turkish shown when the app is in TR. Saved for everyone; English stays the source. Full reference: <a href="https://github.com/omertuncaydin/roastingplan/blob/main/tr-strings.md" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">tr-strings.md</a></div>
+      <div id="trList"></div>
+      <button class="btn" style="margin-top:10px" onclick="saveTranslations()">Save translations</button>
+      <div class="small" id="trMsg" style="margin-top:8px;color:var(--accent2)"></div>
+    </div>
     <div class="small" style="margin-top:10px">Your recipes, roast history, cuppings and gradings are private to this account. Nobody else can see them.</div>
   </div>
 
@@ -513,7 +520,7 @@ async function flushPending(){ if(!sb) return; const p=loadPending(); if(!p.leng
 async function loadServerData(){
   if(!sb){ LOG=loadLogCache(); applyRules(); recomputeLearning(); return; }
   try{ const u=await sb.auth.getUser(); MYUID=u&&u.data&&u.data.user? u.data.user.id : null; const email=u&&u.data&&u.data.user? u.data.user.email : ''; MYEMAIL=email||''; IS_ADMIN=(email===ADMIN_EMAIL); }catch(e){}
-  try{ const sr=await sb.from('settings').select('*').eq('id',1).maybeSingle(); if(sr&&!sr.error&&sr.data){ const d=sr.data.rules; if(d){ RULES={ offs:Object.assign({},DEFAULT_RULES.offs,d.offs||{}), fcBase:d.fcBase??7, fcDouble:d.fcDouble??12, secPerAg:d.secPerAg??4, learnN:d.learnN??5, cinToA0:d.cinToA0??15 }; } const df=sr.data.defaults; if(df){ SAVED_DEFAULTS={ offs:Object.assign({},DEFAULT_RULES.offs,df.offs||{}), fcBase:df.fcBase??7, fcDouble:df.fcDouble??12, secPerAg:df.secPerAg??4, learnN:df.learnN??5, cinToA0:df.cinToA0??15 }; } } }catch(e){}
+  try{ const sr=await sb.from('settings').select('*').eq('id',1).maybeSingle(); if(sr&&!sr.error&&sr.data){ const d=sr.data.rules; if(d){ RULES={ offs:Object.assign({},DEFAULT_RULES.offs,d.offs||{}), fcBase:d.fcBase??7, fcDouble:d.fcDouble??12, secPerAg:d.secPerAg??4, learnN:d.learnN??5, cinToA0:d.cinToA0??15 }; } const df=sr.data.defaults; if(df){ SAVED_DEFAULTS={ offs:Object.assign({},DEFAULT_RULES.offs,df.offs||{}), fcBase:df.fcBase??7, fcDouble:df.fcDouble??12, secPerAg:df.secPerAg??4, learnN:df.learnN??5, cinToA0:df.cinToA0??15 }; } if(sr.data.tr_dict&&typeof sr.data.tr_dict==='object') Object.assign(DICT.tr, sr.data.tr_dict); } }catch(e){}
   applyRules();
   await loadAccess();
   await flushPending();
@@ -960,6 +967,15 @@ async function loadEntitlements(){ if(!IS_ADMIN||!sb){ if(typeof entList!=='unde
     if(r&&!r.error&&r.data){ entList.innerHTML = r.data.length? r.data.map(e=>{ const a=e.access||{}; const plan=a.plan||'(custom)'; return `<div class="hxrow"><span>${esc(e.email)}</span><span class="tgtval" style="font-size:11px">${esc(plan)} <button class="delx" data-delent="${esc(e.email)}">×</button></span></div>`; }).join('') : '<div class="small">No members provisioned yet.</div>';
       entList.querySelectorAll('[data-delent]').forEach(b=>b.onclick=()=>delEntitlement(b.dataset.delent)); } }catch(e){} }
 async function delEntitlement(email){ if(!IS_ADMIN||!sb) return; if(!confirm('Remove access row for '+email+'?')) return; const r=await sb.from('entitlements').delete().eq('email',email); if(r&&!r.error) loadEntitlements(); }
+// admin: live EN -> TR translation editor (overrides merge over built-in DICT, stored in settings.tr_dict)
+function renderTranslations(){ const el=document.getElementById('trList'); if(!el) return; const keys=Object.keys(DICT.tr);
+  el.innerHTML=keys.map((k,i)=>`<div style="margin-bottom:10px"><div class="small" style="color:var(--muted);margin-bottom:3px">${esc(k)}</div><input type="text" data-trk="${i}" value="${esc(DICT.tr[k]).replace(/"/g,'&quot;')}"></div>`).join(''); }
+async function saveTranslations(){ if(!IS_ADMIN||!sb) return; const keys=Object.keys(DICT.tr), obj={};
+  document.querySelectorAll('[data-trk]').forEach(inp=>{ const k=keys[+inp.dataset.trk]; if(k!=null) obj[k]=inp.value; });
+  Object.assign(DICT.tr,obj);
+  const r=await sb.from('settings').upsert({id:1, tr_dict:obj, updated_at:new Date().toISOString()},{onConflict:'id'}).select();
+  if(r&&r.error){ trMsg.style.color='var(--warn)'; trMsg.textContent='Save failed: '+r.error.message; return; }
+  trMsg.style.color='var(--accent2)'; trMsg.textContent='Saved. Toggle to TR to see it.'; applyLang(); }
 
 // ---- reasoning popups (craft logic, not operating instructions) ----
 function infoModal(title,body){ hxBox.innerHTML=`<h1 style="margin:0 0 8px;font-size:18px">${title}</h1><div class="small" style="line-height:1.6">${body}</div><button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`; hxModal.style.display='flex'; }
@@ -980,6 +996,7 @@ async function renderAccount(){
   else { acEmail.textContent='offline'; acSince.textContent='-'; }
   const ap=document.getElementById('acPlan'); if(ap) ap.textContent=MYPLAN;
   const mc=document.getElementById('memberCard'); if(mc){ mc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadEntitlements(); }
+  const tc=document.getElementById('trCard'); if(tc){ tc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) renderTranslations(); }
 }
 async function changePassword(){ const p1=acPass1.value, p2=acPass2.value;
   if((p1||'').length<6){ acPassMsg.style.color='var(--warn)'; acPassMsg.textContent='Use at least 6 characters.'; return; }
