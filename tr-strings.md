@@ -24,6 +24,7 @@ EN is the source of truth; the app is designed in English. This file holds the T
 - Email → "E-posta"
 - Password → "Şifre"
 - Log in → "Giriş yap"
+- Copied! (after tapping the email to copy) → "Kopyalandı!"
 - If you are a former student, copy this address and email us for your account: info@coffeenutz.net → "Eski bir öğrenciyseniz, bu adresi kopyalayıp hesabınız için bize e-posta gönderin: info@coffeenutz.net"
 
 ## Navigation

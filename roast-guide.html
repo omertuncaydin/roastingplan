@@ -175,7 +175,7 @@
       <label class="fld" for="loginPass" style="margin-top:8px" data-i18n="Password">Password</label><input type="password" id="loginPass" autocomplete="current-password">
       <button class="btn" style="margin-top:14px" onclick="doLogin()" data-i18n="Log in">Log in</button>
       <div class="small" id="loginMsg" style="margin-top:10px;color:var(--warn)"></div>
-      <div class="small" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><span data-i18n="If you are a former student, copy this address and email us for your account:">If you are a former student, copy this address and email us for your account:</span> <a href="mailto:info@coffeenutz.net" style="color:var(--accent);text-decoration:underline">info@coffeenutz.net</a></div>
+      <div class="small" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><span data-i18n="If you are a former student, copy this address and email us for your account:">If you are a former student, copy this address and email us for your account:</span> <a href="#" id="copyMail" onclick="copyEmail(event)" title="Copy" style="color:var(--accent);text-decoration:underline;cursor:pointer">info@coffeenutz.net</a></div>
     </div>
   </div>
 
@@ -1016,6 +1016,7 @@ const DICT={ tr:{
  "Sign in to load your recipes.":"Reçetelerinizi yüklemek için giriş yapın.",
  "Email":"E-posta","Password":"Şifre","Log in":"Giriş yap",
  "If you are a former student, copy this address and email us for your account:":"Eski bir öğrenciyseniz, bu adresi kopyalayıp hesabınız için bize e-posta gönderin:",
+ "Copied!":"Kopyalandı!",
  "Guide":"Rehber","Recipes":"Reçeteler","History":"Geçmiş","Rules":"Kurallar",
  "Roast":"Kavurma","first crack to drop, guided":"ilk çıtırtıdan boşaltmaya, rehberli",
  "Cup":"Tadım","sensory · CVA descriptive + affective":"duyusal · CVA tanımlayıcı + duyuşsal",
@@ -1065,6 +1066,9 @@ function applyLang(){ try{ localStorage.setItem('cnLang',LANG); }catch(e){}
   document.querySelectorAll('.langBtn').forEach(b=>{ b.textContent = LANG==='en'?'TR':'EN'; });
   if(typeof show==='function') show(CURVIEW); }
 function toggleLang(){ LANG = LANG==='en'?'tr':'en'; applyLang(); }
+function copyEmail(e){ if(e&&e.preventDefault) e.preventDefault(); const a='info@coffeenutz.net';
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(a); } else { const t=document.createElement('textarea'); t.value=a; t.style.position='fixed'; t.style.opacity='0'; document.body.appendChild(t); t.focus(); t.select(); document.execCommand('copy'); document.body.removeChild(t); } }catch(err){}
+  const el=document.getElementById('copyMail'); if(el){ el.textContent=T('Copied!'); setTimeout(()=>{ el.textContent=a; },1200); } }
 
 // ===================== views =====================
 const ROAST_GROUP=['roast','recipes','hist','rules'];
