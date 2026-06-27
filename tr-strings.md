@@ -1,0 +1,109 @@
+*Last updated: 2026-06-27 17:20 (Turkey time)*
+
+# CoffeeNutz Guide - Turkish mirror (tr-strings)
+
+EN is the source of truth; the app is designed in English. This file holds the Turkish equivalent of every user-facing string, kept current as the app changes, so a TR toggle can be wired later without re-translation. No language selector is built yet (by design). Brand names (CoffeeNutz, CoffeeNutz Guide) stay untranslated. No em dashes.
+
+## Contents
+- [Website launch banner](#website-launch-banner)
+- [Login](#login)
+- [Navigation](#navigation)
+- [Roast](#roast)
+- [Cup](#cup)
+- [Grade](#grade)
+- [Value Assessment](#value-assessment)
+- [Account](#account)
+- [Plans](#plans)
+
+## Website launch banner
+- CoffeeNutz Guide is live... → "CoffeeNutz Guide yayında. Kavurmadan tadıma, planlamadan değerlendirmeye, kahvenizin tüm yolculuğunu tek yerden yönetin. Tüm öğrencilerimiz davetli."
+- Former students access line (login page) → "Eski öğrencilerimiz: giriş bilgileriniz için [e-posta/adres] yazın."
+
+## Login
+- Sign in to load your recipes. → "Reçetelerinizi yüklemek için giriş yapın."
+- Email → "E-posta"
+- Password → "Şifre"
+- Log in → "Giriş yap"
+
+## Navigation
+- Roast → "Kavurma"
+- Cup → "Tadım"
+- Grade → "Sınıflandırma"
+- Value (Value Assessment) → "Değerlendirme"
+- Sub-tabs: Guide → "Rehber"; Recipes → "Reçeteler"; History → "Geçmiş"; Rules → "Kurallar"
+- Section subtitles:
+  - Roast: "first crack to drop, guided" → "ilk çıtırtıdan boşaltmaya, rehberli"
+  - Cup: "sensory · CVA descriptive + affective" → "duyusal · CVA tanımlayıcı + duyuşsal"
+  - Grade: "green physical · CVA defect grading" → "fiziksel (yeşil) · CVA kusur sınıflandırması"
+  - Value Assessment: "Fit + Distinctiveness · the identity card" → "Uyum + Ayırt Edicilik · kimlik kartı"
+
+## Roast
+- Coffee (active) → "Kahve (aktif)"
+- Machine → "Makine"
+- FC time → "FC zamanı"
+- Drop at → "Boşaltma"
+- Agtron → "Agtron"
+- Open the guide → "Rehberi aç"
+- START → "BAŞLA"
+- CINNAMON → "TARÇIN"
+- FIRST CRACK (A0) → "İLK ÇITIRTI (A0)"
+- DROP / FINISH → "BOŞALT / BİTİR"
+- New roast → "Yeni kavurma"
+- Tap START when the roast begins. → "Kavurma başladığında BAŞLA'ya dokun."
+- Roast finished and learned. → "Kavurma bitti ve öğrenildi."
+- Cup this coffee → "Bu kahveyi tadımla"
+- Deep Calibration Learning → "Derin Kalibrasyon Öğrenmesi"
+
+## Cup
+- cupping score → "tadım puanı"
+- Sample / coffee → "Numune / kahve"
+- Sections: Fragrance → "Koku (kuru)"; Aroma → "Aroma"; Flavor → "Tat"; Aftertaste → "Bitiş tadı"; Acidity → "Asidite"; Sweetness → "Tatlılık"; Mouthfeel → "Ağız hissi"; Overall → "Genel"
+- intensity / Low / High → "yoğunluk" / "Düşük" / "Yüksek"
+- 1 extremely low → "1 çok düşük"; 5 neither → "5 ne yüksek ne düşük"; 9 extremely high → "9 çok yüksek"
+- Main tastes (up to 2) → "Ana tatlar (en fazla 2)"
+- Uniformity & defects → "Tekdüzelik ve kusurlar"
+- Non-uniform cups → "Tekdüze olmayan fincanlar"
+- Defective cups → "Kusurlu fincanlar"
+- Defect type → "Kusur türü"
+- Roast level → "Kavurma derecesi"
+- Save cupping → "Tadımı kaydet"
+- Lite banner / enroll prompt → "Lite erişim. Dilediğinizce puanlayın ve keşfedin. Tadımınızı kaydetmek, sınıfınıza kaydolduğunuzda açılır."
+
+## Grade
+- Green color → "Yeşil renk"
+- Moisture % → "Nem %"
+- Water activity (Aw) → "Su aktivitesi (Aw)"
+- Category 1 defects → "Kategori 1 kusurları"
+- Category 2 defects → "Kategori 2 kusurları"
+- Specialty grade → "Spesiyalite sınıfı"
+- Below specialty → "Spesiyalite altı"
+- Save grading → "Sınıflandırmayı kaydet"
+- Extrinsic (information value) → "Dışsal (bilgi değeri)"
+- Origin → "Menşe"; Variety → "Çeşit"; Process → "İşleme"; Certifications → "Sertifikalar"
+- Aw note → "Su aktivitesi serbest nemi ölçer ve küf riski ile raf ömrünü nem oranından daha iyi öngörür. SCA yeşil standardı zaten Aw'nin 0.70'in altında olmasını ister, ancak CVA Fiziksel formu bunu kaydetmenizi henüz istemiyor."
+
+## Value Assessment
+- Fit → "Uyum"
+- Distinctiveness → "Ayırt Edicilik"
+- The distinctive attribute → "Ayırt edici özellik"
+- Prompt → "Tek cümleyle: bu kahvenin başka bir kahvenin yapamayacağı şey nedir? Puan değil, asıl değeri belirleyen budur."
+- Identity card → "Kimlik kartı"
+- Pillars: Physical (green) → "Fiziksel (yeşil)"; Roast → "Kavurma"; Descriptive → "Tanımlayıcı"; Affective → "Duyuşsal"; Extrinsic → "Dışsal"
+- Bonus round button → "★ Bonus tur · Kahvelerinizi gerçekten tanıyor musunuz? Tek bir kavurmadan A0 / A1 / B1 / C numuneleri alıp tadın ve fincanın nasıl değiştiğini görün. Oyuna girin. Çok yakında."
+
+## Account
+- Your membership → "Üyeliğiniz"
+- Email → "E-posta"; Member since → "Üyelik tarihi"; Plan → "Plan"
+- Change password → "Şifre değiştir"
+- New password → "Yeni şifre"; Confirm new password → "Yeni şifreyi onayla"; Update password → "Şifreyi güncelle"
+- Log out → "Çıkış yap"
+- Member access → "Üye erişimi"
+- Learner email → "Öğrenci e-postası"
+- Save plan → "Planı kaydet"
+- Provisioned members → "Tanımlı üyeler"
+
+## Plans
+- Roaster Plan → "Kavurucu Planı"
+- Roaster & Cupper Plan → "Kavurucu ve Tadımcı Planı"
+- Admin → "Yönetici"
+- Lite (no plan) → "Lite (plansız)"
