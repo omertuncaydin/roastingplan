@@ -292,6 +292,7 @@
         <label>Sec / Agtron pt<input type="number" id="ru_secPerAg"></label>
         <label>Learn last N (0 = off)<input type="number" id="ru_learnN" min="0"></label>
         <label>Cinnamon→A0 @ base (s)<input type="number" id="ru_cinToA0"></label>
+        <label>Agtron tolerance (± pts)<input type="number" id="ru_agTol" min="0"></label>
       </div>
     </div>
     <div id="ruleActions">
@@ -470,7 +471,7 @@ const STAGES=[
 function stIdx(code){ return STAGES.findIndex(s=>s.code===code); }
 // ---- editable rule set (admin sets globally; everyone roasts by it) ----
 const ADMIN_EMAIL="omer_aydin@coffeenutz.net";
-const DEFAULT_RULES={ offs:{A1:15,B0:30,B1:45,C0:60,C1:75,C2:100}, fcBase:7, fcDouble:12, secPerAg:4, learnN:5, cinToA0:15 };
+const DEFAULT_RULES={ offs:{A1:15,B0:30,B1:45,C0:60,C1:75,C2:100}, fcBase:7, fcDouble:12, secPerAg:4, learnN:5, cinToA0:15, agTol:2 };
 let RULES=JSON.parse(JSON.stringify(DEFAULT_RULES)); let IS_ADMIN=false; let SAVED_DEFAULTS=JSON.parse(JSON.stringify(DEFAULT_RULES));
 function applyRules(){ STAGES.forEach(s=>{ if(RULES.offs[s.code]!=null) s.off=RULES.offs[s.code]; }); }
 function fcScale(fcSec){ const span=(RULES.fcDouble-RULES.fcBase)||5; return 1 + ((fcSec/60) - RULES.fcBase)/span; }
@@ -523,7 +524,7 @@ async function flushPending(){ if(!sb) return; const p=loadPending(); if(!p.leng
 async function loadServerData(){
   if(!sb){ LOG=loadLogCache(); applyRules(); recomputeLearning(); return; }
   try{ const u=await sb.auth.getUser(); MYUID=u&&u.data&&u.data.user? u.data.user.id : null; const email=u&&u.data&&u.data.user? u.data.user.email : ''; MYEMAIL=email||''; IS_ADMIN=(email===ADMIN_EMAIL); }catch(e){}
-  try{ const sr=await sb.from('settings').select('*').eq('id',1).maybeSingle(); if(sr&&!sr.error&&sr.data){ const d=sr.data.rules; if(d){ RULES={ offs:Object.assign({},DEFAULT_RULES.offs,d.offs||{}), fcBase:d.fcBase??7, fcDouble:d.fcDouble??12, secPerAg:d.secPerAg??4, learnN:d.learnN??5, cinToA0:d.cinToA0??15 }; } const df=sr.data.defaults; if(df){ SAVED_DEFAULTS={ offs:Object.assign({},DEFAULT_RULES.offs,df.offs||{}), fcBase:df.fcBase??7, fcDouble:df.fcDouble??12, secPerAg:df.secPerAg??4, learnN:df.learnN??5, cinToA0:df.cinToA0??15 }; } if(sr.data.tr_dict&&typeof sr.data.tr_dict==='object') Object.assign(DICT.tr, sr.data.tr_dict); } }catch(e){}
+  try{ const sr=await sb.from('settings').select('*').eq('id',1).maybeSingle(); if(sr&&!sr.error&&sr.data){ const d=sr.data.rules; if(d){ RULES={ offs:Object.assign({},DEFAULT_RULES.offs,d.offs||{}), fcBase:d.fcBase??7, fcDouble:d.fcDouble??12, secPerAg:d.secPerAg??4, learnN:d.learnN??5, cinToA0:d.cinToA0??15, agTol:d.agTol??2 }; } const df=sr.data.defaults; if(df){ SAVED_DEFAULTS={ offs:Object.assign({},DEFAULT_RULES.offs,df.offs||{}), fcBase:df.fcBase??7, fcDouble:df.fcDouble??12, secPerAg:df.secPerAg??4, learnN:df.learnN??5, cinToA0:df.cinToA0??15, agTol:df.agTol??2 }; } if(sr.data.tr_dict&&typeof sr.data.tr_dict==='object') Object.assign(DICT.tr, sr.data.tr_dict); } }catch(e){}
   applyRules();
   await loadAccess();
   await flushPending();
@@ -693,7 +694,7 @@ function openHx(id){ const r=LOG.find(x=>String(x.id)===String(id)); if(!r) retu
 function closeHx(){ hxModal.style.display='none'; }
 function offsLine(r){ const parts=[]; STAGES.forEach(s=>{ if(s.off!=null && r.offs && r.offs[s.code]!=null) parts.push(s.code+' +'+r.offs[s.code]+'s'); }); return 'FC '+fmt(r.fc)+(parts.length? '  ·  after first crack:  '+parts.join('   ') : '  ·  no stage timings recorded'); }
 function corrLine(r){ const t=r.targetAg, a=(r.agtron===''||r.agtron==null?null:Number(r.agtron)); if(t==null||a==null||isNaN(a)) return '';
-  const gap=Math.round(a-t); if(Math.abs(gap)<=2) return '';
+  const gap=Math.round(a-t); if(Math.abs(gap)<=(RULES.agTol??2)) return '';
   const secs=Math.round(Math.abs(gap)*RULES.secPerAg); const ti=stIdx(r.target);
   if(gap>0){ const next=(ti>=0&&STAGES[ti+1])?STAGES[ti+1].code:'a darker drop';
     return 'Ran '+gap+' pts light ('+a+' vs '+t+'). Make sure the gain was '+r.target+' next time, or develop more and drop closer to '+next+' to reach '+t+' (this may require approximately '+secs+'s more).'; }
@@ -1087,14 +1088,15 @@ function show(v){
   ROAST_GROUP.forEach(x=>{ const b=document.getElementById('nav-'+x); if(b) b.classList.toggle('on',x===v); });
   if(v==='recipes') renderRecipes(); if(v==='hist') renderLog(); if(v==='rules') renderRules();
   if(v==='cup') renderCup(); if(v==='grade') renderGrade(); if(v==='value') renderValue(); if(v==='account') renderAccount(); }
-function renderRules(){ const ids=['ru_A1','ru_B0','ru_B1','ru_C0','ru_C1','ru_C2','ru_fcBase','ru_fcDouble','ru_secPerAg','ru_learnN','ru_cinToA0'];
-  ['A1','B0','B1','C0','C1','C2'].forEach(c=>{ const el=document.getElementById('ru_'+c); if(el) el.value=RULES.offs[c]; }); ['fcBase','fcDouble','secPerAg','learnN','cinToA0'].forEach(k=>{ const el=document.getElementById('ru_'+k); if(el) el.value=RULES[k]; });
+function renderRules(){ const ids=['ru_A1','ru_B0','ru_B1','ru_C0','ru_C1','ru_C2','ru_fcBase','ru_fcDouble','ru_secPerAg','ru_learnN','ru_cinToA0','ru_agTol'];
+  ['A1','B0','B1','C0','C1','C2'].forEach(c=>{ const el=document.getElementById('ru_'+c); if(el) el.value=RULES.offs[c]; }); ['fcBase','fcDouble','secPerAg','learnN','cinToA0','agTol'].forEach(k=>{ const el=document.getElementById('ru_'+k); if(el) el.value=RULES[k]; });
   ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!IS_ADMIN; });
   const act=document.getElementById('ruleActions'); if(act) act.style.display=IS_ADMIN?'block':'none';
   const note=document.getElementById('rulesNote'); if(note) note.textContent=IS_ADMIN? 'Admin: these apply to every account using the app.' : 'Read-only. These are the rules the guide runs on, set by CoffeeNutz.'; }
 function currentFormRules(){ const offs={}; ['A1','B0','B1','C0','C1','C2'].forEach(c=>{ const v=Number(document.getElementById('ru_'+c).value); offs[c]=isNaN(v)?DEFAULT_RULES.offs[c]:v; });
   const lv=(ru_learnN.value||'').trim(); let ln; if(lv===''){ ln=5; } else { const n=Number(lv); ln=isNaN(n)?5:Math.max(0,Math.round(n)); }   // 0 = stop learning from history (use rule defaults only); blank = default 5
-  return { offs, fcBase:Number(ru_fcBase.value)||7, fcDouble:Number(ru_fcDouble.value)||12, secPerAg:Number(ru_secPerAg.value)||4, learnN:ln, cinToA0:Number(ru_cinToA0.value)||15 }; }
+  const atv=Number(ru_agTol.value); const agTol=isNaN(atv)?2:Math.max(0,atv);   // 0 = flag any deviation
+  return { offs, fcBase:Number(ru_fcBase.value)||7, fcDouble:Number(ru_fcDouble.value)||12, secPerAg:Number(ru_secPerAg.value)||4, learnN:ln, cinToA0:Number(ru_cinToA0.value)||15, agTol }; }
 async function saveRules(){ const nr=currentFormRules(); RULES=nr; applyRules(); recomputeLearning();
   if(sb){ const r=await sb.from('settings').upsert({id:1, rules:nr, updated_at:new Date().toISOString()},{onConflict:'id'}).select(); if(r&&r.error){ rulesMsg.textContent='Save failed: '+r.error.message; return; } }
   rulesMsg.textContent='Saved. These rules now drive the guide for every account.'; }
