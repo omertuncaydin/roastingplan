@@ -297,25 +297,6 @@
     </div>
     <div class="small" id="rulesMsg" style="margin-top:10px;color:var(--accent2)"></div>
     <div class="small" id="rulesNote" style="margin-top:8px"></div>
-    <div class="card hide" id="memberCard" style="margin-top:12px">
-      <div class="secname" style="margin-bottom:6px">Member access</div>
-      <div class="small" style="margin-bottom:10px">Set what a learner can SAVE. Lite = use and see, cannot keep. Full = saves to their account. Set by email; works even before they sign up.</div>
-      <label class="fld" for="entEmail">Learner email</label><input type="email" id="entEmail" autocomplete="off" oninput="lookupEntitlement()">
-      <div class="rulegrid" style="margin-top:10px">
-        <label>Roast<select id="ent_roast"><option>lite</option><option>full</option></select></label>
-        <label>Cup<select id="ent_cup"><option>lite</option><option>full</option></select></label>
-        <label>Grade<select id="ent_grade"><option>lite</option><option>full</option></select></label>
-        <label>Value<select id="ent_value"><option>lite</option><option>full</option></select></label>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn" onclick="saveEntitlement()">Save access</button>
-        <button class="btn ghost" onclick="setAllAccess('full')">All full</button>
-        <button class="btn ghost" onclick="setAllAccess('lite')">All lite</button>
-      </div>
-      <div class="small" id="entMsg" style="margin-top:8px;color:var(--accent2)"></div>
-      <div class="cgrplbl" style="margin-top:14px">Provisioned members</div>
-      <div id="entList"></div>
-    </div>
   </div>
 
   <!-- CUP (CVA combined: descriptive + affective) -->
@@ -410,7 +391,7 @@
       <div class="secname" style="margin-bottom:10px">Your membership</div>
       <div class="hxrow"><span>Email</span><span class="tgtval" id="acEmail">-</span></div>
       <div class="hxrow"><span>Member since</span><span class="tgtval" id="acSince">-</span></div>
-      <div class="hxrow" style="border-bottom:none"><span>Plan</span><span class="tgtval">CoffeeNutz Guide</span></div>
+      <div class="hxrow" style="border-bottom:none"><span>Plan</span><span class="tgtval" id="acPlan">-</span></div>
     </div>
     <div class="card">
       <div class="cgrplbl">Change password</div>
@@ -419,6 +400,17 @@
       <label class="fld" for="acPass2" style="margin-top:8px">Confirm new password</label><input type="password" id="acPass2" autocomplete="new-password">
       <button class="btn" style="margin-top:12px" onclick="changePassword()">Update password</button>
       <div class="small" id="acPassMsg" style="margin-top:8px"></div>
+    </div>
+    <div class="card hide" id="memberCard">
+      <div class="secname" style="margin-bottom:6px">Member access</div>
+      <div class="small" style="margin-bottom:10px">Assign a plan to a learner by email. Works even before they sign up. No plan = Lite (use and see, cannot keep).</div>
+      <label class="fld" for="entEmail">Learner email</label><input type="email" id="entEmail" autocomplete="off" oninput="lookupEntitlement()">
+      <label class="fld" for="entPlan" style="margin-top:10px">Plan</label>
+      <select id="entPlan"><option>Roaster Plan</option><option>Roaster &amp; Cupper Plan</option></select>
+      <button class="btn" style="margin-top:12px" onclick="saveEntitlement()">Save plan</button>
+      <div class="small" id="entMsg" style="margin-top:8px;color:var(--accent2)"></div>
+      <div class="cgrplbl" style="margin-top:14px">Provisioned members</div>
+      <div id="entList"></div>
     </div>
     <button class="btn ghost" onclick="doLogout()">Log out</button>
     <div class="small" style="margin-top:10px">Your recipes, roast history, cuppings and gradings are private to this account. Nobody else can see them.</div>
@@ -887,7 +879,7 @@ function renderValueCard(){ const s=valSample.value; const c=CUPS.find(x=>x.samp
   h+=`<div class="w dis"><div class="wl">Distinctiveness <span class="info" onclick="showDistInfo()">&#9432;</span></div><div class="wv">${c&&c.distinctive?esc(c.distinctive):(D?D.level:'<span style="color:var(--muted);font-size:13px">cup it first</span>')}</div><div class="wsub">${D?(D.level+' · '+D.index+' · '+D.driver):'what sets it apart'}</div></div></div>`;
   h+=`<div class="cgrplbl" style="margin-top:14px">The distinctive attribute</div><div class="small" style="margin-bottom:6px">In one line: what does this coffee do that another would not? This, not the score, is what makes it worth more.</div>`;
   h+=`<input type="text" id="valDist" placeholder="e.g. jasmine top note that holds into a tea-like cool finish" value="${c?esc(c.distinctive||''):''}" ${(c&&canSave('value'))?'':'disabled'}>`;
-  if(c&&!canSave('value')) h+=`<div class="small" style="margin-top:6px;color:var(--accent2)">Lite access: naming and saving the distinctive attribute unlocks when you enroll.</div>`;
+  if(c&&!canSave('value')) h+=`<div class="small" style="margin-top:6px;color:var(--accent2)">Lite access: naming and saving the distinctive attribute unlocks when you enroll to your class.</div>`;
   h+='</div>';
   // pillars
   h+='<div class="card"><div class="secname" style="margin-bottom:4px">Identity card</div>';
@@ -918,30 +910,31 @@ async function loadCupGrade(){ loadCGCache(); if(!sb) return;
 const MODULES=['roast','cup','grade','value'];
 const DEFAULT_ACCESS={roast:'lite',cup:'lite',grade:'lite',value:'lite'};   // unknown / unprovisioned account = use freely, save nothing
 let ACCESS={roast:'full',cup:'full',grade:'full',value:'full'};
-let MYEMAIL='';
+let MYEMAIL='', MYPLAN='Lite';
+// named plans -> module save access. Roaster Plan saves Roast only; Roaster & Cupper saves everything.
+const PLANS={ 'Roaster Plan':{roast:'full',cup:'lite',grade:'lite',value:'lite'}, 'Roaster & Cupper Plan':{roast:'full',cup:'full',grade:'full',value:'full'} };
 function canSave(m){ return (ACCESS[m]||'lite')==='full'; }
 async function loadAccess(){
-  if(IS_ADMIN){ ACCESS={roast:'full',cup:'full',grade:'full',value:'full'}; return; }   // the master always has full
-  ACCESS=Object.assign({},DEFAULT_ACCESS);
+  if(IS_ADMIN){ ACCESS={roast:'full',cup:'full',grade:'full',value:'full'}; MYPLAN='Admin'; return; }   // the master always has full
+  ACCESS=Object.assign({},DEFAULT_ACCESS); MYPLAN='Lite';
   if(!sb||!MYEMAIL) return;
   try{ const r=await sb.from('entitlements').select('access').eq('email',MYEMAIL.toLowerCase()).maybeSingle();
-    if(r&&!r.error&&r.data&&r.data.access) ACCESS=Object.assign({},DEFAULT_ACCESS,r.data.access); }catch(e){}
+    if(r&&!r.error&&r.data&&r.data.access){ const a=r.data.access; ACCESS=Object.assign({},DEFAULT_ACCESS,a); MYPLAN=a.plan||'Roaster Plan'; } }catch(e){}
 }
-function enrollPrompt(word){ return 'Lite access: explore freely here, but saving your '+word+' unlocks when you enroll with CoffeeNutz.'; }
-function liteBanner(word){ return '<div class="litebanner">Lite access. Score and explore as much as you like - saving your '+word+' unlocks when you enroll.</div>'; }
-// admin: provision learners by email
-function setAllAccess(v){ ['ent_roast','ent_cup','ent_grade','ent_value'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=v; }); }
+function enrollPrompt(word){ return 'Lite access: explore freely here, but saving your '+word+' unlocks when you enroll to your class.'; }
+function liteBanner(word){ return '<div class="litebanner">Lite access. Score and explore as much as you like - saving your '+word+' unlocks when you enroll to your class.</div>'; }
+// admin: provision learners by email + plan
 async function saveEntitlement(){ if(!IS_ADMIN||!sb) return; const email=(entEmail.value||'').trim().toLowerCase(); if(!email){ entMsg.style.color='var(--warn)'; entMsg.textContent='Enter an email.'; return; }
-  const access={roast:ent_roast.value,cup:ent_cup.value,grade:ent_grade.value,value:ent_value.value};
+  const plan=document.getElementById('entPlan').value; const access=Object.assign({},PLANS[plan]||{},{plan});
   const r=await sb.from('entitlements').upsert({email,access,updated_at:new Date().toISOString()},{onConflict:'email'}).select();
   if(r&&r.error){ entMsg.style.color='var(--warn)'; entMsg.textContent='Save failed: '+r.error.message; return; }
-  entMsg.style.color='var(--accent2)'; entMsg.textContent='Saved access for '+email; loadEntitlements(); }
+  entMsg.style.color='var(--accent2)'; entMsg.textContent='Saved '+plan+' for '+email; loadEntitlements(); }
 async function lookupEntitlement(){ if(!IS_ADMIN||!sb) return; const email=(entEmail.value||'').trim().toLowerCase(); if(!email) return;
   try{ const r=await sb.from('entitlements').select('access').eq('email',email).maybeSingle(); const a=(r&&!r.error&&r.data&&r.data.access)?r.data.access:null;
-    MODULES.forEach(m=>{ const el=document.getElementById('ent_'+m); if(el) el.value=(a&&a[m])?a[m]:'lite'; }); }catch(e){} }
+    const el=document.getElementById('entPlan'); if(el&&a&&a.plan) el.value=a.plan; }catch(e){} }
 async function loadEntitlements(){ if(!IS_ADMIN||!sb){ if(typeof entList!=='undefined'&&entList) entList.innerHTML=''; return; }
   try{ const r=await sb.from('entitlements').select('*').order('email');
-    if(r&&!r.error&&r.data){ entList.innerHTML = r.data.length? r.data.map(e=>{ const a=e.access||{}; return `<div class="hxrow"><span>${esc(e.email)}</span><span class="tgtval" style="font-size:11px">R:${a.roast||'lite'} C:${a.cup||'lite'} G:${a.grade||'lite'} V:${a.value||'lite'} <button class="delx" data-delent="${esc(e.email)}">×</button></span></div>`; }).join('') : '<div class="small">No members provisioned yet.</div>';
+    if(r&&!r.error&&r.data){ entList.innerHTML = r.data.length? r.data.map(e=>{ const a=e.access||{}; const plan=a.plan||'(custom)'; return `<div class="hxrow"><span>${esc(e.email)}</span><span class="tgtval" style="font-size:11px">${esc(plan)} <button class="delx" data-delent="${esc(e.email)}">×</button></span></div>`; }).join('') : '<div class="small">No members provisioned yet.</div>';
       entList.querySelectorAll('[data-delent]').forEach(b=>b.onclick=()=>delEntitlement(b.dataset.delent)); } }catch(e){} }
 async function delEntitlement(email){ if(!IS_ADMIN||!sb) return; if(!confirm('Remove access row for '+email+'?')) return; const r=await sb.from('entitlements').delete().eq('email',email); if(r&&!r.error) loadEntitlements(); }
 
@@ -962,6 +955,8 @@ function showAwInfo(){ infoModal('Water activity (Aw)',
 async function renderAccount(){
   if(sb){ try{ const u=await sb.auth.getUser(); const usr=u&&u.data&&u.data.user; if(usr){ acEmail.textContent=usr.email||'-'; acSince.textContent=usr.created_at?usr.created_at.slice(0,10):'-'; } }catch(e){} }
   else { acEmail.textContent='offline'; acSince.textContent='-'; }
+  const ap=document.getElementById('acPlan'); if(ap) ap.textContent=MYPLAN;
+  const mc=document.getElementById('memberCard'); if(mc){ mc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadEntitlements(); }
 }
 async function changePassword(){ const p1=acPass1.value, p2=acPass2.value;
   if((p1||'').length<6){ acPassMsg.style.color='var(--warn)'; acPassMsg.textContent='Use at least 6 characters.'; return; }
@@ -989,8 +984,7 @@ function renderRules(){ const ids=['ru_A1','ru_B0','ru_B1','ru_C0','ru_C1','ru_C
   ['A1','B0','B1','C0','C1','C2'].forEach(c=>{ const el=document.getElementById('ru_'+c); if(el) el.value=RULES.offs[c]; }); ['fcBase','fcDouble','secPerAg','learnN','cinToA0'].forEach(k=>{ const el=document.getElementById('ru_'+k); if(el) el.value=RULES[k]; });
   ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!IS_ADMIN; });
   const act=document.getElementById('ruleActions'); if(act) act.style.display=IS_ADMIN?'block':'none';
-  const note=document.getElementById('rulesNote'); if(note) note.textContent=IS_ADMIN? 'Admin: these apply to every account using the app.' : 'Read-only. These are the rules the guide runs on, set by CoffeeNutz.';
-  const mc=document.getElementById('memberCard'); if(mc){ mc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadEntitlements(); } }
+  const note=document.getElementById('rulesNote'); if(note) note.textContent=IS_ADMIN? 'Admin: these apply to every account using the app.' : 'Read-only. These are the rules the guide runs on, set by CoffeeNutz.'; }
 function currentFormRules(){ const offs={}; ['A1','B0','B1','C0','C1','C2'].forEach(c=>{ const v=Number(document.getElementById('ru_'+c).value); offs[c]=isNaN(v)?DEFAULT_RULES.offs[c]:v; });
   const lv=(ru_learnN.value||'').trim(); let ln; if(lv===''){ ln=5; } else { const n=Number(lv); ln=isNaN(n)?5:Math.max(0,Math.round(n)); }   // 0 = stop learning from history (use rule defaults only); blank = default 5
   return { offs, fcBase:Number(ru_fcBase.value)||7, fcDouble:Number(ru_fcDouble.value)||12, secPerAg:Number(ru_secPerAg.value)||4, learnN:ln, cinToA0:Number(ru_cinToA0.value)||15 }; }
