@@ -70,7 +70,7 @@ EN is the source of truth; the app is designed in English. This file holds the T
 - Sections: Fragrance → "Koku (kuru)"; Aroma → "Aroma"; Flavor → "Tat"; Aftertaste → "Bitiş tadı"; Acidity → "Asidite"; Sweetness → "Tatlılık"; Mouthfeel → "Ağız hissi"; Overall → "Genel"
 - intensity / Low / High → "yoğunluk" / "Düşük" / "Yüksek"
 - 1 extremely low → "1 çok düşük"; 5 neither → "5 ne yüksek ne düşük"; 9 extremely high → "9 çok yüksek"
-- Main tastes (up to 2) → "Ana tatlar (en fazla 2)"
+- Main tastes of flavor & aftertaste (up to 2) → "Tat ve bitiş tadının ana tatları (en fazla 2)"
 - Uniformity & defects → "Tekdüzelik ve kusurlar"
 - Non-uniform cups → "Tekdüze olmayan fincanlar"
 - Defective cups → "Kusurlu fincanlar"

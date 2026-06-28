@@ -844,7 +844,7 @@ function renderCup(){
     if(showAff){ h+=`<div class="seg">`; for(let n=1;n<=9;n++) h+=`<button data-sc="${sec.k}" data-n="${n}" class="${sc===n?'on':''}">${n}</button>`; h+=`</div>`;
       h+=`<div class="seglbl"><span>1 extremely low</span><span>5 neither</span><span>9 extremely high</span></div>`; }
     if(showCata){ if(sec.cata==='olf'){ h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div>`+olfChips(sec.cataKey)+`</div>`;
-        if(sec.main) h+=`<div class="cgrp"><div class="cgrplbl">Main tastes (up to 2)</div><div class="chips">`+MAIN_TASTES.map(t=>`<span class="chip ${cup.cata.main.includes(t)?'on':''}" data-mt="${t}">${t}</span>`).join('')+`</div></div>`; }
+        if(sec.main) h+=`<div class="cgrp"><div class="cgrplbl">Main tastes of flavor &amp; aftertaste (up to 2)</div><div class="chips">`+MAIN_TASTES.map(t=>`<span class="chip ${cup.cata.main.includes(t)?'on':''}" data-mt="${t}">${t}</span>`).join('')+`</div></div>`; }
       if(sec.cata==='mouth') h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div><div class="chips">`+MOUTH.map(([v,l])=>`<span class="chip ${cup.cata.mouth.includes(v)?'on':''}" data-mo="${esc(v)}">${esc(l)}</span>`).join('')+`</div></div>`; }
     const nk=NOTE_AFTER[sec.k]; if(nk) h+=`<div class="cgrp"><div class="cgrplbl">${T('Notes')}</div><textarea data-note="${nk}" rows="2">${esc((cup.notes&&cup.notes[nk])||'')}</textarea></div>`;
     h+=`</div>`; });
@@ -888,16 +888,16 @@ function renderFlightMatrix(){ const secs=flightSecs(); if(FLSEC>=secs.length) F
   document.getElementById('flSecHint').textContent = T((showInt&&showAff) ? 'Intensity 0-15 and impression 1-9, across the table' : (showInt ? 'Intensity 0-15, across the table' : 'Impression 1-9, across the table'));
   const nk=NOTE_AFTER[sec.k];
   let h=''; FLIGHT.coffees.forEach((c,ci)=>{ const cup2=c.cup; const iv=cup2.intens[sec.k]; const scc=cup2.score[sec.k]!=null?cup2.score[sec.k]:5;
-    h+=`<div class="sec"><div class="secname" style="font-size:14px">${esc(c.sample)}</div>`;
+    h+=`<div class="sec"><div class="sechd"><span class="secname" style="font-size:14px">${esc(c.sample)}</span>`+((showInt&&sec.i)?`<span class="ival" id="fliv_${ci}">intensity ${iv!=null?iv:7}</span>`:'')+`</div>`;
     if(showInt&&sec.i) h+=`<div class="iwrap"><span class="scale">Low</span><input type="range" class="islider" min="0" max="15" step="1" value="${iv!=null?iv:7}" data-fi="${ci}"><span class="scale" style="text-align:right">High</span></div>`;
     if(showAff){ h+=`<div class="seg">`; for(let n=1;n<=9;n++) h+=`<button data-fsc="${ci}" data-n="${n}" class="${scc===n?'on':''}">${n}</button>`; h+=`</div>`; }
     if(showCata){ if(sec.cata==='olf'){ h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div>`+OLF.map(g=>`<div class="chips" style="margin-bottom:5px">`+g.map((t,i)=>`<span class="chip ${i>0?'sub':''} ${cup2.cata[sec.cataKey].includes(t)?'on':''}" data-fol="${ci}|${sec.cataKey}|${esc(t)}">${esc(t)}</span>`).join('')+`</div>`).join('')+`</div>`;
-      if(sec.main) h+=`<div class="cgrp"><div class="cgrplbl">Main tastes (up to 2)</div><div class="chips">`+MAIN_TASTES.map(t=>`<span class="chip ${cup2.cata.main.includes(t)?'on':''}" data-fmt="${ci}|${t}">${t}</span>`).join('')+`</div></div>`; }
+      if(sec.main) h+=`<div class="cgrp"><div class="cgrplbl">Main tastes of flavor &amp; aftertaste (up to 2)</div><div class="chips">`+MAIN_TASTES.map(t=>`<span class="chip ${cup2.cata.main.includes(t)?'on':''}" data-fmt="${ci}|${t}">${t}</span>`).join('')+`</div></div>`; }
     if(sec.cata==='mouth') h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div><div class="chips">`+MOUTH.map(([v,l])=>`<span class="chip ${cup2.cata.mouth.includes(v)?'on':''}" data-fmo="${ci}|${esc(v)}">${esc(l)}</span>`).join('')+`</div></div>`; }
     if(nk) h+=`<div class="cgrp"><div class="cgrplbl">${T('Notes')}</div><textarea data-fnote="${ci}" rows="2">${esc((cup2.notes&&cup2.notes[nk])||'')}</textarea></div>`;
     h+=`</div>`; });
   const rows=document.getElementById('flRows'); rows.innerHTML=h;
-  rows.querySelectorAll('input[data-fi]').forEach(s=>s.addEventListener('input',e=>{ FLIGHT.coffees[+e.target.dataset.fi].cup.intens[sec.k]=+e.target.value; }));
+  rows.querySelectorAll('input[data-fi]').forEach(s=>s.addEventListener('input',e=>{ const ci=+e.target.dataset.fi; FLIGHT.coffees[ci].cup.intens[sec.k]=+e.target.value; const lb=document.getElementById('fliv_'+ci); if(lb) lb.textContent='intensity '+e.target.value; }));
   rows.querySelectorAll('button[data-fsc]').forEach(b=>b.onclick=()=>{ const ci=+b.dataset.fsc,n=+b.dataset.n; FLIGHT.coffees[ci].cup.score[sec.k]=n; rows.querySelectorAll('button[data-fsc="'+ci+'"]').forEach(x=>x.classList.toggle('on',+x.dataset.n===n)); });
   rows.querySelectorAll('[data-fol]').forEach(c=>c.onclick=()=>{ const p=c.dataset.fol.split('|'); toggleCata(FLIGHT.coffees[+p[0]].cup.cata[p[1]],p[2],c,5); });
   rows.querySelectorAll('[data-fmt]').forEach(c=>c.onclick=()=>{ const p=c.dataset.fmt.split('|'); toggleCata(FLIGHT.coffees[+p[0]].cup.cata.main,p[1],c,2); });
@@ -1187,7 +1187,7 @@ const DICT={ tr:{
  "Build Cupping Session":"Tadım Seansı Oluştur","Cupping Session":"Tadım Seansı","Add a coffee to the table":"Masaya kahve ekle","Add a coffee...":"Kahve ekle...","Save session":"Seansı kaydet","Back to single coffee":"Tek kahveye dön","Intensity 0-15 and impression 1-9, across the table":"Tüm masada yoğunluk 0-15 ve izlenim 1-9","Intensity 0-15, across the table":"Tüm masada yoğunluk 0-15","Impression 1-9, across the table":"Tüm masada izlenim 1-9",
  "Date":"Tarih","Purpose":"Amaç","Roast level (Agtron)":"Kavurma derecesi (Agtron)","Notes":"Notlar","+ New coffee to assess":"+ Değerlendirilecek yeni kahve","New coffee to assess:":"Değerlendirilecek yeni kahve:","Reveal":"Göster","Hide":"Gizle","Keep secured":"Gizli kalsın",
  "Fragrance":"Koku (kuru)","Aroma":"Aroma","Flavor":"Tat","Aftertaste":"Bitiş tadı","Acidity":"Asidite","Sweetness":"Tatlılık","Mouthfeel":"Ağız hissi","Overall":"Genel",
- "Main tastes (up to 2)":"Ana tatlar (en fazla 2)","Uniformity & defects":"Tekdüzelik ve kusurlar","Non-uniform cups":"Tekdüze olmayan fincanlar",
+ "Main tastes of flavor &amp; aftertaste (up to 2)":"Ana tatlar (en fazla 2)","Uniformity & defects":"Tekdüzelik ve kusurlar","Non-uniform cups":"Tekdüze olmayan fincanlar",
  "Defective cups":"Kusurlu fincanlar","Defect type":"Kusur türü","Roast level":"Kavurma derecesi","Save cupping":"Tadımı kaydet",
  // grade
  "Green color":"Yeşil renk","Moisture %":"Nem %","Water activity (Aw)":"Su aktivitesi (Aw)","Category 1 defects":"Kategori 1 kusurları","Category 2 defects":"Kategori 2 kusurları",
