@@ -769,14 +769,16 @@ function blankCup(){ return {id:null,date:new Date().toISOString().slice(0,10),s
 let cup=blankCup();
 // SCA cupping score: anchors 79 (all 5s) and 100 (all 9s); -2 per non-uniform cup, -4 per defective cup; round to 0.25
 function cupTotal(c){ c=c||cup; let sum=0; SCORE_KEYS.forEach(k=>sum+=(c.score[k]!=null?c.score[k]:5)); let S=0.65625*sum+52.75-2*(c.nonuniform||0)-4*(c.defective||0); return Math.round(S/0.25)*0.25; }
-let SCORE_SECURED=true;   // hidden by default to avoid scoring toward a target (reverse cupping)
-function updateCupScore(){ const v=cupTotal(); const sv=document.getElementById('cupSV'), tg=document.getElementById('cupScoreToggle');
-  if(sv){ sv.textContent=v.toFixed(2); sv.classList.toggle('secured',SCORE_SECURED); }   // real number kept blurred until revealed
-  if(tg) tg.textContent = T(SCORE_SECURED ? 'Reveal' : 'Hide');
+let SCORE_REVEALED={};   // per-coffee reveal memory; absent/false = secured (blurred), remembered per coffee
+function activeScoreSample(){ return (CURVIEW==='value') ? ((typeof valSample!=='undefined'&&valSample)?valSample.value:'') : (cup?cup.sample:''); }
+function isScoreSecured(s){ return !SCORE_REVEALED[s]; }
+function updateCupScore(){ const v=cupTotal(); const secured=isScoreSecured(cup.sample); const sv=document.getElementById('cupSV'), tg=document.getElementById('cupScoreToggle');
+  if(sv){ sv.textContent=v.toFixed(2); sv.classList.toggle('secured',secured); }   // real number kept blurred until revealed
+  if(tg) tg.textContent = T(secured ? 'Reveal' : 'Hide');
   checkCalib(); }
 function refreshSecuredViews(){ updateCupScore(); if(CURVIEW==='value') renderValueCard(); }   // one shared state across Cup score + Value Fit
-function toggleScore(){ if(SCORE_SECURED){ showScoreSecuredInfo(); } else { SCORE_SECURED=true; refreshSecuredViews(); } }   // reveal only via popup approval
-function reallyRevealScore(){ SCORE_SECURED=false; closeHx(); refreshSecuredViews(); }
+function toggleScore(){ const s=activeScoreSample(); if(isScoreSecured(s)){ showScoreSecuredInfo(); } else { SCORE_REVEALED[s]=false; refreshSecuredViews(); } }   // reveal only via popup approval
+function reallyRevealScore(){ const s=activeScoreSample(); SCORE_REVEALED[s]=true; closeHx(); refreshSecuredViews(); }
 function showScoreSecuredInfo(){ hxBox.innerHTML=`<h1 style="margin:0 0 8px;font-size:18px">Why the score stays hidden</h1>`+
   `<div class="small" style="line-height:1.6">You score each section on its own merit, and the total is <i>calculated</i> from those scores, not chosen.<br><br>`+
   `Keeping the running total hidden stops <b>reverse cupping</b>: aiming at a number and quietly bending the section scores to reach it. The SCA built the affective form this way on purpose - the cupping score is an output, never a target.</div>`+
@@ -940,7 +942,7 @@ function renderValueCard(){ const s=valSample.value; const c=CUPS.find(x=>x.samp
   const desc=c?distinctDescriptors(c):[]; const fit=c?(c.total||cupTotal(c)).toFixed(2):'—'; const D=c?distinctiveness(c):null;
   const dot=on=>`<span class="pdot ${on?'full':''}"></span>`;
   let h='<div class="card">';
-  h+=`<div class="twowin"><div class="w fit"><div class="wl">Fit <button class="iconbtn" style="padding:2px 8px;font-size:11px" onclick="toggleScore()">${T(SCORE_SECURED?'Reveal':'Hide')}</button></div><div class="wv${SCORE_SECURED?' secured':''}" onclick="toggleScore()" style="cursor:pointer">${fit}</div><div class="wsub">cupping score · how well it suits a target palate</div></div>`;
+  h+=`<div class="twowin"><div class="w fit"><div class="wl">Fit <button class="iconbtn" style="padding:2px 8px;font-size:11px" onclick="toggleScore()">${T(isScoreSecured(s)?'Reveal':'Hide')}</button></div><div class="wv${isScoreSecured(s)?' secured':''}" onclick="toggleScore()" style="cursor:pointer">${fit}</div><div class="wsub">cupping score · how well it suits a target palate</div></div>`;
   h+=`<div class="w dis"><div class="wl">Distinctiveness <span class="info" onclick="showDistInfo()">&#9432;</span></div><div class="wv">${c&&c.distinctive?esc(c.distinctive):(D?D.level:'<span style="color:var(--muted);font-size:13px">cup it first</span>')}</div><div class="wsub">${D?(D.level+' · '+D.index+' · '+D.driver):'what sets it apart'}</div></div></div>`;
   h+=`<div class="cgrplbl" style="margin-top:14px">The distinctive attribute</div><div class="small" style="margin-bottom:6px">In one line: what does this coffee do that another would not? This, not the score, is what makes it worth more.</div>`;
   h+=`<input type="text" id="valDist" placeholder="e.g. jasmine top note that holds into a tea-like cool finish" value="${c?esc(c.distinctive||''):''}" ${(c&&canSave('value'))?'':'disabled'}>`;
