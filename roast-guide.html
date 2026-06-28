@@ -868,6 +868,8 @@ let FLIGHT={ date:new Date().toISOString().slice(0,10), purpose:'', coffees:[] }
 let FLSEC=0, FLMODE='descriptive';
 // session shows the shared descriptors on BOTH screens of each pair (fragrance+aroma share fragAroma; flavor+aftertaste share flavAfter)
 const FL_CATA={ fragrance:{type:'olf',key:'fragAroma',lbl:'Fragrance & aroma descriptors (up to 5)'}, aroma:{type:'olf',key:'fragAroma',lbl:'Fragrance & aroma descriptors (up to 5)'}, flavor:{type:'olf',key:'flavAfter',lbl:'Flavor & aftertaste descriptors (up to 5)',main:true}, aftertaste:{type:'olf',key:'flavAfter',lbl:'Flavor & aftertaste descriptors (up to 5)',main:true}, mouthfeel:{type:'mouth',lbl:'Mouthfeel quality (up to 2)'} };
+// session notes shared per pair (fragrance+aroma -> one note; flavor+aftertaste -> one note)
+const FL_NOTE={ fragrance:'fragAroma', aroma:'fragAroma', flavor:'flavAfter', aftertaste:'flavAfter', acidity:'acidity', sweetness:'sweetness', mouthfeel:'mouthfeel', overall:'overall' };
 function flightSecs(){ return CUP_SECS.filter(s=> !(FLMODE==='descriptive' && s.k==='overall')); }   // overall is affective-only
 function setFlMode(m){ FLMODE=m; ['descriptive','affective','combined'].forEach(x=>{ const b=document.getElementById('fm-'+x); if(b) b.classList.toggle('on',x===m); }); FLSEC=0; if(FLIGHT.coffees.length) renderFlightMatrix(); }
 function renderFlight(){
@@ -889,7 +891,7 @@ function renderFlightMatrix(){ const secs=flightSecs(); if(FLSEC>=secs.length) F
   const showInt=FLMODE!=='affective', showAff=FLMODE!=='descriptive', showCata=FLMODE!=='affective';
   document.getElementById('flSecName').innerHTML=esc(sec.l)+` <span class="info" onclick="showSecInfo('${sec.k}')">&#9432;</span>  <span class="small">(`+(FLSEC+1)+'/'+secs.length+')</span>';
   document.getElementById('flSecHint').textContent = T((showInt&&showAff) ? 'Intensity 0-15 and impression 1-9, across the table' : (showInt ? 'Intensity 0-15, across the table' : 'Impression 1-9, across the table'));
-  const nk=NOTE_AFTER[sec.k], fc=FL_CATA[sec.k];
+  const nk=FL_NOTE[sec.k], fc=FL_CATA[sec.k];
   let h=''; FLIGHT.coffees.forEach((c,ci)=>{ const cup2=c.cup; const iv=cup2.intens[sec.k]; const scc=cup2.score[sec.k]!=null?cup2.score[sec.k]:5;
     h+=`<div class="sec"><div class="sechd"><span class="secname" style="font-size:14px">${esc(c.sample)}</span>`+((showInt&&sec.i)?`<span class="ival" id="fliv_${ci}">intensity ${iv!=null?iv:7}</span>`:'')+`</div>`;
     if(showInt&&sec.i) h+=`<div class="iwrap"><span class="scale">Low</span><input type="range" class="islider" min="0" max="15" step="1" value="${iv!=null?iv:7}" data-fi="${ci}"><span class="scale" style="text-align:right">High</span></div>`;
