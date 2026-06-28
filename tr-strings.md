@@ -59,7 +59,11 @@ EN is the source of truth; the app is designed in English. This file holds the T
 ## Cup
 - cupping score → "tadım puanı"
 - Cup sub-modes: Combined → "Birleşik"; Descriptive → "Tanımlayıcı"; Affective → "Duyuşsal"
-- Sample / coffee → "Numune / kahve"
+- Date → "Tarih"; Purpose → "Amaç"
+- Sample # / coffee → "Numune # / kahve"
+- Roast level (Agtron) → "Kavurma derecesi (Agtron)"
+- Descriptive notes → "Tanımlayıcı notlar"; Affective notes → "Duyuşsal notlar"
+- Score reveal/secure button: Reveal → "Göster"; Hide → "Gizle"
 - Sections: Fragrance → "Koku (kuru)"; Aroma → "Aroma"; Flavor → "Tat"; Aftertaste → "Bitiş tadı"; Acidity → "Asidite"; Sweetness → "Tatlılık"; Mouthfeel → "Ağız hissi"; Overall → "Genel"
 - intensity / Low / High → "yoğunluk" / "Düşük" / "Yüksek"
 - 1 extremely low → "1 çok düşük"; 5 neither → "5 ne yüksek ne düşük"; 9 extremely high → "9 çok yüksek"
