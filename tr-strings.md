@@ -62,8 +62,10 @@ EN is the source of truth; the app is designed in English. This file holds the T
 - Date → "Tarih"; Purpose → "Amaç"
 - Sample # / coffee → "Numune # / kahve"
 - Roast level (Agtron) → "Kavurma derecesi (Agtron)"
-- Descriptive notes → "Tanımlayıcı notlar"; Affective notes → "Duyuşsal notlar"
-- Score reveal/secure button: Reveal → "Göster"; Hide → "Gizle"
+- Notes (per cupping section, end of each) → "Notlar"
+- + New coffee to assess (select option) → "+ Değerlendirilecek yeni kahve"
+- Score reveal/secure button: Reveal → "Göster"; Hide → "Gizle"; Keep secured → "Gizli kalsın"
+- Purpose placeholder (EN-only for now) → e.g. for our Italian cafe customer
 - Sections: Fragrance → "Koku (kuru)"; Aroma → "Aroma"; Flavor → "Tat"; Aftertaste → "Bitiş tadı"; Acidity → "Asidite"; Sweetness → "Tatlılık"; Mouthfeel → "Ağız hissi"; Overall → "Genel"
 - intensity / Low / High → "yoğunluk" / "Düşük" / "Yüksek"
 - 1 extremely low → "1 çok düşük"; 5 neither → "5 ne yüksek ne düşük"; 9 extremely high → "9 çok yüksek"

@@ -107,7 +107,8 @@
   input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent2)}
   /* ---- Cup / Grade / Value ---- */
   .scorebar{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#241c16 0%,#241c16 78%,rgba(36,28,22,0));padding:10px 0 14px;margin:-4px 0 6px;display:flex;align-items:baseline;justify-content:center;gap:10px}
-  .scorebar .sv{font-size:38px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1}
+  .scorebar .sv{font-size:38px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1;cursor:pointer}
+  .scorebar .sv.secured{filter:blur(10px);opacity:.6;user-select:none}
   .scorebar .sl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
   .sec{border-bottom:1px solid var(--line);padding:13px 0}
   .sec:last-child{border-bottom:none}
@@ -313,15 +314,15 @@
       <button id="cm-affective" onclick="setCupMode('affective')" data-i18n="Affective">Affective</button>
       <button id="cm-combined" onclick="setCupMode('combined')" data-i18n="Combined">Combined</button>
     </div>
-    <div class="scorebar" id="cupScoreBar"><span class="sv" id="cupSV">79.00</span><span class="sl">cupping<br>score <span class="info" onclick="showScoreInfo()">&#9432;</span></span><button class="iconbtn" id="cupScoreToggle" onclick="toggleScore()" data-i18n="Reveal">Reveal</button></div>
+    <div class="scorebar" id="cupScoreBar"><span class="sv" id="cupSV" onclick="toggleScore()">79.00</span><span class="sl">cupping<br>score <span class="info" onclick="showScoreInfo()">&#9432;</span></span><button class="iconbtn" id="cupScoreToggle" onclick="toggleScore()" data-i18n="Reveal">Reveal</button></div>
     <div id="cupLiteBanner"></div>
     <div class="card">
       <div class="cuprow" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
         <div style="flex:1;min-width:120px"><label class="fld" for="cupDate" data-i18n="Date">Date</label><input type="date" id="cupDate" oninput="cup.date=this.value"></div>
-        <div style="flex:1.4;min-width:150px"><label class="fld" for="cupPurpose" data-i18n="Purpose">Purpose</label><input type="text" id="cupPurpose" oninput="cup.purpose=this.value"></div>
+        <div style="flex:1.4;min-width:150px"><label class="fld" for="cupPurpose" data-i18n="Purpose">Purpose</label><input type="text" id="cupPurpose" placeholder="e.g. for our Italian cafe customer" oninput="cup.purpose=this.value"></div>
       </div>
       <label class="fld" for="cupSample" style="margin-top:10px" data-i18n="Sample # / coffee">Sample # / coffee</label>
-      <select id="cupSample" onchange="cup.sample=this.value;cupSampleChanged()"></select>
+      <select id="cupSample" onchange="onCupSampleChange(this)"></select>
     </div>
     <div class="card" id="cupSecs"></div>
     <div class="card" id="cupUnifCard">
@@ -338,10 +339,6 @@
       <div class="cgrplbl" data-i18n="Roast level (Agtron)">Roast level (Agtron)</div>
       <div class="slidewrap" style="margin-top:8px"><span class="scale">125</span><input type="range" id="cupAgtron" min="25" max="125" step="1" style="direction:rtl;flex:1"><span class="scale">25</span></div>
       <div class="cuprow" style="margin-top:8px;align-items:center"><span id="cupAgtronSwatch" style="width:18px;height:18px;border-radius:50%;display:inline-block;border:1px solid var(--line)"></span><span class="small" id="cupAgtronVal" style="margin-left:8px"></span></div>
-    </div>
-    <div class="card" id="cupNotesCard">
-      <div id="cupNoteDescWrap"><div class="cgrplbl" data-i18n="Descriptive notes">Descriptive notes</div><textarea id="cupNoteDesc" rows="2" oninput="cup.noteDesc=this.value"></textarea></div>
-      <div id="cupNoteAffWrap"><div class="cgrplbl" data-i18n="Affective notes" style="margin-top:10px">Affective notes</div><textarea id="cupNoteAff" rows="2" oninput="cup.noteAff=this.value"></textarea></div>
     </div>
     <div id="cupNudge"></div>
     <button class="btn" onclick="saveCup()">Save cupping</button>
@@ -763,24 +760,29 @@ const CUP_SECS=[
  {k:'overall',l:'Overall',i:false}
 ];
 const SCORE_KEYS=['fragrance','aroma','flavor','aftertaste','acidity','sweetness','mouthfeel','overall'];
-function blankCup(){ return {id:null,date:new Date().toISOString().slice(0,10),sample:'',purpose:'',intens:{},score:{},cata:{fragAroma:[],flavAfter:[],main:[],mouth:[]},roast:'',agtron:'',noteDesc:'',noteAff:'',nonuniform:0,defective:0,defect:'None',distinctive:''}; }
+const NOTE_AFTER={ aroma:'fragAroma', aftertaste:'flavAfter', acidity:'acidity', sweetness:'sweetness', mouthfeel:'mouthfeel', overall:'overall' };   // Notes box at the end of each cupping section (per CVA form)
+function blankCup(){ return {id:null,date:new Date().toISOString().slice(0,10),sample:'',purpose:'',intens:{},score:{},cata:{fragAroma:[],flavAfter:[],main:[],mouth:[]},roast:'',agtron:'',notes:{fragAroma:'',flavAfter:'',acidity:'',sweetness:'',mouthfeel:'',overall:''},nonuniform:0,defective:0,defect:'None',distinctive:''}; }
 let cup=blankCup();
 // SCA cupping score: anchors 79 (all 5s) and 100 (all 9s); -2 per non-uniform cup, -4 per defective cup; round to 0.25
 function cupTotal(c){ c=c||cup; let sum=0; SCORE_KEYS.forEach(k=>sum+=(c.score[k]!=null?c.score[k]:5)); let S=0.65625*sum+52.75-2*(c.nonuniform||0)-4*(c.defective||0); return Math.round(S/0.25)*0.25; }
 let SCORE_SECURED=true;   // hidden by default to avoid scoring toward a target (reverse cupping)
 function updateCupScore(){ const v=cupTotal(); const sv=document.getElementById('cupSV'), tg=document.getElementById('cupScoreToggle');
-  if(sv) sv.textContent = SCORE_SECURED ? '••.••' : v.toFixed(2);
+  if(sv){ sv.textContent=v.toFixed(2); sv.classList.toggle('secured',SCORE_SECURED); }   // real number kept blurred until revealed
   if(tg) tg.textContent = T(SCORE_SECURED ? 'Reveal' : 'Hide');
   checkCalib(); }
-function toggleScore(){ SCORE_SECURED=!SCORE_SECURED; if(!SCORE_SECURED) showScoreSecuredInfo(); updateCupScore(); }
-function showScoreSecuredInfo(){ infoModal('Why the score stays hidden',
-  `You score each section on its own merit, and the total is <i>calculated</i> from those scores, not chosen.<br><br>`+
-  `Keeping the running total hidden stops <b>reverse cupping</b>: aiming at a number and quietly bending the section scores to reach it. The SCA built the affective form this way on purpose - the cupping score is an output, never a target.<br><br>`+
-  `Reveal it when your section scores are done, or leave it secured and read it after you save.`); }
+function toggleScore(){ if(SCORE_SECURED){ showScoreSecuredInfo(); } else { SCORE_SECURED=true; updateCupScore(); } }   // reveal only via popup approval
+function reallyRevealScore(){ SCORE_SECURED=false; closeHx(); updateCupScore(); }
+function showScoreSecuredInfo(){ hxBox.innerHTML=`<h1 style="margin:0 0 8px;font-size:18px">Why the score stays hidden</h1>`+
+  `<div class="small" style="line-height:1.6">You score each section on its own merit, and the total is <i>calculated</i> from those scores, not chosen.<br><br>`+
+  `Keeping the running total hidden stops <b>reverse cupping</b>: aiming at a number and quietly bending the section scores to reach it. The SCA built the affective form this way on purpose - the cupping score is an output, never a target.</div>`+
+  `<button class="btn" style="margin-top:16px" onclick="reallyRevealScore()" data-i18n="Reveal">Reveal</button>`+
+  `<button class="btn ghost" style="margin-top:8px" onclick="closeHx()" data-i18n="Keep secured">Keep secured</button>`;
+  hxModal.style.display='flex'; }
 // Agtron roast-level color (125 light -> 25 dark)
 function agtronColor(ag){ ag=Math.max(25,Math.min(125,ag)); const t=(125-ag)/100; const st=[[0,'#d8b488'],[0.4,'#9a6638'],[0.7,'#5a3a20'],[1,'#241408']];
   for(let i=0;i<st.length-1;i++){ if(t>=st[i][0]&&t<=st[i+1][0]) return lerpHex(st[i][1],st[i+1][1],(t-st[i][0])/(st[i+1][0]-st[i][0])); } return '#241408'; }
 function updateAgtronUI(ag){ const sw=document.getElementById('cupAgtronSwatch'), vl=document.getElementById('cupAgtronVal'); const c=agtronColor(ag); if(sw) sw.style.background=c; if(vl) vl.textContent='Agtron '+Math.round(ag); }
+function onCupSampleChange(sel){ if(sel.value==='__new__'){ const n=(prompt(T('New coffee to assess:'))||'').trim(); if(!n){ sel.value=cup.sample||''; return; } cup.sample=n; } else { cup.sample=sel.value; } cupSampleChanged(); }
 function cupSampleChanged(){ const s=cup.sample; let ag=null;
   const lg=LOG.find(l=>l.bean===s && l.agtron!==''&&l.agtron!=null); if(lg) ag=Number(lg.agtron);   // actual roasted Agtron for this coffee
   if(ag==null){ const rec=getRecipes().find(r=>r.name===s); if(rec){ const a=parseAg(rstr(rec,'Bullet'))??parseAg(rstr(rec,'HSR15')); if(a!=null) ag=a; } }
@@ -790,7 +792,7 @@ function buildSeeds(elId,cb){ const el=document.getElementById(elId); if(!el) re
 function olfChips(key){ return OLF.map(g=>`<div class="chips" style="margin-bottom:5px">`+g.map((t,i)=>`<span class="chip ${i>0?'sub':''} ${cup.cata[key].includes(t)?'on':''}" data-ol="${esc(t)}" data-key="${key}">${esc(t)}</span>`).join('')+`</div>`).join(''); }
 function renderCup(){
   const names=[]; getRecipes().filter(r=>r.active).forEach(r=>{ if(!names.includes(r.name)) names.push(r.name); }); BEANS.forEach(b=>{ if(!names.includes(b.name)) names.push(b.name); }); if(cup.sample&&!names.includes(cup.sample)) names.unshift(cup.sample);
-  cupSample.innerHTML='<option value=""></option>'+names.map(n=>`<option ${cup.sample===n?'selected':''}>${esc(n)}</option>`).join('');
+  cupSample.innerHTML='<option value=""></option>'+names.map(n=>`<option ${cup.sample===n?'selected':''}>${esc(n)}</option>`).join('')+`<option value="__new__">${T('+ New coffee to assess')}</option>`;
   cupDate.value=cup.date||''; cupPurpose.value=cup.purpose||'';
   let h='';
   const showInt=CUPMODE!=='affective', showAff=CUPMODE!=='descriptive', showCata=CUPMODE!=='affective';
@@ -803,15 +805,13 @@ function renderCup(){
     if(showCata){ if(sec.cata==='olf'){ h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div>`+olfChips(sec.cataKey)+`</div>`;
         if(sec.main) h+=`<div class="cgrp"><div class="cgrplbl">Main tastes (up to 2)</div><div class="chips">`+MAIN_TASTES.map(t=>`<span class="chip ${cup.cata.main.includes(t)?'on':''}" data-mt="${t}">${t}</span>`).join('')+`</div></div>`; }
       if(sec.cata==='mouth') h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div><div class="chips">`+MOUTH.map(([v,l])=>`<span class="chip ${cup.cata.mouth.includes(v)?'on':''}" data-mo="${esc(v)}">${esc(l)}</span>`).join('')+`</div></div>`; }
+    const nk=NOTE_AFTER[sec.k]; if(nk) h+=`<div class="cgrp"><div class="cgrplbl">${T('Notes')}</div><textarea data-note="${nk}" rows="2">${esc((cup.notes&&cup.notes[nk])||'')}</textarea></div>`;
     h+=`</div>`; });
   cupSecs.innerHTML=h;
   cupNU.innerHTML=''; cupDF.innerHTML='';
   for(let i=1;i<=5;i++){ cupNU.innerHTML+=`<button data-nu="${i}" class="${i<=cup.nonuniform?'on':''}">${i}</button>`; cupDF.innerHTML+=`<button data-df="${i}" class="${i<=cup.defective?'on':''}">${i}</button>`; }
   cupDefType.innerHTML=DEFECT_TYPES.map(t=>`<span class="chip ${cup.defect===t?'on':''}" data-dt="${t}">${t}</span>`).join('');
   const ag=(cup.agtron!==''&&cup.agtron!=null)?Number(cup.agtron):95; cupAgtron.value=ag; updateAgtronUI(ag);
-  cupNoteDesc.value=cup.noteDesc||''; cupNoteAff.value=cup.noteAff||'';
-  document.getElementById('cupNoteDescWrap').style.display=(CUPMODE==='affective')?'none':'';
-  document.getElementById('cupNoteAffWrap').style.display=(CUPMODE==='descriptive')?'none':'';
   const sbar=document.getElementById('cupScoreBar'); if(sbar) sbar.style.display=(CUPMODE==='descriptive')?'none':'';
   const uc=document.getElementById('cupUnifCard'); if(uc) uc.style.display=(CUPMODE==='descriptive')?'none':'';
   const rc=document.getElementById('cupRoastCard'); if(rc) rc.style.display=(CUPMODE==='affective')?'none':'';
@@ -830,6 +830,7 @@ function bindCup(){
   cupDF.querySelectorAll('[data-df]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.df; cup.defective=(cup.defective===i?i-1:i); renderCupCups(); updateCupScore(); });
   cupDefType.querySelectorAll('[data-dt]').forEach(c=>c.onclick=()=>{ cup.defect=c.dataset.dt; cupDefType.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x.dataset.dt===cup.defect)); });
   cupAgtron.addEventListener('input',e=>{ cup.agtron=+e.target.value; updateAgtronUI(cup.agtron); });
+  cupSecs.querySelectorAll('textarea[data-note]').forEach(t=>t.addEventListener('input',e=>{ if(!cup.notes) cup.notes={}; cup.notes[e.target.dataset.note]=e.target.value; }));
 }
 function renderCupCups(){ cupNU.querySelectorAll('[data-nu]').forEach(b=>b.classList.toggle('on',+b.dataset.nu<=cup.nonuniform)); cupDF.querySelectorAll('[data-df]').forEach(b=>b.classList.toggle('on',+b.dataset.df<=cup.defective)); }
 function toggleCata(arr,val,el,max){ const i=arr.indexOf(val); if(i>=0){ arr.splice(i,1); el.classList.remove('on'); } else { if(arr.length>=max) return; arr.push(val); el.classList.add('on'); } }
@@ -958,8 +959,8 @@ function renderValueCard(){ const s=valSample.value; const c=CUPS.find(x=>x.samp
 // ---- Cup/Grade persistence (local cache + best-effort Supabase) ----
 function cacheCG(){ try{ localStorage.setItem(CUPS_CACHE,JSON.stringify(CUPS)); localStorage.setItem(GRADES_CACHE,JSON.stringify(GRADES)); }catch(e){} }
 function loadCGCache(){ try{ CUPS=JSON.parse(localStorage.getItem(CUPS_CACHE)||'[]')||[]; }catch(e){ CUPS=[]; } try{ GRADES=JSON.parse(localStorage.getItem(GRADES_CACHE)||'[]')||[]; }catch(e){ GRADES=[]; } }
-function toCupPayload(r){ return {user_id:MYUID,sample:r.sample,date:r.date,total:r.total,data:{intens:r.intens,score:r.score,cata:r.cata,roast:r.roast,agtron:r.agtron,purpose:r.purpose,noteDesc:r.noteDesc,noteAff:r.noteAff,nonuniform:r.nonuniform,defective:r.defective,defect:r.defect,distinctive:r.distinctive}}; }
-function rowToCup(d){ const x=d.data||{}; return {id:d.id,date:d.date,sample:d.sample,total:(d.total!=null?+d.total:0),intens:x.intens||{},score:x.score||{},cata:x.cata||{fragAroma:[],flavAfter:[],main:[],mouth:[]},roast:x.roast||'',agtron:(x.agtron==null?'':x.agtron),purpose:x.purpose||'',noteDesc:x.noteDesc||'',noteAff:x.noteAff||'',nonuniform:x.nonuniform||0,defective:x.defective||0,defect:x.defect||'None',distinctive:x.distinctive||''}; }
+function toCupPayload(r){ return {user_id:MYUID,sample:r.sample,date:r.date,total:r.total,data:{intens:r.intens,score:r.score,cata:r.cata,roast:r.roast,agtron:r.agtron,purpose:r.purpose,notes:r.notes,nonuniform:r.nonuniform,defective:r.defective,defect:r.defect,distinctive:r.distinctive}}; }
+function rowToCup(d){ const x=d.data||{}; return {id:d.id,date:d.date,sample:d.sample,total:(d.total!=null?+d.total:0),intens:x.intens||{},score:x.score||{},cata:x.cata||{fragAroma:[],flavAfter:[],main:[],mouth:[]},roast:x.roast||'',agtron:(x.agtron==null?'':x.agtron),purpose:x.purpose||'',notes:x.notes||{fragAroma:'',flavAfter:'',acidity:'',sweetness:'',mouthfeel:'',overall:''},nonuniform:x.nonuniform||0,defective:x.defective||0,defect:x.defect||'None',distinctive:x.distinctive||''}; }
 function toGradePayload(r){ return {user_id:MYUID,sample:r.sample,date:r.date,data:{color:r.color,moisture:r.moisture,aw:r.aw,screen:r.screen,counts:r.counts,origin:r.origin,variety:r.variety,process:r.process,certs:r.certs,exnote:r.exnote}}; }
 function rowToGrade(d){ const x=d.data||{}; return {id:d.id,date:d.date,sample:d.sample,color:x.color||'',moisture:x.moisture||'',aw:x.aw||'',screen:x.screen||'',counts:x.counts||{},origin:x.origin||'',variety:x.variety||'',process:x.process||[],certs:x.certs||[],exnote:x.exnote||''}; }
 async function loadCupGrade(){ loadCGCache(); if(!sb) return;
@@ -1077,7 +1078,7 @@ const DICT={ tr:{
  "Save rules":"Kuralları kaydet","Save as defaults":"Varsayılan olarak kaydet","Reset to defaults":"Varsayılanlara dön",
  // cup
  "Combined":"Birleşik","Sample # / coffee":"Numune # / kahve","cupping score":"tadım puanı",
- "Date":"Tarih","Purpose":"Amaç","Roast level (Agtron)":"Kavurma derecesi (Agtron)","Descriptive notes":"Tanımlayıcı notlar","Affective notes":"Duyuşsal notlar","Reveal":"Göster","Hide":"Gizle",
+ "Date":"Tarih","Purpose":"Amaç","Roast level (Agtron)":"Kavurma derecesi (Agtron)","Notes":"Notlar","+ New coffee to assess":"+ Değerlendirilecek yeni kahve","Reveal":"Göster","Hide":"Gizle","Keep secured":"Gizli kalsın",
  "Fragrance":"Koku (kuru)","Aroma":"Aroma","Flavor":"Tat","Aftertaste":"Bitiş tadı","Acidity":"Asidite","Sweetness":"Tatlılık","Mouthfeel":"Ağız hissi","Overall":"Genel",
  "Main tastes (up to 2)":"Ana tatlar (en fazla 2)","Uniformity & defects":"Tekdüzelik ve kusurlar","Non-uniform cups":"Tekdüze olmayan fincanlar",
  "Defective cups":"Kusurlu fincanlar","Defect type":"Kusur türü","Roast level":"Kavurma derecesi","Save cupping":"Tadımı kaydet",
