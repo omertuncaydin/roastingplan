@@ -160,6 +160,7 @@
   .twowin .fit .wv{color:var(--gold)}
   .twowin .dis .wv{font-size:15px;color:var(--accent);font-weight:700}
   .twowin .wsub{font-size:11px;color:var(--muted);margin-top:4px}
+  .twowin .wv.secured{filter:blur(9px);opacity:.6;user-select:none}
   .info{display:inline-block;cursor:pointer;color:var(--accent);font-weight:700;font-size:12px;margin-left:3px}
   .nullbtn{display:block;width:100%;border:1px dashed var(--line);border-radius:12px;padding:13px;font-size:13px;font-weight:600;cursor:default;background:transparent;color:var(--muted);margin-top:10px}
   .litebanner{background:#15281a;border:1px solid var(--accent2);color:#9fe0b5;border-radius:10px;padding:10px 12px;font-size:12.5px;margin-bottom:12px}
@@ -317,7 +318,7 @@
     <div class="scorebar" id="cupScoreBar"><span class="sv" id="cupSV" onclick="toggleScore()">79.00</span><span class="sl">cupping<br>score <span class="info" onclick="showScoreInfo()">&#9432;</span></span><button class="iconbtn" id="cupScoreToggle" onclick="toggleScore()" data-i18n="Reveal">Reveal</button></div>
     <div id="cupLiteBanner"></div>
     <div class="card">
-      <div class="cuprow" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
+      <div class="cuprow" style="gap:10px;flex-wrap:wrap;align-items:flex-start">
         <div style="flex:1;min-width:120px"><label class="fld" for="cupDate" data-i18n="Date">Date</label><input type="date" id="cupDate" oninput="cup.date=this.value"></div>
         <div style="flex:1.4;min-width:150px"><label class="fld" for="cupPurpose" data-i18n="Purpose">Purpose</label><input type="text" id="cupPurpose" placeholder="e.g. for our Italian cafe customer" oninput="cup.purpose=this.value"></div>
       </div>
@@ -351,9 +352,12 @@
   <div id="view-grade" class="hide">
     <div id="grLiteBanner"></div>
     <div class="card">
-      <label class="fld" for="grSample">Sample / coffee</label>
-      <input type="text" id="grSample" placeholder="e.g. Ethiopia Guji - washed" oninput="grade.sample=this.value">
-      <div class="seedlist" id="grSeeds"></div>
+      <div class="cuprow" style="gap:10px;flex-wrap:wrap;align-items:flex-start">
+        <div style="flex:1;min-width:120px"><label class="fld" for="grDate" data-i18n="Date">Date</label><input type="date" id="grDate" oninput="grade.date=this.value"></div>
+        <div style="flex:1.4;min-width:150px"><label class="fld" for="grPurpose" data-i18n="Purpose">Purpose</label><input type="text" id="grPurpose" placeholder="e.g. lot pre-purchase check" oninput="grade.purpose=this.value"></div>
+      </div>
+      <label class="fld" for="grSample" style="margin-top:10px" data-i18n="Sample # / coffee">Sample # / coffee</label>
+      <select id="grSample" onchange="onGrSampleChange(this)"></select>
     </div>
     <div class="card"><div class="cgrplbl" style="margin-bottom:6px">Grade <span class="info" onclick="showGradeInfo()">&#9432;</span></div><div id="grVerdict"></div></div>
     <div class="card">
@@ -850,15 +854,18 @@ const CAT2=[['partialblack','Partial Black',3,'partial-black'],['partialsour','P
 const GR_COLORS=['Blue-Green','Bluish-Green','Green','Greenish','Yellow-Green','Pale Yellow','Yellowish','Brownish'];
 const GR_PROC=['Washed','Natural','Honey','Anaerobic','Decaf','Other'];
 const GR_CERTS=['4C','Fair Trade','Organic','Rainforest Alliance','Food Safety'];
-function blankGrade(){ return {id:null,date:new Date().toISOString().slice(0,10),sample:'',color:'',moisture:'',aw:'',screen:'',counts:{},origin:'',variety:'',process:[],certs:[],exnote:''}; }
+function blankGrade(){ return {id:null,date:new Date().toISOString().slice(0,10),sample:'',purpose:'',color:'',moisture:'',aw:'',screen:'',counts:{},origin:'',variety:'',process:[],certs:[],exnote:''}; }
+function onGrSampleChange(sel){ if(sel.value==='__new__'){ const n=(prompt(T('New coffee to assess:'))||'').trim(); if(!n){ sel.value=grade.sample||''; return; } grade.sample=n; } else { grade.sample=sel.value; } renderGrade(); }
 let grade=blankGrade();
 function defFull(list){ let f=0; list.forEach(d=>{ f+=(grade.counts[d[0]]||0)/d[2]; }); return f; }
 function gradeVerdict(){ const c1=defFull(CAT1),c2=defFull(CAT2); const m=parseFloat(grade.moisture);
   const okMoist=isNaN(m)||(m>=10&&m<=12); return {c1,c2,ok:(c1<1&&c2<=5&&okMoist),okMoist}; }   // Aw not gated: not on the SCA CVA form (yet)
 function defCard(d){ const [k,l,ratio,img]=d; const n=grade.counts[k]||0; return `<div class="defcard ${n>0?'hit':''}"><img src="defects/${img}.jpg" alt="${esc(l)}" loading="lazy"><div class="dn">${esc(l)}</div><div class="dr">${ratio} bean${ratio>1?'s':''} = 1 defect</div><div class="defctl"><button data-gd="${k}">−</button><span class="dc" id="dc_${k}">${n}</span><button data-gi="${k}">+</button></div></div>`; }
 function renderGrade(){
-  buildSeeds('grSeeds',s=>{ grade.sample=s; grSample.value=s; });
-  grSample.value=grade.sample||''; grMoist.value=grade.moisture||''; grAw.value=grade.aw||''; grScreen.value=grade.screen||''; grOrigin.value=grade.origin||''; grVariety.value=grade.variety||''; grExNote.value=grade.exnote||'';
+  const gnames=[]; getRecipes().filter(r=>r.active).forEach(r=>{ if(!gnames.includes(r.name)) gnames.push(r.name); }); BEANS.forEach(b=>{ if(!gnames.includes(b.name)) gnames.push(b.name); }); if(grade.sample&&!gnames.includes(grade.sample)) gnames.unshift(grade.sample);
+  grSample.innerHTML='<option value=""></option>'+gnames.map(n=>`<option ${grade.sample===n?'selected':''}>${esc(n)}</option>`).join('')+`<option value="__new__">${T('+ New coffee to assess')}</option>`;
+  grDate.value=grade.date||''; grPurpose.value=grade.purpose||'';
+  grMoist.value=grade.moisture||''; grAw.value=grade.aw||''; grScreen.value=grade.screen||''; grOrigin.value=grade.origin||''; grVariety.value=grade.variety||''; grExNote.value=grade.exnote||'';
   grColors.innerHTML=GR_COLORS.map(c=>`<span class="chip ${grade.color===c?'on':''}" data-col="${esc(c)}">${esc(c)}</span>`).join('');
   grProcess.innerHTML=GR_PROC.map(p=>`<span class="chip ${grade.process.includes(p)?'on':''}" data-pr="${esc(p)}">${esc(p)}</span>`).join('');
   grCerts.innerHTML=GR_CERTS.map(p=>`<span class="chip ${grade.certs.includes(p)?'on':''}" data-ce="${esc(p)}">${esc(p)}</span>`).join('');
@@ -889,6 +896,8 @@ async function delGrade(id){ GRADES=GRADES.filter(g=>String(g.id)!==String(id));
 
 // ---- Value Assessment (holistic identity card) ----
 function valSamples(){ const s=[]; const add=n=>{ if(n&&!s.includes(n)) s.push(n); }; BEANS.forEach(b=>add(b.name)); CUPS.forEach(c=>add(c.sample)); GRADES.forEach(g=>add(g.sample)); LOG.forEach(l=>add(l.bean)); return s; }
+let VAL_SECURED=true;
+function toggleValScore(){ VAL_SECURED=!VAL_SECURED; renderValueCard(); }
 function renderValue(){ const arr=valSamples(),cur=valSample.value; valSample.innerHTML=arr.map(s=>`<option>${esc(s)}</option>`).join(''); if(arr.includes(cur)) valSample.value=cur; valEmpty.classList.toggle('hide',arr.length>0); valCard.innerHTML=''; if(arr.length) renderValueCard(); }
 function topScored(c){ return SCORE_KEYS.map(k=>({k,v:c.score[k]!=null?c.score[k]:5})).sort((a,b)=>b.v-a.v).slice(0,2).map(x=>x.k+' '+x.v).join(', '); }
 function distinctDescriptors(c){ const subs=[]; (c.cata.fragAroma||[]).concat(c.cata.flavAfter||[]).forEach(t=>{ if(!OLF.some(g=>g[0]===t)&&!subs.includes(t)) subs.push(t); }); return subs; }
@@ -932,7 +941,7 @@ function renderValueCard(){ const s=valSample.value; const c=CUPS.find(x=>x.samp
   const desc=c?distinctDescriptors(c):[]; const fit=c?(c.total||cupTotal(c)).toFixed(2):'—'; const D=c?distinctiveness(c):null;
   const dot=on=>`<span class="pdot ${on?'full':''}"></span>`;
   let h='<div class="card">';
-  h+=`<div class="twowin"><div class="w fit"><div class="wl">Fit</div><div class="wv">${fit}</div><div class="wsub">cupping score · how well it suits a target palate</div></div>`;
+  h+=`<div class="twowin"><div class="w fit"><div class="wl">Fit <button class="iconbtn" style="padding:2px 8px;font-size:11px" onclick="toggleValScore()">${T(VAL_SECURED?'Reveal':'Hide')}</button></div><div class="wv${VAL_SECURED?' secured':''}">${fit}</div><div class="wsub">cupping score · how well it suits a target palate</div></div>`;
   h+=`<div class="w dis"><div class="wl">Distinctiveness <span class="info" onclick="showDistInfo()">&#9432;</span></div><div class="wv">${c&&c.distinctive?esc(c.distinctive):(D?D.level:'<span style="color:var(--muted);font-size:13px">cup it first</span>')}</div><div class="wsub">${D?(D.level+' · '+D.index+' · '+D.driver):'what sets it apart'}</div></div></div>`;
   h+=`<div class="cgrplbl" style="margin-top:14px">The distinctive attribute</div><div class="small" style="margin-bottom:6px">In one line: what does this coffee do that another would not? This, not the score, is what makes it worth more.</div>`;
   h+=`<input type="text" id="valDist" placeholder="e.g. jasmine top note that holds into a tea-like cool finish" value="${c?esc(c.distinctive||''):''}" ${(c&&canSave('value'))?'':'disabled'}>`;
@@ -961,8 +970,8 @@ function cacheCG(){ try{ localStorage.setItem(CUPS_CACHE,JSON.stringify(CUPS)); 
 function loadCGCache(){ try{ CUPS=JSON.parse(localStorage.getItem(CUPS_CACHE)||'[]')||[]; }catch(e){ CUPS=[]; } try{ GRADES=JSON.parse(localStorage.getItem(GRADES_CACHE)||'[]')||[]; }catch(e){ GRADES=[]; } }
 function toCupPayload(r){ return {user_id:MYUID,sample:r.sample,date:r.date,total:r.total,data:{intens:r.intens,score:r.score,cata:r.cata,roast:r.roast,agtron:r.agtron,purpose:r.purpose,notes:r.notes,nonuniform:r.nonuniform,defective:r.defective,defect:r.defect,distinctive:r.distinctive}}; }
 function rowToCup(d){ const x=d.data||{}; return {id:d.id,date:d.date,sample:d.sample,total:(d.total!=null?+d.total:0),intens:x.intens||{},score:x.score||{},cata:x.cata||{fragAroma:[],flavAfter:[],main:[],mouth:[]},roast:x.roast||'',agtron:(x.agtron==null?'':x.agtron),purpose:x.purpose||'',notes:x.notes||{fragAroma:'',flavAfter:'',acidity:'',sweetness:'',mouthfeel:'',overall:''},nonuniform:x.nonuniform||0,defective:x.defective||0,defect:x.defect||'None',distinctive:x.distinctive||''}; }
-function toGradePayload(r){ return {user_id:MYUID,sample:r.sample,date:r.date,data:{color:r.color,moisture:r.moisture,aw:r.aw,screen:r.screen,counts:r.counts,origin:r.origin,variety:r.variety,process:r.process,certs:r.certs,exnote:r.exnote}}; }
-function rowToGrade(d){ const x=d.data||{}; return {id:d.id,date:d.date,sample:d.sample,color:x.color||'',moisture:x.moisture||'',aw:x.aw||'',screen:x.screen||'',counts:x.counts||{},origin:x.origin||'',variety:x.variety||'',process:x.process||[],certs:x.certs||[],exnote:x.exnote||''}; }
+function toGradePayload(r){ return {user_id:MYUID,sample:r.sample,date:r.date,data:{purpose:r.purpose,color:r.color,moisture:r.moisture,aw:r.aw,screen:r.screen,counts:r.counts,origin:r.origin,variety:r.variety,process:r.process,certs:r.certs,exnote:r.exnote}}; }
+function rowToGrade(d){ const x=d.data||{}; return {id:d.id,date:d.date,sample:d.sample,purpose:x.purpose||'',color:x.color||'',moisture:x.moisture||'',aw:x.aw||'',screen:x.screen||'',counts:x.counts||{},origin:x.origin||'',variety:x.variety||'',process:x.process||[],certs:x.certs||[],exnote:x.exnote||''}; }
 async function loadCupGrade(){ loadCGCache(); if(!sb) return;
   try{ const cr=await sb.from('cuppings').select('*').order('created_at',{ascending:false}); if(cr&&!cr.error&&cr.data) CUPS=cr.data.map(rowToCup); }catch(e){}
   try{ const gr=await sb.from('green_grades').select('*').order('created_at',{ascending:false}); if(gr&&!gr.error&&gr.data) GRADES=gr.data.map(rowToGrade); }catch(e){}
@@ -1078,7 +1087,7 @@ const DICT={ tr:{
  "Save rules":"Kuralları kaydet","Save as defaults":"Varsayılan olarak kaydet","Reset to defaults":"Varsayılanlara dön",
  // cup
  "Combined":"Birleşik","Sample # / coffee":"Numune # / kahve","cupping score":"tadım puanı",
- "Date":"Tarih","Purpose":"Amaç","Roast level (Agtron)":"Kavurma derecesi (Agtron)","Notes":"Notlar","+ New coffee to assess":"+ Değerlendirilecek yeni kahve","Reveal":"Göster","Hide":"Gizle","Keep secured":"Gizli kalsın",
+ "Date":"Tarih","Purpose":"Amaç","Roast level (Agtron)":"Kavurma derecesi (Agtron)","Notes":"Notlar","+ New coffee to assess":"+ Değerlendirilecek yeni kahve","New coffee to assess:":"Değerlendirilecek yeni kahve:","Reveal":"Göster","Hide":"Gizle","Keep secured":"Gizli kalsın",
  "Fragrance":"Koku (kuru)","Aroma":"Aroma","Flavor":"Tat","Aftertaste":"Bitiş tadı","Acidity":"Asidite","Sweetness":"Tatlılık","Mouthfeel":"Ağız hissi","Overall":"Genel",
  "Main tastes (up to 2)":"Ana tatlar (en fazla 2)","Uniformity & defects":"Tekdüzelik ve kusurlar","Non-uniform cups":"Tekdüze olmayan fincanlar",
  "Defective cups":"Kusurlu fincanlar","Defect type":"Kusur türü","Roast level":"Kavurma derecesi","Save cupping":"Tadımı kaydet",
