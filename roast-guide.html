@@ -352,6 +352,11 @@
   <!-- FLIGHT (attribute-paged scoring across several coffees) -->
   <div id="view-flight" class="hide">
     <div id="flLiteBanner"></div>
+    <div class="subnav" id="flModes">
+      <button id="fm-descriptive" class="on" onclick="setFlMode('descriptive')" data-i18n="Descriptive">Descriptive</button>
+      <button id="fm-affective" onclick="setFlMode('affective')" data-i18n="Affective">Affective</button>
+      <button id="fm-combined" onclick="setFlMode('combined')" data-i18n="Combined">Combined</button>
+    </div>
     <div class="card">
       <div class="secname" style="margin-bottom:8px" data-i18n="Cupping Session">Cupping Session</div>
       <div class="small" style="margin-bottom:10px">Score one attribute across the whole table, then move to the next - the way a cupper actually works the table.</div>
@@ -859,13 +864,16 @@ function setCupMode(m){ CUPMODE=m; ['combined','descriptive','affective'].forEac
 
 // ---- Flight: score one attribute across the whole table, then advance ----
 let FLIGHT={ date:new Date().toISOString().slice(0,10), purpose:'', coffees:[] };   // coffees: [{sample, cup}]
-let FLSEC=0;
+let FLSEC=0, FLMODE='descriptive';
+function flightSecs(){ return CUP_SECS.filter(s=> !(FLMODE==='descriptive' && s.k==='overall')); }   // overall is affective-only
+function setFlMode(m){ FLMODE=m; ['descriptive','affective','combined'].forEach(x=>{ const b=document.getElementById('fm-'+x); if(b) b.classList.toggle('on',x===m); }); FLSEC=0; if(FLIGHT.coffees.length) renderFlightMatrix(); }
 function renderFlight(){
   const names=[]; getRecipes().filter(r=>r.active).forEach(r=>{ if(!names.includes(r.name)) names.push(r.name); }); BEANS.forEach(b=>{ if(!names.includes(b.name)) names.push(b.name); });
   flAdd.innerHTML=`<option value="">${T('Add a coffee...')}</option><option value="__new__">${T('+ New coffee to assess')}</option>`+names.map(n=>`<option>${esc(n)}</option>`).join(''); flAdd.value='';
   flDate.value=FLIGHT.date||''; flPurpose.value=FLIGHT.purpose||'';
   flCoffees.innerHTML=FLIGHT.coffees.map((c,i)=>`<span class="chip on" style="cursor:default">${esc(c.sample)} <span style="cursor:pointer;margin-left:4px" data-flrm="${i}">&times;</span></span>`).join('')||'<span class="small">No coffees on the table yet.</span>';
   flCoffees.querySelectorAll('[data-flrm]').forEach(x=>x.onclick=()=>{ FLIGHT.coffees.splice(+x.dataset.flrm,1); renderFlight(); });
+  ['descriptive','affective','combined'].forEach(x=>{ const b=document.getElementById('fm-'+x); if(b) b.classList.toggle('on',x===FLMODE); });
   const has=FLIGHT.coffees.length>0;
   document.getElementById('flMatrixCard').style.display=has?'':'none'; document.getElementById('flSaveBtn').style.display=has?'':'none';
   const lb=document.getElementById('flLiteBanner'); if(lb) lb.innerHTML=canSave('cup')?'':liteBanner('cupping');
@@ -873,18 +881,19 @@ function renderFlight(){
 }
 function flightAdd(sel){ let n=sel.value; if(!n) return; if(n==='__new__'){ n=(prompt(T('New coffee to assess:'))||'').trim(); if(!n){ sel.value=''; return; } ensureBean(n); }
   if(!FLIGHT.coffees.some(c=>c.sample===n)) FLIGHT.coffees.push({sample:n, cup:blankCup()}); sel.value=''; renderFlight(); }
-function flightStep(d){ FLSEC=Math.max(0,Math.min(CUP_SECS.length-1,FLSEC+d)); renderFlightMatrix(); }
-function renderFlightMatrix(){ const sec=CUP_SECS[FLSEC];
-  document.getElementById('flSecName').innerHTML=esc(sec.l)+` <span class="info" onclick="showSecInfo('${sec.k}')">&#9432;</span>  <span class="small">(`+(FLSEC+1)+'/'+CUP_SECS.length+')</span>';
-  document.getElementById('flSecHint').textContent = T(sec.i ? 'Intensity 0-15 and impression 1-9, across the table' : 'Impression 1-9, across the table');
+function flightStep(d){ const n=flightSecs().length; FLSEC=Math.max(0,Math.min(n-1,FLSEC+d)); renderFlightMatrix(); }
+function renderFlightMatrix(){ const secs=flightSecs(); if(FLSEC>=secs.length) FLSEC=secs.length-1; if(FLSEC<0) FLSEC=0; const sec=secs[FLSEC];
+  const showInt=FLMODE!=='affective', showAff=FLMODE!=='descriptive', showCata=FLMODE!=='affective';
+  document.getElementById('flSecName').innerHTML=esc(sec.l)+` <span class="info" onclick="showSecInfo('${sec.k}')">&#9432;</span>  <span class="small">(`+(FLSEC+1)+'/'+secs.length+')</span>';
+  document.getElementById('flSecHint').textContent = T((showInt&&showAff) ? 'Intensity 0-15 and impression 1-9, across the table' : (showInt ? 'Intensity 0-15, across the table' : 'Impression 1-9, across the table'));
   const nk=NOTE_AFTER[sec.k];
   let h=''; FLIGHT.coffees.forEach((c,ci)=>{ const cup2=c.cup; const iv=cup2.intens[sec.k]; const scc=cup2.score[sec.k]!=null?cup2.score[sec.k]:5;
     h+=`<div class="sec"><div class="secname" style="font-size:14px">${esc(c.sample)}</div>`;
-    if(sec.i) h+=`<div class="iwrap"><span class="scale">Low</span><input type="range" class="islider" min="0" max="15" step="1" value="${iv!=null?iv:7}" data-fi="${ci}"><span class="scale" style="text-align:right">High</span></div>`;
-    h+=`<div class="seg">`; for(let n=1;n<=9;n++) h+=`<button data-fsc="${ci}" data-n="${n}" class="${scc===n?'on':''}">${n}</button>`; h+=`</div>`;
-    if(sec.cata==='olf'){ h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div>`+OLF.map(g=>`<div class="chips" style="margin-bottom:5px">`+g.map((t,i)=>`<span class="chip ${i>0?'sub':''} ${cup2.cata[sec.cataKey].includes(t)?'on':''}" data-fol="${ci}|${sec.cataKey}|${esc(t)}">${esc(t)}</span>`).join('')+`</div>`).join('')+`</div>`;
+    if(showInt&&sec.i) h+=`<div class="iwrap"><span class="scale">Low</span><input type="range" class="islider" min="0" max="15" step="1" value="${iv!=null?iv:7}" data-fi="${ci}"><span class="scale" style="text-align:right">High</span></div>`;
+    if(showAff){ h+=`<div class="seg">`; for(let n=1;n<=9;n++) h+=`<button data-fsc="${ci}" data-n="${n}" class="${scc===n?'on':''}">${n}</button>`; h+=`</div>`; }
+    if(showCata){ if(sec.cata==='olf'){ h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div>`+OLF.map(g=>`<div class="chips" style="margin-bottom:5px">`+g.map((t,i)=>`<span class="chip ${i>0?'sub':''} ${cup2.cata[sec.cataKey].includes(t)?'on':''}" data-fol="${ci}|${sec.cataKey}|${esc(t)}">${esc(t)}</span>`).join('')+`</div>`).join('')+`</div>`;
       if(sec.main) h+=`<div class="cgrp"><div class="cgrplbl">Main tastes (up to 2)</div><div class="chips">`+MAIN_TASTES.map(t=>`<span class="chip ${cup2.cata.main.includes(t)?'on':''}" data-fmt="${ci}|${t}">${t}</span>`).join('')+`</div></div>`; }
-    if(sec.cata==='mouth') h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div><div class="chips">`+MOUTH.map(([v,l])=>`<span class="chip ${cup2.cata.mouth.includes(v)?'on':''}" data-fmo="${ci}|${esc(v)}">${esc(l)}</span>`).join('')+`</div></div>`;
+    if(sec.cata==='mouth') h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div><div class="chips">`+MOUTH.map(([v,l])=>`<span class="chip ${cup2.cata.mouth.includes(v)?'on':''}" data-fmo="${ci}|${esc(v)}">${esc(l)}</span>`).join('')+`</div></div>`; }
     if(nk) h+=`<div class="cgrp"><div class="cgrplbl">${T('Notes')}</div><textarea data-fnote="${ci}" rows="2">${esc((cup2.notes&&cup2.notes[nk])||'')}</textarea></div>`;
     h+=`</div>`; });
   const rows=document.getElementById('flRows'); rows.innerHTML=h;
@@ -1175,7 +1184,7 @@ const DICT={ tr:{
  "Save rules":"Kuralları kaydet","Save as defaults":"Varsayılan olarak kaydet","Reset to defaults":"Varsayılanlara dön",
  // cup
  "Combined":"Birleşik","Sample # / coffee":"Numune # / kahve","cupping score":"tadım puanı",
- "Build Cupping Session":"Tadım Seansı Oluştur","Cupping Session":"Tadım Seansı","Add a coffee to the table":"Masaya kahve ekle","Add a coffee...":"Kahve ekle...","Save session":"Seansı kaydet","Back to single coffee":"Tek kahveye dön","Intensity 0-15 and impression 1-9, across the table":"Tüm masada yoğunluk 0-15 ve izlenim 1-9","Impression 1-9, across the table":"Tüm masada izlenim 1-9",
+ "Build Cupping Session":"Tadım Seansı Oluştur","Cupping Session":"Tadım Seansı","Add a coffee to the table":"Masaya kahve ekle","Add a coffee...":"Kahve ekle...","Save session":"Seansı kaydet","Back to single coffee":"Tek kahveye dön","Intensity 0-15 and impression 1-9, across the table":"Tüm masada yoğunluk 0-15 ve izlenim 1-9","Intensity 0-15, across the table":"Tüm masada yoğunluk 0-15","Impression 1-9, across the table":"Tüm masada izlenim 1-9",
  "Date":"Tarih","Purpose":"Amaç","Roast level (Agtron)":"Kavurma derecesi (Agtron)","Notes":"Notlar","+ New coffee to assess":"+ Değerlendirilecek yeni kahve","New coffee to assess:":"Değerlendirilecek yeni kahve:","Reveal":"Göster","Hide":"Gizle","Keep secured":"Gizli kalsın",
  "Fragrance":"Koku (kuru)","Aroma":"Aroma","Flavor":"Tat","Aftertaste":"Bitiş tadı","Acidity":"Asidite","Sweetness":"Tatlılık","Mouthfeel":"Ağız hissi","Overall":"Genel",
  "Main tastes (up to 2)":"Ana tatlar (en fazla 2)","Uniformity & defects":"Tekdüzelik ve kusurlar","Non-uniform cups":"Tekdüze olmayan fincanlar",
