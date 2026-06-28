@@ -774,8 +774,9 @@ function updateCupScore(){ const v=cupTotal(); const sv=document.getElementById(
   if(sv){ sv.textContent=v.toFixed(2); sv.classList.toggle('secured',SCORE_SECURED); }   // real number kept blurred until revealed
   if(tg) tg.textContent = T(SCORE_SECURED ? 'Reveal' : 'Hide');
   checkCalib(); }
-function toggleScore(){ if(SCORE_SECURED){ showScoreSecuredInfo(); } else { SCORE_SECURED=true; updateCupScore(); } }   // reveal only via popup approval
-function reallyRevealScore(){ SCORE_SECURED=false; closeHx(); updateCupScore(); }
+let REVEAL_TARGET='cup';
+function toggleScore(){ if(SCORE_SECURED){ REVEAL_TARGET='cup'; showScoreSecuredInfo(); } else { SCORE_SECURED=true; updateCupScore(); } }   // reveal only via popup approval
+function reallyRevealScore(){ closeHx(); if(REVEAL_TARGET==='val'){ VAL_SECURED=false; renderValueCard(); } else { SCORE_SECURED=false; updateCupScore(); } }
 function showScoreSecuredInfo(){ hxBox.innerHTML=`<h1 style="margin:0 0 8px;font-size:18px">Why the score stays hidden</h1>`+
   `<div class="small" style="line-height:1.6">You score each section on its own merit, and the total is <i>calculated</i> from those scores, not chosen.<br><br>`+
   `Keeping the running total hidden stops <b>reverse cupping</b>: aiming at a number and quietly bending the section scores to reach it. The SCA built the affective form this way on purpose - the cupping score is an output, never a target.</div>`+
@@ -897,7 +898,7 @@ async function delGrade(id){ GRADES=GRADES.filter(g=>String(g.id)!==String(id));
 // ---- Value Assessment (holistic identity card) ----
 function valSamples(){ const s=[]; const add=n=>{ if(n&&!s.includes(n)) s.push(n); }; BEANS.forEach(b=>add(b.name)); CUPS.forEach(c=>add(c.sample)); GRADES.forEach(g=>add(g.sample)); LOG.forEach(l=>add(l.bean)); return s; }
 let VAL_SECURED=true;
-function toggleValScore(){ VAL_SECURED=!VAL_SECURED; renderValueCard(); }
+function toggleValScore(){ if(VAL_SECURED){ REVEAL_TARGET='val'; showScoreSecuredInfo(); } else { VAL_SECURED=true; renderValueCard(); } }
 function renderValue(){ const arr=valSamples(),cur=valSample.value; valSample.innerHTML=arr.map(s=>`<option>${esc(s)}</option>`).join(''); if(arr.includes(cur)) valSample.value=cur; valEmpty.classList.toggle('hide',arr.length>0); valCard.innerHTML=''; if(arr.length) renderValueCard(); }
 function topScored(c){ return SCORE_KEYS.map(k=>({k,v:c.score[k]!=null?c.score[k]:5})).sort((a,b)=>b.v-a.v).slice(0,2).map(x=>x.k+' '+x.v).join(', '); }
 function distinctDescriptors(c){ const subs=[]; (c.cata.fragAroma||[]).concat(c.cata.flavAfter||[]).forEach(t=>{ if(!OLF.some(g=>g[0]===t)&&!subs.includes(t)) subs.push(t); }); return subs; }
