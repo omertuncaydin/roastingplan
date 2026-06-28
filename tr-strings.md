@@ -1,4 +1,4 @@
-*Last updated: 2026-06-27 17:20 (Turkey time)*
+*Last updated: 2026-06-28 (Turkey time)*
 
 # CoffeeNutz Guide - Turkish mirror (tr-strings)
 
@@ -51,6 +51,11 @@ EN is the source of truth; the app is designed in English. This file holds the T
 - FIRST CRACK (A0) → "İLK ÇITIRTI (A0)"
 - DROP / FINISH → "BOŞALT / BİTİR"
 - New roast → "Yeni kavurma"
+- Gauge center now shows the COUNTDOWN to the next milestone (prediction), not the elapsed clock; elapsed moved to the small line below. Labels:
+  - to cinnamon → "tarçına kalan"; cinnamon now → "tarçın şimdi"
+  - to first crack → "ilk çıtırtıya kalan"; crack now → "çıtırtı şimdi"
+  - to drop · {stage} → "boşaltmaya kalan · {stage}"; drop now · {stage} → "boşalt şimdi · {stage}"
+  - since start → "başlangıçtan beri"; since first crack → "ilk çıtırtıdan beri"
 - Tap START when the roast begins. → "Kavurma başladığında BAŞLA'ya dokun."
 - Roast finished and learned. → "Kavurma bitti ve öğrenildi."
 - Cup this coffee → "Bu kahveyi tadımla"
