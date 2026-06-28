@@ -818,7 +818,7 @@ function showScoreSecuredInfo(){ hxBox.innerHTML=`<h1 style="margin:0 0 8px;font
 function agtronColor(ag){ ag=Math.max(25,Math.min(125,ag)); const t=(125-ag)/100; const st=[[0,'#d8b488'],[0.4,'#9a6638'],[0.7,'#5a3a20'],[1,'#241408']];
   for(let i=0;i<st.length-1;i++){ if(t>=st[i][0]&&t<=st[i+1][0]) return lerpHex(st[i][1],st[i+1][1],(t-st[i][0])/(st[i+1][0]-st[i][0])); } return '#241408'; }
 function updateAgtronUI(ag){ const sw=document.getElementById('cupAgtronSwatch'), vl=document.getElementById('cupAgtronVal'); const c=agtronColor(ag); if(sw) sw.style.background=c; if(vl) vl.textContent='Agtron '+Math.round(ag); }
-function onCupSampleChange(sel){ if(sel.value==='__new__'){ const n=(prompt(T('New coffee to assess:'))||'').trim(); if(!n){ sel.value=cup.sample||''; return; } cup.sample=n; } else { cup.sample=sel.value; } cupSampleChanged(); }
+function onCupSampleChange(sel){ if(sel.value==='__new__'){ const n=(prompt(T('New coffee to assess:'))||'').trim(); if(!n){ sel.value=cup.sample||''; return; } cup.sample=n; ensureBean(n); } else { cup.sample=sel.value; } cupSampleChanged(); }
 function cupSampleChanged(){ const s=cup.sample; let ag=null;
   const lg=LOG.find(l=>l.bean===s && l.agtron!==''&&l.agtron!=null); if(lg) ag=Number(lg.agtron);   // actual roasted Agtron for this coffee
   if(ag==null){ const rec=getRecipes().find(r=>r.name===s); if(rec){ const a=parseAg(rstr(rec,'Bullet'))??parseAg(rstr(rec,'HSR15')); if(a!=null) ag=a; } }
@@ -834,7 +834,7 @@ function renderCup(){
   const showInt=CUPMODE!=='affective', showAff=CUPMODE!=='descriptive', showCata=CUPMODE!=='affective';
   CUP_SECS.forEach(sec=>{ if(CUPMODE==='descriptive'&&sec.k==='overall') return;   // overall is affective-only
     const iv=cup.intens[sec.k]; const sc=cup.score[sec.k]!=null?cup.score[sec.k]:5;
-    h+=`<div class="sec"><div class="sechd"><span class="secname">${sec.l}</span>`+((showInt&&sec.i)?`<span class="ival" id="iv_${sec.k}">${iv!=null?('intensity '+iv):'intensity -'}</span>`:'')+`</div>`;
+    h+=`<div class="sec"><div class="sechd"><span class="secname">${sec.l} <span class="info" onclick="showSecInfo('${sec.k}')">&#9432;</span></span>`+((showInt&&sec.i)?`<span class="ival" id="iv_${sec.k}">${iv!=null?('intensity '+iv):'intensity -'}</span>`:'')+`</div>`;
     if(showInt&&sec.i) h+=`<div class="iwrap"><span class="scale">Low</span><input type="range" class="islider" min="0" max="15" step="1" value="${iv!=null?iv:7}" data-int="${sec.k}"><span class="scale" style="text-align:right">High</span></div>`;
     if(showAff){ h+=`<div class="seg">`; for(let n=1;n<=9;n++) h+=`<button data-sc="${sec.k}" data-n="${n}" class="${sc===n?'on':''}">${n}</button>`; h+=`</div>`;
       h+=`<div class="seglbl"><span>1 extremely low</span><span>5 neither</span><span>9 extremely high</span></div>`; }
@@ -871,11 +871,11 @@ function renderFlight(){
   const lb=document.getElementById('flLiteBanner'); if(lb) lb.innerHTML=canSave('cup')?'':liteBanner('cupping');
   if(has) renderFlightMatrix();
 }
-function flightAdd(sel){ let n=sel.value; if(!n) return; if(n==='__new__'){ n=(prompt(T('New coffee to assess:'))||'').trim(); if(!n){ sel.value=''; return; } }
+function flightAdd(sel){ let n=sel.value; if(!n) return; if(n==='__new__'){ n=(prompt(T('New coffee to assess:'))||'').trim(); if(!n){ sel.value=''; return; } ensureBean(n); }
   if(!FLIGHT.coffees.some(c=>c.sample===n)) FLIGHT.coffees.push({sample:n, cup:blankCup()}); sel.value=''; renderFlight(); }
 function flightStep(d){ FLSEC=Math.max(0,Math.min(CUP_SECS.length-1,FLSEC+d)); renderFlightMatrix(); }
 function renderFlightMatrix(){ const sec=CUP_SECS[FLSEC];
-  document.getElementById('flSecName').textContent=sec.l+'  ('+(FLSEC+1)+'/'+CUP_SECS.length+')';
+  document.getElementById('flSecName').innerHTML=esc(sec.l)+` <span class="info" onclick="showSecInfo('${sec.k}')">&#9432;</span>  <span class="small">(`+(FLSEC+1)+'/'+CUP_SECS.length+')</span>';
   document.getElementById('flSecHint').textContent = T(sec.i ? 'Intensity 0-15 and impression 1-9, across the table' : 'Impression 1-9, across the table');
   const nk=NOTE_AFTER[sec.k];
   let h=''; FLIGHT.coffees.forEach((c,ci)=>{ const cup2=c.cup; const iv=cup2.intens[sec.k]; const scc=cup2.score[sec.k]!=null?cup2.score[sec.k]:5;
@@ -933,7 +933,7 @@ const GR_COLORS=['Blue-Green','Bluish-Green','Green','Greenish','Yellow-Green','
 const GR_PROC=['Washed','Natural','Honey','Anaerobic','Decaf','Other'];
 const GR_CERTS=['4C','Fair Trade','Organic','Rainforest Alliance','Food Safety'];
 function blankGrade(){ return {id:null,date:new Date().toISOString().slice(0,10),sample:'',purpose:'',color:'',moisture:'',aw:'',screen:'',counts:{},origin:'',variety:'',process:[],certs:[],exnote:''}; }
-function onGrSampleChange(sel){ if(sel.value==='__new__'){ const n=(prompt(T('New coffee to assess:'))||'').trim(); if(!n){ sel.value=grade.sample||''; return; } grade.sample=n; } else { grade.sample=sel.value; } renderGrade(); }
+function onGrSampleChange(sel){ if(sel.value==='__new__'){ const n=(prompt(T('New coffee to assess:'))||'').trim(); if(!n){ sel.value=grade.sample||''; return; } grade.sample=n; ensureBean(n); } else { grade.sample=sel.value; } renderGrade(); }
 let grade=blankGrade();
 function defFull(list){ let f=0; list.forEach(d=>{ f+=(grade.counts[d[0]]||0)/d[2]; }); return f; }
 function gradeVerdict(){ const c1=defFull(CAT1),c2=defFull(CAT2); const m=parseFloat(grade.moisture);
@@ -1111,6 +1111,18 @@ async function saveTranslations(){ if(!IS_ADMIN||!sb) return; const keys=Object.
 
 // ---- reasoning popups (craft logic, not operating instructions) ----
 function infoModal(title,body){ hxBox.innerHTML=`<h1 style="margin:0 0 8px;font-size:18px">${title}</h1><div class="small" style="line-height:1.6">${body}</div><button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`; hxModal.style.display='flex'; }
+// SCA / CVA definitions for each cupping attribute
+const SEC_DEFS={
+ fragrance:['Fragrance','The aromatics of the dry, ground coffee, smelled before any water is added (orthonasal). In the CVA you rate how intense it is (descriptive) and your impression of its quality (affective), separately.'],
+ aroma:['Aroma','The aromatics of the wetted, brewing coffee, smelled as you break the crust (orthonasal). Rate its intensity and your impression of quality.'],
+ flavor:['Flavor','The principal character of the coffee: the combined impression of taste in the mouth and retronasal aroma. It captures the mid-range notes, between the first aroma and the aftertaste.'],
+ aftertaste:['Aftertaste','The length and quality of the positive flavor, taste and aroma, that lingers from the back of the palate after the coffee is swallowed or expectorated.'],
+ acidity:['Acidity','The bright, lively, tart quality. Described as brightness when favorable and sour when not. You rate how intense it is and how much you like it as two separate things.'],
+ sweetness:['Sweetness','A pleasing fullness and the perception of sweet taste, the opposite of sour, green or astringent. In the CVA sweetness is rated along a scale, not just present or absent.'],
+ mouthfeel:['Mouthfeel','The tactile sensation of the liquid in the mouth: its weight, texture and viscosity, felt between the tongue and the roof of the mouth. Heavier is not automatically better, so rate the quality.'],
+ overall:['Overall','Your holistic, personal appraisal of the cup as a whole, integrating everything above. It reflects your own or a known market preference, and is not a simple average of the other scores.']
+};
+function showSecInfo(k){ const d=SEC_DEFS[k]; if(d) infoModal(d[0],d[1]); }
 function showScoreInfo(){ infoModal('How the cupping score works',
   `Score = 0.65625 &times; (sum of the eight 1-9 impression scores) + 52.75, then minus 2 for each non-uniform cup and minus 4 for each defective cup, rounded to the nearest 0.25.<br><br>`+
   `<b>Anchors:</b> every section at 5 (neither high nor low) lands at <b>79.00</b>; every section at 9 lands at <b>100.00</b>.<br><br>`+
