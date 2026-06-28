@@ -104,6 +104,7 @@ EN is the source of truth; the app is designed in English. This file holds the T
 ## Account
 - Your membership → "Üyeliğiniz"
 - Email → "E-posta"; Member since → "Üyelik tarihi"; Plan → "Plan"
+- Refresh app (button, cache-busting reload) → "Uygulamayı yenile"
 - Change password → "Şifre değiştir"
 - New password → "Yeni şifre"; Confirm new password → "Yeni şifreyi onayla"; Update password → "Şifreyi güncelle"
 - Log out → "Çıkış yap"

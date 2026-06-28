@@ -443,7 +443,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="text-align:right;margin-bottom:8px"><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card">
       <div class="secname" style="margin-bottom:10px">Your membership</div>
       <div class="hxrow"><span>Email</span><span class="tgtval" id="acEmail">-</span></div>
@@ -1178,7 +1178,7 @@ const DICT={ tr:{
  "Cup":"Tadım","sensory · CVA descriptive + affective":"duyusal · CVA tanımlayıcı + duyuşsal",
  "Grade":"Sınıflandırma","green physical · CVA defect grading":"fiziksel (yeşil) · CVA kusur sınıflandırması",
  "Value Assessment":"Değerlendirme","Fit + Distinctiveness · the identity card":"Uyum + Ayırt Edicilik · kimlik kartı",
- "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz",
+ "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz","Refresh app":"Uygulamayı yenile",
  // roast
  "Coffee (active)":"Kahve (aktif)","Machine":"Makine","FC time":"FC zamanı","Drop at":"Boşaltma","Agtron":"Agtron","Open the guide":"Rehberi aç",
  "START":"BAŞLA","CINNAMON":"TARÇIN","FIRST CRACK (A0)":"İLK ÇITIRTI (A0)","DROP / FINISH":"BOŞALT / BİTİR","New roast":"Yeni kavurma",
@@ -1224,6 +1224,7 @@ function applyLang(){ try{ localStorage.setItem('cnLang',LANG); }catch(e){}
   document.querySelectorAll('.langBtn').forEach(b=>{ b.textContent = LANG==='en'?'TR':'EN'; });
   if(typeof show==='function') show(CURVIEW); }
 function toggleLang(){ LANG = LANG==='en'?'tr':'en'; applyLang(); }
+function hardRefresh(){ try{ const base=location.href.split('?')[0]; location.href=base+'?v='+Date.now(); }catch(e){ location.reload(); } }   // cache-bust reload for the home-screen app
 function copyEmail(e){ if(e&&e.preventDefault) e.preventDefault(); const a='info@coffeenutz.net';
   try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(a); } else { const t=document.createElement('textarea'); t.value=a; t.style.position='fixed'; t.style.opacity='0'; document.body.appendChild(t); t.focus(); t.select(); document.execCommand('copy'); document.body.removeChild(t); } }catch(err){}
   const el=document.getElementById('copyMail'); if(el){ el.textContent=T('Copied!'); setTimeout(()=>{ el.textContent=a; },1200); } }
