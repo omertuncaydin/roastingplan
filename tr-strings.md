@@ -1,4 +1,4 @@
-*Last updated: 2026-06-28 (Turkey time)*
+*Last updated: 2026-06-28 17:25 (Turkey time)*
 
 # CoffeeNutz Guide - Turkish mirror (tr-strings)
 

@@ -610,7 +610,7 @@ function refresh(){
 function drawSetupGauge(){ const el=document.getElementById('setupGauge'); if(!el) return; const r=cur();
   if(!r){ el.innerHTML=renderGauge(null,0.50,null,'-','pick a coffee'); return; }
   const s=rstr(r,equip.value), target=parseStage(s); const t=STAGES.find(x=>x.code===target), dropU=t?t.u:0.73;
-  el.innerHTML=renderGauge(0, 0.50, dropU, '0:00', 'ready');   // cockpit-ready look on the landing
+  el.innerHTML=renderGauge(0, 0.50, dropU, '0:00', 'ready');   // cockpit-ready look on the landing (resync)
 }
 function begin(){
   const r=cur(); if(!r){ alert('Pick a coffee'); return; }
