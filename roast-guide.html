@@ -211,7 +211,10 @@
   <div id="view-roast">
     <div id="setup">
       <div class="card">
-        <label class="fld" for="bean" data-i18n="Coffee (active)">Coffee (active)</label>
+        <div class="small" id="setupBean" style="text-align:center;margin-bottom:2px;font-weight:700;color:var(--ink);font-size:14px"></div>
+        <div class="gaugeWrap" id="setupGauge"></div>
+        <div class="legend"><span><span class="dotw"></span>first crack</span><span><span class="dotg"></span>drop target</span></div>
+        <label class="fld" for="bean" style="margin-top:16px" data-i18n="Coffee (active)">Coffee (active)</label>
         <select id="bean"></select>
         <label class="fld" for="equip" style="margin-top:12px" data-i18n="Machine">Machine</label>
         <select id="equip"><option value="Bullet">Bullet</option><option value="HSR15">HSR15</option></select>
@@ -223,7 +226,7 @@
         <div class="note hide" id="beanNote"></div>
         <div class="small hide" id="learnNote" style="margin-top:8px"></div>
       </div>
-      <button class="btn" onclick="begin()" data-i18n="Open the guide">Open the guide</button>
+      <button class="btn" onclick="begin()" data-i18n="Start roasting">Start roasting</button>
     </div>
     <div id="live" class="hide">
       <div class="card">
@@ -542,8 +545,7 @@ function renderGauge(u, nextU, dropU, top, bot){
     segs+=`<path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${colorForU(um)}" stroke-width="${w}" fill="none"/>`; }
   const tk=(uu,col,wd)=>{ const dd=uToAngle(uu);const[a,b]=gpolar(cx,cy,r-w/2-2,dd),[c,d]=gpolar(cx,cy,r+w/2+2,dd);return `<line x1="${a.toFixed(1)}" y1="${b.toFixed(1)}" x2="${c.toFixed(1)}" y2="${d.toFixed(1)}" stroke="${col}" stroke-width="${wd}"/>`; };
   let ticks = (dropU!=null?tk(dropU,'#e6c14b',4):'') + (nextU!=null?tk(nextU,'#fff',2):'');
-  const [mx,my]=gpolar(cx,cy,r,uToAngle(u));
-  const marker=`<circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="9" fill="#fff" stroke="#1a1410" stroke-width="2"/>`;
+  let marker=''; if(u!=null){ const [mx,my]=gpolar(cx,cy,r,uToAngle(u)); marker=`<circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="9" fill="#fff" stroke="#1a1410" stroke-width="2"/>`; }
   return `<svg viewBox="0 0 240 200" width="100%" style="max-width:320px">${segs}${ticks}${marker}`+
     `<text x="${cx}" y="${cy+2}" text-anchor="middle" font-size="38" font-weight="800" fill="#f3ede4">${top}</text>`+
     `<text x="${cx}" y="${cy+24}" text-anchor="middle" font-size="11" fill="#a8998a">${bot}</text></svg>`;
@@ -594,7 +596,7 @@ function secSince(ms){ return (vnow()-ms)/1000; }     // virtual seconds since a
 function cur(){ return RECIPES.find(r=>r.name===bean.value); }
 function fmt(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 function refresh(){
-  const r=cur(); if(!r){ tFc.textContent=tStage.textContent=tAg.textContent='-'; beanNote.classList.add('hide'); learnNote.classList.add('hide'); return; }
+  const r=cur(); const sbn=document.getElementById('setupBean'); if(!r){ tFc.textContent=tStage.textContent=tAg.textContent='-'; beanNote.classList.add('hide'); learnNote.classList.add('hide'); if(sbn) sbn.textContent=''; drawSetupGauge(); return; }
   const s=rstr(r,equip.value);
   tFc.textContent=fmt(fcActual(parseFc(s))); tStage.textContent=parseStage(s); tAg.textContent=parseAg(s)!=null?parseAg(s):'-';
   if(r.note){ beanNote.textContent='🔔 '+r.note; beanNote.classList.remove('hide'); } else beanNote.classList.add('hide');
@@ -602,6 +604,14 @@ function refresh(){
   if(L){ if(L.cinToA0!=null) lp.push('cinnamon→A0 ~'+L.cinToA0+'s'); if(L.dev!=null) lp.push('dev ~'+L.dev+'s'); }
   if(lp.length){ learnNote.textContent='Your roasts average: '+lp.join(', '); learnNote.classList.remove('hide'); }
   else learnNote.classList.add('hide');
+  if(sbn) sbn.textContent=r.name; drawSetupGauge();
+}
+// idle preview gauge on the landing: shows the selected coffee's plan (FC mark, drop-target tick, FC time)
+function drawSetupGauge(){ const el=document.getElementById('setupGauge'); if(!el) return; const r=cur();
+  if(!r){ el.innerHTML=renderGauge(null,null,null,'-','pick a coffee'); return; }
+  const s=rstr(r,equip.value), fc=parseFc(s), target=parseStage(s), ag=parseAg(s);
+  const t=STAGES.find(x=>x.code===target), dropU=t?t.u:0.73, fcU=0.55;
+  el.innerHTML=renderGauge(null, fcU, dropU, fmt(fcActual(fc)), 'FC time · drop '+target+(ag!=null?(' · '+ag+'A'):''));
 }
 function begin(){
   const r=cur(); if(!r){ alert('Pick a coffee'); return; }
@@ -1182,7 +1192,7 @@ const DICT={ tr:{
  "Value Assessment":"Değerlendirme","Fit + Distinctiveness · the identity card":"Uyum + Ayırt Edicilik · kimlik kartı",
  "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz","Refresh app":"Uygulamayı yenile",
  // roast
- "Coffee (active)":"Kahve (aktif)","Machine":"Makine","FC time":"FC zamanı","Drop at":"Boşaltma","Agtron":"Agtron","Open the guide":"Rehberi aç",
+ "Coffee (active)":"Kahve (aktif)","Machine":"Makine","FC time":"FC zamanı","Drop at":"Boşaltma","Agtron":"Agtron","Open the guide":"Rehberi aç","Start roasting":"Kavurmaya başla",
  "START":"BAŞLA","CINNAMON":"TARÇIN","FIRST CRACK (A0)":"İLK ÇITIRTI (A0)","DROP / FINISH":"BOŞALT / BİTİR","New roast":"Yeni kavurma",
  "Tap START when the roast begins.":"Kavurma başladığında BAŞLA'ya dokun.","Roast finished and learned.":"Kavurma bitti ve öğrenildi.",
  "Cup this coffee":"Bu kahveyi tadımla","Deep Calibration Learning":"Derin Kalibrasyon Öğrenmesi",
