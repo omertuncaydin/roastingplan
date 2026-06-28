@@ -40,7 +40,7 @@
   .spd.on{background:var(--accent);color:#1a1410;border-color:var(--accent)}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
   label.fld{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:5px;font-weight:600}
-  select,input[type=text],input[type=number],input[type=password],input[type=email],input[type=date],textarea{width:100%;background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:11px 12px;font-size:16px;color-scheme:dark}
+  select,input[type=text],input[type=number],input[type=password],input[type=email],input[type=date],textarea{width:100%;background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:11px 12px;font-size:16px;color-scheme:dark;min-height:46px}
   textarea{resize:vertical;font-family:inherit;line-height:1.4}
   select:focus,input:focus{outline:none;border-color:var(--accent)}
   .target{display:flex;gap:10px;margin-top:12px}
@@ -310,7 +310,7 @@
 
   <!-- CUP (CVA combined: descriptive + affective) -->
   <div id="view-cup" class="hide">
-    <button class="btn ghost" style="margin-bottom:10px" onclick="show('flight')" data-i18n="Cup a flight (several coffees)">Cup a flight (several coffees)</button>
+    <button class="btn ghost" style="margin-bottom:10px" onclick="show('flight')" data-i18n="Build Cupping Session">Build Cupping Session</button>
     <div class="subnav" id="cupModes">
       <button id="cm-descriptive" class="on" onclick="setCupMode('descriptive')" data-i18n="Descriptive">Descriptive</button>
       <button id="cm-affective" onclick="setCupMode('affective')" data-i18n="Affective">Affective</button>
@@ -353,8 +353,8 @@
   <div id="view-flight" class="hide">
     <div id="flLiteBanner"></div>
     <div class="card">
-      <div class="secname" style="margin-bottom:8px" data-i18n="Flight">Flight</div>
-      <div class="small" style="margin-bottom:10px">Score one attribute across the whole table, then move to the next - the way a cupper actually works a flight.</div>
+      <div class="secname" style="margin-bottom:8px" data-i18n="Cupping Session">Cupping Session</div>
+      <div class="small" style="margin-bottom:10px">Score one attribute across the whole table, then move to the next - the way a cupper actually works the table.</div>
       <div class="cuprow" style="gap:10px;flex-wrap:wrap;align-items:flex-start">
         <div style="flex:1;min-width:120px"><label class="fld" data-i18n="Date">Date</label><input type="date" id="flDate" oninput="FLIGHT.date=this.value"></div>
         <div style="flex:1.4;min-width:150px"><label class="fld" data-i18n="Purpose">Purpose</label><input type="text" id="flPurpose" placeholder="e.g. morning QC table" oninput="FLIGHT.purpose=this.value"></div>
@@ -372,7 +372,7 @@
       <div class="small" id="flSecHint" style="text-align:center;margin:4px 0 12px"></div>
       <div id="flRows"></div>
     </div>
-    <button class="btn" id="flSaveBtn" onclick="saveFlight()" style="display:none" data-i18n="Save flight">Save flight</button>
+    <button class="btn" id="flSaveBtn" onclick="saveFlight()" style="display:none" data-i18n="Save session">Save session</button>
     <div class="small" id="flMsg" style="margin-top:10px;color:var(--accent2)"></div>
     <button class="btn ghost" onclick="show('cup')" style="margin-top:8px" data-i18n="Back to single coffee">Back to single coffee</button>
   </div>
@@ -828,7 +828,7 @@ function buildSeeds(elId,cb){ const el=document.getElementById(elId); if(!el) re
 function olfChips(key){ return OLF.map(g=>`<div class="chips" style="margin-bottom:5px">`+g.map((t,i)=>`<span class="chip ${i>0?'sub':''} ${cup.cata[key].includes(t)?'on':''}" data-ol="${esc(t)}" data-key="${key}">${esc(t)}</span>`).join('')+`</div>`).join(''); }
 function renderCup(){
   const names=[]; getRecipes().filter(r=>r.active).forEach(r=>{ if(!names.includes(r.name)) names.push(r.name); }); BEANS.forEach(b=>{ if(!names.includes(b.name)) names.push(b.name); }); if(cup.sample&&!names.includes(cup.sample)) names.unshift(cup.sample);
-  cupSample.innerHTML='<option value=""></option>'+names.map(n=>`<option ${cup.sample===n?'selected':''}>${esc(n)}</option>`).join('')+`<option value="__new__">${T('+ New coffee to assess')}</option>`;
+  cupSample.innerHTML=`<option value=""></option><option value="__new__">${T('+ New coffee to assess')}</option>`+names.map(n=>`<option ${cup.sample===n?'selected':''}>${esc(n)}</option>`).join('');
   cupDate.value=cup.date||''; cupPurpose.value=cup.purpose||'';
   let h='';
   const showInt=CUPMODE!=='affective', showAff=CUPMODE!=='descriptive', showCata=CUPMODE!=='affective';
@@ -862,7 +862,7 @@ let FLIGHT={ date:new Date().toISOString().slice(0,10), purpose:'', coffees:[] }
 let FLSEC=0;
 function renderFlight(){
   const names=[]; getRecipes().filter(r=>r.active).forEach(r=>{ if(!names.includes(r.name)) names.push(r.name); }); BEANS.forEach(b=>{ if(!names.includes(b.name)) names.push(b.name); });
-  flAdd.innerHTML=`<option value="">${T('Add a coffee...')}</option>`+names.map(n=>`<option>${esc(n)}</option>`).join('')+`<option value="__new__">${T('+ New coffee to assess')}</option>`; flAdd.value='';
+  flAdd.innerHTML=`<option value="">${T('Add a coffee...')}</option><option value="__new__">${T('+ New coffee to assess')}</option>`+names.map(n=>`<option>${esc(n)}</option>`).join(''); flAdd.value='';
   flDate.value=FLIGHT.date||''; flPurpose.value=FLIGHT.purpose||'';
   flCoffees.innerHTML=FLIGHT.coffees.map((c,i)=>`<span class="chip on" style="cursor:default">${esc(c.sample)} <span style="cursor:pointer;margin-left:4px" data-flrm="${i}">&times;</span></span>`).join('')||'<span class="small">No coffees on the table yet.</span>';
   flCoffees.querySelectorAll('[data-flrm]').forEach(x=>x.onclick=()=>{ FLIGHT.coffees.splice(+x.dataset.flrm,1); renderFlight(); });
@@ -877,20 +877,30 @@ function flightStep(d){ FLSEC=Math.max(0,Math.min(CUP_SECS.length-1,FLSEC+d)); r
 function renderFlightMatrix(){ const sec=CUP_SECS[FLSEC];
   document.getElementById('flSecName').textContent=sec.l+'  ('+(FLSEC+1)+'/'+CUP_SECS.length+')';
   document.getElementById('flSecHint').textContent = T(sec.i ? 'Intensity 0-15 and impression 1-9, across the table' : 'Impression 1-9, across the table');
-  let h=''; FLIGHT.coffees.forEach((c,ci)=>{ const iv=c.cup.intens[sec.k]; const scc=c.cup.score[sec.k]!=null?c.cup.score[sec.k]:5;
+  const nk=NOTE_AFTER[sec.k];
+  let h=''; FLIGHT.coffees.forEach((c,ci)=>{ const cup2=c.cup; const iv=cup2.intens[sec.k]; const scc=cup2.score[sec.k]!=null?cup2.score[sec.k]:5;
     h+=`<div class="sec"><div class="secname" style="font-size:14px">${esc(c.sample)}</div>`;
     if(sec.i) h+=`<div class="iwrap"><span class="scale">Low</span><input type="range" class="islider" min="0" max="15" step="1" value="${iv!=null?iv:7}" data-fi="${ci}"><span class="scale" style="text-align:right">High</span></div>`;
-    h+=`<div class="seg">`; for(let n=1;n<=9;n++) h+=`<button data-fsc="${ci}" data-n="${n}" class="${scc===n?'on':''}">${n}</button>`; h+=`</div></div>`; });
+    h+=`<div class="seg">`; for(let n=1;n<=9;n++) h+=`<button data-fsc="${ci}" data-n="${n}" class="${scc===n?'on':''}">${n}</button>`; h+=`</div>`;
+    if(sec.cata==='olf'){ h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div>`+OLF.map(g=>`<div class="chips" style="margin-bottom:5px">`+g.map((t,i)=>`<span class="chip ${i>0?'sub':''} ${cup2.cata[sec.cataKey].includes(t)?'on':''}" data-fol="${ci}|${sec.cataKey}|${esc(t)}">${esc(t)}</span>`).join('')+`</div>`).join('')+`</div>`;
+      if(sec.main) h+=`<div class="cgrp"><div class="cgrplbl">Main tastes (up to 2)</div><div class="chips">`+MAIN_TASTES.map(t=>`<span class="chip ${cup2.cata.main.includes(t)?'on':''}" data-fmt="${ci}|${t}">${t}</span>`).join('')+`</div></div>`; }
+    if(sec.cata==='mouth') h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div><div class="chips">`+MOUTH.map(([v,l])=>`<span class="chip ${cup2.cata.mouth.includes(v)?'on':''}" data-fmo="${ci}|${esc(v)}">${esc(l)}</span>`).join('')+`</div></div>`;
+    if(nk) h+=`<div class="cgrp"><div class="cgrplbl">${T('Notes')}</div><textarea data-fnote="${ci}" rows="2">${esc((cup2.notes&&cup2.notes[nk])||'')}</textarea></div>`;
+    h+=`</div>`; });
   const rows=document.getElementById('flRows'); rows.innerHTML=h;
   rows.querySelectorAll('input[data-fi]').forEach(s=>s.addEventListener('input',e=>{ FLIGHT.coffees[+e.target.dataset.fi].cup.intens[sec.k]=+e.target.value; }));
   rows.querySelectorAll('button[data-fsc]').forEach(b=>b.onclick=()=>{ const ci=+b.dataset.fsc,n=+b.dataset.n; FLIGHT.coffees[ci].cup.score[sec.k]=n; rows.querySelectorAll('button[data-fsc="'+ci+'"]').forEach(x=>x.classList.toggle('on',+x.dataset.n===n)); });
+  rows.querySelectorAll('[data-fol]').forEach(c=>c.onclick=()=>{ const p=c.dataset.fol.split('|'); toggleCata(FLIGHT.coffees[+p[0]].cup.cata[p[1]],p[2],c,5); });
+  rows.querySelectorAll('[data-fmt]').forEach(c=>c.onclick=()=>{ const p=c.dataset.fmt.split('|'); toggleCata(FLIGHT.coffees[+p[0]].cup.cata.main,p[1],c,2); });
+  rows.querySelectorAll('[data-fmo]').forEach(c=>c.onclick=()=>{ const p=c.dataset.fmo.split('|'); toggleCata(FLIGHT.coffees[+p[0]].cup.cata.mouth,p[1],c,2); });
+  rows.querySelectorAll('textarea[data-fnote]').forEach(t=>t.addEventListener('input',e=>{ const ci=+e.target.dataset.fnote; const c2=FLIGHT.coffees[ci].cup; if(!c2.notes) c2.notes={}; c2.notes[nk]=e.target.value; }));
 }
 async function saveFlight(){ if(!canSave('cup')){ flMsg.style.color='var(--accent2)'; flMsg.textContent=enrollPrompt('cupping'); return; }
   if(!FLIGHT.coffees.length){ flMsg.style.color='var(--warn)'; flMsg.textContent='Add at least one coffee.'; return; }
   let n=0; for(const c of FLIGHT.coffees){ if(!c.sample) continue; const rec=JSON.parse(JSON.stringify(c.cup)); rec.sample=c.sample; rec.date=FLIGHT.date; rec.purpose=FLIGHT.purpose; rec.total=cupTotal(rec); rec.id='local-'+Date.now()+'-'+(n++);
     CUPS.unshift(rec); ensureBean(rec.sample);
     if(sb){ try{ const r=await sb.from('cuppings').insert(toCupPayload(rec)).select('*').single(); if(r&&!r.error){ const ix=CUPS.findIndex(x=>x.id===rec.id); if(ix>=0) CUPS[ix].id=r.data.id; } }catch(e){} } }
-  cacheCG(); flMsg.style.color='var(--accent2)'; flMsg.textContent='Saved '+n+' cuppings from the flight. Open Value to see each coffee.';
+  cacheCG(); flMsg.style.color='var(--accent2)'; flMsg.textContent='Saved '+n+' cuppings from the session. Open Value to see each coffee.';
   FLIGHT={ date:new Date().toISOString().slice(0,10), purpose:'', coffees:[] }; FLSEC=0; renderFlight(); }
 function bindCup(){
   cupSecs.querySelectorAll('input[data-int]').forEach(s=>s.addEventListener('input',e=>{ const k=e.target.dataset.int; cup.intens[k]=+e.target.value; const lb=document.getElementById('iv_'+k); if(lb) lb.textContent='intensity '+cup.intens[k]; checkCalib(); }));
@@ -931,7 +941,7 @@ function gradeVerdict(){ const c1=defFull(CAT1),c2=defFull(CAT2); const m=parseF
 function defCard(d){ const [k,l,ratio,img]=d; const n=grade.counts[k]||0; return `<div class="defcard ${n>0?'hit':''}"><img src="defects/${img}.jpg" alt="${esc(l)}" loading="lazy"><div class="dn">${esc(l)}</div><div class="dr">${ratio} bean${ratio>1?'s':''} = 1 defect</div><div class="defctl"><button data-gd="${k}">−</button><span class="dc" id="dc_${k}">${n}</span><button data-gi="${k}">+</button></div></div>`; }
 function renderGrade(){
   const gnames=[]; getRecipes().filter(r=>r.active).forEach(r=>{ if(!gnames.includes(r.name)) gnames.push(r.name); }); BEANS.forEach(b=>{ if(!gnames.includes(b.name)) gnames.push(b.name); }); if(grade.sample&&!gnames.includes(grade.sample)) gnames.unshift(grade.sample);
-  grSample.innerHTML='<option value=""></option>'+gnames.map(n=>`<option ${grade.sample===n?'selected':''}>${esc(n)}</option>`).join('')+`<option value="__new__">${T('+ New coffee to assess')}</option>`;
+  grSample.innerHTML=`<option value=""></option><option value="__new__">${T('+ New coffee to assess')}</option>`+gnames.map(n=>`<option ${grade.sample===n?'selected':''}>${esc(n)}</option>`).join('');
   grDate.value=grade.date||''; grPurpose.value=grade.purpose||'';
   grMoist.value=grade.moisture||''; grAw.value=grade.aw||''; grScreen.value=grade.screen||''; grOrigin.value=grade.origin||''; grVariety.value=grade.variety||''; grExNote.value=grade.exnote||'';
   grColors.innerHTML=GR_COLORS.map(c=>`<span class="chip ${grade.color===c?'on':''}" data-col="${esc(c)}">${esc(c)}</span>`).join('');
@@ -1153,7 +1163,7 @@ const DICT={ tr:{
  "Save rules":"Kuralları kaydet","Save as defaults":"Varsayılan olarak kaydet","Reset to defaults":"Varsayılanlara dön",
  // cup
  "Combined":"Birleşik","Sample # / coffee":"Numune # / kahve","cupping score":"tadım puanı",
- "Cup a flight (several coffees)":"Birden çok kahveyi tadımla (set)","Flight":"Tadım Seti","Add a coffee to the table":"Masaya kahve ekle","Add a coffee...":"Kahve ekle...","Save flight":"Seti kaydet","Back to single coffee":"Tek kahveye dön","Intensity 0-15 and impression 1-9, across the table":"Tüm masada yoğunluk 0-15 ve izlenim 1-9","Impression 1-9, across the table":"Tüm masada izlenim 1-9",
+ "Build Cupping Session":"Tadım Seansı Oluştur","Cupping Session":"Tadım Seansı","Add a coffee to the table":"Masaya kahve ekle","Add a coffee...":"Kahve ekle...","Save session":"Seansı kaydet","Back to single coffee":"Tek kahveye dön","Intensity 0-15 and impression 1-9, across the table":"Tüm masada yoğunluk 0-15 ve izlenim 1-9","Impression 1-9, across the table":"Tüm masada izlenim 1-9",
  "Date":"Tarih","Purpose":"Amaç","Roast level (Agtron)":"Kavurma derecesi (Agtron)","Notes":"Notlar","+ New coffee to assess":"+ Değerlendirilecek yeni kahve","New coffee to assess:":"Değerlendirilecek yeni kahve:","Reveal":"Göster","Hide":"Gizle","Keep secured":"Gizli kalsın",
  "Fragrance":"Koku (kuru)","Aroma":"Aroma","Flavor":"Tat","Aftertaste":"Bitiş tadı","Acidity":"Asidite","Sweetness":"Tatlılık","Mouthfeel":"Ağız hissi","Overall":"Genel",
  "Main tastes (up to 2)":"Ana tatlar (en fazla 2)","Uniformity & defects":"Tekdüzelik ve kusurlar","Non-uniform cups":"Tekdüze olmayan fincanlar",
