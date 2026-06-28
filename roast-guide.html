@@ -307,7 +307,12 @@
 
   <!-- CUP (CVA combined: descriptive + affective) -->
   <div id="view-cup" class="hide">
-    <div class="scorebar"><span class="sv" id="cupSV">79.00</span><span class="sl">cupping<br>score <span class="info" onclick="showScoreInfo()">&#9432;</span></span></div>
+    <div class="subnav" id="cupModes">
+      <button id="cm-combined" class="on" onclick="setCupMode('combined')" data-i18n="Combined">Combined</button>
+      <button id="cm-descriptive" onclick="setCupMode('descriptive')" data-i18n="Descriptive">Descriptive</button>
+      <button id="cm-affective" onclick="setCupMode('affective')" data-i18n="Affective">Affective</button>
+    </div>
+    <div class="scorebar" id="cupScoreBar"><span class="sv" id="cupSV">79.00</span><span class="sl">cupping<br>score <span class="info" onclick="showScoreInfo()">&#9432;</span></span></div>
     <div id="cupLiteBanner"></div>
     <div class="card">
       <label class="fld" for="cupSample">Sample / coffee</label>
@@ -315,7 +320,7 @@
       <div class="seedlist" id="cupSeeds"></div>
     </div>
     <div class="card" id="cupSecs"></div>
-    <div class="card">
+    <div class="card" id="cupUnifCard">
       <div class="secname" style="margin-bottom:8px">Uniformity &amp; defects</div>
       <div class="cgrplbl">Non-uniform cups</div>
       <div class="cuprow"><div class="cupbox" id="cupNU"></div></div>
@@ -325,7 +330,7 @@
       <div class="chips" id="cupDefType"></div>
       <div class="small" style="margin-top:8px">Each non-uniform cup costs 2 points, each defective cup 4.</div>
     </div>
-    <div class="card">
+    <div class="card" id="cupRoastCard">
       <div class="cgrplbl">Roast level</div>
       <div class="chips" id="cupRoast"></div>
     </div>
@@ -761,23 +766,30 @@ function renderCup(){
   buildSeeds('cupSeeds',s=>{ cup.sample=s; cupSample.value=s; });
   cupSample.value=cup.sample||'';
   let h='';
-  CUP_SECS.forEach(sec=>{ const iv=cup.intens[sec.k]; const sc=cup.score[sec.k]!=null?cup.score[sec.k]:5;
-    h+=`<div class="sec"><div class="sechd"><span class="secname">${sec.l}</span>`+(sec.i?`<span class="ival" id="iv_${sec.k}">${iv!=null?('intensity '+iv):'intensity -'}</span>`:`<span class="ival">affective only</span>`)+`</div>`;
-    if(sec.i) h+=`<div class="iwrap"><span class="scale">Low</span><input type="range" class="islider" min="0" max="15" step="1" value="${iv!=null?iv:7}" data-int="${sec.k}"><span class="scale" style="text-align:right">High</span></div>`;
-    h+=`<div class="seg">`; for(let n=1;n<=9;n++) h+=`<button data-sc="${sec.k}" data-n="${n}" class="${sc===n?'on':''}">${n}</button>`; h+=`</div>`;
-    h+=`<div class="seglbl"><span>1 extremely low</span><span>5 neither</span><span>9 extremely high</span></div>`;
-    if(sec.cata==='olf'){ h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div>`+olfChips(sec.cataKey)+`</div>`;
-      if(sec.main) h+=`<div class="cgrp"><div class="cgrplbl">Main tastes (up to 2)</div><div class="chips">`+MAIN_TASTES.map(t=>`<span class="chip ${cup.cata.main.includes(t)?'on':''}" data-mt="${t}">${t}</span>`).join('')+`</div></div>`; }
-    if(sec.cata==='mouth') h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div><div class="chips">`+MOUTH.map(g=>g.map((t,i)=>`<span class="chip ${i>0?'sub':''} ${cup.cata.mouth.includes(t)?'on':''}" data-mo="${esc(t)}">${esc(t)}</span>`).join('')).join('')+`</div></div>`;
+  const showInt=CUPMODE!=='affective', showAff=CUPMODE!=='descriptive', showCata=CUPMODE!=='affective';
+  CUP_SECS.forEach(sec=>{ if(CUPMODE==='descriptive'&&sec.k==='overall') return;   // overall is affective-only
+    const iv=cup.intens[sec.k]; const sc=cup.score[sec.k]!=null?cup.score[sec.k]:5;
+    h+=`<div class="sec"><div class="sechd"><span class="secname">${sec.l}</span>`+((showInt&&sec.i)?`<span class="ival" id="iv_${sec.k}">${iv!=null?('intensity '+iv):'intensity -'}</span>`:'')+`</div>`;
+    if(showInt&&sec.i) h+=`<div class="iwrap"><span class="scale">Low</span><input type="range" class="islider" min="0" max="15" step="1" value="${iv!=null?iv:7}" data-int="${sec.k}"><span class="scale" style="text-align:right">High</span></div>`;
+    if(showAff){ h+=`<div class="seg">`; for(let n=1;n<=9;n++) h+=`<button data-sc="${sec.k}" data-n="${n}" class="${sc===n?'on':''}">${n}</button>`; h+=`</div>`;
+      h+=`<div class="seglbl"><span>1 extremely low</span><span>5 neither</span><span>9 extremely high</span></div>`; }
+    if(showCata){ if(sec.cata==='olf'){ h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div>`+olfChips(sec.cataKey)+`</div>`;
+        if(sec.main) h+=`<div class="cgrp"><div class="cgrplbl">Main tastes (up to 2)</div><div class="chips">`+MAIN_TASTES.map(t=>`<span class="chip ${cup.cata.main.includes(t)?'on':''}" data-mt="${t}">${t}</span>`).join('')+`</div></div>`; }
+      if(sec.cata==='mouth') h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div><div class="chips">`+MOUTH.map(g=>g.map((t,i)=>`<span class="chip ${i>0?'sub':''} ${cup.cata.mouth.includes(t)?'on':''}" data-mo="${esc(t)}">${esc(t)}</span>`).join('')).join('')+`</div></div>`; }
     h+=`</div>`; });
   cupSecs.innerHTML=h;
   cupNU.innerHTML=''; cupDF.innerHTML='';
   for(let i=1;i<=5;i++){ cupNU.innerHTML+=`<button data-nu="${i}" class="${i<=cup.nonuniform?'on':''}">${i}</button>`; cupDF.innerHTML+=`<button data-df="${i}" class="${i<=cup.defective?'on':''}">${i}</button>`; }
   cupDefType.innerHTML=DEFECT_TYPES.map(t=>`<span class="chip ${cup.defect===t?'on':''}" data-dt="${t}">${t}</span>`).join('');
   cupRoast.innerHTML=ROASTS.map(t=>`<span class="chip ${cup.roast===t?'on':''}" data-ro="${esc(t)}">${esc(t)}</span>`).join('');
+  const sbar=document.getElementById('cupScoreBar'); if(sbar) sbar.style.display=(CUPMODE==='descriptive')?'none':'';
+  const uc=document.getElementById('cupUnifCard'); if(uc) uc.style.display=(CUPMODE==='descriptive')?'none':'';
+  const rc=document.getElementById('cupRoastCard'); if(rc) rc.style.display=(CUPMODE==='affective')?'none':'';
   bindCup(); updateCupScore(); renderCupList();
   const cb=document.getElementById('cupLiteBanner'); if(cb) cb.innerHTML=canSave('cup')?'':liteBanner('cupping');
 }
+let CUPMODE='combined';
+function setCupMode(m){ CUPMODE=m; ['combined','descriptive','affective'].forEach(x=>{ const b=document.getElementById('cm-'+x); if(b) b.classList.toggle('on',x===m); }); renderCup(); }
 function bindCup(){
   cupSecs.querySelectorAll('input[data-int]').forEach(s=>s.addEventListener('input',e=>{ const k=e.target.dataset.int; cup.intens[k]=+e.target.value; const lb=document.getElementById('iv_'+k); if(lb) lb.textContent='intensity '+cup.intens[k]; checkCalib(); }));
   cupSecs.querySelectorAll('button[data-sc]').forEach(b=>b.onclick=()=>{ const k=b.dataset.sc,n=+b.dataset.n; cup.score[k]=n; cupSecs.querySelectorAll('button[data-sc="'+k+'"]').forEach(x=>x.classList.toggle('on',+x.dataset.n===n)); updateCupScore(); });
@@ -1034,7 +1046,7 @@ const DICT={ tr:{
  "Cup this coffee":"Bu kahveyi tadımla","Deep Calibration Learning":"Derin Kalibrasyon Öğrenmesi",
  "Save rules":"Kuralları kaydet","Save as defaults":"Varsayılan olarak kaydet","Reset to defaults":"Varsayılanlara dön",
  // cup
- "Sample / coffee":"Numune / kahve","cupping score":"tadım puanı",
+ "Combined":"Birleşik","Sample / coffee":"Numune / kahve","cupping score":"tadım puanı",
  "Fragrance":"Koku (kuru)","Aroma":"Aroma","Flavor":"Tat","Aftertaste":"Bitiş tadı","Acidity":"Asidite","Sweetness":"Tatlılık","Mouthfeel":"Ağız hissi","Overall":"Genel",
  "Main tastes (up to 2)":"Ana tatlar (en fazla 2)","Uniformity & defects":"Tekdüzelik ve kusurlar","Non-uniform cups":"Tekdüze olmayan fincanlar",
  "Defective cups":"Kusurlu fincanlar","Defect type":"Kusur türü","Roast level":"Kavurma derecesi","Save cupping":"Tadımı kaydet",
