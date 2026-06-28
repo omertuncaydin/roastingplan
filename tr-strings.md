@@ -65,6 +65,7 @@ EN is the source of truth; the app is designed in English. This file holds the T
 - Notes (per cupping section, end of each) → "Notlar"
 - + New coffee to assess (select option) → "+ Değerlendirilecek yeni kahve"
 - Score reveal/secure button: Reveal → "Göster"; Hide → "Gizle"; Keep secured → "Gizli kalsın"
+- Flight (attribute-paged multi-coffee scoring): Cup a flight (several coffees) → "Birden çok kahveyi tadımla (set)"; Flight → "Tadım Seti"; Add a coffee to the table → "Masaya kahve ekle"; Save flight → "Seti kaydet"; Back to single coffee → "Tek kahveye dön"
 - Purpose placeholder (EN-only for now) → e.g. for our Italian cafe customer
 - Sections: Fragrance → "Koku (kuru)"; Aroma → "Aroma"; Flavor → "Tat"; Aftertaste → "Bitiş tadı"; Acidity → "Asidite"; Sweetness → "Tatlılık"; Mouthfeel → "Ağız hissi"; Overall → "Genel"
 - intensity / Low / High → "yoğunluk" / "Düşük" / "Yüksek"

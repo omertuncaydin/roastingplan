@@ -310,7 +310,6 @@
 
   <!-- CUP (CVA combined: descriptive + affective) -->
   <div id="view-cup" class="hide">
-    <button class="btn ghost" style="margin-bottom:10px" onclick="show('flight')" data-i18n="Cup a flight (several coffees)">Cup a flight (several coffees)</button>
     <div class="subnav" id="cupModes">
       <button id="cm-descriptive" class="on" onclick="setCupMode('descriptive')" data-i18n="Descriptive">Descriptive</button>
       <button id="cm-affective" onclick="setCupMode('affective')" data-i18n="Affective">Affective</button>
@@ -347,34 +346,6 @@
     <button class="nullbtn" title="Coming in the next version">Class Mode &nbsp;·&nbsp; aggregate a class on one coffee &nbsp;·&nbsp; coming soon</button>
     <div class="small" id="cupMsg" style="margin-top:10px;color:var(--accent2)"></div>
     <div class="card" style="margin-top:12px"><div class="cgrplbl">Saved cuppings</div><div id="cupList"></div></div>
-  </div>
-
-  <!-- FLIGHT (attribute-paged scoring across several coffees) -->
-  <div id="view-flight" class="hide">
-    <div id="flLiteBanner"></div>
-    <div class="card">
-      <div class="secname" style="margin-bottom:8px" data-i18n="Flight">Flight</div>
-      <div class="small" style="margin-bottom:10px">Score one attribute across the whole table, then move to the next - the way a cupper actually works a flight.</div>
-      <div class="cuprow" style="gap:10px;flex-wrap:wrap;align-items:flex-start">
-        <div style="flex:1;min-width:120px"><label class="fld" data-i18n="Date">Date</label><input type="date" id="flDate" oninput="FLIGHT.date=this.value"></div>
-        <div style="flex:1.4;min-width:150px"><label class="fld" data-i18n="Purpose">Purpose</label><input type="text" id="flPurpose" placeholder="e.g. morning QC table" oninput="FLIGHT.purpose=this.value"></div>
-      </div>
-      <label class="fld" for="flAdd" style="margin-top:10px" data-i18n="Add a coffee to the table">Add a coffee to the table</label>
-      <select id="flAdd" onchange="flightAdd(this)"></select>
-      <div class="chips" id="flCoffees" style="margin-top:10px"></div>
-    </div>
-    <div class="card" id="flMatrixCard" style="display:none">
-      <div class="cuprow" style="justify-content:space-between;align-items:center;gap:8px">
-        <button class="iconbtn" onclick="flightStep(-1)">&#8249;</button>
-        <div class="secname" id="flSecName" style="text-align:center;flex:1"></div>
-        <button class="iconbtn" onclick="flightStep(1)">&#8250;</button>
-      </div>
-      <div class="small" id="flSecHint" style="text-align:center;margin:4px 0 12px"></div>
-      <div id="flRows"></div>
-    </div>
-    <button class="btn" id="flSaveBtn" onclick="saveFlight()" style="display:none" data-i18n="Save flight">Save flight</button>
-    <div class="small" id="flMsg" style="margin-top:10px;color:var(--accent2)"></div>
-    <button class="btn ghost" onclick="show('cup')" style="margin-top:8px" data-i18n="Back to single coffee">Back to single coffee</button>
   </div>
 
   <!-- GRADE (CVA physical / green grading) -->
@@ -856,42 +827,6 @@ function renderCup(){
 }
 let CUPMODE='descriptive';
 function setCupMode(m){ CUPMODE=m; ['combined','descriptive','affective'].forEach(x=>{ const b=document.getElementById('cm-'+x); if(b) b.classList.toggle('on',x===m); }); renderCup(); }
-
-// ---- Flight: score one attribute across the whole table, then advance ----
-let FLIGHT={ date:new Date().toISOString().slice(0,10), purpose:'', coffees:[] };   // coffees: [{sample, cup}]
-let FLSEC=0;
-function renderFlight(){
-  const names=[]; getRecipes().filter(r=>r.active).forEach(r=>{ if(!names.includes(r.name)) names.push(r.name); }); BEANS.forEach(b=>{ if(!names.includes(b.name)) names.push(b.name); });
-  flAdd.innerHTML=`<option value="">${T('Add a coffee...')}</option>`+names.map(n=>`<option>${esc(n)}</option>`).join('')+`<option value="__new__">${T('+ New coffee to assess')}</option>`; flAdd.value='';
-  flDate.value=FLIGHT.date||''; flPurpose.value=FLIGHT.purpose||'';
-  flCoffees.innerHTML=FLIGHT.coffees.map((c,i)=>`<span class="chip on" style="cursor:default">${esc(c.sample)} <span style="cursor:pointer;margin-left:4px" data-flrm="${i}">&times;</span></span>`).join('')||'<span class="small">No coffees on the table yet.</span>';
-  flCoffees.querySelectorAll('[data-flrm]').forEach(x=>x.onclick=()=>{ FLIGHT.coffees.splice(+x.dataset.flrm,1); renderFlight(); });
-  const has=FLIGHT.coffees.length>0;
-  document.getElementById('flMatrixCard').style.display=has?'':'none'; document.getElementById('flSaveBtn').style.display=has?'':'none';
-  const lb=document.getElementById('flLiteBanner'); if(lb) lb.innerHTML=canSave('cup')?'':liteBanner('cupping');
-  if(has) renderFlightMatrix();
-}
-function flightAdd(sel){ let n=sel.value; if(!n) return; if(n==='__new__'){ n=(prompt(T('New coffee to assess:'))||'').trim(); if(!n){ sel.value=''; return; } }
-  if(!FLIGHT.coffees.some(c=>c.sample===n)) FLIGHT.coffees.push({sample:n, cup:blankCup()}); sel.value=''; renderFlight(); }
-function flightStep(d){ FLSEC=Math.max(0,Math.min(CUP_SECS.length-1,FLSEC+d)); renderFlightMatrix(); }
-function renderFlightMatrix(){ const sec=CUP_SECS[FLSEC];
-  document.getElementById('flSecName').textContent=sec.l+'  ('+(FLSEC+1)+'/'+CUP_SECS.length+')';
-  document.getElementById('flSecHint').textContent = T(sec.i ? 'Intensity 0-15 and impression 1-9, across the table' : 'Impression 1-9, across the table');
-  let h=''; FLIGHT.coffees.forEach((c,ci)=>{ const iv=c.cup.intens[sec.k]; const scc=c.cup.score[sec.k]!=null?c.cup.score[sec.k]:5;
-    h+=`<div class="sec"><div class="secname" style="font-size:14px">${esc(c.sample)}</div>`;
-    if(sec.i) h+=`<div class="iwrap"><span class="scale">Low</span><input type="range" class="islider" min="0" max="15" step="1" value="${iv!=null?iv:7}" data-fi="${ci}"><span class="scale" style="text-align:right">High</span></div>`;
-    h+=`<div class="seg">`; for(let n=1;n<=9;n++) h+=`<button data-fsc="${ci}" data-n="${n}" class="${scc===n?'on':''}">${n}</button>`; h+=`</div></div>`; });
-  const rows=document.getElementById('flRows'); rows.innerHTML=h;
-  rows.querySelectorAll('input[data-fi]').forEach(s=>s.addEventListener('input',e=>{ FLIGHT.coffees[+e.target.dataset.fi].cup.intens[sec.k]=+e.target.value; }));
-  rows.querySelectorAll('button[data-fsc]').forEach(b=>b.onclick=()=>{ const ci=+b.dataset.fsc,n=+b.dataset.n; FLIGHT.coffees[ci].cup.score[sec.k]=n; rows.querySelectorAll('button[data-fsc="'+ci+'"]').forEach(x=>x.classList.toggle('on',+x.dataset.n===n)); });
-}
-async function saveFlight(){ if(!canSave('cup')){ flMsg.style.color='var(--accent2)'; flMsg.textContent=enrollPrompt('cupping'); return; }
-  if(!FLIGHT.coffees.length){ flMsg.style.color='var(--warn)'; flMsg.textContent='Add at least one coffee.'; return; }
-  let n=0; for(const c of FLIGHT.coffees){ if(!c.sample) continue; const rec=JSON.parse(JSON.stringify(c.cup)); rec.sample=c.sample; rec.date=FLIGHT.date; rec.purpose=FLIGHT.purpose; rec.total=cupTotal(rec); rec.id='local-'+Date.now()+'-'+(n++);
-    CUPS.unshift(rec); ensureBean(rec.sample);
-    if(sb){ try{ const r=await sb.from('cuppings').insert(toCupPayload(rec)).select('*').single(); if(r&&!r.error){ const ix=CUPS.findIndex(x=>x.id===rec.id); if(ix>=0) CUPS[ix].id=r.data.id; } }catch(e){} } }
-  cacheCG(); flMsg.style.color='var(--accent2)'; flMsg.textContent='Saved '+n+' cuppings from the flight. Open Value to see each coffee.';
-  FLIGHT={ date:new Date().toISOString().slice(0,10), purpose:'', coffees:[] }; FLSEC=0; renderFlight(); }
 function bindCup(){
   cupSecs.querySelectorAll('input[data-int]').forEach(s=>s.addEventListener('input',e=>{ const k=e.target.dataset.int; cup.intens[k]=+e.target.value; const lb=document.getElementById('iv_'+k); if(lb) lb.textContent='intensity '+cup.intens[k]; checkCalib(); }));
   cupSecs.querySelectorAll('button[data-sc]').forEach(b=>b.onclick=()=>{ const k=b.dataset.sc,n=+b.dataset.n; cup.score[k]=n; cupSecs.querySelectorAll('button[data-sc="'+k+'"]').forEach(x=>x.classList.toggle('on',+x.dataset.n===n)); updateCupScore(); });
@@ -1153,7 +1088,6 @@ const DICT={ tr:{
  "Save rules":"Kuralları kaydet","Save as defaults":"Varsayılan olarak kaydet","Reset to defaults":"Varsayılanlara dön",
  // cup
  "Combined":"Birleşik","Sample # / coffee":"Numune # / kahve","cupping score":"tadım puanı",
- "Cup a flight (several coffees)":"Birden çok kahveyi tadımla (set)","Flight":"Tadım Seti","Add a coffee to the table":"Masaya kahve ekle","Add a coffee...":"Kahve ekle...","Save flight":"Seti kaydet","Back to single coffee":"Tek kahveye dön","Intensity 0-15 and impression 1-9, across the table":"Tüm masada yoğunluk 0-15 ve izlenim 1-9","Impression 1-9, across the table":"Tüm masada izlenim 1-9",
  "Date":"Tarih","Purpose":"Amaç","Roast level (Agtron)":"Kavurma derecesi (Agtron)","Notes":"Notlar","+ New coffee to assess":"+ Değerlendirilecek yeni kahve","New coffee to assess:":"Değerlendirilecek yeni kahve:","Reveal":"Göster","Hide":"Gizle","Keep secured":"Gizli kalsın",
  "Fragrance":"Koku (kuru)","Aroma":"Aroma","Flavor":"Tat","Aftertaste":"Bitiş tadı","Acidity":"Asidite","Sweetness":"Tatlılık","Mouthfeel":"Ağız hissi","Overall":"Genel",
  "Main tastes (up to 2)":"Ana tatlar (en fazla 2)","Uniformity & defects":"Tekdüzelik ve kusurlar","Non-uniform cups":"Tekdüze olmayan fincanlar",
@@ -1200,14 +1134,14 @@ const SEC_INFO={ roast:['Roast','first crack to drop, guided'], cup:['Cup','sens
 function groupOf(v){ return ROAST_GROUP.includes(v)?'roast':v; }
 function show(v){
   CURVIEW=v;
-  ['roast','cup','grade','value','recipes','hist','rules','account','flight'].forEach(x=>document.getElementById('view-'+x).classList.toggle('hide',x!==v));
-  const g=(v==='flight')?'cup':groupOf(v);
+  ['roast','cup','grade','value','recipes','hist','rules','account'].forEach(x=>document.getElementById('view-'+x).classList.toggle('hide',x!==v));
+  const g=groupOf(v);
   [['m-roast','roast'],['m-cup','cup'],['m-grade','grade'],['m-value','value']].forEach(([id,grp])=>{ const b=document.getElementById(id); if(b) b.classList.toggle('on',grp===g); });
   const st=document.getElementById('secTitle'), info=SEC_INFO[g]; if(st&&info) st.innerHTML=`<span class="st">${T(info[0])}</span><span class="ss">${T(info[1])}</span>`;   // full section name = what the letter stands for
   const sub=document.getElementById('subnav'); if(sub) sub.classList.toggle('hide',g!=='roast');   // sub-tabs only emerge under Roast
   ROAST_GROUP.forEach(x=>{ const b=document.getElementById('nav-'+x); if(b) b.classList.toggle('on',x===v); });
   if(v==='recipes') renderRecipes(); if(v==='hist') renderLog(); if(v==='rules') renderRules();
-  if(v==='cup') renderCup(); if(v==='grade') renderGrade(); if(v==='value') renderValue(); if(v==='account') renderAccount(); if(v==='flight') renderFlight(); }
+  if(v==='cup') renderCup(); if(v==='grade') renderGrade(); if(v==='value') renderValue(); if(v==='account') renderAccount(); }
 function renderRules(){ const ids=['ru_A1','ru_B0','ru_B1','ru_C0','ru_C1','ru_C2','ru_fcBase','ru_fcDouble','ru_secPerAg','ru_learnN','ru_cinToA0','ru_agTol'];
   ['A1','B0','B1','C0','C1','C2'].forEach(c=>{ const el=document.getElementById('ru_'+c); if(el) el.value=RULES.offs[c]; }); ['fcBase','fcDouble','secPerAg','learnN','cinToA0','agTol'].forEach(k=>{ const el=document.getElementById('ru_'+k); if(el) el.value=RULES[k]; });
   ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!IS_ADMIN; });
