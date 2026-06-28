@@ -213,7 +213,7 @@
       <div class="card">
         <div class="small" id="setupBean" style="text-align:center;margin-bottom:2px;font-weight:700;color:var(--ink);font-size:14px"></div>
         <div class="gaugeWrap" id="setupGauge"></div>
-        <div class="legend"><span><span class="dotw"></span>first crack</span><span><span class="dotg"></span>drop target</span></div>
+        <div class="legend"><span><span class="dotw"></span>next stage</span><span><span class="dotg"></span>drop target</span></div>
         <label class="fld" for="bean" style="margin-top:16px" data-i18n="Coffee (active)">Coffee (active)</label>
         <select id="bean"></select>
         <label class="fld" for="equip" style="margin-top:12px" data-i18n="Machine">Machine</label>
@@ -608,10 +608,9 @@ function refresh(){
 }
 // idle preview gauge on the landing: shows the selected coffee's plan (FC mark, drop-target tick, FC time)
 function drawSetupGauge(){ const el=document.getElementById('setupGauge'); if(!el) return; const r=cur();
-  if(!r){ el.innerHTML=renderGauge(null,null,null,'-','pick a coffee'); return; }
-  const s=rstr(r,equip.value), fc=parseFc(s), target=parseStage(s), ag=parseAg(s);
-  const t=STAGES.find(x=>x.code===target), dropU=t?t.u:0.73, fcU=0.55;
-  el.innerHTML=renderGauge(null, fcU, dropU, fmt(fcActual(fc)), 'FC time · drop '+target+(ag!=null?(' · '+ag+'A'):''));
+  if(!r){ el.innerHTML=renderGauge(null,0.50,null,'-','pick a coffee'); return; }
+  const s=rstr(r,equip.value), target=parseStage(s); const t=STAGES.find(x=>x.code===target), dropU=t?t.u:0.73;
+  el.innerHTML=renderGauge(0, 0.50, dropU, '0:00', 'ready');   // cockpit-ready look on the landing
 }
 function begin(){
   const r=cur(); if(!r){ alert('Pick a coffee'); return; }
@@ -1192,7 +1191,7 @@ const DICT={ tr:{
  "Value Assessment":"Değerlendirme","Fit + Distinctiveness · the identity card":"Uyum + Ayırt Edicilik · kimlik kartı",
  "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz","Refresh app":"Uygulamayı yenile",
  // roast
- "Coffee (active)":"Kahve (aktif)","Machine":"Makine","FC time":"FC zamanı","Drop at":"Boşaltma","Agtron":"Agtron","Open the guide":"Rehberi aç","Start roasting":"Kavurmaya başla",
+ "Coffee (active)":"Kahve (aktif)","Machine":"Makine","FC time":"FC zamanı","Drop at":"Boşaltma","Agtron":"Agtron","Open the guide":"Rehberi aç","Start roasting":"Kavurmaya başla","Pick your coffee":"Kahveni seç","Add new coffee":"Yeni kahve ekle",
  "START":"BAŞLA","CINNAMON":"TARÇIN","FIRST CRACK (A0)":"İLK ÇITIRTI (A0)","DROP / FINISH":"BOŞALT / BİTİR","New roast":"Yeni kavurma",
  "Tap START when the roast begins.":"Kavurma başladığında BAŞLA'ya dokun.","Roast finished and learned.":"Kavurma bitti ve öğrenildi.",
  "Cup this coffee":"Bu kahveyi tadımla","Deep Calibration Learning":"Derin Kalibrasyon Öğrenmesi",
@@ -1275,7 +1274,7 @@ async function saveAsDefaults(){ if(!IS_ADMIN) return;
 function resetRules(){ RULES=JSON.parse(JSON.stringify(SAVED_DEFAULTS)); applyRules(); renderRules(); rulesMsg.textContent='Reset to saved defaults - tap Save rules to apply them live.'; }
 function deepCalibration(){ /* placeholder - sample-roast calibration to learn a bean's full stage map. Not built yet. */ rulesMsg.textContent='Deep Calibration Learning: placeholder - not built yet.'; }
 function esc(s){ return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
-function buildBeans(){ const cur=bean.value; bean.innerHTML=''; getRecipes().filter(r=>r.active).forEach(r=>{ const o=document.createElement('option'); o.value=r.name; o.textContent=r.name; bean.appendChild(o); }); if(cur&&getRecipes().some(r=>r.name===cur&&r.active)) bean.value=cur; refresh(); }
+function buildBeans(){ const cur=bean.value; bean.innerHTML=`<option value="">${T('Pick your coffee')}</option><option value="__newrecipe__">${T('Add new coffee')}</option>`; getRecipes().filter(r=>r.active).forEach(r=>{ const o=document.createElement('option'); o.value=r.name; o.textContent=r.name; bean.appendChild(o); }); if(cur&&getRecipes().some(r=>r.name===cur&&r.active)) bean.value=cur; else bean.value=''; refresh(); }
 
 // ===================== auth + server load =====================
 function showLogin(){ loginOverlay.style.display='flex'; }
@@ -1304,7 +1303,7 @@ async function seedServer(){
 }
 function initApp(){
   try{ if(typeof supabase!=='undefined') sb=supabase.createClient(SUPA_URL, SUPA_KEY); }catch(e){ console.warn('sb init',e); }
-  bean.addEventListener('change',refresh); equip.addEventListener('change',refresh);
+  bean.addEventListener('change',()=>{ if(bean.value==='__newrecipe__'){ bean.value=''; show('recipes'); newRecipe(); return; } refresh(); }); equip.addEventListener('change',refresh);
   show('roast');   // set main/sub nav state (subnav emerges under Roast)
   try{ const l=localStorage.getItem('cnLang'); if(l==='tr'||l==='en') LANG=l; }catch(e){}
   applyLang();
