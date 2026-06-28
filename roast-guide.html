@@ -42,6 +42,7 @@
   label.fld{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:5px;font-weight:600}
   select,input[type=text],input[type=number],input[type=password],input[type=email],input[type=date],textarea{width:100%;background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:11px 12px;font-size:16px;color-scheme:dark;min-height:46px}
   textarea{resize:vertical;font-family:inherit;line-height:1.4}
+  input[type=date]{-webkit-appearance:none;appearance:none;height:46px}
   select:focus,input:focus{outline:none;border-color:var(--accent)}
   .target{display:flex;gap:10px;margin-top:12px}
   .tchip{flex:1;background:#15100b;border:1px solid var(--line);border-radius:9px;padding:10px;text-align:center}
@@ -865,6 +866,8 @@ function setCupMode(m){ CUPMODE=m; ['combined','descriptive','affective'].forEac
 // ---- Flight: score one attribute across the whole table, then advance ----
 let FLIGHT={ date:new Date().toISOString().slice(0,10), purpose:'', coffees:[] };   // coffees: [{sample, cup}]
 let FLSEC=0, FLMODE='descriptive';
+// session shows the shared descriptors on BOTH screens of each pair (fragrance+aroma share fragAroma; flavor+aftertaste share flavAfter)
+const FL_CATA={ fragrance:{type:'olf',key:'fragAroma',lbl:'Fragrance & aroma descriptors (up to 5)'}, aroma:{type:'olf',key:'fragAroma',lbl:'Fragrance & aroma descriptors (up to 5)'}, flavor:{type:'olf',key:'flavAfter',lbl:'Flavor & aftertaste descriptors (up to 5)',main:true}, aftertaste:{type:'olf',key:'flavAfter',lbl:'Flavor & aftertaste descriptors (up to 5)',main:true}, mouthfeel:{type:'mouth',lbl:'Mouthfeel quality (up to 2)'} };
 function flightSecs(){ return CUP_SECS.filter(s=> !(FLMODE==='descriptive' && s.k==='overall')); }   // overall is affective-only
 function setFlMode(m){ FLMODE=m; ['descriptive','affective','combined'].forEach(x=>{ const b=document.getElementById('fm-'+x); if(b) b.classList.toggle('on',x===m); }); FLSEC=0; if(FLIGHT.coffees.length) renderFlightMatrix(); }
 function renderFlight(){
@@ -886,14 +889,14 @@ function renderFlightMatrix(){ const secs=flightSecs(); if(FLSEC>=secs.length) F
   const showInt=FLMODE!=='affective', showAff=FLMODE!=='descriptive', showCata=FLMODE!=='affective';
   document.getElementById('flSecName').innerHTML=esc(sec.l)+` <span class="info" onclick="showSecInfo('${sec.k}')">&#9432;</span>  <span class="small">(`+(FLSEC+1)+'/'+secs.length+')</span>';
   document.getElementById('flSecHint').textContent = T((showInt&&showAff) ? 'Intensity 0-15 and impression 1-9, across the table' : (showInt ? 'Intensity 0-15, across the table' : 'Impression 1-9, across the table'));
-  const nk=NOTE_AFTER[sec.k];
+  const nk=NOTE_AFTER[sec.k], fc=FL_CATA[sec.k];
   let h=''; FLIGHT.coffees.forEach((c,ci)=>{ const cup2=c.cup; const iv=cup2.intens[sec.k]; const scc=cup2.score[sec.k]!=null?cup2.score[sec.k]:5;
     h+=`<div class="sec"><div class="sechd"><span class="secname" style="font-size:14px">${esc(c.sample)}</span>`+((showInt&&sec.i)?`<span class="ival" id="fliv_${ci}">intensity ${iv!=null?iv:7}</span>`:'')+`</div>`;
     if(showInt&&sec.i) h+=`<div class="iwrap"><span class="scale">Low</span><input type="range" class="islider" min="0" max="15" step="1" value="${iv!=null?iv:7}" data-fi="${ci}"><span class="scale" style="text-align:right">High</span></div>`;
     if(showAff){ h+=`<div class="seg">`; for(let n=1;n<=9;n++) h+=`<button data-fsc="${ci}" data-n="${n}" class="${scc===n?'on':''}">${n}</button>`; h+=`</div>`; }
-    if(showCata){ if(sec.cata==='olf'){ h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div>`+OLF.map(g=>`<div class="chips" style="margin-bottom:5px">`+g.map((t,i)=>`<span class="chip ${i>0?'sub':''} ${cup2.cata[sec.cataKey].includes(t)?'on':''}" data-fol="${ci}|${sec.cataKey}|${esc(t)}">${esc(t)}</span>`).join('')+`</div>`).join('')+`</div>`;
-      if(sec.main) h+=`<div class="cgrp"><div class="cgrplbl">Main tastes of flavor &amp; aftertaste (up to 2)</div><div class="chips">`+MAIN_TASTES.map(t=>`<span class="chip ${cup2.cata.main.includes(t)?'on':''}" data-fmt="${ci}|${t}">${t}</span>`).join('')+`</div></div>`; }
-    if(sec.cata==='mouth') h+=`<div class="cgrp"><div class="cgrplbl">${sec.cataLbl}</div><div class="chips">`+MOUTH.map(([v,l])=>`<span class="chip ${cup2.cata.mouth.includes(v)?'on':''}" data-fmo="${ci}|${esc(v)}">${esc(l)}</span>`).join('')+`</div></div>`; }
+    if(showCata && fc){ if(fc.type==='olf'){ h+=`<div class="cgrp"><div class="cgrplbl">${fc.lbl}</div>`+OLF.map(g=>`<div class="chips" style="margin-bottom:5px">`+g.map((t,i)=>`<span class="chip ${i>0?'sub':''} ${cup2.cata[fc.key].includes(t)?'on':''}" data-fol="${ci}|${fc.key}|${esc(t)}">${esc(t)}</span>`).join('')+`</div>`).join('')+`</div>`;
+      if(fc.main) h+=`<div class="cgrp"><div class="cgrplbl">Main tastes of flavor &amp; aftertaste (up to 2)</div><div class="chips">`+MAIN_TASTES.map(t=>`<span class="chip ${cup2.cata.main.includes(t)?'on':''}" data-fmt="${ci}|${t}">${t}</span>`).join('')+`</div></div>`; }
+    if(fc.type==='mouth') h+=`<div class="cgrp"><div class="cgrplbl">${fc.lbl}</div><div class="chips">`+MOUTH.map(([v,l])=>`<span class="chip ${cup2.cata.mouth.includes(v)?'on':''}" data-fmo="${ci}|${esc(v)}">${esc(l)}</span>`).join('')+`</div></div>`; }
     if(nk) h+=`<div class="cgrp"><div class="cgrplbl">${T('Notes')}</div><textarea data-fnote="${ci}" rows="2">${esc((cup2.notes&&cup2.notes[nk])||'')}</textarea></div>`;
     h+=`</div>`; });
   const rows=document.getElementById('flRows'); rows.innerHTML=h;
