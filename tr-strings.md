@@ -62,6 +62,7 @@ EN is the source of truth; the app is designed in English. This file holds the T
 - Deep Calibration Learning → "Derin Kalibrasyon Öğrenmesi"
 - Temp curve module (optional, probe-free bean temp logged at a fixed interval; live on roast screen, hideable, hardcoded EN for now, DICT wiring pending. ROR removed 2026-06-29):
   - Show temp curve → "Sıcaklık eğrisini göster"; Hide temp curve → "Sıcaklık eğrisini gizle"
+  - Charge temperature (°C, beans in): → "Şarj sıcaklığı (°C, çekirdekler girince):" (asked once when the curve is first turned on; becomes the t=0 point)
   - every 30s → "her 30sn"; every 60s → "her 60sn"
   - bean °C (input placeholder) → "çekirdek °C"; Log → "Kaydet"
   - first reading at 30s → "ilk ölçüm 30. sn"; next reading in {n}s → "sonraki ölçüm {n}sn"; log bean °C now → "şimdi çekirdek °C gir"

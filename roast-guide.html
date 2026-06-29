@@ -707,7 +707,8 @@ let TEMP_ON=false, TEMP_INT=30, TEMPS=[], tempChart=null;
 function tempActive(){ return st && st.phase!=='idle' && st.phase!=='done'; }
 function toggleTempCurve(){ TEMP_ON=!TEMP_ON; const body=document.getElementById('tempBody'), tog=document.getElementById('tempToggle');
   if(body) body.classList.toggle('hide',!TEMP_ON); if(tog) tog.textContent=TEMP_ON?'Hide temp curve':'Show temp curve';
-  if(TEMP_ON) updateTempChart(); updateTempDue(); }
+  if(TEMP_ON){ if(TEMPS.length===0 && typeof prompt==='function'){ const v=parseFloat(prompt('Charge temperature (°C, beans in):')); if(!isNaN(v)) TEMPS.push({t:0,temp:v}); } updateTempChart(); }
+  updateTempDue(); }
 function setTempInterval(n,btn){ TEMP_INT=n; document.querySelectorAll('#tempInterval button').forEach(b=>b.classList.toggle('on',b===btn)); updateTempDue(); }
 function logTemp(){ const inp=document.getElementById('tempInput'); if(!inp) return; const v=parseFloat(inp.value);
   if(isNaN(v)||!tempActive()) return; TEMPS.push({t:secSince(st.tStart), temp:v}); inp.value=''; updateTempChart(); updateTempDue(); }
