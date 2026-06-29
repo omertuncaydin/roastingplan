@@ -702,7 +702,7 @@ function draw(){
   pcount.textContent=cnt; pcount.style.color = rem<0 ? 'var(--warn)' : 'var(--accent)';
 }
 function reset(){ stopTick(); clearTempCurve(); releaseWake(); live.classList.add('hide'); setup.classList.remove('hide'); refresh(); }
-// ---- manual temp curve (optional, probe-free): bean temp + ROR logged at a fixed interval; never upstages the gauge ----
+// ---- manual temp curve (optional, probe-free): bean temp logged at a fixed interval; never upstages the gauge ----
 let TEMP_ON=false, TEMP_INT=30, TEMPS=[], tempChart=null;
 function tempActive(){ return st && st.phase!=='idle' && st.phase!=='done'; }
 function toggleTempCurve(){ TEMP_ON=!TEMP_ON; const body=document.getElementById('tempBody'), tog=document.getElementById('tempToggle');
@@ -719,16 +719,13 @@ function updateTempDue(){ const el=document.getElementById('tempDue'); if(!el) r
 function clearTempCurve(){ TEMPS=[]; if(tempChart){ try{tempChart.destroy();}catch(e){} tempChart=null; } const el=document.getElementById('tempDue'); if(el) el.textContent=''; }
 function updateTempChart(){ const cv=document.getElementById('tempChart'); if(!cv||typeof Chart==='undefined') return;
   const labels=TEMPS.map(p=>fmt(p.t)), bt=TEMPS.map(p=>p.temp);
-  const ror=TEMPS.map((p,i)=> i===0?null : +(((p.temp-TEMPS[i-1].temp)/((p.t-TEMPS[i-1].t)/60)).toFixed(1)) );
   const data={labels,datasets:[
-    {label:'Bean °C',data:bt,borderColor:'#c98a3c',backgroundColor:'#c98a3c',yAxisID:'y',tension:.3,pointRadius:3},
-    {label:'ROR °C/min',data:ror,borderColor:'#3c8a9a',backgroundColor:'#3c8a9a',yAxisID:'y1',tension:.3,pointRadius:2,spanGaps:true} ]};
+    {label:'Bean °C',data:bt,borderColor:'#c98a3c',backgroundColor:'#c98a3c',yAxisID:'y',tension:.3,pointRadius:3} ]};
   if(tempChart){ tempChart.data=data; tempChart.update('none'); return; }
   tempChart=new Chart(cv,{type:'line',data,options:{responsive:true,maintainAspectRatio:false,animation:false,
-    plugins:{legend:{labels:{color:'#a8998a',boxWidth:12,font:{size:11}}}},
+    plugins:{legend:{display:false}},
     scales:{x:{ticks:{color:'#a8998a',font:{size:10}},grid:{color:'#2a221b'}},
-      y:{position:'left',ticks:{color:'#c98a3c',font:{size:10}},grid:{color:'#2a221b'}},
-      y1:{position:'right',ticks:{color:'#3c8a9a',font:{size:10}},grid:{drawOnChartArea:false}} }}}); }
+      y:{position:'left',ticks:{color:'#c98a3c',font:{size:10}},grid:{color:'#2a221b'}} }}}); }
 async function requestWake(){ try{ if('wakeLock' in navigator) wake=await navigator.wakeLock.request('screen'); }catch(e){} }
 function releaseWake(){ try{ if(wake){wake.release();wake=null;} }catch(e){} }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&st&&st.phase!=='idle'&&st.phase!=='done'&&live&&!live.classList.contains('hide')) requestWake(); });

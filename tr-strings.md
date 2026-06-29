@@ -60,12 +60,12 @@ EN is the source of truth; the app is designed in English. This file holds the T
 - Roast finished and learned. → "Kavurma bitti ve öğrenildi."
 - Cup this coffee → "Bu kahveyi tadımla"
 - Deep Calibration Learning → "Derin Kalibrasyon Öğrenmesi"
-- Temp curve module (optional, probe-free bean temp + ROR logged at a fixed interval; live on roast screen, hideable, hardcoded EN for now, DICT wiring pending):
+- Temp curve module (optional, probe-free bean temp logged at a fixed interval; live on roast screen, hideable, hardcoded EN for now, DICT wiring pending. ROR removed 2026-06-29):
   - Show temp curve → "Sıcaklık eğrisini göster"; Hide temp curve → "Sıcaklık eğrisini gizle"
   - every 30s → "her 30sn"; every 60s → "her 60sn"
   - bean °C (input placeholder) → "çekirdek °C"; Log → "Kaydet"
   - first reading at 30s → "ilk ölçüm 30. sn"; next reading in {n}s → "sonraki ölçüm {n}sn"; log bean °C now → "şimdi çekirdek °C gir"
-  - Chart series: Bean °C → "Çekirdek °C"; ROR °C/min → "ROR °C/dk" (ROR = yükselme hızı; term kept as ROR)
+  - Chart series: Bean °C → "Çekirdek °C"
 
 ## Cup
 - cupping score → "tadım puanı"
