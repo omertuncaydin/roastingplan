@@ -281,7 +281,7 @@
   <div id="view-recipes" class="hide">
     <div class="rtools">
       <button class="btn" onclick="newRecipe()">+ Add</button>
-      <button class="btn ghost" onclick="exportRecipes()">Export</button>
+      <button class="btn ghost" id="exportBtn" onclick="exportRecipes()">Export</button>
       <button class="btn ghost" onclick="document.getElementById('imp').click()">Import</button>
       <input type="file" id="imp" accept=".json" class="hide">
     </div>
@@ -762,6 +762,10 @@ function updateTempDue(){
   if(rem<=0){ el.textContent='log bean °C now'; el.style.color='var(--gold)'; }
   else { el.textContent='next reading in '+Math.ceil(rem)+'s'; el.style.color='var(--muted)'; } }
 function clearTempCurve(){ TEMPS=[]; if(tempChart){ try{tempChart.destroy();}catch(e){} tempChart=null; } const el=document.getElementById('tempDue'); if(el) el.textContent=''; }
+const rorTipPlugin={ id:'rorTip', afterDatasetsDraw(chart){ try{ const dss=chart.data.datasets, di=dss.findIndex(d=>d.yAxisID==='y1'); if(di<0) return;
+  const pts=chart.getDatasetMeta(di).data; if(!pts||!pts.length) return; const last=pts[pts.length-1], arr=dss[di].data, lv=arr[arr.length-1]; if(lv==null) return;
+  const y=(typeof lv==='object')?lv.y:lv, ctx=chart.ctx; ctx.save(); ctx.fillStyle='#3c8a9a'; ctx.font='800 14px -apple-system,sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='left';
+  let x=last.x+7; const txt=Math.round(y)+''; if(x+ctx.measureText(txt).width+4>chart.chartArea.right) x=chart.chartArea.right-ctx.measureText(txt).width-2; ctx.fillText(txt, x, last.y); ctx.restore(); }catch(e){} } };
 function updateTempChart(){ const cv=document.getElementById('tempChart'); if(!cv||typeof Chart==='undefined') return;
   const pts=TEMPS.map(p=>({x:+(p.t/60).toFixed(3), y:p.temp}));   // x = real elapsed minutes, so each reading lands at its actual time
   const ds=[{label:'Bean °C',data:pts,borderColor:'#c98a3c',backgroundColor:'#c98a3c',yAxisID:'y',tension:.3,pointRadius:3}];
@@ -775,7 +779,7 @@ function updateTempChart(){ const cv=document.getElementById('tempChart'); if(!c
   const data={datasets:ds};
   if(tempChart){ tempChart.data=data; tempChart.options.scales=scales; tempChart.update('none'); return; }
   tempChart=new Chart(cv,{type:'line',data,options:{responsive:true,maintainAspectRatio:false,animation:false,
-    plugins:{legend:{display:ROR_ON,labels:{color:'#a8998a',boxWidth:12,font:{size:11}}}},scales}}); }
+    plugins:{legend:{display:ROR_ON,labels:{color:'#a8998a',boxWidth:12,font:{size:11}}}},scales},plugins:[rorTipPlugin]}); }
 async function requestWake(){ try{ if('wakeLock' in navigator) wake=await navigator.wakeLock.request('screen'); }catch(e){} }
 function releaseWake(){ try{ if(wake){wake.release();wake=null;} }catch(e){} }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&st&&st.phase!=='idle'&&st.phase!=='done'&&live&&!live.classList.contains('hide')) requestWake(); });
@@ -786,7 +790,8 @@ async function ensureOrder(){ RECIPES.sort((a,b)=>((a.active?0:1)-(b.active?0:1)
   let changed=[]; RECIPES.forEach((r,i)=>{ if(r.sortOrder!==i){ r.sortOrder=i; changed.push(r); } });
   if(changed.length){ cacheRecipes(); if(sb){ await Promise.all(changed.filter(r=>r.id).map(r=>sb.from('recipes').update({sort_order:r.sortOrder}).eq('id',r.id))); } } }
 function moveRecipe(i,dir){ const j=i+dir; if(j<0||j>=RECIPES.length) return; const t=RECIPES[i]; RECIPES[i]=RECIPES[j]; RECIPES[j]=t; ensureOrder(); renderRecipes(); buildBeans(); }
-function renderRecipes(){ const el=document.getElementById('rlist'); el.innerHTML=''; const list=getRecipes();
+function renderRecipes(){ const eb=document.getElementById('exportBtn'); if(eb) eb.style.display=IS_ADMIN?'':'none';
+  const el=document.getElementById('rlist'); el.innerHTML=''; const list=getRecipes();
   list.forEach((r,i)=>{ const d=document.createElement('div'); d.className='ritem'; d.dataset.idx=i;
     d.innerHTML=`<div style="display:flex;flex-direction:column;gap:3px;align-items:center;margin-right:8px"><span class="grip" draggable="true" title="Drag to reorder">⠿</span><button class="iconbtn mv" data-up="${i}" ${i===0?'disabled':''}>▲</button><button class="iconbtn mv" data-down="${i}" ${i===list.length-1?'disabled':''}>▼</button></div>`+
       `<div style="flex:1"><div class="rn">${esc(r.name)} ${r.active?'<span style="color:var(--accent2)">●</span>':'<span style="color:var(--muted)">○</span>'}</div>`+
@@ -842,7 +847,9 @@ async function saveRecipe(){ if(!canSave('roast')){ alert(enrollPrompt('recipes'
   if(!saved && sb) alert('Saved on this device only - sync failed (offline?). Re-save when back online.');
   closeForm(); renderRecipes(); buildBeans();
 }
-function exportRecipes(){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(getRecipes(),null,2)],{type:'application/json'})); a.download='coffeenutz-recipes.json'; a.click(); }
+function exportRecipes(){ if(!IS_ADMIN) return;   // recipe data is your IP: export is admin-only, confirmed, and the blob is revoked so it doesn't linger in browser history
+  if(!confirm('Export your full recipe set as a file? It contains every recipe with its power and FC data.')) return;
+  const url=URL.createObjectURL(new Blob([JSON.stringify(getRecipes(),null,2)],{type:'application/json'})); const a=document.createElement('a'); a.href=url; a.download='coffeenutz-recipes.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),5000); }
 document.getElementById('imp').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f)return; const rd=new FileReader();
   rd.onload=ev=>{ try{ const a=JSON.parse(ev.target.result); if(!Array.isArray(a))throw 0; if(!confirm('Replace recipes with '+a.length+' imported?'))return; saveRecipes(a); RECIPES=a; renderRecipes(); buildBeans(); }catch(x){ alert('Import failed'); } }; rd.readAsText(f); e.target.value=''; });
 
@@ -1231,7 +1238,8 @@ async function lookupEntitlement(){ if(!IS_ADMIN||!sb) return; const email=(entE
 async function loadEntitlements(){ if(!IS_ADMIN||!sb){ if(typeof entList!=='undefined'&&entList) entList.innerHTML=''; return; }
   try{ const r=await sb.from('entitlements').select('*').order('email');
     if(r&&!r.error&&r.data){ entList.innerHTML = r.data.length? r.data.map(e=>{ const a=e.access||{}; const plan=a.plan||'(custom)'; return `<div class="hxrow"><span>${esc(e.email)}</span><span class="tgtval" style="font-size:11px">${esc(plan)} <button class="delx" data-delent="${esc(e.email)}">×</button></span></div>`; }).join('') : '<div class="small">No members provisioned yet.</div>';
-      entList.querySelectorAll('[data-delent]').forEach(b=>b.onclick=()=>delEntitlement(b.dataset.delent)); } }catch(e){} }
+      entList.querySelectorAll('[data-delent]').forEach(b=>b.onclick=()=>delEntitlement(b.dataset.delent));
+      entList.querySelectorAll('.hxrow').forEach(row=>{ const b=row.querySelector('[data-delent]'); if(b) enableSwipeDelete(row,()=>delEntitlement(b.dataset.delent)); }); } }catch(e){} }
 async function delEntitlement(email){ if(!IS_ADMIN||!sb) return; if(!confirm('Remove access row for '+email+'?')) return; const r=await sb.from('entitlements').delete().eq('email',email); if(r&&!r.error) loadEntitlements(); }
 // admin: live EN -> TR translation editor (overrides merge over built-in DICT, stored in settings.tr_dict)
 function renderTranslations(){ const el=document.getElementById('trList'); if(!el) return; const keys=Object.keys(DICT.tr);
