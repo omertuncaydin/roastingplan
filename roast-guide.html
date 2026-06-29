@@ -1251,12 +1251,13 @@ function copyEmail(e){ if(e&&e.preventDefault) e.preventDefault(); const a='info
 const ROAST_GROUP=['roast','recipes','hist','rules'];
 const SEC_INFO={ roast:['Roast','first crack to drop, guided'], cup:['Cup','sensory · CVA descriptive + affective'], grade:['Grade','green physical · CVA defect grading'], value:['Value Assessment','Fit + Distinctiveness · the identity card'], account:['Account','your membership & privacy'] };
 function groupOf(v){ return ROAST_GROUP.includes(v)?'roast':v; }
+const GROUP_COLORS={roast:'#c98a3c',cup:'#3c8a9a',grade:'#7d9b57',value:'#e6c14b'};   // section-signature tints: lit only on the active tab
 function show(v){
   CURVIEW=v;
   ['roast','cup','grade','value','recipes','hist','rules','account','flight'].forEach(x=>document.getElementById('view-'+x).classList.toggle('hide',x!==v));
   const g=(v==='flight')?'cup':groupOf(v);
-  [['m-roast','roast'],['m-cup','cup'],['m-grade','grade'],['m-value','value']].forEach(([id,grp])=>{ const b=document.getElementById(id); if(b) b.classList.toggle('on',grp===g); });
-  const st=document.getElementById('secTitle'), info=SEC_INFO[g]; if(st&&info) st.innerHTML=`<span class="st">${T(info[0])}</span><span class="ss">${T(info[1])}</span>`;   // full section name = what the letter stands for
+  [['m-roast','roast'],['m-cup','cup'],['m-grade','grade'],['m-value','value']].forEach(([id,grp])=>{ const b=document.getElementById(id); if(!b) return; const on=(grp===g); b.classList.toggle('on',on); const c=GROUP_COLORS[grp]; if(on){ b.style.background=c; b.style.borderColor=c; b.style.color='#1a1410'; } else { b.style.background=''; b.style.borderColor=''; b.style.color=''; } });
+  const st=document.getElementById('secTitle'), info=SEC_INFO[g]; if(st&&info){ const tc=GROUP_COLORS[g]||'var(--ink)'; st.innerHTML=`<span class="st" style="color:${tc}">${T(info[0])}</span><span class="ss">${T(info[1])}</span>`; }   // section name echoes the active tab's tint
   const sub=document.getElementById('subnav'); if(sub) sub.classList.toggle('hide',g!=='roast');   // sub-tabs only emerge under Roast
   ROAST_GROUP.forEach(x=>{ const b=document.getElementById('nav-'+x); if(b) b.classList.toggle('on',x===v); });
   if(v==='recipes') renderRecipes(); if(v==='hist') renderLog(); if(v==='rules') renderRules();
