@@ -874,9 +874,9 @@ function corrLine(r){ const t=r.targetAg, a=(r.agtron===''||r.agtron==null?null:
   const gap=Math.round(a-t); if(Math.abs(gap)<=(RULES.agTol??2)) return '';
   const secs=Math.round(Math.abs(gap)*RULES.secPerAg); const ti=stIdx(r.target);
   if(gap>0){ const next=(ti>=0&&STAGES[ti+1])?STAGES[ti+1].code:'a darker drop';
-    return 'Ran '+gap+' pts light ('+a+' vs '+t+'). Make sure the gain was '+r.target+' next time, or develop more and drop closer to '+next+' to reach '+t+' (this may require approximately '+secs+'s more).'; }
+    return 'Ran '+gap+' pts light ('+a+' vs '+t+'). Make sure the gain was '+r.target+' next time, or if you are not confident in your recipe, develop more and drop closer to '+next+' to reach '+t+' (this may require approximately '+secs+'s more).'; }
   const prev=(ti>0&&STAGES[ti-1])?STAGES[ti-1].code:'an earlier point';
-  return 'Ran '+(-gap)+' pts dark ('+a+' vs '+t+'). The gain may have passed '+r.target+', so next time drop closer to '+prev+' / a touch earlier to reach '+t+' (this may require approximately '+secs+'s less).'; }
+  return 'Ran '+(-gap)+' pts dark ('+a+' vs '+t+'). The gain may have passed '+r.target+', so next time, if you are not confident in your recipe, drop closer to '+prev+' / a touch earlier to reach '+t+' (this may require approximately '+secs+'s less).'; }
 let agSaveTimers={};
 function pushAgtron(id,v){ if(!sb || String(id).startsWith('local-')) return; clearTimeout(agSaveTimers[id]); agSaveTimers[id]=setTimeout(async()=>{ const r=await sb.from('roast_logs').update({agtron:(v===''||v==null?null:v)}).eq('id',id); if(r&&r.error) console.warn('agtron update',r.error); },700); }
 function updateCorrRow(id,r){ const cr=logTbl.querySelector('tr.corr[data-corr="'+id+'"]'); if(!cr) return; const corr=corrLine(r); cr.classList.toggle('hide', !corr); cr.firstElementChild.innerHTML = corr?('↳ '+corr):''; }
