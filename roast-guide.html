@@ -719,13 +719,13 @@ function updateTempDue(){ const el=document.getElementById('tempDue'); if(!el) r
   else { el.textContent='next reading in '+Math.ceil(rem)+'s'; el.style.color='var(--muted)'; } }
 function clearTempCurve(){ TEMPS=[]; if(tempChart){ try{tempChart.destroy();}catch(e){} tempChart=null; } const el=document.getElementById('tempDue'); if(el) el.textContent=''; }
 function updateTempChart(){ const cv=document.getElementById('tempChart'); if(!cv||typeof Chart==='undefined') return;
-  const labels=TEMPS.map(p=>fmt(p.t)), bt=TEMPS.map(p=>p.temp);
-  const data={labels,datasets:[
-    {label:'Bean °C',data:bt,borderColor:'#c98a3c',backgroundColor:'#c98a3c',yAxisID:'y',tension:.3,pointRadius:3} ]};
+  const pts=TEMPS.map(p=>({x:+(p.t/60).toFixed(3), y:p.temp}));   // x = real elapsed minutes, so each reading lands at its actual time
+  const data={datasets:[
+    {label:'Bean °C',data:pts,borderColor:'#c98a3c',backgroundColor:'#c98a3c',yAxisID:'y',tension:.3,pointRadius:3} ]};
   if(tempChart){ tempChart.data=data; tempChart.update('none'); return; }
   tempChart=new Chart(cv,{type:'line',data,options:{responsive:true,maintainAspectRatio:false,animation:false,
     plugins:{legend:{display:false}},
-    scales:{x:{ticks:{color:'#a8998a',font:{size:10}},grid:{color:'#2a221b'}},
+    scales:{x:{type:'linear',min:0,max:17,title:{display:true,text:'minutes',color:'#a8998a',font:{size:10}},ticks:{stepSize:2,color:'#a8998a',font:{size:10}},grid:{color:'#2a221b'}},
       y:{position:'left',ticks:{color:'#c98a3c',font:{size:10}},grid:{color:'#2a221b'}} }}}); }
 async function requestWake(){ try{ if('wakeLock' in navigator) wake=await navigator.wakeLock.request('screen'); }catch(e){} }
 function releaseWake(){ try{ if(wake){wake.release();wake=null;} }catch(e){} }
