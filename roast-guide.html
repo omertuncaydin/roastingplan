@@ -94,6 +94,9 @@
   tr.detail td{background:#1d1610;color:var(--muted);font-size:12px;padding:8px 12px;font-variant-numeric:tabular-nums;text-align:left}
   tr.corr td{background:#241a0f;color:var(--accent);font-size:12.5px;line-height:1.45;padding:8px 12px;text-align:left;border-left:3px solid var(--accent)}
   .delx{background:none;border:none;color:var(--dark);font-size:16px;cursor:pointer;padding:2px 6px}
+  .swipeable{position:relative;overflow:hidden;padding:0!important}
+  .swipewrap{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;background:var(--panel);padding:9px 0;will-change:transform}
+  .swipedel{position:absolute;top:0;right:0;bottom:0;width:72px;z-index:0;background:#b23b3b;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;opacity:0;cursor:pointer}
   .rtools{display:flex;gap:8px;margin-bottom:12px}.rtools button{flex:1}
   .ritem{border-bottom:1px solid var(--line);padding:9px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
   .ritem:last-child{border-bottom:none}
@@ -245,19 +248,19 @@
         </div>
         <button class="bigbtn" id="bigbtn" onclick="tap()">START</button>
         <button class="btn ghost hide" id="undoBtn" style="margin-top:10px" onclick="undoMark()">Undo last mark</button>
-        <button class="btn ghost" id="cancel" style="margin-top:8px" onclick="reset()">Back</button>
-        <!-- TEST ONLY: delete this block when done testing -->
+        <!-- locked controls: guarded so Back / test speeds can't be hit by accident mid-roast -->
         <div id="testpanel" style="margin-top:12px;border:1px dashed var(--line);border-radius:9px;padding:9px;display:flex;align-items:center;gap:10px;justify-content:center">
-          <button class="spd" id="spdLock" onclick="toggleSpeedLock()" title="Unlock test speed">🔒</button>
+          <button class="spd" id="spdLock" onclick="toggleSpeedLock()" title="Unlock controls">🔒</button>
           <button class="spd" id="spd30" onclick="toggleSpeed(30)" style="opacity:.35;pointer-events:none">30×</button>
           <button class="spd" id="spd60" onclick="toggleSpeed(60)" style="opacity:.35;pointer-events:none">60×</button>
+          <button class="spd" id="cancel" onclick="reset()" style="opacity:.35;pointer-events:none">Back</button>
         </div>
         <div id="tempModule" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
           <button class="btn ghost" id="tempToggle" onclick="toggleTempCurve()">Show temp curve</button>
           <div id="tempBody" class="hide">
             <div style="display:flex;align-items:center;gap:12px;margin-top:10px">
-              <label class="actv" style="margin:0"><input type="checkbox" id="rorOn" onchange="toggleRor(this.checked)"> ROR</label>
-              <div class="seg hide" id="rorInterval" style="flex:1">
+              <label class="actv" style="margin:0"><input type="checkbox" id="rorOn" checked onchange="toggleRor(this.checked)"> ROR</label>
+              <div class="seg" id="rorInterval" style="flex:1">
                 <button onclick="setRorInterval(30,this)">30s</button>
                 <button class="on" onclick="setRorInterval(60,this)">60s</button>
               </div>
@@ -509,7 +512,7 @@
     <div class="small" style="margin-top:10px">Your recipes, roast history, cuppings and gradings are private to this account. Nobody else can see them.</div>
   </div>
 
-  <div class="pagelogo"><a href="https://www.coffeenutz.net/" target="_blank" rel="noopener"><img src="coffeenutz-turtle.png" alt="CoffeeNutz" width="46" height="46"></a></div>
+  <div class="pagelogo" id="pageLogo"><a href="https://www.coffeenutz.net/" target="_blank" rel="noopener"><img src="coffeenutz-turtle.png" alt="CoffeeNutz" width="46" height="46"></a></div>
 
 <script>
 // ===================== recipe store (v2: + active, FC in string, stage code) =====================
@@ -628,7 +631,7 @@ function setSpeed(v){ vAnchorVirt=vnow(); vAnchorReal=Date.now(); SPEED=Math.max
   if(typeof spd30!=='undefined'&&spd30){ spd30.classList.toggle('on',SPEED===30); spd60.classList.toggle('on',SPEED===60); } }
 let SPEED_LOCKED=true;   // test accelerators are locked so they can't be hit by accident mid-roast
 function toggleSpeedLock(){ SPEED_LOCKED=!SPEED_LOCKED; const lk=document.getElementById('spdLock'); if(lk) lk.textContent=SPEED_LOCKED?'🔒':'🔓';
-  [document.getElementById('spd30'),document.getElementById('spd60')].forEach(b=>{ if(b){ b.style.opacity=SPEED_LOCKED?'.35':'1'; b.style.pointerEvents=SPEED_LOCKED?'none':'auto'; } });
+  [document.getElementById('spd30'),document.getElementById('spd60'),document.getElementById('cancel')].forEach(b=>{ if(b){ b.style.opacity=SPEED_LOCKED?'.35':'1'; b.style.pointerEvents=SPEED_LOCKED?'none':'auto'; } });
   if(SPEED_LOCKED && SPEED!==1) setSpeed(1); }
 function toggleSpeed(v){ if(SPEED_LOCKED) return; setSpeed(SPEED===v?1:v); }
 function secSince(ms){ return (vnow()-ms)/1000; }     // virtual seconds since a virtual timestamp
@@ -716,7 +719,10 @@ function draw(){
   gauge.innerHTML = renderGauge(uNow(now), nextU, dropU, top, bot, true);   // stage marks on the live gauge only
   phase.textContent=ph; psub.innerHTML=sub;
   pcount.textContent=cnt; pcount.style.color = rem<0 ? 'var(--warn)' : 'var(--accent)';
+  updateLogo();
 }
+// turtle stays everywhere except mid-roast (deliberate exception so the cockpit is undistracted while roasting)
+function updateLogo(){ const pl=document.getElementById('pageLogo'); if(!pl) return; const roasting=(CURVIEW==='roast' && st && (st.phase==='pre0'||st.phase==='pre1'||st.phase==='dev')); pl.style.display=roasting?'none':''; }
 function reset(){ stopTick(); clearTempCurve(); coolReset(); releaseWake(); live.classList.add('hide'); setup.classList.remove('hide'); refresh(); }
 // ---- cooling timer: starts at drop, target 25°C, warns past 5 min if not confirmed cooled (real wall-clock time) ----
 let COOL_START=0, COOLED=false, coolTimer=null;
@@ -734,7 +740,7 @@ function markCooled(){ COOLED=true; coolStop(); const s=Math.floor((Date.now()-C
 function coolStop(){ if(coolTimer){ clearInterval(coolTimer); coolTimer=null; } }
 function coolReset(){ coolStop(); COOLED=false; const p=document.getElementById('coolPanel'); if(p) p.classList.add('hide'); }
 // ---- manual temp curve (optional, probe-free): bean temp logged at a fixed interval; never upstages the gauge ----
-let TEMP_ON=false, ROR_ON=false, ROR_INT=60, TEMPS=[], tempChart=null;
+let TEMP_ON=false, ROR_ON=true, ROR_INT=60, TEMPS=[], tempChart=null;
 function tempActive(){ return st && st.phase!=='idle' && st.phase!=='done'; }
 function toggleTempCurve(){ TEMP_ON=!TEMP_ON; const body=document.getElementById('tempBody'), tog=document.getElementById('tempToggle');
   if(body) body.classList.toggle('hide',!TEMP_ON); if(tog) tog.textContent=TEMP_ON?'Hide temp curve':'Show temp curve';
@@ -786,7 +792,7 @@ function renderRecipes(){ const el=document.getElementById('rlist'); el.innerHTM
       `<div style="flex:1"><div class="rn">${esc(r.name)} ${r.active?'<span style="color:var(--accent2)">●</span>':'<span style="color:var(--muted)">○</span>'}</div>`+
       `<div class="rmeta">B: ${esc(r.bullet||'-')}</div>${r.note?`<div class="rmeta" style="color:var(--warn)">🔔 ${esc(r.note)}</div>`:''}</div>`+
       `<div style="display:flex;gap:4px"><button class="iconbtn" data-e="${i}">Edit</button><button class="iconbtn" data-d="${i}">Del</button></div>`;
-    el.appendChild(d); });
+    el.appendChild(d); enableSwipeDelete(d,()=>delRecipeAt(i,true)); });
   el.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>moveRecipe(+b.dataset.up,-1));
   el.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>moveRecipe(+b.dataset.down,1));
   el.querySelectorAll('.grip').forEach(g=>{ const item=g.closest('.ritem');
@@ -797,10 +803,24 @@ function renderRecipes(){ const el=document.getElementById('rlist'); el.innerHTM
     item.addEventListener('dragleave',()=>item.classList.remove('dropon'));
     item.addEventListener('drop',e=>{ e.preventDefault(); item.classList.remove('dropon'); const to=+item.dataset.idx; if(dragIdx==null||to===dragIdx)return; const moved=RECIPES.splice(dragIdx,1)[0]; RECIPES.splice(to,0,moved); ensureOrder(); renderRecipes(); buildBeans(); }); });
   el.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>editRecipe(+b.dataset.e));
-  el.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{ const i=+b.dataset.d, r=RECIPES[i]; if(!confirm('Delete '+r.name+'?'))return;
-    if(r.id && sb){ const res=await sb.from('recipes').delete().eq('id',r.id); if(res.error){ alert('Delete failed (offline?)'); return; } }
-    RECIPES.splice(i,1); cacheRecipes(); renderRecipes(); buildBeans(); });
+  el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>delRecipeAt(+b.dataset.d,false));
 }
+async function delRecipeAt(i, skip){ const r=RECIPES[i]; if(!r) return; if(!skip && !confirm('Delete '+r.name+'?')) return;
+  if(r.id && sb){ const res=await sb.from('recipes').delete().eq('id',r.id); if(res.error){ alert('Delete failed (offline?)'); return; } }
+  RECIPES.splice(i,1); cacheRecipes(); renderRecipes(); buildBeans(); }
+// swipe a list row left to reveal a red trash; tap it (or swipe far) to delete
+function enableSwipeDelete(item, onDelete){ if(item.dataset.swipe) return; item.dataset.swipe='1';
+  const wrap=document.createElement('div'); wrap.className='swipewrap'; while(item.firstChild) wrap.appendChild(item.firstChild);
+  const del=document.createElement('div'); del.className='swipedel'; del.textContent='🗑';
+  item.classList.add('swipeable'); item.appendChild(del); item.appendChild(wrap);
+  let x0=0,y0=0,dx=0,drag=false,open=false;
+  const setX=v=>{ wrap.style.transform='translateX('+v+'px)'; del.style.opacity=Math.min(1,-v/72).toFixed(2); };
+  item.addEventListener('touchstart',e=>{ const t=e.touches[0]; x0=t.clientX; y0=t.clientY; dx=open?-72:0; drag=false; wrap.style.transition='none'; },{passive:true});
+  item.addEventListener('touchmove',e=>{ const t=e.touches[0], mx=t.clientX-x0, my=t.clientY-y0;
+    if(!drag){ if(Math.abs(mx)>Math.abs(my)+6 && Math.abs(mx)>8) drag=true; else return; }
+    e.preventDefault(); dx=Math.max(-96,Math.min(0,(open?-72:0)+mx)); setX(dx); },{passive:false});
+  item.addEventListener('touchend',()=>{ if(!drag) return; wrap.style.transition='transform .18s'; if(dx<=-56){ open=true; setX(-72); } else { open=false; setX(0); } });
+  del.addEventListener('click',()=>onDelete()); }
 async function upsertRecipe(rec){
   if(!sb) return null;
   const payload={ name:rec.name, match:rec.match, bullet:rec.bullet, hsr:rec.hsr, note:rec.note, active:rec.active, sort_order:(rec.sortOrder==null?null:rec.sortOrder) };
@@ -1345,7 +1365,8 @@ function show(v){
   const sub=document.getElementById('subnav'); if(sub) sub.classList.toggle('hide',g!=='roast');   // sub-tabs only emerge under Roast
   ROAST_GROUP.forEach(x=>{ const b=document.getElementById('nav-'+x); if(b) b.classList.toggle('on',x===v); });
   if(v==='recipes') renderRecipes(); if(v==='hist') renderLog(); if(v==='rules') renderRules();
-  if(v==='cup') renderCup(); if(v==='grade') renderGrade(); if(v==='value') renderValue(); if(v==='account') renderAccount(); if(v==='flight') renderFlight(); }
+  if(v==='cup') renderCup(); if(v==='grade') renderGrade(); if(v==='value') renderValue(); if(v==='account') renderAccount(); if(v==='flight') renderFlight();
+  updateLogo(); }
 function renderRules(){ const ids=['ru_A1','ru_B0','ru_B1','ru_C0','ru_C1','ru_C2','ru_fcBase','ru_fcDouble','ru_secPerAg','ru_learnN','ru_cinToA0','ru_agTol'];
   ['A1','B0','B1','C0','C1','C2'].forEach(c=>{ const el=document.getElementById('ru_'+c); if(el) el.value=RULES.offs[c]; }); ['fcBase','fcDouble','secPerAg','learnN','cinToA0','agTol'].forEach(k=>{ const el=document.getElementById('ru_'+k); if(el) el.value=RULES[k]; });
   ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled=!IS_ADMIN; });
