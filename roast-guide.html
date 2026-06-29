@@ -526,6 +526,8 @@ function rstr(r,eq){ return eq==='Bullet'?r.bullet:r.hsr; }
 function parseFc(s){ const m=s&&s.match(/(\d+):([0-5]?\d)/); return m? parseInt(m[1],10)*60+parseInt(m[2],10) : 420; }
 function parseStage(s){ const m=s&&s.match(/\b([ABC][0-2])\b/); return m? m[1] : 'B0'; }
 function parseAg(s){ const m=s&&s.match(/(\d+)\s*A\s*$/); return m? parseInt(m[1],10) : null; }
+function parseP(s){ const m=s&&s.match(/(?:^|\s)([+-]?)P(\d+)/i); if(!m) return null; return { dir:(m[1]==='+'?'+':'-'), n:parseInt(m[2],10) }; }   // -P2 = drop power 2 steps at cinnamon
+function powerText(p){ if(!p) return ''; return (p.dir==='+'?'raise':'drop')+' power '+p.n+' step'+(p.n===1?'':'s'); }
 function parseDev(s){ const m=s&&s.match(/(\d+)\s*s\b/i); return m? parseInt(m[1],10) : 60; }   // development time token (e.g. "60s"); drop = A0 + dev x scale x pace
 
 // ===================== stages =====================
@@ -641,9 +643,9 @@ function drawSetupGauge(){ const el=document.getElementById('setupGauge'); if(!e
 function begin(){
   const r=cur(); if(!r){ alert('Pick a coffee'); return; }
   const s=rstr(r,equip.value), fc=parseFc(s), target=parseStage(s);
-  st={ name:r.name, eq:equip.value, fc, scale:fcScale(fc), target, targetAg:parseAg(s), dev:parseDev(s),
+  st={ name:r.name, eq:equip.value, fc, scale:fcScale(fc), target, targetAg:parseAg(s), dev:parseDev(s), power:parseP(s),
        learned:getLearned(r.name,equip.value)||{}, phase:'idle', tStart:0, tCin:0, tA0:0, pace:1, cinToA0Actual:0 };
-  liveBean.textContent = r.name+'  ·  '+equip.value+'  ·  FC '+fmt(fcActual(fc))+'  ·  drop at '+target+(parseAg(s)!=null?'  ('+parseAg(s)+'A)':'');
+  liveBean.textContent = r.name+'  ·  '+equip.value+'  ·  FC '+fmt(fcActual(fc))+'  ·  drop at '+target+(parseAg(s)!=null?'  ('+parseAg(s)+'A)':'')+(st.power?'  ·  '+st.power.dir+'P'+st.power.n:'');
   setup.classList.add('hide'); live.classList.remove('hide'); undoBtn.classList.add('hide');
   draw(); requestWake();
 }
@@ -694,7 +696,7 @@ function draw(){
   const du=targetU(); let top='',bot='',ph='',sub='',cnt='',rem=1,nextU=null,dropU=du;
   if(st.phase==='idle'){ bb.textContent='START'; top='0:00'; bot='ready'; ph='Tap START when the roast begins.'; nextU=0.50;
     bb.onclick=()=>{ startRoast(vnow()); startTick(); draw(); }; }
-  else if(st.phase==='pre0'){ const e=secSince(st.tStart); bb.textContent='CINNAMON'; ph='Building toward cinnamon.'; sub='Tap CINNAMON when the beans turn cinnamon.'; nextU=0.50; rem=st.fc-e; top=(rem>=0?'':'+')+fmtAbs(rem); bot=rem>=0?'to cinnamon':'cinnamon now'; cnt=fmt(e)+' since start'; }
+  else if(st.phase==='pre0'){ const e=secSince(st.tStart); bb.textContent='CINNAMON'; ph='Building toward cinnamon.'; sub=(st.power?('At cinnamon, '+powerText(st.power)+'. '):'')+'Tap CINNAMON when the beans turn cinnamon.'; nextU=0.50; rem=st.fc-e; top=(rem>=0?'':'+')+fmtAbs(rem); bot=rem>=0?'to cinnamon':'cinnamon now'; cnt=fmt(e)+' since start'; }
   else if(st.phase==='pre1'){ const e=secSince(st.tStart); bb.textContent='FIRST CRACK (A0)'; bb.classList.add('crack'); ph='Cinnamon marked.'; sub='Tap the moment first crack starts.'; nextU=0.55; rem=expCinToA0()-secSince(st.tCin); top=(rem>=0?'':'+')+fmtAbs(rem); bot=rem>=0?'to first crack':'crack now'; cnt=fmt(e)+' since start'; }
   else if(st.phase==='dev'){ const eA0=secSince(st.tA0), drop=dropOffset(); bb.textContent='DROP / FINISH'; bb.classList.add('drop'); nextU=du; rem=drop-eA0; top=(rem>=0?'':'+')+fmtAbs(rem); bot=rem>=0?('to drop · '+st.target):('drop now · '+st.target); cnt=fmt(eA0)+' since first crack'; ph='Developing toward '+st.target+' - drop when you reach it.';
     let s2=''; for(const c of devCues()){ if(eA0<c.t){ s2='next cue: '+c.code+' ~ '+fmtAbs(c.t-eA0); break; } if(eA0<c.t+4){ s2=c.code+' around now'; break; } }

@@ -58,6 +58,9 @@ EN is the source of truth; the app is designed in English. This file holds the T
   - since start → "başlangıçtan beri"; since first crack → "ilk çıtırtıdan beri"
 - Tap START when the roast begins. → "Kavurma başladığında BAŞLA'ya dokun."
 - Roast finished and learned. → "Kavurma bitti ve öğrenildi."
+- Power notation from the recipe, shown while roasting (e.g. -P2 stays as-is in the header; spoken out at cinnamon):
+  - drop power {n} steps → "gücü {n} kademe düşür"; raise power {n} steps → "gücü {n} kademe artır" (step singular = "kademe", same word)
+  - At cinnamon, {action}. → "Tarçında, {action}." e.g. "Tarçında, gücü 2 kademe düşür."
 - Cup this coffee → "Bu kahveyi tadımla"
 - Deep Calibration Learning → "Derin Kalibrasyon Öğrenmesi"
 - Temp curve module (optional, probe-free bean temp logged at a fixed interval; live on roast screen, hideable, hardcoded EN for now, DICT wiring pending. ROR removed 2026-06-29):
