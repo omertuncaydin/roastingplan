@@ -60,7 +60,13 @@ EN is the source of truth; the app is designed in English. This file holds the T
 - Roast finished and learned. → "Kavurma bitti ve öğrenildi."
 - Power notation from the recipe, shown while roasting (e.g. -P2 stays as-is in the header; spoken out at cinnamon):
   - drop power {n} steps → "gücü {n} kademe düşür"; raise power {n} steps → "gücü {n} kademe artır" (step singular = "kademe", same word)
-  - At cinnamon, {action}. → "Tarçında, {action}." e.g. "Tarçında, gücü 2 kademe düşür."
+  - At cinnamon, {action}. → "Tarçında, {action}." e.g. "Tarçında, gücü 2 kademe düşür." (shown before cinnamon)
+  - Now: {action}. → "Şimdi: {action}." (shown at the start of cinnamon, when the CINNAMON button is pressed)
+- Cooling timer (opens when DROP is pressed; target 25°C; warns past 5 min):
+  - Cooling → "Soğutma"; Cool to 25°C. → "25°C'ye soğut."; Reached 25°C → "25°C'ye ulaştı"
+  - Cooled to 25°C in {t}. → "{t} içinde 25°C'ye soğudu."
+  - Over-5-min warning → "5 dakika geçti. Çekirdek sıcaklığını kontrol et. 25°C'ye ulaşmadıysa soğutma tablası ve fan hava akışını kontrol et."
+- Test speed buttons (30×/60×) now locked behind a 🔒/🔓 toggle so they aren't pressed by accident mid-roast (icons, no translation)
 - Cup this coffee → "Bu kahveyi tadımla"
 - Deep Calibration Learning → "Derin Kalibrasyon Öğrenmesi"
 - Temp curve module (optional, probe-free bean temp logged at a fixed interval; live on roast screen, hideable, hardcoded EN for now, DICT wiring pending. ROR removed 2026-06-29):

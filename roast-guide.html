@@ -237,13 +237,20 @@
         <div class="phase" id="phase"></div>
         <div class="count" id="pcount"></div>
         <div class="sub" id="psub"></div>
+        <div id="coolPanel" class="hide" style="margin-top:12px;border:1px solid var(--accent2);border-radius:11px;padding:12px;text-align:center">
+          <div class="small" style="text-transform:uppercase;letter-spacing:.5px">Cooling</div>
+          <div id="coolTime" style="font-size:30px;font-weight:800;color:var(--accent2);font-variant-numeric:tabular-nums;margin:2px 0">0:00</div>
+          <div class="small" id="coolMsg">Cool to 25°C.</div>
+          <button class="btn" id="coolDoneBtn" style="margin-top:10px;background:var(--accent2);color:#fff" onclick="markCooled()">Reached 25°C</button>
+        </div>
         <button class="bigbtn" id="bigbtn" onclick="tap()">START</button>
         <button class="btn ghost hide" id="undoBtn" style="margin-top:10px" onclick="undoMark()">Undo last mark</button>
         <button class="btn ghost" id="cancel" style="margin-top:8px" onclick="reset()">Back</button>
         <!-- TEST ONLY: delete this block when done testing -->
         <div id="testpanel" style="margin-top:12px;border:1px dashed var(--line);border-radius:9px;padding:9px;display:flex;align-items:center;gap:10px;justify-content:center">
-          <button class="spd" id="spd30" onclick="toggleSpeed(30)">30×</button>
-          <button class="spd" id="spd60" onclick="toggleSpeed(60)">60×</button>
+          <button class="spd" id="spdLock" onclick="toggleSpeedLock()" title="Unlock test speed">🔒</button>
+          <button class="spd" id="spd30" onclick="toggleSpeed(30)" style="opacity:.35;pointer-events:none">30×</button>
+          <button class="spd" id="spd60" onclick="toggleSpeed(60)" style="opacity:.35;pointer-events:none">60×</button>
         </div>
         <div id="tempModule" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
           <button class="btn ghost" id="tempToggle" onclick="toggleTempCurve()">Show temp curve</button>
@@ -619,7 +626,11 @@ let SPEED=1, vAnchorReal=Date.now(), vAnchorVirt=0;   // TEST: continuous virtua
 function vnow(){ return vAnchorVirt + (Date.now()-vAnchorReal)*SPEED; }
 function setSpeed(v){ vAnchorVirt=vnow(); vAnchorReal=Date.now(); SPEED=Math.max(1,+v||1);
   if(typeof spd30!=='undefined'&&spd30){ spd30.classList.toggle('on',SPEED===30); spd60.classList.toggle('on',SPEED===60); } }
-function toggleSpeed(v){ setSpeed(SPEED===v?1:v); }
+let SPEED_LOCKED=true;   // test accelerators are locked so they can't be hit by accident mid-roast
+function toggleSpeedLock(){ SPEED_LOCKED=!SPEED_LOCKED; const lk=document.getElementById('spdLock'); if(lk) lk.textContent=SPEED_LOCKED?'🔒':'🔓';
+  [document.getElementById('spd30'),document.getElementById('spd60')].forEach(b=>{ if(b){ b.style.opacity=SPEED_LOCKED?'.35':'1'; b.style.pointerEvents=SPEED_LOCKED?'none':'auto'; } });
+  if(SPEED_LOCKED && SPEED!==1) setSpeed(1); }
+function toggleSpeed(v){ if(SPEED_LOCKED) return; setSpeed(SPEED===v?1:v); }
 function secSince(ms){ return (vnow()-ms)/1000; }     // virtual seconds since a virtual timestamp
 function cur(){ return RECIPES.find(r=>r.name===bean.value); }
 function fmt(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
@@ -670,7 +681,7 @@ async function finishRoast(now){
   const rec={ id:'local-'+Date.now(), date:new Date().toISOString().slice(0,10), bean:st.name, eq:st.eq, fc:st.fc, target:st.target, targetAg:(st.targetAg!=null?st.targetAg:null),
     toTarget: devActual, offs, agtron:(st.targetAg!=null?st.targetAg:'') };
   if(canSave('roast')){ LOG.unshift(rec); cacheLog(); recomputeLearning(); ensureBean(rec.bean); }
-  st.phase='done'; draw(); renderLog(); updateTempDue();
+  st.phase='done'; draw(); renderLog(); updateTempDue(); startCooling();
   if(canSave('roast')){ if(sb){ const lr=await sb.from('roast_logs').insert(toLogPayload(rec)).select('*').single(); if(lr&&!lr.error){ rec.id=lr.data.id; cacheLog(); renderLog(); } else { console.warn('log insert',lr&&lr.error); addPending(rec); } } else { addPending(rec); } }
 }
 function undoMark(){
@@ -697,7 +708,7 @@ function draw(){
   if(st.phase==='idle'){ bb.textContent='START'; top='0:00'; bot='ready'; ph='Tap START when the roast begins.'; nextU=0.50;
     bb.onclick=()=>{ startRoast(vnow()); startTick(); draw(); }; }
   else if(st.phase==='pre0'){ const e=secSince(st.tStart); bb.textContent='CINNAMON'; ph='Building toward cinnamon.'; sub=(st.power?('At cinnamon, '+powerText(st.power)+'. '):'')+'Tap CINNAMON when the beans turn cinnamon.'; nextU=0.50; rem=st.fc-e; top=(rem>=0?'':'+')+fmtAbs(rem); bot=rem>=0?'to cinnamon':'cinnamon now'; cnt=fmt(e)+' since start'; }
-  else if(st.phase==='pre1'){ const e=secSince(st.tStart); bb.textContent='FIRST CRACK (A0)'; bb.classList.add('crack'); ph='Cinnamon marked.'; sub='Tap the moment first crack starts.'; nextU=0.55; rem=expCinToA0()-secSince(st.tCin); top=(rem>=0?'':'+')+fmtAbs(rem); bot=rem>=0?'to first crack':'crack now'; cnt=fmt(e)+' since start'; }
+  else if(st.phase==='pre1'){ const e=secSince(st.tStart); bb.textContent='FIRST CRACK (A0)'; bb.classList.add('crack'); ph='Cinnamon marked.'; sub=(st.power?('Now: '+powerText(st.power)+'. '):'')+'Tap the moment first crack starts.'; nextU=0.55; rem=expCinToA0()-secSince(st.tCin); top=(rem>=0?'':'+')+fmtAbs(rem); bot=rem>=0?'to first crack':'crack now'; cnt=fmt(e)+' since start'; }
   else if(st.phase==='dev'){ const eA0=secSince(st.tA0), drop=dropOffset(); bb.textContent='DROP / FINISH'; bb.classList.add('drop'); nextU=du; rem=drop-eA0; top=(rem>=0?'':'+')+fmtAbs(rem); bot=rem>=0?('to drop · '+st.target):('drop now · '+st.target); cnt=fmt(eA0)+' since first crack'; ph='Developing toward '+st.target+' - drop when you reach it.';
     let s2=''; for(const c of devCues()){ if(eA0<c.t){ s2='next cue: '+c.code+' ~ '+fmtAbs(c.t-eA0); break; } if(eA0<c.t+4){ s2=c.code+' around now'; break; } }
     sub = s2 || ('drop target: '+st.target+(st.targetAg!=null?' ('+st.targetAg+'A)':'')); }
@@ -706,7 +717,22 @@ function draw(){
   phase.textContent=ph; psub.innerHTML=sub;
   pcount.textContent=cnt; pcount.style.color = rem<0 ? 'var(--warn)' : 'var(--accent)';
 }
-function reset(){ stopTick(); clearTempCurve(); releaseWake(); live.classList.add('hide'); setup.classList.remove('hide'); refresh(); }
+function reset(){ stopTick(); clearTempCurve(); coolReset(); releaseWake(); live.classList.add('hide'); setup.classList.remove('hide'); refresh(); }
+// ---- cooling timer: starts at drop, target 25°C, warns past 5 min if not confirmed cooled (real wall-clock time) ----
+let COOL_START=0, COOLED=false, coolTimer=null;
+function startCooling(){ COOL_START=Date.now(); COOLED=false; coolStop();
+  const p=document.getElementById('coolPanel'); if(p) p.classList.remove('hide');
+  const b=document.getElementById('coolDoneBtn'); if(b) b.classList.remove('hide');
+  updateCool(); coolTimer=setInterval(updateCool,1000); }
+function updateCool(){ if(COOLED) return; const s=Math.floor((Date.now()-COOL_START)/1000);
+  const t=document.getElementById('coolTime'), m=document.getElementById('coolMsg'); if(!t||!m) return; t.textContent=fmt(s);
+  if(s>=300){ m.textContent='Over 5 min. Check the bean temperature. If it has not reached 25°C, check your cooling tray and fan airflow.'; m.style.color='var(--warn)'; t.style.color='var(--warn)'; }
+  else { m.textContent='Cool to 25°C.'; m.style.color='var(--muted)'; t.style.color='var(--accent2)'; } }
+function markCooled(){ COOLED=true; coolStop(); const s=Math.floor((Date.now()-COOL_START)/1000);
+  const m=document.getElementById('coolMsg'), b=document.getElementById('coolDoneBtn'), t=document.getElementById('coolTime');
+  if(m){ m.textContent='Cooled to 25°C in '+fmt(s)+'.'; m.style.color='var(--accent2)'; } if(t) t.style.color='var(--accent2)'; if(b) b.classList.add('hide'); }
+function coolStop(){ if(coolTimer){ clearInterval(coolTimer); coolTimer=null; } }
+function coolReset(){ coolStop(); COOLED=false; const p=document.getElementById('coolPanel'); if(p) p.classList.add('hide'); }
 // ---- manual temp curve (optional, probe-free): bean temp logged at a fixed interval; never upstages the gauge ----
 let TEMP_ON=false, ROR_ON=false, ROR_INT=60, TEMPS=[], tempChart=null;
 function tempActive(){ return st && st.phase!=='idle' && st.phase!=='done'; }
@@ -723,7 +749,9 @@ function tempAt(tau){ const A=TEMPS; if(!A.length) return null; if(tau<=A[0].t) 
   return A[A.length-1].temp; }
 function logTemp(){ const inp=document.getElementById('tempInput'); if(!inp) return; const v=parseFloat(inp.value);
   if(isNaN(v)||!tempActive()) return; TEMPS.push({t:secSince(st.tStart), temp:v}); inp.value=''; updateTempChart(); updateTempDue(); }
-function updateTempDue(){ const el=document.getElementById('tempDue'); if(!el) return; if(!TEMP_ON||!ROR_ON||!tempActive()){ el.textContent=''; return; }   // reminder only matters when ROR needs evenly-spaced readings
+function updateTempDue(){
+  if(TEMP_ON && tempActive() && tempChart && typeof Chart!=='undefined'){ const em=secSince(st.tStart)/60, want=Math.max(13,Math.ceil(em)); if((tempChart.options.scales.x.max||13)<want){ tempChart.options.scales.x.max=want; tempChart.update('none'); } }   // keep the frame squeezing as the roast runs past 13 min
+  const el=document.getElementById('tempDue'); if(!el) return; if(!TEMP_ON||!ROR_ON||!tempActive()){ el.textContent=''; return; }   // reminder only matters when ROR needs evenly-spaced readings
   const elapsed=secSince(st.tStart), last=TEMPS.length?TEMPS[TEMPS.length-1].t:0, rem=ROR_INT-(elapsed-last);
   if(rem<=0){ el.textContent='log bean °C now'; el.style.color='var(--gold)'; }
   else { el.textContent='next reading in '+Math.ceil(rem)+'s'; el.style.color='var(--muted)'; } }
@@ -731,7 +759,9 @@ function clearTempCurve(){ TEMPS=[]; if(tempChart){ try{tempChart.destroy();}cat
 function updateTempChart(){ const cv=document.getElementById('tempChart'); if(!cv||typeof Chart==='undefined') return;
   const pts=TEMPS.map(p=>({x:+(p.t/60).toFixed(3), y:p.temp}));   // x = real elapsed minutes, so each reading lands at its actual time
   const ds=[{label:'Bean °C',data:pts,borderColor:'#c98a3c',backgroundColor:'#c98a3c',yAxisID:'y',tension:.3,pointRadius:3}];
-  const scales={x:{type:'linear',min:0,max:17,title:{display:true,text:'minutes',color:'#a8998a',font:{size:10}},ticks:{stepSize:2,color:'#a8998a',font:{size:10}},grid:{color:'#2a221b'}},
+  let em=0; try{ if(tempActive()) em=secSince(st.tStart)/60; }catch(e){}
+  const xmax=Math.max(13, Math.ceil(pts.length?pts[pts.length-1].x:0), Math.ceil(em));   // 13 min frame, squeezes wider if the roast runs longer
+  const scales={x:{type:'linear',min:0,max:xmax,title:{display:true,text:'minutes',color:'#a8998a',font:{size:10}},ticks:{stepSize:2,color:'#a8998a',font:{size:10}},grid:{color:'#2a221b'}},
     y:{position:'left',ticks:{color:'#c98a3c',font:{size:10}},grid:{color:'#2a221b'}}};
   if(ROR_ON){ const span=ROR_INT, ror=[]; for(const p of TEMPS){ const tau=p.t-span; if(tau<0) continue; const prev=tempAt(tau); if(prev==null) continue; ror.push({x:+(p.t/60).toFixed(3), y:+(((p.temp-prev)/(span/60)).toFixed(1))}); }
     ds.push({label:'ROR °C/min ('+span+'s)',data:ror,borderColor:'#3c8a9a',backgroundColor:'#3c8a9a',yAxisID:'y1',tension:.3,pointRadius:2});
