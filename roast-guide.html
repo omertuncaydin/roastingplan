@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root{ --bg:#1a1410; --panel:#241c16; --ink:#f3ede4; --muted:#a8998a; --accent:#c98a3c; --accent2:#3c7a5a; --line:#3a2f26; --gold:#e6c14b; --warn:#e0b070; --dark:#d98a8a; }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -243,6 +244,21 @@
         <div id="testpanel" style="margin-top:12px;border:1px dashed var(--line);border-radius:9px;padding:9px;display:flex;align-items:center;gap:10px;justify-content:center">
           <button class="spd" id="spd30" onclick="toggleSpeed(30)">30×</button>
           <button class="spd" id="spd60" onclick="toggleSpeed(60)">60×</button>
+        </div>
+        <div id="tempModule" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+          <button class="btn ghost" id="tempToggle" onclick="toggleTempCurve()">Show temp curve</button>
+          <div id="tempBody" class="hide">
+            <div class="seg" id="tempInterval" style="margin-top:10px">
+              <button class="on" onclick="setTempInterval(30,this)">every 30s</button>
+              <button onclick="setTempInterval(60,this)">every 60s</button>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+              <input type="number" id="tempInput" inputmode="decimal" placeholder="bean °C" style="flex:1;min-width:0">
+              <button class="btn" style="width:auto;padding:11px 18px;margin-top:0" onclick="logTemp()">Log</button>
+            </div>
+            <div class="small" id="tempDue" style="margin-top:6px;text-align:center"></div>
+            <div style="height:200px;margin-top:10px"><canvas id="tempChart"></canvas></div>
+          </div>
         </div>
       </div>
     </div>
@@ -649,7 +665,7 @@ async function finishRoast(now){
   const rec={ id:'local-'+Date.now(), date:new Date().toISOString().slice(0,10), bean:st.name, eq:st.eq, fc:st.fc, target:st.target, targetAg:(st.targetAg!=null?st.targetAg:null),
     toTarget: devActual, offs, agtron:(st.targetAg!=null?st.targetAg:'') };
   if(canSave('roast')){ LOG.unshift(rec); cacheLog(); recomputeLearning(); ensureBean(rec.bean); }
-  st.phase='done'; draw(); renderLog();
+  st.phase='done'; draw(); renderLog(); updateTempDue();
   if(canSave('roast')){ if(sb){ const lr=await sb.from('roast_logs').insert(toLogPayload(rec)).select('*').single(); if(lr&&!lr.error){ rec.id=lr.data.id; cacheLog(); renderLog(); } else { console.warn('log insert',lr&&lr.error); addPending(rec); } } else { addPending(rec); } }
 }
 function undoMark(){
@@ -658,7 +674,7 @@ function undoMark(){
   undoBtn.classList.toggle('hide', st.phase==='idle'||st.phase==='pre0');
   draw();
 }
-function startTick(){ stopTick(); tick=setInterval(draw,120); }
+function startTick(){ stopTick(); tick=setInterval(()=>{ draw(); updateTempDue(); },120); }
 function stopTick(){ if(tick){clearInterval(tick);tick=null;} }
 
 function uNow(now){
@@ -685,7 +701,34 @@ function draw(){
   phase.textContent=ph; psub.innerHTML=sub;
   pcount.textContent=cnt; pcount.style.color = rem<0 ? 'var(--warn)' : 'var(--accent)';
 }
-function reset(){ stopTick(); releaseWake(); live.classList.add('hide'); setup.classList.remove('hide'); refresh(); }
+function reset(){ stopTick(); clearTempCurve(); releaseWake(); live.classList.add('hide'); setup.classList.remove('hide'); refresh(); }
+// ---- manual temp curve (optional, probe-free): bean temp + ROR logged at a fixed interval; never upstages the gauge ----
+let TEMP_ON=false, TEMP_INT=30, TEMPS=[], tempChart=null;
+function tempActive(){ return st && st.phase!=='idle' && st.phase!=='done'; }
+function toggleTempCurve(){ TEMP_ON=!TEMP_ON; const body=document.getElementById('tempBody'), tog=document.getElementById('tempToggle');
+  if(body) body.classList.toggle('hide',!TEMP_ON); if(tog) tog.textContent=TEMP_ON?'Hide temp curve':'Show temp curve';
+  if(TEMP_ON) updateTempChart(); updateTempDue(); }
+function setTempInterval(n,btn){ TEMP_INT=n; document.querySelectorAll('#tempInterval button').forEach(b=>b.classList.toggle('on',b===btn)); updateTempDue(); }
+function logTemp(){ const inp=document.getElementById('tempInput'); if(!inp) return; const v=parseFloat(inp.value);
+  if(isNaN(v)||!tempActive()) return; TEMPS.push({t:secSince(st.tStart), temp:v}); inp.value=''; updateTempChart(); updateTempDue(); }
+function updateTempDue(){ const el=document.getElementById('tempDue'); if(!el) return; if(!TEMP_ON||!tempActive()){ el.textContent=''; return; }
+  const elapsed=secSince(st.tStart), last=TEMPS.length?TEMPS[TEMPS.length-1].t:0, rem=TEMP_INT-(elapsed-last);
+  if(TEMPS.length===0 && elapsed<TEMP_INT){ el.textContent='first reading at '+TEMP_INT+'s'; el.style.color='var(--muted)'; return; }
+  if(rem<=0){ el.textContent='log bean °C now'; el.style.color='var(--gold)'; }
+  else { el.textContent='next reading in '+Math.ceil(rem)+'s'; el.style.color='var(--muted)'; } }
+function clearTempCurve(){ TEMPS=[]; if(tempChart){ try{tempChart.destroy();}catch(e){} tempChart=null; } const el=document.getElementById('tempDue'); if(el) el.textContent=''; }
+function updateTempChart(){ const cv=document.getElementById('tempChart'); if(!cv||typeof Chart==='undefined') return;
+  const labels=TEMPS.map(p=>fmt(p.t)), bt=TEMPS.map(p=>p.temp);
+  const ror=TEMPS.map((p,i)=> i===0?null : +(((p.temp-TEMPS[i-1].temp)/((p.t-TEMPS[i-1].t)/60)).toFixed(1)) );
+  const data={labels,datasets:[
+    {label:'Bean °C',data:bt,borderColor:'#c98a3c',backgroundColor:'#c98a3c',yAxisID:'y',tension:.3,pointRadius:3},
+    {label:'ROR °C/min',data:ror,borderColor:'#3c8a9a',backgroundColor:'#3c8a9a',yAxisID:'y1',tension:.3,pointRadius:2,spanGaps:true} ]};
+  if(tempChart){ tempChart.data=data; tempChart.update('none'); return; }
+  tempChart=new Chart(cv,{type:'line',data,options:{responsive:true,maintainAspectRatio:false,animation:false,
+    plugins:{legend:{labels:{color:'#a8998a',boxWidth:12,font:{size:11}}}},
+    scales:{x:{ticks:{color:'#a8998a',font:{size:10}},grid:{color:'#2a221b'}},
+      y:{position:'left',ticks:{color:'#c98a3c',font:{size:10}},grid:{color:'#2a221b'}},
+      y1:{position:'right',ticks:{color:'#3c8a9a',font:{size:10}},grid:{drawOnChartArea:false}} }}}); }
 async function requestWake(){ try{ if('wakeLock' in navigator) wake=await navigator.wakeLock.request('screen'); }catch(e){} }
 function releaseWake(){ try{ if(wake){wake.release();wake=null;} }catch(e){} }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&st&&st.phase!=='idle'&&st.phase!=='done'&&live&&!live.classList.contains('hide')) requestWake(); });
