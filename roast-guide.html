@@ -97,6 +97,13 @@
   .swipeable{position:relative;overflow:hidden;padding:0!important}
   .swipewrap{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;background:var(--panel);padding:9px 0;will-change:transform}
   .swipedel{position:absolute;top:0;right:0;bottom:0;width:72px;z-index:0;background:#b23b3b;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;opacity:0;cursor:pointer}
+  .wheelWrap{position:relative;width:96px;height:120px;flex:none}
+  .wheel{width:96px;height:120px;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;background:#15100b;border:1px solid var(--line);border-radius:10px;scrollbar-width:none;-webkit-mask-image:linear-gradient(180deg,transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(180deg,transparent,#000 30%,#000 70%,transparent)}
+  .wheel::-webkit-scrollbar{display:none}
+  .wheelInner{padding:48px 0}
+  .wheelInner div{height:24px;line-height:24px;text-align:center;scroll-snap-align:center;font-size:18px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .wheelSel{position:absolute;left:0;right:0;top:48px;height:24px;border-top:1px solid var(--accent);border-bottom:1px solid var(--accent);pointer-events:none}
+  .wheelSel:after{content:'°C';position:absolute;right:8px;top:3px;font-size:10px;color:var(--muted)}
   .rtools{display:flex;gap:8px;margin-bottom:12px}.rtools button{flex:1}
   .ritem{border-bottom:1px solid var(--line);padding:9px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
   .ritem:last-child{border-bottom:none}
@@ -265,12 +272,12 @@
                 <button class="on" onclick="setRorInterval(60,this)">60s</button>
               </div>
             </div>
-            <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
-              <select id="tempInput" style="flex:1;min-width:0"></select>
-              <button class="btn" style="width:auto;padding:11px 18px;margin-top:0" onclick="logTemp()">Log</button>
-            </div>
-            <div class="small" id="tempDue" style="margin-top:6px;text-align:center"></div>
             <div style="height:200px;margin-top:10px"><canvas id="tempChart"></canvas></div>
+            <div class="small" id="tempDue" style="margin-top:6px;text-align:center"></div>
+            <div style="display:flex;gap:14px;align-items:center;justify-content:center;margin-top:8px">
+              <div class="wheelWrap"><div class="wheel" id="tempWheel"><div class="wheelInner" id="wheelInner"></div></div><div class="wheelSel"></div></div>
+              <button class="btn" style="width:auto;padding:16px 26px;margin-top:0;font-size:17px" onclick="logTemp()">Log</button>
+            </div>
           </div>
         </div>
       </div>
@@ -741,11 +748,18 @@ function coolStop(){ if(coolTimer){ clearInterval(coolTimer); coolTimer=null; } 
 function coolReset(){ coolStop(); COOLED=false; const p=document.getElementById('coolPanel'); if(p) p.classList.add('hide'); }
 // ---- manual temp curve (optional, probe-free): bean temp logged at a fixed interval; never upstages the gauge ----
 let TEMP_ON=false, ROR_ON=true, ROR_INT=60, TEMPS=[], tempChart=null; const TEMP_MIN=30, TEMP_MAX=260;   // wheel range; later bounded by the Machine tab
-function fillTempWheel(){ const sel=document.getElementById('tempInput'); if(!sel||sel.tagName!=='SELECT') return; let html=''; for(let v=TEMP_MIN; v<=TEMP_MAX; v++) html+='<option value="'+v+'">'+v+'°C</option>'; sel.innerHTML=html; const last=TEMPS.length?TEMPS[TEMPS.length-1].temp:180; sel.value=String(Math.max(TEMP_MIN,Math.min(TEMP_MAX,Math.round(last)))); }
+const WHEEL_ITEM=24;
+function buildWheel(){ const inner=document.getElementById('wheelInner'); if(!inner) return;
+  if(inner.childElementCount===0){ let h=''; for(let v=TEMP_MIN; v<=TEMP_MAX; v++) h+='<div>'+v+'</div>'; inner.innerHTML=h; }
+  setWheel(predictNext()); }
+function setWheel(v){ const wh=document.getElementById('tempWheel'); if(!wh) return; const cv=Math.max(TEMP_MIN,Math.min(TEMP_MAX,Math.round(v))); wh.scrollTop=(cv-TEMP_MIN)*WHEEL_ITEM; }
+function wheelValue(){ const wh=document.getElementById('tempWheel'); if(!wh) return NaN; return Math.max(TEMP_MIN,Math.min(TEMP_MAX, TEMP_MIN+Math.round(wh.scrollTop/WHEEL_ITEM))); }
+function predictNext(){ if(TEMPS.length>=2){ const n=TEMPS.length, a=TEMPS[n-2], b=TEMPS[n-1], dt=(b.t-a.t)/60; if(dt>0){ return b.temp + ((b.temp-a.temp)/dt)*(ROR_INT/60); } }   // project one interval ahead from the recent rate
+  return TEMPS.length?TEMPS[TEMPS.length-1].temp:180; }
 function tempActive(){ return st && st.phase!=='idle' && st.phase!=='done'; }
 function toggleTempCurve(){ TEMP_ON=!TEMP_ON; const body=document.getElementById('tempBody'), tog=document.getElementById('tempToggle');
   if(body) body.classList.toggle('hide',!TEMP_ON); if(tog) tog.textContent=TEMP_ON?'Hide temp curve':'Show temp curve';
-  if(TEMP_ON){ if(TEMPS.length===0 && typeof prompt==='function'){ const v=parseFloat(prompt('Charge temperature (°C, beans in):')); if(!isNaN(v)) TEMPS.push({t:0,temp:v}); } fillTempWheel(); updateTempChart(); }
+  if(TEMP_ON){ if(TEMPS.length===0 && typeof prompt==='function'){ const v=parseFloat(prompt('Charge temperature (°C, beans in):')); if(!isNaN(v)) TEMPS.push({t:0,temp:v}); } buildWheel(); updateTempChart(); }
   updateTempDue(); }
 function toggleRor(on){ ROR_ON=!!on; const seg=document.getElementById('rorInterval'); if(seg) seg.classList.toggle('hide',!ROR_ON);
   if(tempChart){ try{tempChart.destroy();}catch(e){} tempChart=null; } updateTempChart(); updateTempDue(); }
@@ -754,8 +768,7 @@ function setRorInterval(n,btn){ ROR_INT=n; document.querySelectorAll('#rorInterv
 function tempAt(tau){ const A=TEMPS; if(!A.length) return null; if(tau<=A[0].t) return A[0].temp;
   for(let i=1;i<A.length;i++){ if(tau<=A[i].t){ const a=A[i-1],b=A[i]; return b.t===a.t? b.temp : a.temp+(b.temp-a.temp)*((tau-a.t)/(b.t-a.t)); } }
   return A[A.length-1].temp; }
-function logTemp(){ const inp=document.getElementById('tempInput'); if(!inp) return; const v=parseFloat(inp.value);
-  if(isNaN(v)||!tempActive()) return; TEMPS.push({t:secSince(st.tStart), temp:v}); updateTempChart(); fillTempWheel(); updateTempDue(); }
+function logTemp(){ if(!tempActive()) return; const v=wheelValue(); if(isNaN(v)) return; TEMPS.push({t:secSince(st.tStart), temp:v}); updateTempChart(); buildWheel(); updateTempDue(); }
 function updateTempDue(){
   if(TEMP_ON && tempActive() && tempChart && typeof Chart!=='undefined'){ const em=secSince(st.tStart)/60, want=Math.max(13,Math.ceil(em)); if((tempChart.options.scales.x.max||13)<want){ tempChart.options.scales.x.max=want; tempChart.update('none'); } }   // keep the frame squeezing as the roast runs past 13 min
   const el=document.getElementById('tempDue'); if(!el) return; if(!TEMP_ON||!ROR_ON||!tempActive()){ el.textContent=''; return; }   // reminder only matters when ROR needs evenly-spaced readings

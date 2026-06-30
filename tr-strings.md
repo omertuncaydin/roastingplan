@@ -73,7 +73,7 @@ EN is the source of truth; the app is designed in English. This file holds the T
   - Show temp curve → "Sıcaklık eğrisini göster"; Hide temp curve → "Sıcaklık eğrisini gizle"
   - Charge temperature (°C, beans in): → "Şarj sıcaklığı (°C, çekirdekler girince):" (asked once when the curve is first turned on; becomes the t=0 point)
   - every 30s → "her 30sn"; every 60s → "her 60sn"
-  - Temp entry is an iOS wheel picker (select, 30-260°C, no keyboard), pre-set to the last reading; Log → "Kaydet"
+  - Temp entry is a custom scroll-wheel drum (30-260°C, no keyboard) that auto-jumps to the predicted next temp (one interval ahead of the recent rate); Log → "Kaydet". Layout A: curve on top with CIN/A0/DROP stage marks, wheel docked below.
   - Curve shows stage marks: CIN / A0 / DROP dashed lines at the times they happen (labels kept short/EN)
   - first reading at 30s → "ilk ölçüm 30. sn"; next reading in {n}s → "sonraki ölçüm {n}sn"; log bean °C now → "şimdi çekirdek °C gir"
   - Chart series: Bean °C → "Çekirdek °C"
