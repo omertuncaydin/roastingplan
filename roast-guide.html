@@ -782,9 +782,13 @@ const rorTipPlugin={ id:'rorTip', afterDatasetsDraw(chart){ try{ const dss=chart
   let x=last.x+7; const txt=Math.round(y)+''; if(x+ctx.measureText(txt).width+4>chart.chartArea.right) x=chart.chartArea.right-ctx.measureText(txt).width-2; ctx.fillText(txt, x, last.y); ctx.restore(); }catch(e){} } };
 const stageMarksPlugin={ id:'stageMarks', afterDatasetsDraw(chart){ try{ const S=(typeof st!=='undefined')?st:null; if(!S) return; const sx=chart.scales.x, ca=chart.chartArea, ctx=chart.ctx;
   const ms=[]; if(S.cinSec!=null) ms.push([S.cinSec/60,'CIN','#a8998a']); if(S.a0Sec!=null) ms.push([S.a0Sec/60,'A0','#fff']); if(S.dropSec!=null) ms.push([S.dropSec/60,'DROP','#e6c14b']);
-  ctx.save(); ctx.setLineDash([3,3]); ctx.font='700 9px -apple-system,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
-  ms.forEach(([m,lb,col])=>{ if(m<sx.min||m>sx.max) return; const px=sx.getPixelForValue(m); ctx.strokeStyle=col; ctx.globalAlpha=0.65; ctx.beginPath(); ctx.moveTo(px,ca.top); ctx.lineTo(px,ca.bottom); ctx.stroke(); ctx.globalAlpha=1; ctx.fillStyle=col; ctx.fillText(lb,px,ca.top+2); });
+  ctx.save(); ctx.setLineDash([3,3]); ctx.font='700 9px -apple-system,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+  ms.forEach(([m,lb,col])=>{ if(m<sx.min||m>sx.max) return; const px=sx.getPixelForValue(m); ctx.strokeStyle=col; ctx.globalAlpha=0.65; ctx.beginPath(); ctx.moveTo(px,ca.top); ctx.lineTo(px,ca.bottom); ctx.stroke(); ctx.globalAlpha=1; ctx.fillStyle=col; ctx.fillText(lb,px,ca.bottom-3); });
   ctx.restore(); }catch(e){} } };
+const tempTipPlugin={ id:'tempTip', afterDatasetsDraw(chart){ try{ const dss=chart.data.datasets, di=dss.findIndex(d=>d.yAxisID==='y'); if(di<0) return;
+  const pts=chart.getDatasetMeta(di).data; if(!pts||!pts.length) return; const last=pts[pts.length-1], arr=dss[di].data, lv=arr[arr.length-1]; if(lv==null) return;
+  const y=(typeof lv==='object')?lv.y:lv, ctx=chart.ctx; ctx.save(); ctx.fillStyle='#c98a3c'; ctx.font='800 14px -apple-system,sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='left';
+  let x=last.x+7; const txt=Math.round(y)+'°'; if(x+ctx.measureText(txt).width+4>chart.chartArea.right) x=chart.chartArea.right-ctx.measureText(txt).width-2; ctx.fillText(txt, x, last.y); ctx.restore(); }catch(e){} } };
 function updateTempChart(){ const cv=document.getElementById('tempChart'); if(!cv||typeof Chart==='undefined') return;
   const pts=TEMPS.map(p=>({x:+(p.t/60).toFixed(3), y:p.temp}));   // x = real elapsed minutes, so each reading lands at its actual time
   const ds=[{label:'Bean °C',data:pts,borderColor:'#c98a3c',backgroundColor:'#c98a3c',yAxisID:'y',tension:.3,pointRadius:3}];
@@ -798,7 +802,7 @@ function updateTempChart(){ const cv=document.getElementById('tempChart'); if(!c
   const data={datasets:ds};
   if(tempChart){ tempChart.data=data; tempChart.options.scales=scales; tempChart.update('none'); return; }
   tempChart=new Chart(cv,{type:'line',data,options:{responsive:true,maintainAspectRatio:false,animation:false,
-    plugins:{legend:{display:ROR_ON,labels:{color:'#a8998a',boxWidth:12,font:{size:11}}}},scales},plugins:[rorTipPlugin,stageMarksPlugin]}); }
+    plugins:{legend:{display:ROR_ON,labels:{color:'#a8998a',boxWidth:12,font:{size:11}}}},scales},plugins:[rorTipPlugin,stageMarksPlugin,tempTipPlugin]}); }
 async function requestWake(){ try{ if('wakeLock' in navigator) wake=await navigator.wakeLock.request('screen'); }catch(e){} }
 function releaseWake(){ try{ if(wake){wake.release();wake=null;} }catch(e){} }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&st&&st.phase!=='idle'&&st.phase!=='done'&&live&&!live.classList.contains('hide')) requestWake(); });
