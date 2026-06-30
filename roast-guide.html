@@ -896,7 +896,7 @@ function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
   const batchMap={}, _bc={}; [...LOG].reverse().forEach(x=>{ const k=x.date+'|'+x.eq; _bc[k]=(_bc[k]||0)+1; batchMap[x.id]=_bc[k]; });   // batch # increments per date per machine
   LOG.forEach(r=>{ const tr=document.createElement('tr'); tr.className='logrow'; tr.dataset.row=r.id; const batch=batchMap[r.id]||1;
     const av=(r.agtron!==''&&r.agtron!=null)?r.agtron:''; const sv=av!==''?av:(r.targetAg!=null?r.targetAg:100);
-    tr.innerHTML=`<td>${r.date}<div class="exlbl" data-hx="${r.id}">Heuristics</div></td>`+
+    tr.innerHTML=`<td style="white-space:nowrap">${r.date}<div class="exlbl" data-hx="${r.id}">Heuristics</div></td>`+
       `<td class="num"><b style="color:var(--accent2)">#${batch}</b></td>`+
       `<td>${esc(r.bean)}<div class="exlbl" data-log="${r.id}">Log</div></td>`+
       `<td class="num"><b class="tgtval">${r.targetAg!=null?r.targetAg:'—'}</b></td>`+
