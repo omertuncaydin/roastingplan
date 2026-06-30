@@ -301,7 +301,7 @@
   <!-- HISTORY -->
   <div id="view-hist" class="hide">
     <div class="card" style="overflow-x:auto">
-      <table id="logTbl"><thead><tr><th>Date</th><th>Coffee</th><th>Drop</th><th>Dev Time</th><th></th></tr></thead><tbody></tbody></table>
+      <table id="logTbl"><thead><tr><th>Date</th><th>Coffee</th><th>Target AG</th><th>Actual AG</th><th></th></tr></thead><tbody></tbody></table>
       <div class="small hide" id="emptyLog" style="padding:10px 2px">No roasts logged yet.</div>
     </div>
     <button class="btn ghost" onclick="exportLog()">Download log CSV</button>
@@ -869,14 +869,20 @@ function openHx(id){ const r=LOG.find(x=>String(x.id)===String(id)); if(!r) retu
     `<button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`;
   hxModal.style.display='flex'; }
 function closeHx(){ hxModal.style.display='none'; }
+function openLog(id){ const r=LOG.find(x=>String(x.id)===String(id)); if(!r) return;
+  const rows=[['Machine',esc(r.eq)],['Drop stage',r.target],['Dev time',r.toTarget!=null?fmt(r.toTarget):'-'],['First crack temp',r.fcTemp!=null?(r.fcTemp+'°C'):'-'],['End temp',r.endTemp!=null?(r.endTemp+'°C'):'-']];
+  hxBox.innerHTML=`<h1 style="margin:0 0 4px;font-size:18px">Log</h1><div class="small" style="margin-bottom:10px">${esc(r.bean)} · ${r.date}</div>`+
+    rows.map(x=>`<div class="hxrow"><span>${x[0]}</span><span class="tgtval">${x[1]}</span></div>`).join('')+
+    `<button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`;
+  hxModal.style.display='flex'; }
 function offsLine(r){ const parts=[]; STAGES.forEach(s=>{ if(s.off!=null && r.offs && r.offs[s.code]!=null) parts.push(s.code+' +'+r.offs[s.code]+'s'); }); return 'FC '+fmt(r.fc)+(parts.length? '  ·  after first crack:  '+parts.join('   ') : '  ·  no stage timings recorded'); }
 function corrLine(r){ const t=r.targetAg, a=(r.agtron===''||r.agtron==null?null:Number(r.agtron)); if(t==null||a==null||isNaN(a)) return '';
   const gap=Math.round(a-t); if(Math.abs(gap)<=(RULES.agTol??2)) return '';
   const secs=Math.round(Math.abs(gap)*RULES.secPerAg); const ti=stIdx(r.target);
   if(gap>0){ const next=(ti>=0&&STAGES[ti+1])?STAGES[ti+1].code:'a darker drop';
-    return 'Ran '+gap+' pts light ('+a+' vs '+t+'). Make sure the gain was '+r.target+' next time, or if you are not confident in your recipe, develop more and drop closer to '+next+' to reach '+t+' (this may require approximately '+secs+'s more). Either way, consider updating the recipe or recording a new one.'; }
+    return 'Ran '+gap+' pts light ('+a+' vs '+t+'). Make sure the gain was '+r.target+' next time, or IF YOU ARE NOT CONFIDENT IN YOUR RECIPE, develop more and drop closer to '+next+' to reach '+t+' (this may require approximately '+secs+'s more). Either way, consider recording an updated recipe.'; }
   const prev=(ti>0&&STAGES[ti-1])?STAGES[ti-1].code:'an earlier point';
-  return 'Ran '+(-gap)+' pts dark ('+a+' vs '+t+'). The gain may have passed '+r.target+', so next time, if you are not confident in your recipe, drop closer to '+prev+' / a touch earlier to reach '+t+' (this may require approximately '+secs+'s less). Either way, consider updating the recipe or recording a new one.'; }
+  return 'Ran '+(-gap)+' pts dark ('+a+' vs '+t+'). The first crack gain may have passed '+r.target+', so next time, IF YOU ARE NOT CONFIDENT IN YOUR RECIPE, drop closer to '+prev+' / a touch earlier to reach '+t+' (this may require approximately '+secs+'s less). Either way, consider recording an updated recipe.'; }
 let agSaveTimers={};
 function pushAgtron(id,v){ if(!sb || String(id).startsWith('local-')) return; clearTimeout(agSaveTimers[id]); agSaveTimers[id]=setTimeout(async()=>{ const r=await sb.from('roast_logs').update({agtron:(v===''||v==null?null:v)}).eq('id',id); if(r&&r.error) console.warn('agtron update',r.error); },700); }
 function updateCorrRow(id,r){ const cr=logTbl.querySelector('tr.corr[data-corr="'+id+'"]'); if(!cr) return; const corr=corrLine(r); cr.classList.toggle('hide', !corr); cr.firstElementChild.innerHTML = corr?('↳ '+corr):''; }
@@ -887,14 +893,18 @@ function setAgtron(id,raw){ let v=(raw===''||raw==null)?'':parseFloat(raw); if(v
   updateCorrRow(id,it); pushAgtron(id,v); }
 function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
   emptyLog.classList.toggle('hide', LOG.length>0);
-  LOG.forEach(r=>{ const tr=document.createElement('tr'); tr.className='logrow'; tr.dataset.row=r.id;
-    tr.innerHTML=`<td>${r.date}<div class="exlbl" data-hx="${r.id}">Heuristics</div></td><td>${esc(r.bean)}<div class="small">${r.eq}${(r.fcTemp!=null||r.endTemp!=null)?(' · '+(r.fcTemp!=null?'FC '+r.fcTemp+'°':'')+(r.fcTemp!=null&&r.endTemp!=null?' → ':'')+(r.endTemp!=null?'end '+r.endTemp+'°':'')):''}</div></td><td>${r.target}</td><td class="num">${r.toTarget!=null?fmt(r.toTarget):'-'}</td>`+
-      `<td><button class="delx" data-del="${r.id}">×</button></td>`; tb.appendChild(tr);
+  const batchMap={}, _bc={}; [...LOG].reverse().forEach(x=>{ const k=x.date+'|'+x.eq; _bc[k]=(_bc[k]||0)+1; batchMap[x.id]=_bc[k]; });   // batch # increments per date per machine
+  LOG.forEach(r=>{ const tr=document.createElement('tr'); tr.className='logrow'; tr.dataset.row=r.id; const batch=batchMap[r.id]||1;
     const av=(r.agtron!==''&&r.agtron!=null)?r.agtron:''; const sv=av!==''?av:(r.targetAg!=null?r.targetAg:100);
-    const ar=document.createElement('tr'); ar.className='agrow'; ar.innerHTML=`<td colspan="5"><div class="agrow2"><div class="agtgt"><span class="aglbl">Target AG</span><b class="tgtval">${r.targetAg!=null?r.targetAg:'—'}</b></div><div class="agact"><span class="aglbl">Actual AG</span><div class="agwrap"><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}"></div></div></div></td>`; tb.appendChild(ar);
+    tr.innerHTML=`<td>${r.date}<div class="small" style="color:var(--accent2);font-weight:700">#${batch}</div><div class="exlbl" data-hx="${r.id}">Heuristics</div></td>`+
+      `<td>${esc(r.bean)}<div class="exlbl" data-log="${r.id}">Log</div></td>`+
+      `<td class="num"><b class="tgtval">${r.targetAg!=null?r.targetAg:'—'}</b></td>`+
+      `<td class="num"><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}"></td>`+
+      `<td><button class="delx" data-del="${r.id}">×</button></td>`; tb.appendChild(tr);
     const sr=document.createElement('tr'); sr.className='agrow slide'; sr.innerHTML=`<td colspan="5"><div class="slidewrap"><button class="step" data-dec="${r.id}">−</button><input type="range" class="agslider" min="40" max="130" step="1" value="${sv}" data-rng="${r.id}"><button class="step" data-inc="${r.id}">+</button></div></td>`; tb.appendChild(sr);
     const corr=corrLine(r); const cr=document.createElement('tr'); cr.className='corr'+(corr?'':' hide'); cr.dataset.corr=r.id; cr.innerHTML=`<td colspan="5">${corr?('↳ '+corr):''}</td>`; tb.appendChild(cr); });
   tb.querySelectorAll('[data-hx]').forEach(b=>b.onclick=()=>openHx(b.dataset.hx));
+  tb.querySelectorAll('[data-log]').forEach(b=>b.onclick=()=>openLog(b.dataset.log));
   tb.querySelectorAll('input.act').forEach(i=>i.addEventListener('input',e=>setAgtron(e.target.dataset.id, e.target.value)));
   tb.querySelectorAll('input.agslider').forEach(s=>s.addEventListener('input',e=>setAgtron(e.target.dataset.rng, e.target.value)));
   tb.querySelectorAll('[data-inc]').forEach(b=>b.onclick=()=>{ const id=b.dataset.inc, it=LOG.find(x=>String(x.id)===String(id)); const c=(it&&it.agtron!==''&&it.agtron!=null)?Number(it.agtron):(it&&it.targetAg!=null?it.targetAg:100); setAgtron(id,c+1); });

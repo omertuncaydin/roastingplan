@@ -77,6 +77,13 @@ EN is the source of truth; the app is designed in English. This file holds the T
   - first reading at 30s → "ilk ölçüm 30. sn"; next reading in {n}s → "sonraki ölçüm {n}sn"; log bean °C now → "şimdi çekirdek °C gir"
   - Chart series: Bean °C → "Çekirdek °C"
 
+## History
+- Table columns: Date → "Tarih"; Coffee → "Kahve"; Target AG → "Hedef AG"; Actual AG → "Gerçek AG"
+- Batch code #N (increments per date per machine) → "#N" (kept as-is)
+- Heuristics (label/popup) → "Sezgiler"; Log (label/popup, under Coffee) → "Kayıt"
+- Log popup fields: Machine → "Makine"; Drop stage → "Boşaltma kademesi"; Dev time → "Gelişim süresi"; First crack temp → "İlk çıtırtı sıcaklığı"; End temp → "Bitiş sıcaklığı"
+- Correction suggestion wording (EN, generated): "...The first crack gain may have passed {stage}... IF YOU ARE NOT CONFIDENT IN YOUR RECIPE... Either way, consider recording an updated recipe." (CVA/heuristic copy stays English)
+
 ## Cup
 - cupping score → "tadım puanı"
 - Cup sub-modes: Combined → "Birleşik"; Descriptive → "Tanımlayıcı"; Affective → "Duyuşsal"
