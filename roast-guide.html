@@ -672,17 +672,17 @@ function devCues(){ const ti=stIdx(st.target), drop=dropOffset();           // i
 function tap(){
   const now=vnow();
   if(st.phase==='pre0'){ st.tCin=now; st.phase='pre1'; undoBtn.classList.remove('hide'); draw(); return; }   // mark cinnamon
-  if(st.phase==='pre1'){ st.tA0=now; st.cinToA0Actual=Math.max(0.1, secSince(st.tCin)); const exp=expCinToA0(); st.pace = exp>0 ? st.cinToA0Actual/exp : 1; st.phase='dev'; draw(); return; }   // mark A0, set pace from cinnamon->A0
+  if(st.phase==='pre1'){ st.tA0=now; st.cinToA0Actual=Math.max(0.1, secSince(st.tCin)); const exp=expCinToA0(); st.pace = exp>0 ? st.cinToA0Actual/exp : 1; if(TEMPS.length) st.fcTemp=Math.round(tempAt(secSince(st.tStart))); st.phase='dev'; draw(); return; }   // mark A0 + capture first-crack temp from the curve if logged
   if(st.phase==='dev'){ finishRoast(now); return; }   // observed target stage -> drop
 }
 function startRoast(now){ st.phase='pre0'; st.tStart=now; undoBtn.classList.add('hide'); }
 async function finishRoast(now){
-  stopTick(); releaseWake();
+  stopTick(); releaseWake(); if(TEMPS.length) st.endTemp=Math.round(tempAt(secSince(st.tStart)));   // capture end/drop temp from the curve if logged
   const devActual = st.tA0 ? Math.round(secSince(st.tA0)) : null;   // actual A0->drop (development time)
   const cinA0 = Math.round(st.cinToA0Actual||0);                    // actual cinnamon->A0
   const offs={}; if(cinA0) offs.cinToA0=cinA0; if(devActual!=null) offs.dev=devActual;
   const rec={ id:'local-'+Date.now(), date:new Date().toISOString().slice(0,10), bean:st.name, eq:st.eq, fc:st.fc, target:st.target, targetAg:(st.targetAg!=null?st.targetAg:null),
-    toTarget: devActual, offs, agtron:(st.targetAg!=null?st.targetAg:'') };
+    toTarget: devActual, offs, agtron:(st.targetAg!=null?st.targetAg:''), fcTemp:(st.fcTemp!=null?st.fcTemp:null), endTemp:(st.endTemp!=null?st.endTemp:null) };
   if(canSave('roast')){ LOG.unshift(rec); cacheLog(); recomputeLearning(); ensureBean(rec.bean); }
   st.phase='done'; draw(); renderLog(); updateTempDue(); startCooling();
   if(canSave('roast')){ if(sb){ const lr=await sb.from('roast_logs').insert(toLogPayload(rec)).select('*').single(); if(lr&&!lr.error){ rec.id=lr.data.id; cacheLog(); renderLog(); } else { console.warn('log insert',lr&&lr.error); addPending(rec); } } else { addPending(rec); } }
@@ -888,7 +888,7 @@ function setAgtron(id,raw){ let v=(raw===''||raw==null)?'':parseFloat(raw); if(v
 function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
   emptyLog.classList.toggle('hide', LOG.length>0);
   LOG.forEach(r=>{ const tr=document.createElement('tr'); tr.className='logrow'; tr.dataset.row=r.id;
-    tr.innerHTML=`<td>${r.date}<div class="exlbl" data-hx="${r.id}">Heuristics</div></td><td>${esc(r.bean)}<div class="small">${r.eq}</div></td><td>${r.target}</td><td class="num">${r.toTarget!=null?fmt(r.toTarget):'-'}</td>`+
+    tr.innerHTML=`<td>${r.date}<div class="exlbl" data-hx="${r.id}">Heuristics</div></td><td>${esc(r.bean)}<div class="small">${r.eq}${(r.fcTemp!=null||r.endTemp!=null)?(' · '+(r.fcTemp!=null?'FC '+r.fcTemp+'°':'')+(r.fcTemp!=null&&r.endTemp!=null?' → ':'')+(r.endTemp!=null?'end '+r.endTemp+'°':'')):''}</div></td><td>${r.target}</td><td class="num">${r.toTarget!=null?fmt(r.toTarget):'-'}</td>`+
       `<td><button class="delx" data-del="${r.id}">×</button></td>`; tb.appendChild(tr);
     const av=(r.agtron!==''&&r.agtron!=null)?r.agtron:''; const sv=av!==''?av:(r.targetAg!=null?r.targetAg:100);
     const ar=document.createElement('tr'); ar.className='agrow'; ar.innerHTML=`<td colspan="5"><div class="agrow2"><div class="agtgt"><span class="aglbl">Target AG</span><b class="tgtval">${r.targetAg!=null?r.targetAg:'—'}</b></div><div class="agact"><span class="aglbl">Actual AG</span><div class="agwrap"><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}"></div></div></div></td>`; tb.appendChild(ar);
