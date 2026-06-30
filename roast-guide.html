@@ -870,7 +870,7 @@ function openHx(id){ const r=LOG.find(x=>String(x.id)===String(id)); if(!r) retu
   hxModal.style.display='flex'; }
 function closeHx(){ hxModal.style.display='none'; }
 function openLog(id){ const r=LOG.find(x=>String(x.id)===String(id)); if(!r) return;
-  const rows=[['Machine',esc(r.eq)],['Drop stage',r.target],['Dev time',r.toTarget!=null?fmt(r.toTarget):'-'],['First crack temp',r.fcTemp!=null?(r.fcTemp+'°C'):'-'],['End temp',r.endTemp!=null?(r.endTemp+'°C'):'-']];
+  const rows=[['Machine',esc(r.eq)],['Drop gain',r.target],['Dev time',r.toTarget!=null?fmt(r.toTarget):'-'],['First crack temp',r.fcTemp!=null?(r.fcTemp+'°C'):'-'],['End temp',r.endTemp!=null?(r.endTemp+'°C'):'-']];
   hxBox.innerHTML=`<h1 style="margin:0 0 4px;font-size:18px">Log</h1><div class="small" style="margin-bottom:10px">${esc(r.bean)} · ${r.date}</div>`+
     rows.map(x=>`<div class="hxrow"><span>${x[0]}</span><span class="tgtval">${x[1]}</span></div>`).join('')+
     `<button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`;
@@ -890,6 +890,7 @@ function setAgtron(id,raw){ let v=(raw===''||raw==null)?'':parseFloat(raw); if(v
   const it=LOG.find(x=>String(x.id)===String(id)); if(!it) return; it.agtron=v; cacheLog();
   const inp=logTbl.querySelector('input.act[data-id="'+id+'"]'); if(inp && String(inp.value)!==String(v)) inp.value=v;
   const sld=logTbl.querySelector('input.agslider[data-rng="'+id+'"]'); if(sld && v!=='' && String(sld.value)!==String(v)) sld.value=v;
+  const dsp=logTbl.querySelector('.actval[data-av="'+id+'"]'); if(dsp) dsp.textContent=(v===''?'—':v);   // keep the read-only Actual AG column in sync
   updateCorrRow(id,it); pushAgtron(id,v); }
 function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
   emptyLog.classList.toggle('hide', LOG.length>0);
@@ -899,9 +900,9 @@ function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
     tr.innerHTML=`<td>${r.date}<div class="small" style="color:var(--accent2);font-weight:700">#${batch}</div><div class="exlbl" data-hx="${r.id}">Heuristics</div></td>`+
       `<td>${esc(r.bean)}<div class="exlbl" data-log="${r.id}">Log</div></td>`+
       `<td class="num"><b class="tgtval">${r.targetAg!=null?r.targetAg:'—'}</b></td>`+
-      `<td class="num"><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}"></td>`+
+      `<td class="num"><b class="tgtval actval" data-av="${r.id}">${av!==''?av:'—'}</b></td>`+
       `<td><button class="delx" data-del="${r.id}">×</button></td>`; tb.appendChild(tr);
-    const sr=document.createElement('tr'); sr.className='agrow slide'; sr.innerHTML=`<td colspan="5"><div class="slidewrap"><button class="step" data-dec="${r.id}">−</button><input type="range" class="agslider" min="40" max="130" step="1" value="${sv}" data-rng="${r.id}"><button class="step" data-inc="${r.id}">+</button></div></td>`; tb.appendChild(sr);
+    const sr=document.createElement('tr'); sr.className='agrow slide'; sr.innerHTML=`<td colspan="5"><div class="slidewrap"><span class="aglbl">Actual AG</span><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}" style="width:52px"><button class="step" data-dec="${r.id}">−</button><input type="range" class="agslider" min="40" max="130" step="1" value="${sv}" data-rng="${r.id}"><button class="step" data-inc="${r.id}">+</button></div></td>`; tb.appendChild(sr);
     const corr=corrLine(r); const cr=document.createElement('tr'); cr.className='corr'+(corr?'':' hide'); cr.dataset.corr=r.id; cr.innerHTML=`<td colspan="5">${corr?('↳ '+corr):''}</td>`; tb.appendChild(cr); });
   tb.querySelectorAll('[data-hx]').forEach(b=>b.onclick=()=>openHx(b.dataset.hx));
   tb.querySelectorAll('[data-log]').forEach(b=>b.onclick=()=>openLog(b.dataset.log));
@@ -911,7 +912,7 @@ function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
   tb.querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>{ const id=b.dataset.dec, it=LOG.find(x=>String(x.id)===String(id)); const c=(it&&it.agtron!==''&&it.agtron!=null)?Number(it.agtron):(it&&it.targetAg!=null?it.targetAg:100); setAgtron(id,c-1); });
   tb.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{ const id=b.dataset.del; LOG=LOG.filter(x=>String(x.id)!==id); cacheLog(); recomputeLearning(); renderLog(); if(sb && !id.startsWith('local-')){ const r=await sb.from('roast_logs').delete().eq('id',id); if(r&&r.error) console.warn('log delete',r.error); } });
 }
-function exportLog(){ const rows=[['Date','Coffee','Machine','FC(s)','Drop stage','Dev Time (s)','Target Agtron','Actual Agtron']];
+function exportLog(){ const rows=[['Date','Coffee','Machine','FC(s)','Drop gain','Dev Time (s)','Target Agtron','Actual Agtron']];
   LOG.forEach(r=>rows.push([r.date,r.bean,r.eq,r.fc,r.target,r.toTarget,r.targetAg,r.agtron]));
   const csv=rows.map(r=>r.map(c=>{c=String(c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(',')).join('\n');
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'})); a.download='roast-guide-log.csv'; a.click(); }

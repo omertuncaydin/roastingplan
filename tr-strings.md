@@ -81,7 +81,8 @@ EN is the source of truth; the app is designed in English. This file holds the T
 - Table columns: Date → "Tarih"; Coffee → "Kahve"; Target AG → "Hedef AG"; Actual AG → "Gerçek AG"
 - Batch code #N (increments per date per machine) → "#N" (kept as-is)
 - Heuristics (label/popup) → "Sezgiler"; Log (label/popup, under Coffee) → "Kayıt"
-- Log popup fields: Machine → "Makine"; Drop stage → "Boşaltma kademesi"; Dev time → "Gelişim süresi"; First crack temp → "İlk çıtırtı sıcaklığı"; End temp → "Bitiş sıcaklığı"
+- Log popup fields: Machine → "Makine"; Drop gain (renamed from "Drop stage" 2026-06-30, the crack stage at drop) → "Boşaltma kazanımı"; Dev time → "Gelişim süresi"; First crack temp → "İlk çıtırtı sıcaklığı"; End temp → "Bitiş sıcaklığı"
+- Actual AG entry now read-only in the table column; editable input + slider sit in the row below (label "Actual AG")
 - Correction suggestion wording (EN, generated): "...The first crack gain may have passed {stage}... IF YOU ARE NOT CONFIDENT IN YOUR RECIPE... Either way, consider recording an updated recipe." (CVA/heuristic copy stays English)
 
 ## Cup
