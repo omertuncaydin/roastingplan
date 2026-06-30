@@ -78,7 +78,7 @@ EN is the source of truth; the app is designed in English. This file holds the T
   - Chart series: Bean °C → "Çekirdek °C"
 
 ## History
-- Table columns: Date → "Tarih"; Coffee → "Kahve"; Target Agtron → "Hedef Agtron" (Actual Agtron column removed from the table 2026-06-30)
+- Table columns: Date → "Tarih"; Batch → "Parti"; Coffee → "Kahve"; Target Agtron → "Hedef Agtron" (Actual Agtron column removed from the table 2026-06-30; Batch column added)
 - Actual Agtron (slider section below each row, with the editable number on the right) → "Gerçek Agtron"
 - Batch code #N (increments per date per machine) → "#N" (kept as-is)
 - Heuristics (label/popup) → "Sezgiler"; Log (label/popup, under Coffee) → "Kayıt"

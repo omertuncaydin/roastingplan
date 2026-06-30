@@ -301,7 +301,7 @@
   <!-- HISTORY -->
   <div id="view-hist" class="hide">
     <div class="card" style="overflow-x:auto">
-      <table id="logTbl"><thead><tr><th>Date</th><th>Coffee</th><th>Target Agtron</th><th></th></tr></thead><tbody></tbody></table>
+      <table id="logTbl"><thead><tr><th>Date</th><th>Batch</th><th>Coffee</th><th>Target Agtron</th><th></th></tr></thead><tbody></tbody></table>
       <div class="small hide" id="emptyLog" style="padding:10px 2px">No roasts logged yet.</div>
     </div>
     <button class="btn ghost" onclick="exportLog()">Download log CSV</button>
@@ -896,12 +896,13 @@ function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
   const batchMap={}, _bc={}; [...LOG].reverse().forEach(x=>{ const k=x.date+'|'+x.eq; _bc[k]=(_bc[k]||0)+1; batchMap[x.id]=_bc[k]; });   // batch # increments per date per machine
   LOG.forEach(r=>{ const tr=document.createElement('tr'); tr.className='logrow'; tr.dataset.row=r.id; const batch=batchMap[r.id]||1;
     const av=(r.agtron!==''&&r.agtron!=null)?r.agtron:''; const sv=av!==''?av:(r.targetAg!=null?r.targetAg:100);
-    tr.innerHTML=`<td>${r.date}<div class="small" style="color:var(--accent2);font-weight:700">#${batch}</div><div class="exlbl" data-hx="${r.id}">Heuristics</div></td>`+
+    tr.innerHTML=`<td>${r.date}<div class="exlbl" data-hx="${r.id}">Heuristics</div></td>`+
+      `<td class="num"><b style="color:var(--accent2)">#${batch}</b></td>`+
       `<td>${esc(r.bean)}<div class="exlbl" data-log="${r.id}">Log</div></td>`+
       `<td class="num"><b class="tgtval">${r.targetAg!=null?r.targetAg:'—'}</b></td>`+
       `<td><button class="delx" data-del="${r.id}">×</button></td>`; tb.appendChild(tr);
-    const sr=document.createElement('tr'); sr.className='agrow slide'; sr.innerHTML=`<td colspan="4"><div class="aglbl" style="margin-bottom:5px">Actual Agtron</div><div class="slidewrap"><button class="step" data-dec="${r.id}">−</button><input type="range" class="agslider" min="40" max="130" step="1" value="${sv}" data-rng="${r.id}"><button class="step" data-inc="${r.id}">+</button><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}" style="width:54px;text-align:center"></div></td>`; tb.appendChild(sr);
-    const corr=corrLine(r); const cr=document.createElement('tr'); cr.className='corr'+(corr?'':' hide'); cr.dataset.corr=r.id; cr.innerHTML=`<td colspan="4">${corr?('↳ '+corr):''}</td>`; tb.appendChild(cr); });
+    const sr=document.createElement('tr'); sr.className='agrow slide'; sr.innerHTML=`<td colspan="5"><div class="aglbl" style="margin-bottom:5px">Actual Agtron</div><div class="slidewrap"><button class="step" data-dec="${r.id}">−</button><input type="range" class="agslider" min="40" max="130" step="1" value="${sv}" data-rng="${r.id}"><button class="step" data-inc="${r.id}">+</button><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}" style="width:54px;text-align:center"></div></td>`; tb.appendChild(sr);
+    const corr=corrLine(r); const cr=document.createElement('tr'); cr.className='corr'+(corr?'':' hide'); cr.dataset.corr=r.id; cr.innerHTML=`<td colspan="5">${corr?('↳ '+corr):''}</td>`; tb.appendChild(cr); });
   tb.querySelectorAll('[data-hx]').forEach(b=>b.onclick=()=>openHx(b.dataset.hx));
   tb.querySelectorAll('[data-log]').forEach(b=>b.onclick=()=>openLog(b.dataset.log));
   tb.querySelectorAll('input.act').forEach(i=>i.addEventListener('input',e=>setAgtron(e.target.dataset.id, e.target.value)));
