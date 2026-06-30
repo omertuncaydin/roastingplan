@@ -84,7 +84,7 @@ EN is the source of truth; the app is designed in English. This file holds the T
 - Heuristics (label/popup) → "Sezgiler"; Log (label/popup, under Coffee) → "Kayıt"
 - Log popup fields: Machine → "Makine"; Drop gain (renamed from "Drop stage" 2026-06-30, the crack stage at drop) → "Boşaltma kazanımı"; Dev time → "Gelişim süresi"; First crack temp → "İlk çıtırtı sıcaklığı"; End temp → "Bitiş sıcaklığı"
 - Actual AG entry now read-only in the table column; editable input + slider sit in the row below (label "Actual AG")
-- Correction suggestion wording (EN, generated): "...The first crack gain may have passed {stage}... IF YOU ARE NOT CONFIDENT IN YOUR RECIPE... Either way, consider recording an updated recipe." (CVA/heuristic copy stays English)
+- Correction suggestion (EN, generated; now a numbered 2-point list, no ↳ prefix): "1. Ran {n} pts dark/light ({a} vs {t}) so the first crack gain likely passed/fell short of {stage}. Stay at/Make sure you reach {stage} next time. 2. Or if you are not confident in your recipe, drop nearer {prev/next}, about {s}s earlier/later, to reach {t} and record the updated recipe." (CVA/heuristic copy stays English)
 
 ## Cup
 - cupping score → "tadım puanı"

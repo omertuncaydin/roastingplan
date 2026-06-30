@@ -865,7 +865,7 @@ function openHx(id){ const r=LOG.find(x=>String(x.id)===String(id)); if(!r) retu
     `<div class="small" style="margin-bottom:10px">${esc(r.bean)} · ${r.eq} · ${r.date}</div>`+
     `<div class="small" style="margin-bottom:10px">FC ${fmt(r.fc)} · drop ${r.target}${r.targetAg!=null?(' · target '+r.targetAg+'A'):''}${(r.agtron!==''&&r.agtron!=null)?(' · actual '+r.agtron+'A'):''}</div>`+
     stages+
-    (corr?`<div style="margin-top:12px;color:var(--accent);font-size:13px;line-height:1.5">↳ ${corr}</div>`:'')+
+    (corr?`<div style="margin-top:12px;color:var(--accent);font-size:13px;line-height:1.5">${corr}</div>`:'')+
     `<button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`;
   hxModal.style.display='flex'; }
 function closeHx(){ hxModal.style.display='none'; }
@@ -880,12 +880,12 @@ function corrLine(r){ const t=r.targetAg, a=(r.agtron===''||r.agtron==null?null:
   const gap=Math.round(a-t); if(Math.abs(gap)<=(RULES.agTol??2)) return '';
   const secs=Math.round(Math.abs(gap)*RULES.secPerAg); const ti=stIdx(r.target);
   if(gap>0){ const next=(ti>=0&&STAGES[ti+1])?STAGES[ti+1].code:'a darker drop';
-    return 'Ran '+gap+' pts light ('+a+' vs '+t+'). Make sure the gain was '+r.target+' next time, or IF YOU ARE NOT CONFIDENT IN YOUR RECIPE, develop more and drop closer to '+next+' to reach '+t+' (this may require approximately '+secs+'s more). Either way, consider recording an updated recipe.'; }
+    return '<div>1. Ran '+gap+' pts light ('+a+' vs '+t+') so the first crack gain likely fell short of '+r.target+'. Make sure you reach '+r.target+' next time.</div><div style="margin-top:5px">2. Or if you are not confident in your recipe, drop nearer '+next+', about '+secs+'s later, to reach '+t+' and record the updated recipe.</div>'; }
   const prev=(ti>0&&STAGES[ti-1])?STAGES[ti-1].code:'an earlier point';
-  return 'Ran '+(-gap)+' pts dark ('+a+' vs '+t+'). The first crack gain may have passed '+r.target+', so next time, IF YOU ARE NOT CONFIDENT IN YOUR RECIPE, drop closer to '+prev+' / a touch earlier to reach '+t+' (this may require approximately '+secs+'s less). Either way, consider recording an updated recipe.'; }
+  return '<div>1. Ran '+(-gap)+' pts dark ('+a+' vs '+t+') so the first crack gain likely passed '+r.target+'. Stay at '+r.target+' next time.</div><div style="margin-top:5px">2. Or if you are not confident in your recipe, drop nearer '+prev+', about '+secs+'s earlier, to reach '+t+' and record the updated recipe.</div>'; }
 let agSaveTimers={};
 function pushAgtron(id,v){ if(!sb || String(id).startsWith('local-')) return; clearTimeout(agSaveTimers[id]); agSaveTimers[id]=setTimeout(async()=>{ const r=await sb.from('roast_logs').update({agtron:(v===''||v==null?null:v)}).eq('id',id); if(r&&r.error) console.warn('agtron update',r.error); },700); }
-function updateCorrRow(id,r){ const cr=logTbl.querySelector('tr.corr[data-corr="'+id+'"]'); if(!cr) return; const corr=corrLine(r); cr.classList.toggle('hide', !corr); cr.firstElementChild.innerHTML = corr?('↳ '+corr):''; }
+function updateCorrRow(id,r){ const cr=logTbl.querySelector('tr.corr[data-corr="'+id+'"]'); if(!cr) return; const corr=corrLine(r); cr.classList.toggle('hide', !corr); cr.firstElementChild.innerHTML = corr||''; }
 function setAgtron(id,raw){ let v=(raw===''||raw==null)?'':parseFloat(raw); if(v!==''){ v=isNaN(v)?'':Math.max(0,Math.min(150,Math.round(v))); }
   const it=LOG.find(x=>String(x.id)===String(id)); if(!it) return; it.agtron=v; cacheLog();
   const inp=logTbl.querySelector('input.act[data-id="'+id+'"]'); if(inp && String(inp.value)!==String(v)) inp.value=v;
@@ -902,7 +902,7 @@ function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
       `<td class="num"><b class="tgtval">${r.targetAg!=null?r.targetAg:'—'}</b></td>`+
       `<td><button class="delx" data-del="${r.id}">×</button></td>`; tb.appendChild(tr);
     const sr=document.createElement('tr'); sr.className='agrow slide'; sr.innerHTML=`<td colspan="5"><div class="aglbl" style="margin-bottom:5px">Actual Agtron</div><div class="slidewrap"><button class="step" data-dec="${r.id}">−</button><input type="range" class="agslider" min="40" max="130" step="1" value="${sv}" data-rng="${r.id}"><button class="step" data-inc="${r.id}">+</button><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}" style="width:54px;text-align:center"></div></td>`; tb.appendChild(sr);
-    const corr=corrLine(r); const cr=document.createElement('tr'); cr.className='corr'+(corr?'':' hide'); cr.dataset.corr=r.id; cr.innerHTML=`<td colspan="5">${corr?('↳ '+corr):''}</td>`; tb.appendChild(cr); });
+    const corr=corrLine(r); const cr=document.createElement('tr'); cr.className='corr'+(corr?'':' hide'); cr.dataset.corr=r.id; cr.innerHTML=`<td colspan="5">${corr||''}</td>`; tb.appendChild(cr); });
   tb.querySelectorAll('[data-hx]').forEach(b=>b.onclick=()=>openHx(b.dataset.hx));
   tb.querySelectorAll('[data-log]').forEach(b=>b.onclick=()=>openLog(b.dataset.log));
   tb.querySelectorAll('input.act').forEach(i=>i.addEventListener('input',e=>setAgtron(e.target.dataset.id, e.target.value)));
