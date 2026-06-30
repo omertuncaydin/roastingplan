@@ -266,7 +266,7 @@
               </div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
-              <input type="number" id="tempInput" inputmode="decimal" placeholder="bean °C" style="flex:1;min-width:0">
+              <select id="tempInput" style="flex:1;min-width:0"></select>
               <button class="btn" style="width:auto;padding:11px 18px;margin-top:0" onclick="logTemp()">Log</button>
             </div>
             <div class="small" id="tempDue" style="margin-top:6px;text-align:center"></div>
@@ -671,20 +671,20 @@ function devCues(){ const ti=stIdx(st.target), drop=dropOffset();           // i
 
 function tap(){
   const now=vnow();
-  if(st.phase==='pre0'){ st.tCin=now; st.phase='pre1'; undoBtn.classList.remove('hide'); draw(); return; }   // mark cinnamon
-  if(st.phase==='pre1'){ st.tA0=now; st.cinToA0Actual=Math.max(0.1, secSince(st.tCin)); const exp=expCinToA0(); st.pace = exp>0 ? st.cinToA0Actual/exp : 1; if(TEMPS.length) st.fcTemp=Math.round(tempAt(secSince(st.tStart))); st.phase='dev'; draw(); return; }   // mark A0 + capture first-crack temp from the curve if logged
+  if(st.phase==='pre0'){ st.tCin=now; st.cinSec=secSince(st.tStart); st.phase='pre1'; undoBtn.classList.remove('hide'); draw(); if(TEMP_ON) updateTempChart(); return; }   // mark cinnamon + stage line
+  if(st.phase==='pre1'){ st.tA0=now; st.cinToA0Actual=Math.max(0.1, secSince(st.tCin)); const exp=expCinToA0(); st.pace = exp>0 ? st.cinToA0Actual/exp : 1; st.a0Sec=secSince(st.tStart); if(TEMPS.length) st.fcTemp=Math.round(tempAt(secSince(st.tStart))); st.phase='dev'; draw(); if(TEMP_ON) updateTempChart(); return; }   // mark A0 + capture first-crack temp from the curve if logged
   if(st.phase==='dev'){ finishRoast(now); return; }   // observed target stage -> drop
 }
 function startRoast(now){ st.phase='pre0'; st.tStart=now; undoBtn.classList.add('hide'); }
 async function finishRoast(now){
-  stopTick(); releaseWake(); if(TEMPS.length) st.endTemp=Math.round(tempAt(secSince(st.tStart)));   // capture end/drop temp from the curve if logged
+  stopTick(); releaseWake(); st.dropSec=secSince(st.tStart); if(TEMPS.length) st.endTemp=Math.round(tempAt(secSince(st.tStart)));   // capture end/drop temp + drop stage line
   const devActual = st.tA0 ? Math.round(secSince(st.tA0)) : null;   // actual A0->drop (development time)
   const cinA0 = Math.round(st.cinToA0Actual||0);                    // actual cinnamon->A0
   const offs={}; if(cinA0) offs.cinToA0=cinA0; if(devActual!=null) offs.dev=devActual;
   const rec={ id:'local-'+Date.now(), date:new Date().toISOString().slice(0,10), bean:st.name, eq:st.eq, fc:st.fc, target:st.target, targetAg:(st.targetAg!=null?st.targetAg:null),
     toTarget: devActual, offs, agtron:(st.targetAg!=null?st.targetAg:''), fcTemp:(st.fcTemp!=null?st.fcTemp:null), endTemp:(st.endTemp!=null?st.endTemp:null) };
   if(canSave('roast')){ LOG.unshift(rec); cacheLog(); recomputeLearning(); ensureBean(rec.bean); }
-  st.phase='done'; draw(); renderLog(); updateTempDue(); startCooling();
+  st.phase='done'; draw(); renderLog(); updateTempDue(); if(TEMP_ON) updateTempChart(); startCooling();
   if(canSave('roast')){ if(sb){ const lr=await sb.from('roast_logs').insert(toLogPayload(rec)).select('*').single(); if(lr&&!lr.error){ rec.id=lr.data.id; cacheLog(); renderLog(); } else { console.warn('log insert',lr&&lr.error); addPending(rec); } } else { addPending(rec); } }
 }
 function undoMark(){
@@ -740,11 +740,12 @@ function markCooled(){ COOLED=true; coolStop(); const s=Math.floor((Date.now()-C
 function coolStop(){ if(coolTimer){ clearInterval(coolTimer); coolTimer=null; } }
 function coolReset(){ coolStop(); COOLED=false; const p=document.getElementById('coolPanel'); if(p) p.classList.add('hide'); }
 // ---- manual temp curve (optional, probe-free): bean temp logged at a fixed interval; never upstages the gauge ----
-let TEMP_ON=false, ROR_ON=true, ROR_INT=60, TEMPS=[], tempChart=null;
+let TEMP_ON=false, ROR_ON=true, ROR_INT=60, TEMPS=[], tempChart=null; const TEMP_MIN=30, TEMP_MAX=260;   // wheel range; later bounded by the Machine tab
+function fillTempWheel(){ const sel=document.getElementById('tempInput'); if(!sel||sel.tagName!=='SELECT') return; let html=''; for(let v=TEMP_MIN; v<=TEMP_MAX; v++) html+='<option value="'+v+'">'+v+'°C</option>'; sel.innerHTML=html; const last=TEMPS.length?TEMPS[TEMPS.length-1].temp:180; sel.value=String(Math.max(TEMP_MIN,Math.min(TEMP_MAX,Math.round(last)))); }
 function tempActive(){ return st && st.phase!=='idle' && st.phase!=='done'; }
 function toggleTempCurve(){ TEMP_ON=!TEMP_ON; const body=document.getElementById('tempBody'), tog=document.getElementById('tempToggle');
   if(body) body.classList.toggle('hide',!TEMP_ON); if(tog) tog.textContent=TEMP_ON?'Hide temp curve':'Show temp curve';
-  if(TEMP_ON){ if(TEMPS.length===0 && typeof prompt==='function'){ const v=parseFloat(prompt('Charge temperature (°C, beans in):')); if(!isNaN(v)) TEMPS.push({t:0,temp:v}); } updateTempChart(); }
+  if(TEMP_ON){ if(TEMPS.length===0 && typeof prompt==='function'){ const v=parseFloat(prompt('Charge temperature (°C, beans in):')); if(!isNaN(v)) TEMPS.push({t:0,temp:v}); } fillTempWheel(); updateTempChart(); }
   updateTempDue(); }
 function toggleRor(on){ ROR_ON=!!on; const seg=document.getElementById('rorInterval'); if(seg) seg.classList.toggle('hide',!ROR_ON);
   if(tempChart){ try{tempChart.destroy();}catch(e){} tempChart=null; } updateTempChart(); updateTempDue(); }
@@ -754,7 +755,7 @@ function tempAt(tau){ const A=TEMPS; if(!A.length) return null; if(tau<=A[0].t) 
   for(let i=1;i<A.length;i++){ if(tau<=A[i].t){ const a=A[i-1],b=A[i]; return b.t===a.t? b.temp : a.temp+(b.temp-a.temp)*((tau-a.t)/(b.t-a.t)); } }
   return A[A.length-1].temp; }
 function logTemp(){ const inp=document.getElementById('tempInput'); if(!inp) return; const v=parseFloat(inp.value);
-  if(isNaN(v)||!tempActive()) return; TEMPS.push({t:secSince(st.tStart), temp:v}); inp.value=''; updateTempChart(); updateTempDue(); }
+  if(isNaN(v)||!tempActive()) return; TEMPS.push({t:secSince(st.tStart), temp:v}); updateTempChart(); fillTempWheel(); updateTempDue(); }
 function updateTempDue(){
   if(TEMP_ON && tempActive() && tempChart && typeof Chart!=='undefined'){ const em=secSince(st.tStart)/60, want=Math.max(13,Math.ceil(em)); if((tempChart.options.scales.x.max||13)<want){ tempChart.options.scales.x.max=want; tempChart.update('none'); } }   // keep the frame squeezing as the roast runs past 13 min
   const el=document.getElementById('tempDue'); if(!el) return; if(!TEMP_ON||!ROR_ON||!tempActive()){ el.textContent=''; return; }   // reminder only matters when ROR needs evenly-spaced readings
@@ -766,6 +767,11 @@ const rorTipPlugin={ id:'rorTip', afterDatasetsDraw(chart){ try{ const dss=chart
   const pts=chart.getDatasetMeta(di).data; if(!pts||!pts.length) return; const last=pts[pts.length-1], arr=dss[di].data, lv=arr[arr.length-1]; if(lv==null) return;
   const y=(typeof lv==='object')?lv.y:lv, ctx=chart.ctx; ctx.save(); ctx.fillStyle='#3c8a9a'; ctx.font='800 14px -apple-system,sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='left';
   let x=last.x+7; const txt=Math.round(y)+''; if(x+ctx.measureText(txt).width+4>chart.chartArea.right) x=chart.chartArea.right-ctx.measureText(txt).width-2; ctx.fillText(txt, x, last.y); ctx.restore(); }catch(e){} } };
+const stageMarksPlugin={ id:'stageMarks', afterDatasetsDraw(chart){ try{ const S=(typeof st!=='undefined')?st:null; if(!S) return; const sx=chart.scales.x, ca=chart.chartArea, ctx=chart.ctx;
+  const ms=[]; if(S.cinSec!=null) ms.push([S.cinSec/60,'CIN','#a8998a']); if(S.a0Sec!=null) ms.push([S.a0Sec/60,'A0','#fff']); if(S.dropSec!=null) ms.push([S.dropSec/60,'DROP','#e6c14b']);
+  ctx.save(); ctx.setLineDash([3,3]); ctx.font='700 9px -apple-system,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
+  ms.forEach(([m,lb,col])=>{ if(m<sx.min||m>sx.max) return; const px=sx.getPixelForValue(m); ctx.strokeStyle=col; ctx.globalAlpha=0.65; ctx.beginPath(); ctx.moveTo(px,ca.top); ctx.lineTo(px,ca.bottom); ctx.stroke(); ctx.globalAlpha=1; ctx.fillStyle=col; ctx.fillText(lb,px,ca.top+2); });
+  ctx.restore(); }catch(e){} } };
 function updateTempChart(){ const cv=document.getElementById('tempChart'); if(!cv||typeof Chart==='undefined') return;
   const pts=TEMPS.map(p=>({x:+(p.t/60).toFixed(3), y:p.temp}));   // x = real elapsed minutes, so each reading lands at its actual time
   const ds=[{label:'Bean °C',data:pts,borderColor:'#c98a3c',backgroundColor:'#c98a3c',yAxisID:'y',tension:.3,pointRadius:3}];
@@ -779,7 +785,7 @@ function updateTempChart(){ const cv=document.getElementById('tempChart'); if(!c
   const data={datasets:ds};
   if(tempChart){ tempChart.data=data; tempChart.options.scales=scales; tempChart.update('none'); return; }
   tempChart=new Chart(cv,{type:'line',data,options:{responsive:true,maintainAspectRatio:false,animation:false,
-    plugins:{legend:{display:ROR_ON,labels:{color:'#a8998a',boxWidth:12,font:{size:11}}}},scales},plugins:[rorTipPlugin]}); }
+    plugins:{legend:{display:ROR_ON,labels:{color:'#a8998a',boxWidth:12,font:{size:11}}}},scales},plugins:[rorTipPlugin,stageMarksPlugin]}); }
 async function requestWake(){ try{ if('wakeLock' in navigator) wake=await navigator.wakeLock.request('screen'); }catch(e){} }
 function releaseWake(){ try{ if(wake){wake.release();wake=null;} }catch(e){} }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&st&&st.phase!=='idle'&&st.phase!=='done'&&live&&!live.classList.contains('hide')) requestWake(); });
