@@ -98,11 +98,11 @@
   .swipewrap{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;background:var(--panel);padding:9px 0;will-change:transform}
   .swipedel{position:absolute;top:0;right:0;bottom:0;width:72px;z-index:0;background:#b23b3b;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;opacity:0;cursor:pointer}
   .wheelWrap{position:relative;width:96px;height:120px;flex:none}
-  .wheel{width:96px;height:120px;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;background:#15100b;border:1px solid var(--line);border-radius:10px;scrollbar-width:none;-webkit-mask-image:linear-gradient(180deg,transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(180deg,transparent,#000 30%,#000 70%,transparent)}
+  .wheel{width:96px;height:120px;overflow-y:scroll;scroll-snap-type:y proximity;-webkit-overflow-scrolling:touch;background:#15100b;border:1px solid var(--line);border-radius:10px;scrollbar-width:none;-webkit-mask-image:linear-gradient(180deg,transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(180deg,transparent,#000 30%,#000 70%,transparent)}
   .wheel::-webkit-scrollbar{display:none}
-  .wheelInner{padding:48px 0}
-  .wheelInner div{height:24px;line-height:24px;text-align:center;scroll-snap-align:center;font-size:18px;color:var(--muted);font-variant-numeric:tabular-nums}
-  .wheelSel{position:absolute;left:0;right:0;top:48px;height:24px;border-top:1px solid var(--accent);border-bottom:1px solid var(--accent);pointer-events:none}
+  .wheelInner{padding:50px 0}
+  .wheelInner div{height:20px;line-height:20px;text-align:center;scroll-snap-align:center;font-size:17px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .wheelSel{position:absolute;left:0;right:0;top:50px;height:20px;border-top:1px solid var(--accent);border-bottom:1px solid var(--accent);pointer-events:none}
   .wheelSel:after{content:'°C';position:absolute;right:8px;top:3px;font-size:10px;color:var(--muted)}
   .rtools{display:flex;gap:8px;margin-bottom:12px}.rtools button{flex:1}
   .ritem{border-bottom:1px solid var(--line);padding:9px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
@@ -276,7 +276,10 @@
             <div class="small" id="tempDue" style="margin-top:6px;text-align:center"></div>
             <div style="display:flex;gap:14px;align-items:center;justify-content:center;margin-top:8px">
               <div class="wheelWrap"><div class="wheel" id="tempWheel"><div class="wheelInner" id="wheelInner"></div></div><div class="wheelSel"></div></div>
-              <button class="btn" style="width:auto;padding:16px 26px;margin-top:0;font-size:17px" onclick="logTemp()">Log</button>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <button class="btn" style="width:auto;padding:14px 26px;margin-top:0;font-size:17px" onclick="logTemp()">Log</button>
+                <button class="btn ghost" style="width:auto;padding:8px 26px;margin-top:0;font-size:13px" onclick="undoTemp()">Take back</button>
+              </div>
             </div>
           </div>
         </div>
@@ -689,7 +692,8 @@ async function finishRoast(now){
   const cinA0 = Math.round(st.cinToA0Actual||0);                    // actual cinnamon->A0
   const offs={}; if(cinA0) offs.cinToA0=cinA0; if(devActual!=null) offs.dev=devActual;
   const rec={ id:'local-'+Date.now(), date:new Date().toISOString().slice(0,10), bean:st.name, eq:st.eq, fc:st.fc, target:st.target, targetAg:(st.targetAg!=null?st.targetAg:null),
-    toTarget: devActual, offs, agtron:(st.targetAg!=null?st.targetAg:''), fcTemp:(st.fcTemp!=null?st.fcTemp:null), endTemp:(st.endTemp!=null?st.endTemp:null) };
+    toTarget: devActual, offs, agtron:(st.targetAg!=null?st.targetAg:''), fcTemp:(st.fcTemp!=null?st.fcTemp:null), endTemp:(st.endTemp!=null?st.endTemp:null),
+    temps:(TEMPS.length?TEMPS.slice():null), marks:{cin:(st.cinSec!=null?st.cinSec:null),a0:(st.a0Sec!=null?st.a0Sec:null),drop:(st.dropSec!=null?st.dropSec:null)} };
   if(canSave('roast')){ LOG.unshift(rec); cacheLog(); recomputeLearning(); ensureBean(rec.bean); }
   st.phase='done'; draw(); renderLog(); updateTempDue(); if(TEMP_ON) updateTempChart(); startCooling();
   if(canSave('roast')){ if(sb){ const lr=await sb.from('roast_logs').insert(toLogPayload(rec)).select('*').single(); if(lr&&!lr.error){ rec.id=lr.data.id; cacheLog(); renderLog(); } else { console.warn('log insert',lr&&lr.error); addPending(rec); } } else { addPending(rec); } }
@@ -748,14 +752,15 @@ function coolStop(){ if(coolTimer){ clearInterval(coolTimer); coolTimer=null; } 
 function coolReset(){ coolStop(); COOLED=false; const p=document.getElementById('coolPanel'); if(p) p.classList.add('hide'); }
 // ---- manual temp curve (optional, probe-free): bean temp logged at a fixed interval; never upstages the gauge ----
 let TEMP_ON=false, ROR_ON=true, ROR_INT=60, TEMPS=[], tempChart=null; const TEMP_MIN=30, TEMP_MAX=260;   // wheel range; later bounded by the Machine tab
-const WHEEL_ITEM=24;
+const WHEEL_ITEM=20;
 function buildWheel(){ const inner=document.getElementById('wheelInner'); if(!inner) return;
   if(inner.childElementCount===0){ let h=''; for(let v=TEMP_MIN; v<=TEMP_MAX; v++) h+='<div>'+v+'</div>'; inner.innerHTML=h; }
   setWheel(predictNext()); }
 function setWheel(v){ const wh=document.getElementById('tempWheel'); if(!wh) return; const cv=Math.max(TEMP_MIN,Math.min(TEMP_MAX,Math.round(v))); wh.scrollTop=(cv-TEMP_MIN)*WHEEL_ITEM; }
 function wheelValue(){ const wh=document.getElementById('tempWheel'); if(!wh) return NaN; return Math.max(TEMP_MIN,Math.min(TEMP_MAX, TEMP_MIN+Math.round(wh.scrollTop/WHEEL_ITEM))); }
-function predictNext(){ if(TEMPS.length>=2){ const n=TEMPS.length, a=TEMPS[n-2], b=TEMPS[n-1], dt=(b.t-a.t)/60; if(dt>0){ return b.temp + ((b.temp-a.temp)/dt)*(ROR_INT/60); } }   // project one interval ahead from the recent rate
+function predictNext(){ if(TEMPS.length>=2){ const n=TEMPS.length, a=TEMPS[n-2], b=TEMPS[n-1], dt=(b.t-a.t)/60; if(dt>0){ let p=b.temp + ((b.temp-a.temp)/dt)*(ROR_INT/60); if(b.t>=55 && p<b.temp) p=b.temp; return p; } }   // past the ~1min turnaround temp only rises, so never predict a drop below the current reading
   return TEMPS.length?TEMPS[TEMPS.length-1].temp:180; }
+function undoTemp(){ if(TEMPS.length){ TEMPS.pop(); updateTempChart(); buildWheel(); updateTempDue(); } }
 function tempActive(){ return st && st.phase!=='idle' && st.phase!=='done'; }
 function toggleTempCurve(){ TEMP_ON=!TEMP_ON; const body=document.getElementById('tempBody'), tog=document.getElementById('tempToggle');
   if(body) body.classList.toggle('hide',!TEMP_ON); if(tog) tog.textContent=TEMP_ON?'Hide temp curve':'Show temp curve';
@@ -892,12 +897,22 @@ function openHx(id){ const r=LOG.find(x=>String(x.id)===String(id)); if(!r) retu
     `<button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`;
   hxModal.style.display='flex'; }
 function closeHx(){ hxModal.style.display='none'; }
+let histChart=null;
 function openLog(id){ const r=LOG.find(x=>String(x.id)===String(id)); if(!r) return;
   const rows=[['Machine',esc(r.eq)],['Drop gain',r.target],['Dev time',r.toTarget!=null?fmt(r.toTarget):'-'],['First crack temp',r.fcTemp!=null?(r.fcTemp+'°C'):'-'],['End temp',r.endTemp!=null?(r.endTemp+'°C'):'-']];
+  const hasCurve = r.temps && r.temps.length;
   hxBox.innerHTML=`<h1 style="margin:0 0 4px;font-size:18px">Log</h1><div class="small" style="margin-bottom:10px">${esc(r.bean)} · ${r.date}</div>`+
     rows.map(x=>`<div class="hxrow"><span>${x[0]}</span><span class="tgtval">${x[1]}</span></div>`).join('')+
+    (hasCurve?`<div style="height:180px;margin-top:12px"><canvas id="histChart"></canvas></div>`:`<div class="small" style="margin-top:12px;color:var(--muted)">No temp curve logged for this roast.</div>`)+
     `<button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`;
-  hxModal.style.display='flex'; }
+  hxModal.style.display='flex'; if(hasCurve) renderHistChart(r); }
+function renderHistChart(r){ const cv=document.getElementById('histChart'); if(!cv||typeof Chart==='undefined') return;
+  if(histChart){ try{histChart.destroy();}catch(e){} histChart=null; }
+  const pts=r.temps.map(p=>({x:+(p.t/60).toFixed(3),y:p.temp})); const m=r.marks||{}; const mk=[];
+  if(m.cin!=null) mk.push([m.cin/60,'CIN','#a8998a']); if(m.a0!=null) mk.push([m.a0/60,'A0','#fff']); if(m.drop!=null) mk.push([m.drop/60,'DROP','#e6c14b']);
+  const histMarks={id:'hm',afterDatasetsDraw(c){try{const sx=c.scales.x,ca=c.chartArea,ctx=c.ctx;ctx.save();ctx.setLineDash([3,3]);ctx.font='700 9px -apple-system,sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';mk.forEach(([mm,lb,col])=>{if(mm<sx.min||mm>sx.max)return;const px=sx.getPixelForValue(mm);ctx.strokeStyle=col;ctx.globalAlpha=.65;ctx.beginPath();ctx.moveTo(px,ca.top);ctx.lineTo(px,ca.bottom);ctx.stroke();ctx.globalAlpha=1;ctx.fillStyle=col;ctx.fillText(lb,px,ca.bottom-3);});ctx.restore();}catch(e){}}};
+  const xmax=Math.max(13,Math.ceil(pts.length?pts[pts.length-1].x:0));
+  histChart=new Chart(cv,{type:'line',data:{datasets:[{label:'Bean °C',data:pts,borderColor:'#c98a3c',backgroundColor:'#c98a3c',tension:.3,pointRadius:2}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{type:'linear',min:0,max:xmax,title:{display:true,text:'minutes',color:'#a8998a',font:{size:10}},ticks:{stepSize:2,color:'#a8998a',font:{size:10}},grid:{color:'#2a221b'}},y:{ticks:{color:'#c98a3c',font:{size:10}},grid:{color:'#2a221b'}}}},plugins:[histMarks]}); }
 function offsLine(r){ const parts=[]; STAGES.forEach(s=>{ if(s.off!=null && r.offs && r.offs[s.code]!=null) parts.push(s.code+' +'+r.offs[s.code]+'s'); }); return 'FC '+fmt(r.fc)+(parts.length? '  ·  after first crack:  '+parts.join('   ') : '  ·  no stage timings recorded'); }
 function corrLine(r){ const t=r.targetAg, a=(r.agtron===''||r.agtron==null?null:Number(r.agtron)); if(t==null||a==null||isNaN(a)) return '';
   const gap=Math.round(a-t); if(Math.abs(gap)<=(RULES.agTol??2)) return '';
