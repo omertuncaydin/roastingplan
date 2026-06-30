@@ -78,7 +78,8 @@ EN is the source of truth; the app is designed in English. This file holds the T
   - Chart series: Bean °C → "Çekirdek °C"
 
 ## History
-- Table columns: Date → "Tarih"; Coffee → "Kahve"; Target AG → "Hedef AG"; Actual AG → "Gerçek AG"
+- Table columns: Date → "Tarih"; Coffee → "Kahve"; Target Agtron → "Hedef Agtron" (Actual Agtron column removed from the table 2026-06-30)
+- Actual Agtron (slider section below each row, with the editable number on the right) → "Gerçek Agtron"
 - Batch code #N (increments per date per machine) → "#N" (kept as-is)
 - Heuristics (label/popup) → "Sezgiler"; Log (label/popup, under Coffee) → "Kayıt"
 - Log popup fields: Machine → "Makine"; Drop gain (renamed from "Drop stage" 2026-06-30, the crack stage at drop) → "Boşaltma kazanımı"; Dev time → "Gelişim süresi"; First crack temp → "İlk çıtırtı sıcaklığı"; End temp → "Bitiş sıcaklığı"

@@ -301,7 +301,7 @@
   <!-- HISTORY -->
   <div id="view-hist" class="hide">
     <div class="card" style="overflow-x:auto">
-      <table id="logTbl"><thead><tr><th>Date</th><th>Coffee</th><th>Target AG</th><th>Actual AG</th><th></th></tr></thead><tbody></tbody></table>
+      <table id="logTbl"><thead><tr><th>Date</th><th>Coffee</th><th>Target Agtron</th><th></th></tr></thead><tbody></tbody></table>
       <div class="small hide" id="emptyLog" style="padding:10px 2px">No roasts logged yet.</div>
     </div>
     <button class="btn ghost" onclick="exportLog()">Download log CSV</button>
@@ -890,7 +890,6 @@ function setAgtron(id,raw){ let v=(raw===''||raw==null)?'':parseFloat(raw); if(v
   const it=LOG.find(x=>String(x.id)===String(id)); if(!it) return; it.agtron=v; cacheLog();
   const inp=logTbl.querySelector('input.act[data-id="'+id+'"]'); if(inp && String(inp.value)!==String(v)) inp.value=v;
   const sld=logTbl.querySelector('input.agslider[data-rng="'+id+'"]'); if(sld && v!=='' && String(sld.value)!==String(v)) sld.value=v;
-  const dsp=logTbl.querySelector('.actval[data-av="'+id+'"]'); if(dsp) dsp.textContent=(v===''?'—':v);   // keep the read-only Actual AG column in sync
   updateCorrRow(id,it); pushAgtron(id,v); }
 function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
   emptyLog.classList.toggle('hide', LOG.length>0);
@@ -900,10 +899,9 @@ function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
     tr.innerHTML=`<td>${r.date}<div class="small" style="color:var(--accent2);font-weight:700">#${batch}</div><div class="exlbl" data-hx="${r.id}">Heuristics</div></td>`+
       `<td>${esc(r.bean)}<div class="exlbl" data-log="${r.id}">Log</div></td>`+
       `<td class="num"><b class="tgtval">${r.targetAg!=null?r.targetAg:'—'}</b></td>`+
-      `<td class="num"><b class="tgtval actval" data-av="${r.id}">${av!==''?av:'—'}</b></td>`+
       `<td><button class="delx" data-del="${r.id}">×</button></td>`; tb.appendChild(tr);
-    const sr=document.createElement('tr'); sr.className='agrow slide'; sr.innerHTML=`<td colspan="5"><div class="slidewrap"><span class="aglbl">Actual AG</span><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}" style="width:52px"><button class="step" data-dec="${r.id}">−</button><input type="range" class="agslider" min="40" max="130" step="1" value="${sv}" data-rng="${r.id}"><button class="step" data-inc="${r.id}">+</button></div></td>`; tb.appendChild(sr);
-    const corr=corrLine(r); const cr=document.createElement('tr'); cr.className='corr'+(corr?'':' hide'); cr.dataset.corr=r.id; cr.innerHTML=`<td colspan="5">${corr?('↳ '+corr):''}</td>`; tb.appendChild(cr); });
+    const sr=document.createElement('tr'); sr.className='agrow slide'; sr.innerHTML=`<td colspan="4"><div class="aglbl" style="margin-bottom:5px">Actual Agtron</div><div class="slidewrap"><button class="step" data-dec="${r.id}">−</button><input type="range" class="agslider" min="40" max="130" step="1" value="${sv}" data-rng="${r.id}"><button class="step" data-inc="${r.id}">+</button><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}" style="width:54px;text-align:center"></div></td>`; tb.appendChild(sr);
+    const corr=corrLine(r); const cr=document.createElement('tr'); cr.className='corr'+(corr?'':' hide'); cr.dataset.corr=r.id; cr.innerHTML=`<td colspan="4">${corr?('↳ '+corr):''}</td>`; tb.appendChild(cr); });
   tb.querySelectorAll('[data-hx]').forEach(b=>b.onclick=()=>openHx(b.dataset.hx));
   tb.querySelectorAll('[data-log]').forEach(b=>b.onclick=()=>openLog(b.dataset.log));
   tb.querySelectorAll('input.act').forEach(i=>i.addEventListener('input',e=>setAgtron(e.target.dataset.id, e.target.value)));
