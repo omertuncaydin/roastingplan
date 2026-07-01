@@ -76,6 +76,7 @@ EN is the source of truth; the app is designed in English. This file holds the T
   - every 30s → "her 30sn"; every 60s → "her 60sn"
   - Temp entry is a custom scroll-wheel drum (30-260°C, no keyboard) that auto-jumps to the predicted next temp (one interval ahead of the recent rate); Log → "Kaydet". Layout A: curve on top with CIN/A0/DROP stage marks, wheel docked below.
   - Curve shows stage marks: CIN / A0 / DROP dashed lines at the times they happen (labels kept short/EN)
+  - Capture mode (roast with the calibration wheels, gauge stays cockpit): "Capture with wheels" → "Tekerlekle yakala"; "Hide capture" → "Yakalamayı gizle"; Record → "Kaydet"; hint line translated. CIN/A0/DROP recorded on the wheels advance the gauge phases; other stages log a temp point. Big button kept as fallback.
   - first reading at 30s → "ilk ölçüm 30. sn"; next reading in {n}s → "sonraki ölçüm {n}sn"; log bean °C now → "şimdi çekirdek °C gir"
   - Chart series: Bean °C → "Çekirdek °C"
 
