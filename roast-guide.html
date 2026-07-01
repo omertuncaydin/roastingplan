@@ -293,6 +293,17 @@
           <button class="spd" id="spd60" onclick="toggleSpeed(60)" style="opacity:.35;pointer-events:none">60×</button>
           <button class="spd" id="cancel" onclick="reset()" style="opacity:.35;pointer-events:none">Back</button>
         </div>
+        <div id="captureModule" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+          <button class="btn ghost" id="captureToggle" onclick="toggleCapture()" data-i18n="Capture with wheels">Capture with wheels</button>
+          <div id="captureBody" class="hide">
+            <div style="display:flex;gap:14px;align-items:flex-start;justify-content:center;margin-top:10px">
+              <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px" data-i18n="Stage">Stage</div><div class="wheelWrap"><div class="wheel" id="rcStageWheel"><div class="wheelInner" id="rcStageInner"></div></div><div class="wheelSel"></div></div></div>
+              <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px" data-i18n="Temp">Temp</div><div class="wheelWrap unit-c"><div class="wheel" id="rcTempWheel"><div class="wheelInner" id="rcTempInner"></div></div><div class="wheelSel"></div></div></div>
+              <button class="btn" style="width:auto;padding:14px 22px;margin-top:0" onclick="captureRecord()" data-i18n="Record">Record</button>
+            </div>
+            <div class="small" style="text-align:center;color:var(--muted);margin-top:6px" data-i18n="Pick the stage you just reached and its temp. CIN / A0 / DROP advance the roast; the rest log a point.">Pick the stage you just reached and its temp. CIN / A0 / DROP advance the roast; the rest log a point.</div>
+          </div>
+        </div>
         <div id="tempModule" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
           <button class="btn ghost" id="tempToggle" onclick="toggleTempCurve()">Show temp curve</button>
           <div id="tempBody" class="hide">
@@ -792,6 +803,24 @@ function setWheel(v){ const wh=document.getElementById('tempWheel'); if(!wh) ret
 function wheelValue(){ const wh=document.getElementById('tempWheel'); if(!wh) return NaN; return Math.max(TEMP_MIN,Math.min(TEMP_MAX, TEMP_MIN+Math.round(wh.scrollTop/WHEEL_ITEM))); }
 function predictNext(){ if(TEMPS.length>=2){ const n=TEMPS.length, a=TEMPS[n-2], b=TEMPS[n-1], dt=(b.t-a.t)/60; if(dt>0){ let p=b.temp + ((b.temp-a.temp)/dt)*(ROR_INT/60); if(b.t>=55 && p<b.temp) p=b.temp; return p; } }   // past the ~1min turnaround temp only rises, so never predict a drop below the current reading
   return TEMPS.length?TEMPS[TEMPS.length-1].temp:180; }
+// ---- Capture mode: roast with the calibration wheels while the gauge stays the cockpit ----
+const ROAST_CAP_STAGES=['READ','CIN','A0','A1','B0','B1','C0','C1','C2','DROP'];
+let CAP_ON=false;
+function nextCapStage(){ if(!st) return 'CIN'; if(st.phase==='pre0') return 'CIN'; if(st.phase==='pre1') return 'A0'; if(st.phase==='dev') return 'DROP'; return 'READ'; }
+function buildCaptureWheels(){ const si=document.getElementById('rcStageInner'), ti=document.getElementById('rcTempInner'); if(!si||!ti) return;
+  if(si.childElementCount!==ROAST_CAP_STAGES.length) fillWheel(si, ROAST_CAP_STAGES);
+  if(ti.childElementCount===0){ const temps=[]; for(let v=TEMP_MIN;v<=TEMP_MAX;v++) temps.push(v); fillWheel(ti, temps); }
+  setWheelIdx(document.getElementById('rcStageWheel'), Math.max(0,ROAST_CAP_STAGES.indexOf(nextCapStage())));
+  setWheelIdx(document.getElementById('rcTempWheel'), Math.max(0,Math.min(TEMP_MAX-TEMP_MIN, Math.round(predictNext())-TEMP_MIN))); }
+function toggleCapture(){ CAP_ON=!CAP_ON; const body=document.getElementById('captureBody'), tog=document.getElementById('captureToggle');
+  if(body) body.classList.toggle('hide',!CAP_ON); if(tog) tog.textContent=CAP_ON?T('Hide capture'):T('Capture with wheels');
+  if(CAP_ON) buildCaptureWheels(); }
+function captureRecord(){ if(!st||st.phase==='idle'||st.phase==='done') return;
+  const stage=ROAST_CAP_STAGES[Math.min(ROAST_CAP_STAGES.length-1,wheelIdx(document.getElementById('rcStageWheel')))], temp=Math.min(TEMP_MAX,TEMP_MIN+wheelIdx(document.getElementById('rcTempWheel')));
+  TEMPS.push({t:secSince(st.tStart), temp});   // every capture also logs a temp point for the curve
+  const advance=(stage==='CIN'&&st.phase==='pre0')||(stage==='A0'&&st.phase==='pre1')||(stage==='DROP'&&st.phase==='dev');
+  if(advance){ tap(); } else { draw(); updateTempChart(); }   // CIN/A0/DROP drive the gauge; other stages just log
+  buildCaptureWheels(); }
 function undoTemp(){ if(TEMPS.length){ TEMPS.pop(); updateTempChart(); buildWheel(); updateTempDue(); } }
 function tempActive(){ return st && st.phase!=='idle' && st.phase!=='done'; }
 function toggleTempCurve(){ TEMP_ON=!TEMP_ON; const body=document.getElementById('tempBody'), tog=document.getElementById('tempToggle');
