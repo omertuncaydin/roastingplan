@@ -205,13 +205,15 @@
     <div class="card" style="max-width:440px;width:100%;max-height:92vh;overflow:auto">
       <h1 style="margin:0 0 2px;font-size:18px">Deep Calibration</h1>
       <div class="small" id="calibBean" style="margin-bottom:8px"></div>
+      <div class="seg" id="calibMode" style="margin-bottom:10px"><button class="on" onclick="setCalibMode('soft',this)">Soft Mapping</button><button onclick="setCalibMode('hard',this)">Hard Mapping</button></div>
       <div style="text-align:center;margin-bottom:10px"><span id="calibTime" style="font-size:26px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums">0:00</span> <button class="btn ghost" id="calibStart" style="width:auto;display:inline-block;padding:6px 16px;margin:0" onclick="calibToggle()">Start</button></div>
       <div style="display:flex;gap:18px;align-items:flex-start;justify-content:center;margin-bottom:10px">
         <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px">Stage</div><div class="wheelWrap"><div class="wheel" id="calibStageWheel"><div class="wheelInner" id="calibStageInner"></div></div><div class="wheelSel"></div></div></div>
         <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px">Temp</div><div class="wheelWrap unit-c"><div class="wheel" id="calibTempWheel"><div class="wheelInner" id="calibTempInner"></div></div><div class="wheelSel"></div></div></div>
       </div>
       <button class="btn" onclick="recordSample()">Record sample</button>
-      <div id="calibList" style="margin-top:12px"></div>
+      <div style="height:170px;margin-top:12px"><canvas id="calibChart"></canvas></div>
+      <div id="calibList" style="margin-top:10px"></div>
       <div style="display:flex;gap:10px;margin-top:14px"><button class="btn" style="background:var(--accent2);color:#fff" onclick="finishCalib()">Finish &amp; save</button><button class="btn ghost" onclick="closeCalib()">Close</button></div>
     </div>
   </div>
@@ -253,6 +255,7 @@
         <div class="small hide" id="learnNote" style="margin-top:8px"></div>
       </div>
       <button class="btn" onclick="begin()" data-i18n="Start roasting">Start roasting</button>
+      <button class="btn ghost" onclick="deepCalibration()" style="margin-top:8px;border-color:var(--accent2);color:var(--accent2)">Deep Calibration</button>
     </div>
     <div id="live" class="hide">
       <div class="card">
@@ -361,7 +364,6 @@
       <button class="btn" style="margin-top:8px;background:var(--accent2);color:#fff" onclick="saveAsDefaults()">Save as defaults</button>
       <button class="btn ghost" style="margin-top:8px" onclick="resetRules()">Reset to defaults</button>
     </div>
-    <button class="btn ghost" style="margin-top:16px;border-color:var(--accent2);color:var(--accent2)" onclick="deepCalibration()">Deep Calibration Learning</button>
     <div class="small" id="rulesMsg" style="margin-top:10px;color:var(--accent2)"></div>
     <div class="small" id="rulesNote" style="margin-top:8px"></div>
   </div>
@@ -1455,31 +1457,40 @@ async function saveAsDefaults(){ if(!IS_ADMIN) return;
   if(sb){ const r=await sb.from('settings').upsert({id:1, rules:nr, defaults:nr, updated_at:new Date().toISOString()},{onConflict:'id'}).select(); if(r&&r.error){ rulesMsg.textContent='Save failed: '+r.error.message; return; } }
   renderRules(); rulesMsg.textContent='Saved as defaults. This is now the baseline and the live rule set.'; }
 function resetRules(){ RULES=JSON.parse(JSON.stringify(SAVED_DEFAULTS)); applyRules(); renderRules(); rulesMsg.textContent='Reset to saved defaults - tap Save rules to apply them live.'; }
-// ---- Deep Calibration: streamlined stage+temp capture, one Record per crack sample ----
-const STAGE_CODES=['CIN','A0','A1','B0','B1','C0','C1','C2','DROP'];
-let CALIB={samples:[],tStart:0,running:false}, calibTick=null;
-function fillWheel(inner, items){ if(!inner) return; if(inner.childElementCount!==items.length) inner.innerHTML=items.map(v=>'<div>'+v+'</div>').join(''); }
+// ---- Deep Calibration: streamlined stage+temp capture with a live map graph ----
+const STAGE_FULL=['pt','YLW','CIN','A0','A1','B0','B1','C0','C1','C2','2ND','DROP'];   // pt = extra unnamed temp point
+const STAGE_SOFT=['pt','YLW','CIN','A0','A1','B0','B1','C0','C1','DROP'];               // soft map stops before C2 + second crack
+let CALIB={samples:[],tStart:0,running:false,mode:'soft'}, calibTick=null, calibChart=null;
+function calibStages(){ return CALIB.mode==='hard'?STAGE_FULL:STAGE_SOFT; }
+function fillWheel(inner, items){ if(!inner) return; inner.innerHTML=items.map(v=>'<div>'+v+'</div>').join(''); }
 function wheelIdx(wh){ return wh?Math.max(0,Math.round(wh.scrollTop/WHEEL_ITEM)):0; }
 function setWheelIdx(wh,i){ if(wh) wh.scrollTop=Math.max(0,i)*WHEEL_ITEM; }
-function deepCalibration(){ const r=cur(); CALIB={samples:[],tStart:0,running:false}; if(calibTick){clearInterval(calibTick);calibTick=null;}
+function fillCalibStageWheel(){ fillWheel(document.getElementById('calibStageInner'), calibStages()); setWheelIdx(document.getElementById('calibStageWheel'), Math.max(0,calibStages().indexOf('YLW'))); }
+function setCalibMode(m,btn){ CALIB.mode=m; document.querySelectorAll('#calibMode button').forEach(b=>b.classList.toggle('on',b===btn)); fillCalibStageWheel(); }
+function deepCalibration(){ const r=cur(); CALIB={samples:[],tStart:0,running:false,mode:'soft'}; if(calibTick){clearInterval(calibTick);calibTick=null;} if(calibChart){try{calibChart.destroy();}catch(e){} calibChart=null;}
   document.getElementById('calibModal').style.display='flex';
   const cb=document.getElementById('calibBean'); if(cb) cb.textContent=r?('Calibrating '+r.name):'Pick a coffee on the Roast tab first';
-  const temps=[]; for(let v=TEMP_MIN;v<=TEMP_MAX;v++) temps.push(v);
-  fillWheel(document.getElementById('calibStageInner'), STAGE_CODES); fillWheel(document.getElementById('calibTempInner'), temps);
-  setWheelIdx(document.getElementById('calibStageWheel'), Math.max(0,STAGE_CODES.indexOf('A0'))); setWheelIdx(document.getElementById('calibTempWheel'), 180-TEMP_MIN);
+  document.querySelectorAll('#calibMode button').forEach((b,i)=>b.classList.toggle('on',i===0));   // Soft default
+  const temps=[]; for(let v=TEMP_MIN;v<=TEMP_MAX;v++) temps.push(v); fillWheel(document.getElementById('calibTempInner'), temps); setWheelIdx(document.getElementById('calibTempWheel'), 180-TEMP_MIN);
+  fillCalibStageWheel();
   const tEl=document.getElementById('calibTime'); if(tEl) tEl.textContent='0:00'; const sEl=document.getElementById('calibStart'); if(sEl) sEl.textContent='Start';
   renderCalibList(); }
-function closeCalib(){ if(calibTick){clearInterval(calibTick);calibTick=null;} const m=document.getElementById('calibModal'); if(m) m.style.display='none'; }
+function closeCalib(){ if(calibTick){clearInterval(calibTick);calibTick=null;} if(calibChart){try{calibChart.destroy();}catch(e){} calibChart=null;} const m=document.getElementById('calibModal'); if(m) m.style.display='none'; }
 function calibToggle(){ if(CALIB.running) return; CALIB.running=true; CALIB.tStart=vnow(); const sEl=document.getElementById('calibStart'); if(sEl) sEl.textContent='Running'; calibTick=setInterval(()=>{ const el=document.getElementById('calibTime'); if(el&&CALIB.running) el.textContent=fmt(secSince(CALIB.tStart)); },500); }
-function recordSample(){ const stage=STAGE_CODES[Math.min(STAGE_CODES.length-1,wheelIdx(document.getElementById('calibStageWheel')))], temp=Math.min(TEMP_MAX,TEMP_MIN+wheelIdx(document.getElementById('calibTempWheel'))), t=CALIB.running?secSince(CALIB.tStart):0;
+function recordSample(){ const st2=calibStages(), stage=st2[Math.min(st2.length-1,wheelIdx(document.getElementById('calibStageWheel')))], temp=Math.min(TEMP_MAX,TEMP_MIN+wheelIdx(document.getElementById('calibTempWheel'))), t=CALIB.running?secSince(CALIB.tStart):0;
   CALIB.samples.push({stage,temp,t}); renderCalibList(); }
-function renderCalibList(){ const el=document.getElementById('calibList'); if(!el) return;
-  if(!CALIB.samples.length){ el.innerHTML='<div class="small" style="text-align:center;color:var(--muted)">No samples yet. Spin stage + temp, scoop a sample, tap Record at each crack.</div>'; return; }
+function renderCalibList(){ const el=document.getElementById('calibList'); renderCalibChart();
+  if(!el) return; if(!CALIB.samples.length){ el.innerHTML='<div class="small" style="text-align:center;color:var(--muted)">No samples yet. Set the stage + temp, take a sample, tap Record at each stage.</div>'; return; }
   el.innerHTML=CALIB.samples.map((s,i)=>`<div class="hxrow"><span><b style="color:var(--accent)">${s.stage}</b> &nbsp; ${s.temp}°C &nbsp; <span class="small">${fmt(s.t)}</span></span><button class="delx" data-cs="${i}">×</button></div>`).join('');
   el.querySelectorAll('[data-cs]').forEach(b=>b.onclick=()=>{ CALIB.samples.splice(+b.dataset.cs,1); renderCalibList(); }); }
+function renderCalibChart(){ const cv=document.getElementById('calibChart'); if(!cv||typeof Chart==='undefined') return;
+  const pts=CALIB.samples.slice().sort((a,b)=>a.t-b.t).map(s=>({x:+(s.t/60).toFixed(3),y:s.temp,stg:s.stage}));
+  if(calibChart){ calibChart.data.datasets[0].data=pts; calibChart.update('none'); return; }
+  const lbl={id:'cl',afterDatasetsDraw(c){try{const arr=c.data.datasets[0].data,meta=c.getDatasetMeta(0).data,ctx=c.ctx;ctx.save();ctx.font='700 9px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillStyle='#e6c14b';meta.forEach((p,i)=>{const s=arr[i];if(!s||s.stg==='pt')return;ctx.fillText(s.stg,p.x,p.y-7);});ctx.restore();}catch(e){}}};
+  calibChart=new Chart(cv,{type:'line',data:{datasets:[{data:pts,borderColor:'#c98a3c',backgroundColor:'#c98a3c',tension:.3,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{type:'linear',min:0,title:{display:true,text:'minutes',color:'#a8998a',font:{size:10}},ticks:{color:'#a8998a',font:{size:10}},grid:{color:'#2a221b'}},y:{title:{display:true,text:'°C',color:'#a8998a',font:{size:10}},ticks:{color:'#c98a3c',font:{size:10}},grid:{color:'#2a221b'}}}},plugins:[lbl]}); }
 function finishCalib(){ const r=cur(); if(!CALIB.samples.length){ closeCalib(); return; }
-  try{ const all=JSON.parse(localStorage.getItem('gCalib')||'[]'); all.unshift({bean:r?r.name:'', date:new Date().toISOString().slice(0,10), samples:CALIB.samples}); localStorage.setItem('gCalib', JSON.stringify(all.slice(0,50))); }catch(e){}
-  const n=CALIB.samples.length; closeCalib(); if(typeof rulesMsg!=='undefined'&&rulesMsg) rulesMsg.textContent='Saved '+n+' calibration samples'+(r?(' for '+r.name):'')+'. Cup them next in Value Assessment, Build Cupping Session.'; }
+  try{ const all=JSON.parse(localStorage.getItem('gCalib')||'[]'); all.unshift({bean:r?r.name:'', date:new Date().toISOString().slice(0,10), mode:CALIB.mode, samples:CALIB.samples}); localStorage.setItem('gCalib', JSON.stringify(all.slice(0,50))); }catch(e){}
+  const n=CALIB.samples.length; closeCalib(); if(typeof rulesMsg!=='undefined'&&rulesMsg) rulesMsg.textContent='Saved '+n+' calibration points'+(r?(' for '+r.name):'')+'.'; }
 function esc(s){ return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 function buildBeans(){ const cur=bean.value; bean.innerHTML=`<option value="">${T('Pick your coffee')}</option><option value="__newrecipe__">${T('Add new coffee')}</option>`; getRecipes().filter(r=>r.active).forEach(r=>{ const o=document.createElement('option'); o.value=r.name; o.textContent=r.name; bean.appendChild(o); }); if(cur&&getRecipes().some(r=>r.name===cur&&r.active)) bean.value=cur; else bean.value=''; refresh(); }
 
