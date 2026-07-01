@@ -699,15 +699,17 @@ function begin(){
   const s=rstr(r,equip.value), fc=parseFc(s), target=parseStage(s);
   st={ name:r.name, eq:equip.value, fc, scale:fcScale(fc), target, targetAg:parseAg(s), dev:parseDev(s), power:parseP(s),
        learned:getLearned(r.name,equip.value)||{}, phase:'idle', tStart:0, tCin:0, tA0:0, pace:1, cinToA0Actual:0 };
-  liveBean.textContent = r.name+'  ·  '+equip.value+'  ·  FC '+fmt(fcActual(fc))+'  ·  drop at '+target+(parseAg(s)!=null?'  ('+parseAg(s)+'A)':'')+(st.power?'  ·  '+st.power.dir+'P'+st.power.n:'');
+  liveBean.textContent = r.name+'  ·  '+equip.value+'  ·  FC '+fmt(fcActual(fc))+'  ·  drop at '+target+(parseAg(s)!=null?'  ('+parseAg(s)+'A)':'')+(st.power?'  ·  '+st.power.dir+'P'+st.power.n:'')+(roastCalibForBean()?'  ·  ✓ cal':'');
+  st.calOffs={}; st.calDrop=null;   // per-bean stage timing pulled from the calibration (A0-relative), used by the gauge when present
+  { const a0=calibStageTime('A0'); if(a0!=null){ STAGES.forEach(x=>{ if(x.pre||x.code==='A0') return; const tt=calibStageTime(x.code); if(tt!=null&&tt>a0) st.calOffs[x.code]=tt-a0; }); const dt=calibStageTime('DROP'); if(dt!=null&&dt>a0) st.calDrop=dt-a0; } }
   setup.classList.add('hide'); live.classList.remove('hide'); undoBtn.classList.add('hide');
   draw(); requestWake();
 }
 function targetU(){ const t=STAGES.find(s=>s.code===st.target); return t?t.u:0.73; }
 function expCinToA0(){ return RULES.cinToA0 * st.scale; }                    // expected cinnamon->A0 (scaled)
-function dropOffset(){ return st.dev * st.scale * st.pace; }                 // predicted A0->drop: dev time, FC-scaled, paced by cinnamon->A0
+function dropOffset(){ return ((st.calDrop!=null? st.calDrop : st.dev*st.scale)) * st.pace; }   // A0->drop: calibrated if mapped, else recipe dev, then paced live
 function devCues(){ const ti=stIdx(st.target), drop=dropOffset();           // intermediate stage cues that fall before the drop
-  return STAGES.filter(s=>s.off!=null && s.code!=='A0' && stIdx(s.code)<ti).map(s=>({code:s.code, t:s.off*st.scale*st.pace})).filter(c=>c.t<drop-1); }
+  return STAGES.filter(s=>s.off!=null && s.code!=='A0' && stIdx(s.code)<ti).map(s=>({code:s.code, t:((st.calOffs&&st.calOffs[s.code]!=null)? st.calOffs[s.code] : s.off*st.scale)*st.pace})).filter(c=>c.t<drop-1); }
 
 function tap(){
   const now=vnow();
@@ -754,8 +756,8 @@ function draw(){
   else if(st.phase==='pre0'){ const e=secSince(st.tStart); bb.textContent='CINNAMON'; ph='Building toward cinnamon.'; sub=(st.power?('At cinnamon, '+powerText(st.power)+'. '):'')+'Tap CINNAMON when the beans turn cinnamon.'; nextU=0.50; rem=st.fc-e; top='CIN'; bot=rem>=0?(fmtAbs(rem)+' to cinnamon'):'cinnamon now'; cnt=fmt(e)+' since start'; }
   else if(st.phase==='pre1'){ const e=secSince(st.tStart); bb.textContent='FIRST CRACK (A0)'; bb.classList.add('crack'); ph='Cinnamon marked.'; sub=(st.power?('Now: '+powerText(st.power)+'. '):'')+'Tap the moment first crack starts.'; nextU=0.55; rem=expCinToA0()-secSince(st.tCin); top='A0'; bot=rem>=0?(fmtAbs(rem)+' to first crack'):'crack now'; cnt=fmt(e)+' since start'; }
   else if(st.phase==='dev'){ const eA0=secSince(st.tA0), drop=dropOffset(); bb.textContent='DROP / FINISH'; bb.classList.add('drop'); nextU=du; rem=drop-eA0; top=st.target; bot=rem>=0?(fmtAbs(rem)+' to drop'):'drop now'; cnt=fmt(eA0)+' since first crack'; ph='Developing toward '+st.target+' - drop when you reach it.';
-    let s2=''; for(const c of devCues()){ if(eA0<c.t){ s2='next cue: '+c.code+' ~ '+fmtAbs(c.t-eA0); break; } if(eA0<c.t+4){ s2=c.code+' around now'; break; } }
-    sub = s2 || ('drop target: '+st.target+(st.targetAg!=null?' ('+st.targetAg+'A)':'')); }
+    let s2=''; for(const c of devCues()){ if(eA0<c.t){ s2='next cue: '+c.code+' ~ '+fmtAbs(c.t-eA0)+calTempStr(c.code); break; } if(eA0<c.t+4){ s2=c.code+' around now'+calTempStr(c.code); break; } }
+    sub = s2 || ('drop target: '+st.target+(st.targetAg!=null?' ('+st.targetAg+'A)':'')+calTempStr(st.target)); }
   else { bb.textContent='New roast'; bb.onclick=reset; top='done'; bot=''; ph='Roast finished and learned.'; sub='Enter the actual Agtron in <a href="#" onclick="show(\'hist\');return false;" style="color:var(--accent);text-decoration:underline">History</a>. &nbsp;·&nbsp; <a href="#" onclick="cupThisRoast();return false;" style="color:var(--accent2);text-decoration:underline">Cup this coffee</a>'; }
   gauge.innerHTML = renderGauge(uNow(now), nextU, dropU, top, bot, true);   // stage marks on the live gauge only
   phase.textContent=ph; psub.innerHTML=sub;
@@ -824,7 +826,11 @@ const tempTipPlugin={ id:'tempTip', afterDatasetsDraw(chart){ try{ const dss=cha
   const pts=chart.getDatasetMeta(di).data; if(!pts||!pts.length) return; const last=pts[pts.length-1], arr=dss[di].data, lv=arr[arr.length-1]; if(lv==null) return;
   const y=(typeof lv==='object')?lv.y:lv, ctx=chart.ctx; ctx.save(); ctx.fillStyle='#c98a3c'; ctx.font='800 14px -apple-system,sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='left';
   let x=last.x+7; const txt=Math.round(y)+'°'; if(x+ctx.measureText(txt).width+4>chart.chartArea.right) x=chart.chartArea.right-ctx.measureText(txt).width-2; ctx.fillText(txt, x, last.y); ctx.restore(); }catch(e){} } };
-function roastCalibGhost(){ if(typeof st==='undefined'||!st||!st.name) return null; try{ const c=(JSON.parse(localStorage.getItem('gCalib')||'[]')).find(x=>x.bean===st.name && (x.machine===st.eq||!x.machine)); if(c&&c.samples&&c.samples.length) return c.samples.slice().sort((a,b)=>a.t-b.t).map(s=>({x:+(s.t/60).toFixed(3),y:s.temp})); }catch(e){} return null; }
+function roastCalibForBean(){ if(typeof st==='undefined'||!st||!st.name) return null; try{ return (JSON.parse(localStorage.getItem('gCalib')||'[]')).find(x=>x.bean===st.name && x.machine===st.eq)||null; }catch(e){ return null; } }
+function roastCalibGhost(){ const c=roastCalibForBean(); if(c&&c.samples&&c.samples.length) return c.samples.slice().sort((a,b)=>a.t-b.t).map(s=>({x:+(s.t/60).toFixed(3),y:s.temp})); return null; }
+function calibStageTemp(code){ const c=roastCalibForBean(); if(!c||!c.samples) return null; const m=c.samples.filter(s=>s.stage===code); if(!m.length) return null; return Math.round(m.reduce((a,b)=>a+b.temp,0)/m.length); }   // calibrated temp for a crack stage
+function calTempStr(code){ const t=calibStageTemp(code); return t!=null?(' · ~'+t+'°'):''; }
+function calibStageTime(code){ const c=roastCalibForBean(); if(!c||!c.samples) return null; const m=c.samples.filter(s=>s.stage===code); if(!m.length) return null; return m.reduce((a,b)=>a+b.t,0)/m.length; }   // calibrated A0-relative time comes from these
 function updateTempChart(){ const cv=document.getElementById('tempChart'); if(!cv||typeof Chart==='undefined') return;
   const pts=TEMPS.map(p=>({x:+(p.t/60).toFixed(3), y:p.temp}));   // x = real elapsed minutes, so each reading lands at its actual time
   const ds=[{label:'Bean °C',data:pts,borderColor:'#c98a3c',backgroundColor:'#c98a3c',yAxisID:'y',tension:.3,pointRadius:3}];
@@ -1488,7 +1494,7 @@ function calSettingsRead(){ const g=id=>{const e=document.getElementById(id);ret
 function calSettingsFill(s){ s=s||{}; const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';}; set('calBatch',s.batch);set('calFlame',s.flame);set('calFan',s.fan);set('calDrum',s.drum); }
 function machDefaults(m){ try{ return (JSON.parse(localStorage.getItem('gMachDef')||'{}'))[m]||{}; }catch(e){ return {}; } }
 function saveMachDefaults(m,s){ try{ const all=JSON.parse(localStorage.getItem('gMachDef')||'{}'); all[m]=s; localStorage.setItem('gMachDef',JSON.stringify(all)); }catch(e){} }
-function loadCalibFor(bean,m){ try{ return (JSON.parse(localStorage.getItem('gCalib')||'[]')).find(c=>c.bean===bean && (c.machine===m||!c.machine)); }catch(e){ return null; } }
+function loadCalibFor(bean,m){ try{ return (JSON.parse(localStorage.getItem('gCalib')||'[]')).find(c=>c.bean===bean && c.machine===m); }catch(e){ return null; } }
 function calibStartFresh(){ CALIB.samples=[]; const note=document.getElementById('calibNote'); if(note) note.textContent=''; const dv=document.getElementById('calibDev'); if(dv) dv.textContent=''; renderCalibList(); }
 function renderCalibHistory(){ const el=document.getElementById('calibHist'); if(!el) return; let all=[]; try{ all=JSON.parse(localStorage.getItem('gCalib')||'[]'); }catch(e){}
   if(!all.length){ el.innerHTML='<div class="small" style="color:var(--muted)">'+T('None saved yet.')+'</div>'; return; }
@@ -1538,7 +1544,7 @@ function renderCalibChart(){ const cv=document.getElementById('calibChart'); if(
 function saveCalibMap(){ const r=cur(), machine=calibMachine(), settings=calSettingsRead(); if(machine) saveMachDefaults(machine,settings);   // machine settings persist for next sessions
   if(!CALIB.samples.length) return;
   try{ let all=JSON.parse(localStorage.getItem('gCalib')||'[]'); const rec={bean:r?r.name:'', machine, date:new Date().toISOString().slice(0,10), mode:CALIB.mode, settings, samples:CALIB.samples};
-    const i=all.findIndex(c=>c.bean===rec.bean && (c.machine===machine||!c.machine)); if(i>=0) all[i]=rec; else all.unshift(rec); localStorage.setItem('gCalib', JSON.stringify(all.slice(0,60))); }catch(e){} }
+    const i=all.findIndex(c=>c.bean===rec.bean && c.machine===machine); if(i>=0) all[i]=rec; else all.unshift(rec); localStorage.setItem('gCalib', JSON.stringify(all.slice(0,60))); }catch(e){} }
 function finishCalib(){ const n=CALIB.samples.length, r=cur(), machine=calibMachine(); saveCalibMap(); closeCalib(); if(typeof rulesMsg!=='undefined'&&rulesMsg) rulesMsg.textContent='Saved '+n+' calibration points'+(r?(' for '+r.name):'')+' on '+machine+'.'; }
 function cupStarred(){ const starred=CALIB.samples.filter(s=>s.cup); const note=document.getElementById('calibNote');
   if(!starred.length){ if(note){ note.style.color='var(--warn)'; note.textContent=T('Star the stages you sampled first (tap the ☆).'); } return; }
