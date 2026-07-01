@@ -104,6 +104,8 @@
   .wheelInner div{height:20px;line-height:20px;text-align:center;scroll-snap-align:center;font-size:17px;color:var(--muted);font-variant-numeric:tabular-nums}
   .wheelSel{position:absolute;left:0;right:0;top:50px;height:20px;border-top:1px solid var(--accent);border-bottom:1px solid var(--accent);pointer-events:none}
   .unit-c .wheelSel:after{content:'°C';position:absolute;right:6px;top:2px;font-size:10px;color:var(--muted)}
+  @keyframes calibPulse{0%,100%{box-shadow:0 0 0 0 rgba(60,122,90,.65);transform:scale(1)}50%{box-shadow:0 0 0 9px rgba(60,122,90,0);transform:scale(1.05)}}
+  .calibGo{background:var(--accent2)!important;color:#fff!important;border-color:var(--accent2)!important;font-weight:800;animation:calibPulse 1.15s ease-in-out infinite}
   .rtools{display:flex;gap:8px;margin-bottom:12px}.rtools button{flex:1}
   .ritem{border-bottom:1px solid var(--line);padding:9px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
   .ritem:last-child{border-bottom:none}
@@ -203,28 +205,28 @@
 
   <div id="calibModal" onclick="if(event.target===this)closeCalib()" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:none;align-items:center;justify-content:center;padding:16px">
     <div class="card" style="max-width:440px;width:100%;max-height:92vh;overflow:auto">
-      <h1 style="margin:0 0 2px;font-size:18px">Deep Calibration</h1>
+      <h1 style="margin:0 0 2px;font-size:18px" data-i18n="Deep Calibration">Deep Calibration</h1>
       <div class="small" id="calibBean" style="margin-bottom:4px"></div>
       <div class="small" id="calibNote" style="margin-bottom:8px;color:var(--accent2)"></div>
-      <div class="seg" id="calibMode" style="margin-bottom:10px"><button class="on" onclick="setCalibMode('soft',this)">Soft Mapping</button><button onclick="setCalibMode('hard',this)">Hard Mapping</button></div>
+      <div class="seg" id="calibMode" style="margin-bottom:10px"><button class="on" onclick="setCalibMode('soft',this)" data-i18n="Soft Mapping">Soft Mapping</button><button onclick="setCalibMode('hard',this)" data-i18n="Hard Mapping">Hard Mapping</button></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-        <label style="display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600">Batch (g)<input type="text" id="calBatch" inputmode="numeric" style="font-size:15px"></label>
-        <label style="display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600">Flame/Power<input type="text" id="calFlame" style="font-size:15px"></label>
-        <label style="display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600">Fan<input type="text" id="calFan" style="font-size:15px"></label>
-        <label style="display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600">Drum<input type="text" id="calDrum" style="font-size:15px"></label>
+        <label style="display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600"><span data-i18n="Batch (g)">Batch (g)</span><input type="text" id="calBatch" inputmode="numeric" style="font-size:15px"></label>
+        <label style="display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600"><span data-i18n="Flame/Power">Flame/Power</span><input type="text" id="calFlame" style="font-size:15px"></label>
+        <label style="display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600"><span data-i18n="Fan">Fan</span><input type="text" id="calFan" style="font-size:15px"></label>
+        <label style="display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600"><span data-i18n="Drum">Drum</span><input type="text" id="calDrum" style="font-size:15px"></label>
       </div>
-      <div style="text-align:center;margin-bottom:4px"><span id="calibTime" style="font-size:26px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums">0:00</span> <button class="btn ghost" id="calibStart" style="width:auto;display:inline-block;padding:6px 16px;margin:0" onclick="calibToggle()">Start</button></div>
+      <div style="text-align:center;margin-bottom:4px"><span id="calibTime" style="font-size:26px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums">0:00</span> <button class="btn ghost calibGo" id="calibStart" style="width:auto;display:inline-block;padding:6px 18px;margin:0" onclick="calibToggle()" data-i18n="Start">Start</button></div>
       <div class="small" id="calibDev" style="text-align:center;color:var(--accent);min-height:14px;margin-bottom:8px"></div>
       <div style="display:flex;gap:18px;align-items:flex-start;justify-content:center;margin-bottom:10px">
-        <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px">Stage</div><div class="wheelWrap"><div class="wheel" id="calibStageWheel"><div class="wheelInner" id="calibStageInner"></div></div><div class="wheelSel"></div></div></div>
-        <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px">Temp</div><div class="wheelWrap unit-c"><div class="wheel" id="calibTempWheel"><div class="wheelInner" id="calibTempInner"></div></div><div class="wheelSel"></div></div></div>
+        <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px" data-i18n="Stage">Stage</div><div class="wheelWrap"><div class="wheel" id="calibStageWheel"><div class="wheelInner" id="calibStageInner"></div></div><div class="wheelSel"></div></div></div>
+        <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px" data-i18n="Temp">Temp</div><div class="wheelWrap unit-c"><div class="wheel" id="calibTempWheel"><div class="wheelInner" id="calibTempInner"></div></div><div class="wheelSel"></div></div></div>
       </div>
-      <div style="display:flex;gap:8px"><button class="btn" onclick="recordSample()">Record sample</button><button class="btn ghost" style="width:auto;padding:0 20px;margin-top:0" onclick="undoCalibSample()">Undo</button></div>
+      <div style="display:flex;gap:8px"><button class="btn" onclick="recordSample()" data-i18n="Record sample">Record sample</button><button class="btn ghost" style="width:auto;padding:0 20px;margin-top:0" onclick="undoCalibSample()" data-i18n="Undo">Undo</button></div>
       <div style="height:170px;margin-top:12px"><canvas id="calibChart"></canvas></div>
       <div id="calibList" style="margin-top:10px"></div>
-      <button class="btn" style="background:var(--accent);color:#1a1410;margin-top:12px" onclick="cupStarred()">Cup starred samples</button>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn" style="background:var(--accent2);color:#fff" onclick="finishCalib()">Finish &amp; save</button><button class="btn ghost" onclick="calibStartFresh()">Start fresh</button><button class="btn ghost" onclick="closeCalib()">Close</button></div>
-      <div class="small" style="margin-top:16px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Saved maps</div>
+      <button class="btn" style="background:var(--accent);color:#1a1410;margin-top:12px" onclick="cupStarred()" data-i18n="Cup starred samples">Cup starred samples</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn" style="background:var(--accent2);color:#fff" onclick="finishCalib()" data-i18n="Finish &amp; save">Finish &amp; save</button><button class="btn ghost" onclick="calibStartFresh()" data-i18n="Start fresh">Start fresh</button><button class="btn ghost" onclick="closeCalib()" data-i18n="Close">Close</button></div>
+      <div class="small" style="margin-top:16px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px" data-i18n="Saved maps">Saved maps</div>
       <div id="calibHist" style="margin-top:4px"></div>
     </div>
   </div>
@@ -266,7 +268,7 @@
         <div class="small hide" id="learnNote" style="margin-top:8px"></div>
       </div>
       <button class="btn" onclick="begin()" data-i18n="Start roasting">Start roasting</button>
-      <button class="btn ghost" onclick="deepCalibration()" style="margin-top:8px;border-color:var(--accent2);color:var(--accent2)">Deep Calibration</button>
+      <button class="btn ghost" onclick="deepCalibration()" style="margin-top:8px;border-color:var(--accent2);color:var(--accent2)" data-i18n="Deep Calibration">Deep Calibration</button>
     </div>
     <div id="live" class="hide">
       <div class="card">
@@ -1391,6 +1393,7 @@ const DICT={ tr:{
  "START":"BAŞLA","CINNAMON":"TARÇIN","FIRST CRACK (A0)":"İLK ÇITIRTI (A0)","DROP / FINISH":"BOŞALT / BİTİR","New roast":"Yeni kavurma",
  "Tap START when the roast begins.":"Kavurma başladığında BAŞLA'ya dokun.","Roast finished and learned.":"Kavurma bitti ve öğrenildi.",
  "Cup this coffee":"Bu kahveyi tadımla","Deep Calibration Learning":"Derin Kalibrasyon Öğrenmesi",
+ "Deep Calibration":"Derin Kalibrasyon","Soft Mapping":"Yumuşak Harita","Hard Mapping":"Sert Harita","Batch (g)":"Parti (g)","Flame/Power":"Alev/Güç","Fan":"Fan","Drum":"Tambur","Stage":"Kademe","Temp":"Sıcaklık","Record sample":"Numuneyi kaydet","Undo":"Geri al","Cup starred samples":"Yıldızlı numuneleri tadımla","Finish & save":"Bitir ve kaydet","Start fresh":"Sıfırdan başla","Close":"Kapat","Saved maps":"Kayıtlı haritalar","Start":"Başlat","Running":"Çalışıyor","Load":"Yükle","None saved yet.":"Henüz kayıt yok.","Pick a coffee on the Roast tab first.":"Önce Kavurma sekmesinden bir kahve seç.","Star the stages you sampled first (tap the ☆).":"Önce numune aldığın kademeleri yıldızla (☆ dokun).","No samples yet. Set the stage + temp, take a sample, tap Record at each stage.":"Henüz numune yok. Kademe + sıcaklığı ayarla, numune al, her kademede Kaydet'e dokun.","Dev time (A0 to drop): ":"Gelişim süresi (A0'dan boşaltmaya): ","Calibrating ":"Kalibrasyon: ",
  "Save rules":"Kuralları kaydet","Save as defaults":"Varsayılan olarak kaydet","Reset to defaults":"Varsayılanlara dön",
  // cup
  "Combined":"Birleşik","Sample # / coffee":"Numune # / kahve","cupping score":"tadım puanı",
@@ -1488,8 +1491,8 @@ function saveMachDefaults(m,s){ try{ const all=JSON.parse(localStorage.getItem('
 function loadCalibFor(bean,m){ try{ return (JSON.parse(localStorage.getItem('gCalib')||'[]')).find(c=>c.bean===bean && (c.machine===m||!c.machine)); }catch(e){ return null; } }
 function calibStartFresh(){ CALIB.samples=[]; const note=document.getElementById('calibNote'); if(note) note.textContent=''; const dv=document.getElementById('calibDev'); if(dv) dv.textContent=''; renderCalibList(); }
 function renderCalibHistory(){ const el=document.getElementById('calibHist'); if(!el) return; let all=[]; try{ all=JSON.parse(localStorage.getItem('gCalib')||'[]'); }catch(e){}
-  if(!all.length){ el.innerHTML='<div class="small" style="color:var(--muted)">None saved yet.</div>'; return; }
-  el.innerHTML=all.map((c,i)=>`<div class="hxrow"><span>${esc(c.bean||'?')} <span class="small">${esc(c.machine||'')} · ${c.date} · ${(c.samples||[]).length}pts</span></span><span><button class="iconbtn" data-lc="${i}">Load</button> <button class="delx" data-dc="${i}">×</button></span></div>`).join('');
+  if(!all.length){ el.innerHTML='<div class="small" style="color:var(--muted)">'+T('None saved yet.')+'</div>'; return; }
+  el.innerHTML=all.map((c,i)=>`<div class="hxrow"><span>${esc(c.bean||'?')} <span class="small">${esc(c.machine||'')} · ${c.date} · ${(c.samples||[]).length}pts</span></span><span><button class="iconbtn" data-lc="${i}">${T('Load')}</button> <button class="delx" data-dc="${i}">×</button></span></div>`).join('');
   el.querySelectorAll('[data-lc]').forEach(b=>b.onclick=()=>loadCalibEntry(+b.dataset.lc));
   el.querySelectorAll('[data-dc]').forEach(b=>b.onclick=()=>delCalibEntry(+b.dataset.dc)); }
 function loadCalibEntry(i){ try{ const all=JSON.parse(localStorage.getItem('gCalib')||'[]'), c=all[i]; if(!c) return; CALIB.samples=(c.samples||[]).slice(); CALIB.mode=c.mode||'soft';
@@ -1500,29 +1503,29 @@ function deepCalibration(){ const r=cur(), machine=calibMachine(); if(calibTick)
   const prior = r? loadCalibFor(r.name,machine) : null;
   CALIB={samples: prior?prior.samples.slice():[], tStart:0, running:false, mode:(prior&&prior.mode)?prior.mode:'soft'};
   document.getElementById('calibModal').style.display='flex';
-  const cb=document.getElementById('calibBean'); if(cb) cb.textContent=r?('Calibrating '+r.name+(machine?(' · '+machine):'')):'Pick a coffee on the Roast tab first';
+  const cb=document.getElementById('calibBean'); if(cb) cb.textContent=r?(T('Calibrating ')+r.name+(machine?(' · '+machine):'')):T('Pick a coffee on the Roast tab first.');
   const note=document.getElementById('calibNote'); if(note) note.textContent = prior? ('Continuing this map: '+prior.samples.length+' points saved '+prior.date+'. Add more or Start fresh.') : '';
   document.querySelectorAll('#calibMode button').forEach((b,i)=>b.classList.toggle('on', CALIB.mode==='hard'?i===1:i===0));
   calSettingsFill( (prior&&prior.settings)?prior.settings:machDefaults(machine) );
   const temps=[]; for(let v=TEMP_MIN;v<=TEMP_MAX;v++) temps.push(v); fillWheel(document.getElementById('calibTempInner'), temps); setWheelIdx(document.getElementById('calibTempWheel'), 180-TEMP_MIN);
   fillCalibStageWheel();
-  const tEl=document.getElementById('calibTime'); if(tEl) tEl.textContent='0:00'; const sEl=document.getElementById('calibStart'); if(sEl) sEl.textContent='Start'; const dv=document.getElementById('calibDev'); if(dv) dv.textContent='';
+  const tEl=document.getElementById('calibTime'); if(tEl) tEl.textContent='0:00'; const sEl=document.getElementById('calibStart'); if(sEl){ sEl.classList.add('calibGo'); sEl.textContent=T('Start'); } const dv=document.getElementById('calibDev'); if(dv) dv.textContent='';
   renderCalibList(); renderCalibHistory(); }
 function closeCalib(){ if(calibTick){clearInterval(calibTick);calibTick=null;} if(calibChart){try{calibChart.destroy();}catch(e){} calibChart=null;} const m=document.getElementById('calibModal'); if(m) m.style.display='none'; }
-function calibToggle(){ if(CALIB.running) return; if(!cur()){ const note=document.getElementById('calibNote'); if(note){ note.textContent='Pick a coffee on the Roast tab first.'; note.style.color='var(--warn)'; } return; }
+function calibToggle(){ if(CALIB.running) return; if(!cur()){ const note=document.getElementById('calibNote'); if(note){ note.textContent=T('Pick a coffee on the Roast tab first.'); note.style.color='var(--warn)'; } return; }
   CALIB.running=true; CALIB.tStart=vnow();
   const temp=Math.min(TEMP_MAX,TEMP_MIN+wheelIdx(document.getElementById('calibTempWheel'))); CALIB.samples.push({stage:'CHG',temp,t:0});   // Start records the charge sample
   setWheelIdx(document.getElementById('calibStageWheel'), Math.max(0,calibStages().indexOf('READ'))); renderCalibList();
-  const sEl=document.getElementById('calibStart'); if(sEl) sEl.textContent='Running'; calibTick=setInterval(()=>{ const el=document.getElementById('calibTime'); if(el&&CALIB.running) el.textContent=fmt(secSince(CALIB.tStart)); },500); }
+  const sEl=document.getElementById('calibStart'); if(sEl){ sEl.classList.remove('calibGo'); sEl.textContent=T('Running'); } calibTick=setInterval(()=>{ const el=document.getElementById('calibTime'); if(el&&CALIB.running) el.textContent=fmt(secSince(CALIB.tStart)); },500); }
 function recordSample(){ const st2=calibStages(), swh=document.getElementById('calibStageWheel'), idx=Math.min(st2.length-1,wheelIdx(swh)), stage=st2[idx], temp=Math.min(TEMP_MAX,TEMP_MIN+wheelIdx(document.getElementById('calibTempWheel'))), t=CALIB.running?secSince(CALIB.tStart):0;
   CALIB.samples.push({stage,temp,t});
   if(stage==='DROP'){ if(calibTick){clearInterval(calibTick);calibTick=null;} const tEl=document.getElementById('calibTime'); if(tEl) tEl.textContent=fmt(t);   // drop freezes the clock + computes dev time
-    const a0=CALIB.samples.find(s=>s.stage==='A0'); const dv=document.getElementById('calibDev'); if(dv) dv.textContent = a0? ('Dev time (A0 to drop): '+fmt(Math.max(0,t-a0.t))) : ''; }
+    const a0=CALIB.samples.find(s=>s.stage==='A0'); const dv=document.getElementById('calibDev'); if(dv) dv.textContent = a0? (T('Dev time (A0 to drop): ')+fmt(Math.max(0,t-a0.t))) : ''; }
   if(stage!=='READ') setWheelIdx(swh, Math.min(st2.length-1, idx+1));   // advance to next stage; READ repeats until you move it
   renderCalibList(); }
 function undoCalibSample(){ if(!CALIB.samples.length) return; const last=CALIB.samples.pop(); const i=calibStages().indexOf(last.stage); if(i>=0) setWheelIdx(document.getElementById('calibStageWheel'), i); const dv=document.getElementById('calibDev'); if(dv&&last.stage==='DROP') dv.textContent=''; renderCalibList(); }
 function renderCalibList(){ const el=document.getElementById('calibList'); renderCalibChart();
-  if(!el) return; if(!CALIB.samples.length){ el.innerHTML='<div class="small" style="text-align:center;color:var(--muted)">No samples yet. Set the stage + temp, take a sample, tap Record at each stage.</div>'; return; }
+  if(!el) return; if(!CALIB.samples.length){ el.innerHTML='<div class="small" style="text-align:center;color:var(--muted)">'+T('No samples yet. Set the stage + temp, take a sample, tap Record at each stage.')+'</div>'; return; }
   el.innerHTML=CALIB.samples.map((s,i)=>`<div class="hxrow"><span><button data-star="${i}" style="background:none;border:none;cursor:pointer;font-size:15px;padding:0 4px 0 0;color:${s.cup?'var(--gold)':'var(--muted)'}">${s.cup?'★':'☆'}</button><b style="color:var(--accent)">${s.stage}</b> &nbsp; ${s.temp}°C &nbsp; <span class="small">${fmt(s.t)}</span>${s.cup?` &nbsp; <input data-ag="${i}" type="number" inputmode="numeric" placeholder="AG" value="${s.agtron!=null?s.agtron:''}" style="width:52px;padding:4px;font-size:13px;text-align:center">`:''}</span><button class="delx" data-cs="${i}">×</button></div>`).join('');
   el.querySelectorAll('[data-star]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.star; CALIB.samples[i].cup=!CALIB.samples[i].cup; renderCalibList(); });
   el.querySelectorAll('[data-ag]').forEach(inp=>inp.addEventListener('input',e=>{ const i=+e.target.dataset.ag, v=parseFloat(e.target.value); CALIB.samples[i].agtron=isNaN(v)?null:v; }));
@@ -1538,7 +1541,7 @@ function saveCalibMap(){ const r=cur(), machine=calibMachine(), settings=calSett
     const i=all.findIndex(c=>c.bean===rec.bean && (c.machine===machine||!c.machine)); if(i>=0) all[i]=rec; else all.unshift(rec); localStorage.setItem('gCalib', JSON.stringify(all.slice(0,60))); }catch(e){} }
 function finishCalib(){ const n=CALIB.samples.length, r=cur(), machine=calibMachine(); saveCalibMap(); closeCalib(); if(typeof rulesMsg!=='undefined'&&rulesMsg) rulesMsg.textContent='Saved '+n+' calibration points'+(r?(' for '+r.name):'')+' on '+machine+'.'; }
 function cupStarred(){ const starred=CALIB.samples.filter(s=>s.cup); const note=document.getElementById('calibNote');
-  if(!starred.length){ if(note){ note.style.color='var(--warn)'; note.textContent='Star the stages you sampled first (tap the ☆).'; } return; }
+  if(!starred.length){ if(note){ note.style.color='var(--warn)'; note.textContent=T('Star the stages you sampled first (tap the ☆).'); } return; }
   const r=cur(), bean=r?r.name:''; saveCalibMap();
   FLIGHT={ date:new Date().toISOString().slice(0,10), purpose:(('Calibration '+bean).trim()), coffees: starred.map(s=>({sample:((bean?bean+' ':'')+s.stage+(s.agtron!=null?(' '+s.agtron+'A'):'')), cup:blankCup()})) };
   closeCalib(); show('flight'); }

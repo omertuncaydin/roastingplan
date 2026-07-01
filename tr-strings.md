@@ -69,7 +69,7 @@ EN is the source of truth; the app is designed in English. This file holds the T
 - Test speed buttons (30×/60×) now locked behind a 🔒/🔓 toggle so they aren't pressed by accident mid-roast (icons, no translation)
 - Cup this coffee → "Bu kahveyi tadımla"
 - Deep Calibration Learning → "Derin Kalibrasyon Öğrenmesi"
-- Deep Calibration modal (built 2026-06-30): title "Deep Calibration" → "Derin Kalibrasyon"; Start → "Başlat"/Running → "Çalışıyor"; Stage → "Kademe"; Temp → "Sıcaklık"; Record sample → "Numuneyi kaydet"; Finish & save → "Bitir ve kaydet"; Close → "Kapat". Stage codes CIN/A0.../DROP kept English. Saves locally; hand-off to Build Cupping Session pending.
+- Deep Calibration modal (now DICT-wired so it flips with the TR toggle): title "Derin Kalibrasyon"; Soft/Hard Mapping "Yumuşak/Sert Harita"; Batch (g) "Parti (g)"; Flame/Power "Alev/Güç"; Fan "Fan"; Drum "Tambur"; Stage "Kademe"; Temp "Sıcaklık"; Record sample "Numuneyi kaydet"; Undo "Geri al"; Cup starred samples "Yıldızlı numuneleri tadımla"; Finish & save "Bitir ve kaydet"; Start fresh "Sıfırdan başla"; Close "Kapat"; Saved maps "Kayıtlı haritalar"; Start/Running "Başlat/Çalışıyor"; Load "Yükle". Stage codes CHG/READ/YLW/A0.../2ND/DROP kept English. Starred samples flow to Build Cupping Session. Saves locally (Supabase persistence still pending).
 - Temp curve module (optional, probe-free bean temp logged at a fixed interval; live on roast screen, hideable, hardcoded EN for now, DICT wiring pending. ROR removed 2026-06-29):
   - Show temp curve → "Sıcaklık eğrisini göster"; Hide temp curve → "Sıcaklık eğrisini gizle"
   - Charge temperature (°C, beans in): → "Şarj sıcaklığı (°C, çekirdekler girince):" (asked once when the curve is first turned on; becomes the t=0 point)
