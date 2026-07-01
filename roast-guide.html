@@ -259,6 +259,16 @@
         <select id="bean"></select>
         <label class="fld" for="equip" style="margin-top:12px" data-i18n="Machine">Machine</label>
         <select id="equip"><option value="Bullet">Bullet</option><option value="HSR15">HSR15</option></select>
+        <label class="fld" for="batchSel" style="margin-top:12px" data-i18n="Batch size">Batch size</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="batchSel" style="flex:1"></select>
+          <button class="btn ghost" style="width:auto;padding:9px 14px;margin-top:0;font-size:13px" onclick="toggleChargePanel()" data-i18n="Charge temps">Charge temps</button>
+        </div>
+        <div id="chargePanel" class="hide" style="margin-top:10px;border:1px solid var(--line);border-radius:9px;padding:12px">
+          <div class="small" style="color:var(--muted);margin-bottom:8px"><span data-i18n="Charge temp per batch size for">Charge temp per batch size for</span> <b id="chargeMachName">HSR15</b>. <span data-i18n="The Temp wheel opens here when you Start.">The Temp wheel opens here when you Start.</span></div>
+          <div id="chargeRows"></div>
+          <div style="display:flex;gap:8px;margin-top:8px"><button class="btn ghost" style="width:auto;padding:8px 14px;margin-top:0;font-size:13px" onclick="addChargeRow()" data-i18n="Add size">Add size</button><button class="btn" style="width:auto;padding:8px 18px;margin-top:0" onclick="saveChargeEditor()" data-i18n="Save">Save</button></div>
+        </div>
         <div class="target">
           <div class="tchip"><div class="n" id="tFc">-</div><div class="l" data-i18n="FC time">FC time</div></div>
           <div class="tchip"><div class="n" id="tStage">-</div><div class="l" data-i18n="Drop at">Drop at</div></div>
@@ -682,6 +692,7 @@ function secSince(ms){ return (vnow()-ms)/1000; }     // virtual seconds since a
 function cur(){ return RECIPES.find(r=>r.name===bean.value); }
 function fmt(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 function refresh(){
+  populateBatchSel(); { const p=document.getElementById('chargePanel'); if(p&&!p.classList.contains('hide')) renderChargeEditor(); }   // keep batch sizes + editor in sync with the selected machine
   const r=cur(); const sbn=document.getElementById('setupBean'); if(!r){ tFc.textContent=tStage.textContent=tAg.textContent='-'; beanNote.classList.add('hide'); learnNote.classList.add('hide'); if(sbn) sbn.textContent=''; drawSetupGauge(); return; }
   const s=rstr(r,equip.value);
   tFc.textContent=fmt(fcActual(parseFc(s))); tStage.textContent=parseStage(s); tAg.textContent=parseAg(s)!=null?parseAg(s):'-';
@@ -799,12 +810,24 @@ function buildWheel(){ const inner=document.getElementById('wheelInner'); if(!in
 function setWheel(v){ const wh=document.getElementById('tempWheel'); if(!wh) return; const cv=Math.max(TEMP_MIN,Math.min(TEMP_MAX,Math.round(v))); wh.scrollTop=(cv-TEMP_MIN)*WHEEL_ITEM; }
 function wheelValue(){ const wh=document.getElementById('tempWheel'); if(!wh) return NaN; return Math.max(TEMP_MIN,Math.min(TEMP_MAX, TEMP_MIN+Math.round(wh.scrollTop/WHEEL_ITEM))); }
 function predictNext(){ if(TEMPS.length>=2){ const n=TEMPS.length, a=TEMPS[n-2], b=TEMPS[n-1], dt=(b.t-a.t)/60; if(dt>0){ let p=b.temp + ((b.temp-a.temp)/dt)*(ROR_INT/60); if(b.t>=55 && p<b.temp) p=b.temp; return p; } }   // past the ~1min turnaround temp only rises, so never predict a drop below the current reading
-  return TEMPS.length?TEMPS[TEMPS.length-1].temp:180; }
+  return TEMPS.length?TEMPS[TEMPS.length-1].temp:chargeTempFor(); }   // no readings yet -> pre-fill with the machine+batch charge temp
 // ---- Capture mode: roast with the calibration wheels while the gauge stays the cockpit ----
 const ROAST_CAP_STAGES=['CHG','YLW','CIN','A0','A1','B0','B1','C0','C1','C2','DROP'];   // CHG starts the roast; "+ temp" covers between-stage readings so no READ here
 function nextCapStage(){ if(!st||st.phase==='idle') return 'CHG'; if(st.phase==='pre0') return 'CIN'; if(st.phase==='pre1') return 'A0'; if(st.phase==='dev') return 'DROP'; return 'READ'; }
 function capTempVal(){ return Math.min(TEMP_MAX,TEMP_MIN+wheelIdx(document.getElementById('rcTempWheel'))); }
 function capTempReset(){ setWheelIdx(document.getElementById('rcTempWheel'), Math.max(0,Math.min(TEMP_MAX-TEMP_MIN, Math.round(predictNext())-TEMP_MIN))); }
+// ---- Per-machine charge temps by batch size: Start pre-fills the Temp wheel from this table ----
+const CHARGE_DEFAULTS={ 'Bullet':{500:190}, 'HSR15':{1000:140,2500:150,5000:160,7500:165} };
+function chargeMap(){ try{ const v=JSON.parse(localStorage.getItem('gCharge')||'null'); return (v&&typeof v==='object')?v:JSON.parse(JSON.stringify(CHARGE_DEFAULTS)); }catch(e){ return JSON.parse(JSON.stringify(CHARGE_DEFAULTS)); } }
+function saveChargeMap(m){ try{ localStorage.setItem('gCharge', JSON.stringify(m)); }catch(e){} }
+function curBatch(){ const sel=document.getElementById('batchSel'); const b=sel?parseInt(sel.value,10):NaN; return isNaN(b)?null:b; }
+function chargeTempFor(){ const m=(typeof equip!=='undefined'&&equip)?equip.value:''; const cm=chargeMap()[m]||{}; const keys=Object.keys(cm).map(Number).sort((a,b)=>a-b); if(!keys.length) return 180; let b=curBatch(); if(b!=null&&cm[b]!=null) return cm[b]; if(b==null) return cm[keys[0]]; let best=keys[0]; keys.forEach(k=>{ if(Math.abs(k-b)<Math.abs(best-b)) best=k; }); return cm[best]; }   // exact match, else nearest batch size
+function populateBatchSel(){ const sel=document.getElementById('batchSel'); if(!sel) return; const prev=sel.value; const m=(typeof equip!=='undefined'&&equip)?equip.value:''; const cm=chargeMap()[m]||{}; const keys=Object.keys(cm).map(Number).sort((a,b)=>a-b); sel.innerHTML = keys.length? keys.map(k=>`<option value="${k}">${k} g · ${cm[k]}°C</option>`).join('') : `<option value="">${T('- set charge temps -')}</option>`; if(prev&&keys.map(String).indexOf(prev)>-1) sel.value=prev; }
+function toggleChargePanel(){ const p=document.getElementById('chargePanel'); if(!p) return; const willOpen=p.classList.contains('hide'); p.classList.toggle('hide'); if(willOpen) renderChargeEditor(); }
+function chargeRowHtml(g,t){ return `<div class="chargeRow" style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><input type="number" inputmode="numeric" class="cgB" value="${g}" placeholder="g" style="width:84px;padding:6px;text-align:center"><span style="color:var(--muted)">g →</span><input type="number" inputmode="numeric" class="cgT" value="${t}" placeholder="°C" style="width:72px;padding:6px;text-align:center"><span style="color:var(--muted)">°C</span><button class="delx" onclick="this.closest('.chargeRow').remove()">×</button></div>`; }
+function renderChargeEditor(){ const m=(typeof equip!=='undefined'&&equip)?equip.value:''; const nm=document.getElementById('chargeMachName'); if(nm) nm.textContent=m; const cm=chargeMap()[m]||{}, el=document.getElementById('chargeRows'); if(!el) return; const keys=Object.keys(cm).map(Number).sort((a,b)=>a-b); el.innerHTML = keys.length? keys.map(k=>chargeRowHtml(k,cm[k])).join('') : chargeRowHtml('',''); }
+function addChargeRow(){ const el=document.getElementById('chargeRows'); if(el) el.insertAdjacentHTML('beforeend', chargeRowHtml('','')); }
+function saveChargeEditor(){ const m=(typeof equip!=='undefined'&&equip)?equip.value:''; const rows=document.querySelectorAll('#chargeRows .chargeRow'), obj={}; rows.forEach(r=>{ const g=parseInt(r.querySelector('.cgB').value,10), t=parseInt(r.querySelector('.cgT').value,10); if(!isNaN(g)&&!isNaN(t)) obj[g]=t; }); const all=chargeMap(); all[m]=obj; saveChargeMap(all); populateBatchSel(); const p=document.getElementById('chargePanel'); if(p) p.classList.add('hide'); }
 function buildCaptureWheels(){ const si=document.getElementById('rcStageInner'), ti=document.getElementById('rcTempInner'); if(!si||!ti) return;
   if(si.childElementCount!==ROAST_CAP_STAGES.length) fillWheel(si, ROAST_CAP_STAGES);
   if(ti.childElementCount===0){ const temps=[]; for(let v=TEMP_MIN;v<=TEMP_MAX;v++) temps.push(v); fillWheel(ti, temps); }
@@ -1418,6 +1441,7 @@ let LANG='en', CURVIEW='roast';
 // Full string inventory. TR-translated entries flip live where wired; entries kept in English on purpose
 // (the CVA lexicon: descriptors, defects, roast levels) carry their EN text so they show in the editor and can be translated later.
 const DICT={ tr:{
+ "Batch size":"Parti boyutu","Charge temps":"Şarj sıcaklıkları","Add size":"Boyut ekle","- set charge temps -":"- şarj sıcaklığı gir -","Charge temp per batch size for":"Parti boyutuna göre şarj sıcaklığı:","The Temp wheel opens here when you Start.":"Başlat'a bastığında Sıcaklık tekerleği buradan açılır.",
  // login + chrome
  "Sign in to load your recipes.":"Reçetelerinizi yüklemek için giriş yapın.",
  "Email":"E-posta","Password":"Şifre","Log in":"Giriş yap",
