@@ -103,7 +103,7 @@
   .wheelInner{padding:50px 0}
   .wheelInner div{height:20px;line-height:20px;text-align:center;scroll-snap-align:center;font-size:17px;color:var(--muted);font-variant-numeric:tabular-nums}
   .wheelSel{position:absolute;left:0;right:0;top:50px;height:20px;border-top:1px solid var(--accent);border-bottom:1px solid var(--accent);pointer-events:none}
-  .wheelSel:after{content:'°C';position:absolute;right:8px;top:3px;font-size:10px;color:var(--muted)}
+  .unit-c .wheelSel:after{content:'°C';position:absolute;right:6px;top:2px;font-size:10px;color:var(--muted)}
   .rtools{display:flex;gap:8px;margin-bottom:12px}.rtools button{flex:1}
   .ritem{border-bottom:1px solid var(--line);padding:9px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
   .ritem:last-child{border-bottom:none}
@@ -201,6 +201,21 @@
     <div class="card" id="hxBox" style="max-width:420px;width:100%"></div>
   </div>
 
+  <div id="calibModal" onclick="if(event.target===this)closeCalib()" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:none;align-items:center;justify-content:center;padding:16px">
+    <div class="card" style="max-width:440px;width:100%;max-height:92vh;overflow:auto">
+      <h1 style="margin:0 0 2px;font-size:18px">Deep Calibration</h1>
+      <div class="small" id="calibBean" style="margin-bottom:8px"></div>
+      <div style="text-align:center;margin-bottom:10px"><span id="calibTime" style="font-size:26px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums">0:00</span> <button class="btn ghost" id="calibStart" style="width:auto;display:inline-block;padding:6px 16px;margin:0" onclick="calibToggle()">Start</button></div>
+      <div style="display:flex;gap:18px;align-items:flex-start;justify-content:center;margin-bottom:10px">
+        <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px">Stage</div><div class="wheelWrap"><div class="wheel" id="calibStageWheel"><div class="wheelInner" id="calibStageInner"></div></div><div class="wheelSel"></div></div></div>
+        <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px">Temp</div><div class="wheelWrap unit-c"><div class="wheel" id="calibTempWheel"><div class="wheelInner" id="calibTempInner"></div></div><div class="wheelSel"></div></div></div>
+      </div>
+      <button class="btn" onclick="recordSample()">Record sample</button>
+      <div id="calibList" style="margin-top:12px"></div>
+      <div style="display:flex;gap:10px;margin-top:14px"><button class="btn" style="background:var(--accent2);color:#fff" onclick="finishCalib()">Finish &amp; save</button><button class="btn ghost" onclick="closeCalib()">Close</button></div>
+    </div>
+  </div>
+
   <div class="top">
     <a href="#" onclick="show('account');return false;" style="text-decoration:none;color:inherit;cursor:pointer" title="Account"><div class="logoName" style="font-size:22px"><span class="lr">CoffeeNutz<sup class="rmark">®</sup></span> <span class="lg">Guide</span></div></a>
     <div class="nav">
@@ -275,7 +290,7 @@
             <div style="height:200px;margin-top:10px"><canvas id="tempChart"></canvas></div>
             <div class="small" id="tempDue" style="margin-top:6px;text-align:center"></div>
             <div style="display:flex;gap:14px;align-items:center;justify-content:center;margin-top:8px">
-              <div class="wheelWrap"><div class="wheel" id="tempWheel"><div class="wheelInner" id="wheelInner"></div></div><div class="wheelSel"></div></div>
+              <div class="wheelWrap unit-c"><div class="wheel" id="tempWheel"><div class="wheelInner" id="wheelInner"></div></div><div class="wheelSel"></div></div>
               <div style="display:flex;flex-direction:column;gap:8px">
                 <button class="btn" style="width:auto;padding:14px 26px;margin-top:0;font-size:17px" onclick="logTemp()">Log</button>
                 <button class="btn ghost" style="width:auto;padding:8px 26px;margin-top:0;font-size:13px" onclick="undoTemp()">Take back</button>
@@ -1440,7 +1455,31 @@ async function saveAsDefaults(){ if(!IS_ADMIN) return;
   if(sb){ const r=await sb.from('settings').upsert({id:1, rules:nr, defaults:nr, updated_at:new Date().toISOString()},{onConflict:'id'}).select(); if(r&&r.error){ rulesMsg.textContent='Save failed: '+r.error.message; return; } }
   renderRules(); rulesMsg.textContent='Saved as defaults. This is now the baseline and the live rule set.'; }
 function resetRules(){ RULES=JSON.parse(JSON.stringify(SAVED_DEFAULTS)); applyRules(); renderRules(); rulesMsg.textContent='Reset to saved defaults - tap Save rules to apply them live.'; }
-function deepCalibration(){ /* placeholder - sample-roast calibration to learn a bean's full stage map. Not built yet. */ rulesMsg.textContent='Deep Calibration Learning: placeholder - not built yet.'; }
+// ---- Deep Calibration: streamlined stage+temp capture, one Record per crack sample ----
+const STAGE_CODES=['CIN','A0','A1','B0','B1','C0','C1','C2','DROP'];
+let CALIB={samples:[],tStart:0,running:false}, calibTick=null;
+function fillWheel(inner, items){ if(!inner) return; if(inner.childElementCount!==items.length) inner.innerHTML=items.map(v=>'<div>'+v+'</div>').join(''); }
+function wheelIdx(wh){ return wh?Math.max(0,Math.round(wh.scrollTop/WHEEL_ITEM)):0; }
+function setWheelIdx(wh,i){ if(wh) wh.scrollTop=Math.max(0,i)*WHEEL_ITEM; }
+function deepCalibration(){ const r=cur(); CALIB={samples:[],tStart:0,running:false}; if(calibTick){clearInterval(calibTick);calibTick=null;}
+  document.getElementById('calibModal').style.display='flex';
+  const cb=document.getElementById('calibBean'); if(cb) cb.textContent=r?('Calibrating '+r.name):'Pick a coffee on the Roast tab first';
+  const temps=[]; for(let v=TEMP_MIN;v<=TEMP_MAX;v++) temps.push(v);
+  fillWheel(document.getElementById('calibStageInner'), STAGE_CODES); fillWheel(document.getElementById('calibTempInner'), temps);
+  setWheelIdx(document.getElementById('calibStageWheel'), Math.max(0,STAGE_CODES.indexOf('A0'))); setWheelIdx(document.getElementById('calibTempWheel'), 180-TEMP_MIN);
+  const tEl=document.getElementById('calibTime'); if(tEl) tEl.textContent='0:00'; const sEl=document.getElementById('calibStart'); if(sEl) sEl.textContent='Start';
+  renderCalibList(); }
+function closeCalib(){ if(calibTick){clearInterval(calibTick);calibTick=null;} const m=document.getElementById('calibModal'); if(m) m.style.display='none'; }
+function calibToggle(){ if(CALIB.running) return; CALIB.running=true; CALIB.tStart=vnow(); const sEl=document.getElementById('calibStart'); if(sEl) sEl.textContent='Running'; calibTick=setInterval(()=>{ const el=document.getElementById('calibTime'); if(el&&CALIB.running) el.textContent=fmt(secSince(CALIB.tStart)); },500); }
+function recordSample(){ const stage=STAGE_CODES[Math.min(STAGE_CODES.length-1,wheelIdx(document.getElementById('calibStageWheel')))], temp=Math.min(TEMP_MAX,TEMP_MIN+wheelIdx(document.getElementById('calibTempWheel'))), t=CALIB.running?secSince(CALIB.tStart):0;
+  CALIB.samples.push({stage,temp,t}); renderCalibList(); }
+function renderCalibList(){ const el=document.getElementById('calibList'); if(!el) return;
+  if(!CALIB.samples.length){ el.innerHTML='<div class="small" style="text-align:center;color:var(--muted)">No samples yet. Spin stage + temp, scoop a sample, tap Record at each crack.</div>'; return; }
+  el.innerHTML=CALIB.samples.map((s,i)=>`<div class="hxrow"><span><b style="color:var(--accent)">${s.stage}</b> &nbsp; ${s.temp}°C &nbsp; <span class="small">${fmt(s.t)}</span></span><button class="delx" data-cs="${i}">×</button></div>`).join('');
+  el.querySelectorAll('[data-cs]').forEach(b=>b.onclick=()=>{ CALIB.samples.splice(+b.dataset.cs,1); renderCalibList(); }); }
+function finishCalib(){ const r=cur(); if(!CALIB.samples.length){ closeCalib(); return; }
+  try{ const all=JSON.parse(localStorage.getItem('gCalib')||'[]'); all.unshift({bean:r?r.name:'', date:new Date().toISOString().slice(0,10), samples:CALIB.samples}); localStorage.setItem('gCalib', JSON.stringify(all.slice(0,50))); }catch(e){}
+  const n=CALIB.samples.length; closeCalib(); if(typeof rulesMsg!=='undefined'&&rulesMsg) rulesMsg.textContent='Saved '+n+' calibration samples'+(r?(' for '+r.name):'')+'. Cup them next in Value Assessment, Build Cupping Session.'; }
 function esc(s){ return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 function buildBeans(){ const cur=bean.value; bean.innerHTML=`<option value="">${T('Pick your coffee')}</option><option value="__newrecipe__">${T('Add new coffee')}</option>`; getRecipes().filter(r=>r.active).forEach(r=>{ const o=document.createElement('option'); o.value=r.name; o.textContent=r.name; bean.appendChild(o); }); if(cur&&getRecipes().some(r=>r.name===cur&&r.active)) bean.value=cur; else bean.value=''; refresh(); }
 
