@@ -222,7 +222,8 @@
       <div style="display:flex;gap:8px"><button class="btn" onclick="recordSample()">Record sample</button><button class="btn ghost" style="width:auto;padding:0 20px;margin-top:0" onclick="undoCalibSample()">Undo</button></div>
       <div style="height:170px;margin-top:12px"><canvas id="calibChart"></canvas></div>
       <div id="calibList" style="margin-top:10px"></div>
-      <div style="display:flex;gap:8px;margin-top:14px"><button class="btn" style="background:var(--accent2);color:#fff" onclick="finishCalib()">Finish &amp; save</button><button class="btn ghost" onclick="calibStartFresh()">Start fresh</button><button class="btn ghost" onclick="closeCalib()">Close</button></div>
+      <button class="btn" style="background:var(--accent);color:#1a1410;margin-top:12px" onclick="cupStarred()">Cup starred samples</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn" style="background:var(--accent2);color:#fff" onclick="finishCalib()">Finish &amp; save</button><button class="btn ghost" onclick="calibStartFresh()">Start fresh</button><button class="btn ghost" onclick="closeCalib()">Close</button></div>
       <div class="small" style="margin-top:16px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Saved maps</div>
       <div id="calibHist" style="margin-top:4px"></div>
     </div>
@@ -1522,18 +1523,25 @@ function recordSample(){ const st2=calibStages(), swh=document.getElementById('c
 function undoCalibSample(){ if(!CALIB.samples.length) return; const last=CALIB.samples.pop(); const i=calibStages().indexOf(last.stage); if(i>=0) setWheelIdx(document.getElementById('calibStageWheel'), i); const dv=document.getElementById('calibDev'); if(dv&&last.stage==='DROP') dv.textContent=''; renderCalibList(); }
 function renderCalibList(){ const el=document.getElementById('calibList'); renderCalibChart();
   if(!el) return; if(!CALIB.samples.length){ el.innerHTML='<div class="small" style="text-align:center;color:var(--muted)">No samples yet. Set the stage + temp, take a sample, tap Record at each stage.</div>'; return; }
-  el.innerHTML=CALIB.samples.map((s,i)=>`<div class="hxrow"><span><b style="color:var(--accent)">${s.stage}</b> &nbsp; ${s.temp}°C &nbsp; <span class="small">${fmt(s.t)}</span></span><button class="delx" data-cs="${i}">×</button></div>`).join('');
+  el.innerHTML=CALIB.samples.map((s,i)=>`<div class="hxrow"><span><button data-star="${i}" style="background:none;border:none;cursor:pointer;font-size:15px;padding:0 4px 0 0;color:${s.cup?'var(--gold)':'var(--muted)'}">${s.cup?'★':'☆'}</button><b style="color:var(--accent)">${s.stage}</b> &nbsp; ${s.temp}°C &nbsp; <span class="small">${fmt(s.t)}</span>${s.cup?` &nbsp; <input data-ag="${i}" type="number" inputmode="numeric" placeholder="AG" value="${s.agtron!=null?s.agtron:''}" style="width:52px;padding:4px;font-size:13px;text-align:center">`:''}</span><button class="delx" data-cs="${i}">×</button></div>`).join('');
+  el.querySelectorAll('[data-star]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.star; CALIB.samples[i].cup=!CALIB.samples[i].cup; renderCalibList(); });
+  el.querySelectorAll('[data-ag]').forEach(inp=>inp.addEventListener('input',e=>{ const i=+e.target.dataset.ag, v=parseFloat(e.target.value); CALIB.samples[i].agtron=isNaN(v)?null:v; }));
   el.querySelectorAll('[data-cs]').forEach(b=>b.onclick=()=>{ CALIB.samples.splice(+b.dataset.cs,1); renderCalibList(); }); }
 function renderCalibChart(){ const cv=document.getElementById('calibChart'); if(!cv||typeof Chart==='undefined') return;
   const pts=CALIB.samples.slice().sort((a,b)=>a.t-b.t).map(s=>({x:+(s.t/60).toFixed(3),y:s.temp,stg:s.stage}));
   if(calibChart){ calibChart.data.datasets[0].data=pts; calibChart.update('none'); return; }
   const lbl={id:'cl',afterDatasetsDraw(c){try{const arr=c.data.datasets[0].data,meta=c.getDatasetMeta(0).data,ctx=c.ctx;ctx.save();ctx.font='700 9px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillStyle='#e6c14b';meta.forEach((p,i)=>{const s=arr[i];if(!s||s.stg==='READ')return;ctx.fillText(s.stg,p.x,p.y-7);});ctx.restore();}catch(e){}}};
   calibChart=new Chart(cv,{type:'line',data:{datasets:[{data:pts,borderColor:'#c98a3c',backgroundColor:'#c98a3c',tension:.3,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{type:'linear',min:0,max:16,title:{display:true,text:'minutes',color:'#a8998a',font:{size:10}},ticks:{stepSize:2,color:'#a8998a',font:{size:10}},grid:{color:'#2a221b'}},y:{title:{display:true,text:'°C',color:'#a8998a',font:{size:10}},ticks:{color:'#c98a3c',font:{size:10}},grid:{color:'#2a221b'}}}},plugins:[lbl]}); }
-function finishCalib(){ const r=cur(), machine=calibMachine(), settings=calSettingsRead(); if(machine) saveMachDefaults(machine,settings);   // machine settings persist for next sessions
-  if(!CALIB.samples.length){ closeCalib(); return; }
+function saveCalibMap(){ const r=cur(), machine=calibMachine(), settings=calSettingsRead(); if(machine) saveMachDefaults(machine,settings);   // machine settings persist for next sessions
+  if(!CALIB.samples.length) return;
   try{ let all=JSON.parse(localStorage.getItem('gCalib')||'[]'); const rec={bean:r?r.name:'', machine, date:new Date().toISOString().slice(0,10), mode:CALIB.mode, settings, samples:CALIB.samples};
-    const i=all.findIndex(c=>c.bean===rec.bean && (c.machine===machine||!c.machine)); if(i>=0) all[i]=rec; else all.unshift(rec); localStorage.setItem('gCalib', JSON.stringify(all.slice(0,60))); }catch(e){}
-  const n=CALIB.samples.length; closeCalib(); if(typeof rulesMsg!=='undefined'&&rulesMsg) rulesMsg.textContent='Saved '+n+' calibration points'+(r?(' for '+r.name):'')+' on '+machine+'.'; }
+    const i=all.findIndex(c=>c.bean===rec.bean && (c.machine===machine||!c.machine)); if(i>=0) all[i]=rec; else all.unshift(rec); localStorage.setItem('gCalib', JSON.stringify(all.slice(0,60))); }catch(e){} }
+function finishCalib(){ const n=CALIB.samples.length, r=cur(), machine=calibMachine(); saveCalibMap(); closeCalib(); if(typeof rulesMsg!=='undefined'&&rulesMsg) rulesMsg.textContent='Saved '+n+' calibration points'+(r?(' for '+r.name):'')+' on '+machine+'.'; }
+function cupStarred(){ const starred=CALIB.samples.filter(s=>s.cup); const note=document.getElementById('calibNote');
+  if(!starred.length){ if(note){ note.style.color='var(--warn)'; note.textContent='Star the stages you sampled first (tap the ☆).'; } return; }
+  const r=cur(), bean=r?r.name:''; saveCalibMap();
+  FLIGHT={ date:new Date().toISOString().slice(0,10), purpose:(('Calibration '+bean).trim()), coffees: starred.map(s=>({sample:((bean?bean+' ':'')+s.stage+(s.agtron!=null?(' '+s.agtron+'A'):'')), cup:blankCup()})) };
+  closeCalib(); show('flight'); }
 function esc(s){ return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 function buildBeans(){ const cur=bean.value; bean.innerHTML=`<option value="">${T('Pick your coffee')}</option><option value="__newrecipe__">${T('Add new coffee')}</option>`; getRecipes().filter(r=>r.active).forEach(r=>{ const o=document.createElement('option'); o.value=r.name; o.textContent=r.name; bean.appendChild(o); }); if(cur&&getRecipes().some(r=>r.name===cur&&r.active)) bean.value=cur; else bean.value=''; refresh(); }
 
