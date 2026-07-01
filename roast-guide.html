@@ -298,12 +298,12 @@
             <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px" data-i18n="Stage">Stage</div><div class="wheelWrap"><div class="wheel" id="rcStageWheel"><div class="wheelInner" id="rcStageInner"></div></div><div class="wheelSel"></div></div></div>
             <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px" data-i18n="Temp">Temp</div><div class="wheelWrap unit-c"><div class="wheel" id="rcTempWheel"><div class="wheelInner" id="rcTempInner"></div></div><div class="wheelSel"></div></div></div>
             <div style="display:flex;flex-direction:column;gap:6px">
-              <button class="btn" style="width:auto;padding:12px 16px;margin-top:0" onclick="captureRecord()" data-i18n="Record">Record</button>
+              <button class="btn calibGo" id="rcRecordBtn" style="width:auto;padding:12px 16px;margin-top:0" onclick="captureRecord()">Start</button>
               <button class="btn ghost" style="width:auto;padding:8px 16px;margin-top:0;font-size:13px" onclick="captureTemp()" data-i18n="+ temp">+ temp</button>
               <button class="btn ghost" style="width:auto;padding:8px 16px;margin-top:0;font-size:13px" onclick="captureUndo()" data-i18n="Undo">Undo</button>
             </div>
           </div>
-          <div class="small" style="text-align:center;color:var(--muted);margin-top:6px" data-i18n="CHG starts the roast. CIN / A0 / DROP advance it; + temp logs a reading between stages.">CHG starts the roast. CIN / A0 / DROP advance it; + temp logs a reading between stages.</div>
+          <div class="small" style="text-align:center;color:var(--muted);margin-top:6px" data-i18n="Start records CHG. Then Record each stage in turn; + temp logs a reading between stages.">Start records CHG. Then Record each stage in turn; + temp logs a reading between stages.</div>
         </div>
         <div id="tempModule" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
           <div id="tempBody">
@@ -769,6 +769,7 @@ function draw(){
   pcount.textContent=cnt; pcount.style.color = rem<0 ? 'var(--warn)' : 'var(--accent)';
   if(bigbtn) bigbtn.style.display=(st.phase==='done')?'':'none';   // wheel dock drives the roast; keep the big button only as "New roast" at the end
   if(undoBtn) undoBtn.style.display='none';
+  updateCaptureBtn();
   updateLogo();
 }
 // turtle stays everywhere except mid-roast (deliberate exception so the cockpit is undistracted while roasting)
@@ -808,17 +809,24 @@ function buildCaptureWheels(){ const si=document.getElementById('rcStageInner'),
   if(si.childElementCount!==ROAST_CAP_STAGES.length) fillWheel(si, ROAST_CAP_STAGES);
   if(ti.childElementCount===0){ const temps=[]; for(let v=TEMP_MIN;v<=TEMP_MAX;v++) temps.push(v); fillWheel(ti, temps); }
   setWheelIdx(document.getElementById('rcStageWheel'), Math.max(0,ROAST_CAP_STAGES.indexOf(nextCapStage()))); capTempReset(); }
-let CAP_LAST_ADV=false;
-function captureTemp(){ if(!st||st.phase==='idle'||st.phase==='done') return; TEMPS.push({t:secSince(st.tStart), temp:capTempVal()}); CAP_LAST_ADV=false; draw(); updateTempChart(); capTempReset(); }   // quick reading between stages, wheel stays on the next crack
-function captureUndo(){ if(CAP_LAST_ADV && (st.phase==='pre1'||st.phase==='dev')){ undoMark(); CAP_LAST_ADV=false; }   // revert a mis-marked crack, then drop the point
-  if(TEMPS.length) TEMPS.pop(); updateTempChart(); buildCaptureWheels(); }
-function captureRecord(){ if(!st) return; const stage=ROAST_CAP_STAGES[Math.min(ROAST_CAP_STAGES.length-1,wheelIdx(document.getElementById('rcStageWheel')))], temp=capTempVal();
-  if(stage==='CHG' && st.phase==='idle'){ startRoast(vnow()); startTick(); TEMPS=[{t:0,temp}]; CAP_LAST_ADV=false; draw(); updateTempChart(); buildCaptureWheels(); return; }   // CHG starts the roast + logs charge
-  if(st.phase==='idle'||st.phase==='done') return;
-  TEMPS.push({t:secSince(st.tStart), temp});
-  const advance=(stage==='CIN'&&st.phase==='pre0')||(stage==='A0'&&st.phase==='pre1')||(stage==='DROP'&&st.phase==='dev');
-  if(advance){ CAP_LAST_ADV=(stage!=='DROP'); tap(); } else { CAP_LAST_ADV=false; draw(); updateTempChart(); }   // CIN/A0/DROP drive the gauge; other stages just log
-  buildCaptureWheels(); }
+function updateCaptureBtn(){ const b=document.getElementById('rcRecordBtn'); if(!b) return; const idle=(!st||st.phase==='idle'); b.textContent = idle ? T('Start') : T('Record'); b.classList.toggle('calibGo', idle); }
+function captureTemp(){ if(!st||st.phase==='idle'||st.phase==='done') return; TEMPS.push({t:secSince(st.tStart), temp:capTempVal()}); draw(); updateTempChart(); capTempReset(); }   // quick reading between stages, stage wheel stays put
+function captureUndo(){ if(!st||!TEMPS.length) return; const last=TEMPS.pop();   // pop the last point and walk the wheel back to it, like calibration's Undo
+  if(last && last.stg==='CHG' && st.phase==='pre0'){ stopTick(); st.phase='idle'; st.tStart=0; }   // undoing the charge sends us back to idle
+  else if(last && (last.stg==='CIN'||last.stg==='A0') && (st.phase==='pre1'||st.phase==='dev')) undoMark();   // undoing a crack rolls the gauge back one phase
+  const swh=document.getElementById('rcStageWheel'); if(last && last.stg){ const i=ROAST_CAP_STAGES.indexOf(last.stg); if(i>=0) setWheelIdx(swh, i); }
+  draw(); updateTempChart(); capTempReset(); updateCaptureBtn(); }
+function captureRecord(){ if(!st) return; const swh=document.getElementById('rcStageWheel'), idx=Math.min(ROAST_CAP_STAGES.length-1,wheelIdx(swh)), stage=ROAST_CAP_STAGES[idx], temp=capTempVal();
+  if(stage==='CHG'){ if(st.phase!=='idle') return; startRoast(vnow()); startTick(); TEMPS=[{t:0,temp,stg:'CHG'}]; }   // Start records charge + begins the clock
+  else {
+    if(st.phase==='idle'||st.phase==='done') return;
+    TEMPS.push({t:secSince(st.tStart), temp, stg:stage});
+    if(stage==='CIN' && st.phase==='pre0') tap();          // these three also drive the cockpit gauge
+    else if(stage==='A0' && st.phase==='pre1') tap();
+    else if(stage==='DROP' && st.phase==='dev') tap();
+  }
+  setWheelIdx(swh, Math.min(ROAST_CAP_STAGES.length-1, idx+1));   // walk to the next stage, one at a time (all stages, like calibration)
+  capTempReset(); draw(); updateTempChart(); updateCaptureBtn(); }
 function undoTemp(){ if(TEMPS.length){ TEMPS.pop(); updateTempChart(); buildWheel(); updateTempDue(); } }
 function tempActive(){ return st && st.phase!=='idle' && st.phase!=='done'; }
 function toggleTempCurve(){ TEMP_ON=!TEMP_ON; const body=document.getElementById('tempBody'), tog=document.getElementById('tempToggle');
@@ -1426,7 +1434,7 @@ const DICT={ tr:{
  "START":"BAŞLA","CINNAMON":"TARÇIN","FIRST CRACK (A0)":"İLK ÇITIRTI (A0)","DROP / FINISH":"BOŞALT / BİTİR","New roast":"Yeni kavurma",
  "Tap START when the roast begins.":"Kavurma başladığında BAŞLA'ya dokun.","Roast finished and learned.":"Kavurma bitti ve öğrenildi.",
  "Cup this coffee":"Bu kahveyi tadımla","Deep Calibration Learning":"Derin Kalibrasyon Öğrenmesi",
- "Deep Calibration":"Derin Kalibrasyon","Soft Mapping":"Yumuşak Harita","Hard Mapping":"Sert Harita","Batch (g)":"Parti (g)","Flame/Power":"Alev/Güç","Fan":"Fan","Drum":"Tambur","Stage":"Kademe","Temp":"Sıcaklık","Record sample":"Numuneyi kaydet","Undo":"Geri al","Cup starred samples":"Yıldızlı numuneleri tadımla","Finish & save":"Bitir ve kaydet","Start fresh":"Sıfırdan başla","Close":"Kapat","Saved maps":"Kayıtlı haritalar","Start":"Başlat","Running":"Çalışıyor","Load":"Yükle","None saved yet.":"Henüz kayıt yok.","Pick a coffee on the Roast tab first.":"Önce Kavurma sekmesinden bir kahve seç.","Star the stages you sampled first (tap the ☆).":"Önce numune aldığın kademeleri yıldızla (☆ dokun).","No samples yet. Set the stage + temp, take a sample, tap Record at each stage.":"Henüz numune yok. Kademe + sıcaklığı ayarla, numune al, her kademede Kaydet'e dokun.","Dev time (A0 to drop): ":"Gelişim süresi (A0'dan boşaltmaya): ","Calibrating ":"Kalibrasyon: ","Record":"Kaydet","+ temp":"+ sıcaklık","CHG starts the roast. CIN / A0 / DROP advance it; + temp logs a reading between stages.":"CHG kavurmayı başlatır. CIN / A0 / DROP ilerletir; + sıcaklık kademeler arası bir okuma kaydeder.",
+ "Deep Calibration":"Derin Kalibrasyon","Soft Mapping":"Yumuşak Harita","Hard Mapping":"Sert Harita","Batch (g)":"Parti (g)","Flame/Power":"Alev/Güç","Fan":"Fan","Drum":"Tambur","Stage":"Kademe","Temp":"Sıcaklık","Record sample":"Numuneyi kaydet","Undo":"Geri al","Cup starred samples":"Yıldızlı numuneleri tadımla","Finish & save":"Bitir ve kaydet","Start fresh":"Sıfırdan başla","Close":"Kapat","Saved maps":"Kayıtlı haritalar","Start":"Başlat","Running":"Çalışıyor","Load":"Yükle","None saved yet.":"Henüz kayıt yok.","Pick a coffee on the Roast tab first.":"Önce Kavurma sekmesinden bir kahve seç.","Star the stages you sampled first (tap the ☆).":"Önce numune aldığın kademeleri yıldızla (☆ dokun).","No samples yet. Set the stage + temp, take a sample, tap Record at each stage.":"Henüz numune yok. Kademe + sıcaklığı ayarla, numune al, her kademede Kaydet'e dokun.","Dev time (A0 to drop): ":"Gelişim süresi (A0'dan boşaltmaya): ","Calibrating ":"Kalibrasyon: ","Record":"Kaydet","+ temp":"+ sıcaklık","Start records CHG. Then Record each stage in turn; + temp logs a reading between stages.":"Başlat CHG'yi kaydeder. Sonra her kademeyi sırayla Kaydet; + sıcaklık kademeler arası okuma ekler.",
  "Save rules":"Kuralları kaydet","Save as defaults":"Varsayılan olarak kaydet","Reset to defaults":"Varsayılanlara dön",
  // cup
  "Combined":"Birleşik","Sample # / coffee":"Numune # / kahve","cupping score":"tadım puanı",
