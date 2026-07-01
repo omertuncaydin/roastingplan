@@ -209,7 +209,7 @@
       <div class="seg" id="calibMode" style="margin-bottom:10px"><button class="on" onclick="setCalibMode('soft',this)">Soft Mapping</button><button onclick="setCalibMode('hard',this)">Hard Mapping</button></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
         <label style="display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600">Batch (g)<input type="text" id="calBatch" inputmode="numeric" style="font-size:15px"></label>
-        <label style="display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600">Flame<input type="text" id="calFlame" style="font-size:15px"></label>
+        <label style="display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600">Flame/Power<input type="text" id="calFlame" style="font-size:15px"></label>
         <label style="display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600">Fan<input type="text" id="calFan" style="font-size:15px"></label>
         <label style="display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600">Drum<input type="text" id="calDrum" style="font-size:15px"></label>
       </div>
@@ -219,12 +219,12 @@
         <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px">Stage</div><div class="wheelWrap"><div class="wheel" id="calibStageWheel"><div class="wheelInner" id="calibStageInner"></div></div><div class="wheelSel"></div></div></div>
         <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px">Temp</div><div class="wheelWrap unit-c"><div class="wheel" id="calibTempWheel"><div class="wheelInner" id="calibTempInner"></div></div><div class="wheelSel"></div></div></div>
       </div>
-      <button class="btn" onclick="recordSample()">Record sample</button>
+      <div style="display:flex;gap:8px"><button class="btn" onclick="recordSample()">Record sample</button><button class="btn ghost" style="width:auto;padding:0 20px;margin-top:0" onclick="undoCalibSample()">Undo</button></div>
       <div style="height:170px;margin-top:12px"><canvas id="calibChart"></canvas></div>
       <div id="calibList" style="margin-top:10px"></div>
-      <div class="small" style="margin-top:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Saved maps</div>
-      <div id="calibHist" style="margin-top:4px"></div>
       <div style="display:flex;gap:8px;margin-top:14px"><button class="btn" style="background:var(--accent2);color:#fff" onclick="finishCalib()">Finish &amp; save</button><button class="btn ghost" onclick="calibStartFresh()">Start fresh</button><button class="btn ghost" onclick="closeCalib()">Close</button></div>
+      <div class="small" style="margin-top:16px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Saved maps</div>
+      <div id="calibHist" style="margin-top:4px"></div>
     </div>
   </div>
 
@@ -1509,12 +1509,17 @@ function deepCalibration(){ const r=cur(), machine=calibMachine(); if(calibTick)
   renderCalibList(); renderCalibHistory(); }
 function closeCalib(){ if(calibTick){clearInterval(calibTick);calibTick=null;} if(calibChart){try{calibChart.destroy();}catch(e){} calibChart=null;} const m=document.getElementById('calibModal'); if(m) m.style.display='none'; }
 function calibToggle(){ if(CALIB.running) return; if(!cur()){ const note=document.getElementById('calibNote'); if(note){ note.textContent='Pick a coffee on the Roast tab first.'; note.style.color='var(--warn)'; } return; }
-  CALIB.running=true; CALIB.tStart=vnow(); const sEl=document.getElementById('calibStart'); if(sEl) sEl.textContent='Running'; calibTick=setInterval(()=>{ const el=document.getElementById('calibTime'); if(el&&CALIB.running) el.textContent=fmt(secSince(CALIB.tStart)); },500); }
-function recordSample(){ const st2=calibStages(), stage=st2[Math.min(st2.length-1,wheelIdx(document.getElementById('calibStageWheel')))], temp=Math.min(TEMP_MAX,TEMP_MIN+wheelIdx(document.getElementById('calibTempWheel'))), t=CALIB.running?secSince(CALIB.tStart):0;
+  CALIB.running=true; CALIB.tStart=vnow();
+  const temp=Math.min(TEMP_MAX,TEMP_MIN+wheelIdx(document.getElementById('calibTempWheel'))); CALIB.samples.push({stage:'CHG',temp,t:0});   // Start records the charge sample
+  setWheelIdx(document.getElementById('calibStageWheel'), Math.max(0,calibStages().indexOf('READ'))); renderCalibList();
+  const sEl=document.getElementById('calibStart'); if(sEl) sEl.textContent='Running'; calibTick=setInterval(()=>{ const el=document.getElementById('calibTime'); if(el&&CALIB.running) el.textContent=fmt(secSince(CALIB.tStart)); },500); }
+function recordSample(){ const st2=calibStages(), swh=document.getElementById('calibStageWheel'), idx=Math.min(st2.length-1,wheelIdx(swh)), stage=st2[idx], temp=Math.min(TEMP_MAX,TEMP_MIN+wheelIdx(document.getElementById('calibTempWheel'))), t=CALIB.running?secSince(CALIB.tStart):0;
   CALIB.samples.push({stage,temp,t});
   if(stage==='DROP'){ if(calibTick){clearInterval(calibTick);calibTick=null;} const tEl=document.getElementById('calibTime'); if(tEl) tEl.textContent=fmt(t);   // drop freezes the clock + computes dev time
     const a0=CALIB.samples.find(s=>s.stage==='A0'); const dv=document.getElementById('calibDev'); if(dv) dv.textContent = a0? ('Dev time (A0 to drop): '+fmt(Math.max(0,t-a0.t))) : ''; }
+  if(stage!=='READ') setWheelIdx(swh, Math.min(st2.length-1, idx+1));   // advance to next stage; READ repeats until you move it
   renderCalibList(); }
+function undoCalibSample(){ if(!CALIB.samples.length) return; const last=CALIB.samples.pop(); const i=calibStages().indexOf(last.stage); if(i>=0) setWheelIdx(document.getElementById('calibStageWheel'), i); const dv=document.getElementById('calibDev'); if(dv&&last.stage==='DROP') dv.textContent=''; renderCalibList(); }
 function renderCalibList(){ const el=document.getElementById('calibList'); renderCalibChart();
   if(!el) return; if(!CALIB.samples.length){ el.innerHTML='<div class="small" style="text-align:center;color:var(--muted)">No samples yet. Set the stage + temp, take a sample, tap Record at each stage.</div>'; return; }
   el.innerHTML=CALIB.samples.map((s,i)=>`<div class="hxrow"><span><b style="color:var(--accent)">${s.stage}</b> &nbsp; ${s.temp}°C &nbsp; <span class="small">${fmt(s.t)}</span></span><button class="delx" data-cs="${i}">×</button></div>`).join('');
