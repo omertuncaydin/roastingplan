@@ -767,6 +767,8 @@ function draw(){
   gauge.innerHTML = renderGauge(uNow(now), nextU, dropU, top, bot, true);   // stage marks on the live gauge only
   phase.textContent=ph; psub.innerHTML=sub;
   pcount.textContent=cnt; pcount.style.color = rem<0 ? 'var(--warn)' : 'var(--accent)';
+  if(bigbtn) bigbtn.style.display=(st.phase==='done')?'':'none';   // wheel dock drives the roast; keep the big button only as "New roast" at the end
+  if(undoBtn) undoBtn.style.display='none';
   updateLogo();
 }
 // turtle stays everywhere except mid-roast (deliberate exception so the cockpit is undistracted while roasting)
@@ -798,7 +800,7 @@ function wheelValue(){ const wh=document.getElementById('tempWheel'); if(!wh) re
 function predictNext(){ if(TEMPS.length>=2){ const n=TEMPS.length, a=TEMPS[n-2], b=TEMPS[n-1], dt=(b.t-a.t)/60; if(dt>0){ let p=b.temp + ((b.temp-a.temp)/dt)*(ROR_INT/60); if(b.t>=55 && p<b.temp) p=b.temp; return p; } }   // past the ~1min turnaround temp only rises, so never predict a drop below the current reading
   return TEMPS.length?TEMPS[TEMPS.length-1].temp:180; }
 // ---- Capture mode: roast with the calibration wheels while the gauge stays the cockpit ----
-const ROAST_CAP_STAGES=['CHG','READ','YLW','CIN','A0','A1','B0','B1','C0','C1','C2','DROP'];   // same set as calibration; CHG starts the roast
+const ROAST_CAP_STAGES=['CHG','YLW','CIN','A0','A1','B0','B1','C0','C1','C2','DROP'];   // CHG starts the roast; "+ temp" covers between-stage readings so no READ here
 function nextCapStage(){ if(!st||st.phase==='idle') return 'CHG'; if(st.phase==='pre0') return 'CIN'; if(st.phase==='pre1') return 'A0'; if(st.phase==='dev') return 'DROP'; return 'READ'; }
 function capTempVal(){ return Math.min(TEMP_MAX,TEMP_MIN+wheelIdx(document.getElementById('rcTempWheel'))); }
 function capTempReset(){ setWheelIdx(document.getElementById('rcTempWheel'), Math.max(0,Math.min(TEMP_MAX-TEMP_MIN, Math.round(predictNext())-TEMP_MIN))); }
@@ -806,14 +808,16 @@ function buildCaptureWheels(){ const si=document.getElementById('rcStageInner'),
   if(si.childElementCount!==ROAST_CAP_STAGES.length) fillWheel(si, ROAST_CAP_STAGES);
   if(ti.childElementCount===0){ const temps=[]; for(let v=TEMP_MIN;v<=TEMP_MAX;v++) temps.push(v); fillWheel(ti, temps); }
   setWheelIdx(document.getElementById('rcStageWheel'), Math.max(0,ROAST_CAP_STAGES.indexOf(nextCapStage()))); capTempReset(); }
-function captureTemp(){ if(!st||st.phase==='idle'||st.phase==='done') return; TEMPS.push({t:secSince(st.tStart), temp:capTempVal()}); draw(); updateTempChart(); capTempReset(); }   // quick reading between stages, wheel stays on the next crack
-function captureUndo(){ if(TEMPS.length) TEMPS.pop(); updateTempChart(); buildCaptureWheels(); }
+let CAP_LAST_ADV=false;
+function captureTemp(){ if(!st||st.phase==='idle'||st.phase==='done') return; TEMPS.push({t:secSince(st.tStart), temp:capTempVal()}); CAP_LAST_ADV=false; draw(); updateTempChart(); capTempReset(); }   // quick reading between stages, wheel stays on the next crack
+function captureUndo(){ if(CAP_LAST_ADV && (st.phase==='pre1'||st.phase==='dev')){ undoMark(); CAP_LAST_ADV=false; }   // revert a mis-marked crack, then drop the point
+  if(TEMPS.length) TEMPS.pop(); updateTempChart(); buildCaptureWheels(); }
 function captureRecord(){ if(!st) return; const stage=ROAST_CAP_STAGES[Math.min(ROAST_CAP_STAGES.length-1,wheelIdx(document.getElementById('rcStageWheel')))], temp=capTempVal();
-  if(stage==='CHG' && st.phase==='idle'){ startRoast(vnow()); startTick(); TEMPS=[{t:0,temp}]; draw(); updateTempChart(); buildCaptureWheels(); return; }   // CHG starts the roast + logs charge
+  if(stage==='CHG' && st.phase==='idle'){ startRoast(vnow()); startTick(); TEMPS=[{t:0,temp}]; CAP_LAST_ADV=false; draw(); updateTempChart(); buildCaptureWheels(); return; }   // CHG starts the roast + logs charge
   if(st.phase==='idle'||st.phase==='done') return;
   TEMPS.push({t:secSince(st.tStart), temp});
   const advance=(stage==='CIN'&&st.phase==='pre0')||(stage==='A0'&&st.phase==='pre1')||(stage==='DROP'&&st.phase==='dev');
-  if(advance){ tap(); } else { draw(); updateTempChart(); }   // CIN/A0/DROP drive the gauge; other stages just log
+  if(advance){ CAP_LAST_ADV=(stage!=='DROP'); tap(); } else { CAP_LAST_ADV=false; draw(); updateTempChart(); }   // CIN/A0/DROP drive the gauge; other stages just log
   buildCaptureWheels(); }
 function undoTemp(){ if(TEMPS.length){ TEMPS.pop(); updateTempChart(); buildWheel(); updateTempDue(); } }
 function tempActive(){ return st && st.phase!=='idle' && st.phase!=='done'; }
