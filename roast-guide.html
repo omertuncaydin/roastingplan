@@ -296,13 +296,6 @@
         </div>
         <button class="bigbtn" id="bigbtn" onclick="tap()">START</button>
         <button class="btn ghost hide" id="undoBtn" style="margin-top:10px" onclick="undoMark()">Undo last mark</button>
-        <!-- locked controls: guarded so Back / test speeds can't be hit by accident mid-roast -->
-        <div id="testpanel" style="margin-top:12px;border:1px dashed var(--line);border-radius:9px;padding:9px;display:flex;align-items:center;gap:10px;justify-content:center">
-          <button class="spd" id="spdLock" onclick="toggleSpeedLock()" title="Unlock controls">🔒</button>
-          <button class="spd" id="spd30" onclick="toggleSpeed(30)" style="opacity:.35;pointer-events:none">30×</button>
-          <button class="spd" id="spd60" onclick="toggleSpeed(60)" style="opacity:.35;pointer-events:none">60×</button>
-          <button class="spd" id="cancel" onclick="reset()" style="opacity:.35;pointer-events:none">Back</button>
-        </div>
         <div id="captureModule" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
           <div style="display:flex;gap:12px;align-items:flex-start;justify-content:center">
             <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px" data-i18n="Stage">Stage</div><div class="wheelWrap"><div class="wheel" id="rcStageWheel"><div class="wheelInner" id="rcStageInner"></div></div><div class="wheelSel"></div></div></div>
@@ -327,6 +320,13 @@
             <div style="height:200px;margin-top:10px"><canvas id="tempChart"></canvas></div>
             <div class="small" id="tempDue" style="margin-top:6px;text-align:center"></div>
           </div>
+        </div>
+        <!-- locked controls at the bottom: guarded so Back / test speeds can't be hit by accident mid-roast -->
+        <div id="testpanel" style="margin-top:14px;border:1px dashed var(--line);border-radius:9px;padding:9px;display:flex;align-items:center;gap:10px;justify-content:center">
+          <button class="spd" id="spdLock" onclick="toggleSpeedLock()" title="Unlock controls">🔒</button>
+          <button class="spd" id="spd30" onclick="toggleSpeed(30)" style="opacity:.35;pointer-events:none">30×</button>
+          <button class="spd" id="spd60" onclick="toggleSpeed(60)" style="opacity:.35;pointer-events:none">60×</button>
+          <button class="spd" id="cancel" onclick="reset()" style="opacity:.35;pointer-events:none">Back</button>
         </div>
       </div>
     </div>
@@ -844,9 +844,9 @@ function captureRecord(){ if(!st) return; const swh=document.getElementById('rcS
   else {
     if(st.phase==='idle'||st.phase==='done') return;
     TEMPS.push({t:secSince(st.tStart), temp, stg:stage});
-    if(stage==='CIN' && st.phase==='pre0') tap();          // these three also drive the cockpit gauge
-    else if(stage==='A0' && st.phase==='pre1') tap();
-    else if(stage==='DROP' && st.phase==='dev') tap();
+    if(stage==='CIN'){ if(st.phase==='pre0') tap(); }               // mark cinnamon on the gauge
+    else if(stage==='A0'){ if(st.phase==='pre0') tap(); if(st.phase==='pre1') tap(); }   // reach dev even if CIN was skipped
+    else if(stage==='DROP'){ if(st.phase!=='done') finishRoast(vnow()); }   // drop always ends the roast + freezes the clock, whatever order you recorded
   }
   setWheelIdx(swh, Math.min(ROAST_CAP_STAGES.length-1, idx+1));   // walk to the next stage, one at a time (all stages, like calibration)
   capTempReset(); draw(); updateTempChart(); updateCaptureBtn(); }
