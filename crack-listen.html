@@ -38,7 +38,10 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 </head>
 <body>
 <div class="wrap">
-  <h1>Crack Listener</h1>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <h1>Crack Listener</h1>
+    <button onclick="hardRefresh()" style="width:auto;padding:6px 12px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted);border:1px solid var(--line)">Refresh app</button>
+  </div>
   <div class="sub">gain = crack intensity. the beans' thermal state, out loud.</div>
 
   <div class="card" style="text-align:center">
@@ -109,6 +112,7 @@ sens.oninput=()=>$('sensV').textContent=(+sens.value).toFixed(1)+'x';
 hp.oninput=()=>{ $('hpV').textContent=hp.value+' Hz'; if(hpF) hpF.frequency.value=+hp.value; };
 
 function toggle(){ running?stop():start(); }
+function hardRefresh(){ if(running||wav.len||rows.length){ if(!confirm('Refresh clears the unsaved session (audio + logs). Continue?')) return; } try{ const base=location.href.split('?')[0]; location.href=base+'?v='+Date.now(); }catch(e){ location.reload(); } }
 
 async function start(){
   $('err').textContent='';
