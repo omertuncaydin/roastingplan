@@ -51,6 +51,19 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <button class="go" id="btn" onclick="toggle()">Start listening</button>
   <div class="err" id="err"></div>
 
+  <div class="card" style="margin-top:12px">
+    <div class="lbl">session capture</div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:8px">
+      <input type="checkbox" id="recAudio" checked style="width:18px;height:18px;accent-color:var(--accent)">
+      <span>Record raw audio (WAV, pre-filter)</span>
+    </label>
+    <div class="hint" id="recInfo">Audio and the full gain trace are kept for the whole session. After Stop, save both files; detection can then be re-tuned offline against the recording, no second roast needed. Roughly 5.5 MB per minute; keep the screen on while recording.</div>
+    <div class="row" style="margin-top:10px">
+      <button class="go" id="dlWav" onclick="saveWav()" style="display:none">Save WAV</button>
+      <button class="go" id="dlCsv" onclick="saveCsv()" style="display:none">Save CSV</button>
+    </div>
+  </div>
+
   <div class="row" style="margin-top:12px">
     <div class="card"><div class="lbl">cracks</div><div class="n" id="cnt">0</div></div>
     <div class="card"><div class="lbl">rate /min</div><div class="n" id="rate">0</div></div>
@@ -76,6 +89,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 let AC=null, stream=null, src=null, hpF=null, analyser=null, buf=null, running=false, raf=null;
 let bgEMA=0, fastEMA=0, refractoryUntil=0, inCrack=false, crackPeak=0, crackStart=0;
 let cracks=[], startT=0, peakGain=0;
+let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
 const $=id=>document.getElementById(id);
 
@@ -97,14 +111,33 @@ async function start(){
   analyser=AC.createAnalyser(); analyser.fftSize=1024; analyser.smoothingTimeConstant=0;
   buf=new Float32Array(analyser.fftSize);
   src.connect(hpF); hpF.connect(analyser);
+  wav={chunks:[],len:0,sr:AC.sampleRate}; rows=[];
+  if($('recAudio').checked){
+    proc=AC.createScriptProcessor(4096,1,1);
+    proc.onaudioprocess=e=>{
+      const d=e.inputBuffer.getChannelData(0), q=new Int16Array(d.length);
+      for(let i=0;i<d.length;i++){ const s=Math.max(-1,Math.min(1,d[i])); q[i]=s<0?s*0x8000:s*0x7fff; }
+      wav.chunks.push(q); wav.len+=q.length;
+    };
+    src.connect(proc); proc.connect(AC.destination); // raw tap, before the high-pass; output stays silent
+  }
+  if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
+  $('recAudio').disabled=true; $('dlWav').style.display='none'; $('dlCsv').style.display='none';
   bgEMA=0; fastEMA=0; cracks=[]; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; inCrack=false;
   running=true; $('btn').textContent='Stop'; $('btn').className='stop'; $('status').textContent='Listening. Calibrating background for ~2s, keep it running steady.';
   loop();
 }
 function stop(){
   running=false; if(raf) cancelAnimationFrame(raf);
+  if(proc){ try{ src.disconnect(proc); proc.disconnect(); }catch(e){} proc.onaudioprocess=null; proc=null; }
   if(stream) stream.getTracks().forEach(t=>t.stop());
   if(AC) AC.close();
+  if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
+  $('recAudio').disabled=false;
+  if(wav.len) $('dlWav').style.display='block';
+  if(rows.length) $('dlCsv').style.display='block';
+  const mb=(wav.len*2/1048576).toFixed(1);
+  $('recInfo').textContent='Session kept in memory: '+(wav.len?mb+' MB audio, ':'')+rows.length+' trace samples, '+cracks.length+' cracks. Save both files before closing or reloading the page.';
   $('btn').textContent='Start listening'; $('btn').className='go'; $('status').textContent='Stopped. '+cracks.length+' cracks logged.';
 }
 
@@ -134,6 +167,7 @@ function loop(){
     // crack ended: log it with its peak gain
     const g=Math.round(toGain(crackPeak));
     cracks.push({t:(now-startT)/1000, g});
+    if(rows.length) rows[rows.length-1][7]=g;
     peakGain=Math.max(peakGain,g);
     refractoryUntil=now+70;                               // ignore echo of the same crack for 70ms
     inCrack=false;
@@ -150,7 +184,30 @@ function loop(){
 
   // trace
   trace.push({g:gain, crack:inCrack}); if(trace.length>TRACE_MAX) trace.shift();
+
+  // session log (one row per frame; crack_gain filled on the frame a crack finalizes)
+  rows.push([((now-startT)/1000).toFixed(2), r.toFixed(6), Math.round(gain), Math.round(bgGain), ratio.toFixed(2), sens.value, hp.value, '']);
+  if(wav.len && rows.length%60===0) $('recInfo').textContent='Recording: '+Math.floor((now-startT)/60000)+':'+String(Math.floor((now-startT)/1000%60)).padStart(2,'0')+' • '+(wav.len*2/1048576).toFixed(1)+' MB';
   draw();
+}
+
+function fname(ext){ const d=new Date(), p=n=>String(n).padStart(2,'0'); return 'crack-'+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())+'.'+ext; }
+function dl(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000); }
+function saveWav(){
+  if(!wav.len) return;
+  const sr=wav.sr, dataLen=wav.len*2, h=new ArrayBuffer(44), v=new DataView(h);
+  const ws=(o,s)=>{ for(let i=0;i<s.length;i++) v.setUint8(o+i,s.charCodeAt(i)); };
+  ws(0,'RIFF'); v.setUint32(4,36+dataLen,true); ws(8,'WAVE'); ws(12,'fmt ');
+  v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,sr,true); v.setUint32(28,sr*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true);
+  ws(36,'data'); v.setUint32(40,dataLen,true);
+  dl(new Blob([h,...wav.chunks],{type:'audio/wav'}), fname('wav'));
+}
+function saveCsv(){
+  if(!rows.length) return;
+  let s='t_s,rms,gain,bg_gain,ratio,sens,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
+  s+='\n# cracks: n,t_s,gain\n'+cracks.map((c,i)=>'# '+(i+1)+','+c.t.toFixed(2)+','+c.g).join('\n');
+  dl(new Blob([s],{type:'text/csv'}), fname('csv'));
 }
 
 function addLog(n,t,g){
