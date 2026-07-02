@@ -80,13 +80,14 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   </div>
 
   <div class="card">
-    <div class="lbl">session timeline (all cracks)</div>
-    <canvas id="tl" width="900" height="120"></canvas>
+    <div class="lbl">session timeline · 16 min · bars = cracks, line = cumulative gain</div>
+    <canvas id="tl" width="900" height="160"></canvas>
     <div class="row" style="margin-top:10px">
+      <div class="card"><div class="lbl">cum gain</div><div class="n" id="cum">0</div></div>
       <div class="card"><div class="lbl">time SD s</div><div class="n" id="sdT">-</div></div>
       <div class="card"><div class="lbl">gain SD</div><div class="n" id="sdG">-</div></div>
     </div>
-    <div class="hint">Time SD: spread of crack timestamps. Fast roasts read tight (low SD), slow roasts stretched (high SD). Gain SD: spread of crack loudness, a batch evenness read.</div>
+    <div class="hint">The green line is the staging spine: cumulative crack gain. Slope rising = A1 territory, steepest slope = B1, plateau = C1. Time SD: tight for fast roasts, stretched for slow. Gain SD: batch evenness. Axis fixed at 16 min for now.</div>
   </div>
 
   <div class="card">
@@ -231,18 +232,29 @@ function addLog(n,t,g){
 
 function sd(a){ if(a.length<2) return 0; const m=a.reduce((s,x)=>s+x,0)/a.length; return Math.sqrt(a.reduce((s,x)=>s+(x-m)*(x-m),0)/(a.length-1)); }
 function updateSD(){
+  $('cum').textContent=cracks.reduce((s,c)=>s+c.g,0);
   if(cracks.length<2){ $('sdT').textContent='-'; $('sdG').textContent='-'; return; }
   $('sdT').textContent=sd(cracks.map(c=>c.t)).toFixed(1);
   $('sdG').textContent=sd(cracks.map(c=>c.g)).toFixed(1);
 }
 const tl=$('tl'), tx=tl.getContext('2d');
+const TL_SPAN=960; // fixed 16 min axis for now; panel-adjustable later
 function drawTimeline(nowS){
   tx.clearRect(0,0,tl.width,tl.height);
-  const W=tl.width,H=tl.height, span=Math.max(nowS,60);
+  const W=tl.width,H=tl.height, span=TL_SPAN;
   tx.strokeStyle='#2a221b'; tx.lineWidth=1;
-  for(let m=0;m*60<=span;m++){ const x=(m*60/span)*W; tx.beginPath(); tx.moveTo(x,0); tx.lineTo(x,H); tx.stroke(); }
+  for(let m=0;m*60<=span;m+=2){ const x=(m*60/span)*W; tx.beginPath(); tx.moveTo(x,0); tx.lineTo(x,H); tx.stroke(); }
+  // crack bars, height = per-crack gain
   tx.fillStyle='#e6c14b';
   for(const c of cracks){ const x=(c.t/span)*W, h=Math.max(6,(c.g/100)*H); tx.fillRect(x-1,H-h,2,h); }
+  // cumulative gain curve: the staging spine (slope = energy-release rate)
+  if(cracks.length>1){
+    let tot=0; const cum=cracks.map(c=>({t:c.t, v:(tot+=c.g)}));
+    tx.strokeStyle='#3c7a5a'; tx.lineWidth=2.5; tx.beginPath();
+    tx.moveTo((cum[0].t/span)*W, H-2);
+    for(const p of cum) tx.lineTo((p.t/span)*W, H-2-(p.v/tot)*(H-8));
+    tx.stroke();
+  }
 }
 const cv=$('cv'), cx=cv.getContext('2d');
 function draw(){
