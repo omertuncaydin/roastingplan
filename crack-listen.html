@@ -44,7 +44,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
     <h1>Crack Listener</h1>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--muted)">v2026-07-02b</span>
+      <span style="font-size:11px;color:var(--muted)">v2026-07-02c</span>
       <button onclick="hardRefresh()" style="width:auto;padding:6px 12px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted);border:1px solid var(--line)">Refresh app</button>
     </div>
   </div>
@@ -82,9 +82,9 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div class="card" style="margin-top:12px">
     <div class="lbl">gain trace (cracks marked)</div>
     <canvas id="cv" width="900" height="300"></canvas>
-    <div class="ctl"><label>Sensitivity <span class="info" onclick="showInfo('sens')">&#9432;</span></label><input type="range" id="sens" min="2" max="30" step="0.5" value="8"><span class="v" id="sensV">8.0x</span></div>
+    <div class="ctl"><label>Trigger &times; <span class="info" onclick="showInfo('sens')">&#9432;</span></label><input type="range" id="sens" min="2" max="30" step="0.5" value="4"><span class="v" id="sensV">4.0x</span></div>
     <div class="ctl"><label>High-pass <span class="info" onclick="showInfo('hp')">&#9432;</span></label><input type="range" id="hp" min="300" max="4000" step="100" value="1600"><span class="v" id="hpV">1600 Hz</span></div>
-    <div class="hint">Detection listens for millisecond bursts (clicks), not loud averages, so test it with a pen click or finger snap, not your voice.</div>
+    <div class="hint">Detection listens for millisecond bursts (clicks), not loud averages, so test it with a pen click or finger snap, not your voice. Trigger is a threshold: LOWER catches more.</div>
   </div>
 
   <div class="card">
@@ -238,7 +238,7 @@ function wavHeader(){
   return h;
 }
 function csvText(){
-  let s='t_s,rms,gain,bg_gain,ratio,sens,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
+  let s='t_s,rms,gain,bg_gain,ratio,trigger_x,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
   s+='\n# cracks: n,t_s,gain,fp\n'+cracks.map((c,i)=>'# '+(i+1)+','+c.t.toFixed(2)+','+c.g+','+(c.fp?1:0)).join('\n');
   return s;
 }
@@ -298,7 +298,7 @@ $('log').addEventListener('touchstart',e=>{ swRow=e.target.closest('.lr'); if(e.
 $('log').addEventListener('touchmove',e=>{ if(!swRow) return; const dx=e.touches[0].clientX-swX; if(dx<0) swRow.style.transform='translateX('+Math.max(dx,-100)+'px)'; },{passive:true});
 $('log').addEventListener('touchend',e=>{ if(!swRow) return; const dx=e.changedTouches[0].clientX-swX; if(dx<-60) delCrack(+swRow.dataset.id); else swRow.style.transform=''; swRow=null; });
 const INFO={
- sens:['Sensitivity','A crack counts only when a 1 ms burst is this many times louder than the rolling background floor. Higher = stricter: fewer false hits from clanks and scoops, but quiet cracks may be missed. On the machine, raise it until the roar and handling sounds stop registering, then stop.'],
+ sens:['Trigger threshold','A crack counts only when a 1 ms burst is this many times louder than the rolling background floor. LOWER catches more (more sensitive, more noise too); HIGHER is stricter. Start low (3-5) by the machine and raise only until scoop taps and clanks stop registering.'],
  hp:['High-pass','Everything below this frequency is cut before detection: drum rumble, fan, motor hum. Raise it until the background floor stops riding the roar; lower it if real cracks arrive thin. The raw WAV is recorded before this filter, so recordings are never affected.'],
  bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.']
 };
