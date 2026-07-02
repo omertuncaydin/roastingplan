@@ -34,6 +34,9 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 .lr b{color:var(--accent)}
 .hint{color:var(--muted);font-size:12px;line-height:1.5;margin-top:4px}
 .err{color:var(--warn);font-size:13px;margin-top:8px}
+.info{color:var(--accent);cursor:pointer;font-weight:700}
+.lr{background:var(--panel);touch-action:pan-y}
+.fpr{opacity:.45}
 </style>
 </head>
 <body>
@@ -41,7 +44,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
     <h1>Crack Listener</h1>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--muted)">v2026-07-02a</span>
+      <span style="font-size:11px;color:var(--muted)">v2026-07-02b</span>
       <button onclick="hardRefresh()" style="width:auto;padding:6px 12px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted);border:1px solid var(--line)">Refresh app</button>
     </div>
   </div>
@@ -65,8 +68,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
     </label>
     <div class="hint" id="recInfo">Audio and the full gain trace are kept for the whole session. After Stop, save both files; detection can then be re-tuned offline against the recording, no second roast needed. Roughly 5.5 MB per minute; keep the screen on while recording.</div>
     <div class="row" style="margin-top:10px">
-      <button class="go" id="dlWav" onclick="saveWav()" style="display:none">Save WAV</button>
-      <button class="go" id="dlCsv" onclick="saveCsv()" style="display:none">Save CSV</button>
+      <button class="go" id="dlZip" onclick="saveSession()" style="display:none">Save session (.zip)</button>
     </div>
   </div>
 
@@ -80,33 +82,37 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div class="card" style="margin-top:12px">
     <div class="lbl">gain trace (cracks marked)</div>
     <canvas id="cv" width="900" height="300"></canvas>
-    <div class="ctl"><label>Sensitivity</label><input type="range" id="sens" min="2" max="30" step="0.5" value="8"><span class="v" id="sensV">8.0x</span></div>
-    <div class="ctl"><label>High-pass (cut rumble)</label><input type="range" id="hp" min="300" max="4000" step="100" value="1600"><span class="v" id="hpV">1600 Hz</span></div>
-    <div class="hint">Detection listens for millisecond bursts (clicks), not loud averages, so test it with a pen click or finger snap, not your voice. Higher sensitivity catches quieter cracks but also noise. Raise the high-pass until the drum/fan rumble stops moving the meter, then lower it just enough to still hear cracks.</div>
+    <div class="ctl"><label>Sensitivity <span class="info" onclick="showInfo('sens')">&#9432;</span></label><input type="range" id="sens" min="2" max="30" step="0.5" value="8"><span class="v" id="sensV">8.0x</span></div>
+    <div class="ctl"><label>High-pass <span class="info" onclick="showInfo('hp')">&#9432;</span></label><input type="range" id="hp" min="300" max="4000" step="100" value="1600"><span class="v" id="hpV">1600 Hz</span></div>
+    <div class="hint">Detection listens for millisecond bursts (clicks), not loud averages, so test it with a pen click or finger snap, not your voice.</div>
   </div>
 
   <div class="card">
-    <div class="lbl">session timeline · 16 min · bars = cracks, line = cumulative gain</div>
-    <canvas id="tl" width="900" height="160"></canvas>
+    <div class="lbl">session timeline · 16 min</div>
+    <canvas id="tl" width="900" height="180"></canvas>
+    <div class="ctl"><label>Bin <span class="info" onclick="showInfo('bin')">&#9432;</span></label><input type="range" id="bin" min="1" max="10" step="1" value="1" oninput="document.getElementById('binV').textContent=this.value+' s';drawTimeline()"><span class="v" id="binV">1 s</span></div>
     <div class="row" style="margin-top:10px">
       <div class="card"><div class="lbl">total gain</div><div class="n" id="cum">0</div></div>
       <div class="card"><div class="lbl">time SD s</div><div class="n" id="sdT">-</div></div>
       <div class="card"><div class="lbl">gain SD</div><div class="n" id="sdG">-</div></div>
     </div>
-    <div class="hint">The green line is the staging spine: cumulative crack gain. Slope rising = A1 territory, steepest slope = B1, plateau = C1. Time SD: tight for fast roasts, stretched for slow. Gain SD: batch evenness. Axis fixed at 16 min for now.</div>
+    <div class="hint">Gold bars: share of cracks per bin. Orange curve: the same, smoothed. White lines: mean crack time (solid) and mean &plusmn; 1 SD (dashed); tight for fast roasts, stretched for slow. Thick green: crack progress 0-100% (cumulative gain); slope rising = A1, steepest = B1, plateau = C1. Axis fixed at 16 min for now.</div>
   </div>
 
   <div class="card">
     <div class="lbl">crack log</div>
+    <div class="hint" style="margin-bottom:6px">Tick = false positive: kept and labeled in the CSV, excluded from stats. Swipe a row left to delete it outright (wrong-settings junk).</div>
     <div class="log" id="log"></div>
   </div>
+
+  <div id="modal" onclick="if(event.target===this)this.style.display='none'" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:none;align-items:center;justify-content:center;padding:20px"><div class="card" id="modalBox" style="max-width:420px;width:100%;margin:0"></div></div>
 </div>
 
 <script>
 let AC=null, stream=null, src=null, hpF=null, analyser=null, buf=null, running=false, raf=null;
 let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, lastShort=0, lastBufRms=0;
-let cracks=[], dismissed=[], crackSeq=0, startT=0, peakGain=0;
+let cracks=[], crackSeq=0, startT=0, peakGain=0;
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
 const $=id=>document.getElementById(id);
@@ -145,9 +151,9 @@ async function start(){
     src.connect(proc); proc.connect(AC.destination); // raw tap, before the high-pass; output stays silent
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
-  $('recAudio').disabled=true; $('dlWav').style.display='none'; $('dlCsv').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; dismissed=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null;
-  $('log').innerHTML=''; updateSD(); drawTimeline(0);
+  $('recAudio').disabled=true; $('dlZip').style.display='none';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null;
+  $('log').innerHTML=''; updateSD(); drawTimeline();
   running=true; $('btn').textContent='Stop'; $('btn').className='stop'; $('status').textContent='Listening. Calibrating background for ~2s, keep it running steady.';
   loop();
 }
@@ -159,10 +165,9 @@ function stop(){
   if(AC) AC.close();
   if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
   $('recAudio').disabled=false;
-  if(wav.len) $('dlWav').style.display='block';
-  if(rows.length) $('dlCsv').style.display='block';
+  if(wav.len||rows.length) $('dlZip').style.display='block';
   const mb=(wav.len*2/1048576).toFixed(1);
-  $('recInfo').textContent='Session kept in memory: '+(wav.len?mb+' MB audio, ':'')+rows.length+' trace samples, '+cracks.length+' cracks. Save both files before closing or reloading the page.';
+  $('recInfo').textContent='Session kept in memory: '+(wav.len?mb+' MB audio, ':'')+rows.length+' trace samples, '+cracks.length+' cracks. Save the session before closing or reloading the page.';
   $('btn').textContent='Start listening'; $('btn').className='go'; $('status').textContent='Stopped. '+cracks.length+' cracks logged.';
 }
 
@@ -201,7 +206,7 @@ function loop(){
   if(pendingCrackG!=null){
     $('last').textContent=pendingCrackG; $('peak').textContent=peakGain; $('cnt').textContent=cracks.length;
     if(rows.length) rows[rows.length-1][7]=pendingCrackG;
-    renderLog(); updateSD(); drawTimeline((now-startT)/1000);
+    renderLog(); updateSD(); drawTimeline();
     pendingCrackG=null;
   }
 
@@ -209,7 +214,7 @@ function loop(){
   $('gain').textContent=Math.round(gain);
   $('mfill').style.width=gain+'%';
   $('mfloor').style.left=bgGain+'%';
-  const recent=cracks.filter(c=> (now-startT)/1000 - c.t <= 10).length;
+  const recent=cracks.filter(c=> !c.fp && (now-startT)/1000 - c.t <= 10).length;
   $('rate').textContent=Math.round(recent*6);            // cracks in last 10s -> per minute
 
   // trace
@@ -223,60 +228,123 @@ function loop(){
 
 function fname(ext){ const d=new Date(), p=n=>String(n).padStart(2,'0'); return 'crack-'+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())+'.'+ext; }
 function dl(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000); }
-function saveWav(){
-  if(!wav.len) return;
+function wavHeader(){
   const sr=wav.sr, dataLen=wav.len*2, h=new ArrayBuffer(44), v=new DataView(h);
   const ws=(o,s)=>{ for(let i=0;i<s.length;i++) v.setUint8(o+i,s.charCodeAt(i)); };
   ws(0,'RIFF'); v.setUint32(4,36+dataLen,true); ws(8,'WAVE'); ws(12,'fmt ');
   v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
   v.setUint32(24,sr,true); v.setUint32(28,sr*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true);
   ws(36,'data'); v.setUint32(40,dataLen,true);
-  dl(new Blob([h,...wav.chunks],{type:'audio/wav'}), fname('wav'));
+  return h;
 }
-function saveCsv(){
-  if(!rows.length) return;
+function csvText(){
   let s='t_s,rms,gain,bg_gain,ratio,sens,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
-  s+='\n# cracks: n,t_s,gain\n'+cracks.map((c,i)=>'# '+(i+1)+','+c.t.toFixed(2)+','+c.g).join('\n');
-  if(dismissed.length) s+='\n# dismissed (user-deleted, labeled false positives): t_s,gain\n'+dismissed.map(c=>'# '+c.t.toFixed(2)+','+c.g).join('\n');
-  dl(new Blob([s],{type:'text/csv'}), fname('csv'));
+  s+='\n# cracks: n,t_s,gain,fp\n'+cracks.map((c,i)=>'# '+(i+1)+','+c.t.toFixed(2)+','+c.g+','+(c.fp?1:0)).join('\n');
+  return s;
+}
+// minimal store-only ZIP writer: one tap saves WAV + CSV as a single file
+const CRC_T=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; t[n]=c; } return t; })();
+function crcUpd(crc,b){ for(let i=0;i<b.length;i++) crc=CRC_T[(crc^b[i])&0xff]^(crc>>>8); return crc; }
+function zipBlob(files){
+  const out=[], central=[]; let off=0, cdSize=0;
+  for(const f of files){
+    const nm=new TextEncoder().encode(f.name);
+    const lh=new DataView(new ArrayBuffer(30));
+    lh.setUint32(0,0x04034b50,true); lh.setUint16(4,20,true); lh.setUint32(14,f.crc,true);
+    lh.setUint32(18,f.size,true); lh.setUint32(22,f.size,true); lh.setUint16(26,nm.length,true);
+    out.push(lh.buffer,nm,...f.parts);
+    const ch=new DataView(new ArrayBuffer(46));
+    ch.setUint32(0,0x02014b50,true); ch.setUint16(4,20,true); ch.setUint16(6,20,true);
+    ch.setUint32(16,f.crc,true); ch.setUint32(20,f.size,true); ch.setUint32(24,f.size,true);
+    ch.setUint16(28,nm.length,true); ch.setUint32(42,off,true);
+    central.push(ch.buffer,nm); cdSize+=46+nm.length;
+    off+=30+nm.length+f.size;
+  }
+  const eo=new DataView(new ArrayBuffer(22));
+  eo.setUint32(0,0x06054b50,true); eo.setUint16(8,files.length,true); eo.setUint16(10,files.length,true);
+  eo.setUint32(12,cdSize,true); eo.setUint32(16,off,true);
+  return new Blob([...out,...central,eo.buffer],{type:'application/zip'});
+}
+function saveSession(){
+  if(!rows.length && !wav.len) return;
+  const base=fname('x').slice(0,-2), files=[];
+  const cb=new TextEncoder().encode(csvText());
+  files.push({name:base+'.csv', parts:[cb], size:cb.length, crc:(crcUpd(0xFFFFFFFF,cb)^0xFFFFFFFF)>>>0});
+  if(wav.len){
+    const hu=new Uint8Array(wavHeader()); let crc=crcUpd(0xFFFFFFFF,hu); const parts=[hu];
+    for(const c of wav.chunks){ const u=new Uint8Array(c.buffer,c.byteOffset,c.byteLength); crc=crcUpd(crc,u); parts.push(u); }
+    files.push({name:base+'.wav', parts, size:44+wav.len*2, crc:(crc^0xFFFFFFFF)>>>0});
+  }
+  dl(zipBlob(files), base+'.zip');
 }
 
 function fmtT(t){ return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'); }
+function valid(){ return cracks.filter(c=>!c.fp); }
 function renderLog(){
-  $('log').innerHTML=cracks.map((c,i)=>'<div class="lr"><span>#'+(i+1)+' &nbsp; '+fmtT(c.t)+'</span><span>gain <b>'+c.g+'</b> <span onclick="delCrack('+c.id+')" style="color:var(--warn);cursor:pointer;padding:0 8px;font-weight:800">&times;</span></span></div>').reverse().join('');
+  $('log').innerHTML=cracks.map((c,i)=>'<div class="lr'+(c.fp?' fpr':'')+'" data-id="'+c.id+'"><span><input type="checkbox" '+(c.fp?'checked':'')+' onchange="fpCrack('+c.id+',this.checked)" style="width:16px;height:16px;accent-color:var(--warn);vertical-align:-3px"> #'+(i+1)+' &nbsp; '+fmtT(c.t)+'</span><span>gain <b>'+c.g+'</b></span></div>').reverse().join('');
 }
-function delCrack(id){
-  const i=cracks.findIndex(c=>c.id===id); if(i<0) return;
-  dismissed.push(cracks.splice(i,1)[0]);               // deletions are labeled false positives, kept for the CSV
-  peakGain=cracks.reduce((m,c)=>Math.max(m,c.g),0);
-  $('cnt').textContent=cracks.length; $('peak').textContent=peakGain;
-  $('last').textContent=cracks.length?cracks[cracks.length-1].g:0;
-  renderLog(); updateSD(); drawTimeline(0);
+function fpCrack(id,ck){ const c=cracks.find(c=>c.id===id); if(c){ c.fp=ck; refreshStats(); } }
+function delCrack(id){ const i=cracks.findIndex(c=>c.id===id); if(i>=0){ cracks.splice(i,1); refreshStats(); } }
+function refreshStats(){
+  const v=valid();
+  peakGain=v.reduce((m,c)=>Math.max(m,c.g),0);
+  $('cnt').textContent=v.length; $('peak').textContent=peakGain;
+  $('last').textContent=v.length?v[v.length-1].g:0;
+  renderLog(); updateSD(); drawTimeline();
 }
+// left-swipe to delete (touch)
+let swX=null, swRow=null;
+$('log').addEventListener('touchstart',e=>{ swRow=e.target.closest('.lr'); if(e.target.tagName==='INPUT') swRow=null; if(swRow) swX=e.touches[0].clientX; },{passive:true});
+$('log').addEventListener('touchmove',e=>{ if(!swRow) return; const dx=e.touches[0].clientX-swX; if(dx<0) swRow.style.transform='translateX('+Math.max(dx,-100)+'px)'; },{passive:true});
+$('log').addEventListener('touchend',e=>{ if(!swRow) return; const dx=e.changedTouches[0].clientX-swX; if(dx<-60) delCrack(+swRow.dataset.id); else swRow.style.transform=''; swRow=null; });
+const INFO={
+ sens:['Sensitivity','A crack counts only when a 1 ms burst is this many times louder than the rolling background floor. Higher = stricter: fewer false hits from clanks and scoops, but quiet cracks may be missed. On the machine, raise it until the roar and handling sounds stop registering, then stop.'],
+ hp:['High-pass','Everything below this frequency is cut before detection: drum rumble, fan, motor hum. Raise it until the background floor stops riding the roar; lower it if real cracks arrive thin. The raw WAV is recorded before this filter, so recordings are never affected.'],
+ bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.']
+};
+function showInfo(k){ const d=INFO[k]; $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">'+d[0]+'</h1><div class="hint" style="font-size:13px;margin:0">'+d[1]+'</div><button style="margin-top:14px;background:var(--accent2)" onclick="document.getElementById(\'modal\').style.display=\'none\'">Close</button>'; $('modal').style.display='flex'; }
 
 function sd(a){ if(a.length<2) return 0; const m=a.reduce((s,x)=>s+x,0)/a.length; return Math.sqrt(a.reduce((s,x)=>s+(x-m)*(x-m),0)/(a.length-1)); }
 function updateSD(){
-  $('cum').textContent=cracks.reduce((s,c)=>s+c.g,0);
-  if(cracks.length<2){ $('sdT').textContent='-'; $('sdG').textContent='-'; return; }
-  $('sdT').textContent=sd(cracks.map(c=>c.t)).toFixed(1);
-  $('sdG').textContent=sd(cracks.map(c=>c.g)).toFixed(1);
+  const v=valid();
+  $('cum').textContent=v.reduce((s,c)=>s+c.g,0);
+  if(v.length<2){ $('sdT').textContent='-'; $('sdG').textContent='-'; return; }
+  $('sdT').textContent=sd(v.map(c=>c.t)).toFixed(1);
+  $('sdG').textContent=sd(v.map(c=>c.g)).toFixed(1);
 }
 const tl=$('tl'), tx=tl.getContext('2d');
 const TL_SPAN=960; // fixed 16 min axis for now; panel-adjustable later
-function drawTimeline(nowS){
+function drawTimeline(){
   tx.clearRect(0,0,tl.width,tl.height);
-  const W=tl.width,H=tl.height, span=TL_SPAN;
+  const W=tl.width,H=tl.height, span=TL_SPAN, v=valid();
   tx.strokeStyle='#2a221b'; tx.lineWidth=1;
   for(let m=0;m*60<=span;m+=2){ const x=(m*60/span)*W; tx.beginPath(); tx.moveTo(x,0); tx.lineTo(x,H); tx.stroke(); }
-  // crack bars, height = per-crack gain
+  if(!v.length) return;
+  // histogram: share of cracks per bin
+  const bin=+(($('bin')&&$('bin').value)||1), nb=Math.ceil(span/bin), counts=new Array(nb).fill(0);
+  for(const c of v){ counts[Math.min(nb-1,Math.floor(c.t/bin))]++; }
+  const total=v.length, maxShare=Math.max(...counts)/total;
+  const bw=Math.max(1,(bin/span)*W-1);
   tx.fillStyle='#e6c14b';
-  for(const c of cracks){ const x=(c.t/span)*W, h=Math.max(6,(c.g/100)*H); tx.fillRect(x-1,H-h,2,h); }
-  // cumulative gain curve: the staging spine (slope = energy-release rate)
-  if(cracks.length>1){
-    let tot=0; const cum=cracks.map(c=>({t:c.t, v:(tot+=c.g)}));
-    tx.strokeStyle='#3c7a5a'; tx.lineWidth=2.5; tx.beginPath();
+  counts.forEach((n,i)=>{ if(!n) return; const h=((n/total)/maxShare)*(H-12); tx.fillRect((i*bin/span)*W, H-h, bw, h); });
+  // smoothed density curve (moving average over 5 bins)
+  tx.strokeStyle='#c98a3c'; tx.lineWidth=2; tx.beginPath(); let started=false;
+  for(let i=0;i<nb;i++){ let s=0,k=0; for(let j=Math.max(0,i-2);j<=Math.min(nb-1,i+2);j++){ s+=counts[j]; k++; }
+    const y=H-((s/k/total)/maxShare)*(H-12), x=((i+0.5)*bin/span)*W;
+    started?tx.lineTo(x,y):(tx.moveTo(x,y),started=true); }
+  tx.stroke();
+  // mean (solid) and mean +/- 1 SD (dashed) of crack times
+  if(v.length>1){
+    const ts=v.map(c=>c.t), m=ts.reduce((a,b)=>a+b,0)/ts.length, s1=sd(ts);
+    const mark=(t,dash)=>{ if(t<0||t>span) return; const x=(t/span)*W; tx.setLineDash(dash); tx.strokeStyle='#f3ede4'; tx.lineWidth=1.5; tx.beginPath(); tx.moveTo(x,0); tx.lineTo(x,H); tx.stroke(); tx.setLineDash([]); };
+    mark(m,[]); mark(m-s1,[5,4]); mark(m+s1,[5,4]);
+  }
+  // crack progress 0-100%: cumulative gain, the staging spine (slope = energy-release rate)
+  if(v.length>1){
+    let tot=0; const cum=v.map(c=>({t:c.t, v:(tot+=c.g)}));
+    tx.strokeStyle='#3c7a5a'; tx.lineWidth=4; tx.beginPath();
     tx.moveTo((cum[0].t/span)*W, H-2);
-    for(const p of cum) tx.lineTo((p.t/span)*W, H-2-(p.v/tot)*(H-8));
+    for(const p of cum) tx.lineTo((p.t/span)*W, H-2-(p.v/tot)*(H-12));
     tx.stroke();
   }
 }
