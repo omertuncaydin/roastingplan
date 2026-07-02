@@ -77,9 +77,9 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div class="card" style="margin-top:12px">
     <div class="lbl">gain trace (cracks marked)</div>
     <canvas id="cv" width="900" height="300"></canvas>
-    <div class="ctl"><label>Sensitivity</label><input type="range" id="sens" min="2" max="12" step="0.5" value="5"><span class="v" id="sensV">5.0x</span></div>
+    <div class="ctl"><label>Sensitivity</label><input type="range" id="sens" min="2" max="30" step="0.5" value="8"><span class="v" id="sensV">8.0x</span></div>
     <div class="ctl"><label>High-pass (cut rumble)</label><input type="range" id="hp" min="300" max="4000" step="100" value="1600"><span class="v" id="hpV">1600 Hz</span></div>
-    <div class="hint">Higher sensitivity catches quieter cracks but also noise. Raise the high-pass until the HSR15 drum/fan rumble stops moving the meter, then lower it just enough to still hear cracks.</div>
+    <div class="hint">Detection listens for millisecond bursts (clicks), not loud averages, so test it with a pen click or finger snap, not your voice. Higher sensitivity catches quieter cracks but also noise. Raise the high-pass until the drum/fan rumble stops moving the meter, then lower it just enough to still hear cracks.</div>
   </div>
 
   <div class="card">
@@ -101,7 +101,8 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 
 <script>
 let AC=null, stream=null, src=null, hpF=null, analyser=null, buf=null, running=false, raf=null;
-let bgEMA=0, fastEMA=0, refractoryUntil=0, inCrack=false, crackPeak=0, crackStart=0;
+let bgEMA=0, fastEMA=0, refractoryUntil=0;
+let procDet=null, crackFlash=false, pendingCrackG=null, lastShort=0, lastBufRms=0;
 let cracks=[], dismissed=[], crackSeq=0, startT=0, peakGain=0;
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
@@ -126,6 +127,10 @@ async function start(){
   analyser=AC.createAnalyser(); analyser.fftSize=1024; analyser.smoothingTimeConstant=0;
   buf=new Float32Array(analyser.fftSize);
   src.connect(hpF); hpF.connect(analyser);
+  // detection runs on the audio thread: gap-free, non-overlapping buffers off the high-passed signal
+  procDet=AC.createScriptProcessor(1024,1,1);
+  procDet.onaudioprocess=e=>detectBuf(e.inputBuffer.getChannelData(0));
+  hpF.connect(procDet); procDet.connect(AC.destination);
   wav={chunks:[],len:0,sr:AC.sampleRate}; rows=[];
   if($('recAudio').checked){
     proc=AC.createScriptProcessor(4096,1,1);
@@ -138,13 +143,14 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlWav').style.display='none'; $('dlCsv').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; dismissed=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; inCrack=false;
+  bgEMA=0; fastEMA=0; cracks=[]; dismissed=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null;
   $('log').innerHTML=''; updateSD(); drawTimeline(0);
   running=true; $('btn').textContent='Stop'; $('btn').className='stop'; $('status').textContent='Listening. Calibrating background for ~2s, keep it running steady.';
   loop();
 }
 function stop(){
   running=false; if(raf) cancelAnimationFrame(raf);
+  if(procDet){ try{ hpF.disconnect(procDet); procDet.disconnect(); }catch(e){} procDet.onaudioprocess=null; procDet=null; }
   if(proc){ try{ src.disconnect(proc); proc.disconnect(); }catch(e){} proc.onaudioprocess=null; proc=null; }
   if(stream) stream.getTracks().forEach(t=>t.stop());
   if(AC) AC.close();
@@ -161,35 +167,39 @@ function rms(a){ let s=0; for(let i=0;i<a.length;i++) s+=a[i]*a[i]; return Math.
 // map a linear rms to a 0-100 gain scale via dB, floor at -70dB
 function toGain(r){ const db=20*Math.log10(r+1e-9); return Math.max(0, Math.min(100, (db+70)/70*100)); }
 
+// audio-thread detection: a crack is a millisecond-scale burst (high crest), not a loud average.
+// scan each 1024-sample buffer for the strongest 1ms (48-sample) energy vs the slow background floor.
+function detectBuf(d){
+  let s=0; for(let i=0;i<d.length;i++) s+=d[i]*d[i];
+  const bufRms=Math.sqrt(s/d.length);
+  bgEMA = bgEMA ? bgEMA*0.96 + bufRms*0.04 : bufRms;     // ~0.5s floor at 21ms buffers
+  const W=48; let acc=0, maxE=0;
+  for(let i=0;i<d.length;i++){ acc+=d[i]*d[i]; if(i>=W) acc-=d[i-W]*d[i-W]; if(i>=W-1&&acc>maxE) maxE=acc; }
+  const shortRms=Math.sqrt(maxE/W);
+  lastShort=shortRms; lastBufRms=bufRms;
+  const now=performance.now();
+  if(now-startT>2000 && now>refractoryUntil && shortRms/(bgEMA+1e-9)>+sens.value && shortRms>0.003){
+    refractoryUntil=now+70;                               // ignore echo of the same crack for 70ms
+    const g=Math.round(toGain(shortRms));
+    cracks.push({t:(now-startT)/1000, g, id:++crackSeq});
+    peakGain=Math.max(peakGain,g);
+    crackFlash=true; pendingCrackG=g;                     // UI picks these up on the next frame
+  }
+}
+
 function loop(){
   raf=requestAnimationFrame(loop);
   analyser.getFloatTimeDomainData(buf);
   const r=rms(buf);
-  // fast follows the signal; background is a slow floor
-  fastEMA = fastEMA ? fastEMA*0.6 + r*0.4 : r;
-  bgEMA   = bgEMA   ? bgEMA*0.98  + r*0.02 : r;
+  fastEMA = fastEMA ? fastEMA*0.6 + r*0.4 : r;            // display only; detection lives in detectBuf
   const gain=toGain(fastEMA), bgGain=toGain(bgEMA);
   const now=performance.now();
-  const settled = now-startT>2000;                       // let the background floor settle first
 
-  // crack = fast energy jumps well above the rolling floor
-  const ratio = fastEMA/(bgEMA+1e-9), thresh=+sens.value;
-  if(settled && ratio>thresh && r>0.0025){
-    if(now>refractoryUntil){
-      if(!inCrack){ inCrack=true; crackPeak=fastEMA; crackStart=now; }
-      else crackPeak=Math.max(crackPeak,fastEMA);
-    }
-  } else if(inCrack){
-    // crack ended: log it with its peak gain
-    const g=Math.round(toGain(crackPeak));
-    cracks.push({t:(now-startT)/1000, g, id:++crackSeq});
-    if(rows.length) rows[rows.length-1][7]=g;
-    peakGain=Math.max(peakGain,g);
-    refractoryUntil=now+70;                               // ignore echo of the same crack for 70ms
-    inCrack=false;
-    $('last').textContent=g; $('peak').textContent=peakGain; $('cnt').textContent=cracks.length;
-    renderLog();
-    updateSD(); drawTimeline((now-startT)/1000);
+  if(pendingCrackG!=null){
+    $('last').textContent=pendingCrackG; $('peak').textContent=peakGain; $('cnt').textContent=cracks.length;
+    if(rows.length) rows[rows.length-1][7]=pendingCrackG;
+    renderLog(); updateSD(); drawTimeline((now-startT)/1000);
+    pendingCrackG=null;
   }
 
   // readouts
@@ -200,10 +210,10 @@ function loop(){
   $('rate').textContent=Math.round(recent*6);            // cracks in last 10s -> per minute
 
   // trace
-  trace.push({g:gain, crack:inCrack}); if(trace.length>TRACE_MAX) trace.shift();
+  trace.push({g:gain, crack:crackFlash}); crackFlash=false; if(trace.length>TRACE_MAX) trace.shift();
 
   // session log (one row per frame; crack_gain filled on the frame a crack finalizes)
-  rows.push([((now-startT)/1000).toFixed(2), r.toFixed(6), Math.round(gain), Math.round(bgGain), ratio.toFixed(2), sens.value, hp.value, '']);
+  rows.push([((now-startT)/1000).toFixed(2), lastBufRms.toFixed(6), Math.round(gain), Math.round(bgGain), (lastShort/(bgEMA+1e-9)).toFixed(2), sens.value, hp.value, '']);
   if(wav.len && rows.length%60===0) $('recInfo').textContent='Recording: '+Math.floor((now-startT)/60000)+':'+String(Math.floor((now-startT)/1000%60)).padStart(2,'0')+' • '+(wav.len*2/1048576).toFixed(1)+' MB';
   draw();
 }
