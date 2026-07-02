@@ -45,7 +45,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
     <h1>Crack Listener</h1>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--muted)">v2026-07-02g</span>
+      <span style="font-size:11px;color:var(--muted)">v2026-07-02h</span>
       <button onclick="hardRefresh()" style="width:auto;padding:6px 12px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted);border:1px solid var(--line)">Refresh app</button>
     </div>
   </div>
@@ -120,7 +120,7 @@ const $=id=>document.getElementById(id);
 
 const sens=$('sens'), hp=$('hp');
 function fmtHz(v){ return v>=1000 ? (v/1000).toFixed(1).replace(/\.0$/,'')+'k Hz' : v+' Hz'; }
-function nudge(id,dir){ const el=$(id); el.value=+el.value+dir*(+el.step||1); el.dispatchEvent(new Event('input')); }
+function nudge(id,dir){ const el=$(id); const jump=Math.max(+el.step||1, (+el.max - +el.min)/10); el.value=+el.value+dir*jump; el.dispatchEvent(new Event('input')); }   // each tap = 10% of the slider's range
 sens.oninput=()=>$('sensV').textContent=(+sens.value).toFixed(1)+'x';
 hp.oninput=()=>{ $('hpV').textContent=fmtHz(+hp.value); if(hpF) hpF.frequency.value=+hp.value; };
 

@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f6f2ec">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>SEO Komuta</title>
+<style>
+:root { color-scheme: light;
+  --bg:#f6f2ec; --card:#ffffff; --ink:#2a2118; --mut:#8a7a68; --line:#ece2d4;
+  --accent:#a35c1f; --green:#2c6a4a; --greenbg:#e6f2ea; --red:#b23b3b; --redbg:#fdeaea;
+  --blue:#2c5a7a; --bluebg:#eef4f9; --gold:#f4e8d2;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Segoe UI,Roboto,sans-serif;
+  font-size:15px;line-height:1.45;
+  padding:14px;padding-top:calc(14px + env(safe-area-inset-top));padding-left:calc(14px + env(safe-area-inset-left));padding-right:calc(14px + env(safe-area-inset-right));padding-bottom:calc(30px + env(safe-area-inset-bottom));}
+h1{font-size:22px;letter-spacing:-.3px;margin:4px 0 2px;font-weight:800}
+.sub{color:var(--mut);font-size:12.5px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.linkish{color:var(--accent);font-weight:700;font-size:12px;background:none;border:none;padding:6px;cursor:pointer;text-decoration:none}
+.seg{display:flex;background:#e9dfd0;border-radius:12px;padding:3px;margin-bottom:10px;position:sticky;top:calc(8px + env(safe-area-inset-top));z-index:5;box-shadow:0 2px 8px rgba(60,40,20,.08)}
+.seg button{flex:1;border:none;background:transparent;border-radius:10px;padding:10px 4px;font-size:14px;font-weight:700;color:#7a6a58;min-height:44px;cursor:pointer;transition:all .15s}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(60,40,20,.15)}
+input[type=search],input[type=password]{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;background:#fff;margin-bottom:8px;-webkit-appearance:none}
+.count{color:var(--mut);font-size:12px;margin:2px 2px 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(60,40,20,.06)}
+.card.parked{opacity:.6}
+.khead{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.rank{font-weight:800;font-size:13px;color:#fff;background:var(--accent);border-radius:10px;padding:2px 8px;flex:none}
+.scoreval{font-weight:800;font-size:17px;color:var(--accent);flex:none;font-variant-numeric:tabular-nums}
+.kwname{font-weight:700;font-size:15.5px;line-height:1.3}
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:700;margin-left:auto;white-space:nowrap;flex:none}
+.b-owned{background:#dcfce7;color:#166534}
+.b-active{background:#ccfbf1;color:#115e59}
+.b-siege{background:#ffedd5;color:#9a3412}
+.b-inv{background:#dbeafe;color:#1e40af}
+.b-park{background:#eee;color:#666}
+.b-content{background:#fef9c3;color:#854d0e}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin:9px 0 0}
+.chip{background:#f3efe8;border-radius:8px;padding:2px 7px;font-size:11px;color:#5a4a38;font-variant-numeric:tabular-nums}
+.chip b{color:var(--ink)}
+.chip .oto{color:var(--blue);font-size:9px;font-weight:700}
+.cohort{font-size:11.5px;color:var(--mut);margin-top:7px}
+.cohort.hot{color:var(--red);font-weight:700}
+.verdict{font-size:13.5px;line-height:1.5;margin-top:8px;white-space:pre-wrap}
+.tasks{margin-top:8px;border-top:1px dashed var(--line);padding-top:7px}
+.trow{font-size:12.5px;line-height:1.55;color:#4a3d2e}
+.trow .qm{display:inline-block;width:16px;font-weight:800}
+.trow.open .qm{color:var(--accent)}
+.trow.done{opacity:.55}
+.trow.done .qm{color:var(--green)}
+.meta{font-size:11.5px;color:var(--mut);margin-top:8px;line-height:1.5}
+.meta b{color:#5a4a38;font-weight:600}
+details.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 14px;margin-bottom:10px}
+details.panel summary{font-size:13px;font-weight:700;color:#7a6a58;cursor:pointer;min-height:40px;display:flex;align-items:center}
+summary::-webkit-details-marker{display:none}
+details.panel summary:before{content:'▸';margin-right:7px;transition:transform .15s;display:inline-block}
+details.panel[open] summary:before{transform:rotate(90deg)}
+details.inline{margin-top:8px}
+details.inline summary{font-size:12.5px;font-weight:700;color:#7a6a58;cursor:pointer;min-height:28px;display:flex;align-items:center}
+details.inline summary:before{content:'▸';margin-right:6px;transition:transform .15s;display:inline-block}
+details.inline[open] summary:before{transform:rotate(90deg)}
+.lgrid{padding:2px 0 12px}
+.lrow{font-size:12px;color:#5a4a38;line-height:1.55;margin-bottom:6px}
+.lrow b{color:var(--accent)}
+.sliders{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;padding:6px 0 12px}
+.sl{display:flex;flex-direction:column;font-size:12px;color:#5a4a38}
+.sl b{color:var(--ink)}
+.sl input{width:100%;accent-color:var(--accent);min-height:30px}
+.toggle{grid-column:1 / -1;font-size:13px;display:flex;align-items:center;gap:8px;padding:4px 0}
+.toggle input{width:20px;height:20px;accent-color:var(--green)}
+.btnrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.btn{border:none;border-radius:13px;padding:12px 16px;font-size:15px;font-weight:700;min-height:46px;cursor:pointer;flex:1;min-width:96px}
+.btn-send{background:var(--green);color:#fff}
+.err{background:var(--redbg);color:var(--red);padding:14px;border-radius:14px;font-size:14px}
+.loading{color:var(--mut);font-size:15px;padding:40px 10px;text-align:center}
+.spin{display:inline-block;width:18px;height:18px;border:2.5px solid #d8ccb8;border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-4px;margin-right:8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+#gate .card{max-width:420px;margin:40px auto}
+.queue .qh{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:8px 0 3px}
+.queue .qdep{color:#a89a88;font-size:11px}
+</style>
+</head>
+<body>
+<div id="gate" style="display:none">
+  <div class="card">
+    <h1>SEO Komuta</h1>
+    <div class="sub">Kokpit anahtarını bir kez gir; bu telefonda kalır. Council ile aynı anahtar.</div>
+    <input type="password" id="keyIn" placeholder="Kokpit anahtarı" autocomplete="off">
+    <div class="btnrow"><button class="btn btn-send" onclick="saveKey()">Kokpiti aç</button></div>
+    <div class="err" id="gateErr" style="display:none;margin-top:10px"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <h1>SEO Komuta</h1>
+  <div class="sub">
+    <span id="stamp">Canlı, Smartsheet'ten.</span>
+    <span style="display:flex;gap:2px;align-items:center">
+      <a class="linkish" href="https://app.smartsheet.eu/sheets/rv6Q3WfrhC8Cp8C5Pfqgfw46HHFMfgPcJjP47VC1" target="_blank" rel="noopener">Sheet'te düzenle ↗</a>
+      <button class="linkish" onclick="boot(true)">yenile ⟳</button>
+      <button class="linkish" onclick="logout()">anahtar ⏏</button>
+    </span>
+  </div>
+  <div class="seg" id="seg">
+    <button data-f="act">Aksiyon</button>
+    <button data-f="all">Tümü</button>
+    <button data-f="done">Yapıldı</button>
+  </div>
+  <input type="search" id="q" placeholder="Keyword, verdict, hedef sayfa ara...">
+  <details class="panel">
+    <summary>Skor üsleri (R·V·W·H·S·C·B ÷ E)</summary>
+    <div class="sliders" id="sliders"></div>
+  </details>
+  <details class="panel">
+    <summary>Parametre rehberi (1-5 ne demek?)</summary>
+    <div class="lgrid">
+      <div class="lrow"><b>R</b> Revenue Nearness (oto, Trainings'ten): <b>5</b> kohort ≤56 gün + dolu değil · <b>4</b> ≤112 gün · <b>3</b> daha uzak / evergreen retail · <b>2</b> kohort yok veya dolu</div>
+      <div class="lrow"><b>V</b> Buyer Value: <b>5</b> 60-110k kurs alıcısı · <b>4</b> karışık kurs niyeti (49k) · <b>3</b> retail/çekirdek · <b>2</b> funnel besleyen bilgi niyeti · <b>1</b> yanlış kitle</div>
+      <div class="lrow"><b>W</b> Winnability: <b>5</b> boş SERP veya sahibiz · <b>4</b> poz 5-20 (vuruş mesafesi) · <b>3</b> sayfa 2-3 · <b>2</b> yerleşik rakipler · <b>1</b> blocked (eksik varlık)</div>
+      <div class="lrow"><b>H</b> Headroom (oto, Verdict'ten): <b>5</b> görünmüyoruz, tam upside · <b>4</b> AKTİF, yaklaşıyor · <b>1</b> OWNED, sadece savunma</div>
+      <div class="lrow"><b>S</b> Search Demand (KP aylık hacim): <b>5</b> &gt;5K · <b>4</b> 1K-5K · <b>3</b> 300-1K · <b>2</b> 100-300 · <b>1</b> &lt;100</div>
+      <div class="lrow"><b>C</b> Conversion Evidence (çeyreklik, cluster): <b>5</b> ≥2 kayıt · <b>4</b> 1 kayıt · <b>3</b> talep var kayıt yok · <b>2</b> tık var ses yok · <b>1</b> hiç (ilk dolum ~Eylül)</div>
+      <div class="lrow"><b>B</b> Bundling: aynı iş kaç keyword'e birden hizmet ediyor; <b>1</b> solo iş · <b>5</b> beş+ keyword tek hamlede</div>
+      <div class="lrow"><b>E</b> Effort (BÖLEN, sıradaki hamlenin maliyeti): <b>1</b> saatler · <b>2</b> ~1 hafta · <b>3</b> haftalar · <b>4</b> aylar · <b>5</b> build'e blocked</div>
+    </div>
+  </details>
+  <details class="panel">
+    <summary>Rozet rehberi (Verdict etiketleri)</summary>
+    <div class="lgrid">
+      <div class="lrow"><span class="badge b-owned" style="margin-left:0">OWNED/YAPILDI</span> Kazanılmış veya iş tamamlanmış; sadece savunma ve izleme.</div>
+      <div class="lrow"><span class="badge b-active" style="margin-left:0">AKTİF</span> İş şu anda yürüyor veya Google sonucu pişiriyor; takip gerekir.</div>
+      <div class="lrow"><span class="badge b-content" style="margin-left:0">TETİK KURULDU</span> Tetik kurulu, tarih belli; o güne kadar SIFIR iş.</div>
+      <div class="lrow"><span class="badge b-siege" style="margin-left:0">KUŞATMA</span> Uzun vadeli cephe (aylar): içerik + GBP + video birlikte.</div>
+      <div class="lrow"><span class="badge b-inv" style="margin-left:0">İSTİLA/FIRSAT</span> Boş veya zayıf SERP'e hızlı giriş; ucuz-yüksek-getirili hamle.</div>
+      <div class="lrow"><span class="badge b-content" style="margin-left:0">İÇERİK</span> Yeni sayfa/blog/video yazılarak kazanılacak; iş = içerik üretimi.</div>
+      <div class="lrow"><span class="badge b-park" style="margin-left:0">PARK</span> Tarihsiz bekleme; çeyreklik re-score'da yeniden değerlendirilir.</div>
+    </div>
+  </details>
+  <details class="panel">
+    <summary>Açık içerik &amp; video kuyruğu</summary>
+    <div class="lgrid queue" id="queue">Yükleniyor…</div>
+  </details>
+  <div class="count" id="count"></div>
+  <div id="list" class="loading"><span class="spin"></span>Smartsheet okunuyor...</div>
+</div>
+
+<script>
+const FN='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/seo-proxy';
+const SEO_ID='7857520414689156', TRAIN_ID='8367277466584964';
+const FACTORS=["R","V","W","H","S","C","E","B"];
+let weights=Object.assign({R:1,V:1,W:1,H:1,S:0,C:0,B:0,E:1},JSON.parse(localStorage.getItem("seoKomutaW3")||"{}"));
+let autoR=JSON.parse(localStorage.getItem("seoKomutaAutoR")||"true");
+let DATA=null, FILTER=localStorage.getItem('skFilter')||'act', KEY=localStorage.getItem('ccKey')||'', LOADED=0;
+
+const $=id=>document.getElementById(id);
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function showGate(msg){ $('gate').style.display='block'; $('app').style.display='none'; if(msg){ $('gateErr').textContent=msg; $('gateErr').style.display='block'; } }
+function saveKey(){ KEY=$('keyIn').value.trim(); if(!KEY) return; localStorage.setItem('ccKey',KEY); boot(true); }
+function logout(){ localStorage.removeItem('ccKey'); KEY=''; showGate(); }
+
+async function api(path){
+  const r=await fetch(FN+path,{headers:{'x-cc-key':KEY}});
+  if(r.status===401){ showGate('Anahtar reddedildi.'); throw new Error('unauthorized'); }
+  if(!r.ok) throw new Error('HTTP '+r.status+': '+(await r.text()).slice(0,120));
+  return r.json();
+}
+
+const tnorm=s=>String(s||'').replace(/[İI]/g,'i').toLowerCase();
+function colIds(sheet,spec){
+  const out={};
+  for(const key in spec){
+    const c=(sheet.columns||[]).find(c=>spec[key](tnorm(c.title).trim()));
+    out[key]=c?c.id:null;
+  }
+  return out;
+}
+function cellMap(row){
+  const o={};
+  for(const c of row.cells||[]){
+    let v=c.value;
+    if(v&&typeof v==='object') v=Array.isArray(v.values)?v.values.join(', '):JSON.stringify(v);
+    o[c.columnId]=v;
+  }
+  return o;
+}
+const num=v=>{ const n=parseFloat(v); return isNaN(n)?null:n; };
+
+function parseSheets(seo,tr){
+  const si=colIds(seo,{
+    kw:t=>t==='keyword', intent:t=>t.indexOf('intent')===0, verdict:t=>t.indexOf('verdict')===0,
+    pos:t=>t.indexOf('position')===0, last:t=>t.indexOf('last check')===0, target:t=>t.indexOf('target')===0,
+    ai:t=>t.indexOf('ai visibility')===0, notes:t=>t==='notes',
+    R:t=>t==='r', V:t=>t==='v', W:t=>t==='w',
+    H:t=>t==='h'||t.indexOf('h (')===0||t.indexOf('h(')===0,
+    S:t=>t==='s', C:t=>t==='c', E:t=>t==='e', B:t=>t==='b'
+  });
+  const keywords=(seo.rows||[]).map(row=>{
+    const m=cellMap(row);
+    const kw=m[si.kw];
+    if(!kw) return null;
+    return { kw:String(kw), intent:m[si.intent]||'',
+      R:num(m[si.R]), V:num(m[si.V]), W:num(m[si.W]), H:num(m[si.H]), S:num(m[si.S]), C:num(m[si.C]), B:num(m[si.B]), E:num(m[si.E]),
+      verdict:m[si.verdict]||'', pos:m[si.pos]||'', last:m[si.last]||'', target:m[si.target]||'', aiVis:m[si.ai]||'', notes:m[si.notes]||'' };
+  }).filter(Boolean);
+  const ti=colIds(tr,{
+    start:t=>t.indexOf('start')===0, name:t=>t.indexOf('training')===0, status:t=>t==='status',
+    lang:t=>t.indexOf('lang')===0, cap:t=>t==='cap', reg:t=>t.indexOf('reg')===0
+  });
+  const cohorts=(tr.rows||[]).map(row=>{
+    const m=cellMap(row);
+    const name=String(m[ti.name]||'');
+    if(!name||name==='TOTAL') return null;
+    let program=null;
+    if(/Sensory/i.test(name)) program='Sensory';
+    else if(/Q Grader/i.test(name)) program='Q Grader';
+    else if(/Barista/i.test(name)) program='Barista';
+    else if(/Roasting/i.test(name)) program='Roasting';
+    return { name, program, lang:String(m[ti.lang]||'Turkish'), status:String(m[ti.status]||''),
+      start:Date.parse(m[ti.start]||'')||0, cap:parseFloat(m[ti.cap])||0, reg:parseFloat(m[ti.reg])||0 };
+  }).filter(Boolean);
+  return {keywords,cohorts};
+}
+
+function programOf(kw){
+  kw=kw.toLowerCase();
+  if(/duyusal|cupping|sensory/.test(kw)) return 'Sensory';
+  if(/q grader|q arabica/.test(kw)) return 'Q Grader';
+  if(/barista/.test(kw)) return 'Barista';
+  if(/kavurma|roasting|kavurmahane|roastery|kavurucu/.test(kw)) return 'Roasting';
+  if(/iskandinav|kahvesi/.test(kw)) return 'Retail';
+  return null;
+}
+function computeAutoR(kw,intent,cohorts){
+  const prog=programOf(kw);
+  if(prog==='Retail') return {r:3,label:'evergreen retail'};
+  if(!prog) return null;
+  const lang=/EN\/International/.test(intent||'')?'English':'Turkish';
+  const now=Date.now();
+  const cands=cohorts.filter(c=>c.program===prog&&c.lang===lang&&c.start>now&&!/Cancelled|Delivered/.test(c.status));
+  if(!cands.length) return {r:2,label:'kohort yok ('+lang+')'};
+  cands.sort((a,b)=>a.start-b.start);
+  const c=cands[0];
+  const days=Math.round((c.start-now)/864e5);
+  const full=c.cap>0&&c.reg>=c.cap;
+  const r=full?2:(days<=56?5:days<=112?4:3);
+  return {r,label:c.name+' · '+days+'g · '+c.reg+'/'+c.cap,hot:r===5};
+}
+function badgeOf(verdict){
+  const v=(verdict||'').toUpperCase();
+  if(v.indexOf('OWNED')===0||v.indexOf('YAPILDI')===0) return ['OWNED/YAPILDI','b-owned'];
+  if(v.indexOf('AKTİVASYON')===0||v.indexOf('TETİK')>=0) return ['TETİK KURULDU','b-content'];
+  if(v.indexOf('AKTİF')===0) return ['AKTİF','b-active'];
+  if(v.indexOf('KUŞATMA')===0) return ['KUŞATMA','b-siege'];
+  if(v.indexOf('İSTİLA')>=0||v.indexOf('FIRSAT')===0) return ['İSTİLA/FIRSAT','b-inv'];
+  if(v.indexOf('İÇERİK')>=0) return ['İÇERİK','b-content'];
+  return ['PARK','b-park'];
+}
+const DONE_RE=/(yapıldı|kazanıldı|kazanildi|mevcut|girdi|zaten)|=\s*kendi/;
+const PAGE_RE=/kurulacak|açıl[ıi]rsa|açıl[ıi]nca|yeni içerik|'nedir' sayfası|en yt içerik|uzun vade/;
+
+function extractTasks(){
+  const items={};
+  const add=(type,label,kw,done)=>{
+    const key=type+'::'+label.toLowerCase();
+    if(!items[key]) items[key]={type,label,deps:new Set(),done:false};
+    items[key].deps.add(kw);
+    if(done) items[key].done=true;
+  };
+  const typeByNum={};
+  for(const k of DATA.keywords){
+    const raw=[k.verdict,k.target,k.aiVis,k.notes].filter(Boolean).join('  ||  ');
+    let tm; const reT=/[iİ]çerik\s*#?\s*(\d+)\s*\(([^)]+)\)/gi;
+    while((tm=reT.exec(raw))){ if(!typeByNum[tm[1]]) typeByNum[tm[1]]=tm[2].trim(); }
+  }
+  const iLabel=n=>'içerik #'+n+(typeByNum[n]?' ('+typeByNum[n]+')':'');
+  for(const k of DATA.keywords){
+    const hay=tnorm([k.verdict,k.target,k.aiVis,k.notes].filter(Boolean).join('  ||  '));
+    const done=DONE_RE.test(hay);
+    let m;
+    const reI=/içerik\s*#?\s*(\d+)/g;
+    while((m=reI.exec(hay))) add('icerik',iLabel(m[1]),k.kw,done);
+    if(/rider\s*video/.test(hay)) add('video','rider video',k.kw,done);
+    const h2=hay.replace(/rider\s*video/g,' ').replace(/video\s*pack/g,' ');
+    const reV=/video\s*#?\s*([1-9])\b/g;
+    while((m=reV.exec(h2))) add('video','video '+m[1],k.kw,done);
+    (k.target||'').split('+').forEach(frag=>{
+      frag=frag.trim();
+      const nf=tnorm(frag);
+      if(frag&&PAGE_RE.test(nf)&&!/içerik\s*#?\s*\d/.test(nf)){
+        const label=/'nedir' sayfası/.test(nf)?"'nedir' sayfası · "+(programOf(k.kw)||'Genel'):frag;
+        add('page',label,k.kw,DONE_RE.test(nf));
+      }
+    });
+  }
+  return Object.values(items);
+}
+function buildQueue(){
+  const el=$('queue');
+  if(!el||!DATA) return;
+  const items=extractTasks();
+  const groups={icerik:[],video:[],page:[]};
+  items.forEach(i=>groups[i.type].push(i));
+  const T={icerik:'İçerik (# etiketli)',video:'Video (# etiketli)',page:'Kurulacak sayfa / içerik'};
+  let html='';
+  for(const g of ['icerik','video','page']){
+    const arr=groups[g].sort((a,b)=>(a.done===b.done?0:a.done?1:-1));
+    if(!arr.length) continue;
+    html+='<div><div class="qh">'+T[g]+'</div>';
+    arr.forEach(i=>{
+      html+='<div class="trow '+(i.done?'done':'open')+'"><span class="qm">'+(i.done?'✓':'◻')+'</span><b>'+esc(i.label)+'</b> <span class="qdep">← '+esc([...i.deps].join(', '))+'</span></div>';
+    });
+    html+='</div>';
+  }
+  el.innerHTML=html||"<div class='lrow'>Sheet'te # etiketli içerik/video veya kurulacak sayfa bulunamadı.</div>";
+}
+
+function isDone(r){ return /^\s*(yapıldı|owned)/.test(tnorm(r.verdict)); }
+function isAct(r,openTasks){
+  if(/AÇIK İŞ|ŞİMDİ|🚩/.test(r.verdict||'')) return true;
+  if(isDone(r)) return false;
+  const cls=badgeOf(r.verdict)[1];
+  if(cls==='b-active'||cls==='b-siege'||cls==='b-inv') return true;
+  if(cls==='b-park'||cls==='b-content') return false; // PARK ve TETİK: tarihi gelene kadar sıfır iş
+  return (openTasks[r.kw]||[]).some(t=>!t.done);
+}
+
+function scored(){
+  const tasksByKw={};
+  extractTasks().forEach(it=>it.deps.forEach(kw=>{ (tasksByKw[kw]=tasksByKw[kw]||[]).push(it); }));
+  const rows=DATA.keywords.map(k=>{
+    const auto=autoR?computeAutoR(k.kw,k.intent,DATA.cohorts):null;
+    const R=auto?auto.r:k.R;
+    const score=(!R||!k.V||!k.W||!k.H||!k.E)?null:
+      Math.pow(R,weights.R)*Math.pow(k.V,weights.V)*Math.pow(k.W,weights.W)*Math.pow(k.H||1,weights.H)*Math.pow(k.S||1,weights.S)*Math.pow(k.C||1,weights.C)*Math.pow(k.B||1,weights.B)/Math.pow(k.E,weights.E);
+    return Object.assign({},k,{R,auto,score,tasks:tasksByKw[k.kw]||[]});
+  }).sort((a,b)=>(b.score??-1)-(a.score??-1));
+  return {rows,tasksByKw};
+}
+
+function chip(name,val,oto){
+  return '<span class="chip">'+name+' <b>'+(val==null?'—':val)+'</b>'+(oto?' <span class="oto">oto</span>':'')+'</span>';
+}
+function card(r,i){
+  const b=badgeOf(r.verdict);
+  let h='<div class="card'+(b[1]==='b-park'?' parked':'')+'">';
+  h+='<div class="khead"><span class="rank">'+(i+1)+'</span><span class="scoreval">'+(r.score==null?'—':Math.round(r.score))+'</span><span class="kwname">'+esc(r.kw)+'</span><span class="badge '+b[1]+'">'+b[0]+'</span></div>';
+  h+='<div class="chips">'+chip('R',r.R,!!r.auto)+chip('V',r.V)+chip('W',r.W)+chip('H',r.H)+chip('S',r.S)+chip('C',r.C)+chip('E',r.E)+chip('B',r.B)+'</div>';
+  if(r.auto) h+='<div class="cohort'+(r.auto.hot?' hot':'')+'">'+esc(r.auto.label)+'</div>';
+  h+='<div class="verdict">'+esc(r.verdict)+'</div>';
+  if(r.tasks.length){
+    h+='<div class="tasks">';
+    r.tasks.forEach(t=>{ h+='<div class="trow '+(t.done?'done':'open')+'"><span class="qm">'+(t.done?'✓':'◻')+'</span>'+esc(t.label)+'</div>'; });
+    h+='</div>';
+  }
+  const meta=[];
+  if(r.pos) meta.push('<b>Konum:</b> '+esc(r.pos));
+  if(r.target) meta.push('<b>Hedef:</b> '+esc(r.target));
+  if(r.aiVis) meta.push('<b>AI:</b> '+esc(r.aiVis));
+  if(r.last) meta.push('<b>Son kontrol:</b> '+esc(r.last));
+  if(meta.length) h+='<details class="inline"><summary>Detay</summary><div class="meta">'+meta.join('<br>')+'</div></details>';
+  return h+'</div>';
+}
+
+function render(){
+  if(!DATA) return;
+  document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.f===FILTER));
+  const {rows,tasksByKw}=scored();
+  const openTasks={};
+  for(const kw in tasksByKw) openTasks[kw]=tasksByKw[kw];
+  const term=tnorm($('q').value||'');
+  let items=rows;
+  if(FILTER==='act') items=items.filter(r=>isAct(r,openTasks));
+  if(FILTER==='done') items=items.filter(isDone);
+  if(term) items=items.filter(r=>tnorm(r.kw+' '+r.verdict+' '+r.target+' '+r.notes+' '+r.intent).indexOf(term)>=0);
+  $('count').textContent=items.length+' / '+rows.length+' keyword';
+  $('list').classList.remove('loading');
+  $('list').innerHTML=items.map(card).join('')||'<div class="loading">'+(FILTER==='act'?'Aksiyon bekleyen keyword yok. Kavurmaya dön.':'Eşleşme yok.')+'</div>';
+}
+
+function buildSliders(){
+  const el=$('sliders');
+  el.innerHTML=FACTORS.map(f=>
+    '<label class="sl"><span><b>'+f+'</b> üssü: <span id="v'+f+'">'+weights[f]+'</span></span><input type="range" min="0" max="2.5" step="0.25" value="'+weights[f]+'" data-f="'+f+'"></label>'
+  ).join('')+'<label class="toggle"><input type="checkbox" id="autoRt" '+(autoR?'checked':'')+'> R otomatik (Trainings kohortlarından)</label>';
+  el.querySelectorAll('input[type=range]').forEach(inp=>inp.addEventListener('input',e=>{
+    weights[e.target.dataset.f]=parseFloat(e.target.value);
+    $('v'+e.target.dataset.f).textContent=e.target.value;
+    localStorage.setItem('seoKomutaW3',JSON.stringify(weights));
+    render();
+  }));
+  $('autoRt').addEventListener('change',e=>{
+    autoR=e.target.checked;
+    localStorage.setItem('seoKomutaAutoR',JSON.stringify(autoR));
+    render();
+  });
+}
+
+async function boot(force){
+  $('gate').style.display='none'; $('app').style.display='block';
+  if(!force&&DATA) return;
+  $('list').classList.add('loading');
+  $('list').innerHTML='<span class="spin"></span>Smartsheet okunuyor...';
+  try{
+    const [seo,tr]=await Promise.all([api('/sheet?id='+SEO_ID),api('/sheet?id='+TRAIN_ID)]);
+    DATA=parseSheets(seo,tr);
+    LOADED=Date.now();
+    $('stamp').textContent='Canlı · '+new Date(LOADED).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+    render();
+    buildQueue();
+  }catch(e){ if(e.message!=='unauthorized') $('list').innerHTML='<div class="err">Relay\'e ulaşılamadı: '+esc(e.message)+'</div>'; }
+}
+
+document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{ FILTER=b.dataset.f; localStorage.setItem('skFilter',FILTER); render(); });
+$('q').addEventListener('input',render);
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&KEY&&LOADED&&Date.now()-LOADED>5*60*1000) boot(true);
+});
+buildSliders();
+if(KEY) boot(true); else showGate();
+</script>
+</body>
+</html>
