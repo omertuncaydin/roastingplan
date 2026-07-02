@@ -152,3 +152,15 @@ EN is the source of truth; the app is designed in English. This file holds the T
 - Roaster & Cupper Plan → "Kavurucu ve Tadımcı Planı"
 - Admin → "Yönetici"
 - Lite (no plan) → "Lite (plansız)"
+
+## Stage guide popup (ⓘ next to Stage wheels, Roast capture + Deep Calibration)
+- Stage guide → "Kademe rehberi"
+- Intro → "Prob tamburu okur, çekirdeği değil. A0'dan itibaren her kademe, çekirdeğin sesle anlattıklarıyla tanımlanır."
+- A0 → "Gerçek anlamda ilk çatlama. Art arda çatlamanın başlangıcı değil, ilk tek çıtlama."
+- A1 → "Çatlamalar sıklaşır: saniyede bir ikiden sürekli bir çıtırtıya, yaklaşık beş ve üzerine çıkar."
+- B0 → "Çatlama şiddeti ve çatlama hızı zirveye doğru tırmanır."
+- B1 → "Çatlama şiddetinin ve hızının zirvesi."
+- C0 → "Azalma: çatlamalar son çatlamalara doğru seyrekleşir."
+- C1 → "İlk çatlamanın kesin son çatlaması."
+- C2 → "İlk ve ikinci çatlama arasının orta noktası (MP). Kendi sesi yoktur; C1 sonrası sessizlikte yer alır. Eğitim referansıdır, yalnız sert haritada."
+- 2ND → "İkinci çatlama başlar. Yalnız sert haritada."

@@ -80,6 +80,16 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   </div>
 
   <div class="card">
+    <div class="lbl">session timeline (all cracks)</div>
+    <canvas id="tl" width="900" height="120"></canvas>
+    <div class="row" style="margin-top:10px">
+      <div class="card"><div class="lbl">time SD s</div><div class="n" id="sdT">-</div></div>
+      <div class="card"><div class="lbl">gain SD</div><div class="n" id="sdG">-</div></div>
+    </div>
+    <div class="hint">Time SD: spread of crack timestamps. Fast roasts read tight (low SD), slow roasts stretched (high SD). Gain SD: spread of crack loudness, a batch evenness read.</div>
+  </div>
+
+  <div class="card">
     <div class="lbl">crack log</div>
     <div class="log" id="log"></div>
   </div>
@@ -124,6 +134,7 @@ async function start(){
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlWav').style.display='none'; $('dlCsv').style.display='none';
   bgEMA=0; fastEMA=0; cracks=[]; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; inCrack=false;
+  updateSD(); drawTimeline(0);
   running=true; $('btn').textContent='Stop'; $('btn').className='stop'; $('status').textContent='Listening. Calibrating background for ~2s, keep it running steady.';
   loop();
 }
@@ -173,6 +184,7 @@ function loop(){
     inCrack=false;
     $('last').textContent=g; $('peak').textContent=peakGain; $('cnt').textContent=cracks.length;
     addLog(cracks.length,(now-startT)/1000,g);
+    updateSD(); drawTimeline((now-startT)/1000);
   }
 
   // readouts
@@ -217,6 +229,21 @@ function addLog(n,t,g){
   const L=$('log'); L.insertBefore(d,L.firstChild);
 }
 
+function sd(a){ if(a.length<2) return 0; const m=a.reduce((s,x)=>s+x,0)/a.length; return Math.sqrt(a.reduce((s,x)=>s+(x-m)*(x-m),0)/(a.length-1)); }
+function updateSD(){
+  if(cracks.length<2){ $('sdT').textContent='-'; $('sdG').textContent='-'; return; }
+  $('sdT').textContent=sd(cracks.map(c=>c.t)).toFixed(1);
+  $('sdG').textContent=sd(cracks.map(c=>c.g)).toFixed(1);
+}
+const tl=$('tl'), tx=tl.getContext('2d');
+function drawTimeline(nowS){
+  tx.clearRect(0,0,tl.width,tl.height);
+  const W=tl.width,H=tl.height, span=Math.max(nowS,60);
+  tx.strokeStyle='#2a221b'; tx.lineWidth=1;
+  for(let m=0;m*60<=span;m++){ const x=(m*60/span)*W; tx.beginPath(); tx.moveTo(x,0); tx.lineTo(x,H); tx.stroke(); }
+  tx.fillStyle='#e6c14b';
+  for(const c of cracks){ const x=(c.t/span)*W, h=Math.max(6,(c.g/100)*H); tx.fillRect(x-1,H-h,2,h); }
+}
 const cv=$('cv'), cx=cv.getContext('2d');
 function draw(){
   cx.clearRect(0,0,cv.width,cv.height);

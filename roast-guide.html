@@ -218,7 +218,7 @@
       <div style="text-align:center;margin-bottom:4px"><span id="calibTime" style="font-size:26px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums">0:00</span> <button class="btn ghost calibGo" id="calibStart" style="width:auto;display:inline-block;padding:6px 18px;margin:0" onclick="calibToggle()" data-i18n="Start">Start</button></div>
       <div class="small" id="calibDev" style="text-align:center;color:var(--accent);min-height:14px;margin-bottom:8px"></div>
       <div style="display:flex;gap:18px;align-items:flex-start;justify-content:center;margin-bottom:10px">
-        <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px" data-i18n="Stage">Stage</div><div class="wheelWrap"><div class="wheel" id="calibStageWheel"><div class="wheelInner" id="calibStageInner"></div></div><div class="wheelSel"></div></div></div>
+        <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px"><span data-i18n="Stage">Stage</span> <span onclick="showStageInfo()" style="cursor:pointer;color:var(--accent);font-weight:700">&#9432;</span></div><div class="wheelWrap"><div class="wheel" id="calibStageWheel"><div class="wheelInner" id="calibStageInner"></div></div><div class="wheelSel"></div></div></div>
         <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px" data-i18n="Temp">Temp</div><div class="wheelWrap unit-c"><div class="wheel" id="calibTempWheel"><div class="wheelInner" id="calibTempInner"></div></div><div class="wheelSel"></div></div></div>
       </div>
       <div style="display:flex;gap:8px"><button class="btn" onclick="recordSample()" data-i18n="Record sample">Record sample</button><button class="btn ghost" style="width:auto;padding:0 20px;margin-top:0" onclick="undoCalibSample()" data-i18n="Undo">Undo</button></div>
@@ -298,7 +298,7 @@
         <button class="btn ghost hide" id="undoBtn" style="margin-top:10px" onclick="undoMark()">Undo last mark</button>
         <div id="captureModule" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
           <div style="display:flex;gap:12px;align-items:flex-start;justify-content:center">
-            <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px" data-i18n="Stage">Stage</div><div class="wheelWrap"><div class="wheel" id="rcStageWheel"><div class="wheelInner" id="rcStageInner"></div></div><div class="wheelSel"></div></div></div>
+            <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px"><span data-i18n="Stage">Stage</span> <span onclick="showStageInfo()" style="cursor:pointer;color:var(--accent);font-weight:700">&#9432;</span></div><div class="wheelWrap"><div class="wheel" id="rcStageWheel"><div class="wheelInner" id="rcStageInner"></div></div><div class="wheelSel"></div></div></div>
             <div style="text-align:center"><div class="aglbl" style="margin-bottom:4px" data-i18n="Temp">Temp</div><div class="wheelWrap unit-c"><div class="wheel" id="rcTempWheel"><div class="wheelInner" id="rcTempInner"></div></div><div class="wheelSel"></div></div></div>
             <div style="display:flex;flex-direction:column;gap:6px">
               <button class="btn calibGo" id="rcRecordBtn" style="width:auto;padding:12px 16px;margin-top:0" onclick="captureRecord()">Start</button>
@@ -1420,6 +1420,20 @@ function showAwInfo(){ infoModal('Water activity (Aw)',
   `Aw tracks the <i>free</i> moisture in the bean, and it predicts mold risk and shelf stability better than moisture content alone.<br><br>`+
   `The SCA green standard already calls for Aw below 0.70. Yet the CVA Physical form still does not ask you to record it. So we left the spot grey and ready.<br><br>`+
   `Your move, SCA ;)`); }
+// acoustic stage guide: the cracks define the stages
+const STAGE_INFO={
+ 'A0':'The literal first crack. Not the start of concurrent cracking, the single first pop.',
+ 'A1':'Cracks turn frequent: from one or two per second to a steady chatter, around five or more.',
+ 'B0':'Crack loudness and crack rate climb toward their peak.',
+ 'B1':'The peak of crack intensity and rate.',
+ 'C0':'The decay: cracks thin out toward the last ones.',
+ 'C1':'The definite last crack of first crack.',
+ 'C2':'Midway point (MP) between first and second crack. It has no sound of its own; it sits in the silence after C1. A training reference, hard mapping only.',
+ '2ND':'Second crack begins. Hard mapping only.'
+};
+function showStageInfo(){ infoModal(T('Stage guide'),
+  T('The probe reads the drum, not the beans. From A0 on, every stage is defined by what the beans themselves say in sound.')+'<br><br>'+
+  Object.keys(STAGE_INFO).map(k=>`<b>${k}</b> · ${T(STAGE_INFO[k])}`).join('<br><br>')); }
 async function renderAccount(){
   if(sb){ try{ const u=await sb.auth.getUser(); const usr=u&&u.data&&u.data.user; if(usr){ acEmail.textContent=usr.email||'-'; acSince.textContent=usr.created_at?usr.created_at.slice(0,10):'-'; } }catch(e){} }
   else { acEmail.textContent='offline'; acSince.textContent='-'; }
@@ -1459,6 +1473,16 @@ const DICT={ tr:{
  "Tap START when the roast begins.":"Kavurma başladığında BAŞLA'ya dokun.","Roast finished and learned.":"Kavurma bitti ve öğrenildi.",
  "Cup this coffee":"Bu kahveyi tadımla","Deep Calibration Learning":"Derin Kalibrasyon Öğrenmesi",
  "Deep Calibration":"Derin Kalibrasyon","Soft Mapping":"Yumuşak Harita","Hard Mapping":"Sert Harita","Batch (g)":"Parti (g)","Flame/Power":"Alev/Güç","Fan":"Fan","Drum":"Tambur","Stage":"Kademe","Temp":"Sıcaklık","Record sample":"Numuneyi kaydet","Undo":"Geri al","Cup starred samples":"Yıldızlı numuneleri tadımla","Finish & save":"Bitir ve kaydet","Start fresh":"Sıfırdan başla","Close":"Kapat","Saved maps":"Kayıtlı haritalar","Start":"Başlat","Running":"Çalışıyor","Load":"Yükle","None saved yet.":"Henüz kayıt yok.","Pick a coffee on the Roast tab first.":"Önce Kavurma sekmesinden bir kahve seç.","Star the stages you sampled first (tap the ☆).":"Önce numune aldığın kademeleri yıldızla (☆ dokun).","No samples yet. Set the stage + temp, take a sample, tap Record at each stage.":"Henüz numune yok. Kademe + sıcaklığı ayarla, numune al, her kademede Kaydet'e dokun.","Dev time (A0 to drop): ":"Gelişim süresi (A0'dan boşaltmaya): ","Calibrating ":"Kalibrasyon: ","Record":"Kaydet","+ temp":"+ sıcaklık","Start records CHG. Then Record each stage in turn; + temp logs a reading between stages.":"Başlat CHG'yi kaydeder. Sonra her kademeyi sırayla Kaydet; + sıcaklık kademeler arası okuma ekler.",
+"Stage guide":"Kademe rehberi",
+"The probe reads the drum, not the beans. From A0 on, every stage is defined by what the beans themselves say in sound.":"Prob tamburu okur, çekirdeği değil. A0'dan itibaren her kademe, çekirdeğin sesle anlattıklarıyla tanımlanır.",
+"The literal first crack. Not the start of concurrent cracking, the single first pop.":"Gerçek anlamda ilk çatlama. Art arda çatlamanın başlangıcı değil, ilk tek çıtlama.",
+"Cracks turn frequent: from one or two per second to a steady chatter, around five or more.":"Çatlamalar sıklaşır: saniyede bir ikiden sürekli bir çıtırtıya, yaklaşık beş ve üzerine çıkar.",
+"Crack loudness and crack rate climb toward their peak.":"Çatlama şiddeti ve çatlama hızı zirveye doğru tırmanır.",
+"The peak of crack intensity and rate.":"Çatlama şiddetinin ve hızının zirvesi.",
+"The decay: cracks thin out toward the last ones.":"Azalma: çatlamalar son çatlamalara doğru seyrekleşir.",
+"The definite last crack of first crack.":"İlk çatlamanın kesin son çatlaması.",
+"Midway point (MP) between first and second crack. It has no sound of its own; it sits in the silence after C1. A training reference, hard mapping only.":"İlk ve ikinci çatlama arasının orta noktası (MP). Kendi sesi yoktur; C1 sonrası sessizlikte yer alır. Eğitim referansıdır, yalnız sert haritada.",
+"Second crack begins. Hard mapping only.":"İkinci çatlama başlar. Yalnız sert haritada.",
  "Save rules":"Kuralları kaydet","Save as defaults":"Varsayılan olarak kaydet","Reset to defaults":"Varsayılanlara dön",
  // cup
  "Combined":"Birleşik","Sample # / coffee":"Numune # / kahve","cupping score":"tadım puanı",
