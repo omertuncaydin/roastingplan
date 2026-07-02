@@ -35,6 +35,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 .hint{color:var(--muted);font-size:12px;line-height:1.5;margin-top:4px}
 .err{color:var(--warn);font-size:13px;margin-top:8px}
 .info{color:var(--accent);cursor:pointer;font-weight:700}
+.pm{flex:none;width:34px;padding:6px 0;font-size:17px;font-weight:800;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px}
 .lr{background:var(--panel);touch-action:pan-y}
 .fpr{opacity:.45}
 </style>
@@ -44,7 +45,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
     <h1>Crack Listener</h1>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--muted)">v2026-07-02e</span>
+      <span style="font-size:11px;color:var(--muted)">v2026-07-02f</span>
       <button onclick="hardRefresh()" style="width:auto;padding:6px 12px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted);border:1px solid var(--line)">Refresh app</button>
     </div>
   </div>
@@ -82,15 +83,15 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div class="card" style="margin-top:12px">
     <div class="lbl">gain trace (cracks marked)</div>
     <canvas id="cv" width="900" height="300"></canvas>
-    <div class="ctl"><label>Trigger &times; <span class="info" onclick="showInfo('sens')">&#9432;</span></label><input type="range" id="sens" min="2" max="30" step="0.5" value="4"><span class="v" id="sensV">4.0x</span></div>
-    <div class="ctl"><label>High-pass <span class="info" onclick="showInfo('hp')">&#9432;</span></label><input type="range" id="hp" min="300" max="12000" step="100" value="1600"><span class="v" id="hpV">1600 Hz</span></div>
+    <div class="ctl"><label>Trigger &times; <span class="info" onclick="showInfo('sens')">&#9432;</span></label><button class="pm" onclick="nudge('sens',-1)">&minus;</button><input type="range" id="sens" min="2" max="30" step="0.5" value="4"><button class="pm" onclick="nudge('sens',1)">+</button><span class="v" id="sensV">4.0x</span></div>
+    <div class="ctl"><label>High-pass <span class="info" onclick="showInfo('hp')">&#9432;</span></label><button class="pm" onclick="nudge('hp',-1)">&minus;</button><input type="range" id="hp" min="300" max="12000" step="100" value="1600"><button class="pm" onclick="nudge('hp',1)">+</button><span class="v" id="hpV">1.6k Hz</span></div>
     <div class="hint">Detection listens for millisecond bursts (clicks), not loud averages, so test it with a pen click or finger snap, not your voice. Trigger is a threshold: LOWER catches more.</div>
   </div>
 
   <div class="card">
     <div class="lbl">session timeline · 16 min</div>
     <canvas id="tl" width="900" height="180"></canvas>
-    <div class="ctl"><label>Bin <span class="info" onclick="showInfo('bin')">&#9432;</span></label><input type="range" id="bin" min="1" max="10" step="1" value="1" oninput="document.getElementById('binV').textContent=this.value+' s';drawTimeline()"><span class="v" id="binV">1 s</span></div>
+    <div class="ctl"><label>Bin <span class="info" onclick="showInfo('bin')">&#9432;</span></label><button class="pm" onclick="nudge('bin',-1)">&minus;</button><input type="range" id="bin" min="1" max="10" step="1" value="1" oninput="document.getElementById('binV').textContent=this.value+' s';drawTimeline()"><button class="pm" onclick="nudge('bin',1)">+</button><span class="v" id="binV">1 s</span></div>
     <div class="row" style="margin-top:10px">
       <div class="card"><div class="lbl">total gain</div><div class="n" id="cum">0</div></div>
       <div class="card"><div class="lbl">time SD s</div><div class="n" id="sdT">-</div></div>
@@ -118,8 +119,10 @@ const trace=[]; const TRACE_MAX=900;
 const $=id=>document.getElementById(id);
 
 const sens=$('sens'), hp=$('hp');
+function fmtHz(v){ return v>=1000 ? (v/1000).toFixed(1).replace(/\.0$/,'')+'k Hz' : v+' Hz'; }
+function nudge(id,dir){ const el=$(id); el.value=+el.value+dir*(+el.step||1); el.dispatchEvent(new Event('input')); }
 sens.oninput=()=>$('sensV').textContent=(+sens.value).toFixed(1)+'x';
-hp.oninput=()=>{ $('hpV').textContent=hp.value+' Hz'; if(hpF) hpF.frequency.value=+hp.value; };
+hp.oninput=()=>{ $('hpV').textContent=fmtHz(+hp.value); if(hpF) hpF.frequency.value=+hp.value; };
 
 function toggle(){ running?stop():start(); }
 function hardRefresh(){ if(running||wav.len||rows.length){ if(!confirm('Refresh clears the unsaved session (audio + logs). Continue?')) return; } try{ const base=location.href.split('?')[0]; location.href=base+'?v='+Date.now(); }catch(e){ location.reload(); } }
