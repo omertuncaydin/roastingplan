@@ -83,7 +83,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
     <div class="lbl">session timeline · 16 min · bars = cracks, line = cumulative gain</div>
     <canvas id="tl" width="900" height="160"></canvas>
     <div class="row" style="margin-top:10px">
-      <div class="card"><div class="lbl">cum gain</div><div class="n" id="cum">0</div></div>
+      <div class="card"><div class="lbl">total gain</div><div class="n" id="cum">0</div></div>
       <div class="card"><div class="lbl">time SD s</div><div class="n" id="sdT">-</div></div>
       <div class="card"><div class="lbl">gain SD</div><div class="n" id="sdG">-</div></div>
     </div>
@@ -99,7 +99,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 <script>
 let AC=null, stream=null, src=null, hpF=null, analyser=null, buf=null, running=false, raf=null;
 let bgEMA=0, fastEMA=0, refractoryUntil=0, inCrack=false, crackPeak=0, crackStart=0;
-let cracks=[], startT=0, peakGain=0;
+let cracks=[], dismissed=[], crackSeq=0, startT=0, peakGain=0;
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
 const $=id=>document.getElementById(id);
@@ -134,8 +134,8 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlWav').style.display='none'; $('dlCsv').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; inCrack=false;
-  updateSD(); drawTimeline(0);
+  bgEMA=0; fastEMA=0; cracks=[]; dismissed=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; inCrack=false;
+  $('log').innerHTML=''; updateSD(); drawTimeline(0);
   running=true; $('btn').textContent='Stop'; $('btn').className='stop'; $('status').textContent='Listening. Calibrating background for ~2s, keep it running steady.';
   loop();
 }
@@ -178,13 +178,13 @@ function loop(){
   } else if(inCrack){
     // crack ended: log it with its peak gain
     const g=Math.round(toGain(crackPeak));
-    cracks.push({t:(now-startT)/1000, g});
+    cracks.push({t:(now-startT)/1000, g, id:++crackSeq});
     if(rows.length) rows[rows.length-1][7]=g;
     peakGain=Math.max(peakGain,g);
     refractoryUntil=now+70;                               // ignore echo of the same crack for 70ms
     inCrack=false;
     $('last').textContent=g; $('peak').textContent=peakGain; $('cnt').textContent=cracks.length;
-    addLog(cracks.length,(now-startT)/1000,g);
+    renderLog();
     updateSD(); drawTimeline((now-startT)/1000);
   }
 
@@ -220,14 +220,21 @@ function saveCsv(){
   if(!rows.length) return;
   let s='t_s,rms,gain,bg_gain,ratio,sens,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
   s+='\n# cracks: n,t_s,gain\n'+cracks.map((c,i)=>'# '+(i+1)+','+c.t.toFixed(2)+','+c.g).join('\n');
+  if(dismissed.length) s+='\n# dismissed (user-deleted, labeled false positives): t_s,gain\n'+dismissed.map(c=>'# '+c.t.toFixed(2)+','+c.g).join('\n');
   dl(new Blob([s],{type:'text/csv'}), fname('csv'));
 }
 
-function addLog(n,t,g){
-  const d=document.createElement('div'); d.className='lr';
-  const mm=Math.floor(t/60), ss=String(Math.floor(t%60)).padStart(2,'0');
-  d.innerHTML='<span>#'+n+' &nbsp; '+mm+':'+ss+'</span><span>gain <b>'+g+'</b></span>';
-  const L=$('log'); L.insertBefore(d,L.firstChild);
+function fmtT(t){ return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'); }
+function renderLog(){
+  $('log').innerHTML=cracks.map((c,i)=>'<div class="lr"><span>#'+(i+1)+' &nbsp; '+fmtT(c.t)+'</span><span>gain <b>'+c.g+'</b> <span onclick="delCrack('+c.id+')" style="color:var(--warn);cursor:pointer;padding:0 8px;font-weight:800">&times;</span></span></div>').reverse().join('');
+}
+function delCrack(id){
+  const i=cracks.findIndex(c=>c.id===id); if(i<0) return;
+  dismissed.push(cracks.splice(i,1)[0]);               // deletions are labeled false positives, kept for the CSV
+  peakGain=cracks.reduce((m,c)=>Math.max(m,c.g),0);
+  $('cnt').textContent=cracks.length; $('peak').textContent=peakGain;
+  $('last').textContent=cracks.length?cracks[cracks.length-1].g:0;
+  renderLog(); updateSD(); drawTimeline(0);
 }
 
 function sd(a){ if(a.length<2) return 0; const m=a.reduce((s,x)=>s+x,0)/a.length; return Math.sqrt(a.reduce((s,x)=>s+(x-m)*(x-m),0)/(a.length-1)); }
