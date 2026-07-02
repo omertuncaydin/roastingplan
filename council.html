@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f6f2ec">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Council</title>
+<style>
+:root { color-scheme: light;
+  --bg:#f6f2ec; --card:#ffffff; --ink:#2a2118; --mut:#8a7a68; --line:#ece2d4;
+  --accent:#a35c1f; --green:#2c6a4a; --greenbg:#e6f2ea; --red:#b23b3b; --redbg:#fdeaea;
+  --blue:#2c5a7a; --bluebg:#eef4f9; --gold:#f4e8d2;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Segoe UI,Roboto,sans-serif;
+  font-size:16px;line-height:1.45;
+  padding:14px;padding-top:calc(14px + env(safe-area-inset-top));padding-left:calc(14px + env(safe-area-inset-left));padding-right:calc(14px + env(safe-area-inset-right));padding-bottom:calc(30px + env(safe-area-inset-bottom));}
+h1{font-size:22px;letter-spacing:-.3px;margin:4px 0 2px;font-weight:800}
+.sub{color:var(--mut);font-size:13px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.linkish{color:var(--accent);font-weight:700;font-size:12px;background:none;border:none;padding:6px;cursor:pointer}
+.seg{display:flex;background:#e9dfd0;border-radius:12px;padding:3px;margin-bottom:10px;position:sticky;top:calc(8px + env(safe-area-inset-top));z-index:5;box-shadow:0 2px 8px rgba(60,40,20,.08)}
+.seg button{flex:1;border:none;background:transparent;border-radius:10px;padding:10px 4px;font-size:14px;font-weight:700;color:#7a6a58;min-height:44px;cursor:pointer;transition:all .15s}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(60,40,20,.15)}
+input[type=search],input[type=password]{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;background:#fff;margin-bottom:8px;-webkit-appearance:none}
+.count{color:var(--mut);font-size:12px;margin:2px 2px 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(60,40,20,.06)}
+.qhead{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.qnum{font-weight:800;font-size:14px;color:#fff;background:var(--accent);border-radius:10px;padding:3px 9px}
+.status{font-size:12px;font-weight:700;border-radius:12px;padding:4px 11px;margin-left:auto;white-space:nowrap}
+.st-wait{background:var(--redbg);color:var(--red)}
+.st-done{background:var(--greenbg);color:var(--green)}
+.st-live{background:var(--gold);color:var(--accent)}
+.qtitle{font-size:15.5px;font-weight:700;line-height:1.35;margin:2px 0 4px}
+.vlabel{font-size:11px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;margin-top:12px}
+.verdict{font-size:14px;line-height:1.55;margin-top:5px;white-space:pre-wrap}
+details{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
+summary{font-size:13px;font-weight:700;color:#7a6a58;cursor:pointer;min-height:30px;display:flex;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary:before{content:'▸';margin-right:7px;transition:transform .15s;display:inline-block}
+details[open] summary:before{transform:rotate(90deg)}
+.take{font-size:13.5px;line-height:1.5;margin:8px 0 0;color:#4a3d2e;white-space:pre-wrap}
+.omer{font-style:italic;color:var(--blue);background:var(--bluebg);border-radius:12px;padding:10px 12px;margin-top:8px;font-size:13.5px;white-space:pre-wrap}
+.crux{background:#fdf7ec;border:1px solid #eeddbd;border-radius:14px;padding:12px;margin-top:12px}
+.cruxlbl{font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.side{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;font-size:13.5px;line-height:1.5}
+.side b{color:var(--accent)}
+.btnrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.btn{border:none;border-radius:13px;padding:12px 16px;font-size:15px;font-weight:700;min-height:46px;cursor:pointer;flex:1;min-width:96px;transition:transform .1s}
+.btn:active{transform:scale(.97)}
+.btn-a{background:var(--greenbg);color:var(--green)}
+.btn-b{background:var(--bluebg);color:var(--blue)}
+.btn-c{background:#f1eae0;color:#5a4a38}
+.btn-send{background:var(--green);color:#fff}
+.btn-cancel{background:#f1eae0;color:#5a4a38;flex:0 1 auto}
+textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px;font-family:inherit;margin-top:10px;min-height:74px;background:#fffdf9;resize:vertical}
+.actions{margin-top:10px}
+.act{display:flex;gap:10px;align-items:flex-start;padding:8px 2px;font-size:14px;line-height:1.45}
+.act input{width:22px;height:22px;margin-top:1px;accent-color:var(--green);flex:none}
+.act.done label{text-decoration:line-through;color:var(--mut)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom));background:var(--ink);color:#fff;border-radius:14px;padding:12px 20px;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;transition:opacity .25s;pointer-events:none;z-index:20;max-width:88%}
+.toast.show{opacity:1}
+.err{background:var(--redbg);color:var(--red);padding:14px;border-radius:14px;font-size:14px}
+.loading{color:var(--mut);font-size:15px;padding:40px 10px;text-align:center}
+.spin{display:inline-block;width:18px;height:18px;border:2.5px solid #d8ccb8;border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-4px;margin-right:8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+#gate .card{max-width:420px;margin:40px auto}
+</style>
+</head>
+<body>
+<div id="gate" style="display:none">
+  <div class="card">
+    <h1>Council</h1>
+    <div class="sub">Enter the cockpit key once; it stays on this phone.</div>
+    <input type="password" id="keyIn" placeholder="Cockpit key" autocomplete="off">
+    <div class="btnrow"><button class="btn btn-send" onclick="saveKey()">Open the cockpit</button></div>
+    <div class="err" id="gateErr" style="display:none;margin-top:10px"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <h1>Council</h1>
+  <div class="sub"><span>Answerable in one tap. Live from the Council Log.</span><button class="linkish" onclick="logout()">key ⏏</button></div>
+  <div class="seg" id="seg">
+    <button data-f="wait">Needs me</button>
+    <button data-f="all">All</button>
+    <button data-f="done">Concluded</button>
+  </div>
+  <input type="search" id="q" placeholder="Search questions and verdicts...">
+  <div class="count" id="count"></div>
+  <div id="list" class="loading"><span class="spin"></span>Reading the Council Log...</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const FN='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/council-proxy';
+const COL={ SUBJ:7495167122737028, ROLE:6369267215894404,
+  CT:[2710092518655876,6070259645810564,3818459832125316,8322059459495812,1003710065018756],
+  OT:[3029776061302660,4944359738967940,2692559925282692,7196159552653188] };
+let DATA=[], FILTER=localStorage.getItem('ccFilter')||'wait', BUSY=false, KEY=localStorage.getItem('ccKey')||'';
+
+const $=id=>document.getElementById(id);
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2600); }
+function showGate(msg){ $('gate').style.display='block'; $('app').style.display='none'; if(msg){ $('gateErr').textContent=msg; $('gateErr').style.display='block'; } }
+function saveKey(){ KEY=$('keyIn').value.trim(); if(!KEY) return; localStorage.setItem('ccKey',KEY); boot(); }
+function logout(){ localStorage.removeItem('ccKey'); KEY=''; showGate(); }
+
+async function api(path,opts={}){
+  const r=await fetch(FN+path,Object.assign({},opts,{headers:Object.assign({'x-cc-key':KEY},opts.headers||{})}));
+  if(r.status===401){ showGate('That key was refused.'); throw new Error('unauthorized'); }
+  if(!r.ok) throw new Error('HTTP '+r.status+': '+(await r.text()).slice(0,120));
+  return r.json();
+}
+
+function cellMap(row){ const o={_rowId:row.id}; for(const c of row.cells||[]){ o[c.columnId]=c.value; } return o; }
+
+async function boot(){
+  $('gate').style.display='none'; $('app').style.display='block';
+  try{
+    const d=await api('/sheet');
+    const heads=(d.rows||[]).map(cellMap).filter(o=>o[COL.ROLE]==='Subject Header');
+    const qs={};
+    for(const o of heads){
+      const s=String(o[COL.SUBJ]||'');
+      let m=s.match(/^Q(\d+)\s*[:—-]/);
+      if(m){ const n=+m[1]; qs[n]=qs[n]||{n,sub:{}}; qs[n].main=o; continue; }
+      m=s.match(/^(Marketing & Brand|Operations & Scaling) Council\s*[—-]+\s*Q(\d+)/);
+      if(m){ const n=+m[2]; qs[n]=qs[n]||{n,sub:{}}; qs[n].sub[m[1]]=o; }
+    }
+    DATA=Object.values(qs).filter(q=>q.main).sort((a,b)=>b.n-a.n);
+    render();
+  }catch(e){ if(e.message!=='unauthorized') $('list').innerHTML='<div class="err">Could not reach the relay: '+esc(e.message)+'</div>'; }
+}
+
+function lastSession(o){ for(let i=4;i>=0;i--){ if(o[COL.CT[i]]) return i+1; } return 0; }
+function statusOf(q){
+  const o=q.main, s=lastSession(o);
+  if(o[COL.CT[4]]) return {k:'done',label:'Concluded'};
+  if(!s) return {k:'live',label:'No verdict yet'};
+  if(!o[COL.OT[s-1]]) return {k:'wait',label:'Needs your take · S'+s};
+  return {k:'live',label:'S'+s+' answered · council next'};
+}
+
+function parseVerdict(text){
+  const out={crux:null,actions:[],body:text};
+  if(!text) return out;
+  const cm=text.match(/CRUX:?\s*([\s\S]*?)(?=ACTIONS?:|OPEN:|$)/i);
+  if(cm){ const a=cm[1].match(/A\)\s*([\s\S]*?)(?=B\)|$)/), b=cm[1].match(/B\)\s*([\s\S]*)$/);
+    if(a&&b) out.crux={a:a[1].trim(), b:b[1].trim()}; }
+  const am=text.match(/ACTIONS?:?\s*([\s\S]*?)(?=OPEN:|$)/i);
+  if(am) out.actions=am[1].split(/\n|(?=\d+\.)/).map(s=>s.replace(/^\s*[\d\.\-•]+\s*/,'').trim()).filter(s=>s.length>4);
+  return out;
+}
+
+function card(q){
+  const o=q.main, st=statusOf(q), s=lastSession(o);
+  const subj=String(o[COL.SUBJ]||'');
+  const title=subj.replace(/^Q\d+\s*[:—-]\s*/,'');
+  const short=title.length>120?title.slice(0,120)+'…':title;
+  const v=s?parseVerdict(o[COL.CT[s-1]]):null;
+  let h='<div class="card"><div class="qhead"><span class="qnum">Q'+q.n+'</span><span class="status st-'+st.k+'">'+esc(st.label)+'</span></div>';
+  h+='<div class="qtitle">'+esc(short)+'</div>';
+  if(title.length>120) h+='<details><summary>Full question</summary><div class="take">'+esc(title)+'</div></details>';
+  if(v){
+    if(v.crux){
+      h+='<div class="crux"><div class="cruxlbl">The crux · S'+s+'</div>';
+      h+='<div class="side"><b>A</b> · '+esc(v.crux.a)+'</div><div class="side"><b>B</b> · '+esc(v.crux.b)+'</div></div>';
+    } else {
+      h+='<div class="vlabel">Latest verdict · S'+s+'</div><div class="verdict">'+esc(v.body)+'</div>';
+    }
+    if(v.actions.length){
+      h+='<div class="vlabel">Actions</div><div class="actions">';
+      v.actions.forEach((a,i)=>{ const key='ccAct_'+o._rowId+'_'+s+'_'+i, done=localStorage.getItem(key)==='1';
+        h+='<div class="act'+(done?' done':'')+'"><input type="checkbox" '+(done?'checked':'')+' onchange="tickAct(\''+key+'\',this)"><label>'+esc(a)+'</label></div>'; });
+      h+='</div>';
+    }
+  }
+  if(st.k==='wait'){
+    if(v&&v.crux){
+      h+='<div class="btnrow"><button class="btn btn-a" onclick="quick('+q.n+',\'A\')">Side A</button><button class="btn btn-b" onclick="quick('+q.n+',\'B\')">Side B</button><button class="btn btn-c" onclick="openBox('+q.n+',\'\')">Third way</button></div>';
+    } else {
+      h+='<div class="btnrow"><button class="btn btn-a" onclick="openBox('+q.n+',\'Approved. Proceed as proposed.\')">Approve</button><button class="btn btn-c" onclick="openBox('+q.n+',\'\')">My take</button></div>';
+    }
+    h+='<div id="box'+q.n+'" style="display:none"><textarea id="txt'+q.n+'" placeholder="Your take, one line is enough..."></textarea>'+
+       '<div class="btnrow"><button class="btn btn-send" onclick="send('+q.n+')">Send to the council</button><button class="btn btn-cancel" onclick="closeBox('+q.n+')">Cancel</button></div></div>';
+  }
+  for(const c of ['Marketing & Brand','Operations & Scaling']){
+    const sc=q.sub[c]; if(!sc) continue; const ss=lastSession(sc);
+    if(ss) h+='<details><summary>'+esc(c)+' consensus · S'+ss+'</summary><div class="take">'+esc(sc[COL.CT[ss-1]])+'</div></details>';
+  }
+  const hist=[];
+  for(let i=0;i<5;i++){ if(o[COL.CT[i]]&&i+1!==s) hist.push('<div class="vlabel">S'+(i+1)+'</div><div class="take">'+esc(o[COL.CT[i]])+'</div>');
+    if(i<4&&o[COL.OT[i]]) hist.push('<div class="omer">Your S'+(i+1)+': '+esc(o[COL.OT[i]])+'</div>'); }
+  if(hist.length) h+='<details><summary>History</summary>'+hist.join('')+'</details>';
+  return h+'</div>';
+}
+
+function render(){
+  document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.f===FILTER));
+  const term=($('q').value||'').toLowerCase();
+  let items=DATA;
+  if(FILTER==='wait') items=items.filter(q=>statusOf(q).k==='wait');
+  if(FILTER==='done') items=items.filter(q=>statusOf(q).k==='done');
+  if(term) items=items.filter(q=>JSON.stringify(q).toLowerCase().includes(term));
+  $('count').textContent=items.length+' of '+DATA.length+' questions';
+  $('list').classList.remove('loading');
+  $('list').innerHTML=items.map(card).join('')||'<div class="loading">'+(FILTER==='wait'?'Nothing needs you. Enjoy the roastery.':'Nothing matches.')+'</div>';
+}
+
+function findQ(n){ return DATA.find(q=>q.n===n); }
+function openBox(n,seed){ const b=$('box'+n); b.style.display='block'; const t=$('txt'+n); if(seed&&!t.value) t.value=seed; t.focus(); }
+function closeBox(n){ $('box'+n).style.display='none'; }
+function quick(n,side){ const q=findQ(n), s=lastSession(q.main), v=parseVerdict(q.main[COL.CT[s-1]]);
+  openBox(n,'Side '+side+'. '+(side==='A'?v.crux.a:v.crux.b).split(/[.;]/)[0].trim()+'.'); }
+function tickAct(key,el){ localStorage.setItem(key,el.checked?'1':'0'); el.closest('.act').classList.toggle('done',el.checked); }
+
+async function send(n){
+  if(BUSY) return; const q=findQ(n), t=$('txt'+n).value.trim();
+  if(!t){ toast('Write a line first.'); return; }
+  const s=lastSession(q.main); if(!s||s>4){ toast('This question is not open for a take.'); return; }
+  BUSY=true; toast('Sending to the council...');
+  try{
+    const existing=q.main[COL.OT[s-1]];
+    const val=(existing?existing+' | ':'')+'[cockpit '+new Date().toISOString().slice(0,10)+'] '+t;
+    await api('/rows',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify([{id:q.main._rowId,cells:[{columnId:COL.OT[s-1],value:val}]}])});
+    q.main[COL.OT[s-1]]=val;
+    toast('Landed in the sheet. Tell Claude "run next session" when ready.');
+    render();
+  }catch(e){ toast('Write failed: '+e.message); }
+  BUSY=false;
+}
+
+document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{ FILTER=b.dataset.f; localStorage.setItem('ccFilter',FILTER); render(); });
+$('q').addEventListener('input',render);
+if(KEY) boot(); else showGate();
+</script>
+</body>
+</html>
