@@ -175,3 +175,8 @@ EN is the source of truth; the app is designed in English. This file holds the T
 - Sent ok → "Gönderildi. Cevaplarınız eğitmende. İyi tattınız." / PDF fallback → "PDF kaydedildi. Eğitmeninize iletin."
 - Asks → "Hangisi BAKED DEĞİL?" / "Hangisi FAST ROAST DEĞİL?" / "Hangisi LIGHT ROAST DEĞİL?" / "Hangisi DARK ROAST DEĞİL?" (jargon terms kept EN by design)
 - Triangle → "Üçgen"
+
+## Account · Classroom card (added 2026-07-03)
+- Classroom → "Sınıf"
+- In class today? Your instructor gives the code. → "Bugün sınıfta mısınız? Kodu eğitmeniniz verir."
+- Cupping exam room → "Tadım sınav odası"
