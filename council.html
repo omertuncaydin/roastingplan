@@ -187,7 +187,7 @@ function card(q){
       h+='<div class="btnrow"><button class="btn btn-a" onclick="openBox('+q.n+',\'Approved. Proceed as proposed.\')">Approve</button><button class="btn btn-c" onclick="openBox('+q.n+',\'\')">My take</button></div>';
     }
     h+='<div id="box'+q.n+'" style="display:none"><textarea id="txt'+q.n+'" placeholder="Your take, one line is enough..."></textarea>'+
-       '<div class="act" style="padding:6px 2px 0"><input type="checkbox" id="rq'+q.n+'" checked><label for="rq'+q.n+'">Queue next session (runs at the 09:00 / 18:00 checkpoint)</label></div>'+
+       '<div class="act" style="padding:6px 2px 0"><input type="checkbox" id="rq'+q.n+'" checked><label for="rq'+q.n+'">Queue next session (runs at the 06:00 / 18:00 checkpoint)</label></div>'+
        '<div class="btnrow"><button class="btn btn-send" onclick="send('+q.n+')">Send to the council</button><button class="btn btn-cancel" onclick="closeBox('+q.n+')">Cancel</button></div></div>';
   }
   for(const c of ['Marketing & Brand','Operations & Scaling']){
@@ -231,7 +231,7 @@ async function send(n){
     const val=(existing?existing+' | ':'')+'[cockpit '+new Date().toISOString().slice(0,10)+'] '+t+(rq?' [run-queued]':'');
     await api('/rows',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify([{id:q.main._rowId,cells:[{columnId:COL.OT[s-1],value:val}]}])});
     q.main[COL.OT[s-1]]=val;
-    toast(rq?'Landed. Session queued for the next checkpoint (09:00 / 18:00).':'Landed in the sheet. Tell Claude "run next session" when ready.');
+    toast(rq?'Landed. Session queued for the next checkpoint (06:00 / 18:00).':'Landed in the sheet. Tell Claude "run next session" when ready.');
     render();
   }catch(e){ toast('Write failed: '+e.message); }
   BUSY=false;
