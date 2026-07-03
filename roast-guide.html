@@ -529,12 +529,13 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-03e</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-03f</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl">Classroom (admin)</div>
       <div class="small" style="margin:3px 0 8px">Learners scan the exam's QR; the day's class code goes on the whiteboard.</div>
       <div id="classQRs" style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin:10px 0"></div>
-      <div id="classCodeBig" style="text-align:center;margin:6px 0 4px"></div>
+      <div id="classCodeBig" onclick="copyClassCode(this)" style="text-align:center;margin:6px 0 4px;cursor:pointer"></div>
+      <button class="iconbtn" style="display:block;margin:10px auto 0" onclick="printClassCard()">Print</button>
     </div>
     <div class="card">
       <div class="secname" style="margin-bottom:10px">Your membership</div>
@@ -1413,10 +1414,24 @@ function renderClassQRs(){
       new QRCode(q,{text:url,width:130,height:130});
     });
     const cb=document.getElementById('classCodeBig');
-    if(cb) cb.innerHTML='<div class="small" style="color:var(--muted);margin-bottom:2px">Class code</div>'+
+    if(cb) cb.innerHTML='<div class="small cclbl" style="color:var(--muted);margin-bottom:2px">Class code · tap to copy</div>'+
       '<div style="font-size:44px;font-weight:800;letter-spacing:3px;color:var(--gold)">ROAST26</div>'; };
   if(window.QRCode){ draw(); return; }
   const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; s.onload=draw; document.head.appendChild(s);
+}
+function copyClassCode(el){
+  const code='ROAST26';
+  const done=()=>{ const l=el.querySelector('.cclbl'); if(l){ const o=l.textContent; l.textContent='copied ✓'; setTimeout(()=>l.textContent=o,1200); } };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(done).catch(()=>{});
+}
+function printClassCard(){
+  const imgs=[...document.querySelectorAll('#classQRs canvas')].map(c=>c.toDataURL());
+  const lbls=[...document.querySelectorAll('#classQRs > div > div:first-child')].map(d=>d.textContent);
+  let h='<html><head><title>Exam room</title><style>body{font-family:-apple-system,Helvetica,sans-serif;text-align:center;color:#000;margin:40px}h1{font-size:28px;margin-bottom:24px}img{width:260px;height:260px}.row{display:flex;justify-content:center;gap:40px}.lbl{font-size:20px;font-weight:700;margin-bottom:8px}.code{font-size:64px;font-weight:800;letter-spacing:6px;margin-top:10px}</style></head><body>';
+  h+='<h1>Tadım Sınavı · Cupping Exam</h1><div class="row">';
+  imgs.forEach((src,i)=>{ h+='<div><div class="lbl">'+(lbls[i]||'')+'</div><img src="'+src+'"></div>'; });
+  h+='</div><div class="lbl" style="margin-top:34px">Sınıf kodu · Class code</div><div class="code">ROAST26</div></body></html>';
+  const w=window.open('','_blank'); if(!w) return; w.document.write(h); w.document.close(); setTimeout(()=>{ try{ w.print(); }catch(e){} },400);
 }
 // ---- reasoning popups (craft logic, not operating instructions) ----
 function infoModal(title,body){ hxBox.innerHTML=`<h1 style="margin:0 0 8px;font-size:18px">${title}</h1><div class="small" style="line-height:1.6">${body}</div><button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`; hxModal.style.display='flex'; }
