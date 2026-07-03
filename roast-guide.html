@@ -529,12 +529,12 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-03c</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-03e</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl">Classroom (admin)</div>
       <div class="small" style="margin:3px 0 8px">Learners scan the exam's QR; the day's class code goes on the whiteboard.</div>
       <div id="classQRs" style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin:10px 0"></div>
-      <a class="btn ghost" style="display:block;text-align:center;text-decoration:none" href="exam-tri.html">Open the exam room</a>
+      <div id="classCodeBig" style="text-align:center;margin:6px 0 4px"></div>
     </div>
     <div class="card">
       <div class="secname" style="margin-bottom:10px">Your membership</div>
@@ -1411,7 +1411,10 @@ function renderClassQRs(){
       const q=document.createElement('div'); q.style.cssText='background:#fff;padding:8px;border-radius:8px';
       w.appendChild(t); w.appendChild(q); box.appendChild(w);
       new QRCode(q,{text:url,width:130,height:130});
-    }); };
+    });
+    const cb=document.getElementById('classCodeBig');
+    if(cb) cb.innerHTML='<div class="small" style="color:var(--muted);margin-bottom:2px">Class code</div>'+
+      '<div style="font-size:44px;font-weight:800;letter-spacing:3px;color:var(--gold)">ROAST26</div>'; };
   if(window.QRCode){ draw(); return; }
   const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; s.onload=draw; document.head.appendChild(s);
 }
