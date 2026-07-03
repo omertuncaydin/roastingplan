@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Crack Listener - gain</title>
+<title>BeanSpeak · Crack Analyzer App · free first crack detection</title>
+<meta name="description" content="BeanSpeak is the free crack analyzer app: your phone hears first crack, draws the crack curve live, maps the gain stages A0-C1 and projects roast color. Coffee Acoustics by CoffeeNutz.">
 <style>
 :root{--bg:#1a1410;--panel:#241c16;--panel2:#201a15;--accent:#c98a3c;--accent2:#3c7a5a;--gold:#e6c14b;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -43,19 +44,26 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 <body>
 <div class="wrap">
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
-    <h1>Crack Listener</h1>
+    <h1>BeanSpeak</h1>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--muted)">v2026-07-03f</span>
+      <span style="font-size:11px;color:var(--muted)">v2026-07-03g</span>
       <button onclick="hardRefresh()" style="width:auto;padding:6px 12px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted);border:1px solid var(--line)">Refresh app</button>
     </div>
   </div>
-  <div class="sub">gain = crack intensity. the beans' thermal state, out loud.</div>
+  <div class="sub">the crack analyzer · the probe reads the drum, the beans speak</div>
 
   <div class="card" style="text-align:center">
     <div class="lbl">live gain</div>
     <div class="big" id="gain">0</div>
     <div class="meter"><div class="meterFill" id="mfill"></div><div class="floor" id="mfloor" style="left:0%"></div></div>
     <div class="hint" id="status">Tap start, hold the phone near the drum, disable the case if it covers the mic.</div>
+  </div>
+
+  <div class="card" style="text-align:center">
+    <div class="lbl">projected color · Agtron scale</div>
+    <input type="text" id="coffeeName" placeholder="Coffee (mapping key)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin:8px 0;text-align:center">
+    <canvas id="ag" width="360" height="205"></canvas>
+    <div class="hint" id="agHint"></div>
   </div>
 
   <button class="go" id="btn" onclick="toggle()">Start listening</button>
@@ -169,7 +177,7 @@ async function start(){
   bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null;
   $('log').innerHTML=''; $('metaBox').style.display='none';
   ['mCoffee','mBatch','mAgW','mAgG','mNote'].forEach(i=>{ if($(i)) $(i).value=''; });
-  updateSD(); drawTimeline();
+  updateSD(); drawTimeline(); updateGauge();
   running=true; $('btn').textContent='Stop'; $('btn').className='stop'; $('status').textContent='Listening. Calibrating background for ~2s, keep it running steady.';
   loop();
 }
@@ -181,7 +189,8 @@ function stop(){
   if(AC) AC.close();
   if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
   $('recAudio').disabled=false;
-  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('metaBox').style.display='block'; }
+  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('metaBox').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value; }
+  updateGauge();
   const mb=(wav.len*2/1048576).toFixed(1);
   $('recInfo').textContent='Session kept in memory: '+(wav.len?mb+' MB audio, ':'')+rows.length+' trace samples, '+cracks.length+' cracks. Save the session before closing or reloading the page.';
   $('btn').textContent='Start listening'; $('btn').className='go'; $('status').textContent='Stopped. '+cracks.length+' cracks logged.';
@@ -238,6 +247,7 @@ function loop(){
 
   // session log (one row per frame; crack_gain filled on the frame a crack finalizes)
   rows.push([((now-startT)/1000).toFixed(2), lastBufRms.toFixed(6), Math.round(gain), Math.round(bgGain), (lastShort/(bgEMA+1e-9)).toFixed(2), sens.value, hp.value, '']);
+  if(rows.length%30===0) updateGauge();
   if(wav.len && rows.length%60===0) $('recInfo').textContent='Recording: '+Math.floor((now-startT)/60000)+':'+String(Math.floor((now-startT)/1000%60)).padStart(2,'0')+' • '+(wav.len*2/1048576).toFixed(1)+' MB';
   draw();
 }
@@ -285,6 +295,7 @@ function zipBlob(files){
 }
 function saveSession(){
   if(!rows.length && !wav.len) return;
+  saveCalIfMapped();
   const base=fname('x').slice(0,-2), files=[];
   const cb=new TextEncoder().encode(csvText());
   files.push({name:base+'.csv', parts:[cb], size:cb.length, crc:(crcUpd(0xFFFFFFFF,cb)^0xFFFFFFFF)>>>0});
@@ -330,6 +341,69 @@ function updateSD(){
   $('sdT').textContent=sd(v.map(c=>c.t)).toFixed(1);
   $('sdG').textContent=sd(v.map(c=>c.g)).toFixed(1);
 }
+// ---- Agtron projection gauge: one mapped roast per coffee unlocks it (projection, never measurement) ----
+const SEC_PER_AG=4, AG_TOL=2, AG_MIN=40, AG_MAX=110;
+const agc=$('ag'), agx=agc.getContext('2d');
+const cName=$('coffeeName'); cName.value=localStorage.getItem('bsCoffee')||'';
+cName.oninput=()=>{ localStorage.setItem('bsCoffee',cName.value); updateGauge(); };
+function calMap(){ try{ return JSON.parse(localStorage.getItem('bsCal')||'{}'); }catch(e){ return {}; } }
+function calFor(){ const k=(cName.value||'').trim().toLowerCase(); return k?calMap()[k]:null; }
+function saveCalIfMapped(){
+  const k=(cName.value||$('mCoffee').value||'').trim().toLowerCase();
+  const ag=parseFloat($('mAgG').value), v=valid();
+  if(!k||!isFinite(ag)||v.length<5) return;
+  const m=calMap(); m[k]={a0:v[0].t, devSpan:v[v.length-1].t-v[0].t, agtron:ag, date:new Date().toISOString().slice(0,10)};
+  localStorage.setItem('bsCal',JSON.stringify(m));
+  toast('Color map saved for "'+k+'". The gauge is live on its next roast.');
+}
+function agColor(f){ // f 0(light)..1(dark)
+  const stops=[[217,185,138],[201,138,60],[122,74,35],[74,44,22],[32,20,12]];
+  const p=f*(stops.length-1), i=Math.min(stops.length-2,Math.floor(p)), t=p-i;
+  const c=stops[i].map((a,j)=>Math.round(a+(stops[i+1][j]-a)*t));
+  return 'rgb('+c.join(',')+')';
+}
+function drawGauge(state,projLo,projHi){
+  const W=agc.width,H=agc.height,cx2=W/2,cy=H-16,R=140;
+  agx.clearRect(0,0,W,H);
+  const N=24;
+  for(let i=0;i<N;i++){
+    const a0=Math.PI+ (i/N)*Math.PI, a1=Math.PI+((i+0.9)/N)*Math.PI;
+    agx.strokeStyle=state==='live'?agColor(i/(N-1)):'rgba(138,122,104,0.35)';
+    agx.lineWidth=16; agx.beginPath(); agx.arc(cx2,cy,R,a0,a1); agx.stroke();
+  }
+  agx.textAlign='center';
+  if(state==='live'){
+    const mid=(projLo+projHi)/2, f=Math.min(1,Math.max(0,(AG_MAX-mid)/(AG_MAX-AG_MIN)));
+    const ang=Math.PI+f*Math.PI;
+    agx.strokeStyle='#f3ede4'; agx.lineWidth=3; agx.beginPath();
+    agx.moveTo(cx2+Math.cos(ang)*(R-24),cy+Math.sin(ang)*(R-24));
+    agx.lineTo(cx2+Math.cos(ang)*(R+12),cy+Math.sin(ang)*(R+12)); agx.stroke();
+    agx.fillStyle='#f3ede4'; agx.font='800 44px -apple-system,sans-serif';
+    agx.fillText(Math.round(projLo)+'-'+Math.round(projHi),cx2,cy-34);
+    agx.fillStyle='#a8998a'; agx.font='700 15px -apple-system,sans-serif';
+    agx.fillText('Agtron · projection',cx2,cy-10);
+  } else {
+    agx.fillStyle='#8a7a68'; agx.font='800 30px -apple-system,sans-serif';
+    agx.fillText(state==='wait'?'· · ·':'🔒',cx2,cy-40);
+    agx.fillStyle='#8a7a68'; agx.font='700 14px -apple-system,sans-serif';
+    agx.fillText(state==='wait'?'awaiting first crack':(state==='nocoffee'?'name the coffee above':'unmapped bean'),cx2,cy-12);
+  }
+  agx.textAlign='start';
+}
+function updateGauge(){
+  const k=(cName.value||'').trim();
+  if(!k){ drawGauge('nocoffee'); $('agHint').textContent='Name the coffee; each bean carries its own color map.'; return; }
+  const cal=calFor();
+  if(!cal){ drawGauge('locked'); $('agHint').textContent='Unmapped: roast once, fill "Agtron ground" in the roast record, save. The gauge unlocks for this coffee.'; return; }
+  const v=valid();
+  if(!running||!v.length){ drawGauge('wait'); $('agHint').textContent='Mapped on '+cal.date+' (Agtron '+cal.agtron+'). Projection starts at first crack.'; return; }
+  const devCur=((performance.now()-startT)/1000)-v[0].t;
+  let proj=cal.agtron+(cal.devSpan-devCur)/SEC_PER_AG;
+  proj=Math.min(AG_MAX,Math.max(AG_MIN,proj));
+  drawGauge('live',proj-AG_TOL,proj+AG_TOL);
+  $('agHint').textContent='If dropped now, this bean projects near this color. Projection, not measurement; calibrate often.';
+}
+setTimeout(updateGauge,0);   // initial gauge state on load
 const tl=$('tl'), tx=tl.getContext('2d');
 function drawTimeline(){
   tx.clearRect(0,0,tl.width,tl.height);
