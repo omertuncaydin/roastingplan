@@ -529,7 +529,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-03f</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-03g</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl">Classroom (admin)</div>
       <div class="small" style="margin:3px 0 8px">Learners scan the exam's QR; the day's class code goes on the whiteboard.</div>
@@ -1409,7 +1409,8 @@ function renderClassQRs(){
     [['Exam 3',base+'?e=3'],['Exam 4',base+'?e=4']].forEach(([lbl,url])=>{
       const w=document.createElement('div'); w.style.cssText='text-align:center';
       const t=document.createElement('div'); t.style.cssText='font-weight:700;font-size:12px;margin-bottom:5px'; t.textContent=lbl;
-      const q=document.createElement('div'); q.style.cssText='background:#fff;padding:8px;border-radius:8px';
+      const q=document.createElement('div'); q.style.cssText='background:#fff;padding:8px;border-radius:8px;cursor:pointer'; q.title=url;
+      q.onclick=()=>window.open(url,'_blank');
       w.appendChild(t); w.appendChild(q); box.appendChild(w);
       new QRCode(q,{text:url,width:130,height:130});
     });

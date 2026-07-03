@@ -45,7 +45,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
     <h1>Crack Listener</h1>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--muted)">v2026-07-02h</span>
+      <span style="font-size:11px;color:var(--muted)">v2026-07-03a</span>
       <button onclick="hardRefresh()" style="width:auto;padding:6px 12px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted);border:1px solid var(--line)">Refresh app</button>
     </div>
   </div>
@@ -68,6 +68,17 @@ input[type=range]{flex:1;accent-color:var(--accent)}
       <span>Record raw audio (WAV, pre-filter)</span>
     </label>
     <div class="hint" id="recInfo">Audio and the full gain trace are kept for the whole session. After Stop, save both files; detection can then be re-tuned offline against the recording, no second roast needed. Roughly 5.5 MB per minute; keep the screen on while recording.</div>
+    <div id="metaBox" style="display:none;margin-top:10px">
+      <div class="lbl" style="margin-bottom:6px">roast record (travels inside the CSV)</div>
+      <input type="text" id="mCoffee" placeholder="Coffee" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin-bottom:6px">
+      <div style="display:flex;gap:6px;margin-bottom:6px">
+        <input type="text" id="mBatch" placeholder="Batch g" inputmode="numeric" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="mAgW" placeholder="Agtron whole" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="mAgG" placeholder="Agtron ground" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
+      </div>
+      <input type="text" id="mNote" placeholder="Note (machine, charge, anything)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
+      <div class="hint">Fill what you know before saving; measure Agtron later? Add it to the zip's filename when you file it (e.g. ...-A62-58.zip).</div>
+    </div>
     <div class="row" style="margin-top:10px">
       <button class="go" id="dlZip" onclick="saveSession()" style="display:none">Save session (.zip)</button>
     </div>
@@ -89,7 +100,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   </div>
 
   <div class="card">
-    <div class="lbl">session timeline · 16 min</div>
+    <div class="lbl">session timeline · DEV window (auto-zooms to crack activity)</div>
     <canvas id="tl" width="900" height="180"></canvas>
     <div class="ctl"><label>Bin <span class="info" onclick="showInfo('bin')">&#9432;</span></label><button class="pm" onclick="nudge('bin',-1)">&minus;</button><input type="range" id="bin" min="1" max="10" step="1" value="1" oninput="document.getElementById('binV').textContent=this.value+' s';drawTimeline()"><button class="pm" onclick="nudge('bin',1)">+</button><span class="v" id="binV">1 s</span></div>
     <div class="row" style="margin-top:10px">
@@ -97,7 +108,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
       <div class="card"><div class="lbl">time SD s</div><div class="n" id="sdT">-</div></div>
       <div class="card"><div class="lbl">gain SD</div><div class="n" id="sdG">-</div></div>
     </div>
-    <div class="hint">Gold bars: share of cracks per bin. Orange curve: the same, smoothed. White lines: mean crack time (solid) and mean &plusmn; 1 SD (dashed); tight for fast roasts, stretched for slow. Thick green: crack progress 0-100% (cumulative gain); slope rising = A1, steepest = B1, plateau = C1. Axis fixed at 16 min for now.</div>
+    <div class="hint">Gold bars: share of cracks per bin. Orange curve: the same, smoothed. White lines: mean crack time (solid) and mean &plusmn; 1 SD (dashed); tight for fast roasts, stretched for slow. Thick green: crack progress 0-100% (cumulative gain); slope rising = A1, steepest = B1, plateau = C1. The axis follows the crack window itself, from just before the first crack to just after the last.</div>
   </div>
 
   <div class="card">
@@ -156,7 +167,9 @@ async function start(){
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none';
   bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null;
-  $('log').innerHTML=''; updateSD(); drawTimeline();
+  $('log').innerHTML=''; $('metaBox').style.display='none';
+  ['mCoffee','mBatch','mAgW','mAgG','mNote'].forEach(i=>{ if($(i)) $(i).value=''; });
+  updateSD(); drawTimeline();
   running=true; $('btn').textContent='Stop'; $('btn').className='stop'; $('status').textContent='Listening. Calibrating background for ~2s, keep it running steady.';
   loop();
 }
@@ -168,7 +181,7 @@ function stop(){
   if(AC) AC.close();
   if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
   $('recAudio').disabled=false;
-  if(wav.len||rows.length) $('dlZip').style.display='block';
+  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('metaBox').style.display='block'; }
   const mb=(wav.len*2/1048576).toFixed(1);
   $('recInfo').textContent='Session kept in memory: '+(wav.len?mb+' MB audio, ':'')+rows.length+' trace samples, '+cracks.length+' cracks. Save the session before closing or reloading the page.';
   $('btn').textContent='Start listening'; $('btn').className='go'; $('status').textContent='Stopped. '+cracks.length+' cracks logged.';
@@ -241,7 +254,9 @@ function wavHeader(){
   return h;
 }
 function csvText(){
-  let s='t_s,rms,gain,bg_gain,ratio,trigger_x,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
+  const mv=id=>($(id)&&$(id).value||'').replace(/,/g,';').trim();
+  let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n';
+  s+='t_s,rms,gain,bg_gain,ratio,trigger_x,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
   s+='\n# cracks: n,t_s,gain,fp\n'+cracks.map((c,i)=>'# '+(i+1)+','+c.t.toFixed(2)+','+c.g+','+(c.fp?1:0)).join('\n');
   return s;
 }
@@ -316,38 +331,48 @@ function updateSD(){
   $('sdG').textContent=sd(v.map(c=>c.g)).toFixed(1);
 }
 const tl=$('tl'), tx=tl.getContext('2d');
-const TL_SPAN=960; // fixed 16 min axis for now; panel-adjustable later
 function drawTimeline(){
   tx.clearRect(0,0,tl.width,tl.height);
-  const W=tl.width,H=tl.height, span=TL_SPAN, v=valid();
-  tx.strokeStyle='#2a221b'; tx.lineWidth=1;
-  for(let m=0;m*60<=span;m+=2){ const x=(m*60/span)*W; tx.beginPath(); tx.moveTo(x,0); tx.lineTo(x,H); tx.stroke(); }
+  const W=tl.width,H=tl.height, v=valid();
   if(!v.length) return;
+  // DEV window: from just before the first crack to just after the last (or now, capped)
+  const pad=15, nowS=running?(performance.now()-startT)/1000:v[v.length-1].t;
+  const t0=Math.max(0, v[0].t-pad);
+  const t1=Math.max(v[v.length-1].t+pad, Math.min(nowS, v[v.length-1].t+60));
+  const span=Math.max(60, t1-t0);
+  const X=t=>((t-t0)/span)*W;
+  // grid + time labels each minute (30s when zoomed tight)
+  const stepG=span<=240?30:60;
+  tx.strokeStyle='#2a221b'; tx.lineWidth=1; tx.fillStyle='#8a7a68'; tx.font='16px sans-serif';
+  for(let t=Math.ceil(t0/stepG)*stepG; t<=t0+span; t+=stepG){
+    const x=X(t); tx.beginPath(); tx.moveTo(x,0); tx.lineTo(x,H); tx.stroke();
+    tx.fillText(fmtT(t), x+3, H-4);
+  }
   // histogram: share of cracks per bin
-  const bin=+(($('bin')&&$('bin').value)||1), nb=Math.ceil(span/bin), counts=new Array(nb).fill(0);
-  for(const c of v){ counts[Math.min(nb-1,Math.floor(c.t/bin))]++; }
+  const bin=+(($('bin')&&$('bin').value)||1), nb=Math.max(1,Math.ceil(span/bin)), counts=new Array(nb).fill(0);
+  for(const c of v){ counts[Math.min(nb-1,Math.max(0,Math.floor((c.t-t0)/bin)))]++; }
   const total=v.length, maxShare=Math.max(...counts)/total;
   const bw=Math.max(1,(bin/span)*W-1);
   tx.fillStyle='#e6c14b';
-  counts.forEach((n,i)=>{ if(!n) return; const h=((n/total)/maxShare)*(H-12); tx.fillRect((i*bin/span)*W, H-h, bw, h); });
+  counts.forEach((n,i)=>{ if(!n) return; const h=((n/total)/maxShare)*(H-12); tx.fillRect(X(t0+i*bin), H-h, bw, h); });
   // smoothed density curve (moving average over 5 bins)
   tx.strokeStyle='#c98a3c'; tx.lineWidth=2; tx.beginPath(); let started=false;
   for(let i=0;i<nb;i++){ let s=0,k=0; for(let j=Math.max(0,i-2);j<=Math.min(nb-1,i+2);j++){ s+=counts[j]; k++; }
-    const y=H-((s/k/total)/maxShare)*(H-12), x=((i+0.5)*bin/span)*W;
+    const y=H-((s/k/total)/maxShare)*(H-12), x=X(t0+(i+0.5)*bin);
     started?tx.lineTo(x,y):(tx.moveTo(x,y),started=true); }
   tx.stroke();
   // mean (solid) and mean +/- 1 SD (dashed) of crack times
   if(v.length>1){
     const ts=v.map(c=>c.t), m=ts.reduce((a,b)=>a+b,0)/ts.length, s1=sd(ts);
-    const mark=(t,dash)=>{ if(t<0||t>span) return; const x=(t/span)*W; tx.setLineDash(dash); tx.strokeStyle='#f3ede4'; tx.lineWidth=1.5; tx.beginPath(); tx.moveTo(x,0); tx.lineTo(x,H); tx.stroke(); tx.setLineDash([]); };
+    const mark=(t,dash)=>{ if(t<t0||t>t0+span) return; const x=X(t); tx.setLineDash(dash); tx.strokeStyle='#f3ede4'; tx.lineWidth=1.5; tx.beginPath(); tx.moveTo(x,0); tx.lineTo(x,H); tx.stroke(); tx.setLineDash([]); };
     mark(m,[]); mark(m-s1,[5,4]); mark(m+s1,[5,4]);
   }
   // crack progress 0-100%: cumulative gain, the staging spine (slope = energy-release rate)
   if(v.length>1){
     let tot=0; const cum=v.map(c=>({t:c.t, v:(tot+=c.g)}));
     tx.strokeStyle='#3c7a5a'; tx.lineWidth=4; tx.beginPath();
-    tx.moveTo((cum[0].t/span)*W, H-2);
-    for(const p of cum) tx.lineTo((p.t/span)*W, H-2-(p.v/tot)*(H-12));
+    tx.moveTo(X(cum[0].t), H-2);
+    for(const p of cum) tx.lineTo(X(p.t), H-2-(p.v/tot)*(H-12));
     tx.stroke();
   }
 }
