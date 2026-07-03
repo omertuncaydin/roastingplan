@@ -8,6 +8,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Cupping Exam</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{color-scheme:light;
  --bg:#f6f2ec;--card:#fff;--ink:#2a2118;--mut:#8a7a68;--line:#ece2d4;
@@ -45,7 +46,7 @@ input[type=text]{width:100%;border:1px solid var(--line);border-radius:12px;padd
 </head>
 <body>
 <div class="wrap">
-<div class="langrow"><button class="lng" id="lngTr" onclick="setLang('tr')">TR</button><button class="lng" id="lngEn" onclick="setLang('en')">EN</button></div>
+<div class="langrow" style="justify-content:space-between;align-items:center"><span style="font-size:11px;color:var(--mut)">v2026-07-03a</span><span><button class="lng" id="lngTr" onclick="setLang('tr')">TR</button> <button class="lng" id="lngEn" onclick="setLang('en')">EN</button></span></div>
 
 <div id="gate">
   <div class="card">
@@ -56,6 +57,16 @@ input[type=text]{width:100%;border:1px solid var(--line);border-radius:12px;padd
     <button class="btn btn-go" id="gStart" onclick="enter()"></button>
     <div class="err" id="gerr" style="display:none"></div>
     <div class="hint" id="gHint"></div>
+  </div>
+</div>
+
+<div id="adminV" style="display:none">
+  <div class="card" style="text-align:center">
+    <h1>QR · Exam Room</h1>
+    <div class="sub">guide.coffeenutz.net/exam-tri.html</div>
+    <div id="qrbox" style="display:flex;justify-content:center;margin:14px 0"></div>
+    <div class="hint" id="codeList" style="text-align:left"></div>
+    <div class="hint">Show this screen or print it. Write the day's class code on the whiteboard only.</div>
   </div>
 </div>
 
@@ -124,8 +135,15 @@ function applyLang(){
   if(CODE){ build(); }
 }
 
+const ADMIN_CODE='PATRON26';   // Ömer's QR/admin screen; change anytime
 function enter(){
   LEARNER=$('lname').value.trim(); CODE=$('ccode').value.trim().toUpperCase();
+  if(CODE===ADMIN_CODE){
+    $('gate').style.display='none'; $('adminV').style.display='block';
+    new QRCode($('qrbox'),{text:'https://guide.coffeenutz.net/exam-tri.html',width:280,height:280});
+    $('codeList').innerHTML='<b>Active class codes:</b><br>'+Object.keys(CODES).map(k=>k+' · '+CODES[k].label).join('<br>');
+    CODE=''; return;
+  }
   if(!LEARNER){ gerr(T('noName')); return; }
   if(!CODES[CODE]){ gerr(T('badCode')); CODE=''; return; }
   $('gate').style.display='none'; $('exam').style.display='block';
