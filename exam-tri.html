@@ -46,7 +46,7 @@ input[type=text]{width:100%;border:1px solid var(--line);border-radius:12px;padd
 </head>
 <body>
 <div class="wrap">
-<div class="langrow" style="justify-content:space-between;align-items:center"><span style="font-size:11px;color:var(--mut)">v2026-07-03c <button class="lng" onclick="hardRefresh()" style="margin-left:6px">&#8635;</button></span><span><button class="lng" id="lngTr" onclick="setLang('tr')">TR</button> <button class="lng" id="lngEn" onclick="setLang('en')">EN</button></span></div>
+<div class="langrow" style="justify-content:space-between;align-items:center"><span style="font-size:11px;color:var(--mut)">v2026-07-03d <button class="lng" onclick="hardRefresh()" style="margin-left:6px">&#8635;</button></span><span><button class="lng" id="lngTr" onclick="setLang('tr')">TR</button> <button class="lng" id="lngEn" onclick="setLang('en')">EN</button></span></div>
 
 <div id="gate">
   <div class="card">
@@ -224,7 +224,27 @@ function buildPdf(){
 
 async function sendExam(){
   if(SENT) return;
-  $('sendBtn').disabled=true; toast(T('sending'));
+  $('sendBtn').disabled=true;
+  // 1) PDF first, inside the tap gesture (share sheets refuse late calls)
+  let blob=null, fname='exam.pdf';
+  try{
+    const doc=buildPdf();
+    fname='exam-'+LEARNER.replace(/\s+/g,'_')+'-'+new Date().toISOString().slice(0,10)+'.pdf';
+    blob=doc.output('blob');
+  }catch(e){ toast('PDF error: '+e.message); }
+  let shared=false;
+  if(blob){
+    const file=new File([blob],fname,{type:'application/pdf'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file],title:'Cupping exam'}); shared=true; }catch(e){ /* cancelled or blocked */ }
+    }
+    if(!shared){
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname;
+      document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),1000);
+    }
+  }
+  // 2) then the server record
+  toast(T('sending'));
   const payload={ learner:LEARNER, class_code:CODE, exam:activeExams().join('+'), answers:PICKS };
   let dbOk=false;
   try{
@@ -237,17 +257,6 @@ async function sendExam(){
     $('serr').textContent=T('svErr')+' ('+e.message+'). '+T('svErr2');
     $('serr').style.display='block';
   }
-  try{
-    const doc=buildPdf();
-    const fname='exam-'+LEARNER.replace(/\s+/g,'_')+'-'+new Date().toISOString().slice(0,10)+'.pdf';
-    const blob=doc.output('blob');
-    const file=new File([blob],fname,{type:'application/pdf'});
-    if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file],title:'Cupping exam'});
-    } else {
-      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname; a.click();
-    }
-  }catch(e){ /* share sheet cancelled; fine */ }
   SENT=true;
   $('sentOk').textContent=dbOk?T('okDb'):T('okPdf');
   $('sentOk').style.display='block';
