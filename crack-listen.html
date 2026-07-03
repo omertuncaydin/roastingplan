@@ -26,6 +26,8 @@ button{font-family:inherit;border:none;border-radius:11px;font-size:16px;font-we
 .meterFill{height:100%;width:0%;background:var(--accent);border-radius:8px;transition:width .05s linear}
 .floor{position:absolute;top:0;bottom:0;width:2px;background:var(--gold)}
 canvas{width:100%;height:150px;display:block;border-radius:8px;background:var(--panel2);margin-top:6px}
+#cv{height:88px}
+#tl{height:180px}
 .ctl{display:flex;align-items:center;gap:10px;margin-top:12px}
 .ctl label{font-size:12px;color:var(--muted);width:96px}
 input[type=range]{flex:1;accent-color:var(--accent)}
@@ -46,36 +48,49 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
     <h1>BeanSpeak</h1>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--muted)">v2026-07-03g</span>
+      <span style="font-size:11px;color:var(--muted)">v2026-07-03h</span>
       <button onclick="hardRefresh()" style="width:auto;padding:6px 12px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted);border:1px solid var(--line)">Refresh app</button>
     </div>
   </div>
   <div class="sub">the crack analyzer · the probe reads the drum, the beans speak</div>
 
-  <div class="card" style="text-align:center">
+  <div class="card">
     <div class="lbl">live gain</div>
-    <div class="big" id="gain">0</div>
-    <div class="meter"><div class="meterFill" id="mfill"></div><div class="floor" id="mfloor" style="left:0%"></div></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
+      <div class="meter" style="flex:1;margin-top:0"><div class="meterFill" id="mfill"></div><div class="floor" id="mfloor" style="left:0%"></div></div>
+      <div id="gain" style="font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;min-width:52px;text-align:right">0</div>
+    </div>
     <div class="hint" id="status">Tap start, hold the phone near the drum, disable the case if it covers the mic.</div>
   </div>
 
   <div class="card" style="text-align:center">
     <div class="lbl">projected color · Agtron scale</div>
     <input type="text" id="coffeeName" placeholder="Coffee (mapping key)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin:8px 0;text-align:center">
-    <canvas id="ag" width="360" height="205"></canvas>
+    <div id="ag" style="display:flex;justify-content:center"></div>
     <div class="hint" id="agHint"></div>
+  </div>
+
+  <div class="card">
+    <div class="lbl">session timeline · DEV <span class="info" onclick="showInfo('tl')">&#9432;</span></div>
+    <canvas id="tl" width="900" height="180"></canvas>
+    <div class="ctl"><label>Bin <span class="info" onclick="showInfo('bin')">&#9432;</span></label><button class="pm" onclick="nudge('bin',-1)">&minus;</button><input type="range" id="bin" min="1" max="10" step="1" value="4" oninput="document.getElementById('binV').textContent=this.value+' s';drawTimeline()"><button class="pm" onclick="nudge('bin',1)">+</button><span class="v" id="binV">4 s</span></div>
+    <div class="row" style="margin-top:10px">
+      <div class="card"><div class="lbl">total gain</div><div class="n" id="cum">0</div></div>
+      <div class="card"><div class="lbl">time SD s</div><div class="n" id="sdT">-</div></div>
+      <div class="card"><div class="lbl">gain SD</div><div class="n" id="sdG">-</div></div>
+    </div>
   </div>
 
   <button class="go" id="btn" onclick="toggle()">Start listening</button>
   <div class="err" id="err"></div>
 
   <div class="card" style="margin-top:12px">
-    <div class="lbl">session capture</div>
+    <div class="lbl">session capture <span class="info" onclick="showInfo('cap')">&#9432;</span></div>
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:8px">
       <input type="checkbox" id="recAudio" checked style="width:18px;height:18px;accent-color:var(--accent)">
       <span>Record raw audio (WAV, pre-filter)</span>
     </label>
-    <div class="hint" id="recInfo">Audio and the full gain trace are kept for the whole session. After Stop, save both files; detection can then be re-tuned offline against the recording, no second roast needed. Roughly 5.5 MB per minute; keep the screen on while recording.</div>
+    <div class="hint" id="recInfo">Everything is kept for the whole session; save after Stop. Keep the screen on.</div>
     <div id="metaBox" style="display:none;margin-top:10px">
       <div class="lbl" style="margin-bottom:6px">roast record (travels inside the CSV)</div>
       <input type="text" id="mCoffee" placeholder="Coffee" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin-bottom:6px">
@@ -105,18 +120,6 @@ input[type=range]{flex:1;accent-color:var(--accent)}
     <div class="ctl"><label>Trigger &times; <span class="info" onclick="showInfo('sens')">&#9432;</span></label><button class="pm" onclick="nudge('sens',-1)">&minus;</button><input type="range" id="sens" min="2" max="30" step="0.5" value="5"><button class="pm" onclick="nudge('sens',1)">+</button><span class="v" id="sensV">5.0x</span></div>
     <div class="ctl"><label>High-pass <span class="info" onclick="showInfo('hp')">&#9432;</span></label><button class="pm" onclick="nudge('hp',-1)">&minus;</button><input type="range" id="hp" min="300" max="12000" step="100" value="4000"><button class="pm" onclick="nudge('hp',1)">+</button><span class="v" id="hpV">4k Hz</span></div>
     <div class="hint">Detection listens for millisecond bursts (clicks), not loud averages, so test it with a pen click or finger snap, not your voice. Trigger is a threshold: LOWER catches more.</div>
-  </div>
-
-  <div class="card">
-    <div class="lbl">session timeline · DEV · centered, auto-scale</div>
-    <canvas id="tl" width="900" height="180"></canvas>
-    <div class="ctl"><label>Bin <span class="info" onclick="showInfo('bin')">&#9432;</span></label><button class="pm" onclick="nudge('bin',-1)">&minus;</button><input type="range" id="bin" min="1" max="10" step="1" value="4" oninput="document.getElementById('binV').textContent=this.value+' s';drawTimeline()"><button class="pm" onclick="nudge('bin',1)">+</button><span class="v" id="binV">4 s</span></div>
-    <div class="row" style="margin-top:10px">
-      <div class="card"><div class="lbl">total gain</div><div class="n" id="cum">0</div></div>
-      <div class="card"><div class="lbl">time SD s</div><div class="n" id="sdT">-</div></div>
-      <div class="card"><div class="lbl">gain SD</div><div class="n" id="sdG">-</div></div>
-    </div>
-    <div class="hint">Gold bars: cracks per bin. Thick green: the smoothed crack rate, the bell. Stage letters ride the bell: A0 first pop, A1 sustained rise past 30% of peak, B0 70% rising, B1 the crown, C0 70% falling, C1 last crack. Right-side markers settle only as the data does; thresholds are provisional until your labeled sessions calibrate them. White lines: mean &plusmn; 1 SD. The window keeps the crack activity centered and snaps to standard sizes (0:30, 1:00, 2:00, 3:00, 5:00...), shown top-right; a half-minute dev fills the frame the same way a two-minute one does, and roasts on the same window compare shape-to-shape.</div>
   </div>
 
   <div class="card">
@@ -329,7 +332,9 @@ $('log').addEventListener('touchend',e=>{ if(!swRow) return; const dx=e.changedT
 const INFO={
  sens:['Trigger threshold','A crack counts only when a 1 ms burst is this many times louder than the rolling background floor. LOWER catches more (more sensitive, more noise too); HIGHER is stricter. Start low (3-5) by the machine and raise only until scoop taps and clanks stop registering.'],
  hp:['High-pass','Everything below this frequency is cut before detection: drum rumble, fan, motor hum. Raise it until the background floor stops riding the roar; lower it if real cracks arrive thin. The raw WAV is recorded before this filter, so recordings are never affected.'],
- bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.']
+ bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.'],
+ tl:['Session timeline, the whole story','Gold bars: cracks per bin. Thick green: the smoothed crack rate, the bell. Stage letters ride the bell: A0 first pop, A1 sustained rise past 30% of peak, B0 70% rising, B1 the crown, C0 70% falling, C1 last crack. Right-side markers settle only as the data does; thresholds are provisional until labeled sessions calibrate them. White lines: mean and mean plus/minus 1 SD. The window keeps crack activity centered and snaps to standard sizes (0:30, 1:00, 2:00, 3:00, 5:00...) shown top-right, so a half-minute dev fills the frame like a two-minute one and same-window roasts compare shape-to-shape.'],
+ cap:['Session capture, the whole story','While listening, BeanSpeak keeps three things: the raw microphone audio as WAV (tapped BEFORE the high-pass, ~5.5 MB per minute), a per-frame CSV (time, loudness, floor, ratio, your slider settings, every crack), and your crack log edits: ticked rows travel as labeled false positives, swiped rows are removed. Fill the roast record (coffee, batch, Agtron) after Stop and it rides inside the CSV header; the Agtron ground value is also what unlocks the color gauge for that coffee. Save session packs WAV + CSV into one zip. Everything lives only in this page’s memory: close or reload without saving and the session is gone.']
 };
 function showInfo(k){ const d=INFO[k]; $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">'+d[0]+'</h1><div class="hint" style="font-size:13px;margin:0">'+d[1]+'</div><button style="margin-top:14px;background:var(--accent2)" onclick="document.getElementById(\'modal\').style.display=\'none\'">Close</button>'; $('modal').style.display='flex'; }
 
@@ -342,8 +347,8 @@ function updateSD(){
   $('sdG').textContent=sd(v.map(c=>c.g)).toFixed(1);
 }
 // ---- Agtron projection gauge: one mapped roast per coffee unlocks it (projection, never measurement) ----
+// Visual ported from the Guide's cockpit gauge: 270-degree arc, 36 segments, white knob, gold ticks.
 const SEC_PER_AG=4, AG_TOL=2, AG_MIN=40, AG_MAX=110;
-const agc=$('ag'), agx=agc.getContext('2d');
 const cName=$('coffeeName'); cName.value=localStorage.getItem('bsCoffee')||'';
 cName.oninput=()=>{ localStorage.setItem('bsCoffee',cName.value); updateGauge(); };
 function calMap(){ try{ return JSON.parse(localStorage.getItem('bsCal')||'{}'); }catch(e){ return {}; } }
@@ -356,39 +361,36 @@ function saveCalIfMapped(){
   localStorage.setItem('bsCal',JSON.stringify(m));
   toast('Color map saved for "'+k+'". The gauge is live on its next roast.');
 }
-function agColor(f){ // f 0(light)..1(dark)
-  const stops=[[217,185,138],[201,138,60],[122,74,35],[74,44,22],[32,20,12]];
-  const p=f*(stops.length-1), i=Math.min(stops.length-2,Math.floor(p)), t=p-i;
-  const c=stops[i].map((a,j)=>Math.round(a+(stops[i+1][j]-a)*t));
-  return 'rgb('+c.join(',')+')';
+function lerpHex(a,b,t){ const pa=[1,3,5].map(i=>parseInt(a.substr(i,2),16)), pb=[1,3,5].map(i=>parseInt(b.substr(i,2),16)); return '#'+pa.map((x,i)=>Math.round(x+(pb[i]-x)*t).toString(16).padStart(2,'0')).join(''); }
+function colorForU(u){ const s=[[0,'#4f9e3a'],[0.20,'#cfd23f'],[0.35,'#d9a93c'],[0.50,'#b9742f'],[0.68,'#8a4f26'],[0.85,'#5e3418'],[1,'#34200f']];
+  if(u<=0)return s[0][1]; if(u>=1)return s[6][1];
+  for(let i=0;i<6;i++) if(u>=s[i][0]&&u<=s[i+1][0]) return lerpHex(s[i][1],s[i+1][1],(u-s[i][0])/(s[i+1][0]-s[i][0])); return '#888'; }
+function gpolar(cx,cy,r,deg){ const a=deg*Math.PI/180; return [cx+r*Math.sin(a), cy-r*Math.cos(a)]; }
+function uToAngle(u){ return -135+Math.max(0,Math.min(1,u))*270; }
+function agU(ag){ return (AG_MAX-ag)/(AG_MAX-AG_MIN); }
+function gaugeSVG(u,loU,hiU,top,bot,dim){
+  const cx=120,cy=120,r=86,w=20,N=36; let segs='';
+  for(let i=0;i<N;i++){ const d1=-135+270*i/N, d2=-135+270*(i+1)/N, um=(i+0.5)/N;
+    const [x1,y1]=gpolar(cx,cy,r,d1),[x2,y2]=gpolar(cx,cy,r,d2);
+    segs+='<path d="M '+x1.toFixed(1)+' '+y1.toFixed(1)+' A '+r+' '+r+' 0 0 1 '+x2.toFixed(1)+' '+y2.toFixed(1)+'" stroke="'+colorForU(um)+'" stroke-width="'+w+'" fill="none" opacity="'+(dim?0.22:1)+'"/>'; }
+  let extra='';
+  if(!dim&&u!=null){
+    const tk=uu=>{ const dd=uToAngle(uu); const[a,b]=gpolar(cx,cy,r-w/2-2,dd),[c,d]=gpolar(cx,cy,r+w/2+2,dd);
+      return '<line x1="'+a.toFixed(1)+'" y1="'+b.toFixed(1)+'" x2="'+c.toFixed(1)+'" y2="'+d.toFixed(1)+'" stroke="#e6c14b" stroke-width="3"/>'; };
+    const [mx,my]=gpolar(cx,cy,r,uToAngle(u));
+    extra=tk(loU)+tk(hiU)+'<circle cx="'+mx.toFixed(1)+'" cy="'+my.toFixed(1)+'" r="9" fill="#fff" stroke="#1a1410" stroke-width="2"/>';
+  }
+  return '<svg viewBox="0 0 240 200" width="100%" style="max-width:300px">'+segs+extra+
+    '<text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-size="32" font-weight="800" fill="'+(dim?'#8a7a68':'#f3ede4')+'">'+top+'</text>'+
+    '<text x="'+cx+'" y="'+(cy+26)+'" text-anchor="middle" font-size="11" fill="#a8998a">'+bot+'</text></svg>';
 }
 function drawGauge(state,projLo,projHi){
-  const W=agc.width,H=agc.height,cx2=W/2,cy=H-16,R=140;
-  agx.clearRect(0,0,W,H);
-  const N=24;
-  for(let i=0;i<N;i++){
-    const a0=Math.PI+ (i/N)*Math.PI, a1=Math.PI+((i+0.9)/N)*Math.PI;
-    agx.strokeStyle=state==='live'?agColor(i/(N-1)):'rgba(138,122,104,0.35)';
-    agx.lineWidth=16; agx.beginPath(); agx.arc(cx2,cy,R,a0,a1); agx.stroke();
-  }
-  agx.textAlign='center';
-  if(state==='live'){
-    const mid=(projLo+projHi)/2, f=Math.min(1,Math.max(0,(AG_MAX-mid)/(AG_MAX-AG_MIN)));
-    const ang=Math.PI+f*Math.PI;
-    agx.strokeStyle='#f3ede4'; agx.lineWidth=3; agx.beginPath();
-    agx.moveTo(cx2+Math.cos(ang)*(R-24),cy+Math.sin(ang)*(R-24));
-    agx.lineTo(cx2+Math.cos(ang)*(R+12),cy+Math.sin(ang)*(R+12)); agx.stroke();
-    agx.fillStyle='#f3ede4'; agx.font='800 44px -apple-system,sans-serif';
-    agx.fillText(Math.round(projLo)+'-'+Math.round(projHi),cx2,cy-34);
-    agx.fillStyle='#a8998a'; agx.font='700 15px -apple-system,sans-serif';
-    agx.fillText('Agtron · projection',cx2,cy-10);
-  } else {
-    agx.fillStyle='#8a7a68'; agx.font='800 30px -apple-system,sans-serif';
-    agx.fillText(state==='wait'?'· · ·':'🔒',cx2,cy-40);
-    agx.fillStyle='#8a7a68'; agx.font='700 14px -apple-system,sans-serif';
-    agx.fillText(state==='wait'?'awaiting first crack':(state==='nocoffee'?'name the coffee above':'unmapped bean'),cx2,cy-12);
-  }
-  agx.textAlign='start';
+  let h;
+  if(state==='live') h=gaugeSVG(agU((projLo+projHi)/2),agU(projHi),agU(projLo),Math.round(projLo)+'-'+Math.round(projHi),'Agtron · projection',false);
+  else if(state==='wait') h=gaugeSVG(null,0,0,'· · ·','waiting for first crack',true);
+  else if(state==='nocoffee') h=gaugeSVG(null,0,0,'—','name the coffee above',true);
+  else h=gaugeSVG(null,0,0,'&#128274;','unmapped bean',true);
+  $('ag').innerHTML=h;
 }
 function updateGauge(){
   const k=(cName.value||'').trim();
