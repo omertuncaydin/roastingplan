@@ -53,6 +53,7 @@ details[open] summary:before{transform:rotate(90deg)}
 .btn{border:none;border-radius:13px;padding:12px 16px;font-size:15px;font-weight:700;min-height:46px;cursor:pointer;flex:1;min-width:96px;transition:transform .1s}
 .btn:active{transform:scale(.97)}
 .btn-a{background:var(--greenbg);color:var(--green)}
+.btn-approve{background:var(--green);color:#fff}
 .btn-b{background:var(--bluebg);color:var(--blue)}
 .btn-c{background:#f1eae0;color:#5a4a38}
 .btn-send{background:var(--green);color:#fff}
@@ -184,7 +185,7 @@ function card(q){
     if(v&&v.crux){
       h+='<div class="btnrow"><button class="btn btn-a" onclick="quick('+q.n+',\'A\')">Side A</button><button class="btn btn-b" onclick="quick('+q.n+',\'B\')">Side B</button><button class="btn btn-c" onclick="openBox('+q.n+',\'\')">Third way</button></div>';
     } else {
-      h+='<div class="btnrow"><button class="btn btn-a" onclick="openBox('+q.n+',\'Approved. Proceed as proposed.\')">Approve</button><button class="btn btn-c" onclick="openBox('+q.n+',\'\')">My take</button></div>';
+      h+='<div class="btnrow"><button class="btn btn-approve" onclick="approve('+q.n+')">&#10003; Approve</button><button class="btn btn-c" onclick="openBox('+q.n+',\'\')">&#9998; My take</button></div>';
     }
     h+='<div id="box'+q.n+'" style="display:none"><textarea id="txt'+q.n+'" placeholder="Your take, one line is enough..."></textarea>'+
        '<div class="act" style="padding:6px 2px 0"><input type="checkbox" id="rq'+q.n+'" checked><label for="rq'+q.n+'">Queue next session (runs at the 06:00 / 18:00 checkpoint)</label></div>'+
@@ -220,21 +221,29 @@ function quick(n,side){ const q=findQ(n), s=lastSession(q.main), v=parseVerdict(
   openBox(n,'Side '+side+'. '+(side==='A'?v.crux.a:v.crux.b).split(/[.;]/)[0].trim()+'.'); }
 function tickAct(key,el){ localStorage.setItem(key,el.checked?'1':'0'); el.closest('.act').classList.toggle('done',el.checked); }
 
-async function send(n){
-  if(BUSY) return; const q=findQ(n), t=$('txt'+n).value.trim();
-  if(!t){ toast('Write a line first.'); return; }
+async function submitTake(n,text,queue){
+  if(BUSY) return; const q=findQ(n);
   const s=lastSession(q.main); if(!s||s>4){ toast('This question is not open for a take.'); return; }
   BUSY=true; toast('Sending to the council...');
   try{
     const existing=q.main[COL.OT[s-1]];
-    const rq=$('rq'+n)&&$('rq'+n).checked;
-    const val=(existing?existing+' | ':'')+'[cockpit '+new Date().toISOString().slice(0,10)+'] '+t+(rq?' [run-queued]':'');
+    const val=(existing?existing+' | ':'')+'[cockpit '+new Date().toISOString().slice(0,10)+'] '+text+(queue?' [run-queued]':'');
     await api('/rows',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify([{id:q.main._rowId,cells:[{columnId:COL.OT[s-1],value:val}]}])});
     q.main[COL.OT[s-1]]=val;
-    toast(rq?'Landed. Session queued for the next checkpoint (06:00 / 18:00).':'Landed in the sheet. Tell Claude "run next session" when ready.');
+    toast(queue?'Landed. Session queued for the next checkpoint (06:00 / 18:00).':'Landed in the sheet. Tell Claude "run next session" when ready.');
     render();
   }catch(e){ toast('Write failed: '+e.message); }
   BUSY=false;
+}
+function approve(n){
+  if(confirm('One tap, no writing: send "Approved. Proceed as proposed." and queue the next session?'))
+    submitTake(n,'Approved. Proceed as proposed.',true);
+}
+async function send(n){
+  const t=$('txt'+n).value.trim();
+  if(!t){ toast('Write a line first.'); return; }
+  const rq=$('rq'+n)&&$('rq'+n).checked;
+  submitTake(n,t,rq);
 }
 
 document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{ FILTER=b.dataset.f; localStorage.setItem('ccFilter',FILTER); render(); });
