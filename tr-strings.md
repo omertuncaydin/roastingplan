@@ -164,3 +164,14 @@ EN is the source of truth; the app is designed in English. This file holds the T
 - C1 → "İlk çatlamanın kesin son çatlaması."
 - C2 → "İlk ve ikinci çatlama arasının orta noktası (MP). Kendi sesi yoktur; C1 sonrası sessizlikte yer alır. Eğitim referansıdır, yalnız sert haritada."
 - 2ND → "İkinci çatlama başlar. Yalnız sert haritada."
+
+## Exam page (exam-tri.html, own inline i18n, TR default + EN toggle)
+- Cupping Exam → "Tadım Sınavı"
+- SCA triangulation. Calm palate, quiet mind. → "SCA üçgen testi. Sakin damak, sakin zihin."
+- Your name → "Adınız"; Class code (on the board) → "Sınıf kodu (tahtada)"; Start → "Başla"
+- Hint → "Üçgendeki üç fincanı da tadın. Biri farklı. Koduna dokunun. Geri almak için tekrar dokunun. Göndermeden önce her şeyi değiştirebilirsiniz."
+- answered → "cevaplandı"; ready to send → "göndermeye hazır"; Send Exam → "Sınavı Gönder"
+- Send hint → "Gönderince cevaplarınız eğitmene kaydedilir ve paylaşmanız için sayfanızın PDF hali açılır. Başka iş yok; kaşığınızı çalkalayın."
+- Sent ok → "Gönderildi. Cevaplarınız eğitmende. İyi tattınız." / PDF fallback → "PDF kaydedildi. Eğitmeninize iletin."
+- Asks → "Hangisi BAKED DEĞİL?" / "Hangisi FAST ROAST DEĞİL?" / "Hangisi LIGHT ROAST DEĞİL?" / "Hangisi DARK ROAST DEĞİL?" (jargon terms kept EN by design)
+- Triangle → "Üçgen"

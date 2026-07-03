@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
@@ -19,6 +19,9 @@ body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSys
 .wrap{max-width:520px;margin:0 auto}
 h1{font-size:22px;letter-spacing:-.3px;margin:4px 0 2px;font-weight:800}
 .sub{color:var(--mut);font-size:13px;margin-bottom:14px}
+.langrow{display:flex;justify-content:flex-end;gap:6px;margin-bottom:4px}
+.lng{border:1px solid var(--line);background:#fff;color:#7a6a58;border-radius:10px;padding:6px 12px;font-size:13px;font-weight:800;cursor:pointer}
+.lng.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(60,40,20,.06)}
 input[type=text]{width:100%;border:1px solid var(--line);border-radius:12px;padding:13px 14px;font-size:17px;background:#fff;margin-bottom:10px;-webkit-appearance:none}
 .btn{border:none;border-radius:13px;padding:14px 16px;font-size:16px;font-weight:700;min-height:48px;cursor:pointer;width:100%;transition:transform .1s}
@@ -42,16 +45,17 @@ input[type=text]{width:100%;border:1px solid var(--line);border-radius:12px;padd
 </head>
 <body>
 <div class="wrap">
+<div class="langrow"><button class="lng" id="lngTr" onclick="setLang('tr')">TR</button><button class="lng" id="lngEn" onclick="setLang('en')">EN</button></div>
 
 <div id="gate">
   <div class="card">
-    <h1>Cupping Exam</h1>
-    <div class="sub">SCA triangulation. Calm palate, quiet mind.</div>
-    <input type="text" id="lname" placeholder="Your name" autocomplete="name">
-    <input type="text" id="ccode" placeholder="Class code (on the board)" autocapitalize="characters" autocomplete="off">
-    <button class="btn btn-go" onclick="enter()">Start</button>
+    <h1 id="gTitle"></h1>
+    <div class="sub" id="gSub"></div>
+    <input type="text" id="lname" autocomplete="name">
+    <input type="text" id="ccode" autocapitalize="characters" autocomplete="off">
+    <button class="btn btn-go" id="gStart" onclick="enter()"></button>
     <div class="err" id="gerr" style="display:none"></div>
-    <div class="hint">Taste all three cups in a triangle. One is different. Tap its code. You can change any answer until you send.</div>
+    <div class="hint" id="gHint"></div>
   </div>
 </div>
 
@@ -61,8 +65,8 @@ input[type=text]{width:100%;border:1px solid var(--line);border-radius:12px;padd
   <div class="prog" id="prog"></div>
   <div id="sections"></div>
   <div class="card">
-    <button class="btn btn-go" id="sendBtn" onclick="sendExam()" disabled>Send Exam</button>
-    <div class="hint">Sending saves your answers to the instructor and opens a PDF of your sheet to share. Nothing else to do; go rinse your spoon.</div>
+    <button class="btn btn-go" id="sendBtn" onclick="sendExam()" disabled></button>
+    <div class="hint" id="sHint"></div>
     <div class="ok" id="sentOk" style="display:none"></div>
     <div class="err" id="serr" style="display:none"></div>
   </div>
@@ -72,30 +76,58 @@ input[type=text]{width:100%;border:1px solid var(--line);border-radius:12px;padd
 <div class="toast" id="toast"></div>
 
 <script>
-// ---- config: class codes decide which exams show. Edit per cohort. ----
+// ---- class codes decide which exams show. Edit per cohort. ----
 const CODES={
   'ROAST26':{label:'Roasting Bundle · Intermediate Cupping', exams:['EXAM3','EXAM4']}
   // future: 'PRO26':{label:'Roasting PRO', exams:[...]}, 'Q26':{label:'Q Class', exams:[...]}
 };
 const EXAMS={
   EXAM3:{title:'Exam 3', sections:[
-    {ask:'Choose the one that is NOT BAKED', pre:'1', tris:[['771','803','287'],['781','191','653'],['324','673','449']]},
-    {ask:'Choose the one that is NOT FAST ROAST', pre:'2', tris:[['989','055','851'],['773','547','278'],['002','195','865']]}]},
+    {ask:{en:'Choose the one that is NOT BAKED', tr:'Hangisi BAKED DEĞİL?'}, pre:'1', tris:[['771','803','287'],['781','191','653'],['324','673','449']]},
+    {ask:{en:'Choose the one that is NOT FAST ROAST', tr:'Hangisi FAST ROAST DEĞİL?'}, pre:'2', tris:[['989','055','851'],['773','547','278'],['002','195','865']]}]},
   EXAM4:{title:'Exam 4', sections:[
-    {ask:'Choose the one that is NOT LIGHT ROAST', pre:'1', tris:[['473','376','944'],['781','919','653'],['177','308','572']]},
-    {ask:'Choose the one that is NOT DARK ROAST', pre:'2', tris:[['898','591','851'],['200','730','642'],['005','158','591']]}]}
+    {ask:{en:'Choose the one that is NOT LIGHT ROAST', tr:'Hangisi LIGHT ROAST DEĞİL?'}, pre:'1', tris:[['473','376','944'],['781','919','653'],['177','308','572']]},
+    {ask:{en:'Choose the one that is NOT DARK ROAST', tr:'Hangisi DARK ROAST DEĞİL?'}, pre:'2', tris:[['898','591','851'],['200','730','642'],['005','158','591']]}]}
+};
+const L={
+ en:{title:'Cupping Exam',sub:'SCA triangulation. Calm palate, quiet mind.',name:'Your name',code:'Class code (on the board)',start:'Start',
+     noName:'Write your name first.',badCode:'That code did not match. Check the board.',
+     hint:'Taste all three cups in a triangle. One is different. Tap its code. Tap again to undo. You can change anything until you send.',
+     answered:'answered',ready:'ready to send',send:'Send Exam',
+     sendHint:'Sending saves your answers to the instructor and opens a PDF of your sheet to share. Nothing else to do; go rinse your spoon.',
+     sending:'Sending...',done:'Done.',svErr:'Could not reach the server',svErr2:'Your PDF still works; share it with your instructor.',
+     okDb:'Sent. Your answers are with the instructor. Well tasted.',okPdf:'Saved as PDF. Hand it to your instructor.',tri:'Triangle'},
+ tr:{title:'Tadım Sınavı',sub:'SCA üçgen testi. Sakin damak, sakin zihin.',name:'Adınız',code:'Sınıf kodu (tahtada)',start:'Başla',
+     noName:'Önce adınızı yazın.',badCode:'Kod eşleşmedi. Tahtaya bakın.',
+     hint:'Üçgendeki üç fincanı da tadın. Biri farklı. Koduna dokunun. Geri almak için tekrar dokunun. Göndermeden önce her şeyi değiştirebilirsiniz.',
+     answered:'cevaplandı',ready:'göndermeye hazır',send:'Sınavı Gönder',
+     sendHint:'Gönderince cevaplarınız eğitmene kaydedilir ve paylaşmanız için sayfanızın PDF hali açılır. Başka iş yok; kaşığınızı çalkalayın.',
+     sending:'Gönderiliyor...',done:'Tamam.',svErr:'Sunucuya ulaşılamadı',svErr2:'PDF yine de hazır; eğitmeninizle paylaşın.',
+     okDb:'Gönderildi. Cevaplarınız eğitmende. İyi tattınız.',okPdf:'PDF kaydedildi. Eğitmeninize iletin.',tri:'Üçgen'}
 };
 const SUPA_URL="https://efjvfggwnhqkunjvoyjb.supabase.co";
 const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA";
 
+let LANG=localStorage.getItem('exLang')||'tr';
 let LEARNER='', CODE='', PICKS={}, TOTAL=0, SENT=false;
 const $=id=>document.getElementById(id);
+const T=k=>L[LANG][k];
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2600); }
+
+function setLang(l){ LANG=l; localStorage.setItem('exLang',l); applyLang(); }
+function applyLang(){
+  $('lngTr').classList.toggle('on',LANG==='tr'); $('lngEn').classList.toggle('on',LANG==='en');
+  $('gTitle').textContent=T('title'); $('gSub').textContent=T('sub');
+  $('lname').placeholder=T('name'); $('ccode').placeholder=T('code');
+  $('gStart').textContent=T('start'); $('gHint').textContent=T('hint');
+  $('sendBtn').textContent=T('send'); $('sHint').textContent=T('sendHint');
+  if(CODE){ build(); }
+}
 
 function enter(){
   LEARNER=$('lname').value.trim(); CODE=$('ccode').value.trim().toUpperCase();
-  if(!LEARNER){ gerr('Write your name first.'); return; }
-  if(!CODES[CODE]){ gerr('That code did not match. Check the board.'); return; }
+  if(!LEARNER){ gerr(T('noName')); return; }
+  if(!CODES[CODE]){ gerr(T('badCode')); CODE=''; return; }
   $('gate').style.display='none'; $('exam').style.display='block';
   $('modLabel').textContent=CODES[CODE].label;
   $('who').textContent=LEARNER+' · '+new Date().toLocaleDateString('tr-TR');
@@ -109,11 +141,11 @@ function build(){
     const ex=EXAMS[ek];
     h+='<div class="exTitle">'+ex.title+'</div>';
     ex.sections.forEach(sec=>{
-      h+='<div class="card"><div class="ask">'+sec.ask+'</div>';
+      h+='<div class="card"><div class="ask">'+sec.ask[LANG]+'</div>';
       sec.tris.forEach((cups,i)=>{
         const key=ek+'|'+sec.pre+':'+(i+1); TOTAL++;
-        h+='<div class="tri"><div class="trilbl">Triangle '+sec.pre+':'+(i+1)+'</div><div class="cups">'+
-          cups.map(c=>'<button class="cup" id="c_'+key+'_'+c+'" onclick="pick(\''+key+'\',\''+c+'\')">'+c+'</button>').join('')+'</div></div>';
+        h+='<div class="tri"><div class="trilbl">'+T('tri')+' '+sec.pre+':'+(i+1)+'</div><div class="cups">'+
+          cups.map(c=>'<button class="cup'+(PICKS[key]===c?' on':'')+'" id="c_'+key+'_'+c+'" onclick="pick(\''+key+'\',\''+c+'\')">'+c+'</button>').join('')+'</div></div>';
       });
       h+='</div>';
     });
@@ -123,13 +155,14 @@ function build(){
 function pick(key,cup){
   if(SENT) return;
   const prev=PICKS[key];
+  if(prev===cup){ delete PICKS[key]; $('c_'+key+'_'+cup).classList.remove('on'); updateProg(); return; }   // second tap = undo
   if(prev) $('c_'+key+'_'+prev).classList.remove('on');
   PICKS[key]=cup; $('c_'+key+'_'+cup).classList.add('on');
   updateProg();
 }
 function updateProg(){
   const n=Object.keys(PICKS).length;
-  $('prog').textContent=n+' / '+TOTAL+' answered'+(n===TOTAL?' · ready to send':'');
+  $('prog').textContent=n+' / '+TOTAL+' '+T('answered')+(n===TOTAL?' · '+T('ready'):'');
   $('sendBtn').disabled=(n!==TOTAL)||SENT;
 }
 
@@ -146,7 +179,7 @@ function buildPdf(){
     const ex=EXAMS[ek];
     doc.setFont(undefined,'bold'); doc.text(ex.title,14,y); y+=7; doc.setFont(undefined,'normal');
     ex.sections.forEach(sec=>{
-      doc.text(sec.ask,14,y); y+=6;
+      doc.text(sec.ask.en,14,y); y+=6;
       sec.tris.forEach((cups,i)=>{
         const key=ek+'|'+sec.pre+':'+(i+1);
         doc.text('  Triangle '+sec.pre+':'+(i+1)+'  ('+cups.join(' / ')+')   answer: '+(PICKS[key]||'-'),14,y); y+=6;
@@ -161,7 +194,7 @@ function buildPdf(){
 
 async function sendExam(){
   if(SENT) return;
-  $('sendBtn').disabled=true; toast('Sending...');
+  $('sendBtn').disabled=true; toast(T('sending'));
   const payload={ learner:LEARNER, class_code:CODE, exam:CODES[CODE].exams.join('+'), answers:PICKS };
   let dbOk=false;
   try{
@@ -171,10 +204,9 @@ async function sendExam(){
     dbOk=r.ok;
     if(!r.ok) throw new Error('HTTP '+r.status);
   }catch(e){
-    $('serr').textContent='Could not reach the server ('+e.message+'). Your PDF still works; share it with your instructor.';
+    $('serr').textContent=T('svErr')+' ('+e.message+'). '+T('svErr2');
     $('serr').style.display='block';
   }
-  // PDF: download + iOS share sheet
   try{
     const doc=buildPdf();
     const fname='exam-'+LEARNER.replace(/\s+/g,'_')+'-'+new Date().toISOString().slice(0,10)+'.pdf';
@@ -185,12 +217,14 @@ async function sendExam(){
     } else {
       const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname; a.click();
     }
-  }catch(e){ /* user may cancel the share sheet; fine */ }
+  }catch(e){ /* share sheet cancelled; fine */ }
   SENT=true;
-  $('sentOk').textContent=dbOk?'Sent. Your answers are with the instructor. Well tasted.':'Saved as PDF. Hand it to your instructor.';
+  $('sentOk').textContent=dbOk?T('okDb'):T('okPdf');
   $('sentOk').style.display='block';
-  toast('Done.');
+  toast(T('done'));
 }
+
+applyLang();
 </script>
 </body>
 </html>
