@@ -529,11 +529,12 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-03b</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-03c</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl">Classroom (admin)</div>
-      <div class="small" style="margin:3px 0 8px">Exam room page; enter the admin code there for the on-screen QR.</div>
-      <a class="btn ghost" style="display:block;text-align:center;text-decoration:none" href="exam-tri.html">Cupping exam room + QR</a>
+      <div class="small" style="margin:3px 0 8px">Learners scan the exam's QR; the day's class code goes on the whiteboard.</div>
+      <div id="classQRs" style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin:10px 0"></div>
+      <a class="btn ghost" style="display:block;text-align:center;text-decoration:none" href="exam-tri.html">Open the exam room</a>
     </div>
     <div class="card">
       <div class="secname" style="margin-bottom:10px">Your membership</div>
@@ -1399,6 +1400,21 @@ async function saveTranslations(){ if(!IS_ADMIN||!sb) return; const keys=Object.
   if(r&&r.error){ trMsg.style.color='var(--warn)'; trMsg.textContent='Save failed: '+r.error.message; return; }
   trMsg.style.color='var(--accent2)'; trMsg.textContent='Saved. Toggle to TR to see it.'; applyLang(); }
 
+// ---- classroom QRs (admin only): lazy-load qrcodejs, draw one QR per exam link ----
+function renderClassQRs(){
+  const box=document.getElementById('classQRs'); if(!box||box.dataset.done) return;
+  const draw=()=>{ box.dataset.done='1'; box.innerHTML='';
+    const base='https://guide.coffeenutz.net/exam-tri.html';
+    [['Exam 3',base+'?e=3'],['Exam 4',base+'?e=4']].forEach(([lbl,url])=>{
+      const w=document.createElement('div'); w.style.cssText='text-align:center';
+      const t=document.createElement('div'); t.style.cssText='font-weight:700;font-size:12px;margin-bottom:5px'; t.textContent=lbl;
+      const q=document.createElement('div'); q.style.cssText='background:#fff;padding:8px;border-radius:8px';
+      w.appendChild(t); w.appendChild(q); box.appendChild(w);
+      new QRCode(q,{text:url,width:130,height:130});
+    }); };
+  if(window.QRCode){ draw(); return; }
+  const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; s.onload=draw; document.head.appendChild(s);
+}
 // ---- reasoning popups (craft logic, not operating instructions) ----
 function infoModal(title,body){ hxBox.innerHTML=`<h1 style="margin:0 0 8px;font-size:18px">${title}</h1><div class="small" style="line-height:1.6">${body}</div><button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`; hxModal.style.display='flex'; }
 // SCA / CVA definitions for each cupping attribute
@@ -1443,7 +1459,7 @@ async function renderAccount(){
   if(sb){ try{ const u=await sb.auth.getUser(); const usr=u&&u.data&&u.data.user; if(usr){ acEmail.textContent=usr.email||'-'; acSince.textContent=usr.created_at?usr.created_at.slice(0,10):'-'; } }catch(e){} }
   else { acEmail.textContent='offline'; acSince.textContent='-'; }
   const ap=document.getElementById('acPlan'); if(ap) ap.textContent=MYPLAN;
-  const cc=document.getElementById('classCard'); if(cc) cc.classList.toggle('hide',!IS_ADMIN);
+  const cc=document.getElementById('classCard'); if(cc){ cc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) renderClassQRs(); }
   const mc=document.getElementById('memberCard'); if(mc){ mc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadEntitlements(); }
   const tc=document.getElementById('trCard'); if(tc){ tc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) renderTranslations(); }
 }
