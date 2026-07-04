@@ -48,7 +48,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
     <h1>BeanSpeak</h1>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--muted)">v2026-07-04a</span>
+      <span style="font-size:11px;color:var(--muted)">v2026-07-04b</span>
       <button onclick="hardRefresh()" style="width:auto;padding:6px 12px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted);border:1px solid var(--line)">Refresh app</button>
     </div>
   </div>
@@ -143,7 +143,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 </div>
 
 <script>
-let AC=null, stream=null, src=null, hpF=null, analyser=null, buf=null, running=false, raf=null;
+let AC=null, stream=null, src=null, hpF=null, lpF=null, analyser=null, buf=null, running=false, raf=null;
 let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, lastShort=0, lastBufRms=0;
 let cracks=[], crackSeq=0, startT=0, peakGain=0;
@@ -171,11 +171,13 @@ async function start(){
   hpF=AC.createBiquadFilter(); hpF.type='highpass'; hpF.frequency.value=+hp.value; hpF.Q.value=0.7;
   analyser=AC.createAnalyser(); analyser.fftSize=1024; analyser.smoothingTimeConstant=0;
   buf=new Float32Array(analyser.fftSize);
-  src.connect(hpF); hpF.connect(analyser);
-  // detection runs on the audio thread: gap-free, non-overlapping buffers off the high-passed signal
+  // fixed 16 kHz lowpass after the HP: field data (2026-07-04 session) shows crack SNR peaks 12-16k and collapses above
+  lpF=AC.createBiquadFilter(); lpF.type='lowpass'; lpF.frequency.value=16000; lpF.Q.value=0.7;
+  src.connect(hpF); hpF.connect(lpF); lpF.connect(analyser);
+  // detection runs on the audio thread: gap-free, non-overlapping buffers off the band-passed signal
   procDet=AC.createScriptProcessor(1024,1,1);
   procDet.onaudioprocess=e=>detectBuf(e.inputBuffer.getChannelData(0));
-  hpF.connect(procDet); procDet.connect(AC.destination);
+  lpF.connect(procDet); procDet.connect(AC.destination);
   wav={chunks:[],len:0,sr:AC.sampleRate}; rows=[];
   if($('recAudio').checked){
     proc=AC.createScriptProcessor(4096,1,1);
@@ -197,7 +199,7 @@ async function start(){
 }
 function stop(){
   running=false; if(raf) cancelAnimationFrame(raf);
-  if(procDet){ try{ hpF.disconnect(procDet); procDet.disconnect(); }catch(e){} procDet.onaudioprocess=null; procDet=null; }
+  if(procDet){ try{ lpF.disconnect(procDet); procDet.disconnect(); }catch(e){} procDet.onaudioprocess=null; procDet=null; }
   if(proc){ try{ src.disconnect(proc); proc.disconnect(); }catch(e){} proc.onaudioprocess=null; proc=null; }
   if(stream) stream.getTracks().forEach(t=>t.stop());
   if(AC) AC.close();
@@ -262,6 +264,7 @@ function loop(){
   // session log (one row per frame; crack_gain filled on the frame a crack finalizes)
   rows.push([((now-startT)/1000).toFixed(2), lastBufRms.toFixed(6), Math.round(gain), Math.round(bgGain), (lastShort/(bgEMA+1e-9)).toFixed(2), sens.value, hp.value, '']);
   if(rows.length%30===0) updateGauge();
+  if(rows.length%30===15) drawTimeline();
   if(wav.len && rows.length%60===0) $('recInfo').textContent='Recording: '+Math.floor((now-startT)/60000)+':'+String(Math.floor((now-startT)/1000%60)).padStart(2,'0')+' • '+(wav.len*2/1048576).toFixed(1)+' MB';
   draw();
 }
@@ -289,14 +292,20 @@ const CRC_T=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n
 function crcUpd(crc,b){ for(let i=0;i<b.length;i++) crc=CRC_T[(crc^b[i])&0xff]^(crc>>>8); return crc; }
 function zipBlob(files){
   const out=[], central=[]; let off=0, cdSize=0;
+  const now=new Date();
+  const dosT=(now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1);
+  const dosD=(((now.getFullYear()-1980)&0x7f)<<9)|((now.getMonth()+1)<<5)|now.getDate();
   for(const f of files){
     const nm=new TextEncoder().encode(f.name);
     const lh=new DataView(new ArrayBuffer(30));
-    lh.setUint32(0,0x04034b50,true); lh.setUint16(4,20,true); lh.setUint32(14,f.crc,true);
+    lh.setUint32(0,0x04034b50,true); lh.setUint16(4,20,true);
+    lh.setUint16(10,dosT,true); lh.setUint16(12,dosD,true);
+    lh.setUint32(14,f.crc,true);
     lh.setUint32(18,f.size,true); lh.setUint32(22,f.size,true); lh.setUint16(26,nm.length,true);
     out.push(lh.buffer,nm,...f.parts);
     const ch=new DataView(new ArrayBuffer(46));
     ch.setUint32(0,0x02014b50,true); ch.setUint16(4,20,true); ch.setUint16(6,20,true);
+    ch.setUint16(12,dosT,true); ch.setUint16(14,dosD,true);
     ch.setUint32(16,f.crc,true); ch.setUint32(20,f.size,true); ch.setUint32(24,f.size,true);
     ch.setUint16(28,nm.length,true); ch.setUint32(42,off,true);
     central.push(ch.buffer,nm); cdSize+=46+nm.length;
@@ -477,7 +486,7 @@ const tl=$('tl'), tx=tl.getContext('2d');
 function drawTimeline(){
   tx.clearRect(0,0,tl.width,tl.height);
   const W=tl.width,H=tl.height, v=valid();
-  if(!v.length) return;
+  if(!v.length){ tx.fillStyle='#8a7a68'; tx.font='18px -apple-system,sans-serif'; tx.fillText(running?'listening for first crack...':'the DEV window draws itself from the first crack', 14, 32); return; }
   // DEV window: auto-scale ladder, activity CENTERED. Snaps to standard sizes so
   // a 30s dev and a 2min dev each fill the frame, and same-class roasts stay comparable.
   const first=v[0].t, last=v[v.length-1].t, ext=Math.max(1,last-first);
