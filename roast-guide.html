@@ -120,6 +120,7 @@
   .actv{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
   input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent2)}
   /* ---- Cup / Grade / Value ---- */
+  .qblur{filter:blur(7px);pointer-events:none;user-select:none}
   .scorebar{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#241c16 0%,#241c16 78%,rgba(36,28,22,0));padding:10px 0 14px;margin:-4px 0 6px;display:flex;align-items:baseline;justify-content:center;gap:10px}
   .scorebar .sv{font-size:38px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1;cursor:pointer}
   .scorebar .sv.secured{filter:blur(10px);opacity:.6;user-select:none}
@@ -529,7 +530,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-03g</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-04a</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl">Classroom (admin)</div>
       <div class="small" style="margin:3px 0 8px">Learners scan the exam's QR; the day's class code goes on the whiteboard.</div>
@@ -1241,7 +1242,10 @@ function renderGrade(){
   grCerts.innerHTML=GR_CERTS.map(p=>`<span class="chip ${grade.certs.includes(p)?'on':''}" data-ce="${esc(p)}">${esc(p)}</span>`).join('');
   grCat1.innerHTML=CAT1.map(defCard).join(''); grCat2.innerHTML=CAT2.map(defCard).join('');
   bindGrade(); updateGradeVerdict(); renderGrList();
-  const gb=document.getElementById('grLiteBanner'); if(gb) gb.innerHTML=canSave('grade')?'':liteBanner('grading');
+  const gLocked=!canSave('grade');
+  document.querySelectorAll('#view-grade > .card').forEach(el=>el.classList.toggle('qblur',gLocked));
+  const gb=document.getElementById('grLiteBanner');
+  if(gb) gb.innerHTML=gLocked?`<div class="card" style="border-color:#e6c14b"><b>${T('Grading is a Q-tier module.')}</b><div class="small" style="margin-top:4px">${T('You can see it working; Q learners use it and keep it for life.')}</div></div>`:'';
 }
 function bindGrade(){
   grColors.querySelectorAll('[data-col]').forEach(c=>c.onclick=()=>{ grade.color=c.dataset.col; grColors.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x.dataset.col===grade.color)); });
@@ -1309,8 +1313,9 @@ function renderValueCard(){ const s=valSample.value; const c=CUPS.find(x=>x.samp
   const desc=c?distinctDescriptors(c):[]; const fit=c?(c.total||cupTotal(c)).toFixed(2):'—'; const D=c?distinctiveness(c):null;
   const dot=on=>`<span class="pdot ${on?'full':''}"></span>`;
   let h='<div class="card">';
-  h+=`<div class="twowin"><div class="w fit"><div class="wl">Fit <button class="iconbtn" style="padding:2px 8px;font-size:11px" onclick="toggleScore()">${T(isScoreSecured(s)?'Reveal':'Hide')}</button></div><div class="wv${isScoreSecured(s)?' secured':''}" onclick="toggleScore()" style="cursor:pointer">${fit}</div><div class="wsub">cupping score · how well it suits a target palate</div></div>`;
-  h+=`<div class="w dis"><div class="wl">Distinctiveness <span class="info" onclick="showDistInfo()">&#9432;</span></div><div class="wv">${c&&c.distinctive?esc(c.distinctive):(D?D.level:'<span style="color:var(--muted);font-size:13px">cup it first</span>')}</div><div class="wsub">${D?(D.level+' · '+D.index+' · '+D.driver):'what sets it apart'}</div></div></div>`;
+  h+=`<div class="twowin"><div class="w fit"><div class="wl">Fit <button class="iconbtn" style="padding:2px 8px;font-size:11px" onclick="toggleScore()">${T(isScoreSecured(s)?'Reveal':'Hide')}</button></div><div class="wv${isScoreSecured(s)?' secured':''}${canSave('value')?'':' qblur'}" onclick="toggleScore()" style="cursor:pointer">${fit}</div><div class="wsub">cupping score · how well it suits a target palate</div></div>`;
+  h+=`<div class="w dis"><div class="wl">Distinctiveness <span class="info" onclick="showDistInfo()">&#9432;</span></div><div class="wv${canSave('value')?'':' qblur'}">${c&&c.distinctive?esc(c.distinctive):(D?D.level:'<span style="color:var(--muted);font-size:13px">cup it first</span>')}</div><div class="wsub">${D?(D.level+' · '+D.index+' · '+D.driver):'what sets it apart'}</div></div></div>`;
+  if(!canSave('value')) h+=`<div class="small" style="color:var(--muted);margin-top:6px">${T('Fit and Distinctiveness are Q-tier readings. Q learners keep them for life.')}</div>`;
   h+=`<div class="cgrplbl" style="margin-top:14px">The distinctive attribute</div><div class="small" style="margin-bottom:6px">In one line: what does this coffee do that another would not? This, not the score, is what makes it worth more.</div>`;
   h+=`<input type="text" id="valDist" placeholder="e.g. jasmine top note that holds into a tea-like cool finish" value="${c?esc(c.distinctive||''):''}" ${(c&&canSave('value'))?'':'disabled'}>`;
   if(c&&!canSave('value')) h+=`<div class="small" style="margin-top:6px;color:var(--accent2)">Lite access: naming and saving the distinctive attribute unlocks when you enroll to your class.</div>`;
@@ -1515,6 +1520,9 @@ const DICT={ tr:{
  "Cup this coffee":"Bu kahveyi tadımla","Deep Calibration Learning":"Derin Kalibrasyon Öğrenmesi",
  "Deep Calibration":"Derin Kalibrasyon","Soft Mapping":"Yumuşak Harita","Hard Mapping":"Sert Harita","Batch (g)":"Parti (g)","Flame/Power":"Alev/Güç","Fan":"Fan","Drum":"Tambur","Stage":"Kademe","Temp":"Sıcaklık","Record sample":"Numuneyi kaydet","Undo":"Geri al","Cup starred samples":"Yıldızlı numuneleri tadımla","Finish & save":"Bitir ve kaydet","Start fresh":"Sıfırdan başla","Close":"Kapat","Saved maps":"Kayıtlı haritalar","Start":"Başlat","Running":"Çalışıyor","Load":"Yükle","None saved yet.":"Henüz kayıt yok.","Pick a coffee on the Roast tab first.":"Önce Kavurma sekmesinden bir kahve seç.","Star the stages you sampled first (tap the ☆).":"Önce numune aldığın kademeleri yıldızla (☆ dokun).","No samples yet. Set the stage + temp, take a sample, tap Record at each stage.":"Henüz numune yok. Kademe + sıcaklığı ayarla, numune al, her kademede Kaydet'e dokun.","Dev time (A0 to drop): ":"Gelişim süresi (A0'dan boşaltmaya): ","Calibrating ":"Kalibrasyon: ","Record":"Kaydet","+ temp":"+ sıcaklık","Start records CHG. Then Record each stage in turn; + temp logs a reading between stages.":"Başlat CHG'yi kaydeder. Sonra her kademeyi sırayla Kaydet; + sıcaklık kademeler arası okuma ekler.",
 "Stage guide":"Kademe rehberi",
+"Grading is a Q-tier module.":"Derecelendirme Q seviyesi bir modüldür.",
+"You can see it working; Q learners use it and keep it for life.":"Çalışışını görebilirsiniz; Q öğrencileri ömür boyu kullanır ve saklar.",
+"Fit and Distinctiveness are Q-tier readings. Q learners keep them for life.":"Fit ve Ayırt Edicilik Q seviyesi okumalardır. Q öğrencilerinde ömür boyudur.",
 "The probe reads the drum, not the beans. From A0 on, every stage is defined by what the beans themselves say in sound.":"Prob tamburu okur, çekirdeği değil. A0'dan itibaren her kademe, çekirdeğin sesle anlattıklarıyla tanımlanır.",
 "The literal first crack. Not the start of concurrent cracking, the single first pop.":"Gerçek anlamda ilk çatlama. Art arda çatlamanın başlangıcı değil, ilk tek çıtlama.",
 "Cracks turn frequent: from one or two per second to a steady chatter, around five or more.":"Çatlamalar sıklaşır: saniyede bir ikiden sürekli bir çıtırtıya, yaklaşık beş ve üzerine çıkar.",

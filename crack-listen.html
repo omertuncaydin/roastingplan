@@ -48,7 +48,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
     <h1>BeanSpeak</h1>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--muted)">v2026-07-03h</span>
+      <span style="font-size:11px;color:var(--muted)">v2026-07-04a</span>
       <button onclick="hardRefresh()" style="width:auto;padding:6px 12px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted);border:1px solid var(--line)">Refresh app</button>
     </div>
   </div>
@@ -68,6 +68,16 @@ input[type=range]{flex:1;accent-color:var(--accent)}
     <input type="text" id="coffeeName" placeholder="Coffee (mapping key)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin:8px 0;text-align:center">
     <div id="ag" style="display:flex;justify-content:center"></div>
     <div class="hint" id="agHint"></div>
+    <details style="text-align:left">
+      <summary>Coffee badge (sticker bilgisi)</summary>
+      <input type="text" id="bSub" placeholder="Alt başlık (örn. chirripó yıkanmış)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink);margin:8px 0 6px">
+      <div style="display:flex;gap:6px;margin-bottom:6px">
+        <input type="text" id="bHarvest" placeholder="Hasat yılı" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="bProcess" placeholder="İşlem" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink)">
+      </div>
+      <input type="text" id="bNotes" placeholder="Notlar (örn. mürdüm eriği, fıstık)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink)">
+      <div class="hint">Saved per coffee on this phone; the batch card pulls from here.</div>
+    </details>
   </div>
 
   <div class="card">
@@ -104,6 +114,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
     </div>
     <div class="row" style="margin-top:10px">
       <button class="go" id="dlZip" onclick="saveSession()" style="display:none">Save session (.zip)</button>
+      <button class="go" id="dlCard" onclick="makeBatchCard()" style="display:none;background:var(--accent)">Batch card (PNG)</button>
     </div>
   </div>
 
@@ -176,7 +187,7 @@ async function start(){
     src.connect(proc); proc.connect(AC.destination); // raw tap, before the high-pass; output stays silent
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
-  $('recAudio').disabled=true; $('dlZip').style.display='none';
+  $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none';
   bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null;
   $('log').innerHTML=''; $('metaBox').style.display='none';
   ['mCoffee','mBatch','mAgW','mAgG','mNote'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -192,7 +203,7 @@ function stop(){
   if(AC) AC.close();
   if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
   $('recAudio').disabled=false;
-  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('metaBox').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value; }
+  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('metaBox').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value; }
   updateGauge();
   const mb=(wav.len*2/1048576).toFixed(1);
   $('recInfo').textContent='Session kept in memory: '+(wav.len?mb+' MB audio, ':'')+rows.length+' trace samples, '+cracks.length+' cracks. Save the session before closing or reloading the page.';
@@ -404,6 +415,62 @@ function updateGauge(){
   proj=Math.min(AG_MAX,Math.max(AG_MIN,proj));
   drawGauge('live',proj-AG_TOL,proj+AG_TOL);
   $('agHint').textContent='If dropped now, this bean projects near this color. Projection, not measurement; calibrate often.';
+}
+// ---- coffee badge (sticker info) per coffee, feeds the batch card ----
+function badgeMap(){ try{ return JSON.parse(localStorage.getItem('bsBadge')||'{}'); }catch(e){ return {}; } }
+function badgeKey(){ return (cName.value||'').trim().toLowerCase(); }
+function loadBadge(){ const b=badgeMap()[badgeKey()]||{}; $('bSub').value=b.sub||''; $('bHarvest').value=b.harvest||''; $('bProcess').value=b.process||''; $('bNotes').value=b.notes||''; }
+function saveBadge(){ const k=badgeKey(); if(!k) return; const m=badgeMap(); m[k]={sub:$('bSub').value,harvest:$('bHarvest').value,process:$('bProcess').value,notes:$('bNotes').value}; localStorage.setItem('bsBadge',JSON.stringify(m)); }
+['bSub','bHarvest','bProcess','bNotes'].forEach(i=>$(i).addEventListener('input',saveBadge));
+cName.addEventListener('input',loadBadge);
+loadBadge();
+
+// ---- batch card: 33x52mm print sticker, bell replaces the QR ----
+function makeBatchCard(){
+  const v=valid();
+  if(v.length<3){ toast('Not enough cracks for a card.'); return; }
+  const b=badgeMap()[badgeKey()]||{};
+  const W=780, H=1228;                       // 33x52mm @ ~600dpi
+  const c=document.createElement('canvas'); c.width=W; c.height=H;
+  const x=c.getContext('2d');
+  x.fillStyle='#fff'; x.fillRect(0,0,W,H);
+  x.strokeStyle='#000'; x.lineWidth=14; x.strokeRect(7,7,W-14,H-14);   // frame
+  const L=54; let y=120;
+  x.fillStyle='#000'; x.textAlign='left';
+  x.font='800 78px -apple-system,Helvetica,sans-serif';
+  x.fillText((cName.value||'coffee').toLowerCase(), L, y); y+=64;
+  x.font='600 46px -apple-system,Helvetica,sans-serif';
+  x.fillText((b.sub||'').toLowerCase(), L, y); y+=86;
+  const today=new Date(), dd=n=>String(n).padStart(2,'0');
+  const tarih=dd(today.getDate())+'.'+dd(today.getMonth()+1)+'.'+today.getFullYear();
+  const batch=($('mBatch').value||'').trim();
+  x.font='700 34px -apple-system,Helvetica,sans-serif';
+  x.fillText('KAVURMA TARİHİ: '+tarih+(batch?' / '+batch+'G':''), L, y); y+=52;
+  if(b.harvest) { x.fillText('HASAT YILI: '+b.harvest.toUpperCase(), L, y); y+=52; }
+  if(b.process) { x.fillText('İŞLEM: '+b.process.toUpperCase(), L, y); y+=52; }
+  if(b.notes)   { x.fillText('NOTLAR: '+b.notes.toUpperCase(), L, y); y+=52; }
+  // the bell, where the QR used to live: black on white, print-safe
+  const gx=L-6, gy=y+16, gw=W-2*(L-6), gh=H-gy-120;
+  // compute bins over the DEV window (same logic as the timeline)
+  const pad=15, t0=Math.max(0,v[0].t-pad);
+  const LAD=[30,60,120,180,300,420,600], ext=Math.max(1,v[v.length-1].t-v[0].t);
+  const span=LAD.find(s=>s>=ext*1.35)||600;
+  const bin=4, nb=Math.max(1,Math.ceil(span/bin)), counts=new Array(nb).fill(0);
+  for(const cr of v){ const i=Math.min(nb-1,Math.max(0,Math.floor((cr.t-t0)/bin))); counts[i]++; }
+  const sig=Math.max(1.2,Math.max(3,span/40)/bin), sm=new Array(nb).fill(0);
+  for(let i=0;i<nb;i++){ let s=0,ws=0; for(let j=0;j<nb;j++){ const w=Math.exp(-0.5*((j-i)/sig)*((j-i)/sig)); s+=counts[j]*w; ws+=w; } sm[i]=s/ws; }
+  const peak=Math.max(...sm)||1, maxC=Math.max(...counts)||1;
+  // bars light gray
+  x.fillStyle='#c9c9c9';
+  const bw=Math.max(2,gw/nb-2);
+  counts.forEach((n,i)=>{ if(!n) return; const h2=(n/maxC)*(gh-40); x.fillRect(gx+(i/nb)*gw, gy+gh-h2, bw, h2); });
+  // bell black
+  x.strokeStyle='#000'; x.lineWidth=10; x.lineCap='round'; x.beginPath();
+  for(let i=0;i<nb;i++){ const px=gx+((i+0.5)/nb)*gw, py=gy+gh-(sm[i]/peak)*(gh-40); i?x.lineTo(px,py):x.moveTo(px,py); }
+  x.stroke();
+  x.font='700 26px -apple-system,Helvetica,sans-serif'; x.fillStyle='#000';
+  x.fillText('BU PARTİNİN ÇATLAMA EĞRİSİ · beanspeak.coffee', L, H-64);
+  c.toBlob(blob=>{ dl(blob,'batch-'+(cName.value||'coffee').replace(/\s+/g,'_')+'-'+new Date().toISOString().slice(0,10)+'.png'); },'image/png');
 }
 setTimeout(updateGauge,0);   // initial gauge state on load
 const tl=$('tl'), tx=tl.getContext('2d');
