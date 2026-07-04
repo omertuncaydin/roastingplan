@@ -48,7 +48,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
     <h1>BeanSpeak</h1>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--muted)">v2026-07-04b</span>
+      <span style="font-size:11px;color:var(--muted)">v2026-07-04c</span>
       <button onclick="hardRefresh()" style="width:auto;padding:6px 12px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted);border:1px solid var(--line)">Refresh app</button>
     </div>
   </div>
@@ -110,12 +110,17 @@ input[type=range]{flex:1;accent-color:var(--accent)}
         <input type="text" id="mAgG" placeholder="Agtron ground" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
       </div>
       <input type="text" id="mNote" placeholder="Note (machine, charge, anything)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
-      <div class="hint">Fill what you know before saving; measure Agtron later? Add it to the zip's filename when you file it (e.g. ...-A62-58.zip).</div>
+      <div class="hint">Fill what you know before saving; measure Agtron later? Load the saved zip back in, add it, tap Map.</div>
+      <button class="go" id="mapBtn" onclick="saveCalIfMapped(true);updateGauge()" style="display:none;background:var(--accent2);margin-top:8px">Map this coffee (save color)</button>
     </div>
     <div class="row" style="margin-top:10px">
       <button class="go" id="dlZip" onclick="saveSession()" style="display:none">Save session (.zip)</button>
       <button class="go" id="dlCard" onclick="makeBatchCard()" style="display:none;background:var(--accent)">Batch card (PNG)</button>
     </div>
+    <div class="row" style="margin-top:8px">
+      <button class="go" style="background:#5a4a38" onclick="document.getElementById('loadF').click()">Load session (.zip / .csv)</button>
+    </div>
+    <input type="file" id="loadF" accept=".zip,.csv" style="display:none" onchange="loadSession(this.files[0])">
   </div>
 
   <div class="row" style="margin-top:12px">
@@ -189,7 +194,7 @@ async function start(){
     src.connect(proc); proc.connect(AC.destination); // raw tap, before the high-pass; output stays silent
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
-  $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none';
+  $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('mapBtn').style.display='none';
   bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null;
   $('log').innerHTML=''; $('metaBox').style.display='none';
   ['mCoffee','mBatch','mAgW','mAgG','mNote'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -205,7 +210,7 @@ function stop(){
   if(AC) AC.close();
   if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
   $('recAudio').disabled=false;
-  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('metaBox').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value; }
+  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value; }
   updateGauge();
   const mb=(wav.len*2/1048576).toFixed(1);
   $('recInfo').textContent='Session kept in memory: '+(wav.len?mb+' MB audio, ':'')+rows.length+' trace samples, '+cracks.length+' cracks. Save the session before closing or reloading the page.';
@@ -373,10 +378,10 @@ const cName=$('coffeeName'); cName.value=localStorage.getItem('bsCoffee')||'';
 cName.oninput=()=>{ localStorage.setItem('bsCoffee',cName.value); updateGauge(); };
 function calMap(){ try{ return JSON.parse(localStorage.getItem('bsCal')||'{}'); }catch(e){ return {}; } }
 function calFor(){ const k=(cName.value||'').trim().toLowerCase(); return k?calMap()[k]:null; }
-function saveCalIfMapped(){
+function saveCalIfMapped(verbose){
   const k=(cName.value||$('mCoffee').value||'').trim().toLowerCase();
   const ag=parseFloat($('mAgG').value), v=valid();
-  if(!k||!isFinite(ag)||v.length<5) return;
+  if(!k||!isFinite(ag)||v.length<5){ if(verbose) toast('Mapping needs: coffee name + Agtron ground + at least 5 cracks.'); return; }
   const m=calMap(); m[k]={a0:v[0].t, devSpan:v[v.length-1].t-v[0].t, agtron:ag, date:new Date().toISOString().slice(0,10)};
   localStorage.setItem('bsCal',JSON.stringify(m));
   toast('Color map saved for "'+k+'". The gauge is live on its next roast.');
@@ -480,6 +485,37 @@ function makeBatchCard(){
   x.font='700 26px -apple-system,Helvetica,sans-serif'; x.fillStyle='#000';
   x.fillText('BU PARTİNİN ÇATLAMA EĞRİSİ · beanspeak.coffee', L, H-64);
   c.toBlob(blob=>{ dl(blob,'batch-'+(cName.value||'coffee').replace(/\s+/g,'_')+'-'+new Date().toISOString().slice(0,10)+'.png'); },'image/png');
+}
+// ---- load a saved session back in (.zip from this app, store-method, or bare .csv) ----
+async function loadSession(file){
+  if(!file) return;
+  if(running){ toast('Stop the live session first.'); return; }
+  let text=null;
+  const bytes=new Uint8Array(await file.arrayBuffer());
+  if(/\.csv$/i.test(file.name)) text=new TextDecoder().decode(bytes);
+  else{
+    const dv=new DataView(bytes.buffer); let i=0;
+    while(i+30<bytes.length){
+      if(dv.getUint32(i,true)!==0x04034b50) break;
+      const sz=dv.getUint32(i+18,true), nlen=dv.getUint16(i+26,true), elen=dv.getUint16(i+28,true);
+      const name=new TextDecoder().decode(bytes.slice(i+30,i+30+nlen));
+      const start=i+30+nlen+elen;
+      if(/\.csv$/i.test(name)) text=new TextDecoder().decode(bytes.slice(start,start+sz));
+      i=start+sz;
+    }
+  }
+  if(!text){ toast('No CSV found in that file.'); return; }
+  const meta={}; for(const m of text.matchAll(/# meta,([^,]+),([^\n]*)/g)) meta[m[1]]=m[2].trim();
+  cracks=[]; crackSeq=0;
+  for(const m of text.matchAll(/# (\d+),([\d.]+),(\d+)(?:,(\d))?\n/g)) cracks.push({t:+m[2], g:+m[3], id:++crackSeq, fp:m[4]==='1'});
+  if(!cracks.length){ toast('No cracks in that session.'); return; }
+  SENT=false; wav={chunks:[],len:0,sr:48000}; rows=[];
+  if(meta.coffee){ cName.value=meta.coffee; localStorage.setItem('bsCoffee',meta.coffee); loadBadge(); }
+  $('mCoffee').value=meta.coffee||''; $('mBatch').value=meta.batch_g||''; $('mAgW').value=meta.agtron_whole||''; $('mAgG').value=meta.agtron_ground||''; $('mNote').value=meta.note||'';
+  $('metaBox').style.display='block'; $('mapBtn').style.display='block';
+  $('dlZip').style.display='none'; $('dlCard').style.display='block';
+  refreshStats();
+  toast('Loaded: '+cracks.length+' cracks'+(meta.coffee?' ('+meta.coffee+')':'')+'. Fill Agtron ground, tap Map.');
 }
 setTimeout(updateGauge,0);   // initial gauge state on load
 const tl=$('tl'), tx=tl.getContext('2d');
