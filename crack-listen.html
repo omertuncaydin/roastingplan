@@ -65,7 +65,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
     <h1>Crack Listener</h1>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--muted)">v2026-07-04d</span>
+      <span style="font-size:11px;color:var(--muted)">v2026-07-04e</span>
       <button onclick="hardRefresh()" style="width:auto;padding:6px 12px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted);border:1px solid var(--line)">Refresh app</button>
     </div>
   </div>
@@ -407,9 +407,10 @@ function saveCalIfMapped(verbose){
   const k=(cName.value||$('mCoffee').value||'').trim().toLowerCase();
   const ag=parseFloat($('mAgG').value), v=valid();
   if(!k||!isFinite(ag)||v.length<5){ if(verbose) toast('Mapping needs: coffee name + Agtron ground + at least 5 cracks.'); return; }
-  const m=calMap(); m[k]={a0:v[0].t, devSpan:v[v.length-1].t-v[0].t, agtron:ag, date:new Date().toISOString().slice(0,10)};
+  const m=calMap(); const entry={a0:v[0].t, devSpan:v[v.length-1].t-v[0].t, agtron:ag, date:new Date().toISOString().slice(0,10), src:k};
+  m[k]=entry; m['__house']=entry;   // every map also becomes the house default: unmapped beans borrow it
   localStorage.setItem('bsCal',JSON.stringify(m));
-  toast('Color map saved for "'+k+'". The gauge is live on its next roast.');
+  toast('Color map saved for "'+k+'" (and set as house map).');
 }
 function lerpHex(a,b,t){ const pa=[1,3,5].map(i=>parseInt(a.substr(i,2),16)), pb=[1,3,5].map(i=>parseInt(b.substr(i,2),16)); return '#'+pa.map((x,i)=>Math.round(x+(pb[i]-x)*t).toString(16).padStart(2,'0')).join(''); }
 function colorForU(u){ const s=[[0,'#4f9e3a'],[0.20,'#cfd23f'],[0.35,'#d9a93c'],[0.50,'#b9742f'],[0.68,'#8a4f26'],[0.85,'#5e3418'],[1,'#34200f']];
@@ -445,18 +446,20 @@ function drawGauge(state,projLo,projHi){
 function updateGauge(){
   const k=(cName.value||'').trim();
   if(!k){ drawGauge('nocoffee'); $('agHint').textContent='Name the coffee; each bean carries its own color map.'; return; }
-  const cal=calFor();
+  let cal=calFor(), borrowed=false;
+  if(!cal){ const h=calMap()['__house']; if(h){ cal=h; borrowed=true; } }
   if(!cal){ drawGauge('locked');
-    const keys=Object.keys(calMap());
-    $('agHint').textContent='Unmapped on THIS device/app copy. '+(keys.length?('Mapped here: '+keys.join(', ')+'. Match one of those names exactly, or map this one.'):'No maps on this device yet: load a session or roast, fill Agtron ground, tap Map. Note: Safari tab and Home-Screen app keep SEPARATE maps.');
+    const keys=Object.keys(calMap()).filter(x=>x!=='__house');
+    $('agHint').textContent='Unmapped on THIS device/app copy. '+(keys.length?('Mapped here: '+keys.join(', ')+'.'):'No maps yet: load a session or roast, fill Agtron ground, tap Map. Note: Safari tab and Home-Screen app keep SEPARATE maps.');
     return; }
+  const bTag=borrowed?(' · borrowed house map ('+(cal.src||'?')+')'):'';
   const v=valid();
-  if(!running||!v.length){ drawGauge('wait'); $('agHint').textContent='Mapped on '+cal.date+' (Agtron '+cal.agtron+'). Projection starts at first crack.'; return; }
+  if(!running||!v.length){ drawGauge('wait'); $('agHint').textContent='Mapped on '+cal.date+' (Agtron '+cal.agtron+')'+bTag+'. Projection starts at first crack.'; return; }
   const devCur=((performance.now()-startT)/1000)-v[0].t;
   let proj=cal.agtron+(cal.devSpan-devCur)/SEC_PER_AG;
   proj=Math.min(AG_MAX,Math.max(AG_MIN,proj));
   drawGauge('live',proj-AG_TOL,proj+AG_TOL);
-  $('agHint').textContent='If dropped now, this bean projects near this color. Projection, not measurement; calibrate often.';
+  $('agHint').textContent='If dropped now, this bean projects near this color'+bTag+'. Projection, not measurement; calibrate often.';
 }
 // ---- coffee badge (sticker info) per coffee, feeds the batch card ----
 function badgeMap(){ try{ return JSON.parse(localStorage.getItem('bsBadge')||'{}'); }catch(e){ return {}; } }
