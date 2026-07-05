@@ -65,7 +65,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
     <h1>Crack Listener</h1>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--muted)">v2026-07-04e</span>
+      <span style="font-size:11px;color:var(--muted)">v2026-07-04f</span>
       <button onclick="hardRefresh()" style="width:auto;padding:6px 12px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted);border:1px solid var(--line)">Refresh app</button>
     </div>
   </div>
@@ -103,7 +103,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
     <canvas id="tl" width="900" height="180"></canvas>
     <div class="ctl"><label>Bin <span class="info" onclick="showInfo('bin')">&#9432;</span></label><button class="pm" onclick="nudge('bin',-1)">&minus;</button><input type="range" id="bin" min="1" max="10" step="1" value="4" oninput="document.getElementById('binV').textContent=this.value+' s';drawTimeline()"><button class="pm" onclick="nudge('bin',1)">+</button><span class="v" id="binV">4 s</span></div>
     <div class="row" style="margin-top:10px">
-      <div class="card"><div class="lbl">total gain</div><div class="n" id="cum">0</div></div>
+      <div class="card"><div class="lbl">total gain</div><div class="n" id="cum">0</div><div class="hint" id="tgRef" style="margin-top:2px;font-size:11px"></div></div>
       <div class="card"><div class="lbl">time SD s</div><div class="n" id="sdT">-</div></div>
       <div class="card"><div class="lbl">gain SD</div><div class="n" id="sdG">-</div></div>
     </div>
@@ -260,7 +260,9 @@ function detectBuf(d){
   if(now-startT>2000 && now>refractoryUntil && shortRms/(bgEMA+1e-9)>+sens.value && shortRms>0.003){
     refractoryUntil=now+70;                               // ignore echo of the same crack for 70ms
     const g=Math.round(toGain(shortRms));
-    cracks.push({t:(now-startT)/1000, g, id:++crackSeq});
+    let zc=0; for(let i=1;i<d.length;i++) if((d[i]>=0)!==(d[i-1]>=0)) zc++;
+    const f=Math.round(zc*AC.sampleRate/(2*d.length));    // zero-crossing pitch proxy within the 4-16k band
+    cracks.push({t:(now-startT)/1000, g, id:++crackSeq, f});
     peakGain=Math.max(peakGain,g);
     crackFlash=true; pendingCrackG=g;                     // UI picks these up on the next frame
   }
@@ -314,7 +316,7 @@ function csvText(){
   const mv=id=>($(id)&&$(id).value||'').replace(/,/g,';').trim();
   let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n';
   s+='t_s,rms,gain,bg_gain,ratio,trigger_x,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
-  s+='\n# cracks: n,t_s,gain,fp\n'+cracks.map((c,i)=>'# '+(i+1)+','+c.t.toFixed(2)+','+c.g+','+(c.fp?1:0)).join('\n');
+  s+='\n# cracks: n,t_s,gain,fp,f_hz\n'+cracks.map((c,i)=>'# '+(i+1)+','+c.t.toFixed(2)+','+c.g+','+(c.fp?1:0)+','+(c.f||'')).join('\n');
   return s;
 }
 // minimal store-only ZIP writer: one tap saves WAV + CSV as a single file
@@ -391,7 +393,10 @@ function showInfo(k){ const d=INFO[k]; $('modalBox').innerHTML='<h1 style="margi
 function sd(a){ if(a.length<2) return 0; const m=a.reduce((s,x)=>s+x,0)/a.length; return Math.sqrt(a.reduce((s,x)=>s+(x-m)*(x-m),0)/(a.length-1)); }
 function updateSD(){
   const v=valid();
-  $('cum').textContent=v.reduce((s,c)=>s+c.g,0);
+  const cum=v.reduce((s,c)=>s+c.g,0);
+  $('cum').textContent=cum;
+  const cal=calFor()||calMap()['__house'];
+  $('tgRef').textContent=(cal&&cal.tg&&cum)?Math.round(cum/cal.tg*100)+'% of ref ('+cal.tg+')':'';
   if(v.length<2){ $('sdT').textContent='-'; $('sdG').textContent='-'; return; }
   $('sdT').textContent=sd(v.map(c=>c.t)).toFixed(1);
   $('sdG').textContent=sd(v.map(c=>c.g)).toFixed(1);
@@ -407,7 +412,8 @@ function saveCalIfMapped(verbose){
   const k=(cName.value||$('mCoffee').value||'').trim().toLowerCase();
   const ag=parseFloat($('mAgG').value), v=valid();
   if(!k||!isFinite(ag)||v.length<5){ if(verbose) toast('Mapping needs: coffee name + Agtron ground + at least 5 cracks.'); return; }
-  const m=calMap(); const entry={a0:v[0].t, devSpan:v[v.length-1].t-v[0].t, agtron:ag, date:new Date().toISOString().slice(0,10), src:k};
+  const m=calMap(); const entry={a0:v[0].t, devSpan:v[v.length-1].t-v[0].t, agtron:ag, date:new Date().toISOString().slice(0,10), src:k,
+    tg:v.reduce((s,c)=>s+c.g,0), bgg:parseFloat($('mBatch').value)||null};
   m[k]=entry; m['__house']=entry;   // every map also becomes the house default: unmapped beans borrow it
   localStorage.setItem('bsCal',JSON.stringify(m));
   toast('Color map saved for "'+k+'" (and set as house map).');
@@ -538,7 +544,7 @@ async function loadSession(file){
   if(!text){ toast('No CSV found in that file.'); return; }
   const meta={}; for(const m of text.matchAll(/# meta,([^,]+),([^\n]*)/g)) meta[m[1]]=m[2].trim();
   cracks=[]; crackSeq=0;
-  for(const m of text.matchAll(/# (\d+),([\d.]+),(\d+)(?:,(\d))?\n/g)) cracks.push({t:+m[2], g:+m[3], id:++crackSeq, fp:m[4]==='1'});
+  for(const m of text.matchAll(/# (\d+),([\d.]+),(\d+)(?:,(\d))?(?:,(\d*))?\n/g)) cracks.push({t:+m[2], g:+m[3], id:++crackSeq, fp:m[4]==='1', f:m[5]?+m[5]:undefined});
   if(!cracks.length){ toast('No cracks in that session.'); return; }
   SENT=false; wav={chunks:[],len:0,sr:48000}; rows=[];
   if(meta.coffee){ cName.value=meta.coffee; localStorage.setItem('bsCoffee',meta.coffee); loadBadge(); }
