@@ -17,7 +17,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Se
 body.st-setup #cGauge{order:1} body.st-setup #btn{order:2} body.st-setup #err{order:2} body.st-setup #cCapture{order:3} body.st-setup #cTune{order:4}
 body.st-setup #cGain,body.st-setup #cTimeline,body.st-setup #cStats,body.st-setup #cLog{display:none}
 /* LIVE: gauge, bell, gain, STOP (sticky), compact stats. Chores hidden. */
-body.st-live #cGauge{order:1} body.st-live #cTimeline{order:2} body.st-live #cGain{order:3} body.st-live #btn{order:4} body.st-live #err{order:4} body.st-live #cStats{order:5} body.st-live #cTune{order:6} body.st-live #cLog{order:7}
+body.st-live #cGauge{order:1} body.st-live #cStats{order:2} body.st-live #cTimeline{order:3} body.st-live #cGain{order:4} body.st-live #btn{order:5} body.st-live #err{order:5} body.st-live #cTune{order:6} body.st-live #cLog{order:7}
 body.st-live #cCapture{display:none}
 body.st-live #btn{position:sticky;bottom:12px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45)}
 body.st-live #cGauge details{display:none}
@@ -64,7 +64,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 .logoName .lr{color:#D8453B}.logoName .lg{color:var(--ink)}
 .rmark{font-family:Helvetica,Arial,sans-serif;font-size:.36em;font-weight:700;vertical-align:super}
 .logoSub{color:var(--muted);font-weight:600;letter-spacing:5px;font-size:11px;margin-top:6px}
-.brandCompact{display:none;align-items:center}
+.brandCompact{display:none;align-items:center;justify-content:center}
 .hdrDivider{border-top:1px solid var(--line);margin:13px 0}
 .titleRow{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .titleMeta{display:flex;align-items:center;gap:8px;flex-shrink:0}
@@ -90,13 +90,13 @@ body.st-setup #btn{display:none}
       <div class="logoSub">ROAST · CUP · GRADE</div>
     </div>
     <div class="brandCompact">
-      <div class="logoName" style="font-size:16px"><span class="lr">CoffeeNutz<sup class="rmark">&reg;</sup></span> <span class="lg">Guide</span></div>
+      <div class="logoName" style="font-size:22px;display:inline-block"><span class="lr">CoffeeNutz<sup class="rmark">&reg;</sup></span> <span class="lg">Guide</span></div>
     </div>
     <div class="hdrDivider"></div>
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag">v2026-07-05k</span>
+        <span class="vtag">v2026-07-05l</span>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
     </div>
@@ -199,7 +199,7 @@ body.st-setup #btn{display:none}
     <div class="lbl">gain trace (cracks marked)</div>
     <canvas id="cv" width="900" height="300"></canvas>
     <div class="ctl"><label>Trigger &times; <span class="info" onclick="showInfo('sens')">&#9432;</span></label><button class="pm" onclick="nudge('sens',-1)">&minus;</button><input type="range" id="sens" min="2" max="30" step="0.5" value="5"><button class="pm" onclick="nudge('sens',1)">+</button><span class="v" id="sensV">5.0x</span></div>
-    <div class="ctl"><label>High-pass <span class="info" onclick="showInfo('hp')">&#9432;</span></label><button class="pm" onclick="nudge('hp',-1)">&minus;</button><input type="range" id="hp" min="300" max="12000" step="100" value="4000"><button class="pm" onclick="nudge('hp',1)">+</button><span class="v" id="hpV">4k Hz</span></div>
+    <div class="ctl"><label>High-pass <span class="info" onclick="showInfo('hp')">&#9432;</span></label><button class="pm" onclick="nudge('hp',-1)">&minus;</button><input type="range" id="hp" min="300" max="16000" step="100" value="10000"><button class="pm" onclick="nudge('hp',1)">+</button><span class="v" id="hpV">10k Hz</span></div>
     <div class="hint">Detection listens for millisecond bursts (clicks), not loud averages, so test it with a pen click or finger snap, not your voice. Trigger is a threshold: LOWER catches more.</div>
   </div>
   </details>
