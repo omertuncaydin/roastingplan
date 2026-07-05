@@ -57,19 +57,43 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 .pm{flex:none;width:34px;padding:6px 0;font-size:17px;font-weight:800;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px}
 .lr{background:var(--panel);touch-action:pan-y}
 .fpr{opacity:.45}
+@font-face{font-family:'Aardvark';src:url('AardvarkBold.ttf') format('truetype');font-weight:400;font-display:swap}
+.brandFull{text-align:center;margin:2px 0 0}
+.tlogo{width:44px;height:44px;display:block;margin:0 auto 8px}
+.logoName{font-family:'Aardvark','Arial Black',Helvetica,sans-serif;line-height:1;white-space:nowrap}
+.logoName .lr{color:#D8453B}.logoName .lg{color:var(--ink)}
+.rmark{font-family:Helvetica,Arial,sans-serif;font-size:.36em;font-weight:700;vertical-align:super}
+.logoSub{color:var(--muted);font-weight:600;letter-spacing:5px;font-size:11px;margin-top:6px}
+.brandCompact{display:none;align-items:center}
+.hdrDivider{border-top:1px solid var(--line);margin:13px 0}
+.titleRow{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.titleMeta{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.vtag{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.refresh{width:auto;padding:5px 10px;font-size:12px;font-weight:600;background:transparent;color:var(--accent);border:1px solid var(--accent)}
+body.st-live .brandFull,body.st-done .brandFull{display:none}
+body.st-live .brandCompact,body.st-done .brandCompact{display:flex}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div id="hdr">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start">
-    <h1>Crack Listener</h1>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--muted)">v2026-07-05b</span>
-      <button onclick="hardRefresh()" style="width:auto;padding:6px 12px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted);border:1px solid var(--line)">Refresh app</button>
+    <div class="brandFull">
+      <img class="tlogo" src="coffeenutz-turtle.png" alt="CoffeeNutz">
+      <div class="logoName" style="font-size:30px"><span class="lr">CoffeeNutz<sup class="rmark">&reg;</sup></span> <span class="lg">Guide</span></div>
+      <div class="logoSub">ROAST · CUP · GRADE</div>
     </div>
-  </div>
-  <div class="sub">the crack analyzer · the probe reads the drum, the beans speak</div>
+    <div class="brandCompact">
+      <div class="logoName" style="font-size:16px"><span class="lr">CoffeeNutz<sup class="rmark">&reg;</sup></span> <span class="lg">Guide</span></div>
+    </div>
+    <div class="hdrDivider"></div>
+    <div class="titleRow">
+      <h1>Crack Listener</h1>
+      <div class="titleMeta">
+        <span class="vtag">v2026-07-05c</span>
+        <button class="refresh" onclick="hardRefresh()">Refresh</button>
+      </div>
+    </div>
+    <div class="sub">the crack analyzer · the probe reads the drum, the beans speak</div>
   </div>
 
   <div class="card" id="cGain">

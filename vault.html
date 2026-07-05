@@ -71,8 +71,12 @@ summary{font-size:13px;font-weight:700;color:#7a6a58;cursor:pointer}
   <div class="card">
     <div class="vlabel">new idea → memo</div>
     <textarea id="newIdea" placeholder="Raw idea, exactly as it hits you..."></textarea>
-    <div class="btnrow"><button class="btn btn-send" onclick="addIdea()">Drop into the vault</button></div>
-    <div class="take" style="color:var(--mut)">The 09:07 run develops it into a 3-option shoot brief.</div>
+    <input type="file" id="newMedia" accept="image/*,video/*" style="display:none" onchange="stageMedia(this)">
+    <div class="btnrow" style="display:flex;gap:8px">
+      <button class="btn btn-c" style="flex:0 0 auto;width:auto;white-space:nowrap" onclick="document.getElementById('newMedia').click()">&#128247; Photo / video</button>
+      <button class="btn btn-send" style="flex:1" onclick="addIdea()">Drop into the vault</button>
+    </div>
+    <div class="take" id="mediaNote" style="color:var(--mut)">The 09:07 run develops it into a 3-option shoot brief.</div>
   </div>
   <div class="seg" id="seg">
     <button data-f="req">Requested</button>
@@ -84,14 +88,15 @@ summary{font-size:13px;font-weight:700;color:#7a6a58;cursor:pointer}
   <div id="list" class="loading">Loading the vault...</div>
 </div>
 <div class="toast" id="toast"></div>
-<input type="file" id="photoF" accept="image/*" capture="environment" style="display:none">
+<input type="file" id="photoF" accept="image/*,video/*" style="display:none">
 
 <script>
 const FN='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/vault-proxy';
 const COL={ TITLE:6604630618408836, MEMO:7853979696498564, SUMMARY:1274467756148612, DIR:7026843083474820,
   SEO:1397343549261700, REVIEW:7222653863724932, TAKE:1593154329511812, VERDICT:6096753956882308,
   PICKED:1488842995664772, CAPTURED:4775043269789572, CHANNEL:8856430432094084, FORMAT:271443642419076 };
-let DATA=[], FILTER=localStorage.getItem('ivFilter')||'req', KEY=localStorage.getItem('ccKey')||'', BUSY=false, PHROW=null;
+let DATA=[], FILTER=localStorage.getItem('ivFilter')||'all', KEY=localStorage.getItem('ccKey')||'', BUSY=false, PHROW=null, STAGED=null;
+function stageMedia(inp){ STAGED=inp.files[0]||null; $('mediaNote').textContent = STAGED ? ('Attached: '+(STAGED.name||'media')+' — uploads with the idea.') : 'The 09:07 run develops it into a 3-option shoot brief.'; }
 
 const $=id=>document.getElementById(id);
 function esc(s){ return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -151,7 +156,10 @@ function render(){
   if(term) items=items.filter(o=>JSON.stringify(o).toLowerCase().includes(term));
   $('count').textContent=items.length+' of '+DATA.length+' rows';
   $('list').classList.remove('loading');
-  $('list').innerHTML=items.map(card).join('')||'<div class="loading">Nothing here.</div>';
+  if(!items.length){
+    const msg = term ? 'No matches for your search.' : FILTER==='req' ? 'No requested items right now. Tap All to browse everything, or drop a new idea above.' : FILTER==='dec' ? 'Nothing decided yet.' : 'Vault is empty. Drop your first idea above.';
+    $('list').innerHTML='<div class="loading">'+msg+'</div>';
+  } else { $('list').innerHTML=items.map(card).join(''); }
 }
 
 async function writeCell(rowId,colId,value,okMsg){
@@ -169,12 +177,18 @@ function reqReview(id){ writeCell(id,COL.REVIEW,'Requested','Queued for the 09:0
 async function addIdea(){
   const t=$('newIdea').value.trim(); if(!t){ toast('Write the idea first.'); return; }
   if(BUSY) return; BUSY=true; toast('Dropping into the vault...');
+  const media=STAGED;
   try{
-    await api('/addrow',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({memo:t})});
-    $('newIdea').value='';
-    toast('In. The 09:07 run develops it into a shoot brief.');
+    const res=await api('/addrow',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({memo:t})});
+    const newId=res && res.result && res.result[0] && res.result[0].id;
+    if(media && newId){
+      toast('Uploading media...');
+      await api('/att?rowId='+newId,{method:'POST',headers:{'content-type':media.type||'application/octet-stream','x-filename':'vault-'+new Date().toISOString().slice(0,10)+'-'+(media.name||'media')},body:media});
+    }
+    $('newIdea').value=''; STAGED=null; $('newMedia').value=''; $('mediaNote').textContent='The 09:07 run develops it into a 3-option shoot brief.';
+    toast(media ? 'In, with media attached.' : 'In. The 09:07 run develops it into a shoot brief.');
     boot();
-  }catch(e){ toast('Failed: '+e.message); }
+  }catch(e){ toast(media?'Idea saved, media upload failed: '+e.message:'Failed: '+e.message); }
   BUSY=false;
 }
 
