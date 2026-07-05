@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f6f2ec">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Image Vault</title>
+<style>
+:root{color-scheme:light;
+ --bg:#f6f2ec;--card:#fff;--ink:#2a2118;--mut:#8a7a68;--line:#ece2d4;
+ --accent:#a35c1f;--green:#2c6a4a;--greenbg:#e6f2ea;--red:#b23b3b;--redbg:#fdeaea;
+ --blue:#2c5a7a;--bluebg:#eef4f9;--gold:#f4e8d2;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Segoe UI,Roboto,sans-serif;font-size:16px;line-height:1.45;
+ padding:14px;padding-top:calc(14px + env(safe-area-inset-top));padding-bottom:calc(30px + env(safe-area-inset-bottom))}
+h1{font-size:22px;letter-spacing:-.3px;margin:4px 0 2px;font-weight:800}
+.sub{color:var(--mut);font-size:13px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.linkish{color:var(--accent);font-weight:700;font-size:12px;background:none;border:none;padding:6px;cursor:pointer}
+.seg{display:flex;background:#e9dfd0;border-radius:12px;padding:3px;margin-bottom:10px;position:sticky;top:calc(8px + env(safe-area-inset-top));z-index:5;box-shadow:0 2px 8px rgba(60,40,20,.08)}
+.seg button{flex:1;border:none;background:transparent;border-radius:10px;padding:10px 2px;font-size:13px;font-weight:700;color:#7a6a58;min-height:44px;cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(60,40,20,.15)}
+input[type=search],input[type=password]{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;background:#fff;margin-bottom:8px;-webkit-appearance:none}
+textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px;font-family:inherit;min-height:70px;background:#fffdf9}
+.count{color:var(--mut);font-size:12px;margin:2px 2px 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(60,40,20,.06)}
+.title{font-size:15.5px;font-weight:700;line-height:1.35}
+.status{font-size:11px;font-weight:800;border-radius:12px;padding:4px 10px;white-space:nowrap}
+.st-req{background:var(--gold);color:var(--accent)}
+.st-ses{background:var(--bluebg);color:var(--blue)}
+.st-dec{background:var(--greenbg);color:var(--green)}
+.st-non{background:#eee6da;color:#8a7a68}
+.vlabel{font-size:11px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;margin-top:10px}
+.take{font-size:13.5px;line-height:1.5;margin:5px 0 0;color:#4a3d2e;white-space:pre-wrap}
+.verdict{font-size:14px;font-weight:600;margin-top:5px;background:#fdf7ec;border:1px solid #eeddbd;border-radius:12px;padding:10px 12px}
+details{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+summary{font-size:13px;font-weight:700;color:#7a6a58;cursor:pointer}
+.btnrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.btn{border:none;border-radius:13px;padding:12px 14px;font-size:14px;font-weight:700;min-height:44px;cursor:pointer;flex:1;min-width:90px}
+.btn:active{transform:scale(.97)}
+.btn-a{background:var(--greenbg);color:var(--green)}
+.btn-b{background:var(--bluebg);color:var(--blue)}
+.btn-c{background:#f1eae0;color:#5a4a38}
+.btn-send{background:var(--green);color:#fff}
+.pick{display:flex;gap:6px;margin-top:8px}
+.pk{flex:1;border:2px solid var(--line);background:#fffdf9;border-radius:10px;padding:10px 2px;font-size:15px;font-weight:800;text-align:center;cursor:pointer}
+.pk.on{border-color:var(--green);background:var(--greenbg);color:var(--green)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom));background:var(--ink);color:#fff;border-radius:14px;padding:12px 20px;font-size:14px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:20;max-width:88%}
+.toast.show{opacity:1}
+.err{background:var(--redbg);color:var(--red);padding:14px;border-radius:14px;font-size:14px}
+.loading{color:var(--mut);font-size:15px;padding:40px 10px;text-align:center}
+#gate .card{max-width:420px;margin:40px auto}
+</style>
+</head>
+<body>
+<div id="gate" style="display:none">
+  <div class="card">
+    <h1>Image Vault</h1>
+    <div class="sub">Same cockpit key as the council.</div>
+    <input type="password" id="keyIn" placeholder="Cockpit key" autocomplete="off">
+    <div class="btnrow"><button class="btn btn-send" onclick="saveKey()">Open the vault</button></div>
+    <div class="err" id="gateErr" style="display:none;margin-top:10px"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <h1>Image Vault</h1>
+  <div class="sub"><span>Ideas in, photos in, verdicts out.</span><button class="linkish" onclick="logout()">key ⏏</button></div>
+  <div class="card">
+    <div class="vlabel">new idea → memo</div>
+    <textarea id="newIdea" placeholder="Raw idea, exactly as it hits you..."></textarea>
+    <div class="btnrow"><button class="btn btn-send" onclick="addIdea()">Drop into the vault</button></div>
+    <div class="take" style="color:var(--mut)">The 09:07 run develops it into a 3-option shoot brief.</div>
+  </div>
+  <div class="seg" id="seg">
+    <button data-f="req">Requested</button>
+    <button data-f="dec">Decided</button>
+    <button data-f="all">All</button>
+  </div>
+  <input type="search" id="q" placeholder="Search titles, memos, verdicts...">
+  <div class="count" id="count"></div>
+  <div id="list" class="loading">Loading the vault...</div>
+</div>
+<div class="toast" id="toast"></div>
+<input type="file" id="photoF" accept="image/*" capture="environment" style="display:none">
+
+<script>
+const FN='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/vault-proxy';
+const COL={ TITLE:6604630618408836, MEMO:7853979696498564, SUMMARY:1274467756148612, DIR:7026843083474820,
+  SEO:1397343549261700, REVIEW:7222653863724932, TAKE:1593154329511812, VERDICT:6096753956882308,
+  PICKED:1488842995664772, CAPTURED:4775043269789572, CHANNEL:8856430432094084, FORMAT:271443642419076 };
+let DATA=[], FILTER=localStorage.getItem('ivFilter')||'req', KEY=localStorage.getItem('ccKey')||'', BUSY=false, PHROW=null;
+
+const $=id=>document.getElementById(id);
+function esc(s){ return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2600); }
+function showGate(msg){ $('gate').style.display='block'; $('app').style.display='none'; if(msg){ $('gateErr').textContent=msg; $('gateErr').style.display='block'; } }
+function saveKey(){ KEY=$('keyIn').value.trim(); if(!KEY) return; localStorage.setItem('ccKey',KEY); boot(); }
+function logout(){ localStorage.removeItem('ccKey'); KEY=''; showGate(); }
+
+async function api(path,opts={}){
+  const r=await fetch(FN+path,Object.assign({},opts,{headers:Object.assign({'x-cc-key':KEY},opts.headers||{})}));
+  if(r.status===401){ showGate('That key was refused.'); throw new Error('unauthorized'); }
+  if(!r.ok) throw new Error('HTTP '+r.status+': '+(await r.text()).slice(0,120));
+  return r.json();
+}
+function cellMap(row){ const o={_rowId:row.id}; for(const c of row.cells||[]) o[c.columnId]=c.value; return o; }
+
+async function boot(){
+  $('gate').style.display='none'; $('app').style.display='block';
+  try{
+    const d=await api('/sheet');
+    DATA=(d.rows||[]).map(cellMap).filter(o=>o[COL.TITLE]||o[COL.MEMO]);
+    render();
+  }catch(e){ if(e.message!=='unauthorized') $('list').innerHTML='<div class="err">Could not reach the relay: '+esc(e.message)+'. Is vault-proxy deployed?</div>'; }
+}
+
+function statusOf(o){
+  const r=o[COL.REVIEW];
+  if(r==='Requested') return {k:'req',label:'Council requested'};
+  if(r==='In session') return {k:'ses',label:'In session'};
+  if(r==='Decided') return {k:'dec',label:'Decided'};
+  if(r==='No Need') return {k:'non',label:'No need'};
+  return {k:'non',label:o[COL.CAPTURED]?'Captured':'Idea'};
+}
+
+function card(o){
+  const st=statusOf(o), id=o._rowId;
+  let h='<div class="card"><div style="display:flex;gap:8px;align-items:flex-start;justify-content:space-between">'+
+    '<div class="title">'+esc(o[COL.TITLE]||'(untitled idea)')+'</div><span class="status st-'+st.k+'">'+st.label+'</span></div>';
+  if(o[COL.SUMMARY]) h+='<div class="vlabel">shoot summary</div><div class="take">'+esc(o[COL.SUMMARY])+'</div>';
+  if(o[COL.VERDICT]) h+='<div class="verdict">'+esc(o[COL.VERDICT])+'</div>';
+  if(o[COL.MEMO]) h+='<details><summary>Idea memo</summary><div class="take">'+esc(o[COL.MEMO])+'</div></details>';
+  if(o[COL.DIR]) h+='<details><summary>Full shoot direction</summary><div class="take">'+esc(o[COL.DIR])+'</div></details>';
+  if(o[COL.TAKE]) h+='<details><summary>Council takes</summary><div class="take">'+esc(o[COL.TAKE])+'</div></details>';
+  h+='<div class="vlabel">picked</div><div class="pick">'+['A','B','C','D'].map(p=>'<button class="pk'+(o[COL.PICKED]===p?' on':'')+'" onclick="setPick('+id+',\''+p+'\')">'+p+'</button>').join('')+'</div>';
+  h+='<div class="btnrow">';
+  if(st.k!=='req'&&st.k!=='ses') h+='<button class="btn btn-b" onclick="reqReview('+id+')">Council review</button>';
+  h+='<button class="btn btn-c" onclick="addPhoto('+id+')">&#128247; Photo</button></div></div>';
+  return h;
+}
+
+function render(){
+  document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.f===FILTER));
+  const term=($('q').value||'').toLowerCase();
+  let items=DATA;
+  if(FILTER==='req') items=items.filter(o=>['Requested','In session'].includes(o[COL.REVIEW]));
+  if(FILTER==='dec') items=items.filter(o=>o[COL.REVIEW]==='Decided');
+  if(term) items=items.filter(o=>JSON.stringify(o).toLowerCase().includes(term));
+  $('count').textContent=items.length+' of '+DATA.length+' rows';
+  $('list').classList.remove('loading');
+  $('list').innerHTML=items.map(card).join('')||'<div class="loading">Nothing here.</div>';
+}
+
+async function writeCell(rowId,colId,value,okMsg){
+  if(BUSY) return; BUSY=true; toast('Writing...');
+  try{
+    await api('/rows',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify([{id:rowId,cells:[{columnId:colId,value:value}]}])});
+    const o=DATA.find(x=>x._rowId===rowId); if(o) o[colId]=value;
+    toast(okMsg); render();
+  }catch(e){ toast('Failed: '+e.message); }
+  BUSY=false;
+}
+function setPick(id,p){ writeCell(id,COL.PICKED,p,'Picked '+p+'.'); }
+function reqReview(id){ writeCell(id,COL.REVIEW,'Requested','Queued for the 09:07 council pass.'); }
+
+async function addIdea(){
+  const t=$('newIdea').value.trim(); if(!t){ toast('Write the idea first.'); return; }
+  if(BUSY) return; BUSY=true; toast('Dropping into the vault...');
+  try{
+    await api('/addrow',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({memo:t})});
+    $('newIdea').value='';
+    toast('In. The 09:07 run develops it into a shoot brief.');
+    boot();
+  }catch(e){ toast('Failed: '+e.message); }
+  BUSY=false;
+}
+
+function addPhoto(rowId){ PHROW=rowId; $('photoF').click(); }
+$('photoF').addEventListener('change',async function(){
+  const f=this.files[0]; this.value=''; if(!f||!PHROW) return;
+  toast('Uploading photo...');
+  try{
+    await api('/att?rowId='+PHROW,{method:'POST',headers:{'content-type':f.type||'image/jpeg','x-filename':'vault-'+new Date().toISOString().slice(0,10)+'-'+(f.name||'photo.jpg')},body:f});
+    toast('Photo attached to the row.');
+  }catch(e){ toast('Upload failed: '+e.message); }
+  PHROW=null;
+});
+
+document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{ FILTER=b.dataset.f; localStorage.setItem('ivFilter',FILTER); render(); });
+$('q').addEventListener('input',render);
+if(KEY) boot(); else showGate();
+</script>
+</body>
+</html>
