@@ -65,7 +65,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
     <h1>Crack Listener</h1>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--muted)">v2026-07-04f</span>
+      <span style="font-size:11px;color:var(--muted)">v2026-07-04g</span>
       <button onclick="hardRefresh()" style="width:auto;padding:6px 12px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--muted);border:1px solid var(--line)">Refresh app</button>
     </div>
   </div>
@@ -106,6 +106,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
       <div class="card"><div class="lbl">total gain</div><div class="n" id="cum">0</div><div class="hint" id="tgRef" style="margin-top:2px;font-size:11px"></div></div>
       <div class="card"><div class="lbl">time SD s</div><div class="n" id="sdT">-</div></div>
       <div class="card"><div class="lbl">gain SD</div><div class="n" id="sdG">-</div></div>
+      <div class="card"><div class="lbl">pitch Hz</div><div class="n" id="fMean">-</div><div class="hint" id="fSd" style="margin-top:2px;font-size:11px"></div></div>
     </div>
   </div>
 
@@ -316,6 +317,8 @@ function csvText(){
   const mv=id=>($(id)&&$(id).value||'').replace(/,/g,';').trim();
   let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n';
   s+='t_s,rms,gain,bg_gain,ratio,trigger_x,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
+  const vv=valid(), fss=vv.filter(c=>c.f).map(c=>c.f);
+  if(vv.length>1) s+='\n# stats,total_gain,'+vv.reduce((a,c)=>a+c.g,0)+',time_sd,'+sd(vv.map(c=>c.t)).toFixed(2)+',gain_sd,'+sd(vv.map(c=>c.g)).toFixed(2)+(fss.length>1?',f_mean,'+Math.round(fss.reduce((a,b)=>a+b,0)/fss.length)+',f_sd,'+Math.round(sd(fss)):'');
   s+='\n# cracks: n,t_s,gain,fp,f_hz\n'+cracks.map((c,i)=>'# '+(i+1)+','+c.t.toFixed(2)+','+c.g+','+(c.fp?1:0)+','+(c.f||'')).join('\n');
   return s;
 }
@@ -397,9 +400,12 @@ function updateSD(){
   $('cum').textContent=cum;
   const cal=calFor()||calMap()['__house'];
   $('tgRef').textContent=(cal&&cal.tg&&cum)?Math.round(cum/cal.tg*100)+'% of ref ('+cal.tg+')':'';
-  if(v.length<2){ $('sdT').textContent='-'; $('sdG').textContent='-'; return; }
+  if(v.length<2){ $('sdT').textContent='-'; $('sdG').textContent='-'; $('fMean').textContent='-'; $('fSd').textContent=''; return; }
   $('sdT').textContent=sd(v.map(c=>c.t)).toFixed(1);
   $('sdG').textContent=sd(v.map(c=>c.g)).toFixed(1);
+  const fs=v.filter(c=>c.f).map(c=>c.f);
+  if(fs.length>1){ const fm=Math.round(fs.reduce((a,b)=>a+b,0)/fs.length);
+    $('fMean').textContent=(fm/1000).toFixed(1)+'k'; $('fSd').textContent='± '+Math.round(sd(fs))+' Hz'; }
 }
 // ---- Agtron projection gauge: one mapped roast per coffee unlocks it (projection, never measurement) ----
 // Visual ported from the Guide's cockpit gauge: 270-degree arc, 36 segments, white knob, gold ticks.
