@@ -233,7 +233,7 @@
   </div>
 
   <div class="top">
-    <a href="#" onclick="show('account');return false;" style="text-decoration:none;color:inherit;cursor:pointer" title="Account"><div class="logoName" style="font-size:22px"><span class="lr">CoffeeNutz<sup class="rmark">®</sup></span> <span class="lg">Guide</span></div></a>
+    <a href="#" onclick="show('account');return false;" style="text-decoration:none;color:inherit;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent" title="Account"><div class="logoName" style="font-size:22px"><span class="lr">CoffeeNutz<sup class="rmark">®</sup></span> <span class="lg">Guide</span></div></a>
     <div class="nav">
       <button id="m-roast" class="on" onclick="show('roast')" title="Roast">R</button>
       <button id="m-cup" onclick="show('cup')" title="Cup">C</button>
@@ -530,13 +530,15 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-04a</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-04b</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
-      <div class="cgrplbl">Classroom (admin)</div>
+      <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
+      <div id="classBody">
       <div class="small" style="margin:3px 0 8px">Learners scan the exam's QR; the day's class code goes on the whiteboard.</div>
       <div id="classQRs" style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin:10px 0"></div>
       <div id="classCodeBig" onclick="copyClassCode(this)" style="text-align:center;margin:6px 0 4px;cursor:pointer"></div>
       <button class="iconbtn" style="display:block;margin:10px auto 0" onclick="printClassCard()">Print</button>
+      </div>
     </div>
     <div class="card">
       <div class="secname" style="margin-bottom:10px">Your membership</div>
@@ -1425,6 +1427,7 @@ function renderClassQRs(){
   if(window.QRCode){ draw(); return; }
   const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; s.onload=draw; document.head.appendChild(s);
 }
+function toggleClass(){ const b=document.getElementById('classBody'), c=document.getElementById('classChev'); if(!b) return; const hidden=b.style.display==='none'; b.style.display=hidden?'':'none'; if(c) c.innerHTML=hidden?'&#9662;':'&#9656;'; }
 function copyClassCode(el){
   const code='ROAST26';
   const done=()=>{ const l=el.querySelector('.cclbl'); if(l){ const o=l.textContent; l.textContent='copied ✓'; setTimeout(()=>l.textContent=o,1200); } };
