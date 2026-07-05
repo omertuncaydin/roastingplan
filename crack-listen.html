@@ -72,11 +72,12 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 .refresh{width:auto;padding:5px 10px;font-size:12px;font-weight:600;background:transparent;color:var(--accent);border:1px solid var(--accent)}
 body.st-live .brandFull,body.st-done .brandFull{display:none}
 body.st-live .brandCompact,body.st-done .brandCompact{display:flex}
-.micBtn{display:none;position:absolute;top:47%;left:50%;transform:translate(-50%,-50%);width:66px;height:66px;border-radius:50%;background:var(--accent2);border:none;padding:0;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.45);cursor:pointer;align-items:center;justify-content:center}
+.micBtn{display:none;position:absolute;top:60%;left:50%;transform:translate(-50%,-50%);width:66px;height:66px;border-radius:50%;background:var(--accent2);border:none;padding:0;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.45);cursor:pointer;align-items:center;justify-content:center}
 body.st-setup .micBtn{display:flex}
-.micHint{display:none;position:absolute;top:calc(47% + 44px);left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap;pointer-events:none}
+.micHint{display:none;position:absolute;top:calc(60% + 42px);left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap;pointer-events:none}
 body.st-setup .micHint{display:block}
 body.st-setup #btn{display:none}
+.row>.card .lbl{min-height:2.4em;line-height:1.2;display:flex;align-items:flex-end;justify-content:center}
 </style>
 </head>
 <body>
@@ -94,7 +95,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag">v2026-07-05g</span>
+        <span class="vtag">v2026-07-05i</span>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
     </div>
@@ -499,11 +500,12 @@ function gaugeSVG(u,loU,hiU,top,bot,dim){
     '<text x="'+cx+'" y="'+(cy+26)+'" text-anchor="middle" font-size="11" fill="#a8998a">'+bot+'</text></svg>';
 }
 function drawGauge(state,projLo,projHi){
+  const setup=document.body.classList.contains('st-setup');
   let h;
   if(state==='live') h=gaugeSVG(agU((projLo+projHi)/2),agU(projHi),agU(projLo),Math.round(projLo)+'-'+Math.round(projHi),'Agtron · projection',false);
-  else if(state==='wait') h=gaugeSVG(null,0,0,'· · ·','waiting for first crack',true);
-  else if(state==='nocoffee') h=gaugeSVG(null,0,0,'—','name the coffee above',true);
-  else h=gaugeSVG(null,0,0,'&#128274;','unmapped bean',true);
+  else if(state==='wait') h=gaugeSVG(null,0,0,setup?'':'· · ·',setup?'':'waiting for first crack',true);
+  else if(state==='nocoffee') h=gaugeSVG(null,0,0,setup?'':'—',setup?'':'name the coffee above',true);
+  else h=gaugeSVG(null,0,0,setup?'':'&#128274;',setup?'':'unmapped bean',true);
   $('ag').innerHTML=h;
 }
 function updateGauge(){
