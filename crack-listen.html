@@ -60,7 +60,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 @font-face{font-family:'Aardvark';src:url('AardvarkBold.ttf') format('truetype');font-weight:400;font-display:swap}
 .brandFull{text-align:center;margin:2px 0 0}
 .tlogo{width:44px;height:44px;display:block;margin:0 auto 8px}
-.logoName{font-family:'Aardvark','Arial Black',Helvetica,sans-serif;line-height:1;white-space:nowrap}
+.logoName{font-family:'Aardvark','Arial Black',Helvetica,sans-serif;line-height:1;white-space:nowrap;-webkit-text-size-adjust:none;text-size-adjust:none}
 .logoName .lr{color:#D8453B}.logoName .lg{color:var(--ink)}
 .rmark{font-family:Helvetica,Arial,sans-serif;font-size:.36em;font-weight:700;vertical-align:super}
 .logoSub{color:var(--muted);font-weight:600;letter-spacing:5px;font-size:11px;margin-top:6px}
@@ -85,7 +85,8 @@ body.st-setup #btn{display:none}
   <div id="hdr">
     <div class="brandFull">
       <img class="tlogo" src="coffeenutz-turtle.png" alt="CoffeeNutz">
-      <div class="logoName" style="font-size:22px"><span class="lr">CoffeeNutz<sup class="rmark">&reg;</sup></span> <span class="lg">Guide</span></div>
+      <div class="logoName" style="font-size:24px;color:#D8453B">CoffeeNutz<sup class="rmark">&reg;</sup></div>
+      <div class="logoName" style="font-size:24px;color:var(--ink);margin-top:2px">Guide</div>
       <div class="logoSub">ROAST · CUP · GRADE</div>
     </div>
     <div class="brandCompact">
@@ -95,7 +96,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag">v2026-07-05i</span>
+        <span class="vtag">v2026-07-05j</span>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
     </div>
