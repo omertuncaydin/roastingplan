@@ -94,7 +94,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag">v2026-07-05f</span>
+        <span class="vtag">v2026-07-05g</span>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
     </div>
@@ -186,7 +186,7 @@ body.st-setup #btn{display:none}
 
   <div class="row" id="cStats" style="margin-top:12px">
     <div class="card"><div class="lbl">counted cracks</div><div class="n" id="cnt">0</div></div>
-    <div class="card"><div class="lbl">rate /m</div><div class="n" id="rate">0</div></div>
+    <div class="card"><div class="lbl">rate /min</div><div class="n" id="rate">0</div></div>
     <div class="card"><div class="lbl">last gain</div><div class="n" id="last">0</div></div>
     <div class="card"><div class="lbl">peak gain</div><div class="n" id="peak">0</div></div>
   </div>
@@ -451,7 +451,7 @@ function updateSD(){
 }
 // ---- Agtron projection gauge: one mapped roast per coffee unlocks it (projection, never measurement) ----
 // Visual ported from the Guide's cockpit gauge: 270-degree arc, 36 segments, white knob, gold ticks.
-const SEC_PER_AG=4, AG_TOL=2, AG_MIN=40, AG_MAX=110;
+const SEC_PER_AG=4, FC_AG=125, AG_TOL=2, AG_MIN=40, AG_MAX=130;
 const cName=$('coffeeName'); cName.value=localStorage.getItem('bsCoffee')||'';
 cName.oninput=()=>{ localStorage.setItem('bsCoffee',cName.value); updateGauge(); };
 function calMap(){ try{ return JSON.parse(localStorage.getItem('bsCal')||'{}'); }catch(e){ return {}; } }
@@ -519,7 +519,8 @@ function updateGauge(){
   const v=valid();
   if(!running||!v.length){ drawGauge('wait'); $('agHint').textContent='Mapped on '+cal.date+' (Agtron '+cal.agtron+')'+bTag+'. Projection starts at first crack.'; return; }
   const devCur=((performance.now()-startT)/1000)-v[0].t;
-  let proj=cal.agtron+(cal.devSpan-devCur)/SEC_PER_AG;
+  const frac=cal.devSpan>0?devCur/cal.devSpan:0;
+  let proj=FC_AG+(cal.agtron-FC_AG)*frac;
   proj=Math.min(AG_MAX,Math.max(AG_MIN,proj));
   drawGauge('live',proj-AG_TOL,proj+AG_TOL);
   $('agHint').textContent='If dropped now, this bean projects near this color'+bTag+'. Projection, not measurement; calibrate often.';
