@@ -98,7 +98,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag">v2026-07-06a</span>
+        <span class="vtag">v2026-07-06b</span>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
     </div>
@@ -141,7 +141,7 @@ body.st-setup #btn{display:none}
     <canvas id="tl" width="900" height="180"></canvas>
     <div class="ctl"><label>Bin <span class="info" onclick="showInfo('bin')">&#9432;</span></label><button class="pm" onclick="nudge('bin',-1)">&minus;</button><input type="range" id="bin" min="1" max="10" step="1" value="4" oninput="document.getElementById('binV').textContent=this.value+' s';drawTimeline()"><button class="pm" onclick="nudge('bin',1)">+</button><span class="v" id="binV">4 s</span></div>
     <div class="row" style="margin-top:10px">
-      <div class="card"><div class="lbl">total gain</div><div class="n" id="cum">0</div><canvas id="tgArc" width="140" height="76" style="width:70px;height:38px;display:none;margin:4px auto 0;background:none"></canvas><div class="hint" id="tgRef" style="margin-top:2px;font-size:11px"></div></div>
+      <div class="card"><div class="lbl">total gain</div><div class="n" id="cum">0</div><canvas id="tgArc" width="280" height="40" style="width:100%;height:20px;display:none;margin:6px 0 0;background:none"></canvas><div class="hint" id="tgRef" style="margin-top:2px;font-size:11px"></div></div>
       <div class="card"><div class="lbl">time SD s</div><div class="n" id="sdT">-</div></div>
       <div class="card"><div class="lbl">gain SD</div><div class="n" id="sdG">-</div></div>
       <div class="card"><div class="lbl">pitch Hz</div><div class="n" id="fMean">-</div><div class="hint" id="fSd" style="margin-top:2px;font-size:11px"></div></div>
@@ -480,17 +480,19 @@ function updateSD(){
   const cum=v.reduce((s,c)=>s+c.g,0);
   $('cum').textContent=cum;
   const cal=calFor()||calMap()['__house'];
-  $('tgRef').textContent=(cal&&cal.tg&&cum)?Math.round(cum/cal.tg*100)+'% of ref ('+cal.tg+')':'';
-  // mini arc: total gain vs reference, at a glance
+  $('tgRef').textContent=(cal&&cal.tg&&cum)?Math.round(cum/cal.tg*100)+'% · ref '+cal.tg:'';
+  // runway bar: total gain vs reference. Green zone 95-105%, gold tick = 100%, white knob = you.
   const tga=$('tgArc');
   if(cal&&cal.tg&&cum){
     tga.style.display='block';
-    const c2=tga.getContext('2d'); c2.clearRect(0,0,140,76);
-    const frac=Math.min(1.1,cum/cal.tg);
-    c2.lineWidth=12; c2.lineCap='round';
-    c2.strokeStyle='#3a2f26'; c2.beginPath(); c2.arc(70,70,54,Math.PI,2*Math.PI); c2.stroke();
-    c2.strokeStyle=frac>=0.95&&frac<=1.05?'#3c7a5a':'#e6c14b';
-    c2.beginPath(); c2.arc(70,70,54,Math.PI,Math.PI*(1+Math.min(1,frac))); c2.stroke();
+    const c2=tga.getContext('2d'); c2.clearRect(0,0,280,40);
+    const fr=Math.min(1.1,cum/cal.tg), X=f=>280*f/1.1;
+    c2.fillStyle='#3a2f26'; c2.fillRect(0,14,280,12);                       // track (scale 0-110%)
+    c2.fillStyle='#3c7a5a'; c2.fillRect(X(0.95),14,X(1.05)-X(0.95),12);     // target zone
+    c2.fillStyle='#e6c14b'; c2.fillRect(X(1)-1.5,8,3,24);                   // 100% tick
+    c2.fillRect(0,17,Math.max(4,X(fr)),6);                                  // progress
+    c2.beginPath(); c2.arc(Math.min(273,X(fr)),20,7,0,7); c2.fillStyle='#fff'; c2.fill();
+    c2.lineWidth=2; c2.strokeStyle='#1a1410'; c2.stroke();                   // knob
   } else tga.style.display='none';
   if(v.length<2){ $('sdT').textContent='-'; $('sdG').textContent='-'; $('fMean').textContent='-'; $('fSd').textContent=''; return; }
   $('sdT').textContent=sd(v.map(c=>c.t)).toFixed(1);
