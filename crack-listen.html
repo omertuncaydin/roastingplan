@@ -118,7 +118,8 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag">v2026-07-07b</span>
+        <span class="vtag">v2026-07-07c</span>
+        <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
     </div>
@@ -153,13 +154,13 @@ body.st-setup #btn{display:none}
     </div>
     <div class="hint" id="agHint"></div>
     <details style="text-align:left;margin-top:10px">
-      <summary style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;cursor:pointer;padding:9px 0;border-top:1px solid var(--line)">Coffee badge · sticker bilgisi</summary>
-      <input type="text" id="bSub" placeholder="Alt başlık (örn. chirripó yıkanmış)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink);margin:8px 0 6px">
+      <summary style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;cursor:pointer;padding:9px 0;border-top:1px solid var(--line)">Coffee badge · sticker info</summary>
+      <input type="text" id="bSub" placeholder="Subtitle (e.g. chirripó washed)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink);margin:8px 0 6px">
       <div style="display:flex;gap:6px;margin-bottom:6px">
-        <input type="text" id="bHarvest" placeholder="Hasat yılı" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink)">
-        <input type="text" id="bProcess" placeholder="İşlem" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="bHarvest" placeholder="Harvest year" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="bProcess" placeholder="Process" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink)">
       </div>
-      <input type="text" id="bNotes" placeholder="Notlar (örn. mürdüm eriği, fıstık)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink)">
+      <input type="text" id="bNotes" placeholder="Notes (e.g. plum, hazelnut)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink)">
       <div class="hint">Saved per coffee on this phone; the batch card pulls from here.</div>
     </details>
   </div>
@@ -313,7 +314,7 @@ async function start(){
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote'].forEach(i=>{ if($(i)) $(i).value=''; });
   updateSD(); drawTimeline(); updateGauge();
   document.body.className='st-live';
-  running=true; $('btn').textContent='Stop'; $('btn').className='stop'; $('status').textContent='Listening. Calibrating background for ~2s, keep it running steady.';
+  running=true; $('btn').textContent=tt('Stop'); $('btn').className='stop'; $('status').textContent=tt('Listening. Calibrating background for ~2s, keep it running steady.');
   loop();
 }
 function stop(){
@@ -325,13 +326,16 @@ function stop(){
   if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
   $('recAudio').disabled=false;
   STOPPROJ=LASTPROJ;   // freeze what the gauge said at the moment of drop, before retrospective recompute
-  $('finalCall').textContent=STOPPROJ?('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.'):'';
+  $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):'';
   if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value; }
   renderSamples(); updateGauge();
   const mb=(wav.len*2/1048576).toFixed(1);
-  $('recInfo').textContent='Session kept in memory: '+(wav.len?mb+' MB audio, ':'')+rows.length+' trace samples, '+cracks.length+' cracks. Save the session before closing or reloading the page.';
+  $('recInfo').textContent=LANG==='tr'
+    ?('Seans bellekte: '+(wav.len?mb+' MB ses, ':'')+rows.length+' iz örneği, '+cracks.length+' çatlak. Sayfayı kapatmadan önce seansı kaydet.')
+    :('Session kept in memory: '+(wav.len?mb+' MB audio, ':'')+rows.length+' trace samples, '+cracks.length+' cracks. Save the session before closing or reloading the page.');
   document.body.className='st-done';
-  $('btn').textContent='New session'; $('btn').className='go'; $('status').textContent='Stopped. '+cracks.length+' cracks logged.';
+  $('btn').textContent=tt('New session'); $('btn').className='go';
+  $('status').textContent=LANG==='tr'?('Durduruldu. '+cracks.length+' çatlak kaydedildi.'):('Stopped. '+cracks.length+' cracks logged.');
 }
 
 function rms(a){ let s=0; for(let i=0;i<a.length;i++) s+=a[i]*a[i]; return Math.sqrt(s/a.length); }
@@ -520,7 +524,25 @@ const INFO={
  tl:['Session timeline, the whole story','Gold ticks on the floor: every valid crack. Thick green with the soft fill: the smoothed crack rate, the bell. Grey dashed: the GHOST of your mapped reference roast, raced live, with the lap chip telling you how far ahead or behind you are. The gold floor edge is DEV progress from A0. The window centers the crack activity and snaps to standard sizes (top-right badge).<br><br>The gain stages ride the bell:<br>&bull; <b>A0</b> · the literal first crack (confirmed by followers, a lone pop cannot claim it)<br>&bull; <b>A1</b> · sustained rise past 30% of peak<br>&bull; <b>B0</b> · 70% on the way up<br>&bull; <b>B1</b> · the crown (appears once the fall is real)<br>&bull; <b>C0</b> · fallen through 70% (appears after 12s of quiet)<br>&bull; <b>C1</b> · the definite last crack (only after real silence; a fresh crack is never C1)<br><br>Right-side markers settle as the data does; thresholds are provisional until labeled sessions calibrate them.'],
  cap:['Session capture, the whole story','While listening, the app keeps three things: the raw microphone audio as WAV (tapped BEFORE the high-pass, ~5.5 MB per minute), a per-frame CSV (time, loudness, floor, ratio, your slider settings, every crack), and your crack log edits: ticked rows travel as labeled false positives, swiped rows are removed. Fill the roast record (coffee, batch, Agtron) after Stop and it rides inside the CSV header; the Agtron ground value is also what unlocks the color gauge for that coffee. Save session packs WAV + CSV into one zip. Everything lives only in this page’s memory: close or reload without saving and the session is gone.']
 };
-function showInfo(k){ const d=INFO[k]; $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">'+d[0]+'</h1><div class="hint" style="font-size:13px;margin:0">'+d[1]+'</div><button style="margin-top:14px;background:var(--accent2)" onclick="document.getElementById(\'modal\').style.display=\'none\'">Close</button>'; $('modal').style.display='flex'; }
+const INFO_TR={
+ tg:['Referansa göre toplam kazanç','Bu seanstaki tüm geçerli çatlak kazançlarının toplamı; kadran referans kavurmanın toplamının %110\'una ölçekli. Yeşil bölge = %95-105: parti, eşlenmiş referansın kadar konuştu. Altın çizgi tam %100.'],
+ pace:['Referansa göre tempo','Bu kavurmanın referans toplam kazancın %25\'ine ulaşma hızı, referansın aynı noktaya kendi süresine oranla. Orta çizgi = aynı hız; solu daha hızlı, sağı daha yavaş. %25 noktası geçilince kilitlenir; renk öngörüsü saati bununla düzeltir.'],
+ even:['Homojenlik, kazanç dağılımı','Bu seanstaki çatlak kazançlarının yayılımı (SS), referans kavurmanın aynı değerine oranla. Orta = referansla aynı yayılım; sol = daha sıkı (daha tekdüze patlamalar), sağ = daha gevşek. Renk-SS çalışmaları kalibre edene kadar göreli bir homojenlik vekilidir.'],
+ bri:['Çatlak parlaklığı','Her çatlağın 5-16 kHz spektral ağırlık merkezi, seans ortalaması. Çatlak geniş bantlı bir patlamadır: perdesi değil, parlaklığı (enerjisinin nerede durduğu) vardır. &plusmn; değeri çatlaklar arası yayılımdır; çekirdeğin-sesi kapısı, çekirdeğe ait olmayan sesleri bu kümelenmeyle eler.'],
+ voice:['Çekirdeğin sesi, seyrek çatlak nöbeti','Son 30 saniyedeki geçerli çatlaklar. Altın çizgi, öngörünün dürüst kalması için gereken asgari (30 sn\'de 8, geçici); yeşil halka iyi beslenmiş gösterge demek. İlk çatlağın ortasında incelirse: mikrofonu yaklaştır ya da daha geniş bir öngörü bandını kabul et. Tepeden sonra düşüş doğaldır, kadran nöbeti bırakır. Yavaş, sessiz kavurmalar için unutma: sessizlik onlara zarar verir.'],
+ tsd:['Zaman SS','Çatlak zaman damgalarının saniye cinsinden yayılımı. Hızlı kavurmalar sıkı kümelenir, yavaşlar uzar. Aynı makine ve stil içinde karşılaştır, makineler arası değil.'],
+ cnt:['Sayılan çatlaklar','Yalnızca geçerli çatlaklar: genişlik/ses kapılarının otomatik elediği olaylar ve senin yanlış pozitif işaretlediğin satırlar tüm istatistiklerden ve öngörüden hariçtir.'],
+ rateI:['Dakika başına çatlak','Son 10 saniyedeki geçerli çatlaklar çarpı altı. Çekirdeğin sesinin canlı hızı.'],
+ lastg:['Son kazanç','En yeni geçerli çatlağın şiddeti (0-100 dB skalası).'],
+ peakg:['Tepe kazanç','Bu seansın şimdiye kadarki en gür çatlağı.'],
+ pur:['Sinyal saflığı','Algılanan olayların çekirdek çatlağı kabul edilen payı. Düşük saflık = gürültülü yerleşim ya da yanlış ayar: telefonu taşı ya da tetiği yükselt. Kurulumda ve ilk çatlağın başında değerlendir.'],
+ sens:['Tetik eşiği','Bir çatlak, 1 ms\'lik patlama arka plan tabanından bu kat daha gürse sayılır. DÜŞÜK daha çok yakalar (daha hassas, daha çok gürültü); YÜKSEK daha katı. Makinenin yanında düşük başla (3-5), kepçe ve tıkırtılar kaydolmayı bırakana kadar yükselt.'],
+ hp:['Yüksek geçiren','Bu frekansın altındaki her şey algılamadan önce kesilir: kazan uğultusu, fan, motor. Taban gürlemeyle yükselmeyi bırakana kadar yükselt; gerçek çatlaklar cılız gelirse düşür. Ham WAV bu filtreden ÖNCE kaydedilir.'],
+ bin:['Aralık genişliği','Zaman çizgisi histogramının çubuk genişliği. Küçük aralık dokuyu, büyük aralık biçimi gösterir. Yalnızca görünüm; algılama matematiğini değiştirmez.'],
+ tl:['Seans zaman çizgisi, bütün hikâye','Tabandaki altın çizgiler: her geçerli çatlak. Dolgulu kalın yeşil: yumuşatılmış çatlak hızı, yani çan. Gri kesikli: eşlenmiş referans kavurmanın HAYALETİ, canlı yarışta; tur çipi önde mi geride mi olduğunu söyler. Altın taban kenarı A0\'dan itibaren DEV ilerlemesi.<br><br>Kazanç evreleri çanın üstünde:<br>&bull; <b>A0</b> · gerçek ilk çatlak (takipçilerle doğrulanır)<br>&bull; <b>A1</b> · tepenin %30\'unu aşan kalıcı yükseliş<br>&bull; <b>B0</b> · çıkışta %70<br>&bull; <b>B1</b> · taç (düşüş gerçekleşince görünür)<br>&bull; <b>C0</b> · %70\'in altına düşüş (12 sn sessizlikten sonra)<br>&bull; <b>C1</b> · kesin son çatlak (ancak gerçek sessizlikten sonra)<br><br>Sağ taraf işaretleri veri oturdukça oturur.'],
+ cap:['Seans kaydı, bütün hikâye','Dinlerken uygulama üç şey tutar: ham mikrofon sesi WAV olarak (yüksek geçirenden ÖNCE, ~5,5 MB/dk), kare başına CSV (zaman, gürlük, taban, oran, ayarların, her çatlak) ve çatlak kaydı düzenlemelerin. Kavurma kaydını Durdur\'dan sonra doldur; öğütülmüş Agtron değeri o kahvenin renk göstergesini de açar. Seansı kaydet WAV + CSV\'yi tek zip yapar. Her şey yalnızca bu sayfanın belleğinde yaşar: kaydetmeden kapatırsan seans gider.']
+};
+function showInfo(k){ const d=(LANG==='tr'&&INFO_TR[k])?INFO_TR[k]:INFO[k]; $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">'+d[0]+'</h1><div class="hint" style="font-size:13px;margin:0">'+d[1]+'</div><button style="margin-top:14px;background:var(--accent2)" onclick="document.getElementById(\'modal\').style.display=\'none\'">Close</button>'; $('modal').style.display='flex'; }
 
 function sd(a){ if(a.length<2) return 0; const m=a.reduce((s,x)=>s+x,0)/a.length; return Math.sqrt(a.reduce((s,x)=>s+(x-m)*(x-m),0)/(a.length-1)); }
 // shared cockpit dial (270-degree, 18 segments): the instrument family for total gain / pace / evenness.
@@ -552,24 +574,24 @@ function drawCockpit(id,o){
 // Alarm only mid-FC; past the bell's peak the fall is natural and the dial stands down.
 function updateVoice(){
   const v=valid();
-  if(!running||!v.length){ drawCockpit('voiceG',{dim:true,num:'· · ·',sub:running?'waiting for cracks':''}); return; }
+  if(!running||!v.length){ drawCockpit('voiceG',{dim:true,num:'· · ·',sub:running?tt('waiting for cracks'):''}); return; }
   const now=(performance.now()-startT)/1000, MIN=8;
   const n30=v.filter(c=>now-c.t<=30).length;
-  if(PASTPEAK&&now-v[v.length-1].t>20){ drawCockpit('voiceG',{dim:true,num:String(n30),sub:'quiet, as it should be'}); return; }
+  if(PASTPEAK&&now-v[v.length-1].t>20){ drawCockpit('voiceG',{dim:true,num:String(n30),sub:tt('quiet, as it should be')}); return; }
   drawCockpit('voiceG',{u:Math.min(1,n30/(2*MIN)), zone:[0.5,1], tick:0.5, num:String(n30),
-    sub:n30>=MIN?'strong voice':(PASTPEAK?'fading':(n30>=MIN/2?'thin voice':'silence will harm them'))});
+    sub:n30>=MIN?tt('strong voice'):(PASTPEAK?tt('fading'):(n30>=MIN/2?tt('thin voice'):tt('silence will harm them')))});
 }
 // pace dial: log scale 0.5x-2.0x, center tick = same speed as the reference. Locks once past the 25% point.
 function updatePace(){
   const cal=calFor()||calMap()['__house'], v=valid();
-  if(!(cal&&cal.tg&&cal.q25)){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:'needs a mapped ref'}); return; }
-  if(v.length<5){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:'waiting for cracks'}); return; }
+  if(!(cal&&cal.tg&&cal.q25)){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:tt('needs a mapped ref')}); return; }
+  if(v.length<5){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:tt('waiting for cracks')}); return; }
   const a0=effA0(v); let cum=0,tq=null;
   for(const c of v){ cum+=c.g; if(cum>=cal.tg*0.25){ tq=c.t-a0; break; } }
-  if(!(tq&&tq>2)){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:'before the 25% point'}); return; }
+  if(!(tq&&tq>2)){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:tt('before the 25% point')}); return; }
   const pace=Math.min(2,Math.max(0.5,tq/cal.q25)), u=(Math.log2(pace)+1)/2;
   drawCockpit('paceG',{u, zone:[(Math.log2(0.95)+1)/2,(Math.log2(1.05)+1)/2], tick:0.5,
-    num:pace.toFixed(2)+'×', sub:pace<0.97?'faster than ref':(pace>1.03?'slower than ref':'on pace')});
+    num:pace.toFixed(2)+'×', sub:pace<0.97?tt('faster than ref'):(pace>1.03?tt('slower than ref'):tt('on pace'))});
 }
 function updateSD(){
   const v=valid(), cum=v.reduce((s,c)=>s+c.g,0);
@@ -578,8 +600,8 @@ function updateSD(){
     const fr=Math.min(1.1,cum/cal.tg);
     drawCockpit('tgArc',{u:fr/1.1, lit:fr/1.1, zone:[0.95/1.1,1.05/1.1], tick:1/1.1,
       num:String(cum), sub:Math.round(cum/cal.tg*100)+'%'});
-    $('tgRef').textContent='ref '+cal.tg;
-  } else { drawCockpit('tgArc',{dim:true,num:cum?String(cum):'· · ·',sub:cum?'no reference':''}); $('tgRef').textContent=''; }
+    $('tgRef').textContent=tt('ref')+' '+cal.tg;
+  } else { drawCockpit('tgArc',{dim:true,num:cum?String(cum):'· · ·',sub:cum?tt('no reference'):''}); $('tgRef').textContent=''; }
   $('pur').textContent=cracks.length?Math.round(v.length/cracks.length*100)+'%':'-';
   updatePace(); updateVoice();
   // evenness: this session's crack-gain spread vs the reference roast's own spread (relative, like everything here)
@@ -587,8 +609,8 @@ function updateSD(){
   if(gsd!=null&&cal&&cal.gsd){
     const ratio=Math.max(0.5,Math.min(2,gsd/cal.gsd)), u=(Math.log2(ratio)+1)/2;
     drawCockpit('evenG',{u, zone:[(Math.log2(0.85)+1)/2,(Math.log2(1.15)+1)/2], tick:0.5,
-      num:gsd.toFixed(1), sub:ratio<0.9?'tighter':(ratio>1.1?'looser':'like ref')});
-  } else drawCockpit('evenG',{dim:true,num:gsd!=null?gsd.toFixed(1):'· · ·',sub:gsd!=null?'map ref to unlock':''});
+      num:gsd.toFixed(1), sub:ratio<0.9?tt('tighter'):(ratio>1.1?tt('looser'):tt('like ref'))});
+  } else drawCockpit('evenG',{dim:true,num:gsd!=null?gsd.toFixed(1):'· · ·',sub:gsd!=null?tt('map ref to unlock'):''});
   if(v.length<2){ $('sdT').textContent='-'; $('fMean').textContent='-'; $('fSd').textContent=''; return; }
   $('sdT').textContent=sd(v.map(c=>c.t)).toFixed(1);
   const fs=v.filter(c=>c.f).map(c=>c.f);
@@ -640,7 +662,7 @@ function toast(msg){
 function saveCalIfMapped(verbose){
   const k=(cName.value||$('mCoffee').value||'').trim().toLowerCase();
   const ag=parseFloat($('mAgG').value), v=valid();
-  if(!k||!isFinite(ag)||v.length<5){ if(verbose) toast('Mapping needs: coffee name + Agtron ground + at least 5 cracks.'); return; }
+  if(!k||!isFinite(ag)||v.length<5){ if(verbose) toast(tt('Mapping needs: coffee name + Agtron ground + at least 5 cracks.')); return; }
   const a0=effA0(v), tg=v.reduce((s,c)=>s+c.g,0);
   let cum=0, q25=null;
   for(const c of v){ cum+=c.g; if(cum>=tg*0.25){ q25=c.t-a0; break; } }
@@ -685,25 +707,25 @@ function gaugeSVG(u,loU,hiU,top,bot,dim){
 function drawGauge(state,projLo,projHi){
   const setup=document.body.classList.contains('st-setup');
   let h;
-  if(state==='live') h=gaugeSVG(agU((projLo+projHi)/2),agU(projHi),agU(projLo),Math.round(projLo)+'-'+Math.round(projHi),'Agtron · projection',false);
-  else if(state==='wait') h=gaugeSVG(null,0,0,setup?'':'· · ·',setup?'':'waiting for first crack',true);
-  else if(state==='nocoffee') h=gaugeSVG(null,0,0,setup?'':'&middot;',setup?'':'name the coffee above',true);
-  else h=gaugeSVG(null,0,0,setup?'':'&#128274;',setup?'':'unmapped bean',true);
+  if(state==='live') h=gaugeSVG(agU((projLo+projHi)/2),agU(projHi),agU(projLo),Math.round(projLo)+'-'+Math.round(projHi),tt('Agtron · projection'),false);
+  else if(state==='wait') h=gaugeSVG(null,0,0,setup?'':'· · ·',setup?'':tt('waiting for first crack'),true);
+  else if(state==='nocoffee') h=gaugeSVG(null,0,0,setup?'':'&middot;',setup?'':tt('name the coffee above'),true);
+  else h=gaugeSVG(null,0,0,setup?'':'&#128274;',setup?'':tt('unmapped bean'),true);
   $('ag').innerHTML=h;
 }
 function updateGauge(){
   const k=(cName.value||'').trim();
-  if(!k){ drawGauge('nocoffee'); $('agHint').textContent='Name the coffee; each bean carries its own color map.'; return; }
+  if(!k){ drawGauge('nocoffee'); $('agHint').textContent=tt('Name the coffee; each bean carries its own color map.'); return; }
   let cal=calFor(), borrowed=false;
   if(!cal){ const h=calMap()['__house']; if(h){ cal=h; borrowed=true; } }
   if(!cal){ drawGauge('locked');
     const keys=Object.keys(calMap()).filter(x=>x!=='__house');
-    $('agHint').textContent='Unmapped on THIS device/app copy. '+(keys.length?('Mapped here: '+keys.join(', ')+'.'):'No maps yet: load a session or roast, fill Agtron ground, tap Map. Note: Safari tab and Home-Screen app keep SEPARATE maps.');
+    $('agHint').textContent=tt('Unmapped on THIS device/app copy.')+' '+(keys.length?(tt('Mapped here:')+' '+keys.join(', ')+'.'):tt('No maps yet: load a session or roast, fill Agtron ground, tap Map. Note: Safari tab and Home-Screen app keep SEPARATE maps.'));
     return; }
-  const bTag=borrowed?(' · borrowed house map ('+(cal.src||'?')+')'):'';
+  const bTag=borrowed?(' · '+tt('borrowed house map')+' ('+(cal.src||'?')+')'):'';
   const v=valid();
-  if(!v.length){ drawGauge('wait'); $('agHint').textContent='Mapped on '+cal.date+' (Agtron '+cal.agtron+')'+bTag+'. Projection starts at first crack.'; return; }
-  if(v.length<5){ drawGauge('wait'); $('agHint').textContent='Gathering cracks ('+v.length+'/5) before projecting; a couple of pops is not a first crack yet.'; return; }
+  if(!v.length){ drawGauge('wait'); $('agHint').textContent=tt('Mapped on')+' '+cal.date+' (Agtron '+cal.agtron+')'+bTag+'. '+tt('Projection starts at first crack.'); return; }
+  if(v.length<5){ drawGauge('wait'); $('agHint').textContent=(LANG==='tr'?('Çatlaklar toplanıyor ('+v.length+'/5); birkaç pat henüz ilk çatlak değildir.'):('Gathering cracks ('+v.length+'/5) before projecting; a couple of pops is not a first crack yet.')); return; }
   // live: clock runs. done/loaded: retrospective final call at last crack + coast (Drop after last, if filled)
   const nowDev=running?((performance.now()-startT)/1000):(v[v.length-1].t+(parseFloat($('mDrop').value)||0));
   const a0=effA0(v), devCur=nowDev-a0;
@@ -731,7 +753,9 @@ function updateGauge(){
   const band=Math.min(6,Math.max(AG_TOL, AG_TOL+Math.abs(prT-prE)/2));   // honest range: widens when estimators disagree
   LASTPROJ=Math.round(proj);
   drawGauge('live',proj-band,proj+band);
-  $('agHint').textContent=(running?('~'+Math.round(proj)+' if dropped now'):('final call ~'+Math.round(proj)))+' (clock '+Math.round(prT)+' · energy '+Math.round(prE)+' · pace '+pace.toFixed(2)+')'+bTag+'. Projection, not measurement.';
+  $('agHint').textContent=LANG==='tr'
+    ?((running?('~'+Math.round(proj)+' şimdi bırakılırsa'):('son çağrı ~'+Math.round(proj)))+' (saat '+Math.round(prT)+' · enerji '+Math.round(prE)+' · tempo '+pace.toFixed(2)+')'+bTag+'. Öngörü, ölçüm değil.')
+    :((running?('~'+Math.round(proj)+' if dropped now'):('final call ~'+Math.round(proj)))+' (clock '+Math.round(prT)+' · energy '+Math.round(prE)+' · pace '+pace.toFixed(2)+')'+bTag+'. Projection, not measurement.');
 }
 // ---- coffee badge (sticker info) per coffee, feeds the batch card ----
 function badgeMap(){ try{ return JSON.parse(localStorage.getItem('bsBadge')||'{}'); }catch(e){ return {}; } }
@@ -745,7 +769,7 @@ loadBadge();
 // ---- batch card: 33x52mm print sticker, bell replaces the QR ----
 function makeBatchCard(){
   const v=valid();
-  if(v.length<3){ toast('Not enough cracks for a card.'); return; }
+  if(v.length<3){ toast(tt('Not enough cracks for a card.')); return; }
   const b=badgeMap()[badgeKey()]||{};
   const W=780, H=1228;                       // 33x52mm @ ~600dpi
   const c=document.createElement('canvas'); c.width=W; c.height=H;
@@ -792,7 +816,7 @@ function makeBatchCard(){
 // ---- load a saved session back in (.zip from this app, store-method, or bare .csv) ----
 async function loadSession(file){
   if(!file) return;
-  if(running){ toast('Stop the live session first.'); return; }
+  if(running){ toast(tt('Stop the live session first.')); return; }
   let text=null;
   const bytes=new Uint8Array(await file.arrayBuffer());
   if(/\.csv$/i.test(file.name)) text=new TextDecoder().decode(bytes);
@@ -827,13 +851,14 @@ async function loadSession(file){
 // ---- SampleInRoast: tryer pulls become color anchors ----
 const SAMP_LINES=['The bean cannot hide now.','Spoon out, truth in.','Color caught mid-flight.','One more anchor for the gauge.'];
 function markSample(){
-  if(!running){ toast('Only during a live session.'); return; }
+  if(!running){ toast(tt('Only during a live session.')); return; }
   const t=(performance.now()-startT)/1000;
   SAMPLES.push({t, ag:null});
   const b=$('sampleBtn'); b.classList.remove('sPop'); void b.offsetWidth; b.classList.add('sPop');
   const n=$('sampN'); n.style.display='inline-block'; n.textContent='S'+SAMPLES.length;
   renderSampChips(); drawTimeline();
-  toast('S'+SAMPLES.length+' · '+fmtT(t)+' · '+SAMP_LINES[(SAMPLES.length-1)%SAMP_LINES.length]);
+  const lines=LANG==='tr'?SAMP_TR:SAMP_LINES;
+  toast('S'+SAMPLES.length+' · '+fmtT(t)+' · '+lines[(SAMPLES.length-1)%lines.length]);
 }
 function delSample(i){
   SAMPLES.splice(i,1); renderSampChips(); renderSamples(); drawTimeline();
@@ -848,7 +873,7 @@ function renderSampChips(){
 function renderSamples(){
   const el=$('sampList'); if(!el) return;
   if(!SAMPLES.length){ el.innerHTML=''; return; }
-  el.innerHTML='<div class="lbl" style="margin:8px 0 4px">tryer samples (fill measured Agtron)</div>'+
+  el.innerHTML='<div class="lbl" style="margin:8px 0 4px">'+tt('tryer samples (fill measured Agtron)')+'</div>'+
     SAMPLES.map((s,i)=>'<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><span style="font-size:13px;color:var(--muted);min-width:74px">S'+(i+1)+' · '+fmtT(s.t)+'</span>'+
     '<input type="text" inputmode="decimal" value="'+(s.ag??'')+'" placeholder="Agtron" oninput="SAMPLES['+i+'].ag=parseFloat(this.value)||null" style="flex:1;border:1px solid var(--line);border-radius:9px;padding:8px;font-size:15px;background:var(--panel2);color:var(--ink)">'+
     '<b style="color:var(--warn);cursor:pointer;padding:0 6px;font-size:17px" onclick="delSample('+i+')">&times;</b></div>').join('');
@@ -857,7 +882,7 @@ function renderSamples(){
 function exportMaps(){
   const payload={cal:calMap(), badge:badgeMap(), exported:new Date().toISOString()};
   dl(new Blob([JSON.stringify(payload,null,1)],{type:'application/json'}),'crack-maps-'+new Date().toISOString().slice(0,10)+'.json');
-  toast('Maps exported. Import them on the other device.');
+  toast(tt('Maps exported. Import them on the other device.'));
 }
 async function importMaps(file){
   if(!file) return;
@@ -868,13 +893,76 @@ async function importMaps(file){
     toast('Imported '+Object.keys(p.cal||{}).filter(k=>k!=='__house').length+' map(s).'); updateGauge(); updateSD();
   }catch(e){ toast('Import failed: '+e.message); }
 }
+// ---- i18n: EN-first, TR selectable from the top. Static text via tree walk, dynamic via tt(). ----
+let LANG=localStorage.getItem('bsLang')||'en';
+const EN2TR={
+'live gain':'canlı kazanç','projected color · Agtron scale':'öngörülen renk · Agtron skalası',
+"this bean's map · tap to edit":'bu çekirdeğin haritası · düzenle',
+'coffee · mapping key':'kahve · eşleme anahtarı','name the coffee':'kahveyi adlandır',
+'Coffee badge · sticker info':'Kahve rozeti · etiket bilgisi',
+'session timeline · DEV':'seans zaman çizgisi · DEV','total gain':'toplam kazanç','pace':'tempo',
+'bean voice':'çekirdeğin sesi','evenness':'homojenlik','brightness':'parlaklık','time SD s':'zaman SS sn',
+'counted cracks':'sayılan çatlaklar','rate /min':'çatlak /dk','last gain':'son kazanç','peak gain':'tepe kazanç',
+'session capture':'seans kaydı','roast record (travels inside the CSV)':'kavurma kaydı (CSV içinde taşınır)',
+'tuning & trace':'ayar & iz','crack log':'çatlak kaydı','gain trace (cracks marked)':'kazanç izi (çatlaklar işaretli)',
+'signal purity':'sinyal saflığı','cracks / 30s':'çatlak / 30 sn','vs reference':'referansa göre',
+'Record raw audio (WAV, pre-filter)':'Ham sesi kaydet (WAV, filtre öncesi)',
+'Start listening':'Dinlemeye başla','Stop':'Durdur','New session':'Yeni seans','Sample pulled':'Numune çekildi',
+'Save session (.zip)':'Seansı kaydet (.zip)','Batch card (PNG)':'Parti kartı (PNG)',
+'Load session (.zip / .csv)':'Seans yükle (.zip / .csv)','Export maps':'Haritaları dışa aktar','Import maps':'Haritaları içe aktar',
+'Map this coffee (save color)':'Bu kahveyi eşle (rengi kaydet)','Bin':'Aralık','Trigger ×':'Tetik ×','High-pass':'Yüksek geçiren','Refresh':'Yenile',
+'tap to listen':'dinlemek için dokun','the crack analyzer · the probe reads the drum, the beans speak':'çatlak analizörü · prob kazanı okur, çekirdekler konuşur',
+'Tap start, hold the phone near the drum, disable the case if it covers the mic.':'Başlata dokun, telefonu kazana yaklaştır, kılıf mikrofonu kapatıyorsa çıkar.',
+'Everything is kept for the whole session; save after Stop. Keep the screen on.':'Her şey seans boyunca bellekte tutulur; Durdur sonrası kaydet. Ekranı açık tut.',
+'Saved per coffee on this phone; the batch card pulls from here.':'Bu telefonda kahve başına saklanır; parti kartı buradan beslenir.',
+'Fill what you know before saving; measure Agtron later? Load the saved zip back in, add it, tap Map.':"Bildiklerini kaydetmeden önce doldur; Agtron sonra mı ölçülecek? Kayıtlı zip'i geri yükle, ekle, Eşle'ye dokun.",
+'Detection listens for millisecond bursts (clicks), not loud averages, so test it with a pen click or finger snap, not your voice. Trigger is a threshold: LOWER catches more.':'Algılama milisaniyelik patlamaları (klikleri) dinler, yüksek ortalamaları değil; kalem kliği ya da parmak şıklatmasıyla dene, sesinle değil. Tetik bir eşiktir: DÜŞÜK daha çok yakalar.',
+'Tick = false positive: kept and labeled in the CSV, excluded from stats. Swipe a row left to delete it outright (wrong-settings junk).':"İşaret = yanlış pozitif: CSV'de etiketli tutulur, istatistiklerden çıkarılır. Satırı tamamen silmek için sola kaydır.",
+'tryer samples (fill measured Agtron)':"tryer numuneleri (ölçülen Agtron'u doldur)",
+'Coffee':'Kahve','Batch g':'Parti g','Agtron whole':'Agtron çekirdek','Agtron ground':'Agtron öğütülmüş',
+'Process (washed/natural)':'İşlem (yıkanmış/natürel)','Charge→FC (m:ss)':'Şarj→FC (d:ss)','Drop after last (s)':'Son çatlaktan sonra tahliye (sn)',
+'Whole SD':'Çekirdek SS','Ground SD':'Öğütülmüş SS','Note (machine, phone position, cup notes)':'Not (makine, telefon konumu, fincan notları)',
+'Subtitle (e.g. chirripó washed)':'Alt başlık (örn. chirripó yıkanmış)','Harvest year':'Hasat yılı','Process':'İşlem','Notes (e.g. plum, hazelnut)':'Notlar (örn. mürdüm eriği, fıstık)',
+'strong voice':'güçlü ses','thin voice':'incelen ses','silence will harm them':'sessizlik onlara zarar verir','fading':'sönümleniyor',
+'quiet, as it should be':'sessiz, olması gerektiği gibi','waiting for cracks':'çatlak bekleniyor','needs a mapped ref':'eşlenmiş referans gerek',
+'before the 25% point':'%25 noktasından önce','no reference':'referans yok','map ref to unlock':'açmak için referans eşle',
+'tighter':'daha sıkı','looser':'daha gevşek','like ref':'referans gibi','on pace':'temposunda','faster than ref':'referanstan hızlı','slower than ref':'referanstan yavaş','ref':'ref',
+'Agtron · projection':'Agtron · öngörü','waiting for first crack':'ilk çatlak bekleniyor','name the coffee above':'yukarıda kahveyi adlandır','unmapped bean':'eşlenmemiş çekirdek',
+'Name the coffee; each bean carries its own color map.':'Kahveyi adlandır; her çekirdek kendi renk haritasını taşır.',
+'Unmapped on THIS device/app copy.':'BU cihaz/uygulama kopyasında eşlenmemiş.','Mapped here:':'Burada eşli:',
+'No maps yet: load a session or roast, fill Agtron ground, tap Map. Note: Safari tab and Home-Screen app keep SEPARATE maps.':"Henüz harita yok: bir seans yükle ya da kavur, öğütülmüş Agtron'u doldur, Eşle'ye dokun. Not: Safari sekmesi ve ana ekran uygulaması AYRI harita tutar.",
+'Mapped on':'Eşleme tarihi:','Projection starts at first crack.':'Öngörü ilk çatlakla başlar.','borrowed house map':'ödünç ev haritası',
+'Listening. Calibrating background for ~2s, keep it running steady.':'Dinliyor. ~2 sn arka plan kalibrasyonu, düzeni bozmadan çalıştır.',
+'Only during a live session.':'Yalnızca canlı seans sırasında.','Stop the live session first.':'Önce canlı seansı durdur.',
+'Not enough cracks for a card.':'Kart için yeterli çatlak yok.','Mapping needs: coffee name + Agtron ground + at least 5 cracks.':'Eşleme için: kahve adı + öğütülmüş Agtron + en az 5 çatlak.',
+'Maps exported. Import them on the other device.':'Haritalar dışa aktarıldı. Diğer cihazda içe aktar.',
+'listening for first crack...':'ilk çatlak dinleniyor...','the DEV window draws itself from the first crack':'DEV penceresi ilk çatlaktan kendini çizer','window':'pencere','with ref':'referansla','gain':'kazanç'};
+const SAMP_TR=['Çekirdek artık saklanamaz.','Kaşık dışarı, gerçek içeri.','Renk uçuşta yakalandı.','Gösterge için bir çapa daha.'];
+function tt(s){ return LANG==='tr'?(EN2TR[s]||s):s; }
+const I18N_ORIG=new Map();
+function applyLang(){
+  $('langBtn').textContent=LANG==='tr'?'EN':'TR';
+  const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT); const ns=[];
+  while(w.nextNode()) ns.push(w.currentNode);
+  ns.forEach(n=>{ const k=(n.nodeValue||'').trim(); if(!k) return;
+    if(!I18N_ORIG.has(n)&&EN2TR[k]) I18N_ORIG.set(n,n.nodeValue);
+    const base=I18N_ORIG.get(n); if(base==null) return;
+    const bk=base.trim(); n.nodeValue=base.replace(bk, LANG==='tr'?(EN2TR[bk]||bk):bk); });
+  document.querySelectorAll('input[placeholder]').forEach(i=>{ if(!i.dataset.ph) i.dataset.ph=i.placeholder;
+    i.placeholder=LANG==='tr'?(EN2TR[i.dataset.ph]||i.dataset.ph):i.dataset.ph; });
+  renderNameplate(); updateGauge(); updateSD(); drawTimeline();
+  if(!running){ $('btn').textContent=(document.body.classList.contains('st-done'))?tt('New session'):tt('Start listening'); }
+  else $('btn').textContent=tt('Stop');
+}
+function toggleLang(){ LANG=LANG==='tr'?'en':'tr'; localStorage.setItem('bsLang',LANG); applyLang(); }
 document.body.className='st-setup';
 setTimeout(updateGauge,0);   // initial gauge state on load
+setTimeout(applyLang,0);
 const tl=$('tl'), tx=tl.getContext('2d');
 function drawTimeline(){
   tx.clearRect(0,0,tl.width,tl.height);
   const W=tl.width,H=tl.height, v=valid();
-  if(!v.length){ tx.fillStyle='#8a7a68'; tx.font='18px -apple-system,sans-serif'; tx.fillText(running?'listening for first crack...':'the DEV window draws itself from the first crack', 14, 32); return; }
+  if(!v.length){ tx.fillStyle='#8a7a68'; tx.font='18px -apple-system,sans-serif'; tx.fillText(running?tt('listening for first crack...'):tt('the DEV window draws itself from the first crack'), 14, 32); return; }
   // DEV window: auto-scale ladder, activity CENTERED. Snaps to standard sizes so
   // a 30s dev and a 2min dev each fill the frame, and same-class roasts stay comparable.
   const first=v[0].t, last=v[v.length-1].t, ext=Math.max(1,last-first);
@@ -898,7 +986,7 @@ function drawTimeline(){
   tx.fillStyle='#8a7a68'; tx.font='13px ui-monospace,Menlo,monospace';
   tx.fillText(fmtT(nowT)+(nowT>a0c?' · DEV '+fmtT(nowT-a0c):''), 12, 20);
   tx.font='bold 15px -apple-system,sans-serif'; tx.textAlign='right';
-  tx.fillText('window '+fmtT(span), W-8, 20); tx.textAlign='start'; tx.font='16px sans-serif';
+  tx.fillText(tt('window')+' '+fmtT(span), W-8, 20); tx.textAlign='start'; tx.font='16px sans-serif';
   // histogram: share of cracks per bin
   const bin=+(($('bin')&&$('bin').value)||1), nb=Math.max(1,Math.ceil(span/bin)), counts=new Array(nb).fill(0);
   for(const c of v){ counts[Math.min(nb-1,Math.max(0,Math.floor((c.t-t0)/bin)))]++; }
@@ -933,7 +1021,7 @@ function drawTimeline(){
     if(calT.tg&&calT.q25){ let cum2=0,tq2=null;
       for(const c of v){ cum2+=c.g; if(cum2>=calT.tg*0.25){ tq2=c.t-a0c; break; } }
       if(tq2&&tq2>2){ const dd=Math.round(tq2-calT.q25);
-        const txt=Math.abs(dd)<2?'with ref':(dd<0?(-dd)+'s ahead of ref':dd+'s behind ref');
+        const txt=Math.abs(dd)<2?tt('with ref'):(LANG==='tr'?(dd<0?((-dd)+' sn önde'):(dd+' sn geride')):(dd<0?((-dd)+'s ahead of ref'):(dd+'s behind ref')));
         tx.font='bold 13px -apple-system,sans-serif';
         const tw=tx.measureText(txt).width+22, bx=W-8-tw;
         tx.fillStyle='#241c16'; tx.strokeStyle=dd<=0?'#3c7a5a':'#c98a3c'; tx.lineWidth=1.5;
