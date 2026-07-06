@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>BeanSpeak · Crack Analyzer App · free first crack detection</title>
-<meta name="description" content="BeanSpeak is the free crack analyzer app: your phone hears first crack, draws the crack curve live, maps the gain stages A0-C1 and projects roast color. Coffee Acoustics by CoffeeNutz.">
+<title>Crack Listener · Crack Analyzer App · free first crack detection</title>
+<meta name="description" content="Crack Listener is the free crack analyzer app: your phone hears first crack, draws the crack curve live, maps the gain stages A0-C1 and projects roast color. Coffee Acoustics by CoffeeNutz.">
 <style>
 :root{--bg:#1a1410;--panel:#241c16;--panel2:#201a15;--accent:#c98a3c;--accent2:#3c7a5a;--gold:#e6c14b;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -98,7 +98,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag">v2026-07-05r</span>
+        <span class="vtag">v2026-07-05s</span>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
     </div>
@@ -300,6 +300,17 @@ function rms(a){ let s=0; for(let i=0;i<a.length;i++) s+=a[i]*a[i]; return Math.
 // map a linear rms to a 0-100 gain scale via dB, floor at -70dB
 function toGain(r){ const db=20*Math.log10(r+1e-9); return Math.max(0, Math.min(100, (db+70)/70*100)); }
 
+// THE VOICE OF THE BEAN: within one session real cracks cluster tightly in spectral brightness;
+// dirt (voices, clanks, scoops, snaps) lands elsewhere. Learned from this roast's own cracks,
+// adapts over the last 40 valid events, needs zero user input. Robust stats (median + MAD),
+// MAD floored at 400 Hz so a very uniform bean never over-tightens the gate.
+function beanVoice(){
+  const fs=cracks.filter(c=>!c.fp&&c.f).slice(-40).map(c=>c.f);
+  if(fs.length<8) return null;
+  const so=[...fs].sort((a,b)=>a-b), med=so[Math.floor(so.length/2)];
+  const ad=fs.map(x=>Math.abs(x-med)).sort((a,b)=>a-b);
+  return {med, mad:Math.max(400, ad[Math.floor(ad.length/2)])};
+}
 // audio-thread detection: a crack is a millisecond-scale burst (high crest), not a loud average.
 // scan each 1024-sample buffer for the strongest 1ms (48-sample) energy vs the slow background floor.
 function detectBuf(d){
@@ -329,8 +340,11 @@ function detectBuf(d){
     const f=Math.round(BINS.reduce((s,k,i)=>s+k*en[i],0)/esum*1000);   // spectral centroid, Hz
     const hf=+(en.slice(8).reduce((a,b)=>a+b,0)/esum).toFixed(2);      // share >=13 kHz
     const isSnap=wSlots>=5;                               // too wide to be a bean
-    cracks.push({t:(now-startT)/1000, g, id:++crackSeq, f, w:wSlots, hf, fp:isSnap, auto:isSnap});
-    if(isSnap){ pendingUI=true; }
+    const bv=isSnap?null:beanVoice();
+    const offVoice=!!bv && Math.abs(f-bv.med)>3.5*bv.mad; // 3.5 robust sigmas off the bean's voice
+    const rej=isSnap||offVoice;
+    cracks.push({t:(now-startT)/1000, g, id:++crackSeq, f, w:wSlots, hf, fp:rej, auto:rej, why:isSnap?'width':(offVoice?'voice':undefined)});
+    if(rej){ pendingUI=true; }
     else { peakGain=Math.max(peakGain,g); crackFlash=true; pendingCrackG=g; }
   }
 }
@@ -434,7 +448,7 @@ function saveSession(){
 function fmtT(t){ return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'); }
 function valid(){ return cracks.filter(c=>!c.fp); }
 function renderLog(){
-  $('log').innerHTML=cracks.map((c,i)=>'<div class="lr'+(c.fp?' fpr':'')+'" data-id="'+c.id+'"><span><input type="checkbox" '+(c.fp?'checked':'')+' onchange="fpCrack('+c.id+',this.checked)" style="width:16px;height:16px;accent-color:var(--warn);vertical-align:-3px"> #'+(i+1)+' &nbsp; '+fmtT(c.t)+(c.auto?' <b style="color:var(--warn);font-size:10px">AUTO</b>':'')+'</span><span>'+(c.f?((c.f/1000).toFixed(1)+'k · '):'')+'gain <b>'+c.g+'</b></span></div>').reverse().join('');
+  $('log').innerHTML=cracks.map((c,i)=>'<div class="lr'+(c.fp?' fpr':'')+'" data-id="'+c.id+'"><span><input type="checkbox" '+(c.fp?'checked':'')+' onchange="fpCrack('+c.id+',this.checked)" style="width:16px;height:16px;accent-color:var(--warn);vertical-align:-3px"> #'+(i+1)+' &nbsp; '+fmtT(c.t)+(c.auto?' <b style="color:var(--warn);font-size:10px">'+(c.why==='voice'?'VOICE':'AUTO')+'</b>':'')+'</span><span>'+(c.f?((c.f/1000).toFixed(1)+'k · '):'')+'gain <b>'+c.g+'</b></span></div>').reverse().join('');
 }
 function fpCrack(id,ck){ const c=cracks.find(c=>c.id===id); if(c){ c.fp=ck; refreshStats(); } }
 function delCrack(id){ const i=cracks.findIndex(c=>c.id===id); if(i>=0){ cracks.splice(i,1); refreshStats(); } }
@@ -455,7 +469,7 @@ const INFO={
  hp:['High-pass','Everything below this frequency is cut before detection: drum rumble, fan, motor hum. Raise it until the background floor stops riding the roar; lower it if real cracks arrive thin. The raw WAV is recorded before this filter, so recordings are never affected.'],
  bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.'],
  tl:['Session timeline, the whole story','Gold bars: cracks per bin. Thick green: the smoothed crack rate, the bell. White lines: mean and &plusmn;1 SD. The window centers the crack activity and snaps to standard sizes (top-right badge).<br><br>The gain stages ride the bell:<br>&bull; <b>A0</b> · the literal first crack (confirmed by followers, a lone pop cannot claim it)<br>&bull; <b>A1</b> · sustained rise past 30% of peak<br>&bull; <b>B0</b> · 70% on the way up<br>&bull; <b>B1</b> · the crown (appears once the fall is real)<br>&bull; <b>C0</b> · fallen through 70% (appears after 12s of quiet)<br>&bull; <b>C1</b> · the definite last crack (only after real silence; a fresh crack is never C1)<br><br>Right-side markers settle as the data does; thresholds are provisional until labeled sessions calibrate them.'],
- cap:['Session capture, the whole story','While listening, BeanSpeak keeps three things: the raw microphone audio as WAV (tapped BEFORE the high-pass, ~5.5 MB per minute), a per-frame CSV (time, loudness, floor, ratio, your slider settings, every crack), and your crack log edits: ticked rows travel as labeled false positives, swiped rows are removed. Fill the roast record (coffee, batch, Agtron) after Stop and it rides inside the CSV header; the Agtron ground value is also what unlocks the color gauge for that coffee. Save session packs WAV + CSV into one zip. Everything lives only in this page’s memory: close or reload without saving and the session is gone.']
+ cap:['Session capture, the whole story','While listening, the app keeps three things: the raw microphone audio as WAV (tapped BEFORE the high-pass, ~5.5 MB per minute), a per-frame CSV (time, loudness, floor, ratio, your slider settings, every crack), and your crack log edits: ticked rows travel as labeled false positives, swiped rows are removed. Fill the roast record (coffee, batch, Agtron) after Stop and it rides inside the CSV header; the Agtron ground value is also what unlocks the color gauge for that coffee. Save session packs WAV + CSV into one zip. Everything lives only in this page’s memory: close or reload without saving and the session is gone.']
 };
 function showInfo(k){ const d=INFO[k]; $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">'+d[0]+'</h1><div class="hint" style="font-size:13px;margin:0">'+d[1]+'</div><button style="margin-top:14px;background:var(--accent2)" onclick="document.getElementById(\'modal\').style.display=\'none\'">Close</button>'; $('modal').style.display='flex'; }
 
@@ -492,7 +506,7 @@ cName.oninput=()=>{ localStorage.setItem('bsCoffee',cName.value); updateGauge();
 function calMap(){ try{ return JSON.parse(localStorage.getItem('bsCal')||'{}'); }catch(e){ return {}; } }
 function calFor(){ const k=(cName.value||'').trim().toLowerCase(); return k?calMap()[k]:null; }
 // confirmed A0: first crack that is followed by >=2 more within 25s (a lone clank cannot own the anchor)
-function effA0(v){ for(let i=0;i<v.length-2;i++){ if(v[i+2].t-v[i].t<=25) return v[i].t; } return v.length?v[0].t:0; }
+function effA0(v){ for(let i=0;i<v.length-2;i++){ if(v[i+2].t-v[i].t<=30) return v[i].t; } return v.length?v[0].t:0; }   // 30s follower window: Ömer's field data, fast roasts 5-10s, slow 20-30s
 // learned seconds-per-Agtron slope: least squares over a coffee's mapped history, else pooled house, else 4
 function fitSlope(hist){ if(!hist||hist.length<2) return null;
   const xs=hist.map(h=>h.agtron), ys=hist.map(h=>h.devSpan);
@@ -659,7 +673,7 @@ function makeBatchCard(){
   for(let i=0;i<nb;i++){ const px=gx+((i+0.5)/nb)*gw, py=gy+gh-(sm[i]/peak)*(gh-40); i?x.lineTo(px,py):x.moveTo(px,py); }
   x.stroke();
   x.font='700 26px -apple-system,Helvetica,sans-serif'; x.fillStyle='#000';
-  x.fillText('BU PARTİNİN ÇATLAMA EĞRİSİ · beanspeak.coffee', L, H-64);
+  x.fillText('BU PARTİNİN ÇATLAMA EĞRİSİ · guide.coffeenutz.net', L, H-64);
   c.toBlob(blob=>{ dl(blob,'batch-'+(cName.value||'coffee').replace(/\s+/g,'_')+'-'+new Date().toISOString().slice(0,10)+'.png'); },'image/png');
 }
 // ---- load a saved session back in (.zip from this app, store-method, or bare .csv) ----
