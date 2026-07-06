@@ -65,7 +65,7 @@ button{font-family:inherit;border:none;border-radius:11px;font-size:16px;font-we
 .floor{position:absolute;top:0;bottom:0;width:2px;background:var(--gold)}
 canvas{width:100%;height:150px;display:block;border-radius:8px;background:var(--panel2);margin-top:6px}
 #cv{height:88px}
-#tl{height:180px}
+#tl{height:180px;background:#15100b;border:1px solid var(--line)}
 .ctl{display:flex;align-items:center;gap:10px;margin-top:12px}
 .ctl label{font-size:12px;color:var(--muted);width:96px}
 input[type=range]{flex:1;accent-color:var(--accent)}
@@ -118,7 +118,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag">v2026-07-07a</span>
+        <span class="vtag">v2026-07-07b</span>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
     </div>
@@ -137,7 +137,15 @@ body.st-setup #btn{display:none}
 
   <div class="card" id="cGauge" style="text-align:center">
     <div class="lbl">projected color · Agtron scale</div>
-    <input type="text" id="coffeeName" placeholder="Coffee (mapping key)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin:8px 0;text-align:center">
+    <div id="npWrap" style="margin:10px 0 8px;cursor:pointer" onclick="editName()">
+      <span id="npName" style="font-size:21px;font-weight:800;color:var(--ink)">name the coffee</span> <span style="color:var(--accent);font-size:13px">&#9998;</span>
+      <div id="npUnder" style="width:64px;height:2px;background:var(--accent);margin:7px auto 4px"></div>
+      <div class="lbl" style="font-size:10px">this bean's map · tap to edit</div>
+    </div>
+    <div id="nameEdit" style="display:none;text-align:left;margin:10px 0 8px">
+      <div class="lbl" style="margin-bottom:5px">coffee · mapping key</div>
+      <input type="text" id="coffeeName" placeholder="chirripó yıkanmış" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:16px;background:#15100b;color:var(--ink)">
+    </div>
     <div id="agWrap" style="position:relative;display:flex;justify-content:center">
       <div id="ag" style="display:flex;justify-content:center"></div>
       <button class="micBtn" onclick="toggle()" aria-label="Start listening"><svg viewBox="0 0 60 60" width="32" height="32" aria-hidden="true"><rect x="24" y="14" width="12" height="21" rx="6" fill="#fff"/><path d="M19 30 a11 11 0 0 0 22 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="41" x2="30" y2="47" stroke="#fff" stroke-width="3"/><line x1="23" y1="47" x2="37" y2="47" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg></button>
@@ -185,6 +193,7 @@ body.st-setup #btn{display:none}
     <div class="hint" id="recInfo">Everything is kept for the whole session; save after Stop. Keep the screen on.</div>
     <div id="metaBox" style="display:none;margin-top:10px">
       <div class="lbl" style="margin-bottom:6px">roast record (travels inside the CSV)</div>
+      <div class="hint" id="finalCall" style="margin-bottom:8px;color:var(--gold)"></div>
       <input type="text" id="mCoffee" placeholder="Coffee" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin-bottom:6px">
       <div style="display:flex;gap:6px;margin-bottom:6px">
         <input type="text" id="mBatch" placeholder="Batch g" inputmode="numeric" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
@@ -254,7 +263,7 @@ body.st-setup #btn{display:none}
 let AC=null, stream=null, src=null, hpF=null, lpF=null, analyser=null, buf=null, running=false, raf=null;
 let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
-let cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, PASTPEAK=false;
+let cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false;
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
 const $=id=>document.getElementById(id);
@@ -298,7 +307,7 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('mapBtn').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; PASTPEAK=false; renderSamples(); renderSampChips(); $('sampN').style.display='none';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; PASTPEAK=false; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -315,6 +324,8 @@ function stop(){
   if(AC) AC.close();
   if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
   $('recAudio').disabled=false;
+  STOPPROJ=LASTPROJ;   // freeze what the gauge said at the moment of drop, before retrospective recompute
+  $('finalCall').textContent=STOPPROJ?('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.'):'';
   if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value; }
   renderSamples(); updateGauge();
   const mb=(wav.len*2/1048576).toFixed(1);
@@ -425,7 +436,7 @@ function csvText(){
   let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n'+SAMPLES.map((s,i)=>'# sample,'+(i+1)+','+s.t.toFixed(1)+','+(s.ag||'')+'\n').join('');
   s+='t_s,rms,gain,bg_gain,ratio,trigger_x,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
   const vv=valid(), fss=vv.filter(c=>c.f).map(c=>c.f);
-  if(vv.length>1) s+='\n# stats,total_gain,'+vv.reduce((a,c)=>a+c.g,0)+',time_sd,'+sd(vv.map(c=>c.t)).toFixed(2)+',gain_sd,'+sd(vv.map(c=>c.g)).toFixed(2)+(fss.length>1?',f_mean,'+Math.round(fss.reduce((a,b)=>a+b,0)/fss.length)+',f_sd,'+Math.round(sd(fss)):'')+(LASTPROJ?',proj_final,'+LASTPROJ:'');
+  if(vv.length>1) s+='\n# stats,total_gain,'+vv.reduce((a,c)=>a+c.g,0)+',time_sd,'+sd(vv.map(c=>c.t)).toFixed(2)+',gain_sd,'+sd(vv.map(c=>c.g)).toFixed(2)+(fss.length>1?',f_mean,'+Math.round(fss.reduce((a,b)=>a+b,0)/fss.length)+',f_sd,'+Math.round(sd(fss)):'')+(LASTPROJ?',proj_final,'+LASTPROJ:'')+(STOPPROJ?',proj_stop,'+STOPPROJ:'');
   s+='\n# cracks: n,t_s,gain,fp,f_hz,w_ms,hf\n'+cracks.map((c,i)=>'# '+(i+1)+','+c.t.toFixed(2)+','+c.g+','+(c.fp?1:0)+','+(c.f||'')+','+(c.w||'')+','+(c.hf!=null?c.hf:'')).join('\n');
   return s;
 }
@@ -506,7 +517,7 @@ const INFO={
  sens:['Trigger threshold','A crack counts only when a 1 ms burst is this many times louder than the rolling background floor. LOWER catches more (more sensitive, more noise too); HIGHER is stricter. Start low (3-5) by the machine and raise only until scoop taps and clanks stop registering.'],
  hp:['High-pass','Everything below this frequency is cut before detection: drum rumble, fan, motor hum. Raise it until the background floor stops riding the roar; lower it if real cracks arrive thin. The raw WAV is recorded before this filter, so recordings are never affected.'],
  bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.'],
- tl:['Session timeline, the whole story','Gold bars: cracks per bin. Thick green: the smoothed crack rate, the bell. White lines: mean and &plusmn;1 SD. The window centers the crack activity and snaps to standard sizes (top-right badge).<br><br>The gain stages ride the bell:<br>&bull; <b>A0</b> · the literal first crack (confirmed by followers, a lone pop cannot claim it)<br>&bull; <b>A1</b> · sustained rise past 30% of peak<br>&bull; <b>B0</b> · 70% on the way up<br>&bull; <b>B1</b> · the crown (appears once the fall is real)<br>&bull; <b>C0</b> · fallen through 70% (appears after 12s of quiet)<br>&bull; <b>C1</b> · the definite last crack (only after real silence; a fresh crack is never C1)<br><br>Right-side markers settle as the data does; thresholds are provisional until labeled sessions calibrate them.'],
+ tl:['Session timeline, the whole story','Gold ticks on the floor: every valid crack. Thick green with the soft fill: the smoothed crack rate, the bell. Grey dashed: the GHOST of your mapped reference roast, raced live, with the lap chip telling you how far ahead or behind you are. The gold floor edge is DEV progress from A0. The window centers the crack activity and snaps to standard sizes (top-right badge).<br><br>The gain stages ride the bell:<br>&bull; <b>A0</b> · the literal first crack (confirmed by followers, a lone pop cannot claim it)<br>&bull; <b>A1</b> · sustained rise past 30% of peak<br>&bull; <b>B0</b> · 70% on the way up<br>&bull; <b>B1</b> · the crown (appears once the fall is real)<br>&bull; <b>C0</b> · fallen through 70% (appears after 12s of quiet)<br>&bull; <b>C1</b> · the definite last crack (only after real silence; a fresh crack is never C1)<br><br>Right-side markers settle as the data does; thresholds are provisional until labeled sessions calibrate them.'],
  cap:['Session capture, the whole story','While listening, the app keeps three things: the raw microphone audio as WAV (tapped BEFORE the high-pass, ~5.5 MB per minute), a per-frame CSV (time, loudness, floor, ratio, your slider settings, every crack), and your crack log edits: ticked rows travel as labeled false positives, swiped rows are removed. Fill the roast record (coffee, batch, Agtron) after Stop and it rides inside the CSV header; the Agtron ground value is also what unlocks the color gauge for that coffee. Save session packs WAV + CSV into one zip. Everything lives only in this page’s memory: close or reload without saving and the session is gone.']
 };
 function showInfo(k){ const d=INFO[k]; $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">'+d[0]+'</h1><div class="hint" style="font-size:13px;margin:0">'+d[1]+'</div><button style="margin-top:14px;background:var(--accent2)" onclick="document.getElementById(\'modal\').style.display=\'none\'">Close</button>'; $('modal').style.display='flex'; }
@@ -589,6 +600,15 @@ function updateSD(){
 const SEC_PER_AG=4, FC_AG=125, AG_TOL=2, AG_MIN=40, AG_MAX=130;
 const cName=$('coffeeName'); cName.value=localStorage.getItem('bsCoffee')||'';
 cName.oninput=()=>{ localStorage.setItem('bsCoffee',cName.value); updateGauge(); };
+// nameplate: the bean's name is an instrument headline, not a form field. Tap to edit, Guide-style well while editing.
+function renderNameplate(){ const nv=(cName.value||'').trim(), n=$('npName');
+  n.textContent=nv||'name the coffee'; n.style.color=nv?'var(--ink)':'var(--muted)';
+  $('npUnder').style.background=nv?'var(--accent)':'var(--line)'; }
+function editName(){ $('npWrap').style.display='none'; $('nameEdit').style.display='block'; cName.focus(); }
+function closeName(){ $('nameEdit').style.display='none'; $('npWrap').style.display='block'; renderNameplate(); }
+cName.addEventListener('blur',closeName);
+cName.addEventListener('keydown',e=>{ if(e.key==='Enter') cName.blur(); });
+renderNameplate();
 function calMap(){ try{ return JSON.parse(localStorage.getItem('bsCal')||'{}'); }catch(e){ return {}; } }
 function calFor(){ const k=(cName.value||'').trim().toLowerCase(); return k?calMap()[k]:null; }
 // confirmed A0: first crack that is followed by >=2 more within 30s (a lone clank cannot own the anchor)
@@ -630,6 +650,11 @@ function saveCalIfMapped(verbose){
   entry.hist=entry.hist.concat([{devSpan:entry.devSpan, agtron:ag, tg, q25, date:entry.date}]).slice(-8);
   const anch=SAMPLES.filter(s=>s.ag&&s.t>a0).map(s=>({dt:+(s.t-a0).toFixed(1), ag:s.ag})).sort((x,y)=>x.dt-y.dt);
   if(anch.length) entry.anchors=anch;   // SampleInRoast: measured color at known dev moments
+  // ghost bell: this roast's smoothed shape over its DEV span, normalized, for racing next time
+  const BP=48, bshape=new Array(BP).fill(0);
+  for(const c of v){ const rel=(c.t-a0)/(entry.devSpan||1); if(rel>=0&&rel<=1) bshape[Math.min(BP-1,Math.floor(rel*BP))]++; }
+  const sm2=bshape.map((_,i)=>{ let s2=0,w2=0; for(let j=0;j<BP;j++){ const g2=Math.exp(-0.5*((j-i)/2)*((j-i)/2)); s2+=bshape[j]*g2; w2+=g2; } return s2/w2; });
+  const pk2=Math.max(...sm2)||1; entry.bell=sm2.map(x2=>+(x2/pk2).toFixed(3));
   m[k]=entry; m['__house']=entry;   // every map also becomes the house default: unmapped beans borrow it
   localStorage.setItem('bsCal',JSON.stringify(m));
   toast('Color map saved for "'+k+'" ('+entry.hist.length+' roast'+(entry.hist.length>1?'s':'')+' in its history).');
@@ -788,8 +813,8 @@ async function loadSession(file){
   for(const m of text.matchAll(/# (\d+),([\d.]+),(\d+)(?:,(\d))?(?:,(\d*))?(?:,(\d*))?(?:,([\d.]*))?/g)) cracks.push({t:+m[2], g:+m[3], id:++crackSeq, fp:m[4]==='1', f:m[5]?+m[5]:undefined, w:m[6]?+m[6]:undefined, hf:m[7]?+m[7]:undefined});
   SAMPLES=[]; for(const m of text.matchAll(/# sample,\d+,([\d.]+),([\d.]*)/g)) SAMPLES.push({t:+m[1], ag:m[2]?+m[2]:null});
   if(!cracks.length){ toast('No cracks in that session.'); return; }
-  LASTPROJ=null; wav={chunks:[],len:0,sr:48000}; rows=[];
-  if(meta.coffee){ cName.value=meta.coffee; localStorage.setItem('bsCoffee',meta.coffee); loadBadge(); }
+  LASTPROJ=null; STOPPROJ=null; $('finalCall').textContent=''; wav={chunks:[],len:0,sr:48000}; rows=[];
+  if(meta.coffee){ cName.value=meta.coffee; localStorage.setItem('bsCoffee',meta.coffee); loadBadge(); renderNameplate(); }
   $('mCoffee').value=meta.coffee||''; $('mBatch').value=meta.batch_g||''; $('mAgW').value=meta.agtron_whole||''; $('mAgG').value=meta.agtron_ground||''; $('mNote').value=meta.note||'';
   $('mAgWSd').value=meta.agtron_whole_sd||''; $('mAgSd').value=meta.agtron_ground_sd||''; $('mProc').value=meta.process||''; $('mChgFc').value=meta.charge_to_fc||''; $('mDrop').value=meta.drop_after_last_s||'';
   $('metaBox').style.display='block'; $('mapBtn').style.display='block';
@@ -858,20 +883,25 @@ function drawTimeline(){
   const mid=(first+last)/2;
   const t0=Math.max(0, mid-span/2);
   const X=t=>((t-t0)/span)*W;
-  // grid + time labels, step scaled to the window
+  // dotted grid + time labels, step scaled to the window
   const stepG=span<=60?10:(span<=180?30:60);
-  tx.strokeStyle='#2a221b'; tx.lineWidth=1; tx.fillStyle='#8a7a68'; tx.font='16px sans-serif';
+  tx.strokeStyle='#2a221b'; tx.lineWidth=1; tx.fillStyle='#8a7a68'; tx.font='15px sans-serif';
+  tx.setLineDash([2,5]);
   for(let t=Math.ceil(t0/stepG)*stepG; t<=t0+span; t+=stepG){
     const x=X(t); tx.beginPath(); tx.moveTo(x,0); tx.lineTo(x,H); tx.stroke();
     tx.fillText(fmtT(t), x+3, H-4);
   }
-  // scale badge
-  tx.fillStyle='#8a7a68'; tx.font='bold 15px -apple-system,sans-serif'; tx.textAlign='right';
+  tx.setLineDash([]);
+  // corner readouts: mono clock left, window badge right
+  const nowT=running?(performance.now()-startT)/1000:v[v.length-1].t;
+  const a0c=effA0(v);
+  tx.fillStyle='#8a7a68'; tx.font='13px ui-monospace,Menlo,monospace';
+  tx.fillText(fmtT(nowT)+(nowT>a0c?' · DEV '+fmtT(nowT-a0c):''), 12, 20);
+  tx.font='bold 15px -apple-system,sans-serif'; tx.textAlign='right';
   tx.fillText('window '+fmtT(span), W-8, 20); tx.textAlign='start'; tx.font='16px sans-serif';
   // histogram: share of cracks per bin
   const bin=+(($('bin')&&$('bin').value)||1), nb=Math.max(1,Math.ceil(span/bin)), counts=new Array(nb).fill(0);
   for(const c of v){ counts[Math.min(nb-1,Math.max(0,Math.floor((c.t-t0)/bin)))]++; }
-  const bw=Math.max(1,(bin/span)*W-1);
   // smoothed crack rate (gaussian kernel): THE BELL. Smoothing scales with the window in TIME,
   // so a 30s dev keeps its texture and a 5min dev stays calm.
   const sig=Math.max(1.2, Math.max(3, span/40)/bin), sm=new Array(nb).fill(0);
@@ -879,15 +909,38 @@ function drawTimeline(){
   let peakI=0; for(let i=1;i<nb;i++) if(sm[i]>sm[peakI]) peakI=i;
   const peak=sm[peakI]||1, yScale=(H-34)/(peak*1.15);
   const Y=val=>H-6-val*yScale;
-  // bars (soft, behind the bell)
-  const maxC=Math.max(...counts)||1;
-  tx.fillStyle='rgba(230,193,75,0.55)';
-  counts.forEach((n,i)=>{ if(!n) return; const h=(n/maxC)*(H-34); tx.fillRect(X(t0+i*bin), H-6-h, bw, h); });
-  // mean (solid) and mean +/- 1 SD (dashed) of crack times
-  if(v.length>1){
-    const ts=v.map(c=>c.t), m=ts.reduce((a,b)=>a+b,0)/ts.length, s1=sd(ts);
-    const mark=(t,dash)=>{ if(t<t0||t>t0+span) return; const x=X(t); tx.setLineDash(dash); tx.strokeStyle='rgba(243,237,228,0.5)'; tx.lineWidth=1.3; tx.beginPath(); tx.moveTo(x,0); tx.lineTo(x,H); tx.stroke(); tx.setLineDash([]); };
-    mark(m,[]); mark(m-s1,[5,4]); mark(m+s1,[5,4]);
+  // baseline crack ticks: each valid crack is a gold tick on the floor (bars retired with the bezel look)
+  tx.fillStyle='rgba(230,193,75,0.85)';
+  for(const c of v){ if(c.t<t0||c.t>t0+span) continue; tx.fillRect(X(c.t)-1,H-22,2,8); }
+  // DEV progress edge along the floor: copper-gold from A0 to now
+  tx.strokeStyle='#3a2f26'; tx.lineWidth=3; tx.lineCap='round';
+  tx.beginPath(); tx.moveTo(4,H-2); tx.lineTo(W-4,H-2); tx.stroke();
+  if(nowT>a0c){ tx.strokeStyle='#e6c14b'; tx.beginPath(); tx.moveTo(Math.max(4,X(a0c)),H-2); tx.lineTo(Math.min(W-4,X(Math.min(nowT,t0+span))),H-2); tx.stroke(); }
+  // area fill under the bell
+  tx.fillStyle='rgba(60,122,90,0.16)'; tx.beginPath();
+  for(let i=0;i<nb;i++){ const x=X(t0+(i+0.5)*bin), y=Y(sm[i]); i?tx.lineTo(x,y):tx.moveTo(x,y); }
+  tx.lineTo(X(t0+(nb-0.5)*bin),H-6); tx.lineTo(X(t0+0.5*bin),H-6); tx.closePath(); tx.fill();
+  // GHOST REFERENCE: the mapped roast's bell shape, raced live (dashed, muted)
+  const calT=calFor()||calMap()['__house'];
+  if(calT&&calT.bell&&calT.devSpan){
+    const gx0=X(a0c), gx1=X(a0c+calT.devSpan), gn=calT.bell.length;
+    if(gx1>4&&gx0<W-4){
+      tx.strokeStyle='rgba(168,153,138,0.55)'; tx.lineWidth=3; tx.setLineDash([7,6]); tx.beginPath();
+      calT.bell.forEach((gv,i)=>{ const x=gx0+(i/(gn-1))*(gx1-gx0), y=Y(gv*peak*0.92); i?tx.lineTo(x,y):tx.moveTo(x,y); });
+      tx.stroke(); tx.setLineDash([]);
+    }
+    // lap delta chip: time to 25% of ref gain vs the ref's own
+    if(calT.tg&&calT.q25){ let cum2=0,tq2=null;
+      for(const c of v){ cum2+=c.g; if(cum2>=calT.tg*0.25){ tq2=c.t-a0c; break; } }
+      if(tq2&&tq2>2){ const dd=Math.round(tq2-calT.q25);
+        const txt=Math.abs(dd)<2?'with ref':(dd<0?(-dd)+'s ahead of ref':dd+'s behind ref');
+        tx.font='bold 13px -apple-system,sans-serif';
+        const tw=tx.measureText(txt).width+22, bx=W-8-tw;
+        tx.fillStyle='#241c16'; tx.strokeStyle=dd<=0?'#3c7a5a':'#c98a3c'; tx.lineWidth=1.5;
+        tx.beginPath(); tx.roundRect?tx.roundRect(bx,28,tw,22,11):tx.rect(bx,28,tw,22); tx.fill(); tx.stroke();
+        tx.fillStyle='#f3ede4'; tx.textAlign='center'; tx.fillText(txt,bx+tw/2,43); tx.textAlign='start';
+      }
+    }
   }
   // tryer sample marks: copper dashed drops, editable via the chips / the list
   SAMPLES.forEach((s,i)=>{ if(s.t<t0||s.t>t0+span) return; const x=X(s.t);
@@ -917,16 +970,19 @@ function drawTimeline(){
     if(quiet>12){ stages.push(['C0',susDn(0.70)]); stages.push(['C1',v[v.length-1].t]); }
     // hard monotonic clamp: the sequence A0<=A1<=B0<=B1<=C0<=C1 is a law, not a suggestion
     for(let i=1;i<stages.length;i++) if(stages[i][1]<stages[i-1][1]) stages[i][1]=stages[i-1][1];
-    tx.font='bold 19px -apple-system,sans-serif'; tx.textAlign='center';
+    // stage pins: copper dot on the bell, stem, bordered chip (Guide chip language). Staggered when crowded.
+    tx.textAlign='center'; tx.font='bold 12px -apple-system,sans-serif';
     let prevX=-999, level=0;
     for(const [name,st] of stages){
       const bi=Math.min(nb-1,Math.max(0,Math.floor((st-t0)/bin)));
       const x=X(st), y=Y(sm[bi]);
-      level=(x-prevX<38)?(level+1)%3:0; prevX=x;
-      const ly=Math.max(18,y-12-level*20);
-      tx.fillStyle='#c98a3c'; tx.beginPath(); tx.arc(x,y,6,0,7); tx.fill();
-      tx.lineWidth=4; tx.strokeStyle='#241c16'; tx.strokeText(name,x,ly);
-      tx.fillStyle='#f3ede4'; tx.fillText(name,x,ly);
+      level=(x-prevX<42)?(level+1)%3:0; prevX=x;
+      const cy2=Math.max(12,y-24-level*22);
+      tx.fillStyle='#c98a3c'; tx.beginPath(); tx.arc(x,y,5,0,7); tx.fill();
+      tx.strokeStyle='#c98a3c'; tx.lineWidth=1.5; tx.beginPath(); tx.moveTo(x,y-6); tx.lineTo(x,cy2+9); tx.stroke();
+      tx.fillStyle='#241c16'; tx.strokeStyle='#c98a3c'; tx.lineWidth=1.2; tx.beginPath();
+      tx.roundRect?tx.roundRect(x-16,cy2-9,32,18,9):tx.rect(x-16,cy2-9,32,18); tx.fill(); tx.stroke();
+      tx.fillStyle='#f3ede4'; tx.fillText(name,x,cy2+4.5);
     }
     tx.textAlign='start';
   }
