@@ -85,7 +85,7 @@ textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px
 
 <div id="app" style="display:none">
   <h1>Council</h1>
-  <div style="display:flex;align-items:center;gap:10px;margin:2px 0 8px"><button onclick="hardRefresh()" style="font-size:12px;font-weight:700;color:var(--accent);background:none;border:1px solid var(--line);border-radius:8px;padding:5px 11px;cursor:pointer">Refresh</button><span style="font-size:12px;color:var(--mut)">v2026-07-05d</span></div>
+  <div style="display:flex;align-items:center;gap:10px;margin:2px 0 8px"><button onclick="hardRefresh()" style="font-size:12px;font-weight:700;color:var(--accent);background:none;border:1px solid var(--line);border-radius:8px;padding:5px 11px;cursor:pointer">Refresh</button><span style="font-size:12px;color:var(--mut)">v2026-07-05e</span></div>
   <div class="sub"><span>Answerable in one tap. Live from the Council Log.</span><button class="linkish" onclick="logout()">key ⏏</button></div>
   <div class="seg" id="seg">
     <button data-f="wait">Needs me</button>
@@ -100,7 +100,7 @@ textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px
 
 <script>
 const FN='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/council-proxy';
-const COL={ SUBJ:7495167122737028, ROLE:6369267215894404,
+const COL={ SUBJ:7495167122737028, ROLE:6369267215894404, NOTE:2996276188809092,
   CT:[2710092518655876,6070259645810564,3818459832125316,8322059459495812,1003710065018756],
   OT:[3029776061302660,4944359738967940,2692559925282692,7196159552653188] };
 let DATA=[], FILTER=localStorage.getItem('ccFilter')||'wait', BUSY=false, KEY=localStorage.getItem('ccKey')||'';
@@ -112,6 +112,12 @@ function showGate(msg){ $('gate').style.display='block'; $('app').style.display=
 function saveKey(){ KEY=$('keyIn').value.trim(); if(!KEY) return; localStorage.setItem('ccKey',KEY); boot(); }
 function logout(){ localStorage.removeItem('ccKey'); KEY=''; showGate(); }
 function hardRefresh(){ try{ const base=location.href.split('?')[0]; location.href=base+'?v='+Date.now(); }catch(e){ location.reload(); } }
+let PENDING_NOTE='';
+function maybeShowNote(note){ if(!note) return; if(localStorage.getItem('ccNoteSeen')===note) return; showNotePopup(note); }
+function showNotePopup(note){ PENDING_NOTE=note; const m=document.createElement('div'); m.id='noteModal'; m.style.cssText='position:fixed;inset:0;background:rgba(40,25,10,.55);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px'; m.innerHTML='<div style="background:#fff;border-radius:14px;max-width:440px;width:100%;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.3)"><div style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Claude · from your lessons</div><div style="font-size:14px;line-height:1.55;color:var(--ink);white-space:pre-wrap">'+esc(note)+'</div><button style="margin-top:16px;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px;width:100%;font-weight:700;cursor:pointer" onclick="closeNote()">Got it</button></div>'; document.body.appendChild(m); }
+function closeNote(){ localStorage.setItem('ccNoteSeen',PENDING_NOTE); const m=$('noteModal'); if(m) m.remove(); }
+function addLesson(n){ const t=prompt('Lessons learned — what actually happened after this decision? (real-life consequence)'); if(!t||!t.trim()) return; const q=findQ(n), s=lastSession(q.main)||1, idx=Math.min(s,4)-1; submitLesson(n, idx, t.trim()); }
+async function submitLesson(n, idx, text){ if(BUSY) return; const q=findQ(n); BUSY=true; toast('Saving the lesson...'); try{ const col=COL.OT[idx], existing=q.main[col]; const val=(existing?existing+' | ':'')+'[lesson-learned '+new Date().toISOString().slice(0,10)+'] '+text; await api('/rows',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify([{id:q.main._rowId,cells:[{columnId:col,value:val}]}])}); q.main[col]=val; toast('Lesson saved. Claude reads it at the next checkpoint.'); }catch(e){ toast('Save failed: '+e.message); } BUSY=false; }
 
 async function api(path,opts={}){
   const r=await fetch(FN+path,Object.assign({},opts,{headers:Object.assign({'x-cc-key':KEY},opts.headers||{})}));
@@ -137,6 +143,7 @@ async function boot(){
     }
     DATA=Object.values(qs).filter(q=>q.main).sort((a,b)=>b.n-a.n);
     render();
+    let cNote=''; for(const row of (d.rows||[])){ const o=cellMap(row); if(o[COL.NOTE]) cNote=o[COL.NOTE]; } maybeShowNote(cNote);
   }catch(e){ if(e.message!=='unauthorized') $('list').innerHTML='<div class="err">Could not reach the relay: '+esc(e.message)+'</div>'; }
 }
 
@@ -183,6 +190,7 @@ function card(q){
       h+='</div>';
     }
   }
+  h+='<div class="btnrow" style="margin-top:6px"><button class="btn" style="background:#efe6d8;color:#5a4a38;font-size:13px" onclick="addLesson('+q.n+')">&#9998; Lessons learned</button></div>';
   if(st.k==='wait'){
     h+='<div class="btnrow"><button class="btn btn-a" onclick="quick('+q.n+',\'A\')">Side A</button><button class="btn btn-b" onclick="quick('+q.n+',\'B\')">Side B</button><button class="btn btn-c" onclick="openBox('+q.n+',\'\')">Third way</button></div>';
     h+='<div id="box'+q.n+'" style="display:none"><textarea id="txt'+q.n+'" placeholder="Your take, one line is enough..."></textarea>'+
