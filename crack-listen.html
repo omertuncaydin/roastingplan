@@ -98,7 +98,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag">v2026-07-06b</span>
+        <span class="vtag">v2026-07-06c</span>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
     </div>
@@ -141,10 +141,13 @@ body.st-setup #btn{display:none}
     <canvas id="tl" width="900" height="180"></canvas>
     <div class="ctl"><label>Bin <span class="info" onclick="showInfo('bin')">&#9432;</span></label><button class="pm" onclick="nudge('bin',-1)">&minus;</button><input type="range" id="bin" min="1" max="10" step="1" value="4" oninput="document.getElementById('binV').textContent=this.value+' s';drawTimeline()"><button class="pm" onclick="nudge('bin',1)">+</button><span class="v" id="binV">4 s</span></div>
     <div class="row" style="margin-top:10px">
-      <div class="card"><div class="lbl">total gain</div><div class="n" id="cum">0</div><canvas id="tgArc" width="280" height="40" style="width:100%;height:20px;display:none;margin:6px 0 0;background:none"></canvas><div class="hint" id="tgRef" style="margin-top:2px;font-size:11px"></div></div>
-      <div class="card"><div class="lbl">time SD s</div><div class="n" id="sdT">-</div></div>
-      <div class="card"><div class="lbl">gain SD</div><div class="n" id="sdG">-</div></div>
-      <div class="card"><div class="lbl">pitch Hz</div><div class="n" id="fMean">-</div><div class="hint" id="fSd" style="margin-top:2px;font-size:11px"></div></div>
+      <div class="card"><div class="lbl">total gain <span class="info" onclick="showInfo('tg')">&#9432;</span></div><canvas id="tgArc" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas><div class="hint" id="tgRef" style="margin-top:2px;font-size:11px"></div></div>
+      <div class="card"><div class="lbl">pace <span class="info" onclick="showInfo('pace')">&#9432;</span></div><canvas id="paceG" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas><div class="hint" style="margin-top:2px;font-size:11px">vs reference</div></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="card"><div class="lbl">evenness <span class="info" onclick="showInfo('even')">&#9432;</span></div><canvas id="evenG" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas></div>
+      <div class="card"><div class="lbl">brightness <span class="info" onclick="showInfo('bri')">&#9432;</span></div><div class="n" id="fMean">-</div><div class="hint" id="fSd" style="margin-top:2px;font-size:11px"></div></div>
+      <div class="card"><div class="lbl">time SD s <span class="info" onclick="showInfo('tsd')">&#9432;</span></div><div class="n" id="sdT">-</div></div>
     </div>
   </div>
 
@@ -196,10 +199,10 @@ body.st-setup #btn{display:none}
   </div>
 
   <div class="row" id="cStats" style="margin-top:12px">
-    <div class="card"><div class="lbl">counted cracks</div><div class="n" id="cnt">0</div></div>
-    <div class="card"><div class="lbl">rate /min</div><div class="n" id="rate">0</div></div>
-    <div class="card"><div class="lbl">last gain</div><div class="n" id="last">0</div></div>
-    <div class="card"><div class="lbl">peak gain</div><div class="n" id="peak">0</div></div>
+    <div class="card"><div class="lbl">counted cracks <span class="info" onclick="showInfo('cnt')">&#9432;</span></div><div class="n" id="cnt">0</div></div>
+    <div class="card"><div class="lbl">rate /min <span class="info" onclick="showInfo('rateI')">&#9432;</span></div><div class="n" id="rate">0</div></div>
+    <div class="card"><div class="lbl">last gain <span class="info" onclick="showInfo('lastg')">&#9432;</span></div><div class="n" id="last">0</div></div>
+    <div class="card"><div class="lbl">peak gain <span class="info" onclick="showInfo('peakg')">&#9432;</span></div><div class="n" id="peak">0</div></div>
   </div>
 
   <details class="fold" id="cTune" style="margin-top:12px">
@@ -210,6 +213,7 @@ body.st-setup #btn{display:none}
     <div class="ctl"><label>Trigger &times; <span class="info" onclick="showInfo('sens')">&#9432;</span></label><button class="pm" onclick="nudge('sens',-1)">&minus;</button><input type="range" id="sens" min="2" max="30" step="0.5" value="5"><button class="pm" onclick="nudge('sens',1)">+</button><span class="v" id="sensV">5.0x</span></div>
     <div class="ctl"><label>High-pass <span class="info" onclick="showInfo('hp')">&#9432;</span></label><button class="pm" onclick="nudge('hp',-1)">&minus;</button><input type="range" id="hp" min="300" max="14000" step="100" value="10000"><button class="pm" onclick="nudge('hp',1)">+</button><span class="v" id="hpV">10k Hz</span></div>
     <div class="hint">Detection listens for millisecond bursts (clicks), not loud averages, so test it with a pen click or finger snap, not your voice. Trigger is a threshold: LOWER catches more.</div>
+    <div class="lbl" style="margin-top:10px">signal purity <span class="info" onclick="showInfo('pur')">&#9432;</span> · <span id="pur" style="color:var(--ink);font-size:15px">-</span></div>
   </div>
   </details>
 
@@ -466,6 +470,16 @@ $('log').addEventListener('touchstart',e=>{ swRow=e.target.closest('.lr'); if(e.
 $('log').addEventListener('touchmove',e=>{ if(!swRow) return; const dx=e.touches[0].clientX-swX; if(dx<0) swRow.style.transform='translateX('+Math.max(dx,-100)+'px)'; },{passive:true});
 $('log').addEventListener('touchend',e=>{ if(!swRow) return; const dx=e.changedTouches[0].clientX-swX; if(dx<-60) delCrack(+swRow.dataset.id); else swRow.style.transform=''; swRow=null; });
 const INFO={
+ tg:['Total gain vs reference','Sum of all valid crack gains this session, on a dial scaled to 110% of the reference roast\'s total. Green zone = 95-105%: the batch spoke about as much as your mapped reference. The gold tick is exactly 100%.'],
+ pace:['Pace vs reference','How fast this roast reached 25% of the reference total gain, against the reference\'s own time to the same point. Center tick = same speed; left of it = faster, right = slower. It locks once the 25% point is passed, and the color projection uses it to correct the clock.'],
+ even:['Evenness, gain spread','Spread (SD) of crack gains this session vs the same number in your reference roast. Center = same spread as the reference; left = tighter (more uniform pops), right = looser. A relative proxy for batch evenness until color-SD studies calibrate it into a score.'],
+ bri:['Crack brightness','Spectral centroid of each crack across 5-16 kHz, averaged over the session. A crack is a broadband snap: it has brightness (where its energy sits), not pitch. The &plusmn; value is the spread between cracks; the voice-of-the-bean gate uses this clustering to reject sounds that are not your bean.'],
+ tsd:['Time SD','Spread of crack timestamps in seconds. Fast roasts cluster tight, slow roasts stretch. Compare within one machine and style, not across.'],
+ cnt:['Counted cracks','Valid cracks only: events auto-rejected by the width or voice gates and rows you tick as false positives are excluded from every stat and from the projection.'],
+ rateI:['Rate per minute','Valid cracks in the last 10 seconds, times six. The live speed of the bean\'s voice.'],
+ lastg:['Last gain','Loudness (0-100 dB scale) of the newest valid crack.'],
+ peakg:['Peak gain','The loudest valid crack so far this session.'],
+ pur:['Signal purity','Share of detected events accepted as bean cracks. Low purity means noisy placement or tuning: move the phone, or raise the trigger. Judge it during setup and early first crack; a clean session runs high.'],
  sens:['Trigger threshold','A crack counts only when a 1 ms burst is this many times louder than the rolling background floor. LOWER catches more (more sensitive, more noise too); HIGHER is stricter. Start low (3-5) by the machine and raise only until scoop taps and clanks stop registering.'],
  hp:['High-pass','Everything below this frequency is cut before detection: drum rumble, fan, motor hum. Raise it until the background floor stops riding the roar; lower it if real cracks arrive thin. The raw WAV is recorded before this filter, so recordings are never affected.'],
  bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.'],
@@ -475,28 +489,63 @@ const INFO={
 function showInfo(k){ const d=INFO[k]; $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">'+d[0]+'</h1><div class="hint" style="font-size:13px;margin:0">'+d[1]+'</div><button style="margin-top:14px;background:var(--accent2)" onclick="document.getElementById(\'modal\').style.display=\'none\'">Close</button>'; $('modal').style.display='flex'; }
 
 function sd(a){ if(a.length<2) return 0; const m=a.reduce((s,x)=>s+x,0)/a.length; return Math.sqrt(a.reduce((s,x)=>s+(x-m)*(x-m),0)/(a.length-1)); }
+// shared cockpit dial (270-degree, 18 segments): the instrument family for total gain / pace / evenness.
+// o = { u: knob position 0-1, lit: fill segments up to (fuel style), zone: [u1,u2] green target ring,
+//       tick: gold radial mark, num: center value, sub: small line, dim: no-data state }
+function drawCockpit(id,o){
+  const c=$(id); if(!c) return; const g=c.getContext('2d');
+  const cx=150,cy=124,r=96; g.clearRect(0,0,300,240);
+  const ang=u=>(-135+270*Math.max(0,Math.min(1,u)))*Math.PI/180;
+  const pol=(rr,u)=>[cx+rr*Math.sin(ang(u)),cy-rr*Math.cos(ang(u))];
+  for(let i=0;i<18;i++){
+    const lit=!o.dim&&o.lit!=null&&((i+0.5)/18)<=o.lit;
+    g.strokeStyle=lit?'#e6c14b':'#3a2f26'; g.lineWidth=26; g.beginPath();
+    g.arc(cx,cy,r,ang(i/18+0.006)-Math.PI/2,ang((i+1)/18-0.006)-Math.PI/2); g.stroke();
+  }
+  if(!o.dim&&o.zone){ g.strokeStyle='#3c7a5a'; g.lineWidth=8; g.beginPath();
+    g.arc(cx,cy,r+22,ang(o.zone[0])-Math.PI/2,ang(o.zone[1])-Math.PI/2); g.stroke(); }
+  if(!o.dim&&o.tick!=null){ const[x1,y1]=pol(r-18,o.tick),[x2,y2]=pol(r+16,o.tick);
+    g.strokeStyle='#e6c14b'; g.lineWidth=5; g.beginPath(); g.moveTo(x1,y1); g.lineTo(x2,y2); g.stroke(); }
+  if(!o.dim&&o.u!=null){ const[kx,ky]=pol(r,o.u);
+    g.beginPath(); g.arc(kx,ky,12,0,7); g.fillStyle='#fff'; g.fill();
+    g.lineWidth=4; g.strokeStyle='#1a1410'; g.stroke(); }
+  g.textAlign='center'; g.fillStyle=o.dim?'#8a7a68':'#f3ede4';
+  g.font='800 44px -apple-system,sans-serif'; g.fillText(o.num,cx,cy+15);
+  g.font='600 20px -apple-system,sans-serif'; g.fillStyle='#a8998a'; g.fillText(o.sub||'',cx,cy+46);
+  g.textAlign='start';
+}
+// pace dial: log scale 0.5x-2.0x, center tick = same speed as the reference. Locks once past the 25% point.
+function updatePace(){
+  const cal=calFor()||calMap()['__house'], v=valid();
+  if(!(cal&&cal.tg&&cal.q25)){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:'needs a mapped ref'}); return; }
+  if(v.length<5){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:'waiting for cracks'}); return; }
+  const a0=effA0(v); let cum=0,tq=null;
+  for(const c of v){ cum+=c.g; if(cum>=cal.tg*0.25){ tq=c.t-a0; break; } }
+  if(!(tq&&tq>2)){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:'before the 25% point'}); return; }
+  const pace=Math.min(2,Math.max(0.5,tq/cal.q25)), u=(Math.log2(pace)+1)/2;
+  drawCockpit('paceG',{u, zone:[(Math.log2(0.95)+1)/2,(Math.log2(1.05)+1)/2], tick:0.5,
+    num:pace.toFixed(2)+'×', sub:pace<0.97?'faster than ref':(pace>1.03?'slower than ref':'on pace')});
+}
 function updateSD(){
-  const v=valid();
-  const cum=v.reduce((s,c)=>s+c.g,0);
-  $('cum').textContent=cum;
+  const v=valid(), cum=v.reduce((s,c)=>s+c.g,0);
   const cal=calFor()||calMap()['__house'];
-  $('tgRef').textContent=(cal&&cal.tg&&cum)?Math.round(cum/cal.tg*100)+'% · ref '+cal.tg:'';
-  // runway bar: total gain vs reference. Green zone 95-105%, gold tick = 100%, white knob = you.
-  const tga=$('tgArc');
   if(cal&&cal.tg&&cum){
-    tga.style.display='block';
-    const c2=tga.getContext('2d'); c2.clearRect(0,0,280,40);
-    const fr=Math.min(1.1,cum/cal.tg), X=f=>280*f/1.1;
-    c2.fillStyle='#3a2f26'; c2.fillRect(0,14,280,12);                       // track (scale 0-110%)
-    c2.fillStyle='#3c7a5a'; c2.fillRect(X(0.95),14,X(1.05)-X(0.95),12);     // target zone
-    c2.fillStyle='#e6c14b'; c2.fillRect(X(1)-1.5,8,3,24);                   // 100% tick
-    c2.fillRect(0,17,Math.max(4,X(fr)),6);                                  // progress
-    c2.beginPath(); c2.arc(Math.min(273,X(fr)),20,7,0,7); c2.fillStyle='#fff'; c2.fill();
-    c2.lineWidth=2; c2.strokeStyle='#1a1410'; c2.stroke();                   // knob
-  } else tga.style.display='none';
-  if(v.length<2){ $('sdT').textContent='-'; $('sdG').textContent='-'; $('fMean').textContent='-'; $('fSd').textContent=''; return; }
+    const fr=Math.min(1.1,cum/cal.tg);
+    drawCockpit('tgArc',{u:fr/1.1, lit:fr/1.1, zone:[0.95/1.1,1.05/1.1], tick:1/1.1,
+      num:String(cum), sub:Math.round(cum/cal.tg*100)+'%'});
+    $('tgRef').textContent='ref '+cal.tg;
+  } else { drawCockpit('tgArc',{dim:true,num:cum?String(cum):'· · ·',sub:cum?'no reference':''}); $('tgRef').textContent=''; }
+  $('pur').textContent=cracks.length?Math.round(v.length/cracks.length*100)+'%':'-';
+  updatePace();
+  // evenness: this session's crack-gain spread vs the reference roast's own spread (relative, like everything here)
+  const gsd=v.length>1?sd(v.map(c=>c.g)):null;
+  if(gsd!=null&&cal&&cal.gsd){
+    const ratio=Math.max(0.5,Math.min(2,gsd/cal.gsd)), u=(Math.log2(ratio)+1)/2;
+    drawCockpit('evenG',{u, zone:[(Math.log2(0.85)+1)/2,(Math.log2(1.15)+1)/2], tick:0.5,
+      num:gsd.toFixed(1), sub:ratio<0.9?'tighter':(ratio>1.1?'looser':'like ref')});
+  } else drawCockpit('evenG',{dim:true,num:gsd!=null?gsd.toFixed(1):'· · ·',sub:gsd!=null?'map ref to unlock':''});
+  if(v.length<2){ $('sdT').textContent='-'; $('fMean').textContent='-'; $('fSd').textContent=''; return; }
   $('sdT').textContent=sd(v.map(c=>c.t)).toFixed(1);
-  $('sdG').textContent=sd(v.map(c=>c.g)).toFixed(1);
   const fs=v.filter(c=>c.f).map(c=>c.f);
   if(fs.length>1){ const fm=Math.round(fs.reduce((a,b)=>a+b,0)/fs.length);
     $('fMean').textContent=(fm/1000).toFixed(1)+'k'; $('fSd').textContent='± '+Math.round(sd(fs))+' Hz'; }
@@ -542,7 +591,7 @@ function saveCalIfMapped(verbose){
   let cum=0, q25=null;
   for(const c of v){ cum+=c.g; if(cum>=tg*0.25){ q25=c.t-a0; break; } }
   const m=calMap();
-  const entry={a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, date:new Date().toISOString().slice(0,10), src:k,
+  const entry={a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, gsd:Math.round(sd(v.map(c=>c.g))*10)/10, date:new Date().toISOString().slice(0,10), src:k,
     bgg:parseFloat($('mBatch').value)||null, hist:(m[k]&&m[k].hist)||[]};
   entry.hist=entry.hist.concat([{devSpan:entry.devSpan, agtron:ag, tg, q25, date:entry.date}]).slice(-8);
   const anch=SAMPLES.filter(s=>s.ag&&s.t>a0).map(s=>({dt:+(s.t-a0).toFixed(1), ag:s.ag})).sort((x,y)=>x.dt-y.dt);
