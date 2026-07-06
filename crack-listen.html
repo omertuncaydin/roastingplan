@@ -21,6 +21,7 @@ body.st-live #cGauge{order:1} body.st-live #cStats{order:2} body.st-live #cTimel
 body.st-live #cCapture{display:none}
 body.st-live #btn{position:sticky;bottom:12px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45)}
 body.st-live #cGauge details{display:none}
+body.st-live #sampleBtn{display:block !important}
 /* DONE: results first, then record/save, log for fp ticking. */
 body.st-done #cTimeline{order:1} body.st-done #cStats{order:2} body.st-done #cCapture{order:3} body.st-done #cGauge{order:4} body.st-done #cLog{order:5} body.st-done #cTune{order:6} body.st-done #btn{order:7} body.st-done #err{order:7}
 body.st-done #cGain{display:none}
@@ -97,7 +98,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag">v2026-07-05p</span>
+        <span class="vtag">v2026-07-05q</span>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
     </div>
@@ -111,6 +112,7 @@ body.st-setup #btn{display:none}
       <div id="gain" style="font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;min-width:52px;text-align:right">0</div>
     </div>
     <div class="hint" id="status">Tap start, hold the phone near the drum, disable the case if it covers the mic.</div>
+    <button class="pm" id="sampleBtn" style="display:none;width:100%;margin-top:10px;padding:12px;font-size:15px" onclick="markSample()">Sample pulled (tryer)</button>
   </div>
 
   <div class="card" id="cGauge" style="text-align:center">
@@ -139,7 +141,7 @@ body.st-setup #btn{display:none}
     <canvas id="tl" width="900" height="180"></canvas>
     <div class="ctl"><label>Bin <span class="info" onclick="showInfo('bin')">&#9432;</span></label><button class="pm" onclick="nudge('bin',-1)">&minus;</button><input type="range" id="bin" min="1" max="10" step="1" value="4" oninput="document.getElementById('binV').textContent=this.value+' s';drawTimeline()"><button class="pm" onclick="nudge('bin',1)">+</button><span class="v" id="binV">4 s</span></div>
     <div class="row" style="margin-top:10px">
-      <div class="card"><div class="lbl">total gain</div><div class="n" id="cum">0</div><div class="hint" id="tgRef" style="margin-top:2px;font-size:11px"></div></div>
+      <div class="card"><div class="lbl">total gain</div><div class="n" id="cum">0</div><canvas id="tgArc" width="140" height="76" style="width:70px;height:38px;display:none;margin:4px auto 0;background:none"></canvas><div class="hint" id="tgRef" style="margin-top:2px;font-size:11px"></div></div>
       <div class="card"><div class="lbl">time SD s</div><div class="n" id="sdT">-</div></div>
       <div class="card"><div class="lbl">gain SD</div><div class="n" id="sdG">-</div></div>
       <div class="card"><div class="lbl">pitch Hz</div><div class="n" id="fMean">-</div><div class="hint" id="fSd" style="margin-top:2px;font-size:11px"></div></div>
@@ -175,6 +177,7 @@ body.st-setup #btn{display:none}
       </div>
       <input type="text" id="mNote" placeholder="Note (machine, phone position, cup notes)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
       <div class="hint">Fill what you know before saving; measure Agtron later? Load the saved zip back in, add it, tap Map.</div>
+      <div id="sampList"></div>
       <button class="go" id="mapBtn" onclick="saveCalIfMapped(true);updateGauge()" style="display:none;background:var(--accent2);margin-top:8px">Map this coffee (save color)</button>
     </div>
     <div class="row" style="margin-top:10px">
@@ -184,6 +187,11 @@ body.st-setup #btn{display:none}
     <div class="row" style="margin-top:8px">
       <button class="go" style="background:#5a4a38" onclick="document.getElementById('loadF').click()">Load session (.zip / .csv)</button>
     </div>
+    <div class="row" style="margin-top:8px">
+      <button class="go" style="background:#3a2f26;font-size:13px" onclick="exportMaps()">Export maps</button>
+      <button class="go" style="background:#3a2f26;font-size:13px" onclick="document.getElementById('mapsF').click()">Import maps</button>
+    </div>
+    <input type="file" id="mapsF" accept=".json" style="display:none" onchange="importMaps(this.files[0])">
     <input type="file" id="loadF" accept=".zip,.csv" style="display:none" onchange="loadSession(this.files[0])">
   </div>
 
@@ -219,7 +227,7 @@ body.st-setup #btn{display:none}
 <script>
 let AC=null, stream=null, src=null, hpF=null, lpF=null, analyser=null, buf=null, running=false, raf=null;
 let bgEMA=0, fastEMA=0, refractoryUntil=0;
-let procDet=null, crackFlash=false, pendingCrackG=null, lastShort=0, lastBufRms=0;
+let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
 let cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null;
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
@@ -264,7 +272,7 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('mapBtn').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null;
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; renderSamples();
   $('log').innerHTML=''; $('metaBox').style.display='none';
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote'].forEach(i=>{ if($(i)) $(i).value=''; });
   updateSD(); drawTimeline(); updateGauge();
@@ -281,7 +289,7 @@ function stop(){
   if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
   $('recAudio').disabled=false;
   if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value; }
-  updateGauge();
+  renderSamples(); updateGauge();
   const mb=(wav.len*2/1048576).toFixed(1);
   $('recInfo').textContent='Session kept in memory: '+(wav.len?mb+' MB audio, ':'')+rows.length+' trace samples, '+cracks.length+' cracks. Save the session before closing or reloading the page.';
   document.body.className='st-done';
@@ -306,11 +314,22 @@ function detectBuf(d){
   if(now-startT>2000 && now>refractoryUntil && shortRms/(bgEMA+1e-9)>+sens.value && shortRms>0.003){
     refractoryUntil=now+70;                               // ignore echo of the same crack for 70ms
     const g=Math.round(toGain(shortRms));
-    let zc=0; for(let i=1;i<d.length;i++) if((d[i]>=0)!==(d[i-1]>=0)) zc++;
-    const f=Math.round(zc*AC.sampleRate/(2*d.length));    // zero-crossing pitch proxy within the 4-16k band
-    cracks.push({t:(now-startT)/1000, g, id:++crackSeq, f});
-    peakGain=Math.max(peakGain,g);
-    crackFlash=true; pendingCrackG=g;                     // UI picks these up on the next frame
+    // transient WIDTH: bean cracks die in 1-3ms; snaps, claps and dropped scoops ring for 5ms+
+    const slots=Math.floor(d.length/W), se2=[];
+    for(let si=0;si<slots;si++){ let e=0; for(let j=si*W;j<(si+1)*W;j++) e+=d[j]*d[j]; se2.push(e); }
+    let pI=0; for(let i=1;i<slots;i++) if(se2[i]>se2[pI]) pI=i;
+    let wSlots=1; for(let i=pI-1;i>=0&&se2[i]>0.4*se2[pI];i--) wSlots++;
+    for(let i=pI+1;i<slots&&se2[i]>0.4*se2[pI];i++) wSlots++;
+    // real spectral read at the transient (Goertzel at 6/10/14 kHz over ~3ms around the peak)
+    const gs=Math.max(0,(pI-1)*W), ge=Math.min(d.length,(pI+2)*W);
+    const goe=fr=>{ const w=2*Math.PI*fr/AC.sampleRate, cw=2*Math.cos(w); let s1=0,s2=0; for(let i=gs;i<ge;i++){ const s0=d[i]+cw*s1-s2; s2=s1; s1=s0; } return s1*s1+s2*s2-cw*s1*s2; };
+    const e6=goe(6000), e10=goe(10000), e14=goe(14000), esum=e6+e10+e14+1e-12;
+    const f=Math.round((6*e6+10*e10+14*e14)/esum*1000);   // spectral centroid, Hz
+    const hf=+(e14/esum).toFixed(2);                      // high-band share
+    const isSnap=wSlots>=5;                               // too wide to be a bean
+    cracks.push({t:(now-startT)/1000, g, id:++crackSeq, f, w:wSlots, hf, fp:isSnap, auto:isSnap});
+    if(isSnap){ pendingUI=true; }
+    else { peakGain=Math.max(peakGain,g); crackFlash=true; pendingCrackG=g; }
   }
 }
 
@@ -323,11 +342,11 @@ function loop(){
   const now=performance.now();
 
   if(pendingCrackG!=null){
-    $('last').textContent=pendingCrackG; $('peak').textContent=peakGain; $('cnt').textContent=cracks.length;
+    $('last').textContent=pendingCrackG; $('peak').textContent=peakGain; $('cnt').textContent=valid().length;
     if(rows.length) rows[rows.length-1][7]=pendingCrackG;
     renderLog(); updateSD(); drawTimeline();
     pendingCrackG=null;
-  }
+  } else if(pendingUI){ renderLog(); updateSD(); drawTimeline(); pendingUI=false; }
 
   // readouts
   $('gain').textContent=Math.round(gain);
@@ -360,7 +379,7 @@ function wavHeader(){
 }
 function csvText(){
   const mv=id=>($(id)&&$(id).value||'').replace(/,/g,';').trim();
-  let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n';
+  let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n'+SAMPLES.map((s,i)=>'# sample,'+(i+1)+','+s.t.toFixed(1)+','+(s.ag||'')+'\n').join('');
   s+='t_s,rms,gain,bg_gain,ratio,trigger_x,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
   const vv=valid(), fss=vv.filter(c=>c.f).map(c=>c.f);
   if(vv.length>1) s+='\n# stats,total_gain,'+vv.reduce((a,c)=>a+c.g,0)+',time_sd,'+sd(vv.map(c=>c.t)).toFixed(2)+',gain_sd,'+sd(vv.map(c=>c.g)).toFixed(2)+(fss.length>1?',f_mean,'+Math.round(fss.reduce((a,b)=>a+b,0)/fss.length)+',f_sd,'+Math.round(sd(fss)):'')+(LASTPROJ?',proj_final,'+LASTPROJ:'');
@@ -413,7 +432,7 @@ function saveSession(){
 function fmtT(t){ return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'); }
 function valid(){ return cracks.filter(c=>!c.fp); }
 function renderLog(){
-  $('log').innerHTML=cracks.map((c,i)=>'<div class="lr'+(c.fp?' fpr':'')+'" data-id="'+c.id+'"><span><input type="checkbox" '+(c.fp?'checked':'')+' onchange="fpCrack('+c.id+',this.checked)" style="width:16px;height:16px;accent-color:var(--warn);vertical-align:-3px"> #'+(i+1)+' &nbsp; '+fmtT(c.t)+'</span><span>gain <b>'+c.g+'</b></span></div>').reverse().join('');
+  $('log').innerHTML=cracks.map((c,i)=>'<div class="lr'+(c.fp?' fpr':'')+'" data-id="'+c.id+'"><span><input type="checkbox" '+(c.fp?'checked':'')+' onchange="fpCrack('+c.id+',this.checked)" style="width:16px;height:16px;accent-color:var(--warn);vertical-align:-3px"> #'+(i+1)+' &nbsp; '+fmtT(c.t)+(c.auto?' <b style="color:var(--warn);font-size:10px">AUTO</b>':'')+'</span><span>'+(c.f?((c.f/1000).toFixed(1)+'k · '):'')+'gain <b>'+c.g+'</b></span></div>').reverse().join('');
 }
 function fpCrack(id,ck){ const c=cracks.find(c=>c.id===id); if(c){ c.fp=ck; refreshStats(); } }
 function delCrack(id){ const i=cracks.findIndex(c=>c.id===id); if(i>=0){ cracks.splice(i,1); refreshStats(); } }
@@ -433,7 +452,7 @@ const INFO={
  sens:['Trigger threshold','A crack counts only when a 1 ms burst is this many times louder than the rolling background floor. LOWER catches more (more sensitive, more noise too); HIGHER is stricter. Start low (3-5) by the machine and raise only until scoop taps and clanks stop registering.'],
  hp:['High-pass','Everything below this frequency is cut before detection: drum rumble, fan, motor hum. Raise it until the background floor stops riding the roar; lower it if real cracks arrive thin. The raw WAV is recorded before this filter, so recordings are never affected.'],
  bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.'],
- tl:['Session timeline, the whole story','Gold bars: cracks per bin. Thick green: the smoothed crack rate, the bell. Stage letters ride the bell: A0 first pop, A1 sustained rise past 30% of peak, B0 70% rising, B1 the crown, C0 70% falling, C1 last crack. Right-side markers settle only as the data does; thresholds are provisional until labeled sessions calibrate them. White lines: mean and mean plus/minus 1 SD. The window keeps crack activity centered and snaps to standard sizes (0:30, 1:00, 2:00, 3:00, 5:00...) shown top-right, so a half-minute dev fills the frame like a two-minute one and same-window roasts compare shape-to-shape.'],
+ tl:['Session timeline, the whole story','Gold bars: cracks per bin. Thick green: the smoothed crack rate, the bell. White lines: mean and &plusmn;1 SD. The window centers the crack activity and snaps to standard sizes (top-right badge).<br><br>The gain stages ride the bell:<br>&bull; <b>A0</b> · the literal first crack (confirmed by followers, a lone pop cannot claim it)<br>&bull; <b>A1</b> · sustained rise past 30% of peak<br>&bull; <b>B0</b> · 70% on the way up<br>&bull; <b>B1</b> · the crown (appears once the fall is real)<br>&bull; <b>C0</b> · fallen through 70% (appears after 12s of quiet)<br>&bull; <b>C1</b> · the definite last crack (only after real silence; a fresh crack is never C1)<br><br>Right-side markers settle as the data does; thresholds are provisional until labeled sessions calibrate them.'],
  cap:['Session capture, the whole story','While listening, BeanSpeak keeps three things: the raw microphone audio as WAV (tapped BEFORE the high-pass, ~5.5 MB per minute), a per-frame CSV (time, loudness, floor, ratio, your slider settings, every crack), and your crack log edits: ticked rows travel as labeled false positives, swiped rows are removed. Fill the roast record (coffee, batch, Agtron) after Stop and it rides inside the CSV header; the Agtron ground value is also what unlocks the color gauge for that coffee. Save session packs WAV + CSV into one zip. Everything lives only in this page’s memory: close or reload without saving and the session is gone.']
 };
 function showInfo(k){ const d=INFO[k]; $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">'+d[0]+'</h1><div class="hint" style="font-size:13px;margin:0">'+d[1]+'</div><button style="margin-top:14px;background:var(--accent2)" onclick="document.getElementById(\'modal\').style.display=\'none\'">Close</button>'; $('modal').style.display='flex'; }
@@ -445,6 +464,17 @@ function updateSD(){
   $('cum').textContent=cum;
   const cal=calFor()||calMap()['__house'];
   $('tgRef').textContent=(cal&&cal.tg&&cum)?Math.round(cum/cal.tg*100)+'% of ref ('+cal.tg+')':'';
+  // mini arc: total gain vs reference, at a glance
+  const tga=$('tgArc');
+  if(cal&&cal.tg&&cum){
+    tga.style.display='block';
+    const c2=tga.getContext('2d'); c2.clearRect(0,0,140,76);
+    const frac=Math.min(1.1,cum/cal.tg);
+    c2.lineWidth=12; c2.lineCap='round';
+    c2.strokeStyle='#3a2f26'; c2.beginPath(); c2.arc(70,70,54,Math.PI,2*Math.PI); c2.stroke();
+    c2.strokeStyle=frac>=0.95&&frac<=1.05?'#3c7a5a':'#e6c14b';
+    c2.beginPath(); c2.arc(70,70,54,Math.PI,Math.PI*(1+Math.min(1,frac))); c2.stroke();
+  } else tga.style.display='none';
   if(v.length<2){ $('sdT').textContent='-'; $('sdG').textContent='-'; $('fMean').textContent='-'; $('fSd').textContent=''; return; }
   $('sdT').textContent=sd(v.map(c=>c.t)).toFixed(1);
   $('sdG').textContent=sd(v.map(c=>c.g)).toFixed(1);
@@ -496,6 +526,8 @@ function saveCalIfMapped(verbose){
   const entry={a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, date:new Date().toISOString().slice(0,10), src:k,
     bgg:parseFloat($('mBatch').value)||null, hist:(m[k]&&m[k].hist)||[]};
   entry.hist=entry.hist.concat([{devSpan:entry.devSpan, agtron:ag, tg, q25, date:entry.date}]).slice(-8);
+  const anch=SAMPLES.filter(s=>s.ag&&s.t>a0).map(s=>({dt:+(s.t-a0).toFixed(1), ag:s.ag})).sort((x,y)=>x.dt-y.dt);
+  if(anch.length) entry.anchors=anch;   // SampleInRoast: measured color at known dev moments
   m[k]=entry; m['__house']=entry;   // every map also becomes the house default: unmapped beans borrow it
   localStorage.setItem('bsCal',JSON.stringify(m));
   toast('Color map saved for "'+k+'" ('+entry.hist.length+' roast'+(entry.hist.length>1?'s':'')+' in its history).');
@@ -544,6 +576,7 @@ function updateGauge(){
   const bTag=borrowed?(' · borrowed house map ('+(cal.src||'?')+')'):'';
   const v=valid();
   if(!running||!v.length){ drawGauge('wait'); $('agHint').textContent='Mapped on '+cal.date+' (Agtron '+cal.agtron+')'+bTag+'. Projection starts at first crack.'; return; }
+  if(v.length<5){ drawGauge('wait'); $('agHint').textContent='Gathering cracks ('+v.length+'/5) before projecting; a couple of pops is not a first crack yet.'; return; }
   const a0=effA0(v), devCur=((performance.now()-startT)/1000)-a0;
   // pace: time to reach 25% of the REFERENCE total gain, vs the reference's own q25 (like-for-like)
   let pace=1, cum=0, tq=null;
@@ -552,7 +585,17 @@ function updateGauge(){
   const pT=cal.devSpan>0?(devCur/pace)/cal.devSpan:0;
   const pE=cal.tg? v.reduce((s,c)=>s+c.g,0)/cal.tg : pT;
   const p=(tq!=null)?(0.5*pT+0.5*pE):pT;
-  let proj=FC_AG+(cal.agtron-FC_AG)*p;
+  // anchor-aware projection: tryer samples beat interpolation wherever they exist
+  let proj;
+  const devEff=p*cal.devSpan;
+  if(cal.anchors&&cal.anchors.length){
+    const pts=[{dt:0,ag:FC_AG}].concat(cal.anchors).concat([{dt:cal.devSpan,ag:cal.agtron}]).sort((x,y)=>x.dt-y.dt);
+    let i=0; while(i<pts.length-1&&devEff>pts[i+1].dt) i++;
+    const a=pts[i], b2=pts[Math.min(i+1,pts.length-1)];
+    proj=(b2.dt>a.dt)?a.ag+(b2.ag-a.ag)*(devEff-a.dt)/(b2.dt-a.dt):b2.ag;
+    if(devEff>cal.devSpan){ const l1=pts[pts.length-2],l2=pts[pts.length-1];
+      const sl=(l2.dt>l1.dt)?(l2.ag-l1.ag)/(l2.dt-l1.dt):0; proj=l2.ag+sl*(devEff-cal.devSpan); }
+  } else proj=FC_AG+(cal.agtron-FC_AG)*p;
   proj=Math.min(AG_MAX,Math.max(AG_MIN,proj));
   const prT=Math.min(AG_MAX,Math.max(AG_MIN,FC_AG+(cal.agtron-FC_AG)*pT));
   const prE=Math.min(AG_MAX,Math.max(AG_MIN,FC_AG+(cal.agtron-FC_AG)*pE));
@@ -638,7 +681,8 @@ async function loadSession(file){
   if(!text){ toast('No CSV found in that file.'); return; }
   const meta={}; for(const m of text.matchAll(/# meta,([^,]+),([^\n]*)/g)) meta[m[1]]=m[2].trim();
   cracks=[]; crackSeq=0;
-  for(const m of text.matchAll(/# (\d+),([\d.]+),(\d+)(?:,(\d))?(?:,(\d*))?\n/g)) cracks.push({t:+m[2], g:+m[3], id:++crackSeq, fp:m[4]==='1', f:m[5]?+m[5]:undefined});
+  for(const m of text.matchAll(/# (\d+),([\d.]+),(\d+)(?:,(\d))?(?:,(\d*))?/g)) cracks.push({t:+m[2], g:+m[3], id:++crackSeq, fp:m[4]==='1', f:m[5]?+m[5]:undefined});
+  SAMPLES=[]; for(const m of text.matchAll(/# sample,\d+,([\d.]+),([\d.]*)/g)) SAMPLES.push({t:+m[1], ag:m[2]?+m[2]:null});
   if(!cracks.length){ toast('No cracks in that session.'); return; }
   SENT=false; wav={chunks:[],len:0,sr:48000}; rows=[];
   if(meta.coffee){ cName.value=meta.coffee; localStorage.setItem('bsCoffee',meta.coffee); loadBadge(); }
@@ -650,6 +694,35 @@ async function loadSession(file){
   refreshStats();
   if(parseFloat(meta.agtron_ground)){ saveCalIfMapped(true); updateGauge(); }
   else toast('Loaded: '+cracks.length+' cracks'+(meta.coffee?' ('+meta.coffee+')':'')+'. Fill Agtron ground, tap Map.');
+}
+// ---- SampleInRoast: tryer pulls become color anchors ----
+function markSample(){
+  if(!running){ toast('Only during a live session.'); return; }
+  const t=(performance.now()-startT)/1000;
+  SAMPLES.push({t, ag:null});
+  toast('Sample #'+SAMPLES.length+' marked at '+fmtT(t)+'. Fill its Agtron after the roast.');
+}
+function renderSamples(){
+  const el=$('sampList'); if(!el) return;
+  if(!SAMPLES.length){ el.innerHTML=''; return; }
+  el.innerHTML='<div class="lbl" style="margin:8px 0 4px">tryer samples (fill measured Agtron)</div>'+
+    SAMPLES.map((s,i)=>'<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><span style="font-size:13px;color:var(--muted);min-width:74px">#'+(i+1)+' · '+fmtT(s.t)+'</span>'+
+    '<input type="text" inputmode="decimal" value="'+(s.ag??'')+'" placeholder="Agtron" oninput="SAMPLES['+i+'].ag=parseFloat(this.value)||null" style="flex:1;border:1px solid var(--line);border-radius:9px;padding:8px;font-size:15px;background:var(--panel2);color:var(--ink)"></div>').join('');
+}
+// ---- maps portability: same maps on desktop and phone ----
+function exportMaps(){
+  const payload={cal:calMap(), badge:badgeMap(), exported:new Date().toISOString()};
+  dl(new Blob([JSON.stringify(payload,null,1)],{type:'application/json'}),'crack-maps-'+new Date().toISOString().slice(0,10)+'.json');
+  toast('Maps exported. Import them on the other device.');
+}
+async function importMaps(file){
+  if(!file) return;
+  try{
+    const p=JSON.parse(await file.text());
+    const m=Object.assign(calMap(), p.cal||{}); localStorage.setItem('bsCal',JSON.stringify(m));
+    const b=Object.assign(badgeMap(), p.badge||{}); localStorage.setItem('bsBadge',JSON.stringify(b));
+    toast('Imported '+Object.keys(p.cal||{}).filter(k=>k!=='__house').length+' map(s).'); updateGauge(); updateSD();
+  }catch(e){ toast('Import failed: '+e.message); }
 }
 document.body.className='st-setup';
 setTimeout(updateGauge,0);   // initial gauge state on load
@@ -706,13 +779,26 @@ function drawTimeline(){
     const run=Math.max(2,Math.round(12/bin));
     const susUp=f=>{ const th=f*peak; for(let i=0;i<peakI;i++){ let ok=true; for(let j=i;j<Math.min(i+run,peakI+1);j++) if(sm[j]<th){ ok=false; break; } if(ok) return t0+(i+0.5)*bin; } return t0+(peakI+0.5)*bin; };
     const susDn=f=>{ const th=f*peak; for(let i=peakI;i<nb;i++){ let ok=true; for(let j=i;j<Math.min(i+run,nb);j++) if(sm[j]>th){ ok=false; break; } if(ok) return t0+(i+0.5)*bin; } return t0+(nb-0.5)*bin; };
-    const stages=[['A0',v[0].t],['A1',susUp(0.30)],['B0',susUp(0.70)],['B1',t0+(peakI+0.5)*bin],['C0',susDn(0.70)],['C1',v[v.length-1].t]];
+    // markers settle only as the data does (per the info tab): the right side of the bell
+    // exists only after real quiet; a fresh "last crack" is NOT C1, it is just the newest crack.
+    const nowS=running?(performance.now()-startT)/1000:v[v.length-1].t+99;
+    const quiet=nowS-v[v.length-1].t;
+    const pastPeak=sm[Math.min(nb-1,peakI+run)]<0.7*peak;
+    const stages=[['A0',effA0(v)],['A1',susUp(0.30)],['B0',susUp(0.70)]];
+    if(pastPeak||quiet>6) stages.push(['B1',t0+(peakI+0.5)*bin]);
+    if(quiet>12){ stages.push(['C0',susDn(0.70)]); stages.push(['C1',v[v.length-1].t]); }
+    // anti-collision: sort by x, stagger labels vertically when they crowd
+    stages.sort((a,b)=>a[1]-b[1]);
     tx.font='bold 19px -apple-system,sans-serif'; tx.textAlign='center';
+    let prevX=-999, level=0;
     for(const [name,st] of stages){
       const bi=Math.min(nb-1,Math.max(0,Math.floor((st-t0)/bin)));
       const x=X(st), y=Y(sm[bi]);
+      level=(x-prevX<38)?(level+1)%3:0; prevX=x;
+      const ly=Math.max(18,y-12-level*20);
       tx.fillStyle='#c98a3c'; tx.beginPath(); tx.arc(x,y,6,0,7); tx.fill();
-      tx.fillStyle='#f3ede4'; tx.fillText(name,x,Math.max(16,y-12));
+      tx.lineWidth=4; tx.strokeStyle='#241c16'; tx.strokeText(name,x,ly);
+      tx.fillStyle='#f3ede4'; tx.fillText(name,x,ly);
     }
     tx.textAlign='start';
   }
