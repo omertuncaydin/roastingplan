@@ -98,7 +98,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag">v2026-07-05q</span>
+        <span class="vtag">v2026-07-05r</span>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
     </div>
@@ -323,9 +323,11 @@ function detectBuf(d){
     // real spectral read at the transient (Goertzel at 6/10/14 kHz over ~3ms around the peak)
     const gs=Math.max(0,(pI-1)*W), ge=Math.min(d.length,(pI+2)*W);
     const goe=fr=>{ const w=2*Math.PI*fr/AC.sampleRate, cw=2*Math.cos(w); let s1=0,s2=0; for(let i=gs;i<ge;i++){ const s0=d[i]+cw*s1-s2; s2=s1; s1=s0; } return s1*s1+s2*s2-cw*s1*s2; };
-    const e6=goe(6000), e10=goe(10000), e14=goe(14000), esum=e6+e10+e14+1e-12;
-    const f=Math.round((6*e6+10*e10+14*e14)/esum*1000);   // spectral centroid, Hz
-    const hf=+(e14/esum).toFixed(2);                      // high-band share
+    // 12-bin spectral profile 5-16 kHz (was 3 bins: too coarse to call a "pitch")
+    const BINS=[5,6,7,8,9,10,11,12,13,14,15,16];
+    const en=BINS.map(k=>goe(k*1000)); const esum=en.reduce((a,b)=>a+b,0)+1e-12;
+    const f=Math.round(BINS.reduce((s,k,i)=>s+k*en[i],0)/esum*1000);   // spectral centroid, Hz
+    const hf=+(en.slice(8).reduce((a,b)=>a+b,0)/esum).toFixed(2);      // share >=13 kHz
     const isSnap=wSlots>=5;                               // too wide to be a bean
     cracks.push({t:(now-startT)/1000, g, id:++crackSeq, f, w:wSlots, hf, fp:isSnap, auto:isSnap});
     if(isSnap){ pendingUI=true; }
@@ -777,18 +779,22 @@ function drawTimeline(){
   // gain stages on the bell (thresholds provisional: A1 30% sustained rise, B0 70% rise, B1 peak, C0 70% fall)
   if(v.length>3){
     const run=Math.max(2,Math.round(12/bin));
-    const susUp=f=>{ const th=f*peak; for(let i=0;i<peakI;i++){ let ok=true; for(let j=i;j<Math.min(i+run,peakI+1);j++) if(sm[j]<th){ ok=false; break; } if(ok) return t0+(i+0.5)*bin; } return t0+(peakI+0.5)*bin; };
+    const a0t=effA0(v), a0Bin=Math.max(0,Math.floor((a0t-t0)/bin));
+    // susUp scans only FROM A0's bin: gaussian smoothing bleeds the bell backwards in time,
+    // so without this clamp A1 could land before A0 — physically impossible (Ömer's law:
+    // FC sound rises gradually from the first pop, peaks at B1, then decays).
+    const susUp=f=>{ const th=f*peak; for(let i=a0Bin;i<peakI;i++){ let ok=true; for(let j=i;j<Math.min(i+run,peakI+1);j++) if(sm[j]<th){ ok=false; break; } if(ok) return t0+(i+0.5)*bin; } return t0+(peakI+0.5)*bin; };
     const susDn=f=>{ const th=f*peak; for(let i=peakI;i<nb;i++){ let ok=true; for(let j=i;j<Math.min(i+run,nb);j++) if(sm[j]>th){ ok=false; break; } if(ok) return t0+(i+0.5)*bin; } return t0+(nb-0.5)*bin; };
     // markers settle only as the data does (per the info tab): the right side of the bell
     // exists only after real quiet; a fresh "last crack" is NOT C1, it is just the newest crack.
     const nowS=running?(performance.now()-startT)/1000:v[v.length-1].t+99;
     const quiet=nowS-v[v.length-1].t;
     const pastPeak=sm[Math.min(nb-1,peakI+run)]<0.7*peak;
-    const stages=[['A0',effA0(v)],['A1',susUp(0.30)],['B0',susUp(0.70)]];
+    const stages=[['A0',a0t],['A1',susUp(0.30)],['B0',susUp(0.70)]];
     if(pastPeak||quiet>6) stages.push(['B1',t0+(peakI+0.5)*bin]);
     if(quiet>12){ stages.push(['C0',susDn(0.70)]); stages.push(['C1',v[v.length-1].t]); }
-    // anti-collision: sort by x, stagger labels vertically when they crowd
-    stages.sort((a,b)=>a[1]-b[1]);
+    // hard monotonic clamp: the sequence A0<=A1<=B0<=B1<=C0<=C1 is a law, not a suggestion
+    for(let i=1;i<stages.length;i++) if(stages[i][1]<stages[i-1][1]) stages[i][1]=stages[i-1][1];
     tx.font='bold 19px -apple-system,sans-serif'; tx.textAlign='center';
     let prevX=-999, level=0;
     for(const [name,st] of stages){
