@@ -24,6 +24,9 @@ body.st-live #cGauge details{display:none}
 #sampleBtn{display:none;background:var(--panel);color:var(--ink);border:2px solid var(--accent);border-radius:14px;font-size:16px;font-weight:700;padding:13px;width:100%;align-items:center;justify-content:center;gap:10px}
 body.st-live #sampleBtn{display:flex;position:sticky;bottom:80px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45);order:5}
 #sampN{background:var(--accent);color:#fff;border-radius:10px;padding:2px 9px;font-size:13px;display:none}
+#cAdmin,#cBri,#cTsd{display:none}
+body.admin #cAdmin{display:block}
+body.admin #cBri,body.admin #cTsd{display:block}
 @keyframes sPop{0%{transform:scale(1)}45%{transform:scale(1.07) rotate(-1.2deg)}100%{transform:scale(1)}}
 .sPop{animation:sPop .4s ease}
 @media (min-width:900px){
@@ -118,7 +121,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag">v2026-07-07c</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07d</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -176,8 +179,8 @@ body.st-setup #btn{display:none}
     </div>
     <div class="row" style="margin-top:10px">
       <div class="card"><div class="lbl">evenness <span class="info" onclick="showInfo('even')">&#9432;</span></div><canvas id="evenG" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas></div>
-      <div class="card"><div class="lbl">brightness <span class="info" onclick="showInfo('bri')">&#9432;</span></div><div class="n" id="fMean">-</div><div class="hint" id="fSd" style="margin-top:2px;font-size:11px"></div></div>
-      <div class="card"><div class="lbl">time SD s <span class="info" onclick="showInfo('tsd')">&#9432;</span></div><div class="n" id="sdT">-</div></div>
+      <div class="card" id="cBri"><div class="lbl">brightness <span class="info" onclick="showInfo('bri')">&#9432;</span></div><div class="n" id="fMean">-</div><div class="hint" id="fSd" style="margin-top:2px;font-size:11px"></div></div>
+      <div class="card" id="cTsd"><div class="lbl">time SD s <span class="info" onclick="showInfo('tsd')">&#9432;</span></div><div class="n" id="sdT">-</div></div>
     </div>
   </div>
 
@@ -249,6 +252,14 @@ body.st-setup #btn{display:none}
   </div>
   </details>
 
+  <details class="fold" id="cAdmin">
+  <summary>engine internals · admin</summary>
+  <div class="card">
+    <div id="admGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+    <div class="hint" style="margin-top:10px">Admin view lives only on this unlocked device. The page source still carries the whole engine: real secrecy needs the server layer. <b style="color:var(--warn);cursor:pointer" onclick="adminLock()">lock admin</b></div>
+  </div>
+  </details>
+
   <details class="fold" id="cLog">
   <summary>crack log</summary>
   <div class="card">
@@ -264,7 +275,7 @@ body.st-setup #btn{display:none}
 let AC=null, stream=null, src=null, hpF=null, lpF=null, analyser=null, buf=null, running=false, raf=null;
 let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
-let cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false;
+let cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={};
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
 const $=id=>document.getElementById(id);
@@ -518,6 +529,18 @@ const INFO={
  lastg:['Last gain','Loudness (0-100 dB scale) of the newest valid crack.'],
  peakg:['Peak gain','The loudest valid crack so far this session.'],
  pur:['Signal purity','Share of detected events accepted as bean cracks. Low purity means noisy placement or tuning: move the phone, or raise the trigger. Judge it during setup and early first crack; a clean session runs high.'],
+ admPT:['Clock estimator pT','Progress through the reference DEV by pace-corrected time: devCur divided by pace, over the reference devSpan. One of the two legs the projection stands on.'],
+ admPE:['Energy estimator pE','Progress by accumulated crack gain as a fraction of the reference total gain. The second leg. When pT and pE disagree, the band widens honestly.'],
+ admP:['Blended progress p','The 50/50 fusion of pT and pE once pace is measurable; pure pT before that. This is the number the color projection actually rides.'],
+ admQ25:['q25, live vs reference','Seconds from A0 to 25% of the reference total gain, this roast vs the reference roast. Their ratio IS the pace factor.'],
+ admBand:['Band width','The honest uncertainty of the projection in Agtron points: floor ±2, widened by estimator disagreement, capped at ±6.'],
+ admA0:['Confirmed A0','The anchor: first crack with at least 2 followers within 30s. Every dev clock in the engine starts here.'],
+ admW:['Transient width median','Median duration of crack bursts in ms slots. Bean cracks die in 1-3 ms; 5+ is auto-rejected as dirt.'],
+ admHF:['High-band share mean','Average share of crack energy at or above 13 kHz. Rises with crest sharpness; a fingerprint candidate for bean state.'],
+ admVoice:['Voice cluster','The live median brightness ± robust spread (MAD) that the voice-of-the-bean gate is enforcing right now. Events 3.5 spreads away are rejected.'],
+ admSlope:['Learned slope','Least-squares seconds-per-Agtron fitted from this coffee\'s mapped history, else pooled across maps. Not yet in the live formula; graduates at 3+ mapped roasts per coffee.'],
+ admDevEff:['Effective dev','p times the reference devSpan: the corrected seconds the anchor interpolation feeds on. The meter shows position within the reference DEV.'],
+ admGrade:['Self-grade','Projected at stop / retrospective final / measured Agtron. The engine\'s report card, one roast at a time.'],
  sens:['Trigger threshold','A crack counts only when a 1 ms burst is this many times louder than the rolling background floor. LOWER catches more (more sensitive, more noise too); HIGHER is stricter. Start low (3-5) by the machine and raise only until scoop taps and clanks stop registering.'],
  hp:['High-pass','Everything below this frequency is cut before detection: drum rumble, fan, motor hum. Raise it until the background floor stops riding the roar; lower it if real cracks arrive thin. The raw WAV is recorded before this filter, so recordings are never affected.'],
  bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.'],
@@ -616,7 +639,40 @@ function updateSD(){
   const fs=v.filter(c=>c.f).map(c=>c.f);
   if(fs.length>1){ const fm=Math.round(fs.reduce((a,b)=>a+b,0)/fs.length);
     $('fMean').textContent=(fm/1000).toFixed(1)+'k'; $('fSd').textContent='± '+Math.round(sd(fs))+' Hz'; }
+  renderAdmin();
 }
+// ---- admin panel: every hidden engine measurement, meters + hints. Gate = UI convenience, NOT security. ----
+function admRow(k,label,val,frac){
+  return '<div style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px"><div class="lbl" style="font-size:9px">'+label+' <span class="info" onclick="showInfo(\''+k+'\')">&#9432;</span></div><div style="font-size:16px;font-weight:800;margin:3px 0;font-variant-numeric:tabular-nums">'+val+'</div>'+(frac!=null?('<div style="height:5px;background:var(--line);border-radius:3px"><div style="height:5px;border-radius:3px;background:var(--gold);width:'+Math.round(Math.min(1,Math.max(0,frac))*100)+'%"></div></div>'):'')+'</div>';
+}
+function renderAdmin(){
+  if(!document.body.classList.contains('admin')||!$('admGrid')) return;
+  const v=valid(), cal=calFor()||calMap()['__house'], E=ENGINE;
+  const ws=v.filter(c=>c.w).map(c=>c.w).sort((a,b)=>a-b);
+  const wMed=ws.length?ws[Math.floor(ws.length/2)]:null;
+  const hfs=v.filter(c=>c.hf!=null).map(c=>c.hf);
+  const hfM=hfs.length?(hfs.reduce((a,b)=>a+b,0)/hfs.length):null;
+  const bv=beanVoice(), sl=cal?slopeFor(cal):null;
+  $('admGrid').innerHTML=
+   admRow('admPT','clock estimator pT',E.pT!=null?Math.round(E.pT*100)+'%':'·',E.pT)
+  +admRow('admPE','energy estimator pE',E.pE!=null?Math.round(E.pE*100)+'%':'·',E.pE)
+  +admRow('admP','blended progress p',E.p!=null?Math.round(E.p*100)+'%':'·',E.p)
+  +admRow('admQ25','q25 live / ref',(E.tq?Math.round(E.tq)+'s':'·')+' / '+(cal&&cal.q25?Math.round(cal.q25)+'s':'·'),null)
+  +admRow('admBand','band width',E.band!=null?('±'+E.band.toFixed(1)):'·',E.band!=null?(E.band-2)/4:null)
+  +admRow('admA0','confirmed A0',v.length?fmtT(effA0(v)):'·',null)
+  +admRow('admW','transient width median',wMed?wMed+' ms':'·',wMed?Math.min(1,wMed/5):null)
+  +admRow('admHF','high-band share mean',hfM!=null?hfM.toFixed(2):'·',hfM)
+  +admRow('admVoice','voice cluster',bv?((bv.med/1000).toFixed(1)+'k ± '+Math.round(bv.mad)):'·',null)
+  +admRow('admSlope','learned slope',sl?sl.toFixed(1)+' s/Ag':'·',sl?(sl-2)/8:null)
+  +admRow('admDevEff','effective dev',E.devEff!=null?Math.round(E.devEff)+'s':'·',(cal&&cal.devSpan&&E.devEff!=null)?E.devEff/cal.devSpan:null)
+  +admRow('admGrade','stop / final / measured',(STOPPROJ||'·')+' / '+(LASTPROJ||'·')+' / '+(($('mAgG')&&$('mAgG').value)||'·'),null);
+}
+function adminTap(){
+  if(document.body.classList.contains('admin')){ toast('Admin is on. Panel is below the tuning fold.'); return; }
+  const c=prompt('Admin code'); if(c==='PATRON26'){ localStorage.setItem('bsAdmin','1'); document.body.classList.add('admin'); renderAdmin(); updateSD(); toast('Admin unlocked: engine internals visible.'); }
+}
+function adminLock(){ localStorage.removeItem('bsAdmin'); document.body.classList.remove('admin'); toast('Admin locked.'); }
+if(localStorage.getItem('bsAdmin')==='1') document.body.classList.add('admin');
 // ---- Agtron projection gauge: one mapped roast per coffee unlocks it (projection, never measurement) ----
 // Visual ported from the Guide's cockpit gauge: 270-degree arc, 36 segments, white knob, gold ticks.
 const SEC_PER_AG=4, FC_AG=125, AG_TOL=2, AG_MIN=40, AG_MAX=130;
@@ -751,6 +807,7 @@ function updateGauge(){
   const prT=Math.min(AG_MAX,Math.max(AG_MIN,FC_AG+(cal.agtron-FC_AG)*pT));
   const prE=Math.min(AG_MAX,Math.max(AG_MIN,FC_AG+(cal.agtron-FC_AG)*pE));
   const band=Math.min(6,Math.max(AG_TOL, AG_TOL+Math.abs(prT-prE)/2));   // honest range: widens when estimators disagree
+  ENGINE={pT,pE,p,tq,band,devEff};
   LASTPROJ=Math.round(proj);
   drawGauge('live',proj-band,proj+band);
   $('agHint').textContent=LANG==='tr'
@@ -1004,10 +1061,12 @@ function drawTimeline(){
   tx.strokeStyle='#3a2f26'; tx.lineWidth=3; tx.lineCap='round';
   tx.beginPath(); tx.moveTo(4,H-2); tx.lineTo(W-4,H-2); tx.stroke();
   if(nowT>a0c){ tx.strokeStyle='#e6c14b'; tx.beginPath(); tx.moveTo(Math.max(4,X(a0c)),H-2); tx.lineTo(Math.min(W-4,X(Math.min(nowT,t0+span))),H-2); tx.stroke(); }
-  // area fill under the bell
-  tx.fillStyle='rgba(60,122,90,0.16)'; tx.beginPath();
-  for(let i=0;i<nb;i++){ const x=X(t0+(i+0.5)*bin), y=Y(sm[i]); i?tx.lineTo(x,y):tx.moveTo(x,y); }
-  tx.lineTo(X(t0+(nb-0.5)*bin),H-6); tx.lineTo(X(t0+0.5*bin),H-6); tx.closePath(); tx.fill();
+  // soft columns (option A): raw crack counts as rounded bars, the body under the bell
+  const maxC=Math.max(...counts)||1;
+  tx.fillStyle='rgba(230,193,75,0.20)';
+  const bw2=Math.max(2,(bin/span)*W-2);
+  counts.forEach((n,i)=>{ if(!n) return; const bh=(n/maxC)*(H-58), bx=X(t0+i*bin)+1, by=H-24-bh;
+    tx.beginPath(); if(tx.roundRect) tx.roundRect(bx,by,bw2,bh,[3,3,0,0]); else tx.rect(bx,by,bw2,bh); tx.fill(); });
   // GHOST REFERENCE: the mapped roast's bell shape, raced live (dashed, muted)
   const calT=calFor()||calMap()['__house'];
   if(calT&&calT.bell&&calT.devSpan){
