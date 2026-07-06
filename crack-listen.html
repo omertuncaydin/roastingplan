@@ -21,7 +21,27 @@ body.st-live #cGauge{order:1} body.st-live #cStats{order:2} body.st-live #cTimel
 body.st-live #cCapture{display:none}
 body.st-live #btn{position:sticky;bottom:12px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45)}
 body.st-live #cGauge details{display:none}
-body.st-live #sampleBtn{display:block !important}
+#sampleBtn{display:none;background:var(--panel);color:var(--ink);border:2px solid var(--accent);border-radius:14px;font-size:16px;font-weight:700;padding:13px;width:100%;align-items:center;justify-content:center;gap:10px}
+body.st-live #sampleBtn{display:flex;position:sticky;bottom:80px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45);order:5}
+#sampN{background:var(--accent);color:#fff;border-radius:10px;padding:2px 9px;font-size:13px;display:none}
+@keyframes sPop{0%{transform:scale(1)}45%{transform:scale(1.07) rotate(-1.2deg)}100%{transform:scale(1)}}
+.sPop{animation:sPop .4s ease}
+@media (min-width:900px){
+  .wrap{max-width:1240px}
+  body.st-live .wrap{display:grid;grid-template-columns:1.5fr 1fr;column-gap:18px;align-items:start;
+    grid-template-areas:"hdr hdr" "tl gauge" "tl gain" "tl sample" "tl btn" "stats err" "tune tune" "log log"}
+  body.st-live #hdr{grid-area:hdr}
+  body.st-live #cTimeline{grid-area:tl}
+  body.st-live #cGauge{grid-area:gauge}
+  body.st-live #cGain{grid-area:gain}
+  body.st-live #sampleBtn{grid-area:sample;position:static;box-shadow:none}
+  body.st-live #btn{grid-area:btn;position:static;box-shadow:none}
+  body.st-live #err{grid-area:err}
+  body.st-live #cStats{grid-area:stats;margin-top:0}
+  body.st-live #cTune{grid-area:tune}
+  body.st-live #cLog{grid-area:log}
+  body.st-live #tl{height:320px}
+}
 /* DONE: results first, then record/save, log for fp ticking. */
 body.st-done #cTimeline{order:1} body.st-done #cStats{order:2} body.st-done #cCapture{order:3} body.st-done #cGauge{order:4} body.st-done #cLog{order:5} body.st-done #cTune{order:6} body.st-done #btn{order:7} body.st-done #err{order:7}
 body.st-done #cGain{display:none}
@@ -98,7 +118,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag">v2026-07-06c</span>
+        <span class="vtag">v2026-07-07a</span>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
     </div>
@@ -112,7 +132,7 @@ body.st-setup #btn{display:none}
       <div id="gain" style="font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;min-width:52px;text-align:right">0</div>
     </div>
     <div class="hint" id="status">Tap start, hold the phone near the drum, disable the case if it covers the mic.</div>
-    <button class="pm" id="sampleBtn" style="display:none;width:100%;margin-top:10px;padding:12px;font-size:15px" onclick="markSample()">Sample pulled (tryer)</button>
+    <div id="sampChips" style="display:none;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
   </div>
 
   <div class="card" id="cGauge" style="text-align:center">
@@ -143,6 +163,7 @@ body.st-setup #btn{display:none}
     <div class="row" style="margin-top:10px">
       <div class="card"><div class="lbl">total gain <span class="info" onclick="showInfo('tg')">&#9432;</span></div><canvas id="tgArc" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas><div class="hint" id="tgRef" style="margin-top:2px;font-size:11px"></div></div>
       <div class="card"><div class="lbl">pace <span class="info" onclick="showInfo('pace')">&#9432;</span></div><canvas id="paceG" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas><div class="hint" style="margin-top:2px;font-size:11px">vs reference</div></div>
+      <div class="card"><div class="lbl">bean voice <span class="info" onclick="showInfo('voice')">&#9432;</span></div><canvas id="voiceG" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas><div class="hint" style="margin-top:2px;font-size:11px">cracks / 30s</div></div>
     </div>
     <div class="row" style="margin-top:10px">
       <div class="card"><div class="lbl">evenness <span class="info" onclick="showInfo('even')">&#9432;</span></div><canvas id="evenG" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas></div>
@@ -151,6 +172,7 @@ body.st-setup #btn{display:none}
     </div>
   </div>
 
+  <button id="sampleBtn" onclick="markSample()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><ellipse cx="7.4" cy="7.4" rx="4" ry="5.2" transform="rotate(-45 7.4 7.4)" fill="#e6c14b"/><line x1="10.6" y1="10.6" x2="20" y2="20" stroke="#e6c14b" stroke-width="2.6" stroke-linecap="round"/></svg>Sample pulled<b id="sampN"></b></button>
   <button class="go" id="btn" onclick="toggle()">Start listening</button>
   <div class="err" id="err"></div>
 
@@ -232,7 +254,7 @@ body.st-setup #btn{display:none}
 let AC=null, stream=null, src=null, hpF=null, lpF=null, analyser=null, buf=null, running=false, raf=null;
 let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
-let cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null;
+let cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, PASTPEAK=false;
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
 const $=id=>document.getElementById(id);
@@ -276,7 +298,7 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('mapBtn').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; renderSamples();
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; PASTPEAK=false; renderSamples(); renderSampChips(); $('sampN').style.display='none';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -381,7 +403,7 @@ function loop(){
 
   // session log (one row per frame; crack_gain filled on the frame a crack finalizes)
   rows.push([((now-startT)/1000).toFixed(2), lastBufRms.toFixed(6), Math.round(gain), Math.round(bgGain), (lastShort/(bgEMA+1e-9)).toFixed(2), sens.value, hp.value, '']);
-  if(rows.length%30===0) updateGauge();
+  if(rows.length%30===0){ updateGauge(); updateVoice(); }   // voice decays with TIME, not only on crack events
   if(rows.length%30===15) drawTimeline();
   if(wav.len && rows.length%60===0) $('recInfo').textContent='Recording: '+Math.floor((now-startT)/60000)+':'+String(Math.floor((now-startT)/1000%60)).padStart(2,'0')+' • '+(wav.len*2/1048576).toFixed(1)+' MB';
   draw();
@@ -474,6 +496,7 @@ const INFO={
  pace:['Pace vs reference','How fast this roast reached 25% of the reference total gain, against the reference\'s own time to the same point. Center tick = same speed; left of it = faster, right = slower. It locks once the 25% point is passed, and the color projection uses it to correct the clock.'],
  even:['Evenness, gain spread','Spread (SD) of crack gains this session vs the same number in your reference roast. Center = same spread as the reference; left = tighter (more uniform pops), right = looser. A relative proxy for batch evenness until color-SD studies calibrate it into a score.'],
  bri:['Crack brightness','Spectral centroid of each crack across 5-16 kHz, averaged over the session. A crack is a broadband snap: it has brightness (where its energy sits), not pitch. The &plusmn; value is the spread between cracks; the voice-of-the-bean gate uses this clustering to reject sounds that are not your bean.'],
+ voice:['Bean voice, the sparse-crack watch','Valid cracks in the last 30 seconds. The gold tick is the minimum the projection needs to stay honest (8 per 30s, provisional); inside the green ring the gauge is well fed. If it thins in the middle of first crack: bring the mic closer, or accept a wider projection band. Past the bell\'s peak the fall is natural and the dial stands down. Slow, quiet roasts, remember: silence will harm them.'],
  tsd:['Time SD','Spread of crack timestamps in seconds. Fast roasts cluster tight, slow roasts stretch. Compare within one machine and style, not across.'],
  cnt:['Counted cracks','Valid cracks only: events auto-rejected by the width or voice gates and rows you tick as false positives are excluded from every stat and from the projection.'],
  rateI:['Rate per minute','Valid cracks in the last 10 seconds, times six. The live speed of the bean\'s voice.'],
@@ -514,6 +537,17 @@ function drawCockpit(id,o){
   g.font='600 20px -apple-system,sans-serif'; g.fillStyle='#a8998a'; g.fillText(o.sub||'',cx,cy+46);
   g.textAlign='start';
 }
+// bean voice dial: valid cracks in the last 30s vs the minimum the projection needs (8, provisional).
+// Alarm only mid-FC; past the bell's peak the fall is natural and the dial stands down.
+function updateVoice(){
+  const v=valid();
+  if(!running||!v.length){ drawCockpit('voiceG',{dim:true,num:'· · ·',sub:running?'waiting for cracks':''}); return; }
+  const now=(performance.now()-startT)/1000, MIN=8;
+  const n30=v.filter(c=>now-c.t<=30).length;
+  if(PASTPEAK&&now-v[v.length-1].t>20){ drawCockpit('voiceG',{dim:true,num:String(n30),sub:'quiet, as it should be'}); return; }
+  drawCockpit('voiceG',{u:Math.min(1,n30/(2*MIN)), zone:[0.5,1], tick:0.5, num:String(n30),
+    sub:n30>=MIN?'strong voice':(PASTPEAK?'fading':(n30>=MIN/2?'thin voice':'silence will harm them'))});
+}
 // pace dial: log scale 0.5x-2.0x, center tick = same speed as the reference. Locks once past the 25% point.
 function updatePace(){
   const cal=calFor()||calMap()['__house'], v=valid();
@@ -536,7 +570,7 @@ function updateSD(){
     $('tgRef').textContent='ref '+cal.tg;
   } else { drawCockpit('tgArc',{dim:true,num:cum?String(cum):'· · ·',sub:cum?'no reference':''}); $('tgRef').textContent=''; }
   $('pur').textContent=cracks.length?Math.round(v.length/cracks.length*100)+'%':'-';
-  updatePace();
+  updatePace(); updateVoice();
   // evenness: this session's crack-gain spread vs the reference roast's own spread (relative, like everything here)
   const gsd=v.length>1?sd(v.map(c=>c.g)):null;
   if(gsd!=null&&cal&&cal.gsd){
@@ -766,18 +800,33 @@ async function loadSession(file){
   else toast('Loaded: '+cracks.length+' cracks'+(meta.coffee?' ('+meta.coffee+')':'')+'. Fill Agtron ground, tap Map.');
 }
 // ---- SampleInRoast: tryer pulls become color anchors ----
+const SAMP_LINES=['The bean cannot hide now.','Spoon out, truth in.','Color caught mid-flight.','One more anchor for the gauge.'];
 function markSample(){
   if(!running){ toast('Only during a live session.'); return; }
   const t=(performance.now()-startT)/1000;
   SAMPLES.push({t, ag:null});
-  toast('Sample #'+SAMPLES.length+' marked at '+fmtT(t)+'. Fill its Agtron after the roast.');
+  const b=$('sampleBtn'); b.classList.remove('sPop'); void b.offsetWidth; b.classList.add('sPop');
+  const n=$('sampN'); n.style.display='inline-block'; n.textContent='S'+SAMPLES.length;
+  renderSampChips(); drawTimeline();
+  toast('S'+SAMPLES.length+' · '+fmtT(t)+' · '+SAMP_LINES[(SAMPLES.length-1)%SAMP_LINES.length]);
+}
+function delSample(i){
+  SAMPLES.splice(i,1); renderSampChips(); renderSamples(); drawTimeline();
+  const n=$('sampN'); if(SAMPLES.length) n.textContent='S'+SAMPLES.length; else n.style.display='none';
+}
+function renderSampChips(){
+  const el=$('sampChips'); if(!el) return;
+  if(!SAMPLES.length){ el.style.display='none'; el.innerHTML=''; return; }
+  el.style.display='flex';
+  el.innerHTML=SAMPLES.map((s,i)=>'<span style="display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--accent);border-radius:20px;padding:5px 10px;font-size:13px">S'+(i+1)+' · '+fmtT(s.t)+' <b style="color:var(--warn);cursor:pointer;padding:0 3px" onclick="delSample('+i+')">&times;</b></span>').join('');
 }
 function renderSamples(){
   const el=$('sampList'); if(!el) return;
   if(!SAMPLES.length){ el.innerHTML=''; return; }
   el.innerHTML='<div class="lbl" style="margin:8px 0 4px">tryer samples (fill measured Agtron)</div>'+
-    SAMPLES.map((s,i)=>'<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><span style="font-size:13px;color:var(--muted);min-width:74px">#'+(i+1)+' · '+fmtT(s.t)+'</span>'+
-    '<input type="text" inputmode="decimal" value="'+(s.ag??'')+'" placeholder="Agtron" oninput="SAMPLES['+i+'].ag=parseFloat(this.value)||null" style="flex:1;border:1px solid var(--line);border-radius:9px;padding:8px;font-size:15px;background:var(--panel2);color:var(--ink)"></div>').join('');
+    SAMPLES.map((s,i)=>'<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><span style="font-size:13px;color:var(--muted);min-width:74px">S'+(i+1)+' · '+fmtT(s.t)+'</span>'+
+    '<input type="text" inputmode="decimal" value="'+(s.ag??'')+'" placeholder="Agtron" oninput="SAMPLES['+i+'].ag=parseFloat(this.value)||null" style="flex:1;border:1px solid var(--line);border-radius:9px;padding:8px;font-size:15px;background:var(--panel2);color:var(--ink)">'+
+    '<b style="color:var(--warn);cursor:pointer;padding:0 6px;font-size:17px" onclick="delSample('+i+')">&times;</b></div>').join('');
 }
 // ---- maps portability: same maps on desktop and phone ----
 function exportMaps(){
@@ -840,6 +889,11 @@ function drawTimeline(){
     const mark=(t,dash)=>{ if(t<t0||t>t0+span) return; const x=X(t); tx.setLineDash(dash); tx.strokeStyle='rgba(243,237,228,0.5)'; tx.lineWidth=1.3; tx.beginPath(); tx.moveTo(x,0); tx.lineTo(x,H); tx.stroke(); tx.setLineDash([]); };
     mark(m,[]); mark(m-s1,[5,4]); mark(m+s1,[5,4]);
   }
+  // tryer sample marks: copper dashed drops, editable via the chips / the list
+  SAMPLES.forEach((s,i)=>{ if(s.t<t0||s.t>t0+span) return; const x=X(s.t);
+    tx.setLineDash([5,5]); tx.strokeStyle='#c98a3c'; tx.lineWidth=2; tx.beginPath(); tx.moveTo(x,16); tx.lineTo(x,H-16); tx.stroke(); tx.setLineDash([]);
+    tx.fillStyle='#c98a3c'; tx.font='bold 14px -apple-system,sans-serif'; tx.fillText('S'+(i+1), x+4, 26); tx.font='16px sans-serif';
+  });
   // the bell
   tx.strokeStyle='#3c7a5a'; tx.lineWidth=5; tx.lineCap='round'; tx.beginPath();
   for(let i=0;i<nb;i++){ const x=X(t0+(i+0.5)*bin), y=Y(sm[i]); i?tx.lineTo(x,y):tx.moveTo(x,y); }
@@ -857,7 +911,7 @@ function drawTimeline(){
     // exists only after real quiet; a fresh "last crack" is NOT C1, it is just the newest crack.
     const nowS=running?(performance.now()-startT)/1000:v[v.length-1].t+99;
     const quiet=nowS-v[v.length-1].t;
-    const pastPeak=sm[Math.min(nb-1,peakI+run)]<0.7*peak;
+    const pastPeak=sm[Math.min(nb-1,peakI+run)]<0.7*peak; PASTPEAK=pastPeak;
     const stages=[['A0',a0t],['A1',susUp(0.30)],['B0',susUp(0.70)]];
     if(pastPeak||quiet>6) stages.push(['B1',t0+(peakI+0.5)*bin]);
     if(quiet>12){ stages.push(['C0',susDn(0.70)]); stages.push(['C1',v[v.length-1].t]); }
