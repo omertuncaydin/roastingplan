@@ -215,7 +215,7 @@ function render(){
 }
 
 function findQ(n){ return DATA.find(q=>q.n===n); }
-function openBox(n,seed){ const b=$('box'+n); b.style.display='block'; const t=$('txt'+n); if(seed&&!t.value) t.value=seed; t.focus(); }
+function openBox(n,seed){ const b=$('box'+n); b.style.display='block'; const t=$('txt'+n); if(seed && (!t.value || /^Side [AB]\./.test(t.value))) t.value=seed; t.focus(); }
 function closeBox(n){ $('box'+n).style.display='none'; }
 function quick(n,side){ const q=findQ(n), s=lastSession(q.main), v=parseVerdict(q.main[COL.CT[s-1]]);
   openBox(n,'Side '+side+'. '+(side==='A'?v.crux.a:v.crux.b).split(/[.;]/)[0].trim()+'.'); }
