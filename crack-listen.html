@@ -121,12 +121,13 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07d</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07e</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
     </div>
-    <div class="sub">the crack analyzer · the probe reads the drum, the beans speak</div>
+    <div class="sub">the crack analyzer · the probe reads the drum, the beans speak · <span id="planTag" style="color:var(--accent);cursor:pointer" onclick="showPaywall()"></span></div>
+    <div class="hint" id="guideUp" style="margin:-8px 0 12px">Part of the CoffeeNutz cockpit: <a href="roast-guide.html" style="color:var(--accent)">Guide &rarr;</a> recipes, cupping, grading.</div>
   </div>
 
   <div class="card" id="cGain">
@@ -213,8 +214,10 @@ body.st-setup #btn{display:none}
         <input type="text" id="mAgWSd" placeholder="Whole SD" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
         <input type="text" id="mAgSd" placeholder="Ground SD" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
       </div>
+      <input type="text" id="mTarget" placeholder="Target Agtron (recipe · Pro)" inputmode="decimal" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin-bottom:6px">
       <input type="text" id="mNote" placeholder="Note (machine, phone position, cup notes)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
       <div class="hint">Fill what you know before saving; measure Agtron later? Load the saved zip back in, add it, tap Map.</div>
+      <div class="hint">Map with a roast taken to the DARKEST level you serve: projections interpolate inside the mapped range, never guess beyond it.</div>
       <div id="sampList"></div>
       <button class="go" id="mapBtn" onclick="saveCalIfMapped(true);updateGauge()" style="display:none;background:var(--accent2);margin-top:8px">Map this coffee (save color)</button>
     </div>
@@ -290,6 +293,7 @@ function toggle(){ running?stop():start(); }
 function hardRefresh(){ if(running||wav.len||rows.length||cracks.length){ if(!confirm('Refresh clears the unsaved session (audio + logs). Continue?')) return; } try{ const base=location.href.split('?')[0]; location.href=base+'?v='+Date.now(); }catch(e){ location.reload(); } }
 
 async function start(){
+  if(!planActive() && roastCount()>=FREE_ROASTS){ showPaywall(); return; }
   $('err').textContent='';
   try{
     stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
@@ -322,7 +326,7 @@ async function start(){
   bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; PASTPEAK=false; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
-  ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote'].forEach(i=>{ if($(i)) $(i).value=''; });
+  ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget'].forEach(i=>{ if($(i)) $(i).value=''; });
   updateSD(); drawTimeline(); updateGauge();
   document.body.className='st-live';
   running=true; $('btn').textContent=tt('Stop'); $('btn').className='stop'; $('status').textContent=tt('Listening. Calibrating background for ~2s, keep it running steady.');
@@ -337,6 +341,7 @@ function stop(){
   if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
   $('recAudio').disabled=false;
   STOPPROJ=LASTPROJ;   // freeze what the gauge said at the moment of drop, before retrospective recompute
+  if(!planActive() && valid().length>=10){ localStorage.setItem('bsRoastN',String(roastCount()+1)); refreshPlanUI(); }   // a "roast" = 10+ real cracks; test taps stay free
   $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):'';
   if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value; }
   renderSamples(); updateGauge();
@@ -448,7 +453,7 @@ function wavHeader(){
 }
 function csvText(){
   const mv=id=>($(id)&&$(id).value||'').replace(/,/g,';').trim();
-  let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n'+SAMPLES.map((s,i)=>'# sample,'+(i+1)+','+s.t.toFixed(1)+','+(s.ag||'')+'\n').join('');
+  let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,target,'+mv('mTarget')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n'+SAMPLES.map((s,i)=>'# sample,'+(i+1)+','+s.t.toFixed(1)+','+(s.ag||'')+'\n').join('');
   s+='t_s,rms,gain,bg_gain,ratio,trigger_x,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
   const vv=valid(), fss=vv.filter(c=>c.f).map(c=>c.f);
   if(vv.length>1) s+='\n# stats,total_gain,'+vv.reduce((a,c)=>a+c.g,0)+',time_sd,'+sd(vv.map(c=>c.t)).toFixed(2)+',gain_sd,'+sd(vv.map(c=>c.g)).toFixed(2)+(fss.length>1?',f_mean,'+Math.round(fss.reduce((a,b)=>a+b,0)/fss.length)+',f_sd,'+Math.round(sd(fss)):'')+(LASTPROJ?',proj_final,'+LASTPROJ:'')+(STOPPROJ?',proj_stop,'+STOPPROJ:'');
@@ -673,6 +678,40 @@ function adminTap(){
 }
 function adminLock(){ localStorage.removeItem('bsAdmin'); document.body.classList.remove('admin'); toast('Admin locked.'); }
 if(localStorage.getItem('bsAdmin')==='1') document.body.classList.add('admin');
+// ---- plans: free = 10 roasts, Pro $20/mo · $200/yr, Special = 12 months included.
+// v1 gate is HONOR-BASED (localStorage): real enforcement lands with the accounts layer + server codes.
+const FREE_ROASTS=10;
+function planActive(){ try{ const p=JSON.parse(localStorage.getItem('bsPlan')||'null'); return (p&&new Date(p.until)>=new Date())?p:null; }catch(e){ return null; } }
+function roastCount(){ return +(localStorage.getItem('bsRoastN')||0); }
+function refreshPlanUI(){ const p=planActive(), el=$('planTag'); if(!el) return;
+  el.textContent=p?((p.tier==='special'?'SPECIAL':'PRO')+' · '+p.until)
+    :(LANG==='tr'?('ücretsiz · '+Math.max(0,FREE_ROASTS-roastCount())+'/'+FREE_ROASTS+' kavurma'):('free · '+Math.max(0,FREE_ROASTS-roastCount())+'/'+FREE_ROASTS+' roasts')); }
+function grantPlan(tier,months,code){ const u=new Date(); u.setMonth(u.getMonth()+months);
+  localStorage.setItem('bsPlan',JSON.stringify({tier,until:u.toISOString().slice(0,10),code}));
+  toast((tier==='special'?'Special':'Pro')+' · '+(LANG==='tr'?'şu tarihe kadar aktif: ':'active until ')+u.toISOString().slice(0,10));
+  refreshPlanUI(); $('modal').style.display='none'; }
+function enterCode(){ const c=(prompt(LANG==='tr'?'Lisans kodu':'License code')||'').trim().toUpperCase(); if(!c) return;
+  if(c==='NUTZ-M26') grantPlan('pro',1,c);
+  else if(c==='NUTZ-Y26') grantPlan('pro',12,c);
+  else if(c==='NUTZ-S26') grantPlan('special',12,c);
+  else toast(LANG==='tr'?'Kod tanınmadı.':'Code not recognized.'); }
+function showPaywall(feature){
+  const p=planActive();
+  const tr=LANG==='tr';
+  $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">Crack Listener Pro</h1>'
+   +'<div class="hint" style="font-size:13px;margin:0">'
+   +(p?((tr?'Planın: ':'Your plan: ')+p.tier.toUpperCase()+' · '+p.until)
+      :((feature?(feature+' '+(tr?'Pro özelliğidir.':'is a Pro feature.')+' '):'')
+        +(tr?('Ücretsiz sürüm '+FREE_ROASTS+' kavurma içerir ('+Math.max(0,FREE_ROASTS-roastCount())+' kaldı).'):('The free version includes '+FREE_ROASTS+' roasts ('+Math.max(0,FREE_ROASTS-roastCount())+' left).'))
+        +'<br><br><b>$20</b>/'+(tr?'ay':'month')+' · <b>$200</b>/'+(tr?'yıl':'year')+'<br>'
+        +(tr?'Derin Kalibrasyon, numune çapaları ve reçeteler Pro ile açılır.':'Deep Calibration, sample anchors and recipes unlock with Pro.')))
+   +'</div>'
+   +'<button style="margin-top:14px;background:var(--accent2)" onclick="enterCode()">'+(tr?'Lisans kodu gir':'Enter license code')+'</button>'
+   +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="window.open(\'https://www.coffeenutz.net/\')">'+(tr?'coffeenutz.net üzerinden edin':'Get it at coffeenutz.net')+'</button>'
+   +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Kapat':'Close')+'</button>';
+  $('modal').style.display='flex';
+}
+refreshPlanUI();
 // ---- Agtron projection gauge: one mapped roast per coffee unlocks it (projection, never measurement) ----
 // Visual ported from the Guide's cockpit gauge: 270-degree arc, 36 segments, white knob, gold ticks.
 const SEC_PER_AG=4, FC_AG=125, AG_TOL=2, AG_MIN=40, AG_MAX=130;
@@ -726,8 +765,10 @@ function saveCalIfMapped(verbose){
   const entry={a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, gsd:Math.round(sd(v.map(c=>c.g))*10)/10, date:new Date().toISOString().slice(0,10), src:k,
     bgg:parseFloat($('mBatch').value)||null, hist:(m[k]&&m[k].hist)||[]};
   entry.hist=entry.hist.concat([{devSpan:entry.devSpan, agtron:ag, tg, q25, date:entry.date}]).slice(-8);
+  entry.target=parseFloat($('mTarget').value)||((m[k]&&m[k].target)||null);   // recipe target rides the map
   const anch=SAMPLES.filter(s=>s.ag&&s.t>a0).map(s=>({dt:+(s.t-a0).toFixed(1), ag:s.ag})).sort((x,y)=>x.dt-y.dt);
-  if(anch.length) entry.anchors=anch;   // SampleInRoast: measured color at known dev moments
+  if(anch.length&&planActive()) entry.anchors=anch;   // SampleInRoast anchors: Deep Calibration, Pro
+  else if(m[k]&&m[k].anchors) entry.anchors=m[k].anchors;   // keep earlier anchors
   // ghost bell: this roast's smoothed shape over its DEV span, normalized, for racing next time
   const BP=48, bshape=new Array(BP).fill(0);
   for(const c of v){ const rel=(c.t-a0)/(entry.devSpan||1); if(rel>=0&&rel<=1) bshape[Math.min(BP-1,Math.floor(rel*BP))]++; }
@@ -755,6 +796,8 @@ function gaugeSVG(u,loU,hiU,top,bot,dim){
       return '<line x1="'+a.toFixed(1)+'" y1="'+b.toFixed(1)+'" x2="'+c.toFixed(1)+'" y2="'+d.toFixed(1)+'" stroke="#e6c14b" stroke-width="3"/>'; };
     const [mx,my]=gpolar(cx,cy,r,uToAngle(u));
     extra=tk(loU)+tk(hiU)+'<circle cx="'+mx.toFixed(1)+'" cy="'+my.toFixed(1)+'" r="9" fill="#fff" stroke="#1a1410" stroke-width="2"/>';
+    if(TGT_U!=null){ const [tx2,ty2]=gpolar(cx,cy,r+w/2+9,uToAngle(TGT_U));
+      extra+='<circle cx="'+tx2.toFixed(1)+'" cy="'+ty2.toFixed(1)+'" r="5" fill="none" stroke="#e6c14b" stroke-width="2.5"/>'; }
   }
   return '<svg viewBox="0 0 240 200" width="100%" style="max-width:300px">'+segs+extra+
     '<text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-size="32" font-weight="800" fill="'+(dim?'#8a7a68':'#f3ede4')+'">'+top+'</text>'+
@@ -769,7 +812,9 @@ function drawGauge(state,projLo,projHi){
   else h=gaugeSVG(null,0,0,setup?'':'&#128274;',setup?'':tt('unmapped bean'),true);
   $('ag').innerHTML=h;
 }
+let TGT_U=null;
 function updateGauge(){
+  TGT_U=null;
   const k=(cName.value||'').trim();
   if(!k){ drawGauge('nocoffee'); $('agHint').textContent=tt('Name the coffee; each bean carries its own color map.'); return; }
   let cal=calFor(), borrowed=false;
@@ -778,7 +823,8 @@ function updateGauge(){
     const keys=Object.keys(calMap()).filter(x=>x!=='__house');
     $('agHint').textContent=tt('Unmapped on THIS device/app copy.')+' '+(keys.length?(tt('Mapped here:')+' '+keys.join(', ')+'.'):tt('No maps yet: load a session or roast, fill Agtron ground, tap Map. Note: Safari tab and Home-Screen app keep SEPARATE maps.'));
     return; }
-  const bTag=borrowed?(' · '+tt('borrowed house map')+' ('+(cal.src||'?')+')'):'';
+  const dcTag=(cal.anchors&&cal.anchors.length>=3)?(' · '+(LANG==='tr'?'derin kalibrasyon':'deep calibration')):'';
+  const bTag=(borrowed?(' · '+tt('borrowed house map')+' ('+(cal.src||'?')+')'):'')+dcTag;
   const v=valid();
   if(!v.length){ drawGauge('wait'); $('agHint').textContent=tt('Mapped on')+' '+cal.date+' (Agtron '+cal.agtron+')'+bTag+'. '+tt('Projection starts at first crack.'); return; }
   if(v.length<5){ drawGauge('wait'); $('agHint').textContent=(LANG==='tr'?('Çatlaklar toplanıyor ('+v.length+'/5); birkaç pat henüz ilk çatlak değildir.'):('Gathering cracks ('+v.length+'/5) before projecting; a couple of pops is not a first crack yet.')); return; }
@@ -809,10 +855,14 @@ function updateGauge(){
   const band=Math.min(6,Math.max(AG_TOL, AG_TOL+Math.abs(prT-prE)/2));   // honest range: widens when estimators disagree
   ENGINE={pT,pE,p,tq,band,devEff};
   LASTPROJ=Math.round(proj);
+  TGT_U=(planActive()&&cal.target)?agU(cal.target):null;   // recipe target ring: Pro
   drawGauge('live',proj-band,proj+band);
-  $('agHint').textContent=LANG==='tr'
+  let hint=LANG==='tr'
     ?((running?('~'+Math.round(proj)+' şimdi bırakılırsa'):('son çağrı ~'+Math.round(proj)))+' (saat '+Math.round(prT)+' · enerji '+Math.round(prE)+' · tempo '+pace.toFixed(2)+')'+bTag+'. Öngörü, ölçüm değil.')
     :((running?('~'+Math.round(proj)+' if dropped now'):('final call ~'+Math.round(proj)))+' (clock '+Math.round(prT)+' · energy '+Math.round(prE)+' · pace '+pace.toFixed(2)+')'+bTag+'. Projection, not measurement.');
+  if(TGT_U!=null){ hint+=' · '+(LANG==='tr'?'hedef':'target')+' '+cal.target;
+    if(running&&Math.abs(proj-cal.target)<=AG_TOL) hint+=LANG==='tr'?' · TAHLİYE PENCERESİ':' · DROP WINDOW'; }
+  $('agHint').textContent=hint;
 }
 // ---- coffee badge (sticker info) per coffee, feeds the batch card ----
 function badgeMap(){ try{ return JSON.parse(localStorage.getItem('bsBadge')||'{}'); }catch(e){ return {}; } }
@@ -897,7 +947,7 @@ async function loadSession(file){
   LASTPROJ=null; STOPPROJ=null; $('finalCall').textContent=''; wav={chunks:[],len:0,sr:48000}; rows=[];
   if(meta.coffee){ cName.value=meta.coffee; localStorage.setItem('bsCoffee',meta.coffee); loadBadge(); renderNameplate(); }
   $('mCoffee').value=meta.coffee||''; $('mBatch').value=meta.batch_g||''; $('mAgW').value=meta.agtron_whole||''; $('mAgG').value=meta.agtron_ground||''; $('mNote').value=meta.note||'';
-  $('mAgWSd').value=meta.agtron_whole_sd||''; $('mAgSd').value=meta.agtron_ground_sd||''; $('mProc').value=meta.process||''; $('mChgFc').value=meta.charge_to_fc||''; $('mDrop').value=meta.drop_after_last_s||'';
+  $('mAgWSd').value=meta.agtron_whole_sd||''; $('mAgSd').value=meta.agtron_ground_sd||''; $('mProc').value=meta.process||''; $('mChgFc').value=meta.charge_to_fc||''; $('mDrop').value=meta.drop_after_last_s||''; $('mTarget').value=meta.target||'';
   $('metaBox').style.display='block'; $('mapBtn').style.display='block';
   $('dlZip').style.display='block'; $('dlCard').style.display='block';   // re-save allowed: corrected FP labels are the training corpus
   document.body.className='st-done';
@@ -908,6 +958,7 @@ async function loadSession(file){
 // ---- SampleInRoast: tryer pulls become color anchors ----
 const SAMP_LINES=['The bean cannot hide now.','Spoon out, truth in.','Color caught mid-flight.','One more anchor for the gauge.'];
 function markSample(){
+  if(!planActive()){ showPaywall(LANG==='tr'?'Numune çekme (Derin Kalibrasyon)':'Sample pulled (Deep Calibration)'); return; }
   if(!running){ toast(tt('Only during a live session.')); return; }
   const t=(performance.now()-startT)/1000;
   SAMPLES.push({t, ag:null});
