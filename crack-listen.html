@@ -145,7 +145,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zx</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zy</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -206,6 +206,7 @@ body.st-setup #btn{display:none}
         <input type="text" id="bProcess" placeholder="Process" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:16px;background:var(--panel2);color:var(--ink)">
       </div>
       <input type="text" id="bNotes" placeholder="Notes (e.g. plum, hazelnut)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:16px;background:var(--panel2);color:var(--ink)">
+      <input type="text" id="bCue" placeholder="Power cue · shown when listening starts (e.g. at cinnamon drop to P6)" style="width:100%;border:1px solid var(--accent);border-radius:9px;padding:9px;font-size:16px;background:var(--panel2);color:var(--ink);margin-top:6px">
       <div class="hint">Saved per coffee on this phone; the batch card pulls from here.</div>
     </details>
   </div>
@@ -377,6 +378,11 @@ async function start(){
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw'].forEach(i=>{ if($(i)) $(i).value=''; });
   updateSD(); drawTimeline(); updateGauge();
   document.body.className='st-live';
+  const bcue=((badgeMap()[badgeKey()]||{}).cue||'').replace(/</g,'&lt;');
+  if(bcue){ $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">'+(LANG==='tr'?'Reçete hatırlatması':'Recipe reminder')+'</h1>'
+    +'<div style="font-size:23px;font-weight:800;color:var(--gold);line-height:1.35;margin:6px 0 4px">'+bcue+'</div>'
+    +'<button style="margin-top:14px;background:var(--accent2)" onclick="document.getElementById(\'modal\').style.display=\'none\'">OK</button>';
+    $('modal').style.display='flex'; }
   running=true; $('btn').textContent=tt('Drop'); $('btn').className='stop'; $('status').textContent=tt('Listening. Calibrating background for ~2s, keep it running steady.');
   loop();
 }
@@ -1026,9 +1032,9 @@ function updateGauge(){
 // ---- coffee badge (sticker info) per coffee, feeds the batch card ----
 function badgeMap(){ try{ return JSON.parse(localStorage.getItem('bsBadge')||'{}'); }catch(e){ return {}; } }
 function badgeKey(){ return (cName.value||'').trim().toLowerCase(); }
-function loadBadge(){ const b=badgeMap()[badgeKey()]||{}; $('bSub').value=b.sub||''; $('bHarvest').value=b.harvest||''; $('bProcess').value=b.process||''; $('bNotes').value=b.notes||''; }
-function saveBadge(){ const k=badgeKey(); if(!k) return; const m=badgeMap(); m[k]={sub:$('bSub').value,harvest:$('bHarvest').value,process:$('bProcess').value,notes:$('bNotes').value}; localStorage.setItem('bsBadge',JSON.stringify(m)); }
-['bSub','bHarvest','bProcess','bNotes'].forEach(i=>$(i).addEventListener('input',saveBadge));
+function loadBadge(){ const b=badgeMap()[badgeKey()]||{}; $('bSub').value=b.sub||''; $('bHarvest').value=b.harvest||''; $('bProcess').value=b.process||''; $('bNotes').value=b.notes||''; if($('bCue')) $('bCue').value=b.cue||''; }
+function saveBadge(){ const k=badgeKey(); if(!k) return; const m=badgeMap(); m[k]={sub:$('bSub').value,harvest:$('bHarvest').value,process:$('bProcess').value,notes:$('bNotes').value,cue:$('bCue').value}; localStorage.setItem('bsBadge',JSON.stringify(m)); }
+['bSub','bHarvest','bProcess','bNotes','bCue'].forEach(i=>$(i).addEventListener('input',saveBadge));
 cName.addEventListener('input',loadBadge);
 loadBadge();
 
