@@ -24,9 +24,11 @@ body.st-live #cGauge details{display:none}
 #sampleBtn{display:none;background:var(--panel);color:var(--ink);border:2px solid var(--accent);border-radius:14px;font-size:16px;font-weight:700;padding:13px;width:100%;align-items:center;justify-content:center;gap:10px}
 body.st-live #sampleBtn{display:flex;position:sticky;bottom:80px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45);order:5}
 #sampN{background:var(--accent);color:#fff;border-radius:10px;padding:2px 9px;font-size:13px;display:none}
-#cAdmin,#cBri,#cTsd{display:none}
+#cAdmin,#adminStatsRow{display:none}
 body.admin #cAdmin{display:block}
-body.admin #cBri,body.admin #cTsd{display:block}
+body.admin #adminStatsRow{display:flex}
+#dialGrid>.card{margin-bottom:0;text-align:center;min-width:0}
+@media (min-width:900px){ #dialGrid{grid-template-columns:repeat(4,1fr)} }
 @keyframes sPop{0%{transform:scale(1)}45%{transform:scale(1.07) rotate(-1.2deg)}100%{transform:scale(1)}}
 .sPop{animation:sPop .4s ease}
 @media (min-width:900px){
@@ -121,7 +123,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07g</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07h</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -173,13 +175,13 @@ body.st-setup #btn{display:none}
     <div class="lbl">session timeline · DEV <span class="info" onclick="showInfo('tl')">&#9432;</span></div>
     <canvas id="tl" width="900" height="180"></canvas>
     <div class="ctl"><label>Bin <span class="info" onclick="showInfo('bin')">&#9432;</span></label><button class="pm" onclick="nudge('bin',-1)">&minus;</button><input type="range" id="bin" min="1" max="10" step="1" value="4" oninput="document.getElementById('binV').textContent=this.value+' s';drawTimeline()"><button class="pm" onclick="nudge('bin',1)">+</button><span class="v" id="binV">4 s</span></div>
-    <div class="row" style="margin-top:10px">
+    <div id="dialGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px">
       <div class="card"><div class="lbl">total gain <span class="info" onclick="showInfo('tg')">&#9432;</span></div><canvas id="tgArc" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas><div class="hint" id="tgRef" style="margin-top:2px;font-size:11px"></div></div>
       <div class="card"><div class="lbl">pace <span class="info" onclick="showInfo('pace')">&#9432;</span></div><canvas id="paceG" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas><div class="hint" style="margin-top:2px;font-size:11px">vs reference</div></div>
       <div class="card"><div class="lbl">bean voice <span class="info" onclick="showInfo('voice')">&#9432;</span></div><canvas id="voiceG" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas><div class="hint" style="margin-top:2px;font-size:11px">cracks / 30s</div></div>
+      <div class="card"><div class="lbl">evenness <span class="info" onclick="showInfo('even')">&#9432;</span></div><canvas id="evenG" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas><div class="hint" style="margin-top:2px;font-size:11px">vs reference</div></div>
     </div>
-    <div class="row" style="margin-top:10px">
-      <div class="card"><div class="lbl">evenness <span class="info" onclick="showInfo('even')">&#9432;</span></div><canvas id="evenG" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas></div>
+    <div class="row" id="adminStatsRow" style="margin-top:10px">
       <div class="card" id="cBri"><div class="lbl">brightness <span class="info" onclick="showInfo('bri')">&#9432;</span></div><div class="n" id="fMean">-</div><div class="hint" id="fSd" style="margin-top:2px;font-size:11px"></div></div>
       <div class="card" id="cTsd"><div class="lbl">time SD s <span class="info" onclick="showInfo('tsd')">&#9432;</span></div><div class="n" id="sdT">-</div></div>
     </div>
@@ -214,6 +216,15 @@ body.st-setup #btn{display:none}
         <input type="text" id="mAgWSd" placeholder="Whole SD" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
         <input type="text" id="mAgSd" placeholder="Ground SD" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
       </div>
+      <select id="mLevelPick" onchange="if(this.value){$('mAgG').value=this.value;toast(LANG==='tr'?'Tahmini Agtron yazıldı (±6). Ölçebildiğin gün gerçek değerle değiştir.':'Estimated Agtron filled (±6). Replace with a measured value when you can.');this.selectedIndex=0;}" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:14px;background:var(--panel2);color:var(--muted);margin-bottom:6px">
+        <option value="">No color meter? Pick the closest level (CoffeeNutz estimate)</option>
+        <option value="80">Nordic light · ~80</option>
+        <option value="70">Light / City · ~70</option>
+        <option value="60">Medium / Full City · ~60</option>
+        <option value="50">Medium-dark / Full City+ · ~50</option>
+        <option value="42">Dark / Vienna · ~42</option>
+        <option value="35">Very dark / French · ~35</option>
+      </select>
       <input type="text" id="mTarget" placeholder="Target Agtron (recipe · Pro)" inputmode="decimal" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin-bottom:6px">
       <input type="text" id="mNote" placeholder="Note (machine, phone position, cup notes)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
       <div class="hint">Fill what you know before saving; measure Agtron later? Load the saved zip back in, add it, tap Map.</div>
@@ -550,6 +561,10 @@ const INFO={
  admSlope:['Learned slope','Least-squares seconds-per-Agtron fitted from this coffee\'s mapped history, else pooled across maps. Not yet in the live formula; graduates at 3+ mapped roasts per coffee.'],
  admDevEff:['Effective dev','p times the reference devSpan: the corrected seconds the anchor interpolation feeds on. The meter shows position within the reference DEV.'],
  admGrade:['Self-grade','Projected at stop / retrospective final / measured Agtron. The engine\'s report card, one roast at a time.'],
+ admEvents:['Events total vs valid','Everything that fired the trigger vs what survived the gates. The bar is the purity fraction.'],
+ admRej:['Rejections by reason','Width = burst too long to be a bean. Voice = brightness too far from this bean\'s live cluster. Rising voice-rejects on a clean roast means the gate is too tight: raise the sigma rule.'],
+ admBG:['Background floor','The rolling noise floor the trigger measures against, on the 0-100 gain scale. Riding high = roar leaking through the high-pass: raise HP.'],
+ admPaceRaw:['Pace raw','The unclamped tq/q25 ratio before the clamp rule. If this often hits the clamp walls, widen PMIN/PMAX in the Guide rules card.'],
  sens:['Trigger threshold','A crack counts only when a 1 ms burst is this many times louder than the rolling background floor. LOWER catches more (more sensitive, more noise too); HIGHER is stricter. Start low (3-5) by the machine and raise only until scoop taps and clanks stop registering.'],
  hp:['High-pass','Everything below this frequency is cut before detection: drum rumble, fan, motor hum. Raise it until the background floor stops riding the roar; lower it if real cracks arrive thin. The raw WAV is recorded before this filter, so recordings are never affected.'],
  bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.'],
@@ -674,11 +689,16 @@ function renderAdmin(){
   +admRow('admVoice','voice cluster',bv?((bv.med/1000).toFixed(1)+'k ± '+Math.round(bv.mad)):'·',null)
   +admRow('admSlope','learned slope',sl?sl.toFixed(1)+' s/Ag':'·',sl?(sl-2)/8:null)
   +admRow('admDevEff','effective dev',E.devEff!=null?Math.round(E.devEff)+'s':'·',(cal&&cal.devSpan&&E.devEff!=null)?E.devEff/cal.devSpan:null)
-  +admRow('admGrade','stop / final / measured',(STOPPROJ||'·')+' / '+(LASTPROJ||'·')+' / '+(($('mAgG')&&$('mAgG').value)||'·'),null);
+  +admRow('admGrade','stop / final / measured',(STOPPROJ||'·')+' / '+(LASTPROJ||'·')+' / '+(($('mAgG')&&$('mAgG').value)||'·'),null)
+  +admRow('admEvents','events total / valid',cracks.length+' / '+v.length,cracks.length?v.length/cracks.length:null)
+  +admRow('admRej','rejected width / voice',cracks.filter(c=>c.why==='width').length+' / '+cracks.filter(c=>c.why==='voice').length,null)
+  +admRow('admBG','background floor (gain)',bgEMA?toGain(bgEMA).toFixed(0):'·',bgEMA?toGain(bgEMA)/100:null)
+  +admRow('admPaceRaw','pace raw (unclamped)',(E.tq&&cal&&cal.q25)?(E.tq/cal.q25).toFixed(2)+'×':'·',null);
 }
 function adminTap(){
   if(document.body.classList.contains('admin')){ toast('Admin is on. Panel is below the tuning fold.'); return; }
   const c=prompt('Admin code'); if(c==='PATRON26'){ localStorage.setItem('bsAdmin','1'); document.body.classList.add('admin'); renderAdmin(); updateSD(); toast('Admin unlocked: engine internals visible.'); }
+  else if(c) toast(LANG==='tr'?'Yanlış kod.':'Wrong code.');
 }
 function adminLock(){ localStorage.removeItem('bsAdmin'); document.body.classList.remove('admin'); toast('Admin locked.'); }
 if(localStorage.getItem('bsAdmin')==='1') document.body.classList.add('admin');
@@ -1106,10 +1126,9 @@ function drawTimeline(){
   // corner readouts: mono clock left, window badge right
   const nowT=running?(performance.now()-startT)/1000:v[v.length-1].t;
   const a0c=effA0(v);
-  tx.fillStyle='#8a7a68'; tx.font='13px ui-monospace,Menlo,monospace';
-  tx.fillText(fmtT(nowT)+(nowT>a0c?' · DEV '+fmtT(nowT-a0c):''), 12, 20);
-  tx.font='bold 15px -apple-system,sans-serif'; tx.textAlign='right';
-  tx.fillText(tt('window')+' '+fmtT(span), W-8, 20); tx.textAlign='start'; tx.font='16px sans-serif';
+  tx.fillStyle='#f3ede4'; tx.font='bold 19px ui-monospace,Menlo,monospace';
+  tx.fillText(fmtT(nowT)+(nowT>a0c?' · DEV '+fmtT(nowT-a0c):''), 12, 24);
+  tx.font='16px sans-serif';
   // histogram: share of cracks per bin
   const bin=+(($('bin')&&$('bin').value)||1), nb=Math.max(1,Math.ceil(span/bin)), counts=new Array(nb).fill(0);
   for(const c of v){ counts[Math.min(nb-1,Math.max(0,Math.floor((c.t-t0)/bin)))]++; }
