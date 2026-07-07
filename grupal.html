@@ -44,6 +44,7 @@ button:active{transform:scale(.99)}
     <div style="display:flex;align-items:baseline;gap:10px">
       <div class="big" id="count">·</div>
       <div class="hint" id="targetTxt"></div>
+      <div class="hint" id="pledgedTxt" style="margin-left:auto"></div>
     </div>
     <div class="bar"><div class="fill" id="fill" style="width:0%"></div><div class="tick" id="tick" style="left:100%"></div></div>
     <div class="count" id="leftTxt"></div>
@@ -51,7 +52,7 @@ button:active{transform:scale(.99)}
     <div class="count" id="endTxt"></div>
   </div>
 
-  <div class="guarantee">Hedefe ulaşılmazsa kimseden ücret alınmaz. Söz toplarız, hedef dolunca ödeme penceresi açılır.</div>
+  <div class="guarantee" id="guaranteeTxt">Kapora ile yerini kilitlersin. Hedef dolmazsa kaporan iade edilir; hedef dolunca kapora fiyattan düşülür.</div>
 
   <div class="card" id="joinCard">
     <div class="lbl">söz ver · yerini ayır</div>
@@ -70,7 +71,13 @@ button:active{transform:scale(.99)}
   </div>
 
   <div class="share" id="shareBox">
-    <div style="font-size:14px;margin-bottom:6px">Sözün alındı. Şimdi hedefi birlikte dolduralım:</div>
+    <div id="lockRow" style="display:none;margin-bottom:10px">
+      <div style="font-size:14px;margin-bottom:8px">Sözün alındı. Şimdi yerini kilitle:</div>
+      <button style="background:var(--accent);color:#16130f" onclick="window.open(DEPLINK)" id="depBtn">Yerini kilitle · kapora</button>
+      <div class="hint" id="depTxt" style="margin-top:6px"></div>
+    </div>
+    <div id="lockedBadge" style="display:none;border:1px solid var(--green);border-radius:10px;padding:10px;margin-bottom:10px;font-weight:700">Yerin kilitli ✓</div>
+    <div style="font-size:14px;margin-bottom:6px">Hedefi birlikte dolduralım:</div>
     <code id="shareLink"></code>
     <button style="margin-top:10px;background:var(--green);color:#fff" onclick="doShare()">Bağlantıyı paylaş</button>
   </div>
@@ -82,7 +89,7 @@ button:active{transform:scale(.99)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 const SLUG=new URLSearchParams(location.search).get('k')||'ornek-kampanya';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-let PAYURL=null, STATE=null;
+let PAYURL=null, STATE=null, DEPLINK=null;
 const $=id=>document.getElementById(id);
 
 async function load(){
@@ -95,16 +102,21 @@ async function load(){
     $('lot').textContent=s.lot||'';
     $('unitTxt').textContent=s.unit?('Birim: '+s.unit):'';
     $('shipTxt').textContent=s.ships_by?('Teslimat: '+s.ships_by):'';
-    $('count').textContent=s.count;
-    $('targetTxt').textContent='/ '+s.target+' hedef';
-    const pct=Math.min(100,Math.round(100*s.count/s.target));
+    $('count').textContent=s.locked!=null?s.locked:s.pledged;
+    $('targetTxt').textContent='/ '+s.target+' kilitli hedef';
+    $('pledgedTxt').textContent='+'+Math.max(0,(s.pledged||0)-(s.locked||0))+' söz';
+    const pct=Math.min(100,Math.round(100*(s.locked||0)/s.target));
     $('fill').style.width=pct+'%';
     $('tick').style.left=Math.min(100,100*s.target/(s.cap||s.target))+'%';
-    const left=Math.max(0,s.target-s.count);
-    $('leftTxt').textContent=left>0?('Hedefe '+left+' kişi kaldı'):'Hedef doldu';
+    const left=Math.max(0,s.target-(s.locked||0));
+    $('leftTxt').textContent=left>0?('Hedefe '+left+' kilitli yer kaldı'):'Hedef doldu';
+    if(s.deposit_txt) $('depTxt').textContent=s.deposit_txt;
+    const myRef=localStorage.getItem('grupal_'+SLUG);
+    if(s.deposit_url&&myRef){ DEPLINK=s.deposit_url+(s.deposit_url.includes('?')?'&':'?')+'attributes[ref]='+encodeURIComponent(myRef)+'&attributes[k]='+encodeURIComponent(SLUG); }
+    if(myRef) checkMine(myRef);
     const end=new Date(s.end_at), days=Math.max(0,Math.ceil((end-Date.now())/864e5));
     $('endTxt').textContent='Kampanya bitişine '+days+' gün';
-    $('ladder').innerHTML=(s.ladder||[]).map(r=>'<div class="rung'+(s.count>=r.at?' hit':'')+'"><span>'+r.at+' katılımcıda</span><b>'+r.price+'</b></div>').join('');
+    $('ladder').innerHTML=(s.ladder||[]).map(r=>'<div class="rung'+((s.locked||0)>=r.at?' hit':'')+'"><span>'+r.at+' kilitli katılımcıda</span><b>'+r.price+'</b></div>').join('');
     if((s.status==='funded'||s.status==='paying')&&PAYURL){ $('payBlock').style.display='block'; }
   }catch(e){ $('title').textContent='Bağlantı hatası, tekrar deneyin'; }
 }
@@ -125,6 +137,15 @@ async function pledge(){
     } else alert(j.error==='this email already pledged'?'Bu e-posta ile zaten söz verilmiş.':(j.error||'Hata'));
   }catch(e){ alert('Bağlantı hatası, tekrar deneyin.'); }
   $('joinBtn').disabled=false; $('joinBtn').textContent='Söz veriyorum';
+}
+async function checkMine(ref){
+  try{
+    const r=await fetch(API+'/mine?slug='+encodeURIComponent(SLUG)+'&ref='+encodeURIComponent(ref));
+    const j=await r.json();
+    const lockedish=j.status==='locked'||j.status==='paid';
+    $('lockedBadge').style.display=lockedish?'block':'none';
+    $('lockRow').style.display=(!lockedish&&DEPLINK)?'block':'none';
+  }catch(e){}
 }
 function doShare(){
   const link=$('shareLink').textContent;
