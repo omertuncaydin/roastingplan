@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07n</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07o</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -288,7 +288,7 @@ body.st-setup #btn{display:none}
 let AC=null, stream=null, src=null, hpF=null, lpF=null, analyser=null, buf=null, running=false, raf=null;
 let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
-let cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={};
+let cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={}, STOPT=null, PHASE=0;
 let LANG=localStorage.getItem('bsLang')||'en';   // declared at the very top: eval-order safe (v07e lesson)
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
@@ -337,7 +337,7 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('mapBtn').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; PASTPEAK=false; LASTSTAGES=null; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -354,6 +354,7 @@ function stop(){
   if(AC) AC.close();
   if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
   $('recAudio').disabled=false;
+  STOPT=(performance.now()-startT)/1000;   // the DROP moment: known exactly, never invented
   STOPPROJ=LASTPROJ;   // freeze what the gauge said at the moment of drop, before retrospective recompute
   if(!planActive() && valid().length>=10){ localStorage.setItem('bsRoastN',String(roastCount()+1)); refreshPlanUI(); }   // a "roast" = 10+ real cracks; test taps stay free
   $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):'';
@@ -470,7 +471,7 @@ function csvText(){
   let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,target,'+mv('mTarget')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n'+SAMPLES.map((s,i)=>'# sample,'+(i+1)+','+s.t.toFixed(1)+','+(s.ag||'')+'\n').join('');
   s+='t_s,rms,gain,bg_gain,ratio,trigger_x,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
   const vv=valid(), fss=vv.filter(c=>c.f).map(c=>c.f);
-  if(vv.length>1) s+='\n# stats,total_gain,'+vv.reduce((a,c)=>a+c.g,0)+',time_sd,'+sd(vv.map(c=>c.t)).toFixed(2)+',gain_sd,'+sd(vv.map(c=>c.g)).toFixed(2)+(fss.length>1?',f_mean,'+Math.round(fss.reduce((a,b)=>a+b,0)/fss.length)+',f_sd,'+Math.round(sd(fss)):'')+(LASTPROJ?',proj_final,'+LASTPROJ:'')+(STOPPROJ?',proj_stop,'+STOPPROJ:'');
+  if(vv.length>1) s+='\n# stats,total_gain,'+vv.reduce((a,c)=>a+c.g,0)+',time_sd,'+sd(vv.map(c=>c.t)).toFixed(2)+',gain_sd,'+sd(vv.map(c=>c.g)).toFixed(2)+(fss.length>1?',f_mean,'+Math.round(fss.reduce((a,b)=>a+b,0)/fss.length)+',f_sd,'+Math.round(sd(fss)):'')+(LASTPROJ?',proj_final,'+LASTPROJ:'')+(STOPPROJ?',proj_stop,'+STOPPROJ:'')+(PHASE?',phase_final,'+PHASE.toFixed(3):'');
   if(LASTSTAGES&&LASTSTAGES.length) s+='\n# stages,'+LASTSTAGES.map(sg=>sg[0]+','+sg[1].toFixed(1)).join(',');
   s+='\n# cracks: n,t_s,gain,fp,f_hz,w_ms,hf\n'+cracks.map((c,i)=>'# '+(i+1)+','+c.t.toFixed(2)+','+c.g+','+(c.fp?1:0)+','+(c.f||'')+','+(c.w||'')+','+(c.hf!=null?c.hf:'')).join('\n');
   return s;
@@ -571,10 +572,11 @@ const INFO={
  admRej:['Rejections by reason','Width = burst too long to be a bean. Voice = brightness too far from this bean\'s live cluster. Rising voice-rejects on a clean roast means the gate is too tight: raise the sigma rule.'],
  admBG:['Background floor','The rolling noise floor the trigger measures against, on the 0-100 gain scale. Riding high = roar leaking through the high-pass: raise HP.'],
  admPaceRaw:['Pace raw','The unclamped tq/q25 ratio before the clamp rule. If this often hits the clamp walls, widen PMIN/PMAX in the Guide rules card.'],
+ admPhase:['Envelope phase','Stepless position inside the FC loudness envelope: 0 at A0, 0.5 at the crown, 1 in the silence valley. Mic-invariant and speed-invariant by construction. Being measured and logged (phase_final in CSV, phDrop in maps) to test the thesis that color follows phase; joins the live formula when the labeled data proves its tolerance.'],
  sens:['Trigger threshold','A crack counts only when a 1 ms burst is this many times louder than the rolling background floor. LOWER catches more (more sensitive, more noise too); HIGHER is stricter. Start low (3-5) by the machine and raise only until scoop taps and clanks stop registering.'],
  hp:['High-pass','Everything below this frequency is cut before detection: drum rumble, fan, motor hum. Raise it until the background floor stops riding the roar; lower it if real cracks arrive thin. The raw WAV is recorded before this filter, so recordings are never affected.'],
  bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.'],
- tl:['Session timeline, the whole story','Gold ticks on the floor: every valid crack. Thick green with the soft fill: the smoothed crack rate, the bell. Grey dashed: the GHOST of your mapped reference roast, raced live, with the lap chip telling you how far ahead or behind you are. The gold floor edge is DEV progress from A0. The window centers the crack activity and snaps to standard sizes (top-right badge).<br><br>The gain stages ride the bell:<br>&bull; <b>A0</b> · the literal first crack (confirmed by followers, a lone pop cannot claim it)<br>&bull; <b>A1</b> · sustained rise past 30% of peak<br>&bull; <b>B0</b> · 70% on the way up<br>&bull; <b>B1</b> · the crown (appears once the fall is real)<br>&bull; <b>C0</b> · the confirmed decline: live once the bell has fallen for 20% of the FC span (the reference span when mapped, estimated from this roast\'s own rise when not), settling at the B1-C1 midpoint when C1 is known<br>&bull; <b>C1</b> · the definite last crack (only after real silence; a fresh crack is never C1)<br><br>Right-side markers settle as the data does; thresholds are provisional until labeled sessions calibrate them.'],
+ tl:['Session timeline, the whole story','Gold ticks on the floor: every valid crack. Thick green with the soft fill: the smoothed crack rate, the bell. Grey dashed: the GHOST of your mapped reference roast, raced live, with the lap chip telling you how far ahead or behind you are. The gold floor edge is DEV progress from A0. The window centers the crack activity and snaps to standard sizes (top-right badge).<br><br>The gain stages ride the bell:<br>&bull; <b>A0</b> · the literal first crack (confirmed by followers, a lone pop cannot claim it)<br>&bull; <b>A1</b> · sustained rise past 30% of peak<br>&bull; <b>B0</b> · 70% on the way up<br>&bull; <b>B1</b> · the crown (appears once the fall is real)<br>&bull; <b>C0</b> · the confirmed decline: live once the bell has fallen for 20% of the FC span (the reference span when mapped, estimated from this roast\'s own rise when not), settling at the B1-C1 midpoint when C1 is known<br>&bull; <b>C1</b> · the definite last crack, earned only by OBSERVED silence: 10s minimum, longer for slow roasts (3x the recent crack gap). A roast stopped before that ends with a <b>DROP</b> chip at the stop moment instead: nothing is invented beyond the evidence<br><br>Right-side markers settle as the data does; thresholds are provisional until labeled sessions calibrate them.'],
  cap:['Session capture, the whole story','While listening, the app keeps three things: the raw microphone audio as WAV (tapped BEFORE the high-pass, ~5.5 MB per minute), a per-frame CSV (time, loudness, floor, ratio, your slider settings, every crack), and your crack log edits: ticked rows travel as labeled false positives, swiped rows are removed. Fill the roast record (coffee, batch, Agtron) after Stop and it rides inside the CSV header; the Agtron ground value is also what unlocks the color gauge for that coffee. Save session packs WAV + CSV into one zip. Everything lives only in this page’s memory: close or reload without saving and the session is gone.']
 };
 const INFO_TR={
@@ -592,7 +594,7 @@ const INFO_TR={
  sens:['Tetik eşiği','Bir çatlak, 1 ms\'lik patlama arka plan tabanından bu kat daha gürse sayılır. DÜŞÜK daha çok yakalar (daha hassas, daha çok gürültü); YÜKSEK daha katı. Makinenin yanında düşük başla (3-5), kepçe ve tıkırtılar kaydolmayı bırakana kadar yükselt.'],
  hp:['Yüksek geçiren','Bu frekansın altındaki her şey algılamadan önce kesilir: kazan uğultusu, fan, motor. Taban gürlemeyle yükselmeyi bırakana kadar yükselt; gerçek çatlaklar cılız gelirse düşür. Ham WAV bu filtreden ÖNCE kaydedilir.'],
  bin:['Aralık genişliği','Zaman çizgisi histogramının çubuk genişliği. Küçük aralık dokuyu, büyük aralık biçimi gösterir. Yalnızca görünüm; algılama matematiğini değiştirmez.'],
- tl:['Seans zaman çizgisi, bütün hikâye','Tabandaki altın çizgiler: her geçerli çatlak. Dolgulu kalın yeşil: yumuşatılmış çatlak hızı, yani çan. Gri kesikli: eşlenmiş referans kavurmanın HAYALETİ, canlı yarışta; tur çipi önde mi geride mi olduğunu söyler. Altın taban kenarı A0\'dan itibaren DEV ilerlemesi.<br><br>Gain evreleri çanın üstünde:<br>&bull; <b>A0</b> · gerçek ilk çatlak (takipçilerle doğrulanır)<br>&bull; <b>A1</b> · tepenin %30\'unu aşan kalıcı yükseliş<br>&bull; <b>B0</b> · çıkışta %70<br>&bull; <b>B1</b> · taç (düşüş gerçekleşince görünür)<br>&bull; <b>C0</b> · doğrulanmış düşüş: canlıda çan FC süresinin %20\'si kadar düştüğünde (eşliyken referans süre, değilken bu kavurmanın kendi yükselişinden tahmin), C1 bilinince B1-C1 orta noktasına oturur<br>&bull; <b>C1</b> · kesin son çatlak (ancak gerçek sessizlikten sonra)<br><br>Sağ taraf işaretleri veri oturdukça oturur.'],
+ tl:['Seans zaman çizgisi, bütün hikâye','Tabandaki altın çizgiler: her geçerli çatlak. Dolgulu kalın yeşil: yumuşatılmış çatlak hızı, yani çan. Gri kesikli: eşlenmiş referans kavurmanın HAYALETİ, canlı yarışta; tur çipi önde mi geride mi olduğunu söyler. Altın taban kenarı A0\'dan itibaren DEV ilerlemesi.<br><br>Gain evreleri çanın üstünde:<br>&bull; <b>A0</b> · gerçek ilk çatlak (takipçilerle doğrulanır)<br>&bull; <b>A1</b> · tepenin %30\'unu aşan kalıcı yükseliş<br>&bull; <b>B0</b> · çıkışta %70<br>&bull; <b>B1</b> · taç (düşüş gerçekleşince görünür)<br>&bull; <b>C0</b> · doğrulanmış düşüş: canlıda çan FC süresinin %20\'si kadar düştüğünde (eşliyken referans süre, değilken bu kavurmanın kendi yükselişinden tahmin), C1 bilinince B1-C1 orta noktasına oturur<br>&bull; <b>C1</b> · kesin son çatlak, yalnızca GÖZLENEN sessizlikle kazanılır: en az 10 sn, yavaş kavurmalarda daha uzun (son çatlak aralığının 3 katı). Daha önce durdurulan kavurma <b>DROP</b> çipiyle biter: kanıtın ötesinde hiçbir şey uydurulmaz<br><br>Sağ taraf işaretleri veri oturdukça oturur.'],
  cap:['Seans kaydı, bütün hikâye','Dinlerken uygulama üç şey tutar: ham mikrofon sesi WAV olarak (yüksek geçirenden ÖNCE, ~5,5 MB/dk), kare başına CSV (zaman, gürlük, taban, oran, ayarların, her çatlak) ve çatlak kaydı düzenlemelerin. Kavurma kaydını Durdur\'dan sonra doldur; öğütülmüş Agtron değeri o kahvenin renk göstergesini de açar. Seansı kaydet WAV + CSV\'yi tek zip yapar. Her şey yalnızca bu sayfanın belleğinde yaşar: kaydetmeden kapatırsan seans gider.']
 };
 function showInfo(k){ const d=(LANG==='tr'&&INFO_TR[k])?INFO_TR[k]:INFO[k]; $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">'+d[0]+'</h1><div class="hint" style="font-size:13px;margin:0">'+d[1]+'</div><button style="margin-top:14px;background:var(--accent2)" onclick="document.getElementById(\'modal\').style.display=\'none\'">Close</button>'; $('modal').style.display='flex'; }
@@ -699,7 +701,8 @@ function renderAdmin(){
   +admRow('admEvents','events total / valid',cracks.length+' / '+v.length,cracks.length?v.length/cracks.length:null)
   +admRow('admRej','rejected width / voice',cracks.filter(c=>c.why==='width').length+' / '+cracks.filter(c=>c.why==='voice').length,null)
   +admRow('admBG','background floor (gain)',bgEMA?toGain(bgEMA).toFixed(0):'·',bgEMA?toGain(bgEMA)/100:null)
-  +admRow('admPaceRaw','pace raw (unclamped)',(E.tq&&cal&&cal.q25)?(E.tq/cal.q25).toFixed(2)+'×':'·',null);
+  +admRow('admPaceRaw','pace raw (unclamped)',(E.tq&&cal&&cal.q25)?(E.tq/cal.q25).toFixed(2)+'×':'·',null)
+  +admRow('admPhase','envelope phase φ',PHASE?Math.round(PHASE*100)+'%':'·',PHASE||null);
 }
 function adminTap(){
   if(document.body.classList.contains('admin')){ toast('Admin is on. Panel is below the tuning fold.'); return; }
@@ -719,7 +722,7 @@ function grantPlan(tier,months,code){ const u=new Date(); u.setMonth(u.getMonth(
   localStorage.setItem('bsPlan',JSON.stringify({tier,until:u.toISOString().slice(0,10),code}));
   toast((tier==='special'?'Special':'Pro')+' · '+(LANG==='tr'?'şu tarihe kadar aktif: ':'active until ')+u.toISOString().slice(0,10));
   refreshPlanUI(); hideCode(); $('modal').style.display='none'; }
-function revealCode(){ $('modal').style.display='none'; const r=$('codeRow'); r.style.display='flex'; setTimeout(()=>{ const i=$('licInput'); if(i) i.focus(); },60); }
+function revealCode(){ $('modal').style.display='none'; const r=$('codeRow'); r.style.display='flex'; window.scrollTo({top:0,behavior:'smooth'}); setTimeout(()=>{ const i=$('licInput'); if(i) i.focus(); },350); }
 function hideCode(){ const r=$('codeRow'); if(r) r.style.display='none'; const i=$('licInput'); if(i) i.value=''; }
 async function applyCode(){ const el=$('licInput'), c=((el&&el.value)||'').trim().toUpperCase(); if(!c){ if(el) el.focus(); return; }
   if(c==='PATRON26'){ localStorage.setItem('bsAdmin','1'); document.body.classList.add('admin'); hideCode(); renderAdmin(); updateSD(); toast('Admin unlocked: engine internals visible.'); return; }
@@ -816,7 +819,7 @@ function saveCalIfMapped(verbose){
   let cum=0, q25=null;
   for(const c of v){ cum+=c.g; if(cum>=tg*0.25){ q25=c.t-a0; break; } }
   const m=calMap();
-  const entry={a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, gsd:Math.round(sd(v.map(c=>c.g))*10)/10, date:new Date().toISOString().slice(0,10), src:k,
+  const entry={a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, gsd:Math.round(sd(v.map(c=>c.g))*10)/10, phDrop:+PHASE.toFixed(3)||null, date:new Date().toISOString().slice(0,10), src:k,
     bgg:parseFloat($('mBatch').value)||null, hist:(m[k]&&m[k].hist)||[]};
   entry.hist=entry.hist.concat([{devSpan:entry.devSpan, agtron:ag, tg, q25, date:entry.date}]).slice(-8);
   entry.target=parseFloat($('mTarget').value)||((m[k]&&m[k].target)||null);   // recipe target rides the map
@@ -997,6 +1000,7 @@ async function loadSession(file){
   cracks=[]; crackSeq=0;
   for(const m of text.matchAll(/# (\d+),([\d.]+),(\d+)(?:,(\d))?(?:,(\d*))?(?:,(\d*))?(?:,([\d.]*))?/g)) cracks.push({t:+m[2], g:+m[3], id:++crackSeq, fp:m[4]==='1', f:m[5]?+m[5]:undefined, w:m[6]?+m[6]:undefined, hf:m[7]?+m[7]:undefined});
   SAMPLES=[]; for(const m of text.matchAll(/# sample,\d+,([\d.]+),([\d.]*)/g)) SAMPLES.push({t:+m[1], ag:m[2]?+m[2]:null});
+  const dataT=[...text.matchAll(/^([\d.]+),/gm)]; STOPT=dataT.length?+dataT[dataT.length-1][1]:null; PHASE=0;   // session end = last trace row
   if(!cracks.length){ toast('No cracks in that session.'); return; }
   LASTPROJ=null; STOPPROJ=null; $('finalCall').textContent=''; wav={chunks:[],len:0,sr:48000}; rows=[];
   if(meta.coffee){ cName.value=meta.coffee; localStorage.setItem('bsCoffee',meta.coffee); loadBadge(); renderNameplate(); }
@@ -1215,17 +1219,27 @@ function drawTimeline(){
     const susUp=f=>{ const th=f*peak; for(let i=a0Bin;i<peakI;i++){ let ok=true; for(let j=i;j<Math.min(i+run,peakI+1);j++) if(sm[j]<th){ ok=false; break; } if(ok) return t0+(i+0.5)*bin; } return t0+(peakI+0.5)*bin; };
     // markers settle only as the data does (per the info tab): the right side of the bell
     // exists only after real quiet; a fresh "last crack" is NOT C1, it is just the newest crack.
-    const nowS=running?(performance.now()-startT)/1000:v[v.length-1].t+99;
+    const nowS=running?(performance.now()-startT)/1000:(STOPT!=null?STOPT:v[v.length-1].t+99);
     const quiet=nowS-v[v.length-1].t;
     const nowBin=Math.min(nb-1,Math.max(0,Math.floor((Math.min(nowS,t0+span-0.01)-t0)/bin)));
     const pastPeak=nowBin>peakI && sm[nowBin]<0.7*peak; PASTPEAK=pastPeak;
+    // stepless envelope PHASE 0-1 (Omer's thesis: color follows the loudness phase, not the clock).
+    // Rising half: rate/peak maps 0->0.5. Falling half: 0.5->1 as the rate dies. Monotonic, mic-invariant.
+    const smNow=sm[nowBin]||0;
+    const phRaw=(nowBin<=peakI&&!pastPeak)?(0.5*smNow/(peak||1)):(0.5+0.5*(1-smNow/(peak||1)));
+    PHASE=Math.max(PHASE,Math.min(1,phRaw));
     const stages=[['A0',a0t],['A1',susUp(EP.A1)],['B0',susUp(EP.B0)]];
     const tB1=t0+(peakI+0.5)*bin;
     if(pastPeak||quiet>EP.QUIET_B1) stages.push(['B1',tB1]);
-    if(quiet>EP.QUIET_C){ const tC1=v[v.length-1].t; stages.push(['C0',(tB1+tC1)/2]); stages.push(['C1',tC1]); }
-    else if(pastPeak){ const calS=calFor()||calMap()['__house'];
-      const fcEst=(calS&&calS.devSpan)?calS.devSpan:((tB1-a0t)*2.6);
-      if(nowS-tB1>=0.2*fcEst) stages.push(['C0',tB1+0.2*fcEst]); }
+    // C1 must be EARNED by observed silence: at least 10s, adaptive to roast speed (3x recent median gap).
+    const rg=v.slice(-11).map(c=>c.t); let medGap=2;
+    if(rg.length>3){ const dif=[]; for(let i=1;i<rg.length;i++) dif.push(rg[i]-rg[i-1]); dif.sort((a,b)=>a-b); medGap=dif[Math.floor(dif.length/2)]; }
+    const silThr=Math.max(10,3*medGap);
+    if(quiet>=silThr){ const tC1=v[v.length-1].t; stages.push(['C0',(tB1+tC1)/2]); stages.push(['C1',tC1]); }
+    else{ if(pastPeak){ const calS=calFor()||calMap()['__house'];
+        const fcEst=(calS&&calS.devSpan)?calS.devSpan:((tB1-a0t)*2.6);
+        if(nowS-tB1>=0.2*fcEst) stages.push(['C0',tB1+0.2*fcEst]); }
+      if(!running&&STOPT!=null) stages.push(['DROP',Math.min(STOPT,t0+span-0.5)]); }   // the cut, marked honestly
     // hard monotonic clamp: the sequence A0<=A1<=B0<=B1<=C0<=C1 is a law, not a suggestion
     for(let i=1;i<stages.length;i++) if(stages[i][1]<stages[i-1][1]) stages[i][1]=stages[i-1][1];
     LASTSTAGES=stages.map(sg=>[sg[0],sg[1]]); renderStageStrip();
@@ -1240,7 +1254,8 @@ function drawTimeline(){
       tx.fillStyle='#c98a3c'; tx.beginPath(); tx.arc(x,y,6,0,7); tx.fill();
       tx.strokeStyle='#c98a3c'; tx.lineWidth=1.5; tx.beginPath(); tx.moveTo(x,y+7); tx.lineTo(x,cy2-10); tx.stroke();
       tx.fillStyle='#241c16'; tx.strokeStyle='#c98a3c'; tx.lineWidth=1.4; tx.beginPath();
-      tx.roundRect?tx.roundRect(x-19,cy2-10,38,21,10):tx.rect(x-19,cy2-10,38,21); tx.fill(); tx.stroke();
+      const cw=name.length>2?58:38;
+      tx.roundRect?tx.roundRect(x-cw/2,cy2-10,cw,21,10):tx.rect(x-cw/2,cy2-10,cw,21); tx.fill(); tx.stroke();
       tx.fillStyle='#f3ede4'; tx.fillText(name,x,cy2+5.5);
     }
     tx.textAlign='start';
