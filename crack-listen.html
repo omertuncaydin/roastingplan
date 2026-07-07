@@ -124,7 +124,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07j</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07k</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -1210,18 +1210,18 @@ function drawTimeline(){
     // hard monotonic clamp: the sequence A0<=A1<=B0<=B1<=C0<=C1 is a law, not a suggestion
     for(let i=1;i<stages.length;i++) if(stages[i][1]<stages[i-1][1]) stages[i][1]=stages[i-1][1];
     // stage pins: copper dot on the bell, stem, bordered chip (Guide chip language). Staggered when crowded.
-    tx.textAlign='center'; tx.font='bold 12px -apple-system,sans-serif';
+    tx.textAlign='center'; tx.font='bold 14px -apple-system,sans-serif';
     let prevX=-999, level=0;
     for(const [name,st] of stages){
       const bi=Math.min(nb-1,Math.max(0,Math.floor((st-t0)/bin)));
       const x=X(st), y=Y(sm[bi]);
-      level=(x-prevX<42)?(level+1)%2:0; prevX=x;
-      const cy2=H-46-level*22;   // chips live LOW, over the bars: the DEV clock owns the top-left
-      tx.fillStyle='#c98a3c'; tx.beginPath(); tx.arc(x,y,5,0,7); tx.fill();
-      tx.strokeStyle='#c98a3c'; tx.lineWidth=1.5; tx.beginPath(); tx.moveTo(x,y+6); tx.lineTo(x,cy2-9); tx.stroke();
-      tx.fillStyle='#241c16'; tx.strokeStyle='#c98a3c'; tx.lineWidth=1.2; tx.beginPath();
-      tx.roundRect?tx.roundRect(x-16,cy2-9,32,18,9):tx.rect(x-16,cy2-9,32,18); tx.fill(); tx.stroke();
-      tx.fillStyle='#f3ede4'; tx.fillText(name,x,cy2+4.5);
+      level=(x-prevX<48)?(level+1)%2:0; prevX=x;
+      const cy2=H-48-level*24;   // chips live LOW, over the bars: the DEV clock owns the top-left
+      tx.fillStyle='#c98a3c'; tx.beginPath(); tx.arc(x,y,6,0,7); tx.fill();
+      tx.strokeStyle='#c98a3c'; tx.lineWidth=1.5; tx.beginPath(); tx.moveTo(x,y+7); tx.lineTo(x,cy2-10); tx.stroke();
+      tx.fillStyle='#241c16'; tx.strokeStyle='#c98a3c'; tx.lineWidth=1.4; tx.beginPath();
+      tx.roundRect?tx.roundRect(x-19,cy2-10,38,21,10):tx.rect(x-19,cy2-10,38,21); tx.fill(); tx.stroke();
+      tx.fillStyle='#f3ede4'; tx.fillText(name,x,cy2+5.5);
     }
     tx.textAlign='start';
   }
