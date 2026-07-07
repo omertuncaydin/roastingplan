@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zc</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zd</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -345,7 +345,7 @@ async function start(){
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw'].forEach(i=>{ if($(i)) $(i).value=''; });
   updateSD(); drawTimeline(); updateGauge();
   document.body.className='st-live';
-  running=true; $('btn').textContent=tt('Stop'); $('btn').className='stop'; $('status').textContent=tt('Listening. Calibrating background for ~2s, keep it running steady.');
+  running=true; $('btn').textContent=tt('Drop'); $('btn').className='stop'; $('status').textContent=tt('Listening. Calibrating background for ~2s, keep it running steady.');
   loop();
 }
 function stop(){
@@ -1082,7 +1082,7 @@ const EN2TR={
 'tuning & trace':'ayar & iz','crack log':'çatlak kaydı','gain trace (cracks marked)':'gain izi (çatlaklar işaretli)',
 'signal purity':'sinyal saflığı','cracks / 30s':'çatlak / 30 sn','vs reference':'referansa göre',
 'Record raw audio (WAV, pre-filter)':'Ham sesi kaydet (WAV, filtre öncesi)',
-'Start listening':'Dinlemeye başla','Stop':'Durdur','New session':'Yeni seans','Sample pulled':'Numune çekildi',
+'Start listening':'Dinlemeye başla','Stop':'Durdur','Drop':'Drop','New session':'Yeni seans','Sample pulled':'Numune çekildi',
 'Save session (.zip)':'Seansı kaydet (.zip)','Batch card (PNG)':'Parti kartı (PNG)',
 'Load session (.zip / .csv)':'Seans yükle (.zip / .csv)','Export maps':'Haritaları dışa aktar','Import maps':'Haritaları içe aktar',
 'Map this coffee (save color)':'Bu kahveyi eşle (rengi kaydet)','Bin':'Aralık','Trigger ×':'Tetik ×','High-pass':'Yüksek geçiren','Refresh':'Yenile',
@@ -1127,7 +1127,7 @@ function applyLang(){
     i.placeholder=LANG==='tr'?(EN2TR[i.dataset.ph]||i.dataset.ph):i.dataset.ph; });
   renderNameplate(); updateGauge(); updateSD(); drawTimeline();
   if(!running){ $('btn').textContent=(document.body.classList.contains('st-done'))?tt('New session'):tt('Start listening'); }
-  else $('btn').textContent=tt('Stop');
+  else $('btn').textContent=tt('Drop');
 }
 function toggleLang(){ LANG=LANG==='tr'?'en':'tr'; localStorage.setItem('bsLang',LANG); applyLang(); }
 document.body.className='st-setup';
