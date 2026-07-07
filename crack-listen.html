@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07o</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07q</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -217,6 +217,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;gap:6px;margin-bottom:6px">
         <input type="text" id="mProc" placeholder="Process (washed/natural)" style="flex:1.2;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
         <input type="text" id="mChgFc" placeholder="Charge→FC (m:ss)" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="mMoist" placeholder="Moisture %" inputmode="decimal" style="flex:0.7;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
       </div>
       <div style="display:flex;gap:6px;margin-bottom:6px">
         <input type="text" id="mDrop" placeholder="Drop after last (s)" inputmode="numeric" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
@@ -340,7 +341,7 @@ async function start(){
   bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
-  ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget'].forEach(i=>{ if($(i)) $(i).value=''; });
+  ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist'].forEach(i=>{ if($(i)) $(i).value=''; });
   updateSD(); drawTimeline(); updateGauge();
   document.body.className='st-live';
   running=true; $('btn').textContent=tt('Stop'); $('btn').className='stop'; $('status').textContent=tt('Listening. Calibrating background for ~2s, keep it running steady.');
@@ -468,7 +469,7 @@ function wavHeader(){
 }
 function csvText(){
   const mv=id=>($(id)&&$(id).value||'').replace(/,/g,';').trim();
-  let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,target,'+mv('mTarget')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n'+SAMPLES.map((s,i)=>'# sample,'+(i+1)+','+s.t.toFixed(1)+','+(s.ag||'')+'\n').join('');
+  let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,moisture,'+mv('mMoist')+'\n# meta,target,'+mv('mTarget')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n'+SAMPLES.map((s,i)=>'# sample,'+(i+1)+','+s.t.toFixed(1)+','+(s.ag||'')+'\n').join('');
   s+='t_s,rms,gain,bg_gain,ratio,trigger_x,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
   const vv=valid(), fss=vv.filter(c=>c.f).map(c=>c.f);
   if(vv.length>1) s+='\n# stats,total_gain,'+vv.reduce((a,c)=>a+c.g,0)+',time_sd,'+sd(vv.map(c=>c.t)).toFixed(2)+',gain_sd,'+sd(vv.map(c=>c.g)).toFixed(2)+(fss.length>1?',f_mean,'+Math.round(fss.reduce((a,b)=>a+b,0)/fss.length)+',f_sd,'+Math.round(sd(fss)):'')+(LASTPROJ?',proj_final,'+LASTPROJ:'')+(STOPPROJ?',proj_stop,'+STOPPROJ:'')+(PHASE?',phase_final,'+PHASE.toFixed(3):'');
@@ -819,7 +820,7 @@ function saveCalIfMapped(verbose){
   let cum=0, q25=null;
   for(const c of v){ cum+=c.g; if(cum>=tg*0.25){ q25=c.t-a0; break; } }
   const m=calMap();
-  const entry={a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, gsd:Math.round(sd(v.map(c=>c.g))*10)/10, phDrop:+PHASE.toFixed(3)||null, date:new Date().toISOString().slice(0,10), src:k,
+  const entry={a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, gsd:Math.round(sd(v.map(c=>c.g))*10)/10, phDrop:+PHASE.toFixed(3)||null, moist:parseFloat($('mMoist').value)||null, date:new Date().toISOString().slice(0,10), src:k,
     bgg:parseFloat($('mBatch').value)||null, hist:(m[k]&&m[k].hist)||[]};
   entry.hist=entry.hist.concat([{devSpan:entry.devSpan, agtron:ag, tg, q25, date:entry.date}]).slice(-8);
   entry.target=parseFloat($('mTarget').value)||((m[k]&&m[k].target)||null);   // recipe target rides the map
@@ -1005,7 +1006,7 @@ async function loadSession(file){
   LASTPROJ=null; STOPPROJ=null; $('finalCall').textContent=''; wav={chunks:[],len:0,sr:48000}; rows=[];
   if(meta.coffee){ cName.value=meta.coffee; localStorage.setItem('bsCoffee',meta.coffee); loadBadge(); renderNameplate(); }
   $('mCoffee').value=meta.coffee||''; $('mBatch').value=meta.batch_g||''; $('mAgW').value=meta.agtron_whole||''; $('mAgG').value=meta.agtron_ground||''; $('mNote').value=meta.note||'';
-  $('mAgWSd').value=meta.agtron_whole_sd||''; $('mAgSd').value=meta.agtron_ground_sd||''; $('mProc').value=meta.process||''; $('mChgFc').value=meta.charge_to_fc||''; $('mDrop').value=meta.drop_after_last_s||''; $('mTarget').value=meta.target||'';
+  $('mAgWSd').value=meta.agtron_whole_sd||''; $('mAgSd').value=meta.agtron_ground_sd||''; $('mProc').value=meta.process||''; $('mChgFc').value=meta.charge_to_fc||''; $('mDrop').value=meta.drop_after_last_s||''; $('mTarget').value=meta.target||''; $('mMoist').value=meta.moisture||'';
   $('metaBox').style.display='block'; $('mapBtn').style.display='block';
   $('dlZip').style.display='block'; $('dlCard').style.display='block';   // re-save allowed: corrected FP labels are the training corpus
   document.body.className='st-done';
@@ -1234,7 +1235,7 @@ function drawTimeline(){
     // C1 must be EARNED by observed silence: at least 10s, adaptive to roast speed (3x recent median gap).
     const rg=v.slice(-11).map(c=>c.t); let medGap=2;
     if(rg.length>3){ const dif=[]; for(let i=1;i<rg.length;i++) dif.push(rg[i]-rg[i-1]); dif.sort((a,b)=>a-b); medGap=dif[Math.floor(dif.length/2)]; }
-    const silThr=Math.max(10,3*medGap);
+    const silThr=Math.max(5,3*medGap);   // 5s floor (Omer 2026-07-07), scaled up for slow roasts by the recent gap
     if(quiet>=silThr){ const tC1=v[v.length-1].t; stages.push(['C0',(tB1+tC1)/2]); stages.push(['C1',tC1]); }
     else{ if(pastPeak){ const calS=calFor()||calMap()['__house'];
         const fcEst=(calS&&calS.devSpan)?calS.devSpan:((tB1-a0t)*2.6);
@@ -1251,12 +1252,13 @@ function drawTimeline(){
       const x=X(st), y=Y(sm[bi]);
       level=(x-prevX<48)?(level+1)%2:0; prevX=x;
       const cy2=H-48-level*24;   // chips live LOW, over the bars: the DEV clock owns the top-left
-      tx.fillStyle='#c98a3c'; tx.beginPath(); tx.arc(x,y,6,0,7); tx.fill();
-      tx.strokeStyle='#c98a3c'; tx.lineWidth=1.5; tx.beginPath(); tx.moveTo(x,y+7); tx.lineTo(x,cy2-10); tx.stroke();
-      tx.fillStyle='#241c16'; tx.strokeStyle='#c98a3c'; tx.lineWidth=1.4; tx.beginPath();
       const cw=name.length>2?58:38;
-      tx.roundRect?tx.roundRect(x-cw/2,cy2-10,cw,21,10):tx.rect(x-cw/2,cy2-10,cw,21); tx.fill(); tx.stroke();
-      tx.fillStyle='#f3ede4'; tx.fillText(name,x,cy2+5.5);
+      const cxp=Math.min(W-cw/2-2,Math.max(cw/2+2,x));   // chip clamped INTO the canvas; A0 at the rim stays visible
+      tx.fillStyle='#c98a3c'; tx.beginPath(); tx.arc(x,y,6,0,7); tx.fill();
+      tx.strokeStyle='#c98a3c'; tx.lineWidth=1.5; tx.beginPath(); tx.moveTo(x,y+7); tx.lineTo(cxp,cy2-10); tx.stroke();
+      tx.fillStyle='#241c16'; tx.strokeStyle='#c98a3c'; tx.lineWidth=1.4; tx.beginPath();
+      tx.roundRect?tx.roundRect(cxp-cw/2,cy2-10,cw,21,10):tx.rect(cxp-cw/2,cy2-10,cw,21); tx.fill(); tx.stroke();
+      tx.fillStyle='#f3ede4'; tx.fillText(name,cxp,cy2+5.5);
     }
     tx.textAlign='start';
   }
