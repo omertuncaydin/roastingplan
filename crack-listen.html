@@ -129,7 +129,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zq</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zr</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -1244,6 +1244,9 @@ function applyLang(){
   else $('btn').textContent=tt('Drop');
 }
 function toggleLang(){ LANG=LANG==='tr'?'en':'tr'; localStorage.setItem('bsLang',LANG); applyLang(); }
+// errors surface as toasts for the admin: a dead button must say WHY it died
+window.addEventListener('error',e=>{ try{ if(document.body.classList.contains('admin')) toast('JS error: '+(e.message||'?')+' @'+(e.lineno||'?')); }catch(_){} });
+window.addEventListener('unhandledrejection',e=>{ try{ if(document.body.classList.contains('admin')) toast('Async error: '+((e.reason&&e.reason.message)||e.reason||'?')); }catch(_){} });
 document.body.className='st-setup';
 setTimeout(updateGauge,0);   // initial gauge state on load
 setTimeout(applyLang,0);
