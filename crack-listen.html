@@ -127,7 +127,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zn</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zo</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -860,7 +860,7 @@ function saveCalIfMapped(verbose){
     // LEARN WITHOUT OVERWRITING: the cut roast's lesson (self-grade + phi point) joins the existing
     // map; the fuller reference geometry stays. Second tap within 8s = full overwrite, deliberate.
     const projAt=STOPPROJ||LASTPROJ, today=new Date().toISOString().slice(0,10);
-    if(isFinite(ag)&&projAt){
+    if(isFinite(ag)&&projAt&&!PROJBORROWED){
       let g2=prevM.grades||[]; const resid=ag-projAt;
       if(g2.length){ const mb=g2.reduce((a2,g)=>a2+(g.meas-g.proj),0)/g2.length; if(Math.abs(resid-mb)>6) g2=[]; }
       prevM.grades=g2.concat([{proj:projAt,meas:ag,date:today}]).slice(-6);
@@ -878,7 +878,7 @@ function saveCalIfMapped(verbose){
   entry.hist=entry.hist.concat([{devSpan:entry.devSpan, agtron:ag, tg, q25, ph:entry.phDrop, date:entry.date}]).slice(-8);
   let grades=(prevM&&prevM.grades)||[];
   const projAt=STOPPROJ||LASTPROJ;
-  if(isFinite(ag)&&projAt){ const resid=ag-projAt;
+  if(isFinite(ag)&&projAt&&!PROJBORROWED){   // a borrowed map's guess is NOT this coffee's lesson const resid=ag-projAt;
     if(grades.length){ const mb=grades.reduce((a2,g)=>a2+(g.meas-g.proj),0)/grades.length;
       if(Math.abs(resid-mb)>6) grades=[]; }   // epoch break: this is a different bean/bag now
     grades=grades.concat([{proj:projAt, meas:ag, date:entry.date}]).slice(-6);
@@ -931,7 +931,7 @@ function drawGauge(state,projLo,projHi){
   else h=gaugeSVG(null,0,0,setup?'':'&#128274;',setup?'':tt('unmapped bean'),true);
   $('ag').innerHTML=h;
 }
-let TGT_U=null, LASTSTAGES=null, MAPWARN=0;
+let TGT_U=null, LASTSTAGES=null, MAPWARN=0, PROJBORROWED=false;
 function updateGauge(){
   TGT_U=null;
   const k=(cName.value||'').trim();
@@ -942,6 +942,7 @@ function updateGauge(){
     const keys=Object.keys(calMap()).filter(x=>x!=='__house');
     $('agHint').textContent=tt('Unmapped on THIS device/app copy.')+' '+(keys.length?(tt('Mapped here:')+' '+keys.join(', ')+'.'):tt('No maps yet: load a session or roast, fill Agtron ground, tap Map. Note: Safari tab and Home-Screen app keep SEPARATE maps.'));
     return; }
+  PROJBORROWED=borrowed;
   const dcTag=(cal.anchors&&cal.anchors.length>=3)?(' · '+(LANG==='tr'?'derin kalibrasyon':'deep calibration')):'';
   const bTag=(borrowed?(' · '+tt('borrowed house map')+' ('+(cal.src||'?')+')'):'')+dcTag;
   const v=valid();
