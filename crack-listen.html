@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zb</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zc</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -360,7 +360,13 @@ function stop(){
   STOPPROJ=LASTPROJ;   // freeze what the gauge said at the moment of drop, before retrospective recompute
   if(!planActive() && valid().length>=10){ localStorage.setItem('bsRoastN',String(roastCount()+1)); refreshPlanUI(); }   // a "roast" = 10+ real cracks; test taps stay free
   $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):'';
-  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value; }
+  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value;
+    // a mapped coffee fills its own paperwork: bean-constant fields prefill from the map, measurements stay yours
+    const calP=calFor();
+    if(calP){ if(!$('mProc').value&&calP.proc) $('mProc').value=calP.proc;
+      if(!$('mMoist').value&&calP.moist) $('mMoist').value=calP.moist;
+      if(!$('mAw').value&&calP.aw) $('mAw').value=calP.aw;
+      if(!$('mTarget').value&&calP.target) $('mTarget').value=calP.target; } }
   renderSamples(); updateSD(); drawTimeline(); updateGauge();   // retrospective pass: the bell is complete now, stages settle with the whole story
   const mb=(wav.len*2/1048576).toFixed(1);
   $('recInfo').textContent=LANG==='tr'
@@ -822,7 +828,7 @@ function saveCalIfMapped(verbose){
   let cum=0, q25=null;
   for(const c of v){ cum+=c.g; if(cum>=tg*0.25){ q25=c.t-a0; break; } }
   const m=calMap();
-  const entry={a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, gsd:Math.round(sd(v.map(c=>c.g))*10)/10, phDrop:+PHASE.toFixed(3)||null, moist:parseFloat($('mMoist').value)||null, aw:parseFloat($('mAw').value)||null, date:new Date().toISOString().slice(0,10), src:k,
+  const entry={a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, gsd:Math.round(sd(v.map(c=>c.g))*10)/10, phDrop:+PHASE.toFixed(3)||null, moist:parseFloat($('mMoist').value)||null, aw:parseFloat($('mAw').value)||null, proc:(($('mProc').value||'').trim())||((m[k]&&m[k].proc)||null), date:new Date().toISOString().slice(0,10), src:k,
     bgg:parseFloat($('mBatch').value)||null, hist:(m[k]&&m[k].hist)||[]};
   entry.hist=entry.hist.concat([{devSpan:entry.devSpan, agtron:ag, tg, q25, date:entry.date}]).slice(-8);
   entry.target=parseFloat($('mTarget').value)||((m[k]&&m[k].target)||null);   // recipe target rides the map
