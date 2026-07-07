@@ -21,10 +21,11 @@ body.st-setup #cGain,body.st-setup #cTimeline,body.st-setup #cStats,body.st-setu
 /* LIVE: gauge, bell, gain, STOP (sticky), compact stats. Chores hidden. */
 body.st-live #cGauge{order:1} body.st-live #cStats{order:2} body.st-live #cTimeline{order:3} body.st-live #cGain{order:4} body.st-live #btn{order:5} body.st-live #err{order:5} body.st-live #cTune{order:6} body.st-live #cLog{order:7}
 body.st-live #cCapture{display:none}
-body.st-live #btn{position:sticky;bottom:12px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45);padding:26px 15px;font-size:23px;font-weight:800;border-radius:18px;letter-spacing:.5px}
+body.st-live #btn{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:216px;height:108px;border-radius:216px 216px 0 0;background:rgba(217,102,63,0.78);font-size:25px;font-weight:800;padding:0 0 16px;z-index:9;box-shadow:0 -4px 22px rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;letter-spacing:.6px;border:none}
+body.st-live .wrap{padding-bottom:120px}
 body.st-live #cGauge details{display:none}
 #sampleBtn{display:none;background:var(--panel);color:var(--ink);border:2px solid var(--accent);border-radius:14px;font-size:16px;font-weight:700;padding:13px;width:100%;align-items:center;justify-content:center;gap:10px}
-body.st-live #sampleBtn{display:flex;position:sticky;bottom:104px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45);order:5}
+body.st-live #sampleBtn{display:flex;position:sticky;bottom:118px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45);order:5}
 #sampN{background:var(--accent);color:#fff;border-radius:10px;padding:2px 9px;font-size:13px;display:none}
 #cAdmin,#adminStatsRow{display:none}
 body.admin #cAdmin{display:block}
@@ -42,7 +43,8 @@ body.admin #adminStatsRow{display:flex}
   body.st-live #cGauge{grid-area:gauge}
   body.st-live #cGain{grid-area:gain}
   body.st-live #sampleBtn{grid-area:sample;position:static;box-shadow:none}
-  body.st-live #btn{grid-area:btn;position:static;box-shadow:none}
+  body.st-live #btn{grid-area:btn;position:static;box-shadow:none;order:0;width:100%;height:auto;border-radius:16px;background:var(--warn);padding:18px;display:block;transform:none}
+  body.st-live .wrap{padding-bottom:40px}
   body.st-live #err{grid-area:err}
   body.st-live #cStats{grid-area:stats;margin-top:0}
   body.st-live #cTune{grid-area:tune}
@@ -127,7 +129,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zo</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zq</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -1144,14 +1146,30 @@ function exportMaps(){
   dl(new Blob([JSON.stringify(payload,null,1)],{type:'application/json'}),'crack-maps-'+new Date().toISOString().slice(0,10)+'.json');
   toast(tt('Maps exported. Import them on the other device.'));
 }
+let IMPORT_P=null, IMPORT_KEYS=[];
 async function importMaps(file){
   if(!file) return;
   try{
     const p=JSON.parse(await file.text());
-    const m=Object.assign(calMap(), p.cal||{}); localStorage.setItem('bsCal',JSON.stringify(m));
-    const b=Object.assign(badgeMap(), p.badge||{}); localStorage.setItem('bsBadge',JSON.stringify(b));
-    toast('Imported '+Object.keys(p.cal||{}).filter(k=>k!=='__house').length+' map(s).'); updateGauge(); updateSD();
+    IMPORT_KEYS=Object.keys(p.cal||{}).filter(k=>k!=='__house');
+    if(!IMPORT_KEYS.length){ toast(LANG==='tr'?'Dosyada harita yok.':'No maps in that file.'); return; }
+    IMPORT_P=p;
+    $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:17px">'+(LANG==='tr'?'Harita içe aktar':'Import maps')+'</h1>'
+     +'<div class="hint" style="font-size:12px;margin:0 0 6px">'+(LANG==='tr'?'Getirilecek kahveleri seç; aynı isimli mevcut kayıtların üzerine yazılır.':'Pick the coffees to bring in; same-named entries are overwritten.')+'</div>'
+     +IMPORT_KEYS.map((k,i)=>'<label style="display:flex;gap:9px;align-items:center;margin-top:9px;font-size:14px"><input type="checkbox" checked data-imp="'+i+'" style="width:19px;height:19px;accent-color:var(--accent)">'+k+'</label>').join('')
+     +'<button style="margin-top:14px;background:var(--accent2)" onclick="doImport()">'+(LANG==='tr'?'Seçilenleri aktar':'Import selected')+'</button>'
+     +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(LANG==='tr'?'Vazgeç':'Cancel')+'</button>';
+    $('modal').style.display='flex';
   }catch(e){ toast('Import failed: '+e.message); }
+}
+function doImport(){
+  const m=calMap(), b=badgeMap(); let n=0;
+  document.querySelectorAll('[data-imp]').forEach(cb=>{ if(cb.checked){ const k=IMPORT_KEYS[+cb.dataset.imp];
+    if(IMPORT_P.cal&&IMPORT_P.cal[k]){ m[k]=IMPORT_P.cal[k]; n++; }
+    if(IMPORT_P.badge&&IMPORT_P.badge[k]) b[k]=IMPORT_P.badge[k]; } });
+  localStorage.setItem('bsCal',JSON.stringify(m)); localStorage.setItem('bsBadge',JSON.stringify(b));
+  $('modal').style.display='none'; IMPORT_P=null;
+  toast((LANG==='tr'?'Aktarıldı: ':'Imported ')+n+(LANG==='tr'?' harita':' map(s)')); updateGauge(); updateSD();
 }
 // ---- i18n: EN-first, TR selectable from the top. Static text via tree walk, dynamic via tt(). ----
 const EN2TR={
