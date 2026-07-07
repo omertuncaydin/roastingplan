@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07ze</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zf</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -837,7 +837,7 @@ function saveCalIfMapped(verbose){
   else if(m[k]&&m[k].anchors) entry.anchors=m[k].anchors;   // keep earlier anchors
   // ghost bell: this roast's smoothed shape over its DEV span, normalized, for racing next time
   const BP=48, bshape=new Array(BP).fill(0);
-  for(const c of v){ const rel=(c.t-a0)/(entry.devSpan||1); if(rel>=0&&rel<=1) bshape[Math.min(BP-1,Math.floor(rel*BP))]++; }
+  for(const c of v){ const rel=(c.t-a0)/(entry.devSpan||1); if(rel>=0&&rel<=1) bshape[Math.min(BP-1,Math.floor(rel*BP))]+=c.g; }
   const sm2=bshape.map((_,i)=>{ let s2=0,w2=0; for(let j=0;j<BP;j++){ const g2=Math.exp(-0.5*((j-i)/2)*((j-i)/2)); s2+=bshape[j]*g2; w2+=g2; } return s2/w2; });
   const pk2=Math.max(...sm2)||1; entry.bell=sm2.map(x2=>+(x2/pk2).toFixed(3));
   m[k]=entry; m['__house']=entry;   // every map also becomes the house default: unmapped beans borrow it
@@ -971,7 +971,7 @@ function makeBatchCard(){
   const LAD=[30,60,120,180,300,420,600], ext=Math.max(1,v[v.length-1].t-v[0].t);
   const span=LAD.find(s=>s>=ext*1.35)||600;
   const bin=4, nb=Math.max(1,Math.ceil(span/bin)), counts=new Array(nb).fill(0);
-  for(const cr of v){ const i=Math.min(nb-1,Math.max(0,Math.floor((cr.t-t0)/bin))); counts[i]++; }
+  for(const cr of v){ const i=Math.min(nb-1,Math.max(0,Math.floor((cr.t-t0)/bin))); counts[i]+=cr.g; }
   const sig=Math.max(1.2,Math.max(3,span/40)/bin), sm=new Array(nb).fill(0);
   for(let i=0;i<nb;i++){ let s=0,ws=0; for(let j=0;j<nb;j++){ const w=Math.exp(-0.5*((j-i)/sig)*((j-i)/sig)); s+=counts[j]*w; ws+=w; } sm[i]=s/ws; }
   const peak=Math.max(...sm)||1, maxC=Math.max(...counts)||1;
@@ -1165,7 +1165,7 @@ function drawTimeline(){
   tx.font='16px sans-serif';
   // histogram: share of cracks per bin
   const bin=+(($('bin')&&$('bin').value)||1), nb=Math.max(1,Math.ceil(span/bin)), counts=new Array(nb).fill(0);
-  for(const c of v){ counts[Math.min(nb-1,Math.max(0,Math.floor((c.t-t0)/bin)))]++; }
+  for(const c of v){ counts[Math.min(nb-1,Math.max(0,Math.floor((c.t-t0)/bin)))]+=c.g; }   // GAIN-weighted: the bell is the loudness envelope, not a head-count (Omer's B1 spec)
   // smoothed crack rate (gaussian kernel): THE BELL. Smoothing scales with the window in TIME,
   // so a 30s dev keeps its texture and a 5min dev stays calm.
   const sig=Math.max(1.2, Math.max(3, span/40)/bin), sm=new Array(nb).fill(0);
