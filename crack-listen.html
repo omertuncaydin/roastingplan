@@ -121,7 +121,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07e</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07g</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -279,9 +279,13 @@ let AC=null, stream=null, src=null, hpF=null, lpF=null, analyser=null, buf=null,
 let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
 let cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={};
+let LANG=localStorage.getItem('bsLang')||'en';   // declared at the very top: eval-order safe (v07e lesson)
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
 const $=id=>document.getElementById(id);
+// tunable engine RULES: defaults here, overridable from the Guide's "Listener engine rules" card (localStorage bsEngine)
+let EP={FC_AG:125,FOLLOW:30,WSNAP:5,VSIG:3.5,MADF:400,BFLOOR:2,BCAP:6,PMIN:0.5,PMAX:2,A1:0.30,B0:0.70,QUIET_B1:6,QUIET_C:12,VMIN:8};
+try{ EP=Object.assign(EP,JSON.parse(localStorage.getItem('bsEngine')||'{}')); }catch(e){}
 
 const sens=$('sens'), hp=$('hp');
 function fmtHz(v){ return v>=1000 ? (v/1000).toFixed(1).replace(/\.0$/,'')+'k Hz' : v+' Hz'; }
@@ -367,7 +371,7 @@ function beanVoice(){
   if(fs.length<8) return null;
   const so=[...fs].sort((a,b)=>a-b), med=so[Math.floor(so.length/2)];
   const ad=fs.map(x=>Math.abs(x-med)).sort((a,b)=>a-b);
-  return {med, mad:Math.max(400, ad[Math.floor(ad.length/2)])};
+  return {med, mad:Math.max(EP.MADF, ad[Math.floor(ad.length/2)])};
 }
 // audio-thread detection: a crack is a millisecond-scale burst (high crest), not a loud average.
 // scan each 1024-sample buffer for the strongest 1ms (48-sample) energy vs the slow background floor.
@@ -397,9 +401,9 @@ function detectBuf(d){
     const en=BINS.map(k=>goe(k*1000)); const esum=en.reduce((a,b)=>a+b,0)+1e-12;
     const f=Math.round(BINS.reduce((s,k,i)=>s+k*en[i],0)/esum*1000);   // spectral centroid, Hz
     const hf=+(en.slice(8).reduce((a,b)=>a+b,0)/esum).toFixed(2);      // share >=13 kHz
-    const isSnap=wSlots>=5;                               // too wide to be a bean
+    const isSnap=wSlots>=EP.WSNAP;                        // too wide to be a bean
     const bv=isSnap?null:beanVoice();
-    const offVoice=!!bv && Math.abs(f-bv.med)>3.5*bv.mad; // 3.5 robust sigmas off the bean's voice
+    const offVoice=!!bv && Math.abs(f-bv.med)>EP.VSIG*bv.mad; // robust sigmas off the bean's voice
     const rej=isSnap||offVoice;
     cracks.push({t:(now-startT)/1000, g, id:++crackSeq, f, w:wSlots, hf, fp:rej, auto:rej, why:isSnap?'width':(offVoice?'voice':undefined)});
     if(rej){ pendingUI=true; }
@@ -603,7 +607,7 @@ function drawCockpit(id,o){
 function updateVoice(){
   const v=valid();
   if(!running||!v.length){ drawCockpit('voiceG',{dim:true,num:'· · ·',sub:running?tt('waiting for cracks'):''}); return; }
-  const now=(performance.now()-startT)/1000, MIN=8;
+  const now=(performance.now()-startT)/1000, MIN=EP.VMIN;
   const n30=v.filter(c=>now-c.t<=30).length;
   if(PASTPEAK&&now-v[v.length-1].t>20){ drawCockpit('voiceG',{dim:true,num:String(n30),sub:tt('quiet, as it should be')}); return; }
   drawCockpit('voiceG',{u:Math.min(1,n30/(2*MIN)), zone:[0.5,1], tick:0.5, num:String(n30),
@@ -617,7 +621,7 @@ function updatePace(){
   const a0=effA0(v); let cum=0,tq=null;
   for(const c of v){ cum+=c.g; if(cum>=cal.tg*0.25){ tq=c.t-a0; break; } }
   if(!(tq&&tq>2)){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:tt('before the 25% point')}); return; }
-  const pace=Math.min(2,Math.max(0.5,tq/cal.q25)), u=(Math.log2(pace)+1)/2;
+  const pace=Math.min(EP.PMAX,Math.max(EP.PMIN,tq/cal.q25)), u=(Math.log2(pace)+1)/2;
   drawCockpit('paceG',{u, zone:[(Math.log2(0.95)+1)/2,(Math.log2(1.05)+1)/2], tick:0.5,
     num:pace.toFixed(2)+'×', sub:pace<0.97?tt('faster than ref'):(pace>1.03?tt('slower than ref'):tt('on pace'))});
 }
@@ -690,11 +694,23 @@ function grantPlan(tier,months,code){ const u=new Date(); u.setMonth(u.getMonth(
   localStorage.setItem('bsPlan',JSON.stringify({tier,until:u.toISOString().slice(0,10),code}));
   toast((tier==='special'?'Special':'Pro')+' · '+(LANG==='tr'?'şu tarihe kadar aktif: ':'active until ')+u.toISOString().slice(0,10));
   refreshPlanUI(); $('modal').style.display='none'; }
-function enterCode(){ const c=(prompt(LANG==='tr'?'Lisans kodu':'License code')||'').trim().toUpperCase(); if(!c) return;
-  if(c==='NUTZ-M26') grantPlan('pro',1,c);
-  else if(c==='NUTZ-Y26') grantPlan('pro',12,c);
-  else if(c==='NUTZ-S26') grantPlan('special',12,c);
-  else toast(LANG==='tr'?'Kod tanınmadı.':'Code not recognized.'); }
+async function enterCode(){ const c=(prompt(LANG==='tr'?'Lisans kodu':'License code')||'').trim().toUpperCase(); if(!c) return;
+  // owner test codes stay local; everything else is validated by the server (listener-license edge function)
+  if(c==='NUTZ-M26'){ grantPlan('pro',1,c); return; }
+  if(c==='NUTZ-Y26'){ grantPlan('pro',12,c); return; }
+  if(c==='NUTZ-S26'){ grantPlan('special',12,c); return; }
+  toast(LANG==='tr'?'Kod doğrulanıyor...':'Checking code...');
+  try{
+    let dev=localStorage.getItem('bsDevice'); if(!dev){ dev=Math.random().toString(36).slice(2,12); localStorage.setItem('bsDevice',dev); }
+    const r=await fetch('https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/listener-license',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:c,device:dev})});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&j.until){
+      localStorage.setItem('bsPlan',JSON.stringify({tier:j.tier,until:j.until,code:c}));
+      toast((j.tier==='special'?'Special':'Pro')+' · '+(LANG==='tr'?'şu tarihe kadar aktif: ':'active until ')+j.until);
+      refreshPlanUI(); $('modal').style.display='none';
+    } else toast((LANG==='tr'?'Kod reddedildi: ':'Code rejected: ')+(j.error||r.status));
+  }catch(e){ toast(LANG==='tr'?'Sunucuya ulaşılamadı; sonra tekrar dene.':'Could not reach the server; try again later.'); }
+}
 function showPaywall(feature){
   const p=planActive();
   const tr=LANG==='tr';
@@ -714,7 +730,7 @@ function showPaywall(feature){
 refreshPlanUI();
 // ---- Agtron projection gauge: one mapped roast per coffee unlocks it (projection, never measurement) ----
 // Visual ported from the Guide's cockpit gauge: 270-degree arc, 36 segments, white knob, gold ticks.
-const SEC_PER_AG=4, FC_AG=125, AG_TOL=2, AG_MIN=40, AG_MAX=130;
+const SEC_PER_AG=4, FC_AG=EP.FC_AG, AG_TOL=EP.BFLOOR, AG_MIN=40, AG_MAX=130;
 const cName=$('coffeeName'); cName.value=localStorage.getItem('bsCoffee')||'';
 cName.oninput=()=>{ localStorage.setItem('bsCoffee',cName.value); updateGauge(); };
 // nameplate: the bean's name is an instrument headline, not a form field. Tap to edit, Guide-style well while editing.
@@ -729,7 +745,7 @@ renderNameplate();
 function calMap(){ try{ return JSON.parse(localStorage.getItem('bsCal')||'{}'); }catch(e){ return {}; } }
 function calFor(){ const k=(cName.value||'').trim().toLowerCase(); return k?calMap()[k]:null; }
 // confirmed A0: first crack that is followed by >=2 more within 30s (a lone clank cannot own the anchor)
-function effA0(v){ for(let i=0;i<v.length-2;i++){ if(v[i+2].t-v[i].t<=30) return v[i].t; } return v.length?v[0].t:0; }   // 30s follower window: Ömer's field data, fast roasts 5-10s, slow 20-30s
+function effA0(v){ for(let i=0;i<v.length-2;i++){ if(v[i+2].t-v[i].t<=EP.FOLLOW) return v[i].t; } return v.length?v[0].t:0; }   // follower window: Ömer's field data, fast roasts 5-10s, slow 20-30s
 // learned seconds-per-Agtron slope: least squares over a coffee's mapped history, else pooled house, else 4
 function fitSlope(hist){ if(!hist||hist.length<2) return null;
   const xs=hist.map(h=>h.agtron), ys=hist.map(h=>h.devSpan);
@@ -833,7 +849,7 @@ function updateGauge(){
   const a0=effA0(v), devCur=nowDev-a0;
   // pace: time to reach 25% of the REFERENCE total gain, vs the reference's own q25 (like-for-like)
   let pace=1, cum=0, tq=null;
-  if(cal.tg&&cal.q25){ for(const c of v){ cum+=c.g; if(cum>=cal.tg*0.25){ tq=c.t-a0; break; } } if(tq&&tq>2) pace=Math.min(2,Math.max(0.5,tq/cal.q25)); }
+  if(cal.tg&&cal.q25){ for(const c of v){ cum+=c.g; if(cum>=cal.tg*0.25){ tq=c.t-a0; break; } } if(tq&&tq>2) pace=Math.min(EP.PMAX,Math.max(EP.PMIN,tq/cal.q25)); }
   // two progress estimators through the reference DEV: pace-corrected clock + energy fraction
   const pT=cal.devSpan>0?(devCur/pace)/cal.devSpan:0;
   const pE=cal.tg? v.reduce((s,c)=>s+c.g,0)/cal.tg : pT;
@@ -852,7 +868,7 @@ function updateGauge(){
   proj=Math.min(AG_MAX,Math.max(AG_MIN,proj));
   const prT=Math.min(AG_MAX,Math.max(AG_MIN,FC_AG+(cal.agtron-FC_AG)*pT));
   const prE=Math.min(AG_MAX,Math.max(AG_MIN,FC_AG+(cal.agtron-FC_AG)*pE));
-  const band=Math.min(6,Math.max(AG_TOL, AG_TOL+Math.abs(prT-prE)/2));   // honest range: widens when estimators disagree
+  const band=Math.min(EP.BCAP,Math.max(AG_TOL, AG_TOL+Math.abs(prT-prE)/2));   // honest range: widens when estimators disagree
   ENGINE={pT,pE,p,tq,band,devEff};
   LASTPROJ=Math.round(proj);
   TGT_U=(planActive()&&cal.target)?agU(cal.target):null;   // recipe target ring: Pro
@@ -1002,7 +1018,6 @@ async function importMaps(file){
   }catch(e){ toast('Import failed: '+e.message); }
 }
 // ---- i18n: EN-first, TR selectable from the top. Static text via tree walk, dynamic via tt(). ----
-let LANG=localStorage.getItem('bsLang')||'en';
 const EN2TR={
 'live gain':'canlı kazanç','projected color · Agtron scale':'öngörülen renk · Agtron skalası',
 "this bean's map · tap to edit":'bu çekirdeğin haritası · düzenle',
@@ -1163,9 +1178,9 @@ function drawTimeline(){
     const nowS=running?(performance.now()-startT)/1000:v[v.length-1].t+99;
     const quiet=nowS-v[v.length-1].t;
     const pastPeak=sm[Math.min(nb-1,peakI+run)]<0.7*peak; PASTPEAK=pastPeak;
-    const stages=[['A0',a0t],['A1',susUp(0.30)],['B0',susUp(0.70)]];
-    if(pastPeak||quiet>6) stages.push(['B1',t0+(peakI+0.5)*bin]);
-    if(quiet>12){ stages.push(['C0',susDn(0.70)]); stages.push(['C1',v[v.length-1].t]); }
+    const stages=[['A0',a0t],['A1',susUp(EP.A1)],['B0',susUp(EP.B0)]];
+    if(pastPeak||quiet>EP.QUIET_B1) stages.push(['B1',t0+(peakI+0.5)*bin]);
+    if(quiet>EP.QUIET_C){ stages.push(['C0',susDn(EP.B0)]); stages.push(['C1',v[v.length-1].t]); }
     // hard monotonic clamp: the sequence A0<=A1<=B0<=B1<=C0<=C1 is a law, not a suggestion
     for(let i=1;i<stages.length;i++) if(stages[i][1]<stages[i-1][1]) stages[i][1]=stages[i-1][1];
     // stage pins: copper dot on the bell, stem, bordered chip (Guide chip language). Staggered when crowded.

@@ -239,6 +239,7 @@
       <button id="m-cup" onclick="show('cup')" title="Cup">C</button>
       <button id="m-grade" onclick="show('grade')" title="Grade">G</button>
       <button id="m-value" onclick="show('value')" title="Value Assessment">V</button>
+      <button id="m-listen" onclick="window.open('crack-listen.html','_blank')" title="Crack Listener">L</button>
     </div>
   </div>
   <div class="sectitle" id="secTitle"></div>
@@ -530,7 +531,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-04c</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-07a</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -539,6 +540,28 @@
       <div id="classCodeBig" onclick="copyClassCode(this)" style="text-align:center;margin:6px 0 4px;cursor:pointer"></div>
       <button class="iconbtn" style="display:block;margin:10px auto 0" onclick="printClassCard()">Print</button>
       </div>
+    </div>
+    <div class="card hide" id="engineCard">
+      <div class="cgrplbl">Listener engine rules (admin)</div>
+      <div class="small" style="margin:3px 0 10px">The Crack Listener's projection and detection rules. Saved here, applied by the Listener on its next load (same device/browser). Blank changes nothing; Reset returns factory values.</div>
+      <div class="rulegrid">
+        <label>FC color anchor (Agtron)<input type="text" id="ep_FC_AG" inputmode="decimal"></label>
+        <label>A0 follower window (s)<input type="text" id="ep_FOLLOW" inputmode="decimal"></label>
+        <label>Width reject (ms slots)<input type="text" id="ep_WSNAP" inputmode="decimal"></label>
+        <label>Voice gate (sigmas)<input type="text" id="ep_VSIG" inputmode="decimal"></label>
+        <label>Voice spread floor (Hz)<input type="text" id="ep_MADF" inputmode="decimal"></label>
+        <label>Band floor (&plusmn;Agtron)<input type="text" id="ep_BFLOOR" inputmode="decimal"></label>
+        <label>Band cap (&plusmn;Agtron)<input type="text" id="ep_BCAP" inputmode="decimal"></label>
+        <label>Pace clamp min (&times;)<input type="text" id="ep_PMIN" inputmode="decimal"></label>
+        <label>Pace clamp max (&times;)<input type="text" id="ep_PMAX" inputmode="decimal"></label>
+        <label>A1 rise threshold (0-1)<input type="text" id="ep_A1" inputmode="decimal"></label>
+        <label>B0/C0 threshold (0-1)<input type="text" id="ep_B0" inputmode="decimal"></label>
+        <label>B1 quiet gate (s)<input type="text" id="ep_QUIET_B1" inputmode="decimal"></label>
+        <label>C0/C1 quiet gate (s)<input type="text" id="ep_QUIET_C" inputmode="decimal"></label>
+        <label>Voice minimum (/30s)<input type="text" id="ep_VMIN" inputmode="decimal"></label>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="iconbtn" onclick="saveEngine()">Save rules</button><button class="iconbtn" onclick="resetEngine()">Reset to factory</button></div>
+      <div class="small" id="epMsg" style="margin-top:8px"></div>
     </div>
     <div class="card">
       <div class="secname" style="margin-bottom:10px">Your membership</div>
@@ -1490,6 +1513,7 @@ async function renderAccount(){
   else { acEmail.textContent='offline'; acSince.textContent='-'; }
   const ap=document.getElementById('acPlan'); if(ap) ap.textContent=MYPLAN;
   const cc=document.getElementById('classCard'); if(cc){ cc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) renderClassQRs(); }
+  const ec=document.getElementById('engineCard'); if(ec){ ec.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadEngine(); }
   const mc=document.getElementById('memberCard'); if(mc){ mc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadEntitlements(); }
   const tc=document.getElementById('trCard'); if(tc){ tc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) renderTranslations(); }
 }
@@ -1727,6 +1751,15 @@ function initApp(){
   sb.auth.getSession().then(({data})=>{ if(data.session){ hideLogin(); loadFromServer(); } else { showLogin(); } });
 }
 initApp();
+// ---- Listener engine rules (admin): writes localStorage bsEngine; crack-listen.html reads it on load ----
+const EP_DEF={FC_AG:125,FOLLOW:30,WSNAP:5,VSIG:3.5,MADF:400,BFLOOR:2,BCAP:6,PMIN:0.5,PMAX:2,A1:0.30,B0:0.70,QUIET_B1:6,QUIET_C:12,VMIN:8};
+function loadEngine(){ let e={}; try{ e=JSON.parse(localStorage.getItem('bsEngine')||'{}'); }catch(_){}
+  Object.keys(EP_DEF).forEach(k=>{ const i=document.getElementById('ep_'+k); if(i) i.value=(k in e)?e[k]:EP_DEF[k]; }); }
+function saveEngine(){ if(!IS_ADMIN) return; const out={};
+  Object.keys(EP_DEF).forEach(k=>{ const i=document.getElementById('ep_'+k); if(!i) return; const v=parseFloat(i.value); if(isFinite(v)&&v!==EP_DEF[k]) out[k]=v; });
+  localStorage.setItem('bsEngine',JSON.stringify(out));
+  document.getElementById('epMsg').textContent=Object.keys(out).length?('Saved '+Object.keys(out).length+' override(s). The Listener applies them on its next load.'):'All values at factory: no overrides stored.'; }
+function resetEngine(){ if(!IS_ADMIN) return; localStorage.removeItem('bsEngine'); loadEngine(); document.getElementById('epMsg').textContent='Back to factory rules.'; }
 </script>
 </body>
 </html>
