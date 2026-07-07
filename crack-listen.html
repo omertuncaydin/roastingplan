@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07s</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07t</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -296,7 +296,7 @@ let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
 const $=id=>document.getElementById(id);
 // tunable engine RULES: defaults here, overridable from the Guide's "Listener engine rules" card (localStorage bsEngine)
-let EP={FC_AG:125,FOLLOW:30,WSNAP:5,VSIG:3.5,MADF:400,BFLOOR:2,BCAP:6,PMIN:0.5,PMAX:2,A1:0.30,B0:0.70,QUIET_B1:6,QUIET_C:12,VMIN:8};
+let EP={FC_AG:125,FOLLOW:30,WSNAP:5,VSIG:3.5,MADF:400,BFLOOR:2,BCAP:6,PMIN:0.5,PMAX:2,A1:0.30,B0:0.70,QUIET_B1:6,QUIET_C:12,VMIN:8,MAXDK:0.8};
 try{ EP=Object.assign(EP,JSON.parse(localStorage.getItem('bsEngine')||'{}')); }catch(e){}
 
 const sens=$('sens'), hp=$('hp');
@@ -908,6 +908,7 @@ function updateGauge(){
     if(devEff>cal.devSpan){ const l1=pts[pts.length-2],l2=pts[pts.length-1];
       const sl=(l2.dt>l1.dt)?(l2.ag-l1.ag)/(l2.dt-l1.dt):0; proj=l2.ag+sl*(devEff-cal.devSpan); }
   } else proj=FC_AG+(cal.agtron-FC_AG)*p;
+  proj=Math.max(proj, FC_AG-devCur*EP.MAXDK);   // physics floor: real beans cannot darken faster than MAXDK Agtron/s of DEV
   proj=Math.min(AG_MAX,Math.max(AG_MIN,proj));
   const prT=Math.min(AG_MAX,Math.max(AG_MIN,FC_AG+(cal.agtron-FC_AG)*pT));
   const prE=Math.min(AG_MAX,Math.max(AG_MIN,FC_AG+(cal.agtron-FC_AG)*pE));
@@ -1129,6 +1130,7 @@ setTimeout(applyLang,0);
 const formEl=e=>{ const t=e.target; return t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName); };
 ['gesturestart','gesturechange','gestureend'].forEach(ev=>document.addEventListener(ev,e=>{ if(!formEl(e)) e.preventDefault(); }));
 document.addEventListener('touchmove',e=>{ if(!formEl(e)&&e.scale!==undefined&&e.scale!==1) e.preventDefault(); },{passive:false});
+document.addEventListener('touchend',e=>{ const t=e.target; if(t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)){ setTimeout(()=>{ if(document.activeElement!==t){ try{ t.focus(); }catch(_){} } },0); } },{passive:true});
 const tl=$('tl'), tx=tl.getContext('2d');
 function drawTimeline(){
   tx.clearRect(0,0,tl.width,tl.height);
