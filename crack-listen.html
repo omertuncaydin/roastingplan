@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zh</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zi</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -836,7 +836,20 @@ function saveCalIfMapped(verbose){
   const prevM=m[k], isCut=!(LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==='C1'));
   if(verbose&&isCut&&prevM&&prevM.devSpan>((v[v.length-1].t-a0)*1.3)&&Date.now()-MAPWARN>8000){
     MAPWARN=Date.now();
-    toast(LANG==='tr'?"Kesik kavurma (C1 yok). Daha dolu referansın üzerine yazmak için 8 sn içinde tekrar Eşle'ye dokun.":'Cut roast (no C1). Tap Map again within 8s to overwrite your fuller reference.');
+    // LEARN WITHOUT OVERWRITING: the cut roast's lesson (self-grade + phi point) joins the existing
+    // map; the fuller reference geometry stays. Second tap within 8s = full overwrite, deliberate.
+    const projAt=STOPPROJ||LASTPROJ, today=new Date().toISOString().slice(0,10);
+    if(isFinite(ag)&&projAt){
+      let g2=prevM.grades||[]; const resid=ag-projAt;
+      if(g2.length){ const mb=g2.reduce((a2,g)=>a2+(g.meas-g.proj),0)/g2.length; if(Math.abs(resid-mb)>6) g2=[]; }
+      prevM.grades=g2.concat([{proj:projAt,meas:ag,date:today}]).slice(-6);
+      prevM.hist=(prevM.hist||[]).concat([{devSpan:v[v.length-1].t-a0, agtron:ag, tg, q25, ph:+PHASE.toFixed(3)||null, date:today}]).slice(-8);
+      m[k]=prevM; if(m['__house']&&m['__house'].src===k) m['__house']=prevM;
+      localStorage.setItem('bsCal',JSON.stringify(m));
+      toast(LANG==='tr'?"Ders kaydedildi (öz-not + φ noktası), dolu referans korundu. Tamamen üzerine yazmak için 8 sn içinde tekrar Eşle'ye dokun.":'Lesson recorded (self-grade + φ point); fuller reference kept. Tap Map again within 8s to fully overwrite instead.');
+    } else {
+      toast(LANG==='tr'?"Kesik kavurma (C1 yok). Üzerine yazmak için 8 sn içinde tekrar Eşle'ye dokun.":'Cut roast (no C1). Tap Map again within 8s to overwrite your fuller reference.');
+    }
     return;
   }
   const entry={a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, gsd:Math.round(sd(v.map(c=>c.g))*10)/10, phDrop:+PHASE.toFixed(3)||null, moist:parseFloat($('mMoist').value)||null, aw:parseFloat($('mAw').value)||null, proc:(($('mProc').value||'').trim())||((m[k]&&m[k].proc)||null), date:new Date().toISOString().slice(0,10), src:k,
