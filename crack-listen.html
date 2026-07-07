@@ -21,7 +21,7 @@ body.st-setup #cGain,body.st-setup #cTimeline,body.st-setup #cStats,body.st-setu
 /* LIVE: gauge, bell, gain, STOP (sticky), compact stats. Chores hidden. */
 body.st-live #cGauge{order:1} body.st-live #cStats{order:2} body.st-live #cTimeline{order:3} body.st-live #cGain{order:4} body.st-live #btn{order:5} body.st-live #err{order:5} body.st-live #cTune{order:6} body.st-live #cLog{order:7}
 body.st-live #cCapture{display:none}
-body.st-live #btn{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:216px;height:108px;border-radius:216px 216px 0 0;background:rgba(217,102,63,0.78);font-size:25px;font-weight:800;padding:0 0 16px;z-index:9;box-shadow:0 -4px 22px rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;letter-spacing:.6px;border:none}
+body.st-live #btn{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(320px,82vw);height:112px;border-radius:50% 50% 0 0;background:rgba(217,102,63,0.78);font-size:25px;font-weight:800;padding:0 0 16px;z-index:9;box-shadow:0 -4px 22px rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;letter-spacing:.6px;border:none}
 body.st-live .wrap{padding-bottom:120px}
 body.st-live #cGauge details{display:none}
 #sampleBtn{display:none;background:var(--panel);color:var(--ink);border:2px solid var(--accent);border-radius:14px;font-size:16px;font-weight:700;padding:13px;width:100%;align-items:center;justify-content:center;gap:10px}
@@ -105,9 +105,9 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 .refresh{width:auto;padding:5px 10px;font-size:12px;font-weight:600;background:transparent;color:var(--accent);border:1px solid var(--accent)}
 body.st-live .brandFull,body.st-done .brandFull{display:none}
 body.st-live .brandCompact,body.st-done .brandCompact{display:block}
-.micBtn{display:none;position:absolute;top:60%;left:50%;transform:translate(-50%,-50%);width:66px;height:66px;border-radius:50%;background:var(--accent2);border:none;padding:0;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.45);cursor:pointer;align-items:center;justify-content:center}
+.micBtn{display:none;position:absolute;top:60%;left:50%;transform:translate(-50%,-50%);width:92px;height:92px;border-radius:50%;background:var(--accent2);border:none;padding:0;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.45);cursor:pointer;align-items:center;justify-content:center}
 body.st-setup .micBtn{display:flex}
-.micHint{display:none;position:absolute;top:calc(60% + 42px);left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap;pointer-events:none}
+.micHint{display:none;position:absolute;top:calc(60% + 56px);left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap;pointer-events:none}
 body.st-setup .micHint{display:block}
 body.st-setup #btn{display:none}
 .row>.card .lbl{min-height:2.4em;line-height:1.2;display:flex;align-items:flex-end;justify-content:center}
@@ -129,7 +129,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zr</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zt</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -179,7 +179,7 @@ body.st-setup #btn{display:none}
     </div>
     <div id="agWrap" style="position:relative;display:flex;justify-content:center">
       <div id="ag" style="display:flex;justify-content:center"></div>
-      <button class="micBtn" onclick="toggle()" aria-label="Start listening"><svg viewBox="0 0 60 60" width="32" height="32" aria-hidden="true"><rect x="24" y="14" width="12" height="21" rx="6" fill="#fff"/><path d="M19 30 a11 11 0 0 0 22 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="41" x2="30" y2="47" stroke="#fff" stroke-width="3"/><line x1="23" y1="47" x2="37" y2="47" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg></button>
+      <button class="micBtn" onclick="toggle()" aria-label="Start listening"><svg viewBox="0 0 60 60" width="46" height="46" aria-hidden="true"><rect x="24" y="14" width="12" height="21" rx="6" fill="#fff"/><path d="M19 30 a11 11 0 0 0 22 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="41" x2="30" y2="47" stroke="#fff" stroke-width="3"/><line x1="23" y1="47" x2="37" y2="47" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg></button>
       <div class="micHint">tap to listen</div>
     </div>
     <div class="hint" id="agHint"></div>
@@ -880,7 +880,8 @@ function saveCalIfMapped(verbose){
   entry.hist=entry.hist.concat([{devSpan:entry.devSpan, agtron:ag, tg, q25, ph:entry.phDrop, date:entry.date}]).slice(-8);
   let grades=(prevM&&prevM.grades)||[];
   const projAt=STOPPROJ||LASTPROJ;
-  if(isFinite(ag)&&projAt&&!PROJBORROWED){   // a borrowed map's guess is NOT this coffee's lesson const resid=ag-projAt;
+  if(isFinite(ag)&&projAt&&!PROJBORROWED){   // a borrowed map's guess is NOT this coffee's lesson
+    const resid=ag-projAt;
     if(grades.length){ const mb=grades.reduce((a2,g)=>a2+(g.meas-g.proj),0)/grades.length;
       if(Math.abs(resid-mb)>6) grades=[]; }   // epoch break: this is a different bean/bag now
     grades=grades.concat([{proj:projAt, meas:ag, date:entry.date}]).slice(-6);
