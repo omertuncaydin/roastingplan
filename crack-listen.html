@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07z</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07za</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -133,7 +133,7 @@ body.st-setup #btn{display:none}
     <div class="sub">the crack analyzer · the probe reads the drum, the beans speak · <span id="planTag" style="color:var(--accent);cursor:pointer" onclick="showPaywall()"></span></div>
     <div class="hint" id="guideUp" style="margin:-8px 0 12px">Part of the CoffeeNutz cockpit: <a href="roast-guide.html" style="color:var(--accent)">Guide &rarr;</a> recipes, cupping, grading.</div>
     <div id="codeRow" style="display:none;gap:8px;margin:0 0 12px">
-      <input type="text" id="licInput" placeholder="Code" autocapitalize="characters" style="flex:1;min-width:0;border:1px solid var(--accent);border-radius:9px;padding:11px 12px;font-size:16px;background:#15100b;color:var(--ink);text-transform:uppercase">
+      <input type="text" id="licInput" placeholder="Code" autocapitalize="characters" autocorrect="off" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;border:1px solid var(--accent);border-radius:9px;padding:11px 12px;font-size:16px;background:#15100b;color:var(--ink);text-transform:uppercase">
       <button class="pm" style="width:auto;padding:11px 18px;font-size:14px;background:var(--accent2);color:#fff;border:none" onclick="applyCode()">Apply</button>
     </div>
   </div>
@@ -726,7 +726,7 @@ function grantPlan(tier,months,code){ const u=new Date(); u.setMonth(u.getMonth(
   refreshPlanUI(); hideCode(); $('modal').style.display='none'; }
 function revealCode(){ $('modal').style.display='none'; const r=$('codeRow'); r.style.display='flex'; window.scrollTo({top:0,behavior:'smooth'}); setTimeout(()=>{ const i=$('licInput'); if(i) i.focus(); },350); }
 function hideCode(){ const r=$('codeRow'); if(r) r.style.display='none'; const i=$('licInput'); if(i) i.value=''; }
-async function applyCode(){ const el=$('licInput'), c=((el&&el.value)||'').trim().toUpperCase(); if(!c){ if(el) el.focus(); return; }
+async function applyCode(){ const el=$('licInput'), c=((el&&el.value)||'').replace(/\s+/g,'').toUpperCase(); if(!c){ if(el) el.focus(); return; }   // strip ALL whitespace: iOS autocorrect injects spaces
   if(c==='PATRON26'){ localStorage.setItem('bsAdmin','1'); document.body.classList.add('admin'); hideCode(); renderAdmin(); updateSD(); toast('Admin unlocked: engine internals visible.'); return; }
   // owner test codes stay local; everything else is validated by the server (listener-license edge function)
   if(c==='NUTZ-M26'){ grantPlan('pro',1,c); return; }
