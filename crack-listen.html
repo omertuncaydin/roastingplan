@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zd</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07ze</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -1231,21 +1231,25 @@ function drawTimeline(){
     const nowS=running?(performance.now()-startT)/1000:(STOPT!=null?STOPT:v[v.length-1].t+99);
     const quiet=nowS-v[v.length-1].t;
     const nowBin=Math.min(nb-1,Math.max(0,Math.floor((Math.min(nowS,t0+span-0.01)-t0)/bin)));
-    const pastPeak=nowBin>peakI && sm[nowBin]<0.7*peak; PASTPEAK=pastPeak;
+    const lb=Math.min(nb-1,Math.max(0,Math.floor((v[v.length-1].t-t0)/bin)));
+    // CENSORING RULE (Omer's A1-cut test, 2026-07-07): a peak only exists if its decline was
+    // witnessed WHILE cracks were still coming. A maximum at the cut is the edge of the data, not B1.
+    const peakInterior=(lb-peakI)>=run;
+    const pastPeak=peakInterior && nowBin>peakI && sm[nowBin]<0.7*peak; PASTPEAK=pastPeak;
     // stepless envelope PHASE 0-1 (Omer's thesis: color follows the loudness phase, not the clock).
-    // Rising half: rate/peak maps 0->0.5. Falling half: 0.5->1 as the rate dies. Monotonic, mic-invariant.
-    const smNow=sm[nowBin]||0;
-    const phRaw=(nowBin<=peakI&&!pastPeak)?(0.5*smNow/(peak||1)):(0.5+0.5*(1-smNow/(peak||1)));
+    // Rising half: rate/peak maps 0->0.5, capped there until a REAL peak is proven. Monotonic, mic-invariant.
+    const smNow=sm[Math.min(nowBin,lb)]||0;
+    const phRaw=pastPeak?(0.5+0.5*(1-(sm[nowBin]||0)/(peak||1))):Math.min(0.5,0.5*smNow/(peak||1));
     PHASE=Math.max(PHASE,Math.min(1,phRaw));
     const stages=[['A0',a0t],['A1',susUp(EP.A1)],['B0',susUp(EP.B0)]];
     const tB1=t0+(peakI+0.5)*bin;
-    if(pastPeak||quiet>EP.QUIET_B1) stages.push(['B1',tB1]);
+    if(peakInterior&&(pastPeak||quiet>EP.QUIET_B1)) stages.push(['B1',tB1]);
     // C1 must be EARNED by observed silence: at least 10s, adaptive to roast speed (3x recent median gap).
     const rg=v.slice(-11).map(c=>c.t); let medGap=2;
     if(rg.length>3){ const dif=[]; for(let i=1;i<rg.length;i++) dif.push(rg[i]-rg[i-1]); dif.sort((a,b)=>a-b); medGap=dif[Math.floor(dif.length/2)]; }
     const silThr=Math.max(5,3*medGap);   // 5s floor (Omer 2026-07-07), scaled up for slow roasts by the recent gap
-    if(quiet>=silThr){ const tC1=v[v.length-1].t; stages.push(['C0',(tB1+tC1)/2]); stages.push(['C1',tC1]); }
-    else{ if(pastPeak){ const calS=calFor()||calMap()['__house'];
+    if(peakInterior&&quiet>=silThr){ const tC1=v[v.length-1].t; stages.push(['C0',(tB1+tC1)/2]); stages.push(['C1',tC1]); }
+    else{ if(peakInterior&&pastPeak){ const calS=calFor()||calMap()['__house'];
         const fcEst=(calS&&calS.devSpan)?calS.devSpan:((tB1-a0t)*2.6);
         if(nowS-tB1>=0.2*fcEst) stages.push(['C0',tB1+0.2*fcEst]); }
       if(!running&&STOPT!=null) stages.push(['DROP',Math.min(STOPT,t0+span-0.5)]); }   // the cut, marked honestly
