@@ -48,8 +48,9 @@ body.admin #adminStatsRow{display:flex}
   body.st-live #tl{height:320px}
 }
 /* DONE: results first, then record/save, log for fp ticking. */
-body.st-done #cTimeline{order:1} body.st-done #cStats{order:2} body.st-done #cCapture{order:3} body.st-done #cGauge{order:4} body.st-done #cLog{order:5} body.st-done #cTune{order:6} body.st-done #btn{order:7} body.st-done #err{order:7}
+body.st-done #cGauge{order:1} body.st-done #cCapture{order:2} body.st-done #cTimeline{order:3} body.st-done #cStats{order:4} body.st-done #cLog{order:5} body.st-done #cTune{order:6} body.st-done #btn{order:7} body.st-done #err{order:7}
 body.st-done #cGain{display:none}
+body.st-done #cCapture{border:1.5px solid var(--accent)}
 details.fold{background:var(--panel);border-radius:12px;padding:10px 14px;margin-bottom:12px}
 details.fold summary{font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
 details.fold .card{margin:10px 0 2px}
@@ -123,7 +124,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07h</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07i</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -207,6 +208,15 @@ body.st-setup #btn{display:none}
         <input type="text" id="mAgW" placeholder="Agtron whole" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
         <input type="text" id="mAgG" placeholder="Agtron ground" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
       </div>
+      <select id="mLevelPick" onchange="if(this.value){$('mAgG').value=this.value;toast(LANG==='tr'?'Tahmini Agtron yazıldı (±6). Ölçebildiğin gün gerçek değerle değiştir.':'Estimated Agtron filled (±6). Replace with a measured value when you can.');this.selectedIndex=0;}" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:14px;background:var(--panel2);color:var(--muted);margin-bottom:6px">
+        <option value="">No color meter? Pick the closest level (CoffeeNutz Measurement Environment)</option>
+        <option value="110">Nordic light · ~110</option>
+        <option value="100">Light / City · ~100</option>
+        <option value="90">Medium / Full City · ~90</option>
+        <option value="80">Medium-dark / Full City+ · ~80</option>
+        <option value="72">Dark / Vienna · ~72</option>
+        <option value="65">Very dark / French · ~65</option>
+      </select>
       <div style="display:flex;gap:6px;margin-bottom:6px">
         <input type="text" id="mProc" placeholder="Process (washed/natural)" style="flex:1.2;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
         <input type="text" id="mChgFc" placeholder="Charge→FC (m:ss)" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
@@ -216,15 +226,6 @@ body.st-setup #btn{display:none}
         <input type="text" id="mAgWSd" placeholder="Whole SD" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
         <input type="text" id="mAgSd" placeholder="Ground SD" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
       </div>
-      <select id="mLevelPick" onchange="if(this.value){$('mAgG').value=this.value;toast(LANG==='tr'?'Tahmini Agtron yazıldı (±6). Ölçebildiğin gün gerçek değerle değiştir.':'Estimated Agtron filled (±6). Replace with a measured value when you can.');this.selectedIndex=0;}" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:14px;background:var(--panel2);color:var(--muted);margin-bottom:6px">
-        <option value="">No color meter? Pick the closest level (CoffeeNutz estimate)</option>
-        <option value="80">Nordic light · ~80</option>
-        <option value="70">Light / City · ~70</option>
-        <option value="60">Medium / Full City · ~60</option>
-        <option value="50">Medium-dark / Full City+ · ~50</option>
-        <option value="42">Dark / Vienna · ~42</option>
-        <option value="35">Very dark / French · ~35</option>
-      </select>
       <input type="text" id="mTarget" placeholder="Target Agtron (recipe · Pro)" inputmode="decimal" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin-bottom:6px">
       <input type="text" id="mNote" placeholder="Note (machine, phone position, cup notes)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
       <div class="hint">Fill what you know before saving; measure Agtron later? Load the saved zip back in, add it, tap Map.</div>
@@ -1043,7 +1044,7 @@ const EN2TR={
 "this bean's map · tap to edit":'bu çekirdeğin haritası · düzenle',
 'coffee · mapping key':'kahve · eşleme anahtarı','name the coffee':'kahveyi adlandır',
 'Coffee badge · sticker info':'Kahve rozeti · etiket bilgisi',
-'session timeline · DEV':'seans zaman çizgisi · DEV','total gain':'toplam kazanç','pace':'tempo',
+'session timeline · DEV':'seans zaman çizgisi · DEV','total gain':'toplam gain','pace':'tempo',
 'bean voice':'çekirdeğin sesi','evenness':'homojenlik','brightness':'parlaklık','time SD s':'zaman SS sn',
 'counted cracks':'sayılan çatlaklar','rate /min':'çatlak /dk','last gain':'son kazanç','peak gain':'tepe kazanç',
 'session capture':'seans kaydı','roast record (travels inside the CSV)':'kavurma kaydı (CSV içinde taşınır)',
@@ -1101,6 +1102,8 @@ function toggleLang(){ LANG=LANG==='tr'?'en':'tr'; localStorage.setItem('bsLang'
 document.body.className='st-setup';
 setTimeout(updateGauge,0);   // initial gauge state on load
 setTimeout(applyLang,0);
+// iOS: block pinch zoom (Safari ignores maximum-scale for gestures)
+['gesturestart','gesturechange'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault()));
 const tl=$('tl'), tx=tl.getContext('2d');
 function drawTimeline(){
   tx.clearRect(0,0,tl.width,tl.height);
@@ -1116,18 +1119,18 @@ function drawTimeline(){
   const X=t=>((t-t0)/span)*W;
   // dotted grid + time labels, step scaled to the window
   const stepG=span<=60?10:(span<=180?30:60);
-  tx.strokeStyle='#2a221b'; tx.lineWidth=1; tx.fillStyle='#8a7a68'; tx.font='15px sans-serif';
+  tx.strokeStyle='#2a221b'; tx.lineWidth=1; tx.fillStyle='#ded3c4'; tx.font='600 16px -apple-system,sans-serif';
   tx.setLineDash([2,5]);
   for(let t=Math.ceil(t0/stepG)*stepG; t<=t0+span; t+=stepG){
-    const x=X(t); tx.beginPath(); tx.moveTo(x,0); tx.lineTo(x,H); tx.stroke();
-    tx.fillText(fmtT(t), x+3, H-4);
+    const x=X(t); tx.beginPath(); tx.moveTo(x,0); tx.lineTo(x,H-30); tx.stroke();
+    tx.fillText(fmtT(t), x+3, H-6);
   }
   tx.setLineDash([]);
-  // corner readouts: mono clock left, window badge right
+  // corner readout: DEV clock only (users open the app near cinnamon, elapsed-since-open means nothing)
   const nowT=running?(performance.now()-startT)/1000:v[v.length-1].t;
   const a0c=effA0(v);
-  tx.fillStyle='#f3ede4'; tx.font='bold 19px ui-monospace,Menlo,monospace';
-  tx.fillText(fmtT(nowT)+(nowT>a0c?' · DEV '+fmtT(nowT-a0c):''), 12, 24);
+  if(nowT>a0c){ tx.fillStyle='#f3ede4'; tx.font='bold 21px ui-monospace,Menlo,monospace';
+    tx.fillText('DEV '+fmtT(nowT-a0c), 12, 26); }
   tx.font='16px sans-serif';
   // histogram: share of cracks per bin
   const bin=+(($('bin')&&$('bin').value)||1), nb=Math.max(1,Math.ceil(span/bin)), counts=new Array(nb).fill(0);
@@ -1137,11 +1140,12 @@ function drawTimeline(){
   const sig=Math.max(1.2, Math.max(3, span/40)/bin), sm=new Array(nb).fill(0);
   for(let i=0;i<nb;i++){ let s=0,wsum=0; for(let j=0;j<nb;j++){ const w=Math.exp(-0.5*((j-i)/sig)*((j-i)/sig)); s+=counts[j]*w; wsum+=w; } sm[i]=s/wsum; }
   let peakI=0; for(let i=1;i<nb;i++) if(sm[i]>sm[peakI]) peakI=i;
-  const peak=sm[peakI]||1, yScale=(H-34)/(peak*1.15);
-  const Y=val=>H-6-val*yScale;
+  const PB=30;   // reserved floor strip: crack ticks + BRIGHT time labels live here, the bell never enters
+  const peak=sm[peakI]||1, yScale=(H-PB-34)/(peak*1.15);
+  const Y=val=>H-PB-val*yScale;
   // baseline crack ticks: each valid crack is a gold tick on the floor (bars retired with the bezel look)
   tx.fillStyle='rgba(230,193,75,0.85)';
-  for(const c of v){ if(c.t<t0||c.t>t0+span) continue; tx.fillRect(X(c.t)-1,H-22,2,8); }
+  for(const c of v){ if(c.t<t0||c.t>t0+span) continue; tx.fillRect(X(c.t)-1,H-26,2,8); }
   // DEV progress edge along the floor: copper-gold from A0 to now
   tx.strokeStyle='#3a2f26'; tx.lineWidth=3; tx.lineCap='round';
   tx.beginPath(); tx.moveTo(4,H-2); tx.lineTo(W-4,H-2); tx.stroke();
@@ -1150,7 +1154,7 @@ function drawTimeline(){
   const maxC=Math.max(...counts)||1;
   tx.fillStyle='rgba(230,193,75,0.20)';
   const bw2=Math.max(2,(bin/span)*W-2);
-  counts.forEach((n,i)=>{ if(!n) return; const bh=(n/maxC)*(H-58), bx=X(t0+i*bin)+1, by=H-24-bh;
+  counts.forEach((n,i)=>{ if(!n) return; const bh=(n/maxC)*(H-PB-34), bx=X(t0+i*bin)+1, by=H-PB-bh;
     tx.beginPath(); if(tx.roundRect) tx.roundRect(bx,by,bw2,bh,[3,3,0,0]); else tx.rect(bx,by,bw2,bh); tx.fill(); });
   // GHOST REFERENCE: the mapped roast's bell shape, raced live (dashed, muted)
   const calT=calFor()||calMap()['__house'];
@@ -1176,7 +1180,7 @@ function drawTimeline(){
   }
   // tryer sample marks: copper dashed drops, editable via the chips / the list
   SAMPLES.forEach((s,i)=>{ if(s.t<t0||s.t>t0+span) return; const x=X(s.t);
-    tx.setLineDash([5,5]); tx.strokeStyle='#c98a3c'; tx.lineWidth=2; tx.beginPath(); tx.moveTo(x,16); tx.lineTo(x,H-16); tx.stroke(); tx.setLineDash([]);
+    tx.setLineDash([5,5]); tx.strokeStyle='#c98a3c'; tx.lineWidth=2; tx.beginPath(); tx.moveTo(x,16); tx.lineTo(x,H-32); tx.stroke(); tx.setLineDash([]);
     tx.fillStyle='#c98a3c'; tx.font='bold 14px -apple-system,sans-serif'; tx.fillText('S'+(i+1), x+4, 26); tx.font='16px sans-serif';
   });
   // the bell
