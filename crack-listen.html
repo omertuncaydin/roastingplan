@@ -103,6 +103,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 .titleMeta{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .vtag{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 .refresh{width:auto;padding:5px 10px;font-size:12px;font-weight:600;background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.hpill{width:auto;border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--muted);background:none}
 body.st-live .brandFull,body.st-done .brandFull{display:none}
 body.st-live .brandCompact,body.st-done .brandCompact{display:block}
 .micBtn{display:none;position:absolute;top:60%;left:50%;transform:translate(-50%,-50%);width:92px;height:92px;border-radius:50%;background:var(--accent2);border:none;padding:0;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.45);cursor:pointer;align-items:center;justify-content:center}
@@ -126,16 +127,18 @@ body.st-setup #btn{display:none}
       <span class="logoName" style="font-size:22px;display:inline-block"><span class="lr">CoffeeNutz<sup class="rmark">&reg;</sup></span> <span class="lg">Guide</span></span>
     </div>
     <div class="hdrDivider"></div>
-    <div class="titleRow">
-      <h1>Crack Listener</h1>
-      <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zu</span>
-        <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
-        <button class="refresh" onclick="hardRefresh()">Refresh</button>
+    <div style="text-align:center">
+      <h1 style="font-size:25px;margin:2px 0 0">Crack Listener</h1>
+      <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
+      <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
+      <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zv</span>
+        <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
+        <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
+        <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
+      <div class="hint" id="guideUp" style="margin-top:9px">CoffeeNutz cockpit: <a href="roast-guide.html" style="color:var(--accent)">Guide &rarr;</a></div>
     </div>
-    <div class="sub">the crack analyzer · the probe reads the drum, the beans speak · <span id="planTag" style="color:var(--accent);cursor:pointer" onclick="showPaywall()"></span></div>
-    <div class="hint" id="guideUp" style="margin:-8px 0 12px">Part of the CoffeeNutz cockpit: <a href="roast-guide.html" style="color:var(--accent)">Guide &rarr;</a> recipes, cupping, grading.</div>
     <div id="codeRow" style="display:none;gap:8px;margin:0 0 12px">
       <input type="text" id="licInput" placeholder="Code" autocapitalize="characters" autocorrect="off" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;border:1px solid var(--accent);border-radius:9px;padding:11px 12px;font-size:16px;background:#15100b;color:var(--ink);text-transform:uppercase">
       <button class="pm" style="width:auto;padding:11px 18px;font-size:14px;background:var(--accent2);color:#fff;border:none" onclick="applyCode()">Apply</button>
@@ -1201,7 +1204,7 @@ const EN2TR={
 '5 · Measure, fill, tap the button.':'5 · Ölç, doldur, düğmeye dokun.',
 'After cooling, enter the measured color and tap the Map button - on early-cut roasts it says "Record lesson" and keeps your reference safe. Every measured roast makes the next prediction better; that is the app learning your coffee. Save the session (.zip) as your archive.':'Soğuduktan sonra ölçtüğün rengi gir ve Eşle düğmesine dokun - erken kesilen kavurmalarda "Dersi kaydet" yazar ve referansını korur. Ölçülen her kavurma bir sonraki tahmini iyileştirir; uygulamanın kahveni öğrenmesi budur. Seansı (.zip) arşivin olarak kaydet.',
 'Your first 20 roasts are free. Pro unlocks samples, recipes and Deep Calibration.':'İlk 20 kavurman ücretsiz. Pro; numuneleri, reçeteleri ve Derin Kalibrasyonu açar.',
-'tap to listen':'dinlemek için dokun','the crack analyzer · the probe reads the drum, the beans speak':'çatlak analizörü · prob kazanı okur, çekirdekler konuşur',
+'the probe reads the drum, the beans speak':'prob kazanı okur, çekirdekler konuşur','CoffeeNutz cockpit:':'CoffeeNutz kokpiti:','tap to listen':'dinlemek için dokun','the crack analyzer · the probe reads the drum, the beans speak':'çatlak analizörü · prob kazanı okur, çekirdekler konuşur',
 'Tap start, hold the phone near the drum, disable the case if it covers the mic.':'Başlata dokun, telefonu kazana yaklaştır, kılıf mikrofonu kapatıyorsa çıkar.',
 'Everything is kept for the whole session; save after Stop. Keep the screen on.':'Her şey seans boyunca bellekte tutulur; Durdur sonrası kaydet. Ekranı açık tut.',
 'Saved per coffee on this phone; the batch card pulls from here.':'Bu telefonda kahve başına saklanır; parti kartı buradan beslenir.',
