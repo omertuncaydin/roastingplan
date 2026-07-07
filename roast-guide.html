@@ -239,10 +239,11 @@
       <button id="m-cup" onclick="show('cup')" title="Cup">C</button>
       <button id="m-grade" onclick="show('grade')" title="Grade">G</button>
       <button id="m-value" onclick="show('value')" title="Value Assessment">V</button>
-      <button id="m-listen" onclick="window.open('crack-listen.html','_blank')" title="Crack Listener">L</button>
+      <button id="m-listen" onclick="show('listen')" title="Crack Listener">L</button>
     </div>
   </div>
   <div class="sectitle" id="secTitle"></div>
+  <div class="hide" id="view-listen"><iframe id="listenFrame" allow="microphone" style="width:100%;height:calc(100vh - 170px);min-height:560px;border:1px solid var(--line);border-radius:12px;background:#15100b"></iframe></div>
   <div class="subnav hide" id="subnav">
     <button id="nav-roast" class="on" onclick="show('roast')" data-i18n="Guide">Guide</button>
     <button id="nav-recipes" onclick="show('recipes')" data-i18n="Recipes">Recipes</button>
@@ -531,7 +532,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-07b</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-07c</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1614,14 +1615,15 @@ function copyEmail(e){ if(e&&e.preventDefault) e.preventDefault(); const a='info
 
 // ===================== views =====================
 const ROAST_GROUP=['roast','recipes','hist','rules'];
-const SEC_INFO={ roast:['Roast','first crack to drop, guided'], cup:['Cup','sensory · CVA descriptive + affective'], grade:['Grade','green physical · CVA defect grading'], value:['Value Assessment','Fit + Distinctiveness · the identity card'], account:['Account','your membership & privacy'] };
+const SEC_INFO={ listen:['Crack Listener','the roasting instrument · the beans speak'], roast:['Class Learning Workshop','graph, RoR and stage wheels · teaching instruments'], cup:['Cup','sensory · CVA descriptive + affective'], grade:['Grade','green physical · CVA defect grading'], value:['Value Assessment','Fit + Distinctiveness · the identity card'], account:['Account','your membership & privacy'] };
 function groupOf(v){ return ROAST_GROUP.includes(v)?'roast':v; }
-const GROUP_COLORS={roast:'#c98a3c',cup:'#3c8a9a',grade:'#7d9b57',value:'#e6c14b'};   // section-signature tints: lit only on the active tab
+const GROUP_COLORS={listen:'#e6c14b',roast:'#c98a3c',cup:'#3c8a9a',grade:'#7d9b57',value:'#e6c14b'};   // section-signature tints: lit only on the active tab
 function show(v){
   CURVIEW=v;
-  ['roast','cup','grade','value','recipes','hist','rules','account','flight'].forEach(x=>document.getElementById('view-'+x).classList.toggle('hide',x!==v));
+  ['roast','cup','grade','value','recipes','hist','rules','account','flight','listen'].forEach(x=>{ const el=document.getElementById('view-'+x); if(el) el.classList.toggle('hide',x!==v); });
+  if(v==='listen'){ const f=document.getElementById('listenFrame'); if(f&&!f.src) f.src='crack-listen.html'; }
   const g=(v==='flight')?'cup':groupOf(v);
-  [['m-roast','roast'],['m-cup','cup'],['m-grade','grade'],['m-value','value']].forEach(([id,grp])=>{ const b=document.getElementById(id); if(!b) return; const on=(grp===g); b.classList.toggle('on',on); const c=GROUP_COLORS[grp]; if(on){ b.style.background=c; b.style.borderColor=c; b.style.color='#1a1410'; } else { b.style.background=''; b.style.borderColor=''; b.style.color=''; } });
+  [['m-roast','roast'],['m-cup','cup'],['m-grade','grade'],['m-value','value'],['m-listen','listen']].forEach(([id,grp])=>{ const b=document.getElementById(id); if(!b) return; const on=(grp===g); b.classList.toggle('on',on); const c=GROUP_COLORS[grp]; if(on){ b.style.background=c; b.style.borderColor=c; b.style.color='#1a1410'; } else { b.style.background=''; b.style.borderColor=''; b.style.color=''; } });
   const st=document.getElementById('secTitle'), info=SEC_INFO[g]; if(st&&info){ const tc=GROUP_COLORS[g]||'var(--ink)'; st.innerHTML=`<span class="st" style="color:${tc}">${T(info[0])}</span><span class="ss">${T(info[1])}</span>`; }   // section name echoes the active tab's tint
   const sub=document.getElementById('subnav'); if(sub) sub.classList.toggle('hide',g!=='roast');   // sub-tabs only emerge under Roast
   ROAST_GROUP.forEach(x=>{ const b=document.getElementById('nav-'+x); if(b) b.classList.toggle('on',x===v); });
