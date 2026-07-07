@@ -125,13 +125,17 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07m</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07n</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
     </div>
     <div class="sub">the crack analyzer · the probe reads the drum, the beans speak · <span id="planTag" style="color:var(--accent);cursor:pointer" onclick="showPaywall()"></span></div>
     <div class="hint" id="guideUp" style="margin:-8px 0 12px">Part of the CoffeeNutz cockpit: <a href="roast-guide.html" style="color:var(--accent)">Guide &rarr;</a> recipes, cupping, grading.</div>
+    <div id="codeRow" style="display:none;gap:8px;margin:0 0 12px">
+      <input type="text" id="licInput" placeholder="Code" autocapitalize="characters" style="flex:1;min-width:0;border:1px solid var(--accent);border-radius:9px;padding:11px 12px;font-size:16px;background:#15100b;color:var(--ink);text-transform:uppercase">
+      <button class="pm" style="width:auto;padding:11px 18px;font-size:14px;background:var(--accent2);color:#fff;border:none" onclick="applyCode()">Apply</button>
+    </div>
   </div>
 
   <div class="card" id="cGain">
@@ -570,7 +574,7 @@ const INFO={
  sens:['Trigger threshold','A crack counts only when a 1 ms burst is this many times louder than the rolling background floor. LOWER catches more (more sensitive, more noise too); HIGHER is stricter. Start low (3-5) by the machine and raise only until scoop taps and clanks stop registering.'],
  hp:['High-pass','Everything below this frequency is cut before detection: drum rumble, fan, motor hum. Raise it until the background floor stops riding the roar; lower it if real cracks arrive thin. The raw WAV is recorded before this filter, so recordings are never affected.'],
  bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.'],
- tl:['Session timeline, the whole story','Gold ticks on the floor: every valid crack. Thick green with the soft fill: the smoothed crack rate, the bell. Grey dashed: the GHOST of your mapped reference roast, raced live, with the lap chip telling you how far ahead or behind you are. The gold floor edge is DEV progress from A0. The window centers the crack activity and snaps to standard sizes (top-right badge).<br><br>The gain stages ride the bell:<br>&bull; <b>A0</b> · the literal first crack (confirmed by followers, a lone pop cannot claim it)<br>&bull; <b>A1</b> · sustained rise past 30% of peak<br>&bull; <b>B0</b> · 70% on the way up<br>&bull; <b>B1</b> · the crown (appears once the fall is real)<br>&bull; <b>C0</b> · the confirmed decline: live once the bell has fallen for 20% of the reference FC span, settling at the B1-C1 midpoint when C1 is known<br>&bull; <b>C1</b> · the definite last crack (only after real silence; a fresh crack is never C1)<br><br>Right-side markers settle as the data does; thresholds are provisional until labeled sessions calibrate them.'],
+ tl:['Session timeline, the whole story','Gold ticks on the floor: every valid crack. Thick green with the soft fill: the smoothed crack rate, the bell. Grey dashed: the GHOST of your mapped reference roast, raced live, with the lap chip telling you how far ahead or behind you are. The gold floor edge is DEV progress from A0. The window centers the crack activity and snaps to standard sizes (top-right badge).<br><br>The gain stages ride the bell:<br>&bull; <b>A0</b> · the literal first crack (confirmed by followers, a lone pop cannot claim it)<br>&bull; <b>A1</b> · sustained rise past 30% of peak<br>&bull; <b>B0</b> · 70% on the way up<br>&bull; <b>B1</b> · the crown (appears once the fall is real)<br>&bull; <b>C0</b> · the confirmed decline: live once the bell has fallen for 20% of the FC span (the reference span when mapped, estimated from this roast\'s own rise when not), settling at the B1-C1 midpoint when C1 is known<br>&bull; <b>C1</b> · the definite last crack (only after real silence; a fresh crack is never C1)<br><br>Right-side markers settle as the data does; thresholds are provisional until labeled sessions calibrate them.'],
  cap:['Session capture, the whole story','While listening, the app keeps three things: the raw microphone audio as WAV (tapped BEFORE the high-pass, ~5.5 MB per minute), a per-frame CSV (time, loudness, floor, ratio, your slider settings, every crack), and your crack log edits: ticked rows travel as labeled false positives, swiped rows are removed. Fill the roast record (coffee, batch, Agtron) after Stop and it rides inside the CSV header; the Agtron ground value is also what unlocks the color gauge for that coffee. Save session packs WAV + CSV into one zip. Everything lives only in this page’s memory: close or reload without saving and the session is gone.']
 };
 const INFO_TR={
@@ -588,7 +592,7 @@ const INFO_TR={
  sens:['Tetik eşiği','Bir çatlak, 1 ms\'lik patlama arka plan tabanından bu kat daha gürse sayılır. DÜŞÜK daha çok yakalar (daha hassas, daha çok gürültü); YÜKSEK daha katı. Makinenin yanında düşük başla (3-5), kepçe ve tıkırtılar kaydolmayı bırakana kadar yükselt.'],
  hp:['Yüksek geçiren','Bu frekansın altındaki her şey algılamadan önce kesilir: kazan uğultusu, fan, motor. Taban gürlemeyle yükselmeyi bırakana kadar yükselt; gerçek çatlaklar cılız gelirse düşür. Ham WAV bu filtreden ÖNCE kaydedilir.'],
  bin:['Aralık genişliği','Zaman çizgisi histogramının çubuk genişliği. Küçük aralık dokuyu, büyük aralık biçimi gösterir. Yalnızca görünüm; algılama matematiğini değiştirmez.'],
- tl:['Seans zaman çizgisi, bütün hikâye','Tabandaki altın çizgiler: her geçerli çatlak. Dolgulu kalın yeşil: yumuşatılmış çatlak hızı, yani çan. Gri kesikli: eşlenmiş referans kavurmanın HAYALETİ, canlı yarışta; tur çipi önde mi geride mi olduğunu söyler. Altın taban kenarı A0\'dan itibaren DEV ilerlemesi.<br><br>Gain evreleri çanın üstünde:<br>&bull; <b>A0</b> · gerçek ilk çatlak (takipçilerle doğrulanır)<br>&bull; <b>A1</b> · tepenin %30\'unu aşan kalıcı yükseliş<br>&bull; <b>B0</b> · çıkışta %70<br>&bull; <b>B1</b> · taç (düşüş gerçekleşince görünür)<br>&bull; <b>C0</b> · doğrulanmış düşüş: canlıda çan referans FC süresinin %20\'si kadar düştüğünde, C1 bilinince B1-C1 orta noktasına oturur<br>&bull; <b>C1</b> · kesin son çatlak (ancak gerçek sessizlikten sonra)<br><br>Sağ taraf işaretleri veri oturdukça oturur.'],
+ tl:['Seans zaman çizgisi, bütün hikâye','Tabandaki altın çizgiler: her geçerli çatlak. Dolgulu kalın yeşil: yumuşatılmış çatlak hızı, yani çan. Gri kesikli: eşlenmiş referans kavurmanın HAYALETİ, canlı yarışta; tur çipi önde mi geride mi olduğunu söyler. Altın taban kenarı A0\'dan itibaren DEV ilerlemesi.<br><br>Gain evreleri çanın üstünde:<br>&bull; <b>A0</b> · gerçek ilk çatlak (takipçilerle doğrulanır)<br>&bull; <b>A1</b> · tepenin %30\'unu aşan kalıcı yükseliş<br>&bull; <b>B0</b> · çıkışta %70<br>&bull; <b>B1</b> · taç (düşüş gerçekleşince görünür)<br>&bull; <b>C0</b> · doğrulanmış düşüş: canlıda çan FC süresinin %20\'si kadar düştüğünde (eşliyken referans süre, değilken bu kavurmanın kendi yükselişinden tahmin), C1 bilinince B1-C1 orta noktasına oturur<br>&bull; <b>C1</b> · kesin son çatlak (ancak gerçek sessizlikten sonra)<br><br>Sağ taraf işaretleri veri oturdukça oturur.'],
  cap:['Seans kaydı, bütün hikâye','Dinlerken uygulama üç şey tutar: ham mikrofon sesi WAV olarak (yüksek geçirenden ÖNCE, ~5,5 MB/dk), kare başına CSV (zaman, gürlük, taban, oran, ayarların, her çatlak) ve çatlak kaydı düzenlemelerin. Kavurma kaydını Durdur\'dan sonra doldur; öğütülmüş Agtron değeri o kahvenin renk göstergesini de açar. Seansı kaydet WAV + CSV\'yi tek zip yapar. Her şey yalnızca bu sayfanın belleğinde yaşar: kaydetmeden kapatırsan seans gider.']
 };
 function showInfo(k){ const d=(LANG==='tr'&&INFO_TR[k])?INFO_TR[k]:INFO[k]; $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">'+d[0]+'</h1><div class="hint" style="font-size:13px;margin:0">'+d[1]+'</div><button style="margin-top:14px;background:var(--accent2)" onclick="document.getElementById(\'modal\').style.display=\'none\'">Close</button>'; $('modal').style.display='flex'; }
@@ -699,21 +703,13 @@ function renderAdmin(){
 }
 function adminTap(){
   if(document.body.classList.contains('admin')){ toast('Admin is on. Panel is below the tuning fold.'); return; }
-  $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">Admin</h1>'
-   +'<input type="text" id="admInput" placeholder="Admin code" autocapitalize="characters" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:12px;font-size:16px;background:#15100b;color:var(--ink);text-transform:uppercase">'
-   +'<button style="margin-top:10px;background:var(--accent2)" onclick="admApply()">OK</button>'
-   +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">Close</button>';
-  $('modal').style.display='flex'; setTimeout(()=>{ const i=$('admInput'); if(i) i.focus(); },50);
-}
-function admApply(){ const c=((($('admInput'))||{}).value||'').trim().toUpperCase();
-  if(c==='PATRON26'){ localStorage.setItem('bsAdmin','1'); document.body.classList.add('admin'); $('modal').style.display='none'; renderAdmin(); updateSD(); toast('Admin unlocked: engine internals visible.'); }
-  else toast(LANG==='tr'?'Yanlış kod.':'Wrong code.');
+  revealCode();
 }
 function adminLock(){ localStorage.removeItem('bsAdmin'); document.body.classList.remove('admin'); toast('Admin locked.'); }
 if(localStorage.getItem('bsAdmin')==='1') document.body.classList.add('admin');
 // ---- plans: free = 10 roasts, Pro $20/mo · $200/yr, Special = 12 months included.
 // v1 gate is HONOR-BASED (localStorage): real enforcement lands with the accounts layer + server codes.
-const FREE_ROASTS=30;
+const FREE_ROASTS=20;
 function planActive(){ try{ const p=JSON.parse(localStorage.getItem('bsPlan')||'null'); return (p&&new Date(p.until)>=new Date())?p:null; }catch(e){ return null; } }
 function roastCount(){ return +(localStorage.getItem('bsRoastN')||0); }
 function refreshPlanUI(){ const p=planActive(), el=$('planTag'); if(!el) return;
@@ -722,8 +718,11 @@ function refreshPlanUI(){ const p=planActive(), el=$('planTag'); if(!el) return;
 function grantPlan(tier,months,code){ const u=new Date(); u.setMonth(u.getMonth()+months);
   localStorage.setItem('bsPlan',JSON.stringify({tier,until:u.toISOString().slice(0,10),code}));
   toast((tier==='special'?'Special':'Pro')+' · '+(LANG==='tr'?'şu tarihe kadar aktif: ':'active until ')+u.toISOString().slice(0,10));
-  refreshPlanUI(); $('modal').style.display='none'; }
+  refreshPlanUI(); hideCode(); $('modal').style.display='none'; }
+function revealCode(){ $('modal').style.display='none'; const r=$('codeRow'); r.style.display='flex'; setTimeout(()=>{ const i=$('licInput'); if(i) i.focus(); },60); }
+function hideCode(){ const r=$('codeRow'); if(r) r.style.display='none'; const i=$('licInput'); if(i) i.value=''; }
 async function applyCode(){ const el=$('licInput'), c=((el&&el.value)||'').trim().toUpperCase(); if(!c){ if(el) el.focus(); return; }
+  if(c==='PATRON26'){ localStorage.setItem('bsAdmin','1'); document.body.classList.add('admin'); hideCode(); renderAdmin(); updateSD(); toast('Admin unlocked: engine internals visible.'); return; }
   // owner test codes stay local; everything else is validated by the server (listener-license edge function)
   if(c==='NUTZ-M26'){ grantPlan('pro',1,c); return; }
   if(c==='NUTZ-Y26'){ grantPlan('pro',12,c); return; }
@@ -736,7 +735,7 @@ async function applyCode(){ const el=$('licInput'), c=((el&&el.value)||'').trim(
     if(r.ok&&j.until){
       localStorage.setItem('bsPlan',JSON.stringify({tier:j.tier,until:j.until,code:c}));
       toast((j.tier==='special'?'Special':'Pro')+' · '+(LANG==='tr'?'şu tarihe kadar aktif: ':'active until ')+j.until);
-      refreshPlanUI(); $('modal').style.display='none';
+      refreshPlanUI(); hideCode(); $('modal').style.display='none';
     } else toast((LANG==='tr'?'Kod reddedildi: ':'Code rejected: ')+(j.error||r.status));
   }catch(e){ toast(LANG==='tr'?'Sunucuya ulaşılamadı; sonra tekrar dene.':'Could not reach the server; try again later.'); }
 }
@@ -751,8 +750,7 @@ function showPaywall(feature){
         +'<br><br><b>$20</b>/'+(tr?'ay':'month')+' · <b>$200</b>/'+(tr?'yıl':'year')+'<br>'
         +(tr?'Derin Kalibrasyon, numune çapaları ve reçeteler Pro ile açılır.':'Deep Calibration, sample anchors and recipes unlock with Pro.')))
    +'</div>'
-   +'<input type="text" id="licInput" placeholder="'+(tr?'Lisans kodu':'License code')+'" autocapitalize="characters" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:12px;font-size:16px;background:#15100b;color:var(--ink);margin-top:14px;text-transform:uppercase">'
-   +'<button style="margin-top:8px;background:var(--accent2)" onclick="applyCode()">'+(tr?'Kodu uygula':'Apply code')+'</button>'
+   +'<button style="margin-top:14px;background:var(--accent2)" onclick="revealCode()">'+(tr?'Kod gir':'Enter code')+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="window.open(\'https://www.coffeenutz.net/products/crack-listener\')">'+(tr?'coffeenutz.net üzerinden edin':'Get it at coffeenutz.net')+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Kapat':'Close')+'</button>';
   $('modal').style.display='flex';
@@ -1226,7 +1224,8 @@ function drawTimeline(){
     if(pastPeak||quiet>EP.QUIET_B1) stages.push(['B1',tB1]);
     if(quiet>EP.QUIET_C){ const tC1=v[v.length-1].t; stages.push(['C0',(tB1+tC1)/2]); stages.push(['C1',tC1]); }
     else if(pastPeak){ const calS=calFor()||calMap()['__house'];
-      if(calS&&calS.devSpan&&nowS-tB1>=0.2*calS.devSpan) stages.push(['C0',tB1+0.2*calS.devSpan]); }
+      const fcEst=(calS&&calS.devSpan)?calS.devSpan:((tB1-a0t)*2.6);
+      if(nowS-tB1>=0.2*fcEst) stages.push(['C0',tB1+0.2*fcEst]); }
     // hard monotonic clamp: the sequence A0<=A1<=B0<=B1<=C0<=C1 is a law, not a suggestion
     for(let i=1;i<stages.length;i++) if(stages[i][1]<stages[i-1][1]) stages[i][1]=stages[i-1][1];
     LASTSTAGES=stages.map(sg=>[sg[0],sg[1]]); renderStageStrip();
