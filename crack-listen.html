@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zf</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zh</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -581,10 +581,12 @@ const INFO={
  admBG:['Background floor','The rolling noise floor the trigger measures against, on the 0-100 gain scale. Riding high = roar leaking through the high-pass: raise HP.'],
  admPaceRaw:['Pace raw','The unclamped tq/q25 ratio before the clamp rule. If this often hits the clamp walls, widen PMIN/PMAX in the Guide rules card.'],
  admPhase:['Envelope phase','Stepless position inside the FC loudness envelope: 0 at A0, 0.5 at the crown, 1 in the silence valley. Mic-invariant and speed-invariant by construction. Being measured and logged (phase_final in CSV, phDrop in maps) to test the thesis that color follows phase; joins the live formula when the labeled data proves its tolerance.'],
+ admPhiProj:['Phi-curve call','What the learned phi-to-color curve says right now, from this coffee\'s accumulated (phase, measured color) points. Blended 50/50 with the classic estimate once 4+ points exist.'],
+ admBias:['Learned bias','The recency-weighted mean of (measured minus projected) from this coffee\'s past self-grades, applied as a correction, capped at 6. Resets itself when a new roast disagrees hard (bag change).'],
  sens:['Trigger threshold','A crack counts only when a 1 ms burst is this many times louder than the rolling background floor. LOWER catches more (more sensitive, more noise too); HIGHER is stricter. Start low (3-5) by the machine and raise only until scoop taps and clanks stop registering.'],
  hp:['High-pass','Everything below this frequency is cut before detection: drum rumble, fan, motor hum. Raise it until the background floor stops riding the roar; lower it if real cracks arrive thin. The raw WAV is recorded before this filter, so recordings are never affected.'],
  bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.'],
- tl:['Session timeline, the whole story','Gold ticks on the floor: every valid crack. Thick green with the soft fill: the smoothed crack rate, the bell. Grey dashed: the GHOST of your mapped reference roast, raced live, with the lap chip telling you how far ahead or behind you are. The gold floor edge is DEV progress from A0. The window centers the crack activity and snaps to standard sizes (top-right badge).<br><br>The gain stages ride the bell:<br>&bull; <b>A0</b> · the literal first crack (confirmed by followers, a lone pop cannot claim it)<br>&bull; <b>A1</b> · sustained rise past 30% of peak<br>&bull; <b>B0</b> · 70% on the way up<br>&bull; <b>B1</b> · the crown (appears once the fall is real)<br>&bull; <b>C0</b> · the confirmed decline: live once the bell has fallen for 20% of the FC span (the reference span when mapped, estimated from this roast\'s own rise when not), settling at the B1-C1 midpoint when C1 is known<br>&bull; <b>C1</b> · the definite last crack, earned only by OBSERVED silence: 10s minimum, longer for slow roasts (3x the recent crack gap). A roast stopped before that ends with a <b>DROP</b> chip at the stop moment instead: nothing is invented beyond the evidence<br><br>Right-side markers settle as the data does; thresholds are provisional until labeled sessions calibrate them.'],
+ tl:['Session timeline, the whole story','Gold ticks on the floor: every valid crack. Thick green with the soft fill: the smoothed crack rate, the bell. Grey dashed: the GHOST of your mapped reference roast, raced live, with the lap chip telling you how far ahead or behind you are. The gold floor edge is DEV progress from A0. The window centers the crack activity and snaps to standard sizes (top-right badge).<br><br>The gain stages ride the bell:<br>&bull; <b>A0</b> · the literal first crack (confirmed by followers, a lone pop cannot claim it)<br>&bull; <b>A1</b> · the acceleration point: steepest sustained rise of the envelope<br>&bull; <b>B0</b> · the deceleration knee: rise still climbing but bending toward the crown<br>&bull; <b>B1</b> · the crown (appears once the fall is real)<br>&bull; <b>C0</b> · the confirmed decline: live once the bell has fallen for 20% of the FC span (the reference span when mapped, estimated from this roast\'s own rise when not), settling at the B1-C1 midpoint when C1 is known<br>&bull; <b>C1</b> · the definite last crack, earned only by OBSERVED silence: 10s minimum, longer for slow roasts (3x the recent crack gap). A roast stopped before that ends with a <b>DROP</b> chip at the stop moment instead: nothing is invented beyond the evidence<br><br>Right-side markers settle as the data does; thresholds are provisional until labeled sessions calibrate them.'],
  cap:['Session capture, the whole story','While listening, the app keeps three things: the raw microphone audio as WAV (tapped BEFORE the high-pass, ~5.5 MB per minute), a per-frame CSV (time, loudness, floor, ratio, your slider settings, every crack), and your crack log edits: ticked rows travel as labeled false positives, swiped rows are removed. Fill the roast record (coffee, batch, Agtron) after Stop and it rides inside the CSV header; the Agtron ground value is also what unlocks the color gauge for that coffee. Save session packs WAV + CSV into one zip. Everything lives only in this page’s memory: close or reload without saving and the session is gone.']
 };
 const INFO_TR={
@@ -602,7 +604,7 @@ const INFO_TR={
  sens:['Tetik eşiği','Bir çatlak, 1 ms\'lik patlama arka plan tabanından bu kat daha gürse sayılır. DÜŞÜK daha çok yakalar (daha hassas, daha çok gürültü); YÜKSEK daha katı. Makinenin yanında düşük başla (3-5), kepçe ve tıkırtılar kaydolmayı bırakana kadar yükselt.'],
  hp:['Yüksek geçiren','Bu frekansın altındaki her şey algılamadan önce kesilir: kazan uğultusu, fan, motor. Taban gürlemeyle yükselmeyi bırakana kadar yükselt; gerçek çatlaklar cılız gelirse düşür. Ham WAV bu filtreden ÖNCE kaydedilir.'],
  bin:['Aralık genişliği','Zaman çizgisi histogramının çubuk genişliği. Küçük aralık dokuyu, büyük aralık biçimi gösterir. Yalnızca görünüm; algılama matematiğini değiştirmez.'],
- tl:['Seans zaman çizgisi, bütün hikâye','Tabandaki altın çizgiler: her geçerli çatlak. Dolgulu kalın yeşil: yumuşatılmış çatlak hızı, yani çan. Gri kesikli: eşlenmiş referans kavurmanın HAYALETİ, canlı yarışta; tur çipi önde mi geride mi olduğunu söyler. Altın taban kenarı A0\'dan itibaren DEV ilerlemesi.<br><br>Gain evreleri çanın üstünde:<br>&bull; <b>A0</b> · gerçek ilk çatlak (takipçilerle doğrulanır)<br>&bull; <b>A1</b> · tepenin %30\'unu aşan kalıcı yükseliş<br>&bull; <b>B0</b> · çıkışta %70<br>&bull; <b>B1</b> · taç (düşüş gerçekleşince görünür)<br>&bull; <b>C0</b> · doğrulanmış düşüş: canlıda çan FC süresinin %20\'si kadar düştüğünde (eşliyken referans süre, değilken bu kavurmanın kendi yükselişinden tahmin), C1 bilinince B1-C1 orta noktasına oturur<br>&bull; <b>C1</b> · kesin son çatlak, yalnızca GÖZLENEN sessizlikle kazanılır: en az 10 sn, yavaş kavurmalarda daha uzun (son çatlak aralığının 3 katı). Daha önce durdurulan kavurma <b>DROP</b> çipiyle biter: kanıtın ötesinde hiçbir şey uydurulmaz<br><br>Sağ taraf işaretleri veri oturdukça oturur.'],
+ tl:['Seans zaman çizgisi, bütün hikâye','Tabandaki altın çizgiler: her geçerli çatlak. Dolgulu kalın yeşil: yumuşatılmış çatlak hızı, yani çan. Gri kesikli: eşlenmiş referans kavurmanın HAYALETİ, canlı yarışta; tur çipi önde mi geride mi olduğunu söyler. Altın taban kenarı A0\'dan itibaren DEV ilerlemesi.<br><br>Gain evreleri çanın üstünde:<br>&bull; <b>A0</b> · gerçek ilk çatlak (takipçilerle doğrulanır)<br>&bull; <b>A1</b> · ivmelenme noktası: zarfın en dik kalıcı yükselişi<br>&bull; <b>B0</b> · yavaşlama dirseği: yükseliş sürerken taca doğru bükülme<br>&bull; <b>B1</b> · taç (düşüş gerçekleşince görünür)<br>&bull; <b>C0</b> · doğrulanmış düşüş: canlıda çan FC süresinin %20\'si kadar düştüğünde (eşliyken referans süre, değilken bu kavurmanın kendi yükselişinden tahmin), C1 bilinince B1-C1 orta noktasına oturur<br>&bull; <b>C1</b> · kesin son çatlak, yalnızca GÖZLENEN sessizlikle kazanılır: en az 10 sn, yavaş kavurmalarda daha uzun (son çatlak aralığının 3 katı). Daha önce durdurulan kavurma <b>DROP</b> çipiyle biter: kanıtın ötesinde hiçbir şey uydurulmaz<br><br>Sağ taraf işaretleri veri oturdukça oturur.'],
  cap:['Seans kaydı, bütün hikâye','Dinlerken uygulama üç şey tutar: ham mikrofon sesi WAV olarak (yüksek geçirenden ÖNCE, ~5,5 MB/dk), kare başına CSV (zaman, gürlük, taban, oran, ayarların, her çatlak) ve çatlak kaydı düzenlemelerin. Kavurma kaydını Durdur\'dan sonra doldur; öğütülmüş Agtron değeri o kahvenin renk göstergesini de açar. Seansı kaydet WAV + CSV\'yi tek zip yapar. Her şey yalnızca bu sayfanın belleğinde yaşar: kaydetmeden kapatırsan seans gider.']
 };
 function showInfo(k){ const d=(LANG==='tr'&&INFO_TR[k])?INFO_TR[k]:INFO[k]; $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">'+d[0]+'</h1><div class="hint" style="font-size:13px;margin:0">'+d[1]+'</div><button style="margin-top:14px;background:var(--accent2)" onclick="document.getElementById(\'modal\').style.display=\'none\'">Close</button>'; $('modal').style.display='flex'; }
@@ -710,7 +712,9 @@ function renderAdmin(){
   +admRow('admRej','rejected width / voice',cracks.filter(c=>c.why==='width').length+' / '+cracks.filter(c=>c.why==='voice').length,null)
   +admRow('admBG','background floor (gain)',bgEMA?toGain(bgEMA).toFixed(0):'·',bgEMA?toGain(bgEMA)/100:null)
   +admRow('admPaceRaw','pace raw (unclamped)',(E.tq&&cal&&cal.q25)?(E.tq/cal.q25).toFixed(2)+'×':'·',null)
-  +admRow('admPhase','envelope phase φ',PHASE?Math.round(PHASE*100)+'%':'·',PHASE||null);
+  +admRow('admPhase','envelope phase φ',PHASE?Math.round(PHASE*100)+'%':'·',PHASE||null)
+  +admRow('admPhiProj','φ-curve call',E.projPhi?String(Math.round(E.projPhi)):'·',null)
+  +admRow('admBias','learned bias',E.bias?((E.bias>0?'+':'')+E.bias.toFixed(1)):'0',null);
 }
 function adminTap(){
   if(document.body.classList.contains('admin')){ toast('Admin is on. Panel is below the tuning fold.'); return; }
@@ -828,9 +832,24 @@ function saveCalIfMapped(verbose){
   let cum=0, q25=null;
   for(const c of v){ cum+=c.g; if(cum>=tg*0.25){ q25=c.t-a0; break; } }
   const m=calMap();
+  // mapping a CUT roast over a fuller reference amputates the ghost + devSpan: warn, require a second tap
+  const prevM=m[k], isCut=!(LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==='C1'));
+  if(verbose&&isCut&&prevM&&prevM.devSpan>((v[v.length-1].t-a0)*1.3)&&Date.now()-MAPWARN>8000){
+    MAPWARN=Date.now();
+    toast(LANG==='tr'?"Kesik kavurma (C1 yok). Daha dolu referansın üzerine yazmak için 8 sn içinde tekrar Eşle'ye dokun.":'Cut roast (no C1). Tap Map again within 8s to overwrite your fuller reference.');
+    return;
+  }
   const entry={a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, gsd:Math.round(sd(v.map(c=>c.g))*10)/10, phDrop:+PHASE.toFixed(3)||null, moist:parseFloat($('mMoist').value)||null, aw:parseFloat($('mAw').value)||null, proc:(($('mProc').value||'').trim())||((m[k]&&m[k].proc)||null), date:new Date().toISOString().slice(0,10), src:k,
     bgg:parseFloat($('mBatch').value)||null, hist:(m[k]&&m[k].hist)||[]};
-  entry.hist=entry.hist.concat([{devSpan:entry.devSpan, agtron:ag, tg, q25, date:entry.date}]).slice(-8);
+  entry.hist=entry.hist.concat([{devSpan:entry.devSpan, agtron:ag, tg, q25, ph:entry.phDrop, date:entry.date}]).slice(-8);
+  let grades=(prevM&&prevM.grades)||[];
+  const projAt=STOPPROJ||LASTPROJ;
+  if(isFinite(ag)&&projAt){ const resid=ag-projAt;
+    if(grades.length){ const mb=grades.reduce((a2,g)=>a2+(g.meas-g.proj),0)/grades.length;
+      if(Math.abs(resid-mb)>6) grades=[]; }   // epoch break: this is a different bean/bag now
+    grades=grades.concat([{proj:projAt, meas:ag, date:entry.date}]).slice(-6);
+  }
+  entry.grades=grades;
   entry.target=parseFloat($('mTarget').value)||((m[k]&&m[k].target)||null);   // recipe target rides the map
   const anch=SAMPLES.filter(s=>s.ag&&s.t>a0).map(s=>({dt:+(s.t-a0).toFixed(1), ag:s.ag})).sort((x,y)=>x.dt-y.dt);
   if(anch.length&&planActive()) entry.anchors=anch;   // SampleInRoast anchors: Deep Calibration, Pro
@@ -878,7 +897,7 @@ function drawGauge(state,projLo,projHi){
   else h=gaugeSVG(null,0,0,setup?'':'&#128274;',setup?'':tt('unmapped bean'),true);
   $('ag').innerHTML=h;
 }
-let TGT_U=null, LASTSTAGES=null;
+let TGT_U=null, LASTSTAGES=null, MAPWARN=0;
 function updateGauge(){
   TGT_U=null;
   const k=(cName.value||'').trim();
@@ -915,12 +934,33 @@ function updateGauge(){
     if(devEff>cal.devSpan){ const l1=pts[pts.length-2],l2=pts[pts.length-1];
       const sl=(l2.dt>l1.dt)?(l2.ag-l1.ag)/(l2.dt-l1.dt):0; proj=l2.ag+sl*(devEff-cal.devSpan); }
   } else proj=FC_AG+(cal.agtron-FC_AG)*p;
+  // RECURSIVE CALIBRATION 1: the phi->color curve learned from this coffee's whole history.
+  // Every mapped roast contributes its (phase-at-drop, measured color) point; FC_AG anchors phi~0.
+  // Monotone-enforced (color never lightens as phi grows). Active from 4 points.
+  let projPhi=null;
+  { const pts=[[0.001,FC_AG]];
+    (cal.hist||[]).forEach(h=>{ if(h.ph>0.05&&isFinite(h.agtron)) pts.push([h.ph,h.agtron]); });
+    if(cal.phDrop>0.05&&isFinite(cal.agtron)) pts.push([cal.phDrop,cal.agtron]);
+    pts.sort((x,y)=>x[0]-y[0]);
+    for(let i=1;i<pts.length;i++) if(pts[i][1]>pts[i-1][1]) pts[i][1]=pts[i-1][1];
+    if(pts.length>=4&&PHASE>0.03){
+      const x=Math.min(PHASE,pts[pts.length-1][0]);
+      let i=0; while(i<pts.length-1&&x>pts[i+1][0]) i++;
+      const a2=pts[i], b3=pts[Math.min(i+1,pts.length-1)];
+      projPhi=(b3[0]>a2[0])?a2[1]+(b3[1]-a2[1])*(x-a2[0])/(b3[0]-a2[0]):b3[1];
+      proj=0.5*projPhi+0.5*proj;
+    }
+  }
+  // RECURSIVE CALIBRATION 2: self-grade bias. The gauge's own report card (proj vs measured,
+  // recency-weighted) feeds back as a per-coffee correction, capped at +/-6.
+  let bias=0; const gr=(cal.grades||[]);
+  if(gr.length){ let ws=0,bs=0; gr.forEach((g,i)=>{ const w=Math.pow(1.6,i); ws+=w; bs+=w*(g.meas-g.proj); }); bias=Math.max(-6,Math.min(6,bs/ws)); proj+=bias; }
   proj=Math.max(proj, FC_AG-devCur*EP.MAXDK);   // physics floor: real beans cannot darken faster than MAXDK Agtron/s of DEV
   proj=Math.min(AG_MAX,Math.max(AG_MIN,proj));
   const prT=Math.min(AG_MAX,Math.max(AG_MIN,FC_AG+(cal.agtron-FC_AG)*pT));
   const prE=Math.min(AG_MAX,Math.max(AG_MIN,FC_AG+(cal.agtron-FC_AG)*pE));
   const band=Math.min(EP.BCAP,Math.max(AG_TOL, AG_TOL+Math.abs(prT-prE)/2));   // honest range: widens when estimators disagree
-  ENGINE={pT,pE,p,tq,band,devEff};
+  ENGINE={pT,pE,p,tq,band,devEff,projPhi,bias};
   LASTPROJ=Math.round(proj);
   TGT_U=(planActive()&&cal.target)?agU(cal.target):null;   // recipe target ring: Pro
   drawGauge('live',proj-band,proj+band);
@@ -1241,7 +1281,19 @@ function drawTimeline(){
     const smNow=sm[Math.min(nowBin,lb)]||0;
     const phRaw=pastPeak?(0.5+0.5*(1-(sm[nowBin]||0)/(peak||1))):Math.min(0.5,0.5*smNow/(peak||1));
     PHASE=Math.max(PHASE,Math.min(1,phRaw));
-    const stages=[['A0',a0t],['A1',susUp(EP.A1)],['B0',susUp(EP.B0)]];
+    // parameter-free rise tagging: A1 = steepest sustained rise (max slope of the envelope),
+    // B0 = the deceleration knee before the crown (most negative curvature). No 30/70 constants;
+    // legacy thresholds only as fallback when the rise is too short to differentiate.
+    let tA1=null,tB0=null;
+    if(peakI-a0Bin>=3){
+      let dmaxI=-1,dmax=-1e9;
+      for(let i2=Math.max(1,a0Bin);i2<=peakI;i2++){ const dd=sm[i2]-sm[i2-1]; if(dd>dmax){ dmax=dd; dmaxI=i2; } }
+      let s2minI=-1,s2min=1e9;
+      for(let i2=Math.max(2,dmaxI+1);i2<=peakI;i2++){ const s2v=(sm[i2]-sm[i2-1])-(sm[i2-1]-sm[i2-2]); if(s2v<s2min){ s2min=s2v; s2minI=i2; } }
+      if(dmaxI>0) tA1=t0+(dmaxI+0.5)*bin;
+      if(s2minI>0) tB0=t0+(s2minI+0.5)*bin;
+    }
+    const stages=[['A0',a0t],['A1',tA1!=null?tA1:susUp(EP.A1)],['B0',tB0!=null?tB0:susUp(EP.B0)]];
     const tB1=t0+(peakI+0.5)*bin;
     if(peakInterior&&(pastPeak||quiet>EP.QUIET_B1)) stages.push(['B1',tB1]);
     // C1 must be EARNED by observed silence: at least 10s, adaptive to roast speed (3x recent median gap).
