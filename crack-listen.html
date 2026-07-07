@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zj</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zk</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -1257,6 +1257,12 @@ function drawTimeline(){
       tx.strokeStyle='rgba(168,153,138,0.55)'; tx.lineWidth=3; tx.setLineDash([7,6]); tx.beginPath();
       calT.bell.forEach((gv,i)=>{ const x=gx0+(i/(gn-1))*(gx1-gx0), y=Y(gv*peak*0.92); i?tx.lineTo(x,y):tx.moveTo(x,y); });
       tx.stroke(); tx.setLineDash([]);
+      // the ghost signs its work: a small label at its first visible point
+      const glx=Math.max(8,Math.min(W-70,gx0+6));
+      const gly=Math.max(34,Math.min(H-36,Y((calT.bell[0]||0.05)*peak*0.92)-8));
+      tx.fillStyle='rgba(168,153,138,0.85)'; tx.font='600 13px -apple-system,sans-serif';
+      tx.fillText(LANG==='tr'?'hayalet · referans':'ghost · reference', glx, gly);
+      tx.font='16px sans-serif';
     }
     // lap delta chip: time to 25% of ref gain vs the ref's own
     if(calT.tg&&calT.q25){ let cum2=0,tq2=null;
