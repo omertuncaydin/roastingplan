@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07u</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07v</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -168,12 +168,12 @@ body.st-setup #btn{display:none}
     <div class="hint" id="stageStrip" style="margin-top:6px;color:var(--accent);font-variant-numeric:tabular-nums"></div>
     <details style="text-align:left;margin-top:10px">
       <summary style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;cursor:pointer;padding:9px 0;border-top:1px solid var(--line)">Coffee badge · sticker info</summary>
-      <input type="text" id="bSub" placeholder="Subtitle (e.g. chirripó washed)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink);margin:8px 0 6px">
+      <input type="text" id="bSub" placeholder="Subtitle (e.g. chirripó washed)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:16px;background:var(--panel2);color:var(--ink);margin:8px 0 6px">
       <div style="display:flex;gap:6px;margin-bottom:6px">
-        <input type="text" id="bHarvest" placeholder="Harvest year" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink)">
-        <input type="text" id="bProcess" placeholder="Process" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="bHarvest" placeholder="Harvest year" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:16px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="bProcess" placeholder="Process" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:16px;background:var(--panel2);color:var(--ink)">
       </div>
-      <input type="text" id="bNotes" placeholder="Notes (e.g. plum, hazelnut)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:14px;background:var(--panel2);color:var(--ink)">
+      <input type="text" id="bNotes" placeholder="Notes (e.g. plum, hazelnut)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:16px;background:var(--panel2);color:var(--ink)">
       <div class="hint">Saved per coffee on this phone; the batch card pulls from here.</div>
     </details>
   </div>
@@ -208,25 +208,25 @@ body.st-setup #btn{display:none}
     <div id="metaBox" style="display:none;margin-top:10px">
       <div class="lbl" style="margin-bottom:6px">roast record (travels inside the CSV)</div>
       <div class="hint" id="finalCall" style="margin-bottom:8px;color:var(--gold)"></div>
-      <input type="text" id="mCoffee" placeholder="Coffee" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin-bottom:6px">
+      <input type="text" id="mCoffee" placeholder="Coffee" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink);margin-bottom:6px">
       <div style="display:flex;gap:6px;margin-bottom:6px">
-        <input type="text" id="mBatch" placeholder="Batch g" inputmode="numeric" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
-        <input type="text" id="mAgW" placeholder="Agtron whole" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
-        <input type="text" id="mAgG" placeholder="Agtron ground" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="mBatch" placeholder="Batch g" inputmode="numeric" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="mAgW" placeholder="Agtron whole" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="mAgG" placeholder="Agtron ground" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
       </div>
       <div style="display:flex;gap:6px;margin-bottom:6px">
-        <input type="text" id="mProc" placeholder="Process (washed/natural)" style="flex:1.2;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
-        <input type="text" id="mChgFc" placeholder="Charge→FC (m:ss)" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
-        <input type="text" id="mMoist" placeholder="Moisture %" inputmode="decimal" style="flex:0.7;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
-        <input type="text" id="mAw" placeholder="Aw" inputmode="decimal" style="flex:0.6;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="mProc" placeholder="Process (washed/natural)" style="flex:1.2;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="mChgFc" placeholder="Charge→FC (m:ss)" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="mMoist" placeholder="Moisture %" inputmode="decimal" style="flex:0.7;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="mAw" placeholder="Aw" inputmode="decimal" style="flex:0.6;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
       </div>
       <div style="display:flex;gap:6px;margin-bottom:6px">
-        <input type="text" id="mDrop" placeholder="Drop after last (s)" inputmode="numeric" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
-        <input type="text" id="mAgWSd" placeholder="Whole SD" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
-        <input type="text" id="mAgSd" placeholder="Ground SD" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="mDrop" placeholder="Drop after last (s)" inputmode="numeric" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="mAgWSd" placeholder="Whole SD" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="mAgSd" placeholder="Ground SD" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
       </div>
-      <input type="text" id="mTarget" placeholder="Target Agtron (recipe · Pro)" inputmode="decimal" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin-bottom:6px">
-      <input type="text" id="mNote" placeholder="Note (machine, phone position, cup notes)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
+      <input type="text" id="mTarget" placeholder="Target Agtron (recipe · Pro)" inputmode="decimal" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink);margin-bottom:6px">
+      <input type="text" id="mNote" placeholder="Note (machine, phone position, cup notes)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
       <div class="hint">Fill what you know before saving; measure Agtron later? Load the saved zip back in, add it, tap Map.</div>
       <div class="hint">Map with a roast taken to the DARKEST level you serve: projections interpolate inside the mapped range, never guess beyond it.</div>
       <div id="sampList"></div>
@@ -1044,7 +1044,7 @@ function renderSamples(){
   if(!SAMPLES.length){ el.innerHTML=''; return; }
   el.innerHTML='<div class="lbl" style="margin:8px 0 4px">'+tt('tryer samples (fill measured Agtron)')+'</div>'+
     SAMPLES.map((s,i)=>'<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><span style="font-size:13px;color:var(--muted);min-width:74px">S'+(i+1)+' · '+fmtT(s.t)+'</span>'+
-    '<input type="text" inputmode="decimal" value="'+(s.ag??'')+'" placeholder="Agtron" oninput="SAMPLES['+i+'].ag=parseFloat(this.value)||null" style="flex:1;border:1px solid var(--line);border-radius:9px;padding:8px;font-size:15px;background:var(--panel2);color:var(--ink)">'+
+    '<input type="text" inputmode="decimal" value="'+(s.ag??'')+'" placeholder="Agtron" oninput="SAMPLES['+i+'].ag=parseFloat(this.value)||null" style="flex:1;border:1px solid var(--line);border-radius:9px;padding:8px;font-size:16px;background:var(--panel2);color:var(--ink)">'+
     '<b style="color:var(--warn);cursor:pointer;padding:0 6px;font-size:17px" onclick="delSample('+i+')">&times;</b></div>').join('');
 }
 // ---- maps portability: same maps on desktop and phone ----
