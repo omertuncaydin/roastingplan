@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zk</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zl</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -1228,6 +1228,10 @@ function drawTimeline(){
   // histogram: share of cracks per bin
   const bin=+(($('bin')&&$('bin').value)||1), nb=Math.max(1,Math.ceil(span/bin)), counts=new Array(nb).fill(0);
   for(const c of v){ counts[Math.min(nb-1,Math.max(0,Math.floor((c.t-t0)/bin)))]+=c.g; }   // GAIN-weighted: the bell is the loudness envelope, not a head-count (Omer's B1 spec)
+  // partial edge bin: the bin holding the newest crack covers less time and fakes a decline; rescale (capped 3x)
+  { const eb=Math.min(nb-1,Math.max(0,Math.floor((v[v.length-1].t-t0)/bin)));
+    const frac=Math.max(0.001,((v[v.length-1].t-t0)%bin)/bin);
+    if(frac<0.95) counts[eb]*=Math.min(3,1/frac); }
   // smoothed crack rate (gaussian kernel): THE BELL. Smoothing scales with the window in TIME,
   // so a 30s dev keeps its texture and a 5min dev stays calm.
   const sig=Math.max(1.2, Math.max(3, span/40)/bin), sm=new Array(nb).fill(0);
@@ -1269,11 +1273,11 @@ function drawTimeline(){
       for(const c of v){ cum2+=c.g; if(cum2>=calT.tg*0.25){ tq2=c.t-a0c; break; } }
       if(tq2&&tq2>2){ const dd=Math.round(tq2-calT.q25);
         const txt=Math.abs(dd)<2?tt('with ref'):(LANG==='tr'?(dd<0?((-dd)+' sn önde'):(dd+' sn geride')):(dd<0?((-dd)+'s ahead of ref'):(dd+'s behind ref')));
-        tx.font='bold 13px -apple-system,sans-serif';
-        const tw=tx.measureText(txt).width+22, bx=W-8-tw;
-        tx.fillStyle='#241c16'; tx.strokeStyle=dd<=0?'#3c7a5a':'#c98a3c'; tx.lineWidth=1.5;
-        tx.beginPath(); tx.roundRect?tx.roundRect(bx,28,tw,22,11):tx.rect(bx,28,tw,22); tx.fill(); tx.stroke();
-        tx.fillStyle='#f3ede4'; tx.textAlign='center'; tx.fillText(txt,bx+tw/2,43); tx.textAlign='start';
+        tx.font='bold 21px -apple-system,sans-serif';
+        const tw=tx.measureText(txt).width+30, bx=W-8-tw;
+        tx.fillStyle='#241c16'; tx.strokeStyle=dd<=0?'#3c7a5a':'#c98a3c'; tx.lineWidth=2;
+        tx.beginPath(); tx.roundRect?tx.roundRect(bx,26,tw,32,16):tx.rect(bx,26,tw,32); tx.fill(); tx.stroke();
+        tx.fillStyle='#f3ede4'; tx.textAlign='center'; tx.fillText(txt,bx+tw/2,49); tx.textAlign='start';
       }
     }
   }
