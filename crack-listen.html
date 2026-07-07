@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Crack Listener · Crack Analyzer App · free first crack detection</title>
 <meta name="description" content="Crack Listener is the free crack analyzer app: your phone hears first crack, draws the crack curve live, maps the gain stages A0-C1 and projects roast color. Coffee Acoustics by CoffeeNutz.">
@@ -69,7 +69,7 @@ button{font-family:inherit;border:none;border-radius:11px;font-size:16px;font-we
 .meter{height:16px;background:var(--panel2);border-radius:8px;overflow:hidden;position:relative;margin-top:8px}
 .meterFill{height:100%;width:0%;background:var(--accent);border-radius:8px;transition:width .05s linear}
 .floor{position:absolute;top:0;bottom:0;width:2px;background:var(--gold)}
-canvas{width:100%;height:150px;display:block;border-radius:8px;background:var(--panel2);margin-top:6px}
+canvas{width:100%;height:150px;display:block;border-radius:8px;background:var(--panel2);margin-top:6px;touch-action:none}
 #cv{height:88px}
 #tl{height:180px;background:#15100b;border:1px solid var(--line)}
 .ctl{display:flex;align-items:center;gap:10px;margin-top:12px}
@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07t</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07u</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -1126,11 +1126,8 @@ function toggleLang(){ LANG=LANG==='tr'?'en':'tr'; localStorage.setItem('bsLang'
 document.body.className='st-setup';
 setTimeout(updateGauge,0);   // initial gauge state on load
 setTimeout(applyLang,0);
-// iOS: block pinch zoom (Safari ignores maximum-scale for gestures)
-const formEl=e=>{ const t=e.target; return t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName); };
-['gesturestart','gesturechange','gestureend'].forEach(ev=>document.addEventListener(ev,e=>{ if(!formEl(e)) e.preventDefault(); }));
-document.addEventListener('touchmove',e=>{ if(!formEl(e)&&e.scale!==undefined&&e.scale!==1) e.preventDefault(); },{passive:false});
-document.addEventListener('touchend',e=>{ const t=e.target; if(t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)){ setTimeout(()=>{ if(document.activeElement!==t){ try{ t.focus(); }catch(_){} } },0); } },{passive:true});
+// pinch-block is SCOPED to canvases only (CSS touch-action:none on canvas): document-level touch
+// interception broke iPhone input focus twice; charts have no inputs, so they carry the guard alone.
 const tl=$('tl'), tx=tl.getContext('2d');
 function drawTimeline(){
   tx.clearRect(0,0,tl.width,tl.height);
