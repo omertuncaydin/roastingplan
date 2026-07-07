@@ -21,10 +21,10 @@ body.st-setup #cGain,body.st-setup #cTimeline,body.st-setup #cStats,body.st-setu
 /* LIVE: gauge, bell, gain, STOP (sticky), compact stats. Chores hidden. */
 body.st-live #cGauge{order:1} body.st-live #cStats{order:2} body.st-live #cTimeline{order:3} body.st-live #cGain{order:4} body.st-live #btn{order:5} body.st-live #err{order:5} body.st-live #cTune{order:6} body.st-live #cLog{order:7}
 body.st-live #cCapture{display:none}
-body.st-live #btn{position:sticky;bottom:12px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+body.st-live #btn{position:sticky;bottom:12px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45);padding:26px 15px;font-size:23px;font-weight:800;border-radius:18px;letter-spacing:.5px}
 body.st-live #cGauge details{display:none}
 #sampleBtn{display:none;background:var(--panel);color:var(--ink);border:2px solid var(--accent);border-radius:14px;font-size:16px;font-weight:700;padding:13px;width:100%;align-items:center;justify-content:center;gap:10px}
-body.st-live #sampleBtn{display:flex;position:sticky;bottom:80px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45);order:5}
+body.st-live #sampleBtn{display:flex;position:sticky;bottom:104px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45);order:5}
 #sampN{background:var(--accent);color:#fff;border-radius:10px;padding:2px 9px;font-size:13px;display:none}
 #cAdmin,#adminStatsRow{display:none}
 body.admin #cAdmin{display:block}
@@ -127,7 +127,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zm</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zn</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
