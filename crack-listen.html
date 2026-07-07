@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07za</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zb</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -710,7 +710,7 @@ function adminTap(){
   if(document.body.classList.contains('admin')){ toast('Admin is on. Panel is below the tuning fold.'); return; }
   revealCode();
 }
-function adminLock(){ localStorage.removeItem('bsAdmin'); document.body.classList.remove('admin'); toast('Admin locked.'); }
+function adminLock(){ localStorage.removeItem('bsAdmin'); document.body.classList.remove('admin'); refreshPlanUI(); toast('Admin locked.'); }
 if(localStorage.getItem('bsAdmin')==='1') document.body.classList.add('admin');
 // ---- plans: free = 10 roasts, Pro $20/mo · $200/yr, Special = 12 months included.
 // v1 gate is HONOR-BASED (localStorage): real enforcement lands with the accounts layer + server codes.
@@ -718,8 +718,9 @@ const FREE_ROASTS=20;
 function planActive(){ try{ const p=JSON.parse(localStorage.getItem('bsPlan')||'null'); return (p&&new Date(p.until)>=new Date())?p:null; }catch(e){ return null; } }
 function roastCount(){ return +(localStorage.getItem('bsRoastN')||0); }
 function refreshPlanUI(){ const p=planActive(), el=$('planTag'); if(!el) return;
-  el.textContent=p?((p.tier==='special'?'SPECIAL':'PRO')+' · '+p.until)
-    :(LANG==='tr'?('ücretsiz · '+Math.max(0,FREE_ROASTS-roastCount())+'/'+FREE_ROASTS+' kavurma'):('free · '+Math.max(0,FREE_ROASTS-roastCount())+'/'+FREE_ROASTS+' roasts')); }
+  const adm=document.body.classList.contains('admin')?' · +ADMIN':'';
+  el.textContent=(p?((p.tier==='special'?'SPECIAL':'PRO')+' · '+p.until)
+    :(LANG==='tr'?('ücretsiz · '+Math.max(0,FREE_ROASTS-roastCount())+'/'+FREE_ROASTS+' kavurma'):('free · '+Math.max(0,FREE_ROASTS-roastCount())+'/'+FREE_ROASTS+' roasts')))+adm; }
 function grantPlan(tier,months,code){ const u=new Date(); u.setMonth(u.getMonth()+months);
   localStorage.setItem('bsPlan',JSON.stringify({tier,until:u.toISOString().slice(0,10),code}));
   toast((tier==='special'?'Special':'Pro')+' · '+(LANG==='tr'?'şu tarihe kadar aktif: ':'active until ')+u.toISOString().slice(0,10));
@@ -727,7 +728,7 @@ function grantPlan(tier,months,code){ const u=new Date(); u.setMonth(u.getMonth(
 function revealCode(){ $('modal').style.display='none'; const r=$('codeRow'); r.style.display='flex'; window.scrollTo({top:0,behavior:'smooth'}); setTimeout(()=>{ const i=$('licInput'); if(i) i.focus(); },350); }
 function hideCode(){ const r=$('codeRow'); if(r) r.style.display='none'; const i=$('licInput'); if(i) i.value=''; }
 async function applyCode(){ const el=$('licInput'), c=((el&&el.value)||'').replace(/\s+/g,'').toUpperCase(); if(!c){ if(el) el.focus(); return; }   // strip ALL whitespace: iOS autocorrect injects spaces
-  if(c==='PATRON26'){ localStorage.setItem('bsAdmin','1'); document.body.classList.add('admin'); hideCode(); renderAdmin(); updateSD(); toast('Admin unlocked: engine internals visible.'); return; }
+  if(c==='PATRON26'){ localStorage.setItem('bsAdmin','1'); document.body.classList.add('admin'); hideCode(); renderAdmin(); updateSD(); refreshPlanUI(); toast('Admin unlocked: engine internals visible.'); return; }
   // owner test codes stay local; everything else is validated by the server (listener-license edge function)
   if(c==='NUTZ-M26'){ grantPlan('pro',1,c); return; }
   if(c==='NUTZ-Y26'){ grantPlan('pro',12,c); return; }
