@@ -14,6 +14,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Se
 .wrap>*{order:10}
 #hdr{order:0}
 /* SETUP: coffee + gauge, start, capture(load), tuning. Nothing else. */
+#cWalk{display:none}
+body.st-setup #cWalk{display:block;order:1}
 body.st-setup #cGauge{order:1} body.st-setup #btn{order:2} body.st-setup #err{order:2} body.st-setup #cCapture{order:3} body.st-setup #cTune{order:4}
 body.st-setup #cGain,body.st-setup #cTimeline,body.st-setup #cStats,body.st-setup #cLog{display:none}
 /* LIVE: gauge, bell, gain, STOP (sticky), compact stats. Chores hidden. */
@@ -125,7 +127,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zl</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zm</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -137,6 +139,20 @@ body.st-setup #btn{display:none}
       <button class="pm" style="width:auto;padding:11px 18px;font-size:14px;background:var(--accent2);color:#fff;border:none" onclick="applyCode()">Apply</button>
     </div>
   </div>
+
+  <details class="fold" id="cWalk">
+  <summary>how it works · 5 steps</summary>
+  <div class="card">
+    <div class="hint" style="font-size:13px;line-height:1.6">
+    <b style="color:var(--accent)">1 · Name your coffee.</b> Tap the nameplate and give the bean its name; every coffee carries its own map, memory and details.<br><br>
+    <b style="color:var(--accent)">2 · The first roast is the reference.</b> Roast this coffee to the DARKEST level you serve, and after Drop fill the measured color and tap Map. If you pull samples to cup and analyze while roasting, tap "Sample pulled" at each pull (Pro): every measured sample deepens the calibration, and with the Special plan your samples feed cupping sessions in the Guide - the path to this coffee's best recipe.<br><br>
+    <b style="color:var(--accent)">3 · Set up every roast the same way.</b> Open the listener 1-2 minutes before first crack, phone in the same spot near the drum, set Trigger and High-pass once and leave them alone.<br><br>
+    <b style="color:var(--accent)">4 · Roast by the bell.</b> The stages pin themselves as they are earned, the ghost races your reference roast, and the gauge shows the color if you dropped right now. When you drop the beans, tap Drop.<br><br>
+    <b style="color:var(--accent)">5 · Measure, fill, tap the button.</b> After cooling, enter the measured color and tap the Map button - on early-cut roasts it says "Record lesson" and keeps your reference safe. Every measured roast makes the next prediction better; that is the app learning your coffee. Save the session (.zip) as your archive.<br><br>
+    Your first 20 roasts are free. Pro unlocks samples, recipes and Deep Calibration.
+    </div>
+  </div>
+  </details>
 
   <div class="card" id="cGain">
     <div class="lbl">live gain</div>
@@ -772,6 +788,11 @@ function showPaywall(feature){
   $('modal').style.display='flex';
 }
 refreshPlanUI();
+// walkthrough: opens itself for a fresh app copy, then remembers being folded
+try{ const cw=$('cWalk');
+  if(cw){ if(!localStorage.getItem('bsWalkSeen')&&!Object.keys(calMap()).length&&roastCount()===0) cw.open=true;
+    cw.addEventListener('toggle',()=>localStorage.setItem('bsWalkSeen','1')); }
+}catch(e){}
 // no-meter estimator: CoffeeNutz Measurement Environment reference levels
 const LEVELS=[['Nordic light',110],['Light / City',100],['Medium / Full City',90],['Medium-dark / Full City+',80],['Dark / Vienna',72],['Very dark / French',65]];
 function pickLevel(v){ $('mAgG').value=v; $('modal').style.display='none'; toast(LANG==='tr'?'Tahmini Agtron yazıldı (±6). Ölçebildiğin gün gerçek değerle değiştir.':'Estimated Agtron filled (±6). Replace with a measured value when you can.'); }
@@ -1148,6 +1169,18 @@ const EN2TR={
 'Save session (.zip)':'Seansı kaydet (.zip)','Batch card (PNG)':'Parti kartı (PNG)',
 'Load session (.zip / .csv)':'Seans yükle (.zip / .csv)','Export maps':'Haritaları dışa aktar','Import maps':'Haritaları içe aktar',
 'Map this coffee (save color)':'Bu kahveyi eşle (rengi kaydet)','Bin':'Aralık','Trigger ×':'Tetik ×','High-pass':'Yüksek geçiren','Refresh':'Yenile',
+'how it works · 5 steps':'nasıl çalışır · 5 adım',
+'1 · Name your coffee.':'1 · Kahveni adlandır.',
+'Tap the nameplate and give the bean its name; every coffee carries its own map, memory and details.':'İsim plakasına dokun ve çekirdeğe adını ver; her kahve kendi haritasını, hafızasını ve detaylarını taşır.',
+'2 · The first roast is the reference.':'2 · İlk kavurma referanstır.',
+'Roast this coffee to the DARKEST level you serve, and after Drop fill the measured color and tap Map. If you pull samples to cup and analyze while roasting, tap "Sample pulled" at each pull (Pro): every measured sample deepens the calibration, and with the Special plan your samples feed cupping sessions in the Guide - the path to this coffee\'s best recipe.':'Bu kahveyi servis ettiğin EN KOYU seviyeye kavur; Drop sonrası ölçtüğün rengi gir ve Eşle\'ye dokun. Kavururken tatmak ve analiz için numune çekiyorsan her çekişte "Numune çekildi"ye dokun (Pro): ölçülen her numune kalibrasyonu derinleştirir, Special planda ise numunelerin Guide\'daki cupping seanslarına akar - bu kahvenin en iyi reçetesine giden yol.',
+'3 · Set up every roast the same way.':'3 · Her kavurmayı aynı şekilde kur.',
+'Open the listener 1-2 minutes before first crack, phone in the same spot near the drum, set Trigger and High-pass once and leave them alone.':'Dinleyiciyi ilk çatlaktan 1-2 dakika önce aç, telefon kazanın yanında hep aynı yerde; Tetik ve Yüksek geçireni bir kez ayarla, sonra dokunma.',
+'4 · Roast by the bell.':'4 · Çana göre kavur.',
+'The stages pin themselves as they are earned, the ghost races your reference roast, and the gauge shows the color if you dropped right now. When you drop the beans, tap Drop.':'Evreler hak edildikçe kendini işaretler, hayalet referans kavurmanla yarışır, gösterge şu an bıraksan oluşacak rengi söyler. Çekirdekleri bıraktığında Drop\'a dokun.',
+'5 · Measure, fill, tap the button.':'5 · Ölç, doldur, düğmeye dokun.',
+'After cooling, enter the measured color and tap the Map button - on early-cut roasts it says "Record lesson" and keeps your reference safe. Every measured roast makes the next prediction better; that is the app learning your coffee. Save the session (.zip) as your archive.':'Soğuduktan sonra ölçtüğün rengi gir ve Eşle düğmesine dokun - erken kesilen kavurmalarda "Dersi kaydet" yazar ve referansını korur. Ölçülen her kavurma bir sonraki tahmini iyileştirir; uygulamanın kahveni öğrenmesi budur. Seansı (.zip) arşivin olarak kaydet.',
+'Your first 20 roasts are free. Pro unlocks samples, recipes and Deep Calibration.':'İlk 20 kavurman ücretsiz. Pro; numuneleri, reçeteleri ve Derin Kalibrasyonu açar.',
 'tap to listen':'dinlemek için dokun','the crack analyzer · the probe reads the drum, the beans speak':'çatlak analizörü · prob kazanı okur, çekirdekler konuşur',
 'Tap start, hold the phone near the drum, disable the case if it covers the mic.':'Başlata dokun, telefonu kazana yaklaştır, kılıf mikrofonu kapatıyorsa çıkar.',
 'Everything is kept for the whole session; save after Stop. Keep the screen on.':'Her şey seans boyunca bellekte tutulur; Durdur sonrası kaydet. Ekranı açık tut.',
