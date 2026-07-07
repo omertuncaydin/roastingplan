@@ -125,7 +125,7 @@ body.st-setup #btn{display:none}
     <div class="titleRow">
       <h1>Crack Listener</h1>
       <div class="titleMeta">
-        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zi</span>
+        <span class="vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zj</span>
         <button class="refresh" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="refresh" onclick="hardRefresh()">Refresh</button>
       </div>
@@ -367,7 +367,7 @@ function stop(){
       if(!$('mMoist').value&&calP.moist) $('mMoist').value=calP.moist;
       if(!$('mAw').value&&calP.aw) $('mAw').value=calP.aw;
       if(!$('mTarget').value&&calP.target) $('mTarget').value=calP.target; } }
-  renderSamples(); updateSD(); drawTimeline(); updateGauge();   // retrospective pass: the bell is complete now, stages settle with the whole story
+  renderSamples(); updateSD(); drawTimeline(); updateGauge(); updateMapBtn();   // retrospective pass: the bell is complete now, stages settle with the whole story
   const mb=(wav.len*2/1048576).toFixed(1);
   $('recInfo').textContent=LANG==='tr'
     ?('Seans bellekte: '+(wav.len?mb+' MB ses, ':'')+rows.length+' iz örneği, '+cracks.length+' çatlak. Sayfayı kapatmadan önce seansı kaydet.')
@@ -1073,8 +1073,17 @@ async function loadSession(file){
   $('dlZip').style.display='block'; $('dlCard').style.display='block';   // re-save allowed: corrected FP labels are the training corpus
   document.body.className='st-done';
   refreshStats();
+  updateMapBtn();
   if(parseFloat(meta.agtron_ground)){ saveCalIfMapped(true); updateGauge(); }
   else toast('Loaded: '+cracks.length+' cracks'+(meta.coffee?' ('+meta.coffee+')':'')+'. Fill Agtron ground, tap Map.');
+}
+// the Map button announces its own behavior: reference-write vs lesson-record
+function updateMapBtn(){ const b=$('mapBtn'); if(!b) return;
+  const k=(cName.value||($('mCoffee')&&$('mCoffee').value)||'').trim().toLowerCase();
+  const prev=k?calMap()[k]:null, v=valid();
+  const isCut=!(LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==='C1'));
+  const fuller=prev&&v.length&&prev.devSpan>((v[v.length-1].t-effA0(v))*1.3);
+  b.textContent=(isCut&&fuller)?(LANG==='tr'?'Dersi kaydet (referansı koru)':'Record lesson (keep reference)'):tt('Map this coffee (save color)');
 }
 // ---- SampleInRoast: tryer pulls become color anchors ----
 const SAMP_LINES=['The bean cannot hide now.','Spoon out, truth in.','Color caught mid-flight.','One more anchor for the gauge.'];
