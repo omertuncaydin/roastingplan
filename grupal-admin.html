@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grup-Al · kampanya kokpiti</title>
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:16px;line-height:1.5}
+.wrap{max-width:560px;margin:0 auto}
+h1{font-size:20px;margin:8px 0 14px;text-align:center}
+.brand{text-align:center;font-weight:800;font-size:14px;letter-spacing:3px;color:var(--accent)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.lbl{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;display:block;margin:10px 0 4px}
+input,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;font-size:16px;background:var(--panel2);color:var(--ink)}
+button{width:100%;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;background:var(--accent);color:#16130f;margin-top:14px;cursor:pointer}
+.row{display:flex;gap:8px}
+.row>*{flex:1;min-width:0}
+.hint{color:var(--muted);font-size:12px;margin-top:6px}
+.pill{display:inline-block;border:1px solid var(--line);border-radius:16px;padding:6px 12px;font-size:13px;margin:3px 4px 3px 0;cursor:pointer;color:var(--muted)}
+.pill.on{border-color:var(--accent);color:var(--ink)}
+a{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">GRUP-AL</div>
+  <h1>Kampanya Kokpiti</h1>
+
+  <div class="card" id="keyCard">
+    <span class="lbl">anahtar (CC key)</span>
+    <input type="password" id="ccKey" placeholder="Kokpit anahtarı">
+    <button onclick="unlock()">Aç</button>
+  </div>
+
+  <div id="panel" style="display:none">
+    <div class="card">
+      <span class="lbl">kampanyalar</span>
+      <div id="campList"></div>
+      <button style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)" onclick="blank()">+ Yeni kampanya</button>
+    </div>
+
+    <div class="card">
+      <span class="lbl">slug (link adı: /grupal?k=SLUG)</span>
+      <input id="f_slug" placeholder="eylul-ethiopia">
+      <span class="lbl">başlık</span>
+      <input id="f_title" placeholder="Roast-Day Lot · Ethiopia">
+      <span class="lbl">lot açıklaması</span>
+      <input id="f_lot" placeholder="Yıkanmış Ethiopia, kavurma günü lotu">
+      <div class="row">
+        <div><span class="lbl">hedef (kilitli)</span><input id="f_target" inputmode="numeric" placeholder="100"></div>
+        <div><span class="lbl">kapasite (ops.)</span><input id="f_cap" inputmode="numeric" placeholder="140"></div>
+      </div>
+      <span class="lbl">birim</span>
+      <input id="f_unit" placeholder="2 x 500g çekirdek">
+      <span class="lbl">teslimat taahhüdü</span>
+      <input id="f_ships" placeholder="hedefe ulaşıldıktan sonra 10 iş günü içinde kavrulur ve kargolanır">
+      <span class="lbl">bitiş tarihi</span>
+      <input id="f_end" type="date">
+      <span class="lbl">fiyat merdiveni (katılımcı → fiyat)</span>
+      <div class="row"><input id="l1a" inputmode="numeric" placeholder="60"><input id="l1p" placeholder="950 TL"></div>
+      <div class="row" style="margin-top:6px"><input id="l2a" inputmode="numeric" placeholder="100"><input id="l2p" placeholder="875 TL"></div>
+      <div class="row" style="margin-top:6px"><input id="l3a" inputmode="numeric" placeholder=""><input id="l3p" placeholder=""></div>
+      <span class="lbl">kapora linki (Shopify cart permalink)</span>
+      <input id="f_dep" placeholder="https://www.coffeenutz.net/cart/67299383692848:1">
+      <span class="lbl">kapora metni</span>
+      <input id="f_deptxt" placeholder="100 TL kapora · fiyattan düşülür · hedef dolmazsa iade">
+      <span class="lbl">ödeme linki (hedef dolunca gösterilir)</span>
+      <input id="f_pay" placeholder="Shopify ürün/checkout linki">
+      <span class="lbl">durum</span>
+      <select id="f_status">
+        <option value="open">open · kayıt alıyor</option>
+        <option value="funded">funded · hedef doldu</option>
+        <option value="paying">paying · ödeme penceresi</option>
+        <option value="fulfilled">fulfilled · tamamlandı</option>
+        <option value="failed">failed · hedefe ulaşmadı</option>
+      </select>
+      <button onclick="save()">Kaydet / Yayınla</button>
+      <div class="hint" id="msg"></div>
+      <div class="hint" id="linkOut"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
+const $=id=>document.getElementById(id);
+let KEY=localStorage.getItem('grupalKey')||'';
+let CAMPS=[];
+if(KEY){ $('ccKey').value=KEY; unlock(); }
+async function unlock(){
+  KEY=$('ccKey').value.trim(); if(!KEY) return;
+  const r=await fetch(API+'/admin/list',{headers:{'x-cc-key':KEY}});
+  if(r.status===401){ $('msg').textContent=''; alert('Anahtar yanlış.'); return; }
+  CAMPS=await r.json();
+  localStorage.setItem('grupalKey',KEY);
+  $('keyCard').style.display='none'; $('panel').style.display='block';
+  renderList();
+}
+function renderList(){
+  $('campList').innerHTML=CAMPS.map((c,i)=>'<span class="pill" onclick="pick('+i+')">'+c.slug+' · '+c.status+'</span>').join('')||'<div class="hint">Henüz kampanya yok.</div>';
+}
+function blank(){
+  ['f_slug','f_title','f_lot','f_target','f_cap','f_unit','f_ships','f_dep','f_deptxt','f_pay','l1a','l1p','l2a','l2p','l3a','l3p'].forEach(i=>$(i).value='');
+  $('f_status').value='open'; $('f_end').value=''; $('msg').textContent='Yeni kampanya formu.'; $('linkOut').textContent='';
+}
+function pick(i){
+  const c=CAMPS[i];
+  $('f_slug').value=c.slug; $('f_title').value=c.title||''; $('f_lot').value=c.lot||'';
+  $('f_target').value=c.target||''; $('f_cap').value=c.cap||''; $('f_unit').value=c.unit||'';
+  $('f_ships').value=c.ships_by||''; $('f_dep').value=c.deposit_url||''; $('f_deptxt').value=c.deposit_txt||'';
+  $('f_pay').value=c.pay_url||''; $('f_status').value=c.status||'open';
+  $('f_end').value=(c.end_at||'').slice(0,10);
+  const L=c.ladder||[];
+  [['l1a','l1p',0],['l2a','l2p',1],['l3a','l3p',2]].forEach(([a,p,ix])=>{ $(a).value=L[ix]?L[ix].at:''; $(p).value=L[ix]?L[ix].price:''; });
+  $('msg').textContent='Yüklendi: '+c.slug; showLink(c.slug);
+}
+function showLink(slug){
+  const u=location.origin+'/grupal?k='+slug;
+  $('linkOut').innerHTML='Kampanya sayfası: <a href="'+u+'" target="_blank">'+u+'</a>';
+}
+async function save(){
+  const ladder=[];
+  [['l1a','l1p'],['l2a','l2p'],['l3a','l3p']].forEach(([a,p])=>{ const at=parseInt($(a).value); if(at&&$(p).value.trim()) ladder.push({at, price:$(p).value.trim()}); });
+  const body={ slug:$('f_slug').value, title:$('f_title').value, lot:$('f_lot').value,
+    target:parseInt($('f_target').value)||0, cap:parseInt($('f_cap').value)||null,
+    unit:$('f_unit').value, ships_by:$('f_ships').value,
+    end_at:$('f_end').value?($('f_end').value+'T23:59:59+03:00'):null,
+    ladder, deposit_url:$('f_dep').value, deposit_txt:$('f_deptxt').value,
+    pay_url:$('f_pay').value, status:$('f_status').value };
+  if(!body.slug||!body.title||!body.target||!body.end_at){ $('msg').textContent='Slug, başlık, hedef ve bitiş tarihi zorunlu.'; return; }
+  const r=await fetch(API+'/admin/upsert',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  if(j.ok){ $('msg').textContent='Kaydedildi: '+j.slug; showLink(j.slug);
+    const r2=await fetch(API+'/admin/list',{headers:{'x-cc-key':KEY}}); CAMPS=await r2.json(); renderList();
+  } else $('msg').textContent='Hata: '+(j.error||r.status);
+}
+</script>
+</body>
+</html>
