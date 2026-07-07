@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <title>Crack Listener · Crack Analyzer App · free first crack detection</title>
 <meta name="description" content="Crack Listener is the free crack analyzer app: your phone hears first crack, draws the crack curve live, maps the gain stages A0-C1 and projects roast color. Coffee Acoustics by CoffeeNutz.">
 <style>
@@ -27,6 +28,7 @@ body.st-live #cGauge details{display:none}
 #sampleBtn{display:none;background:var(--panel);color:var(--ink);border:2px solid var(--accent);border-radius:14px;font-size:16px;font-weight:700;padding:13px;width:100%;align-items:center;justify-content:center;gap:10px}
 body.st-live #sampleBtn{display:flex;position:sticky;bottom:118px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45);order:5}
 #sampN{background:var(--accent);color:#fff;border-radius:10px;padding:2px 9px;font-size:13px;display:none}
+body.embed .brandFull,body.embed .brandCompact,body.embed #guideUp,body.embed #cWalk,body.embed .hdrDivider{display:none !important}
 #cAdmin,#adminStatsRow{display:none}
 body.admin #cAdmin{display:block}
 body.admin #adminStatsRow{display:flex}
@@ -145,7 +147,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-07zy</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08a</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -277,6 +279,12 @@ body.st-setup #btn{display:none}
       <button class="go" style="background:#3a2f26;font-size:13px" onclick="exportMaps()">Export maps</button>
       <button class="go" style="background:#3a2f26;font-size:13px" onclick="document.getElementById('mapsF').click()">Import maps</button>
     </div>
+    <div class="lbl" style="margin-top:14px">coffee cloud · Guide account <span class="info" onclick="showInfo('cloud')">&#9432;</span></div>
+    <div class="hint" id="cloudStat">·</div>
+    <div class="row" style="margin-top:8px">
+      <button class="go" style="background:#3a2f26;font-size:13px" onclick="cloudSend()">Send coffees to cloud</button>
+      <button class="go" style="background:#3a2f26;font-size:13px" onclick="cloudPull()">Bring from cloud</button>
+    </div>
     <input type="file" id="mapsF" accept=".json" style="display:none" onchange="importMaps(this.files[0])">
     <input type="file" id="loadF" accept=".zip,.csv" style="display:none" onchange="loadSession(this.files[0])">
   </div>
@@ -377,7 +385,7 @@ async function start(){
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw'].forEach(i=>{ if($(i)) $(i).value=''; });
   updateSD(); drawTimeline(); updateGauge();
-  document.body.className='st-live';
+  document.body.className='st-live'+(document.documentElement.dataset.embed?' embed':'');
   const bcue=((badgeMap()[badgeKey()]||{}).cue||'').replace(/</g,'&lt;');
   if(bcue){ $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">'+(LANG==='tr'?'Reçete hatırlatması':'Recipe reminder')+'</h1>'
     +'<div style="font-size:23px;font-weight:800;color:var(--gold);line-height:1.35;margin:6px 0 4px">'+bcue+'</div>'
@@ -410,7 +418,7 @@ function stop(){
   $('recInfo').textContent=LANG==='tr'
     ?('Seans bellekte: '+(wav.len?mb+' MB ses, ':'')+rows.length+' iz örneği, '+cracks.length+' çatlak. Sayfayı kapatmadan önce seansı kaydet.')
     :('Session kept in memory: '+(wav.len?mb+' MB audio, ':'')+rows.length+' trace samples, '+cracks.length+' cracks. Save the session before closing or reloading the page.');
-  document.body.className='st-done';
+  document.body.className='st-done'+(document.documentElement.dataset.embed?' embed':'');
   $('btn').textContent=tt('New session'); $('btn').className='go';
   $('status').textContent=LANG==='tr'?('Durduruldu. '+cracks.length+' çatlak kaydedildi.'):('Stopped. '+cracks.length+' cracks logged.');
 }
@@ -621,6 +629,7 @@ const INFO={
  admPhase:['Envelope phase','Stepless position inside the FC loudness envelope: 0 at A0, 0.5 at the crown, 1 in the silence valley. Mic-invariant and speed-invariant by construction. Being measured and logged (phase_final in CSV, phDrop in maps) to test the thesis that color follows phase; joins the live formula when the labeled data proves its tolerance.'],
  admPhiProj:['Phi-curve call','What the learned phi-to-color curve says right now, from this coffee\'s accumulated (phase, measured color) points. Blended 50/50 with the classic estimate once 4+ points exist.'],
  admBias:['Learned bias','The recency-weighted mean of (measured minus projected) from this coffee\'s past self-grades, applied as a correction, capped at 6. Resets itself when a new roast disagrees hard (bag change).'],
+ cloud:['Coffee cloud','Your coffees (maps with their lessons, badges, green data) stored under your Guide account. Sign-in happens in the Guide; this page reuses the same session in the same browser. Send and Bring both open a consent picker: only the coffees you tick move, and only same-named records are overwritten. This is the start of the registry: recipes and cupping flows attach here next.'],
  sens:['Trigger threshold','A crack counts only when a 1 ms burst is this many times louder than the rolling background floor. LOWER catches more (more sensitive, more noise too); HIGHER is stricter. Start low (3-5) by the machine and raise only until scoop taps and clanks stop registering.'],
  hp:['High-pass','Everything below this frequency is cut before detection: drum rumble, fan, motor hum. Raise it until the background floor stops riding the roar; lower it if real cracks arrive thin. The raw WAV is recorded before this filter, so recordings are never affected.'],
  bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.'],
@@ -810,6 +819,58 @@ function showPaywall(feature){
   $('modal').style.display='flex';
 }
 refreshPlanUI();
+// ---- coffee cloud: the registry (coffees table) under the user's Guide identity.
+// No login UI: the Guide's supabase session lives in this same browser storage and is reused.
+const SUPA_URL='https://efjvfggwnhqkunjvoyjb.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA';
+let SB=null; try{ if(typeof supabase!=='undefined') SB=supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
+async function cloudUser(){ if(!SB) return null; try{ const {data}=await SB.auth.getUser(); return (data&&data.user)||null; }catch(e){ return null; } }
+async function cloudStatus(){ const u=await cloudUser(); const el=$('cloudStat');
+  if(el) el.textContent=u?((LANG==='tr'?'Bağlı: ':'Signed in: ')+u.email):(LANG==='tr'?"Eşitlemek için Guide'da giriş yap (aynı tarayıcı).":'Sign in via the Guide (same browser) to sync.');
+  return u; }
+let PICK_CB=null;
+function pickModal(title,hint,items,btnLabel,cb){
+  PICK_CB=cb;
+  $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:17px">'+title+'</h1>'
+   +'<div class="hint" style="font-size:12px;margin:0 0 6px">'+hint+'</div>'
+   +items.map((t,i)=>'<label style="display:flex;gap:9px;align-items:center;margin-top:9px;font-size:14px"><input type="checkbox" checked data-pick="'+i+'" style="width:19px;height:19px;accent-color:var(--accent)">'+t+'</label>').join('')
+   +'<button style="margin-top:14px;background:var(--accent2)" onclick="pickGo()">'+btnLabel+'</button>'
+   +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(LANG==='tr'?'Vazgeç':'Cancel')+'</button>';
+  $('modal').style.display='flex';
+}
+function pickGo(){ const sel=[]; document.querySelectorAll('[data-pick]').forEach(cb=>{ if(cb.checked) sel.push(+cb.dataset.pick); }); $('modal').style.display='none'; const f=PICK_CB; PICK_CB=null; if(f) f(sel); }
+async function cloudSend(){
+  if(!planActive()){ showPaywall(LANG==='tr'?'Kahve bulutu':'Coffee cloud'); return; }
+  const u=await cloudStatus(); if(!u){ toast(LANG==='tr'?"Önce Guide'da giriş yap.":'Sign in via the Guide first.'); return; }
+  const m=calMap(), keys=Object.keys(m).filter(k=>k!=='__house');
+  if(!keys.length){ toast(LANG==='tr'?'Gönderilecek harita yok.':'No maps to send.'); return; }
+  pickModal(LANG==='tr'?'Buluta gönder':'Send to cloud',
+    LANG==='tr'?'Seçilen kahveler hesabındaki kayıtların üzerine yazılır.':'Selected coffees overwrite your cloud records.',
+    keys, LANG==='tr'?'Gönder':'Send', async sel=>{
+    let n=0;
+    for(const i of sel){ const k=keys[i], cal=m[k]||{}, b=badgeMap()[k]||{};
+      const row={ owner:u.id, name:k, badge:b, green:{moisture:cal.moist||null, aw:cal.aw||null, process:cal.proc||null}, map:cal };
+      const {error}=await SB.from('coffees').upsert(row,{onConflict:'owner,name'});
+      if(!error) n++;
+    }
+    toast((LANG==='tr'?'Buluta gönderildi: ':'Sent to cloud: ')+n+' / '+sel.length);
+  });
+}
+async function cloudPull(){
+  if(!planActive()){ showPaywall(LANG==='tr'?'Kahve bulutu':'Coffee cloud'); return; }
+  const u=await cloudStatus(); if(!u){ toast(LANG==='tr'?"Önce Guide'da giriş yap.":'Sign in via the Guide first.'); return; }
+  const {data,error}=await SB.from('coffees').select('name,badge,map');
+  if(error||!data||!data.length){ toast(LANG==='tr'?'Bulutta kahve yok.':'No coffees in the cloud.'); return; }
+  pickModal(LANG==='tr'?'Buluttan getir':'Bring from cloud',
+    LANG==='tr'?'Seçilenler bu cihazdaki aynı isimli kayıtların üzerine yazılır.':'Selected entries overwrite same-named local records.',
+    data.map(c=>c.name), LANG==='tr'?'Getir':'Bring', sel=>{
+    const m=calMap(), b=badgeMap(); let n=0;
+    sel.forEach(i=>{ const c=data[i]; if(c.map){ m[c.name]=c.map; n++; } if(c.badge&&Object.keys(c.badge).length) b[c.name]=c.badge; });
+    localStorage.setItem('bsCal',JSON.stringify(m)); localStorage.setItem('bsBadge',JSON.stringify(b));
+    toast((LANG==='tr'?'Buluttan alındı: ':'Brought: ')+n); updateGauge(); updateSD();
+  });
+}
+setTimeout(cloudStatus,400);
 // walkthrough: opens itself for a fresh app copy, then remembers being folded
 try{ const cw=$('cWalk');
   if(cw){ if(!localStorage.getItem('bsWalkSeen')&&!Object.keys(calMap()).length&&roastCount()===0) cw.open=true;
@@ -1116,7 +1177,7 @@ async function loadSession(file){
   $('mAgWSd').value=meta.agtron_whole_sd||''; $('mAgSd').value=meta.agtron_ground_sd||''; $('mProc').value=meta.process||''; $('mChgFc').value=meta.charge_to_fc||''; $('mDrop').value=meta.drop_after_last_s||''; $('mTarget').value=meta.target||''; $('mMoist').value=meta.moisture||''; $('mAw').value=meta.water_activity||'';
   $('metaBox').style.display='block'; $('mapBtn').style.display='block';
   $('dlZip').style.display='block'; $('dlCard').style.display='block';   // re-save allowed: corrected FP labels are the training corpus
-  document.body.className='st-done';
+  document.body.className='st-done'+(document.documentElement.dataset.embed?' embed':'');
   refreshStats();
   updateMapBtn();
   if(parseFloat(meta.agtron_ground)){ saveCalIfMapped(true); updateGauge(); }
@@ -1268,7 +1329,8 @@ function toggleLang(){ LANG=LANG==='tr'?'en':'tr'; localStorage.setItem('bsLang'
 // errors surface as toasts for the admin: a dead button must say WHY it died
 window.addEventListener('error',e=>{ try{ if(document.body.classList.contains('admin')) toast('JS error: '+(e.message||'?')+' @'+(e.lineno||'?')); }catch(_){} });
 window.addEventListener('unhandledrejection',e=>{ try{ if(document.body.classList.contains('admin')) toast('Async error: '+((e.reason&&e.reason.message)||e.reason||'?')); }catch(_){} });
-document.body.className='st-setup';
+if(new URLSearchParams(location.search).get('embed')==='1') document.documentElement.dataset.embed='1';
+document.body.className='st-setup'+(document.documentElement.dataset.embed?' embed':'');
 setTimeout(updateGauge,0);   // initial gauge state on load
 setTimeout(applyLang,0);
 // pinch-block is SCOPED to canvases only (CSS touch-action:none on canvas): document-level touch
