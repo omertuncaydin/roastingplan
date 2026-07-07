@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grup-Al · birlikte kavur, birlikte kazan</title>
+<meta name="description" content="Grup-Al: yeterli katılımcı toplanırsa kampanya başlar. Hedefe ulaşılmazsa kimseden ücret alınmaz.">
+<style>
+:root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:16px;line-height:1.5}
+.wrap{max-width:480px;margin:0 auto}
+h1{font-size:26px;margin:14px 0 4px;text-align:center}
+.brand{text-align:center;font-weight:800;font-size:15px;letter-spacing:3px;color:var(--accent);margin-top:8px}
+.sub{color:var(--muted);font-size:13px;text-align:center;margin-bottom:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.lbl{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.big{font-size:40px;font-weight:800;font-variant-numeric:tabular-nums}
+.bar{height:22px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:10px 0 6px;position:relative}
+.fill{height:100%;background:var(--green);border-radius:12px;transition:width .6s ease;min-width:8px}
+.tick{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--gold)}
+.ladder{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.rung{display:flex;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-size:14px}
+.rung.hit{border-color:var(--green);background:rgba(60,122,90,.12)}
+input{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:16px;background:var(--panel2);color:var(--ink);margin-top:8px}
+button{width:100%;border:none;border-radius:12px;padding:16px;font-size:17px;font-weight:800;background:var(--accent);color:#16130f;margin-top:12px;cursor:pointer}
+button:active{transform:scale(.99)}
+.hint{color:var(--muted);font-size:12.5px}
+.guarantee{border:1px solid var(--green);border-radius:12px;padding:12px 14px;font-size:13.5px;margin:14px 0;text-align:center}
+.count{font-size:13px;color:var(--muted);text-align:center;margin-top:6px;font-variant-numeric:tabular-nums}
+.share{background:var(--panel2);border:1px dashed var(--accent);border-radius:12px;padding:14px;text-align:center;margin-top:12px;display:none}
+.share code{color:var(--gold);font-size:15px;word-break:break-all}
+#payBlock{display:none;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">GRUP-AL</div>
+  <h1 id="title">yükleniyor...</h1>
+  <div class="sub" id="lot"></div>
+
+  <div class="card">
+    <div class="lbl">katılımcı</div>
+    <div style="display:flex;align-items:baseline;gap:10px">
+      <div class="big" id="count">·</div>
+      <div class="hint" id="targetTxt"></div>
+    </div>
+    <div class="bar"><div class="fill" id="fill" style="width:0%"></div><div class="tick" id="tick" style="left:100%"></div></div>
+    <div class="count" id="leftTxt"></div>
+    <div class="ladder" id="ladder"></div>
+    <div class="count" id="endTxt"></div>
+  </div>
+
+  <div class="guarantee">Hedefe ulaşılmazsa kimseden ücret alınmaz. Söz toplarız, hedef dolunca ödeme penceresi açılır.</div>
+
+  <div class="card" id="joinCard">
+    <div class="lbl">söz ver · yerini ayır</div>
+    <input type="text" id="fName" placeholder="Ad Soyad">
+    <input type="email" id="fEmail" placeholder="E-posta">
+    <input type="tel" id="fPhone" placeholder="Telefon (ödeme penceresi SMS'i için)">
+    <button onclick="pledge()" id="joinBtn">Söz veriyorum</button>
+    <div class="hint" style="margin-top:10px" id="unitTxt"></div>
+    <div class="hint" id="shipTxt"></div>
+  </div>
+
+  <div class="card" id="payBlock">
+    <div class="lbl">hedef doldu · ödeme penceresi</div>
+    <div style="font-size:15px;margin:10px 0">Kampanya hedefe ulaştı. Yerini tamamlamak için:</div>
+    <button onclick="window.open(PAYURL)">Ödemeye geç</button>
+  </div>
+
+  <div class="share" id="shareBox">
+    <div style="font-size:14px;margin-bottom:6px">Sözün alındı. Şimdi hedefi birlikte dolduralım:</div>
+    <code id="shareLink"></code>
+    <button style="margin-top:10px;background:var(--green);color:#fff" onclick="doShare()">Bağlantıyı paylaş</button>
+  </div>
+
+  <div class="hint" style="text-align:center;margin:18px 0 8px">Grup-Al bir CoffeeNutz projesidir · sorular: iletişim sayfası</div>
+</div>
+
+<script>
+const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
+const SLUG=new URLSearchParams(location.search).get('k')||'ornek-kampanya';
+const REF=new URLSearchParams(location.search).get('ref')||'';
+let PAYURL=null, STATE=null;
+const $=id=>document.getElementById(id);
+
+async function load(){
+  try{
+    const r=await fetch(API+'/state?slug='+encodeURIComponent(SLUG));
+    const s=await r.json();
+    if(s.error){ $('title').textContent='Kampanya bulunamadı'; return; }
+    STATE=s; PAYURL=s.pay_url;
+    $('title').textContent=s.title;
+    $('lot').textContent=s.lot||'';
+    $('unitTxt').textContent=s.unit?('Birim: '+s.unit):'';
+    $('shipTxt').textContent=s.ships_by?('Teslimat: '+s.ships_by):'';
+    $('count').textContent=s.count;
+    $('targetTxt').textContent='/ '+s.target+' hedef';
+    const pct=Math.min(100,Math.round(100*s.count/s.target));
+    $('fill').style.width=pct+'%';
+    $('tick').style.left=Math.min(100,100*s.target/(s.cap||s.target))+'%';
+    const left=Math.max(0,s.target-s.count);
+    $('leftTxt').textContent=left>0?('Hedefe '+left+' kişi kaldı'):'Hedef doldu';
+    const end=new Date(s.end_at), days=Math.max(0,Math.ceil((end-Date.now())/864e5));
+    $('endTxt').textContent='Kampanya bitişine '+days+' gün';
+    $('ladder').innerHTML=(s.ladder||[]).map(r=>'<div class="rung'+(s.count>=r.at?' hit':'')+'"><span>'+r.at+' katılımcıda</span><b>'+r.price+'</b></div>').join('');
+    if((s.status==='funded'||s.status==='paying')&&PAYURL){ $('payBlock').style.display='block'; }
+  }catch(e){ $('title').textContent='Bağlantı hatası, tekrar deneyin'; }
+}
+async function pledge(){
+  const name=$('fName').value.trim(), email=$('fEmail').value.trim(), phone=$('fPhone').value.trim();
+  if(!name||!email){ alert('Ad ve e-posta gerekli.'); return; }
+  $('joinBtn').disabled=true; $('joinBtn').textContent='Kaydediliyor...';
+  try{
+    const r=await fetch(API+'/pledge',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({slug:SLUG,name,email,phone,qty:1,referred_by:REF})});
+    const j=await r.json();
+    if(j.ok){
+      const link=location.origin+location.pathname+'?k='+SLUG+'&ref='+j.ref_code;
+      $('shareLink').textContent=link;
+      $('shareBox').style.display='block'; $('joinCard').style.display='none';
+      localStorage.setItem('grupal_'+SLUG, j.ref_code);
+      load();
+    } else alert(j.error==='this email already pledged'?'Bu e-posta ile zaten söz verilmiş.':(j.error||'Hata'));
+  }catch(e){ alert('Bağlantı hatası, tekrar deneyin.'); }
+  $('joinBtn').disabled=false; $('joinBtn').textContent='Söz veriyorum';
+}
+function doShare(){
+  const link=$('shareLink').textContent;
+  if(navigator.share) navigator.share({title:'Grup-Al',text:'Birlikte kavuralım: hedef dolarsa herkes kazanır.',url:link});
+  else { navigator.clipboard&&navigator.clipboard.writeText(link); alert('Bağlantı kopyalandı.'); }
+}
+if(localStorage.getItem('grupal_'+SLUG)){
+  $('joinCard').style.display='none';
+  $('shareBox').style.display='block';
+  $('shareLink').textContent=location.origin+location.pathname+'?k='+SLUG+'&ref='+localStorage.getItem('grupal_'+SLUG);
+}
+load(); setInterval(load, 30000);
+</script>
+</body>
+</html>
