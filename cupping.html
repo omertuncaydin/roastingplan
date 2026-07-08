@@ -40,6 +40,16 @@ button.sub{background:var(--panel2);color:var(--ink);border:1px solid var(--line
 textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px;font-size:14px;background:var(--panel2);color:var(--ink);min-height:34px;resize:vertical}
 .topbar{display:flex;gap:6px;margin-bottom:10px}
 .topbar button{margin:0;padding:9px;font-size:13px}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tab{flex:1;text-align:center;padding:9px;border:1px solid var(--line);border-radius:10px;font-size:13px;color:var(--muted);cursor:pointer;font-weight:700;user-select:none}
+.tab.on{border-color:var(--accent);color:var(--ink);background:rgba(201,138,60,.15)}
+.nrow{display:flex;align-items:center;gap:8px;margin:5px 0}
+.ninec{display:flex;gap:4px;flex:1;justify-content:space-between}
+.nc{width:27px;height:27px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);cursor:pointer;user-select:none;flex:none}
+.nc.on{background:var(--accent);color:#16130f;font-weight:800;border-color:var(--accent)}
+.cup{width:27px;height:27px;border:1px solid var(--line);border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);cursor:pointer;margin-right:5px;user-select:none}
+.cup.on{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.scoreline{font-size:15px;font-weight:800;color:var(--gold);margin-top:8px;text-align:right}
 .warn{color:var(--accent2);font-size:12px}
 a{color:var(--gold)}
 /* ============ PRINT: SCA-style sheet with placed ticks ============ */
@@ -65,7 +75,12 @@ a{color:var(--gold)}
   .cbox.on{border:1.5px solid #000;color:#000;background:#eee;font-weight:800}
   .cbox.on::before{content:"\2713 "}
   textarea{min-height:22px}
-  .hint,.del{display:none}
+  .hint,.del,.tabs{display:none}
+  .nc{width:15px;height:15px;font-size:8px;border:1px solid #777;color:#555}
+  .nc.on{background:#000;color:#fff;border-color:#000}
+  .cup{width:15px;height:15px;border:1px solid #777;color:#555;font-size:8px;border-radius:3px}
+  .cup.on{background:#000;color:#fff}
+  .scoreline{color:#111;font-size:12px}
 }
 </style>
 </head>
@@ -73,6 +88,12 @@ a{color:var(--gold)}
 <div class="wrap">
   <div class="brand">COFFEENUTZ · NUTZACADEMY</div>
   <h1 id="ttl">Descriptive Form</h1>
+
+  <div class="tabs noprint">
+    <span class="tab" id="tab_desc" onclick="setMode('desc')">Descriptive</span>
+    <span class="tab" id="tab_aff" onclick="setMode('aff')">Affective</span>
+    <span class="tab" id="tab_comb" onclick="setMode('comb')">Combined</span>
+  </div>
 
   <div class="topbar noprint">
     <button class="sub" onclick="newSession()" id="btnNew">New</button>
@@ -121,12 +142,16 @@ const INT=[['fragI','Fragrance'],['aromaI','Aroma']];
 const INT2=[['flavI','Flavor'],['afterI','Aftertaste']];
 const INT3=[['acidI','Acidity'],['sweetI','Sweetness'],['mouthI','Mouthfeel']];
 
-let S=null;
-function blankSample(){return {no:'',roast:50,fragI:null,aromaI:null,olf1:[],flavI:null,afterI:null,olf2:[],tastes:[],acidI:null,sweetI:null,mouthI:null,mouth:[],nFA:'',nFL:'',nAC:'',nSW:'',nMF:''};}
+let S=null, MODE=localStorage.getItem('bsCupMode')||'desc';
+const ATTRS=[['frag','Fragrance'],['aroma','Aroma'],['flav','Flavor'],['after','Aftertaste'],['acid','Acidity'],['sweet','Sweetness'],['mouth9','Mouthfeel'],['overall','Overall']];
+function blankSample(){return {no:'',roast:50,fragI:null,aromaI:null,olf1:[],flavI:null,afterI:null,olf2:[],tastes:[],acidI:null,sweetI:null,mouthI:null,mouth:[],nFA:'',nFL:'',nAC:'',nSW:'',nMF:'',
+  q:{frag:null,aroma:null,flav:null,after:null,acid:null,sweet:null,mouth9:null,overall:null}, nu:[0,0,0,0,0], df:[0,0,0,0,0], nAF:''};}
 function load(){
   try{ S=JSON.parse(localStorage.getItem('bsCupDesc'))||null; }catch(e){ S=null; }
   if(!S){ S={name:'',date:new Date().toISOString().slice(0,10),purpose:'',samples:[blankSample()]}; save(); }
+  S.samples.forEach(sm=>{ const b=blankSample(); for(const k in b) if(sm[k]===undefined) sm[k]=b[k]; }); // migrate older saves
 }
+function setMode(m){ MODE=m; localStorage.setItem('bsCupMode',m); render(); }
 function save(){ try{ localStorage.setItem('bsCupDesc',JSON.stringify(S)); }catch(e){} }
 function hd(){ S.name=$('h_name').value; S.date=$('h_date').value; S.purpose=$('h_purpose').value; save(); }
 function newSession(){ if(!confirm(LANG==='tr'?'Yeni oturum? Mevcut form temizlenir (önce CSV/JSON alabilirsin).':'New session? Current form is cleared (export CSV/JSON first if needed).')) return; localStorage.removeItem('bsCupDesc'); load(); render(); }
@@ -189,9 +214,41 @@ function noteBox(i,key,label){
   return '<span class="lbl">'+label+'</span><textarea oninput="S.samples['+i+'].'+key+'=this.value;save()">'+esc(S.samples[i][key])+'</textarea>';
 }
 function irow(i,def){ return '<div class="irow"><span class="iname">'+def[1]+'</span>'+bar(i,def[0],S.samples[i][def[0]],15)+'</div>'; }
+function nine(i,k,label){ const v=S.samples[i].q[k];
+  return '<div class="nrow"><span class="iname">'+label+'</span><div class="ninec">'+Array.from({length:9},(_,x)=>{const n=x+1;
+    return '<span class="nc'+(v===n?' on':'')+'" onclick="setQ('+i+',\''+k+'\','+n+')">'+n+'</span>';}).join('')+'</div></div>'; }
+function setQ(i,k,n){ S.samples[i].q[k]=(S.samples[i].q[k]===n?null:n); save(); render(); }
+function cups(i,key,label){ return '<span class="lbl">'+label+'</span><div>'+Array.from({length:5},(_,x)=>
+  '<span class="cup'+(S.samples[i][key][x]?' on':'')+'" onclick="togCup('+i+',\''+key+'\','+x+')">'+(x+1)+'</span>').join('')+'</div>'; }
+function togCup(i,key,x){ S.samples[i][key][x]=S.samples[i][key][x]?0:1; save(); render(); }
+function cvaScore(sm){ const vals=ATTRS.map(a=>sm.q[a[0]]); if(vals.some(v=>v==null)) return null;
+  const sum=vals.reduce((a,b)=>a+b,0), nu=sm.nu.reduce((a,b)=>a+b,0), df=sm.df.reduce((a,b)=>a+b,0);
+  return Math.round((0.65625*sum+52.75-2*nu-4*df)*100)/100; }   // SCA CVA affective: 8x9pt -> 58..100, -2/non-uniform cup, -4/defective cup
 
+function descBlock(i){
+  return '<div class="secttl">Fragrance &amp; Aroma</div>'+irow(i,INT[0])+irow(i,INT[1])
+  +cata(i,'olf1',OLF,false)+noteBox(i,'nFA','Notes')
+  +'<div class="secttl">Flavor &amp; Aftertaste</div>'+irow(i,INT2[0])+irow(i,INT2[1])
+  +cata(i,'olf2',OLF,false)
+  +'<span class="lbl">Main tastes (pick 2)</span>'+cata(i,'tastes',TASTES,true)
+  +noteBox(i,'nFL','Notes')
+  +'<div class="secttl">Acidity</div>'+irow(i,INT3[0])+noteBox(i,'nAC','Notes')
+  +'<div class="secttl">Sweetness</div>'+irow(i,INT3[1])+noteBox(i,'nSW','Notes')
+  +'<div class="secttl">Mouthfeel</div>'+irow(i,INT3[2])
+  +cata(i,'mouth',MOUTH,true)+noteBox(i,'nMF','Notes');
+}
+function affBlock(i){
+  const sc=cvaScore(S.samples[i]);
+  return '<div class="secttl">Impression of Quality (1 low &middot; 5 neutral &middot; 9 high)</div>'
+  +ATTRS.map(a=>nine(i,a[0],a[1])).join('')
+  +cups(i,'nu','Non-uniform cups')+cups(i,'df','Defective cups')
+  +'<div class="scoreline">'+(sc==null?(LANG==='tr'?'Skor: 8 nitelik puanlanınca görünür':'Score appears when all 8 attributes are rated'):('CVA Score: '+sc))+'</div>'
+  +noteBox(i,'nAF','Notes');
+}
 function render(){
   $('h_name').value=S.name; $('h_date').value=S.date; $('h_purpose').value=S.purpose;
+  $('ttl').textContent={desc:'Descriptive Form',aff:'Affective Form',comb:'Combined Form'}[MODE];
+  ['desc','aff','comb'].forEach(m=>$('tab_'+m).classList.toggle('on',MODE===m));
   $('samples').innerHTML=S.samples.map((sm,i)=>{
     const rp=sm.roast==null?null:sm.roast;
     return '<div class="samplecard">'
@@ -200,16 +257,7 @@ function render(){
     +'<div style="flex:1"><span class="lbl">ROAST LEVEL (light &rarr; dark)</span>'
     +'<div class="ibar" onclick="setI(event,'+i+',\'roast\',100)">'+(rp==null?'':'<span class="tick" style="left:'+rp+'%">&#10003;</span>')+'</div></div>'
     +'<button class="del noprint" onclick="delSample('+i+')">&#10005;</button></div>'
-    +'<div class="secttl">Fragrance &amp; Aroma</div>'+irow(i,INT[0])+irow(i,INT[1])
-    +cata(i,'olf1',OLF,false)+noteBox(i,'nFA','Notes')
-    +'<div class="secttl">Flavor &amp; Aftertaste</div>'+irow(i,INT2[0])+irow(i,INT2[1])
-    +cata(i,'olf2',OLF,false)
-    +'<span class="lbl">Main tastes (pick 2)</span>'+cata(i,'tastes',TASTES,true)
-    +noteBox(i,'nFL','Notes')
-    +'<div class="secttl">Acidity</div>'+irow(i,INT3[0])+noteBox(i,'nAC','Notes')
-    +'<div class="secttl">Sweetness</div>'+irow(i,INT3[1])+noteBox(i,'nSW','Notes')
-    +'<div class="secttl">Mouthfeel</div>'+irow(i,INT3[2])
-    +cata(i,'mouth',MOUTH,true)+noteBox(i,'nMF','Notes')
+    +(MODE==='desc'?descBlock(i):MODE==='aff'?affBlock(i):descBlock(i)+affBlock(i))
     +'</div>';
   }).join('');
   applyLang();
@@ -225,9 +273,11 @@ function applyLang(){
 }
 function exportJSON(){ dl(JSON.stringify(S,null,1),'cupping-'+(S.date||'session')+'.json','application/json'); }
 function exportCSV(){
-  const cols=['sample_no','roast_level','fragrance_i','aroma_i','olfactory_fa','flavor_i','aftertaste_i','olfactory_flav','main_tastes','acidity_i','sweetness_i','mouthfeel_i','mouthfeel_cata','notes_fa','notes_flavor','notes_acidity','notes_sweetness','notes_mouthfeel'];
+  const cols=['sample_no','roast_level','fragrance_i','aroma_i','olfactory_fa','flavor_i','aftertaste_i','olfactory_flav','main_tastes','acidity_i','sweetness_i','mouthfeel_i','mouthfeel_cata','notes_fa','notes_flavor','notes_acidity','notes_sweetness','notes_mouthfeel',
+    'q_fragrance','q_aroma','q_flavor','q_aftertaste','q_acidity','q_sweetness','q_mouthfeel','q_overall','nonuniform_cups','defective_cups','cva_score','notes_affective'];
   const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
-  const rows=S.samples.map(s=>[s.no,s.roast,s.fragI,s.aromaI,s.olf1.join('; '),s.flavI,s.afterI,s.olf2.join('; '),s.tastes.join('; '),s.acidI,s.sweetI,s.mouthI,s.mouth.join('; '),s.nFA,s.nFL,s.nAC,s.nSW,s.nMF].map(q).join(','));
+  const rows=S.samples.map(s=>[s.no,s.roast,s.fragI,s.aromaI,s.olf1.join('; '),s.flavI,s.afterI,s.olf2.join('; '),s.tastes.join('; '),s.acidI,s.sweetI,s.mouthI,s.mouth.join('; '),s.nFA,s.nFL,s.nAC,s.nSW,s.nMF,
+    ...ATTRS.map(a=>s.q[a[0]]),s.nu.reduce((a,b)=>a+b,0),s.df.reduce((a,b)=>a+b,0),cvaScore(s),s.nAF].map(q).join(','));
   dl('name,'+q(S.name)+'\ndate,'+q(S.date)+'\npurpose,'+q(S.purpose)+'\n'+cols.join(',')+'\n'+rows.join('\n'),'cupping-'+(S.date||'session')+'.csv','text/csv');
 }
 function dl(txt,fn,mime){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([txt],{type:mime})); a.download=fn; a.click(); }
