@@ -147,7 +147,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08f</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08g</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -267,6 +267,7 @@ body.st-setup #btn{display:none}
       <div id="sampList"></div>
       <button class="go" id="noMeterBtn" onclick="showLevels()" style="display:block;background:#5a4a38;margin-top:8px">No color meter? Estimate it</button>
       <button class="go" id="mapBtn" onclick="saveCalIfMapped(true);updateGauge()" style="display:none;background:var(--accent2);margin-top:8px">Map this coffee (save color)</button>
+      <button class="go" id="cupGo" onclick="window.open('roast-guide.html?cup='+encodeURIComponent((cName.value||$('mCoffee').value||'').trim()),'_blank')" style="display:none;background:#3a2f26;margin-top:8px">Cup this coffee &#8599;</button>
     </div>
     <div class="row" style="margin-top:10px">
       <button class="go" id="dlZip" onclick="saveSession()" style="display:none">Save session (.zip)</button>
@@ -406,7 +407,7 @@ function stop(){
   STOPPROJ=LASTPROJ; STOPBORROWED=PROJBORROWED;   // freeze projection AND its provenance at the drop; a rename later cannot launder a borrowed guess
   try{ if(!planActive() && valid().length>=10){ localStorage.setItem('bsRoastN',String(roastCount()+1)); refreshPlanUI(); } }catch(e){}   // a "roast" = 10+ real cracks; test taps stay free
   $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):'';
-  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value;
+  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value;
     // a mapped coffee fills its own paperwork: bean-constant fields prefill from the map, measurements stay yours
     const calP=calFor();
     if(calP){ if(!$('mProc').value&&calP.proc) $('mProc').value=calP.proc;
@@ -1226,7 +1227,7 @@ async function loadSession(file){
   if(meta.coffee){ cName.value=meta.coffee; localStorage.setItem('bsCoffee',meta.coffee); loadBadge(); renderNameplate(); }
   $('mCoffee').value=meta.coffee||''; $('mBatch').value=meta.batch_g||''; $('mAgW').value=meta.agtron_whole||''; $('mAgG').value=meta.agtron_ground||''; $('mNote').value=meta.note||'';
   $('mAgWSd').value=meta.agtron_whole_sd||''; $('mAgSd').value=meta.agtron_ground_sd||''; $('mProc').value=meta.process||''; $('mChgFc').value=meta.charge_to_fc||''; $('mDrop').value=meta.drop_after_last_s||''; $('mTarget').value=meta.target||''; $('mMoist').value=meta.moisture||''; $('mAw').value=meta.water_activity||'';
-  $('metaBox').style.display='block'; $('mapBtn').style.display='block';
+  $('metaBox').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block';
   $('dlZip').style.display='block'; $('dlCard').style.display='block';   // re-save allowed: corrected FP labels are the training corpus
   setState('st-done');
   refreshStats();

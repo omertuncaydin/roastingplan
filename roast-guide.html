@@ -537,7 +537,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-08f</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-08g</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1404,6 +1404,9 @@ async function ensureBean(name, extra){ name=(name||'').trim(); if(!name) return
   if(sb){ try{ const r=await sb.from('beans').insert({name,origin:b.origin,process:b.process,variety:b.variety}).select('*').single(); if(r&&!r.error){ b.id=r.data.id; cacheBeans(); } }catch(e){} }
   return b; }
 function cupThisRoast(){ const n=st&&st.name; cup=blankCup(); cup.sample=n||''; show('cup'); }   // roast-finish handoff
+// Listener handoff: crack-listen.html done screen opens roast-guide.html?cup=<coffee>
+try{ const qc=new URLSearchParams(location.search).get('cup');
+  if(qc){ setTimeout(()=>{ cup=blankCup(); cup.sample=qc.trim(); ensureBean(qc.trim()); show('cup'); },600); } }catch(e){}
 
 // ---- access / entitlements (gate SAVE per module; admin sets per learner) ----
 const MODULES=['roast','cup','grade','value'];
