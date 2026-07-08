@@ -147,7 +147,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08o</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08p</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -858,11 +858,12 @@ function showPaywall(feature){
         +(tr?('Ücretsiz sürüm '+FREE_ROASTS+' kavurma içerir ('+Math.max(0,FREE_ROASTS-roastCount())+' kaldı).'):('The free version includes '+FREE_ROASTS+' roasts ('+Math.max(0,FREE_ROASTS-roastCount())+' left).'))
         ))
    +'</div>'
+   +(()=>{ const curT=p?p.tier:'free'; window.__pmark=t=>curT===t?' <span style="color:var(--gold);font-weight:800">\u00b7 '+(tr?'Mevcut Plan':'Current Plan')+'</span>':''; return ''; })()
    +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:10px;text-align:left">'
    +'<tr style="color:var(--gold)"><th style="padding:4px 6px">'+(tr?'Plan':'Plan')+'</th><th style="padding:4px 6px">'+(tr?'Neler var':'What you get')+'</th></tr>'
-   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Free</b></td><td style="padding:6px">'+(tr?FREE_ROASTS+' kavurma · tam dürüst motor (kademeler, ± bandı) · bu cihazda haritalar ve dersler · yazdırılabilir tadım formları':FREE_ROASTS+' roasts · full honest engine (stages, ± band) · maps and lessons on this device · printable cupping forms')+'</td></tr>'
-   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Pro</b><br><span class="hint" style="font-size:11px">$20/'+(tr?'ay':'mo')+' · $200/'+(tr?'yıl':'yr')+'</span></td><td style="padding:6px">'+(tr?'Sınırsız kavurma · kahve bulutu (tüm cihazlar) · Derin Kalibrasyon numune çapaları · göstergede reçete hedefi · numuneden tadıma akış':'Unlimited roasts · coffee cloud (all your devices) · Deep Calibration sample anchors · recipe target on the gauge · samples-to-cupping flow')+'</td></tr>'
-   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Special</b><br><span class="hint" style="font-size:11px">12 '+(tr?'ay':'mo')+'</span></td><td style="padding:6px">'+(tr?'Pro\'daki her şey · sınıf tadım akışları · yalnızca eğitim kaydıyla gelir, ayrı satılmaz':'Everything in Pro · class cupping flows · comes only with course enrollment, never sold alone')+'</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Free</b>'+__pmark('free')+'</td><td style="padding:6px">'+(tr?FREE_ROASTS+' kavurma · tam dürüst motor (kademeler, ± bandı) · bu cihazda haritalar ve dersler · yazdırılabilir tadım formları':FREE_ROASTS+' roasts · full honest engine (stages, ± band) · maps and lessons on this device · printable cupping forms')+'</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Pro</b>'+__pmark('pro')+'<br><span class="hint" style="font-size:11px">$20/'+(tr?'ay':'mo')+' · $200/'+(tr?'yıl':'yr')+'</span></td><td style="padding:6px">'+(tr?'Sınırsız kavurma · kahve bulutu (tüm cihazlar) · Derin Kalibrasyon numune çapaları · göstergede reçete hedefi · numuneden tadıma akış':'Unlimited roasts · coffee cloud (all your devices) · Deep Calibration sample anchors · recipe target on the gauge · samples-to-cupping flow')+'</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Special</b>'+__pmark('special')+'<br><span class="hint" style="font-size:11px">12 '+(tr?'ay':'mo')+'</span></td><td style="padding:6px">'+(tr?'Pro\'daki her şey · sınıf tadım akışları · yalnızca eğitim kaydıyla gelir, ayrı satılmaz':'Everything in Pro · class cupping flows · comes only with course enrollment, never sold alone')+'</td></tr>'
    +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Fleet</b></td><td style="padding:6px">'+(tr?'Çok kavurmacılı işletmeler için · yakında':'For multi-roaster operations · coming')+'</td></tr>'
    +'</table>'
    +'<button style="margin-top:14px;background:var(--accent2)" onclick="revealCode()">'+(tr?'Kod gir':'Enter code')+'</button>'
