@@ -147,7 +147,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08j</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08k</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -268,7 +268,7 @@ body.st-setup #btn{display:none}
       <div id="sampList"></div>
       <button class="go" id="noMeterBtn" onclick="showLevels()" style="display:block;background:#5a4a38;margin-top:8px">No color meter? Estimate it</button>
       <button class="go" id="mapBtn" onclick="saveCalIfMapped(true);updateGauge()" style="display:none;background:var(--accent2);margin-top:8px">Map this coffee (save color)</button>
-      <button class="go" id="cupGo" onclick="window.open('roast-guide.html?cup='+encodeURIComponent((cName.value||$('mCoffee').value||'').trim()),'_blank')" style="display:none;background:#3a2f26;margin-top:8px">Cup this coffee &#8599;</button>
+      <button class="go" id="cupGo" onclick="cupHandoff()" style="display:none;background:#3a2f26;margin-top:8px">Cup this coffee &#8599;</button>
     </div>
     <div class="row" style="margin-top:10px">
       <button class="go" id="dlZip" onclick="saveSession()" style="display:none">Save session (.zip)</button>
@@ -396,6 +396,9 @@ async function start(){
   running=true; $('btn').textContent=tt('Drop'); $('btn').className='stop'; $('status').textContent=tt('Listening. Calibrating background for ~2s, keep it running steady.');
   loop();
 }
+function cupHandoff(){ const n=(cName.value||$('mCoffee').value||'').trim();
+  // sampled scenario: hand the whole pull set to the Guide's cupping table; plain roast: single cup view
+  window.open('roast-guide.html?'+(SAMPLES.length?'cupflight=':'cup=')+encodeURIComponent(n),'_blank'); }
 function queueSamples(){ try{ if(!SAMPLES.length) return;
   const entry={coffee:(cName.value||$('mCoffee').value||'').trim(), date:new Date().toISOString().slice(0,10),
     a0:+(effA0(valid())||0).toFixed(1), samples:SAMPLES.map(sm=>({t:+sm.t.toFixed(1), ag:sm.ag||null}))};
