@@ -537,7 +537,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-08m</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-08n</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -869,6 +869,8 @@ const CHARGE_DEFAULTS={ 'Bullet':{500:190}, 'HSR15':{1000:140,2500:150,5000:160,
 function chargeMap(){ try{ const v=JSON.parse(localStorage.getItem('gCharge')||'null'); return (v&&typeof v==='object')?v:JSON.parse(JSON.stringify(CHARGE_DEFAULTS)); }catch(e){ return JSON.parse(JSON.stringify(CHARGE_DEFAULTS)); } }
 function saveChargeMap(m){ try{ localStorage.setItem('gCharge', JSON.stringify(m)); }catch(e){} }
 if(!localStorage.getItem('gCharge')) saveChargeMap(chargeMap());   // seed the shared key so the Listener reads the same table from day one
+window.addEventListener('storage',e=>{ if(e&&e.key==='gCharge') populateBatchSel(); });   // Listener edited it in another tab: refresh instantly
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) populateBatchSel(); });   // coming back to this tab: re-read, never stale
 function curBatch(){ const sel=document.getElementById('batchSel'); const b=sel?parseInt(sel.value,10):NaN; return isNaN(b)?null:b; }
 function chargeTempFor(){ const m=(typeof equip!=='undefined'&&equip)?equip.value:''; const cm=chargeMap()[m]||{}; const keys=Object.keys(cm).map(Number).sort((a,b)=>a-b); if(!keys.length) return 180; let b=curBatch(); if(b!=null&&cm[b]!=null) return cm[b]; if(b==null) return cm[keys[0]]; let best=keys[0]; keys.forEach(k=>{ if(Math.abs(k-b)<Math.abs(best-b)) best=k; }); return cm[best]; }   // exact match, else nearest batch size
 function populateBatchSel(){ const sel=document.getElementById('batchSel'); if(!sel) return; const prev=sel.value; const m=(typeof equip!=='undefined'&&equip)?equip.value:''; const cm=chargeMap()[m]||{}; const keys=Object.keys(cm).map(Number).sort((a,b)=>a-b); sel.innerHTML = keys.length? keys.map(k=>`<option value="${k}">${k} g · ${cm[k]}°C</option>`).join('') : `<option value="">${T('- set charge temps -')}</option>`; if(prev&&keys.map(String).indexOf(prev)>-1) sel.value=prev; }
