@@ -36,6 +36,8 @@ h1{font-size:16px;font-weight:800;margin:14px 0 2px}
 .card.st-developing{border-color:#D8453B;background:#241a18}
 .card.st-passive{border-color:#57564f;background:#201f1d}
 .stsel{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:7px;font-size:11px;padding:3px 5px;color-scheme:dark;cursor:pointer}
+.restore{margin-top:14px;font-size:11px;color:var(--muted)}
+.restore a{color:var(--accent);text-decoration:none}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
 .dot.ok{background:var(--ok)}.dot.bad{background:var(--warn)}
 .ver{font-variant-numeric:tabular-nums}
@@ -59,7 +61,7 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <div class="hdrrow">
     <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0">v2026-07-05g</span>
+      <span class="sub" style="margin:0">v2026-07-05h</span>
       <button class="iconbtn" onclick="loadAll()">Recheck</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
@@ -67,6 +69,7 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <h1>Your apps</h1>
   <div class="sub">Tap a card to open. Version and reach are checked live.</div>
   <div id="grid" class="grid"></div>
+  <div id="restore" class="restore"></div>
 
   <div class="grouplbl">External</div>
   <div id="ext" class="grid"></div>
@@ -111,10 +114,14 @@ function card(a,external){
   return el;
 }
 function getStatus(p){ try{ return (JSON.parse(localStorage.getItem('hubStatus')||'{}'))[p]||'live'; }catch(e){ return 'live'; } }
-function changeStatus(p,val){ let m={}; try{ m=JSON.parse(localStorage.getItem('hubStatus')||'{}'); }catch(e){} m[p]=val; localStorage.setItem('hubStatus',JSON.stringify(m)); const c=$('grid').querySelector('.card[data-path="'+p+'"]'); if(c){ c.classList.remove('st-live','st-developing','st-passive'); c.classList.add('st-'+val); } }
+function changeStatus(p,val){ if(val==='delete'){ if(!confirm('Remove this app from the hub? You can restore it from the footer link.')){ const s=$('grid').querySelector('.card[data-path="'+p+'"] .stsel'); if(s) s.value=getStatus(p); return; } const d=getDeleted(); if(!d.includes(p)){ d.push(p); setDeleted(d); } const c=$('grid').querySelector('.card[data-path="'+p+'"]'); if(c) c.remove(); renderRestore(); return; } let m={}; try{ m=JSON.parse(localStorage.getItem('hubStatus')||'{}'); }catch(e){} m[p]=val; localStorage.setItem('hubStatus',JSON.stringify(m)); const c=$('grid').querySelector('.card[data-path="'+p+'"]'); if(c){ c.classList.remove('st-live','st-developing','st-passive'); c.classList.add('st-'+val); } }
+function getDeleted(){ try{ return JSON.parse(localStorage.getItem('hubDeleted')||'[]'); }catch(e){ return []; } }
+function setDeleted(arr){ localStorage.setItem('hubDeleted', JSON.stringify(arr)); }
+function renderRestore(){ const el=$('restore'); if(!el) return; const d=getDeleted(); el.innerHTML=d.length?(d.length+' hidden · <a href="#" onclick="restoreAll();return false">restore all</a>'):''; }
+function restoreAll(){ setDeleted([]); render(); loadAll(); }
 function getOrder(){ try{ return JSON.parse(localStorage.getItem('hubOrder')||'[]'); }catch(e){ return []; } }
 function saveOrder(paths){ localStorage.setItem('hubOrder', JSON.stringify(paths)); }
-function orderedApps(){ const ord=getOrder(), map={}; APPS.forEach(a=>map[a.path]=a); const out=[]; ord.forEach(p=>{ if(map[p]){ out.push(map[p]); delete map[p]; } }); APPS.forEach(a=>{ if(map[a.path]) out.push(a); }); return out; }
+function orderedApps(){ const del=getDeleted(), ord=getOrder(), map={}; APPS.forEach(a=>{ if(!del.includes(a.path)) map[a.path]=a; }); const out=[]; ord.forEach(p=>{ if(map[p]){ out.push(map[p]); delete map[p]; } }); APPS.forEach(a=>{ if(map[a.path]) out.push(a); }); return out; }
 let justDragged=0;
 function openApp(dest,external){ if(Date.now()-justDragged<300) return; if(external) window.open(dest,'_blank'); else location.href=dest; }
 function startDrag(e,path){ e.preventDefault(); e.stopPropagation(); const g=$('grid').querySelector('.card[data-path="'+path+'"]'); if(!g) return; g.classList.add('dragging'); const grip=e.target; try{ grip.setPointerCapture(e.pointerId); }catch(_){ } grip.onpointermove=onDrag; grip.onpointerup=function(){ grip.onpointermove=null; grip.onpointerup=null; endDrag(); }; }
@@ -124,6 +131,7 @@ function moveApp(e,path,dir){ if(e) e.stopPropagation(); justDragged=Date.now();
 function render(){
   const g=$('grid'); g.innerHTML=''; orderedApps().forEach(a=>g.appendChild(card(a,false)));
   const e=$('ext'); e.innerHTML=''; if(!EXT.length){ e.innerHTML='<div class="sub" style="grid-column:1/-1;margin:0">None yet.</div>'; } else EXT.forEach(a=>e.appendChild(card(a,true)));
+  renderRestore();
 }
 async function checkVer(a){
   const ver=$('v_'+a.path); if(!ver) return;
