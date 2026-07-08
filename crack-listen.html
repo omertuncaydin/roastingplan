@@ -147,7 +147,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08e</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08f</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -331,7 +331,7 @@ body.st-setup #btn{display:none}
 let AC=null, stream=null, src=null, hpF=null, lpF=null, analyser=null, buf=null, running=false, raf=null;
 let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
-let cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={}, STOPT=null, PHASE=0, STOPBORROWED=false;
+let BCLIVE=null, cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={}, STOPT=null, PHASE=0, STOPBORROWED=false;
 let LANG=localStorage.getItem('bsLang')||'en';   // declared at the very top: eval-order safe (v07e lesson)
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
@@ -1128,6 +1128,9 @@ function updateGauge(){
   band=Math.min(Math.max(EP.BCAP,7),Math.max(AG_TOL,band));
   const bandR=Math.round(band*2)/2;
   ENGINE={pT,pE,p,tq,band,seT,curveT,dTerm,devEff,projPhi,bias};
+  try{ if(running){ BCLIVE=BCLIVE||new BroadcastChannel('cnLive');
+    const lastSt=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
+    BCLIVE.postMessage({coffee:k, stage:lastSt, n:v.length, proj:Math.round(proj), band:bandR, t:(performance.now()-startT)/1000}); } }catch(e){}
   LASTPROJ=Math.round(proj);
   TGT_U=(planActive()&&cal.target)?agU(cal.target):null;   // recipe target ring: Pro
   drawGauge('live',proj-band,proj+band);

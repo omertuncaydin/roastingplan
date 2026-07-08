@@ -243,7 +243,12 @@
     </div>
   </div>
   <div class="sectitle" id="secTitle"></div>
-  <div class="hide" id="view-listen"><iframe id="listenFrame" allow="microphone" style="width:100%;height:calc(100vh - 170px);min-height:560px;border:1px solid var(--line);border-radius:12px;background:#15100b"></iframe></div>
+  <div class="hide" id="view-listen">
+    <div id="liveTick" style="display:none;border:1px solid var(--accent);border-radius:12px;padding:12px;margin-bottom:12px;font-weight:700"></div>
+    <button class="btn" style="width:100%;margin-bottom:12px" onclick="window.open('crack-listen.html','_blank')">Open Crack Listener &#8599;</button>
+    <div class="small" style="margin-bottom:10px" data-i18n="The Guide never hosts the roast; it watches it. Roast in the Listener; your coffees and results appear here.">The Guide never hosts the roast; it watches it. Roast in the Listener; your coffees and results appear here.</div>
+    <div id="regList"></div>
+  </div>
   <div class="subnav hide" id="subnav">
     <button id="nav-roast" class="on" onclick="show('roast')" data-i18n="Guide">Guide</button>
     <button id="nav-recipes" onclick="show('recipes')" data-i18n="Recipes">Recipes</button>
@@ -532,7 +537,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-08b</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-08f</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1147,7 +1152,7 @@ function buildSeeds(elId,cb){ const el=document.getElementById(elId); if(!el) re
   el.innerHTML=names.map((n,i)=>`<span class="chip sub" data-seed="${i}">${esc(n)}</span>`).join(''); el.querySelectorAll('[data-seed]').forEach(c=>c.onclick=()=>cb(names[+c.dataset.seed])); }
 function olfChips(key){ return OLF.map(g=>`<div class="chips" style="margin-bottom:5px">`+g.map((t,i)=>`<span class="chip ${i>0?'sub':''} ${cup.cata[key].includes(t)?'on':''}" data-ol="${esc(t)}" data-key="${key}">${esc(t)}</span>`).join('')+`</div>`).join(''); }
 function renderCup(){
-  const names=[]; getRecipes().filter(r=>r.active).forEach(r=>{ if(!names.includes(r.name)) names.push(r.name); }); BEANS.forEach(b=>{ if(!names.includes(b.name)) names.push(b.name); }); if(cup.sample&&!names.includes(cup.sample)) names.unshift(cup.sample);
+  const names=[]; getRecipes().filter(r=>r.active).forEach(r=>{ if(!names.includes(r.name)) names.push(r.name); }); BEANS.forEach(b=>{ if(!names.includes(b.name)) names.push(b.name); }); REGISTRY.forEach(c=>{ if(!names.includes(c.name)) names.push(c.name); }); if(cup.sample&&!names.includes(cup.sample)) names.unshift(cup.sample);
   cupSample.innerHTML=`<option value=""></option><option value="__new__">${T('+ New coffee to assess')}</option>`+names.map(n=>`<option ${cup.sample===n?'selected':''}>${esc(n)}</option>`).join('');
   cupDate.value=cup.date||''; cupPurpose.value=cup.purpose||'';
   let h='';
@@ -1187,7 +1192,7 @@ const FL_NOTE={ fragrance:'fragAroma', aroma:'fragAroma', flavor:'flavAfter', af
 function flightSecs(){ return CUP_SECS.filter(s=> !(FLMODE==='descriptive' && s.k==='overall')); }   // overall is affective-only
 function setFlMode(m){ FLMODE=m; ['descriptive','affective','combined'].forEach(x=>{ const b=document.getElementById('fm-'+x); if(b) b.classList.toggle('on',x===m); }); FLSEC=0; if(FLIGHT.coffees.length) renderFlightMatrix(); }
 function renderFlight(){
-  const names=[]; getRecipes().filter(r=>r.active).forEach(r=>{ if(!names.includes(r.name)) names.push(r.name); }); BEANS.forEach(b=>{ if(!names.includes(b.name)) names.push(b.name); });
+  const names=[]; getRecipes().filter(r=>r.active).forEach(r=>{ if(!names.includes(r.name)) names.push(r.name); }); BEANS.forEach(b=>{ if(!names.includes(b.name)) names.push(b.name); }); REGISTRY.forEach(c=>{ if(!names.includes(c.name)) names.push(c.name); });
   flAdd.innerHTML=`<option value="">${T('Add a coffee...')}</option><option value="__new__">${T('+ New coffee to assess')}</option>`+names.map(n=>`<option>${esc(n)}</option>`).join(''); flAdd.value='';
   flDate.value=FLIGHT.date||''; flPurpose.value=FLIGHT.purpose||'';
   flCoffees.innerHTML=FLIGHT.coffees.map((c,i)=>`<span class="chip on" style="cursor:default">${esc(c.sample)} <span style="cursor:pointer;margin-left:4px" data-flrm="${i}">&times;</span></span>`).join('')||'<span class="small">No coffees on the table yet.</span>';
@@ -1619,13 +1624,31 @@ function copyEmail(e){ if(e&&e.preventDefault) e.preventDefault(); const a='info
 
 // ===================== views =====================
 const ROAST_GROUP=['roast','recipes','hist','rules'];
+function renderRegList(){
+  const el=document.getElementById('regList'); if(!el) return;
+  let localCal={}; try{ localCal=JSON.parse(localStorage.getItem('bsCal'))||{}; }catch(e){}
+  const names=new Set(Object.keys(localCal).filter(k=>k!=='__house')); REGISTRY.forEach(c=>names.add(c.name));
+  if(!names.size){ el.innerHTML='<div class="small">No coffees yet. Map one in the Listener, or sign in to pull your cloud registry.</div>'; return; }
+  el.innerHTML=[...names].sort().map(n=>{
+    const rg=REGISTRY.find(c=>c.name===n), lc=localCal[n];
+    const src=(rg?'\u2601 ':'')+(lc?(T('mapped')+' '+(lc.date||'')+' \u00b7 '+(lc.agtron||'?')+'A'):T('cloud only'));
+    const green=rg&&rg.green?[rg.green.process,rg.green.moisture?rg.green.moisture+'%':null].filter(Boolean).join(' \u00b7 '):'';
+    return '<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px"><b>'+esc(n)+'</b><div class="small">'+esc(src)+(green?' \u00b7 '+esc(green):'')+'</div></div>';
+  }).join('');
+}
+try{ new BroadcastChannel('cnLive').onmessage=e=>{   // the Listener broadcasts; the Guide only watches
+  const d=e.data||{}, el=document.getElementById('liveTick'); if(!el) return;
+  el.style.display='block';
+  el.innerHTML='\u25cf '+esc(d.coffee||'?')+' \u00b7 '+esc(d.stage||'\u00b7')+' \u00b7 '+(d.n||0)+' cracks \u00b7 ~'+(d.proj||'\u00b7')+(d.band?(' \u00b1'+d.band):'')+' \u00b7 '+Math.round(d.t||0)+'s';
+  clearTimeout(el._h); el._h=setTimeout(()=>{ el.style.display='none'; },15000);
+}; }catch(e){}
 const SEC_INFO={ listen:['Crack Listener','the roasting instrument · the beans speak'], roast:['Class Learning Workshop','graph, RoR and stage wheels · teaching instruments'], cup:['Cup','sensory · CVA descriptive + affective'], grade:['Grade','green physical · CVA defect grading'], value:['Value Assessment','Fit + Distinctiveness · the identity card'], account:['Account','your membership & privacy'] };
 function groupOf(v){ return ROAST_GROUP.includes(v)?'roast':v; }
 const GROUP_COLORS={listen:'#e6c14b',roast:'#c98a3c',cup:'#3c8a9a',grade:'#7d9b57',value:'#e6c14b'};   // section-signature tints: lit only on the active tab
 function show(v){
   CURVIEW=v;
   ['roast','cup','grade','value','recipes','hist','rules','account','flight','listen'].forEach(x=>{ const el=document.getElementById('view-'+x); if(el) el.classList.toggle('hide',x!==v); });
-  if(v==='listen'){ const f=document.getElementById('listenFrame'); if(f&&!f.src) f.src='crack-listen.html?embed=1'; }
+  if(v==='listen') renderRegList();
   const g=(v==='flight')?'cup':groupOf(v);
   [['m-roast','roast'],['m-cup','cup'],['m-grade','grade'],['m-value','value'],['m-listen','listen']].forEach(([id,grp])=>{ const b=document.getElementById(id); if(!b) return; const on=(grp===g); b.classList.toggle('on',on); const c=GROUP_COLORS[grp]; if(on){ b.style.background=c; b.style.borderColor=c; b.style.color='#1a1410'; } else { b.style.background=''; b.style.borderColor=''; b.style.color=''; } });
   const st=document.getElementById('secTitle'), info=SEC_INFO[g]; if(st&&info){ const tc=GROUP_COLORS[g]||'var(--ink)'; st.innerHTML=`<span class="st" style="color:${tc}">${T(info[0])}</span><span class="ss">${T(info[1])}</span>`; }   // section name echoes the active tab's tint
