@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Management</title>
+<style>
+  :root{
+    --bg:#12100e; --panel:#1c1917; --panel2:#242019; --line:#3a332a;
+    --text:#ece5da; --dim:#9c917f; --accent:#e8a33d; --accent2:#7fb069;
+    --fable:#e8a33d; --opus:#c96f4a; --sonnet:#7fa8c9; --haiku:#8a8f98;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--text); font:15px/1.5 -apple-system,'Segoe UI',Roboto,sans-serif; padding:24px; max-width:880px; margin:0 auto;}
+  h1{font-size:20px; letter-spacing:.5px; margin-bottom:2px;}
+  .sub{color:var(--dim); font-size:12.5px; margin-bottom:20px;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:14px;}
+  label{display:block; font-size:11px; text-transform:uppercase; letter-spacing:1.2px; color:var(--dim); margin-bottom:6px;}
+  textarea{width:100%; min-height:110px; background:var(--panel2); border:1px solid var(--line); border-radius:8px; color:var(--text); padding:10px 12px; font:14px/1.5 inherit; resize:vertical;}
+  textarea:focus,input:focus,select:focus{outline:1px solid var(--accent);}
+  .row{display:flex; gap:12px; align-items:center; flex-wrap:wrap;}
+  select,input[type=password]{background:var(--panel2); border:1px solid var(--line); border-radius:8px; color:var(--text); padding:8px 10px; font-size:13px;}
+  /* slider */
+  .slider-wrap{margin:6px 0 4px;}
+  input[type=range]{width:100%; -webkit-appearance:none; height:6px; border-radius:3px;
+    background:linear-gradient(90deg,var(--accent2),var(--accent));}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:22px; height:22px; border-radius:50%;
+    background:var(--text); border:3px solid var(--bg); box-shadow:0 0 0 1px var(--line); cursor:pointer;}
+  .slider-labels{display:flex; justify-content:space-between; font-size:11.5px; color:var(--dim); margin-top:4px;}
+  .mode-pill{display:inline-block; padding:2px 10px; border-radius:20px; border:1px solid var(--accent); color:var(--accent); font-size:12px; margin-left:8px;}
+  /* bars */
+  .bars{display:grid; grid-template-columns:110px 1fr 52px; gap:6px 10px; align-items:center; margin-top:10px;}
+  .bar-name{font-size:13px;}
+  .bar-track{height:16px; background:var(--panel2); border-radius:4px; overflow:hidden;}
+  .bar-fill{height:100%; border-radius:4px; transition:width .25s ease;}
+  .bar-pct{font-size:13px; text-align:right; font-variant-numeric:tabular-nums;}
+  .costline{margin-top:12px; font-size:13px; color:var(--dim);}
+  .costline b{color:var(--accent2);}
+  button{background:var(--accent); color:#1a1408; border:0; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;}
+  button:hover{filter:brightness(1.1);}
+  button.ghost{background:transparent; color:var(--dim); border:1px solid var(--line); font-weight:400;}
+  pre{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:12px; font:12.5px/1.55 ui-monospace,Menlo,Consolas,monospace; white-space:pre-wrap; word-break:break-word; max-height:420px; overflow:auto;}
+  .flash{color:var(--accent2); font-size:12px; margin-left:10px;}
+  .warn{color:#d98f6a; font-size:12px; margin-top:6px;}
+  details{margin-top:10px;} summary{cursor:pointer; color:var(--dim); font-size:12.5px;}
+  .api-row{margin-top:10px;}
+  footer{color:var(--dim); font-size:11px; margin-top:18px; text-align:center;}
+</style>
+</head>
+<body>
+
+<h1>Claude Management <span class="mode-pill" id="modePill">Balanced</span></h1>
+<div class="sub">Type your intention → get a token-efficient prompt that makes Fable 5 delegate to cheaper models. The % split is an estimate the prompt steers toward, not a guarantee.</div>
+
+<div class="card">
+  <label for="intent">Your intention / question</label>
+  <textarea id="intent" placeholder="e.g. Audit all my Shopify blog pages for schema errors and give me a fix list ..."></textarea>
+  <div class="row" style="margin-top:10px;">
+    <div>
+      <label for="taskType">Task type</label>
+      <select id="taskType">
+        <option value="auto">Auto-detect</option>
+        <option value="research">Research / sweep</option>
+        <option value="code">Code / app build</option>
+        <option value="writing">Writing / copy</option>
+        <option value="strategy">Strategy / judgment</option>
+        <option value="bulk">Bulk data / extraction</option>
+      </select>
+    </div>
+    <div>
+      <label for="deliverable">Deliverable</label>
+      <select id="deliverable">
+        <option value="auto">Auto</option>
+        <option value="answer">Chat answer</option>
+        <option value="file">File / document</option>
+        <option value="table">Table / data</option>
+        <option value="appfile">Working app</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <label>Budget dial</label>
+  <div class="slider-wrap">
+    <input type="range" id="slider" min="0" max="100" value="50">
+    <div class="slider-labels"><span>Best efficiency (cheapest mix)</span><span>Most qualified response (Fable-heavy)</span></div>
+  </div>
+  <label style="display:flex;align-items:center;gap:8px;margin-top:12px;text-transform:none;letter-spacing:0;font-size:12.5px;color:var(--dim);cursor:pointer">
+    <input type="checkbox" id="defSave" style="width:16px;height:16px;accent-color:var(--accent)">
+    Make this my new Fable default (dial, task type and deliverable load like this next time)
+  </label>
+
+  <label style="margin-top:14px;">Output 1 · Estimated model usage</label>
+  <div class="bars" id="bars"></div>
+  <div class="costline" id="costline"></div>
+</div>
+
+<div class="card">
+  <div class="row">
+    <button id="genBtn">Generate prompt</button>
+    <button class="ghost" id="copyBtn">Copy</button>
+    <span class="flash" id="flash"></span>
+  </div>
+  <label style="margin-top:14px;">Output 2 · Optimized prompt for Fable 5</label>
+  <pre id="out">Your optimized prompt appears here.</pre>
+
+  <details>
+    <summary>Optional: use Opus 4.8 via API to rewrite the prompt (better compression, costs API tokens)</summary>
+    <div class="row api-row">
+      <input type="password" id="apiKey" placeholder="sk-ant-..." style="flex:1; min-width:220px;">
+      <select id="apiModel">
+        <option value="claude-opus-4-8">claude-opus-4-8</option>
+        <option value="claude-sonnet-4-6">claude-sonnet-4-6</option>
+      </select>
+      <button class="ghost" id="saveKey">Save key</button>
+    </div>
+    <div class="warn">Key is stored only in this browser (localStorage). API billing is separate from your Claude subscription. If the API call fails, the app falls back to the built-in transformer.</div>
+  </details>
+</div>
+
+<div class="card">
+  <label>Window handovers · which file continues which session</label>
+  <div class="sub" style="margin:2px 0 8px;">Start a new window with one line: "continue from the handover &lt;file name&gt;". Files live in the folder shown.</div>
+  <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+    <tr style="color:var(--dim);text-align:left;">
+      <th style="padding:6px 8px;border-bottom:1px solid var(--line);">Handover file</th>
+      <th style="padding:6px 8px;border-bottom:1px solid var(--line);">Session / window</th>
+      <th style="padding:6px 8px;border-bottom:1px solid var(--line);">Folder</th>
+    </tr>
+    <tr><td style="padding:6px 8px;border-bottom:1px solid var(--line);font-family:ui-monospace,Menlo,monospace;">handover-full-2026-07-08</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Business-wide picture: councils, Q Grader pipeline, YouTube rig, comms. Read first, others are siblings.</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">NutzAcademy</td></tr>
+    <tr><td style="padding:6px 8px;border-bottom:1px solid var(--line);font-family:ui-monospace,Menlo,monospace;">handover-seo-window-2026-07-07</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">SEO window: SEO Komuta live app + full sheet audit</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">CoffeeNutz</td></tr>
+    <tr><td style="padding:6px 8px;border-bottom:1px solid var(--line);font-family:ui-monospace,Menlo,monospace;">handover-procurement-window-2026-07-08</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Procurement &amp; retail ops window</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">CoffeeNutz</td></tr>
+    <tr><td style="padding:6px 8px;border-bottom:1px solid var(--line);font-family:ui-monospace,Menlo,monospace;">handover-lead-ops-window-2026-07-08</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Lead pipeline (Eğitim Talepleri), funnel governance, human side</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">CoffeeNutz</td></tr>
+    <tr><td style="padding:6px 8px;border-bottom:1px solid var(--line);font-family:ui-monospace,Menlo,monospace;">handover-2026-07-08-listener-guide-window</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Crack Listener / Roast Guide / Grup-Al / coffee registry window</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">CoffeeNutz</td></tr>
+    <tr><td style="padding:6px 8px;border-bottom:1px solid var(--line);font-family:ui-monospace,Menlo,monospace;">handover-2026-07-08-ui-polish-window</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">Listener UI polish + this app (Claude Management), continues listener-guide window</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);">CoffeeNutz</td></tr>
+    <tr><td style="padding:6px 8px;font-family:ui-monospace,Menlo,monospace;">handover-dns-deploy</td><td style="padding:6px 8px;">DNS / Cloudflare Pages deploy notes</td><td style="padding:6px 8px;">CoffeeNutz</td></tr>
+  </table>
+</div>
+
+<footer>CoffeeNutz internal tool · offline-first · single file · v1.2 (2026-07-08)</footer>
+
+<script>
+"use strict";
+
+const MODELS = [
+  {id:"fable",  name:"Fable 5",    color:"var(--fable)",  cost:10},
+  {id:"opus",   name:"Opus 4.8",   color:"var(--opus)",   cost:5},
+  {id:"sonnet", name:"Sonnet 4.6", color:"var(--sonnet)", cost:1},
+  {id:"haiku",  name:"Haiku 4.5",  color:"var(--haiku)",  cost:0.25},
+];
+
+/* Anchor splits: q=0 max efficiency, q=0.5 balanced, q=1 max quality. [fable,opus,sonnet,haiku] */
+const ANCHORS = [
+  {q:0.0, s:[5, 5, 40, 50]},
+  {q:0.5, s:[25, 25, 35, 15]},
+  {q:1.0, s:[75, 20, 5, 0]},
+];
+
+const TASK_SHIFT = { /* additive nudges [fable,opus,sonnet,haiku] */
+  auto:[0,0,0,0], research:[-5,0,10,-5], code:[0,10,0,-10],
+  writing:[5,10,-5,-10], strategy:[15,0,-10,-5], bulk:[-10,-5,0,15],
+};
+
+function detectTask(text){
+  const t = text.toLowerCase();
+  if (/app|html|script|code|api|bug|debug|build/.test(t)) return "code";
+  if (/research|find|search|compare|suppliers?|list of|araştır/.test(t)) return "research";
+  if (/csv|xlsx|rows|extract|table|sum|count|parse/.test(t)) return "bulk";
+  if (/write|draft|caption|email|post|blog|yaz/.test(t)) return "writing";
+  if (/should i|strategy|decide|plan|priorit|karar/.test(t)) return "strategy";
+  return "strategy";
+}
+
+function lerp(a,b,t){ return a + (b-a)*t; }
+
+function splitFor(q, task){
+  let lo = ANCHORS[0], hi = ANCHORS[ANCHORS.length-1];
+  for (let i=0;i<ANCHORS.length-1;i++){
+    if (q >= ANCHORS[i].q && q <= ANCHORS[i+1].q){ lo=ANCHORS[i]; hi=ANCHORS[i+1]; break; }
+  }
+  const t = (hi.q===lo.q) ? 0 : (q-lo.q)/(hi.q-lo.q);
+  let s = lo.s.map((v,i)=>lerp(v, hi.s[i], t));
+  const shift = TASK_SHIFT[task] || TASK_SHIFT.auto;
+  s = s.map((v,i)=>Math.max(0, v + shift[i]));
+  const sum = s.reduce((a,b)=>a+b,0);
+  return s.map(v=>v/sum*100);
+}
+
+function modeName(q){
+  if (q < 0.25) return "Max Efficiency";
+  if (q < 0.5)  return "Lean";
+  if (q < 0.75) return "Balanced";
+  return "Max Quality";
+}
+
+function currentState(){
+  const q = document.getElementById("slider").value/100;
+  const text = document.getElementById("intent").value.trim();
+  let task = document.getElementById("taskType").value;
+  if (task === "auto") task = text ? detectTask(text) : "strategy";
+  const split = splitFor(q, task);
+  return {q, text, task, split};
+}
+
+function renderBars(){
+  const {q, split, task} = currentState();
+  const bars = document.getElementById("bars");
+  bars.innerHTML = "";
+  MODELS.forEach((m,i)=>{
+    bars.insertAdjacentHTML("beforeend",
+      `<div class="bar-name">${m.name}</div>
+       <div class="bar-track"><div class="bar-fill" style="width:${split[i]}%;background:${m.color}"></div></div>
+       <div class="bar-pct">${split[i].toFixed(0)}%</div>`);
+  });
+  const cost = split.reduce((acc,p,i)=>acc + (p/100)*MODELS[i].cost, 0);
+  const vsAllFable = (cost / MODELS[0].cost) * 100;
+  document.getElementById("costline").innerHTML =
+    `Estimated cost vs doing it all on Fable 5: <b>${vsAllFable.toFixed(0)}%</b> · task read as: ${task} · these are steering estimates, actual delegation is decided at runtime.`;
+  document.getElementById("modePill").textContent = modeName(q);
+}
+
+function delegationRules(split, task){
+  const [f,o,s,h] = split;
+  const rules = [];
+  rules.push(`Plan first: one short numbered plan (max 6 lines) before any work. No restating my request.`);
+  if (s+h > 45) rules.push(`Delegate ALL research, file sweeps, web lookups and bulk extraction to subagents (model: ${h>20?"haiku for bulk extraction, sonnet for research":"sonnet"}). Briefs to subagents must be self-contained, with exact output format specified, so nothing needs a second round.`);
+  if (o > 15) rules.push(`Delegate long-form drafting and heavy code implementation to an opus subagent with the full spec in one brief; you review the result once, fix deltas only.`);
+  rules.push(`Reserve your own (Fable) tokens for: decisions, synthesis, quality review, and final wording. Target roughly ${f.toFixed(0)}% of total effort on yourself.`);
+  rules.push(`Never re-print subagent output wholesale; report conclusions and deltas only.`);
+  rules.push(`Final answer: outcome first in <=5 sentences, then only what I must act on. No summaries of process, no validation phrases, no em dashes.`);
+  if (task==="bulk") rules.push(`Verify computed numbers with a quick script before reporting them.`);
+  if (task==="code") rules.push(`Verify code runs (syntax check at minimum) before delivering. Save files, don't paste code into chat.`);
+  return rules;
+}
+
+function deliverableLine(){
+  const d = document.getElementById("deliverable").value;
+  const map = {answer:"Deliverable: concise chat answer.", file:"Deliverable: a saved file in my project folder, chat is just the path + one line.", table:"Deliverable: one table, nothing else.", appfile:"Deliverable: a working single-file app saved to my project folder, verified before delivery."};
+  return map[d] || "";
+}
+
+function buildPrompt(){
+  const {q, text, task, split} = currentState();
+  if (!text) return null;
+  const [f,o,s,h] = split.map(v=>v.toFixed(0));
+  const rules = delegationRules(split, task).map((r,i)=>`${i+1}. ${r}`).join("\n");
+  const del = deliverableLine();
+  return (
+`[ROUTING DIRECTIVE · mode: ${modeName(q)} · target effort split: Fable5 ${f}% / Opus4.8 ${o}% / Sonnet4.6 ${s}% / Haiku4.5 ${h}%]
+You are Fable 5 acting as lead. Use the Agent tool with model overrides (opus / sonnet / haiku) to hit the split above. Token economy is a hard requirement, not a preference.
+
+RULES:
+${rules}
+
+TASK:
+${text}
+${del ? "\n" + del : ""}`);
+}
+
+async function apiRewrite(basePrompt){
+  const key = localStorage.getItem("f5router_key");
+  if (!key) return null;
+  const model = document.getElementById("apiModel").value;
+  const {task, split} = currentState();
+  const body = {
+    model, max_tokens: 1200,
+    system: "You are a prompt engineer. Rewrite the user's routing prompt for Claude Fable 5 (lead agent in Claude Cowork with an Agent tool supporting model overrides: opus, sonnet, haiku). Keep the [ROUTING DIRECTIVE] header and the target split EXACTLY as given. Make the task section maximally clear and compressed: remove redundancy, resolve vague wording into concrete instructions, keep the user's language for any content meant for their audience. Output ONLY the final prompt, no commentary.",
+    messages: [{role:"user", content: "Task type: "+task+"\nSplit: "+JSON.stringify(split.map(x=>x.toFixed(0)))+"\n\nPrompt to rewrite:\n\n"+basePrompt}]
+  };
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+      "content-type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error("API " + res.status);
+  const data = await res.json();
+  return (data.content && data.content[0] && data.content[0].text) ? data.content[0].text.trim() : null;
+}
+
+function flash(msg, ms=2500){
+  const el = document.getElementById("flash");
+  el.textContent = msg;
+  setTimeout(()=>{ if (el.textContent===msg) el.textContent=""; }, ms);
+}
+
+document.getElementById("genBtn").addEventListener("click", async ()=>{
+  const base = buildPrompt();
+  const out = document.getElementById("out");
+  if (!base){ out.textContent = "Type your intention first."; return; }
+  out.textContent = base;
+  if (localStorage.getItem("f5router_key")){
+    flash("Refining with " + document.getElementById("apiModel").value + " ...", 8000);
+    try {
+      const refined = await apiRewrite(base);
+      if (refined){ out.textContent = refined; flash("Refined via API."); }
+    } catch(e){
+      flash("API failed (" + e.message + "), using built-in version.");
+    }
+  }
+});
+
+document.getElementById("copyBtn").addEventListener("click", ()=>{
+  const t = document.getElementById("out").textContent;
+  navigator.clipboard.writeText(t).then(()=>flash("Copied."));
+});
+
+document.getElementById("saveKey").addEventListener("click", ()=>{
+  const v = document.getElementById("apiKey").value.trim();
+  if (v){ localStorage.setItem("f5router_key", v); flash("Key saved in this browser."); }
+  else { localStorage.removeItem("f5router_key"); flash("Key cleared."); }
+});
+
+/* default persistence: while the box is ticked, every change keeps saving */
+const DEF_KEY = "f5router_default";
+function saveDefault(){
+  if (!document.getElementById("defSave").checked) return;
+  const d = {q: document.getElementById("slider").value,
+             task: document.getElementById("taskType").value,
+             del: document.getElementById("deliverable").value};
+  localStorage.setItem(DEF_KEY, JSON.stringify(d));
+}
+document.getElementById("defSave").addEventListener("change", e=>{
+  if (e.target.checked){ saveDefault(); flash("Saved as your default."); }
+  else { localStorage.removeItem(DEF_KEY); flash("Default cleared, app opens on Balanced again."); }
+});
+try {
+  const d = JSON.parse(localStorage.getItem(DEF_KEY));
+  if (d){
+    document.getElementById("slider").value = d.q;
+    document.getElementById("taskType").value = d.task;
+    document.getElementById("deliverable").value = d.del;
+    document.getElementById("defSave").checked = true;
+  }
+} catch(e){}
+
+["slider","taskType","deliverable"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", ()=>{ renderBars(); saveDefault(); });
+});
+document.getElementById("intent").addEventListener("input", ()=>{
+  if (document.getElementById("taskType").value==="auto") renderBars();
+});
+
+if (localStorage.getItem("f5router_key")) document.getElementById("apiKey").value = localStorage.getItem("f5router_key");
+renderBars();
+</script>
+</body>
+</html>
