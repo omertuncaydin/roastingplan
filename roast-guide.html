@@ -537,7 +537,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-08g</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-08i</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1152,7 +1152,7 @@ function buildSeeds(elId,cb){ const el=document.getElementById(elId); if(!el) re
   el.innerHTML=names.map((n,i)=>`<span class="chip sub" data-seed="${i}">${esc(n)}</span>`).join(''); el.querySelectorAll('[data-seed]').forEach(c=>c.onclick=()=>cb(names[+c.dataset.seed])); }
 function olfChips(key){ return OLF.map(g=>`<div class="chips" style="margin-bottom:5px">`+g.map((t,i)=>`<span class="chip ${i>0?'sub':''} ${cup.cata[key].includes(t)?'on':''}" data-ol="${esc(t)}" data-key="${key}">${esc(t)}</span>`).join('')+`</div>`).join(''); }
 function renderCup(){
-  const names=[]; getRecipes().filter(r=>r.active).forEach(r=>{ if(!names.includes(r.name)) names.push(r.name); }); BEANS.forEach(b=>{ if(!names.includes(b.name)) names.push(b.name); }); REGISTRY.forEach(c=>{ if(!names.includes(c.name)) names.push(c.name); }); if(cup.sample&&!names.includes(cup.sample)) names.unshift(cup.sample);
+  const names=[]; getRecipes().filter(r=>r.active).forEach(r=>{ if(!names.includes(r.name)) names.push(r.name); }); BEANS.forEach(b=>{ if(!names.includes(b.name)) names.push(b.name); }); REGISTRY.forEach(c=>{ if(!names.includes(c.name)) names.push(c.name); }); try{ (JSON.parse(localStorage.getItem('cnCupQueue')||'[]')).forEach(qe=>{ (qe.samples||[]).forEach(sm=>{ const nm=qe.coffee+' \u00b7 S@'+Math.round(sm.t-(qe.a0||0))+'s '+qe.date; if(!names.includes(nm)) names.push(nm); }); }); }catch(e){} if(cup.sample&&!names.includes(cup.sample)) names.unshift(cup.sample);
   cupSample.innerHTML=`<option value=""></option><option value="__new__">${T('+ New coffee to assess')}</option>`+names.map(n=>`<option ${cup.sample===n?'selected':''}>${esc(n)}</option>`).join('');
   cupDate.value=cup.date||''; cupPurpose.value=cup.purpose||'';
   let h='';
@@ -1192,7 +1192,7 @@ const FL_NOTE={ fragrance:'fragAroma', aroma:'fragAroma', flavor:'flavAfter', af
 function flightSecs(){ return CUP_SECS.filter(s=> !(FLMODE==='descriptive' && s.k==='overall')); }   // overall is affective-only
 function setFlMode(m){ FLMODE=m; ['descriptive','affective','combined'].forEach(x=>{ const b=document.getElementById('fm-'+x); if(b) b.classList.toggle('on',x===m); }); FLSEC=0; if(FLIGHT.coffees.length) renderFlightMatrix(); }
 function renderFlight(){
-  const names=[]; getRecipes().filter(r=>r.active).forEach(r=>{ if(!names.includes(r.name)) names.push(r.name); }); BEANS.forEach(b=>{ if(!names.includes(b.name)) names.push(b.name); }); REGISTRY.forEach(c=>{ if(!names.includes(c.name)) names.push(c.name); });
+  const names=[]; getRecipes().filter(r=>r.active).forEach(r=>{ if(!names.includes(r.name)) names.push(r.name); }); BEANS.forEach(b=>{ if(!names.includes(b.name)) names.push(b.name); }); REGISTRY.forEach(c=>{ if(!names.includes(c.name)) names.push(c.name); }); try{ (JSON.parse(localStorage.getItem('cnCupQueue')||'[]')).forEach(qe=>{ (qe.samples||[]).forEach(sm=>{ const nm=qe.coffee+' \u00b7 S@'+Math.round(sm.t-(qe.a0||0))+'s '+qe.date; if(!names.includes(nm)) names.push(nm); }); }); }catch(e){}
   flAdd.innerHTML=`<option value="">${T('Add a coffee...')}</option><option value="__new__">${T('+ New coffee to assess')}</option>`+names.map(n=>`<option>${esc(n)}</option>`).join(''); flAdd.value='';
   flDate.value=FLIGHT.date||''; flPurpose.value=FLIGHT.purpose||'';
   flCoffees.innerHTML=FLIGHT.coffees.map((c,i)=>`<span class="chip on" style="cursor:default">${esc(c.sample)} <span style="cursor:pointer;margin-left:4px" data-flrm="${i}">&times;</span></span>`).join('')||'<span class="small">No coffees on the table yet.</span>';

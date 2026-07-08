@@ -147,7 +147,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08h</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08i</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -415,6 +415,9 @@ function stop(){
       if(!$('mMoist').value&&calP.moist) $('mMoist').value=calP.moist;
       if(!$('mAw').value&&calP.aw) $('mAw').value=calP.aw;
       if(!$('mTarget').value&&calP.target) $('mTarget').value=calP.target; } }
+  try{ if(SAMPLES.length){ const q=JSON.parse(localStorage.getItem('cnCupQueue')||'[]');   // sample pulls ride to the Guide's Cup section
+    q.push({coffee:(cName.value||'').trim(), date:new Date().toISOString().slice(0,10), a0:+(effA0(valid())||0).toFixed(1), samples:SAMPLES.map(sm=>({t:+sm.t.toFixed(1), ag:sm.ag||null}))});
+    localStorage.setItem('cnCupQueue',JSON.stringify(q.slice(-10))); } }catch(e){}
   try{ renderSamples(); updateSD(); drawTimeline(); updateGauge(); updateMapBtn(); }catch(e){ console.error(e); }   // retrospective pass in a cage: a bad map must never strand the live screen before it reaches st-done
   const mb=(wav.len*2/1048576).toFixed(1);
   $('recInfo').textContent=LANG==='tr'
