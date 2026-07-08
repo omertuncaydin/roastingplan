@@ -147,7 +147,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08g</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08h</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -192,6 +192,7 @@ body.st-setup #btn{display:none}
     <div id="nameEdit" style="display:none;text-align:left;margin:10px 0 8px">
       <div class="lbl" style="margin-bottom:5px">coffee · mapping key</div>
       <input type="text" id="coffeeName" placeholder="chirripó yıkanmış" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:16px;background:#15100b;color:var(--ink)">
+      <div id="nameChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
     </div>
     <div id="agWrap" style="position:relative;display:flex;justify-content:center">
       <div id="ag" style="display:flex;justify-content:center"></div>
@@ -830,6 +831,27 @@ async function cloudStatus(){ const u=await cloudUser(); const el=$('cloudStat')
   if(el) el.textContent=u?((LANG==='tr'?'Bağlı: ':'Signed in: ')+u.email):(LANG==='tr'?"Eşitlemek için Guide'da giriş yap (aynı tarayıcı).":'Sign in via the Guide (same browser) to sync.');
   return u; }
 const escC=s2=>String(s2??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
+let CLOUDNAMES=[];
+function renderNameChips(){ const el=$('nameChips'); if(!el) return;
+  let m={}; try{ m=JSON.parse(localStorage.getItem('bsCal'))||{}; }catch(e){}
+  const names=new Set(Object.keys(m).filter(k=>k!=='__house')); CLOUDNAMES.forEach(n=>names.add(n));
+  el.innerHTML=[...names].sort().map(n=>'<span class="hpill" style="cursor:pointer" data-cn="'+escC(n)+'">'+(m[n]?'':'\u2601 ')+escC(n)+'</span>').join('')
+    ||'<span class="hint" style="font-size:11px">'+(LANG==='tr'?'Kayıtlı kahve yok; adını yaz, eşle.':'No known coffees yet; type a name and map it.')+'</span>';
+  el.querySelectorAll('[data-cn]').forEach(x=>x.onpointerdown=ev=>{ ev.preventDefault(); pickCoffee(x.dataset.cn); });   // pointerdown beats the input blur
+}
+async function pickCoffee(n){
+  cName.value=n; localStorage.setItem('bsCoffee',n);
+  const m=calMap();
+  if(!m[n]&&SB){ try{ const u=await cloudUser();
+    if(u){ const {data}=await SB.from('coffees').select('name,badge,map').eq('owner',u.id).eq('name',n);
+      const c=data&&data[0];
+      if(c&&c.map&&typeof c.map==='object'){ const mm={...c.map}; delete mm.grades;   // bias stays per-device
+        if(mm.bell&&!Array.isArray(mm.bell)) delete mm.bell;
+        m[n]=mm; localStorage.setItem('bsCal',JSON.stringify(m));
+        if(c.badge&&typeof c.badge==='object'&&Object.keys(c.badge).length){ const b=badgeMap(); b[n]=c.badge; localStorage.setItem('bsBadge',JSON.stringify(b)); }
+        toast((LANG==='tr'?'Buluttan alındı: ':'Pulled from cloud: ')+n); } } }catch(e){} }
+  closeName(); updateGauge();
+}
 let PICK_CB=null;
 function pickModal(title,hint,items,btnLabel,cb){
   PICK_CB=cb;
@@ -884,6 +906,7 @@ async function cloudAutoSync(){   // on open, signed in: pull ADDITIONS only (ze
   try{
     const {data,error}=await SB.from('coffees').select('name,badge,map').eq('owner',u.id);
     if(error||!Array.isArray(data)||!data.length) return;
+    CLOUDNAMES=data.map(c=>c.name);
     const m=calMap(), b=badgeMap(); let added=0, differ=0;
     data.forEach(c=>{ if(!c.map||typeof c.map!=='object') return;
       if(!m[c.name]){ const mm={...c.map}; delete mm.grades;   // bias lessons stay per-device
@@ -924,7 +947,7 @@ cName.oninput=()=>{ localStorage.setItem('bsCoffee',cName.value); updateGauge();
 function renderNameplate(){ const nv=(cName.value||'').trim(), n=$('npName');
   n.textContent=nv||'name the coffee'; n.style.color=nv?'var(--ink)':'var(--muted)';
   $('npUnder').style.background=nv?'var(--accent)':'var(--line)'; }
-function editName(){ $('npWrap').style.display='none'; $('nameEdit').style.display='block'; cName.focus(); }
+function editName(){ $('npWrap').style.display='none'; $('nameEdit').style.display='block'; renderNameChips(); cName.focus(); }
 function closeName(){ $('nameEdit').style.display='none'; $('npWrap').style.display='block'; renderNameplate(); }
 cName.addEventListener('blur',closeName);
 cName.addEventListener('keydown',e=>{ if(e.key==='Enter') cName.blur(); });
