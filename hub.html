@@ -21,8 +21,9 @@ h1{font-size:16px;font-weight:800;margin:14px 0 2px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:border-color .12s;display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit}
 .card:hover{border-color:var(--accent)}
 .card{position:relative}
-.grip{position:absolute;top:7px;right:9px;color:var(--muted);font-size:15px;cursor:grab;touch-action:none;padding:5px;line-height:1;user-select:none;-webkit-user-select:none}
-.card.dragging{opacity:.55;border-color:var(--accent)}
+.grip{position:absolute;top:5px;right:5px;color:var(--muted);font-size:18px;cursor:grab;touch-action:none;padding:8px 10px;line-height:1;user-select:none;-webkit-user-select:none}
+.grip:active{cursor:grabbing;color:var(--accent)}
+.card.dragging{opacity:.92;border-color:var(--accent);transform:scale(1.04);box-shadow:0 10px 24px rgba(0,0,0,.5);z-index:5}
 .card .top{display:flex;align-items:center;gap:10px}
 .badge{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#1a1410;flex:none}
 .nm{font-size:15px;font-weight:700}
@@ -51,7 +52,7 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <div class="hdrrow">
     <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0">v2026-07-05c</span>
+      <span class="sub" style="margin:0">v2026-07-05d</span>
       <button class="iconbtn" onclick="loadAll()">Recheck</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
@@ -105,7 +106,7 @@ function orderedApps(){ const ord=getOrder(), map={}; APPS.forEach(a=>map[a.path
 let justDragged=0;
 function openApp(dest,external){ if(Date.now()-justDragged<300) return; if(external) window.open(dest,'_blank'); else location.href=dest; }
 function startDrag(e,path){ e.preventDefault(); e.stopPropagation(); const g=$('grid').querySelector('.card[data-path="'+path+'"]'); if(!g) return; g.classList.add('dragging'); const grip=e.target; try{ grip.setPointerCapture(e.pointerId); }catch(_){ } grip.onpointermove=onDrag; grip.onpointerup=function(){ grip.onpointermove=null; grip.onpointerup=null; endDrag(); }; }
-function onDrag(e){ const dragged=$('grid').querySelector('.card.dragging'); if(!dragged) return; const cards=[...$('grid').querySelectorAll('.card')]; for(const c of cards){ if(c===dragged) continue; const r=c.getBoundingClientRect(); if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom){ const mid=r.top+r.height/2; if(e.clientY<mid) c.parentNode.insertBefore(dragged,c); else c.parentNode.insertBefore(dragged,c.nextSibling); break; } } }
+function onDrag(e){ e.preventDefault(); const dragged=$('grid').querySelector('.card.dragging'); if(!dragged) return; const cards=[...$('grid').querySelectorAll('.card')].filter(c=>c!==dragged); let best=null,bd=Infinity; for(const c of cards){ const r=c.getBoundingClientRect(); const dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2); const d=dx*dx+dy*dy; if(d<bd){ bd=d; best=c; } } if(best){ const r=best.getBoundingClientRect(); const before = e.clientY < r.top+r.height/2-2 || (Math.abs(e.clientY-(r.top+r.height/2))<=r.height/2 && e.clientX < r.left+r.width/2); best.parentNode.insertBefore(dragged, before?best:best.nextSibling); } }
 function endDrag(){ const dragged=$('grid').querySelector('.card.dragging'); if(dragged) dragged.classList.remove('dragging'); justDragged=Date.now(); saveOrder([...$('grid').querySelectorAll('.card')].map(c=>c.dataset.path)); }
 function render(){
   const g=$('grid'); g.innerHTML=''; orderedApps().forEach(a=>g.appendChild(card(a,false)));
