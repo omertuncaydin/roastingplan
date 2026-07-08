@@ -147,7 +147,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08k</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08l</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -246,6 +246,12 @@ body.st-setup #btn{display:none}
       <div class="hint" id="finalCall" style="margin-bottom:8px;color:var(--gold)"></div>
       <input type="text" id="mCoffee" placeholder="Coffee" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink);margin-bottom:6px">
       <div style="display:flex;gap:6px;margin-bottom:6px">
+        <select id="mEquip" onchange="localStorage.setItem('bsEquip',this.value);renderBatchSel()" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)"></select>
+        <select id="mBatchSel" onchange="pickBatch(this.value)" style="flex:1.4;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)"></select>
+        <button type="button" onclick="chargeEditor()" style="flex:0.9;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--muted);font-size:13px;cursor:pointer">Charge temps</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <input type="text" id="mChgT" placeholder="Charge °C" inputmode="numeric" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
         <input type="text" id="mBatch" placeholder="Batch g" inputmode="numeric" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
         <input type="text" id="mAgW" placeholder="Agtron whole" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
         <input type="text" id="mAgG" placeholder="Agtron ground" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
@@ -396,6 +402,26 @@ async function start(){
   running=true; $('btn').textContent=tt('Drop'); $('btn').className='stop'; $('status').textContent=tt('Listening. Calibrating background for ~2s, keep it running steady.');
   loop();
 }
+function chgMap(){ try{ const v=JSON.parse(localStorage.getItem('gCharge')||'null'); if(v&&typeof v==='object') return v; }catch(e){} return {'Bullet':{},'HSR15':{}}; }
+function renderEquipSel(){ const el=$('mEquip'); if(!el) return; const ms=[...new Set([...Object.keys(chgMap()),'Bullet','HSR15'])];
+  const cur=localStorage.getItem('bsEquip')||ms[0]; el.innerHTML=ms.map(m=>'<option'+(m===cur?' selected':'')+'>'+m+'</option>').join(''); renderBatchSel(); }
+function renderBatchSel(){ const el=$('mBatchSel'); if(!el) return; const cm=chgMap()[$('mEquip').value]||{};
+  const ks=Object.keys(cm).map(Number).sort((a,b)=>a-b);
+  el.innerHTML='<option value="">'+(LANG==='tr'?'- şarj seç -':'- pick charge -')+'</option>'+ks.map(k=>'<option value="'+k+'">'+k+' g \u00b7 '+cm[k]+'\u00b0C</option>').join(''); }
+function pickBatch(g){ if(!g) return; const cm=chgMap()[$('mEquip').value]||{}; $('mBatch').value=g; if(cm[g]!=null) $('mChgT').value=cm[g]; }
+function chargeEditor(){ const m=$('mEquip').value, cm=chgMap()[m]||{}; const ks=Object.keys(cm).map(Number).sort((a,b)=>a-b);
+  const rows=(ks.length?ks.map(k=>[k,cm[k]]):[['','']]).concat([['','']]);
+  $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:17px">Charge temps \u00b7 '+escC(m)+'</h1>'
+   +'<div class="hint" style="font-size:12px">'+(LANG==='tr'?'Guide ile ortak tablo: burada değişir, orada görünür.':'Shared with the Guide: edit here, it shows there.')+'</div>'
+   +rows.map(r=>'<div style="display:flex;gap:8px;margin-top:8px"><input data-cg type="text" inputmode="numeric" placeholder="g" value="'+r[0]+'" style="flex:1;border:1px solid var(--line);border-radius:9px;padding:10px;background:var(--panel2);color:var(--ink)"><input data-ct type="text" inputmode="numeric" placeholder="\u00b0C" value="'+r[1]+'" style="flex:1;border:1px solid var(--line);border-radius:9px;padding:10px;background:var(--panel2);color:var(--ink)"></div>').join('')
+   +'<button style="margin-top:14px;background:var(--accent2)" onclick="chargeSave()">'+(LANG==='tr'?'Kaydet':'Save')+'</button>'
+   +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="$(\'modal\').style.display=\'none\'">'+(LANG==='tr'?'Kapat':'Close')+'</button>';
+  $('modal').style.display='flex'; }
+function chargeSave(){ const gs=[...document.querySelectorAll('[data-cg]')], ts=[...document.querySelectorAll('[data-ct]')];
+  const cm=chgMap(), m=$('mEquip').value, o={};
+  gs.forEach((g,i)=>{ const gv=parseFloat(g.value), tv=parseFloat(ts[i].value); if(isFinite(gv)&&isFinite(tv)) o[gv]=tv; });
+  cm[m]=o; localStorage.setItem('gCharge',JSON.stringify(cm));   // the Guide reads this same key
+  $('modal').style.display='none'; renderBatchSel(); toast(LANG==='tr'?'Şarj tablosu kaydedildi (Guide ile ortak).':'Charge table saved (shared with the Guide).'); }
 function cupHandoff(){ const n=(cName.value||$('mCoffee').value||'').trim();
   // sampled scenario: hand the whole pull set to the Guide's cupping table; plain roast: single cup view
   window.open('roast-guide.html?'+(SAMPLES.length?'cupflight=':'cup=')+encodeURIComponent(n),'_blank'); }
@@ -538,7 +564,7 @@ function wavHeader(){
 }
 function csvText(){
   const mv=id=>($(id)&&$(id).value||'').replace(/,/g,';').trim();
-  let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,moisture,'+mv('mMoist')+'\n# meta,water_activity,'+mv('mAw')+'\n# meta,target,'+mv('mTarget')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n'+SAMPLES.map((s,i)=>'# sample,'+(i+1)+','+s.t.toFixed(1)+','+(s.ag||'')+'\n').join('');
+  let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,machine,'+mv('mEquip')+'\n# meta,charge_c,'+mv('mChgT')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,moisture,'+mv('mMoist')+'\n# meta,water_activity,'+mv('mAw')+'\n# meta,target,'+mv('mTarget')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n'+SAMPLES.map((s,i)=>'# sample,'+(i+1)+','+s.t.toFixed(1)+','+(s.ag||'')+'\n').join('');
   s+='t_s,rms,gain,bg_gain,ratio,trigger_x,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
   const vv=valid(), fss=vv.filter(c=>c.f).map(c=>c.f);
   if(vv.length>1) s+='\n# stats,total_gain,'+vv.reduce((a,c)=>a+c.g,0)+',time_sd,'+sd(vv.map(c=>c.t)).toFixed(2)+',gain_sd,'+sd(vv.map(c=>c.g)).toFixed(2)+(fss.length>1?',f_mean,'+Math.round(fss.reduce((a,b)=>a+b,0)/fss.length)+',f_sd,'+Math.round(sd(fss)):'')+(LASTPROJ?',proj_final,'+LASTPROJ:'')+(STOPPROJ?',proj_stop,'+STOPPROJ:'')+(PHASE?',phase_final,'+PHASE.toFixed(3):'');
@@ -936,7 +962,7 @@ async function cloudAutoSync(){   // on open, signed in: pull ADDITIONS only (ze
       el.textContent=t; }
   }catch(e){}
 }
-setTimeout(cloudAutoSync,400);
+setTimeout(cloudAutoSync,400); renderEquipSel();
 // walkthrough: opens itself for a fresh app copy, then remembers being folded
 try{ const cw=$('cWalk');
   if(cw){ if(!localStorage.getItem('bsWalkSeen')&&!Object.keys(calMap()).length&&roastCount()===0) cw.open=true;
@@ -1264,7 +1290,7 @@ async function loadSession(file){
   LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; $('finalCall').textContent=''; wav={chunks:[],len:0,sr:48000}; rows=[];
   if(meta.coffee){ cName.value=meta.coffee; localStorage.setItem('bsCoffee',meta.coffee); loadBadge(); renderNameplate(); }
   $('mCoffee').value=meta.coffee||''; $('mBatch').value=meta.batch_g||''; $('mAgW').value=meta.agtron_whole||''; $('mAgG').value=meta.agtron_ground||''; $('mNote').value=meta.note||'';
-  $('mAgWSd').value=meta.agtron_whole_sd||''; $('mAgSd').value=meta.agtron_ground_sd||''; $('mProc').value=meta.process||''; $('mChgFc').value=meta.charge_to_fc||''; $('mDrop').value=meta.drop_after_last_s||''; $('mTarget').value=meta.target||''; $('mMoist').value=meta.moisture||''; $('mAw').value=meta.water_activity||'';
+  $('mAgWSd').value=meta.agtron_whole_sd||''; $('mAgSd').value=meta.agtron_ground_sd||''; $('mProc').value=meta.process||''; $('mChgFc').value=meta.charge_to_fc||''; if(meta.machine) $('mEquip').value=meta.machine; $('mChgT').value=meta.charge_c||''; $('mDrop').value=meta.drop_after_last_s||''; $('mTarget').value=meta.target||''; $('mMoist').value=meta.moisture||''; $('mAw').value=meta.water_activity||'';
   $('metaBox').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block';
   $('dlZip').style.display='block'; $('dlCard').style.display='block';   // re-save allowed: corrected FP labels are the training corpus
   setState('st-done');
