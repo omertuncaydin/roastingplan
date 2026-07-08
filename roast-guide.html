@@ -270,7 +270,7 @@
         <label class="fld" for="batchSel" style="margin-top:12px" data-i18n="Batch size">Batch size</label>
         <div style="display:flex;gap:8px;align-items:center">
           <select id="batchSel" style="flex:1"></select>
-          <button class="btn ghost" style="width:auto;padding:9px 14px;margin-top:0;font-size:13px" onclick="toggleChargePanel()" data-i18n="Charge temps">Charge temps</button>
+          <button style="width:auto;padding:9px 14px;margin-top:0;font-size:13px;font-weight:600;border:1.5px solid var(--gold,#e6c14b);border-radius:999px;background:rgba(230,193,75,.1);color:var(--gold,#e6c14b);cursor:pointer" onclick="toggleChargePanel()"><span>&#127777;</span> <span data-i18n="Charge temps">Charge temps</span></button>
         </div>
         <div id="chargePanel" class="hide" style="margin-top:10px;border:1px solid var(--line);border-radius:9px;padding:12px">
           <div class="small" style="color:var(--muted);margin-bottom:8px"><span data-i18n="Charge temp per batch size for">Charge temp per batch size for</span> <b id="chargeMachName">HSR15</b>. <span data-i18n="The Temp wheel opens here when you Start.">The Temp wheel opens here when you Start.</span></div>
@@ -537,7 +537,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-08o</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-08p</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
