@@ -1631,8 +1631,8 @@ function renderRegList(){
   const el=document.getElementById('regList'); if(!el) return;
   let localCal={}; try{ localCal=JSON.parse(localStorage.getItem('bsCal'))||{}; }catch(e){}
   const names=new Set(Object.keys(localCal).filter(k=>k!=='__house')); REGISTRY.forEach(c=>names.add(c.name));
-  if(!names.size){ el.innerHTML='<div class="small">No coffees yet. Map one in the Listener, or sign in to pull your cloud registry.</div>'; return; }
-  let h=[...names].sort().map(n=>{
+  let h=names.size?'':'<div class="small">No coffees yet. Map one in the Listener, or sign in to pull your cloud registry.</div>';
+  h+=[...names].sort().map(n=>{
     const rg=REGISTRY.find(c=>c.name===n), lc=localCal[n];
     const src=(rg?'\u2601 ':'')+(lc?(T('mapped')+' '+(lc.date||'')+' \u00b7 '+(lc.agtron||'?')+'A'):T('cloud only'));
     const green=rg&&rg.green?[rg.green.process,rg.green.moisture?rg.green.moisture+'%':null].filter(Boolean).join(' \u00b7 '):'';
