@@ -31,7 +31,11 @@ h1{font-size:16px;font-weight:800;margin:14px 0 2px}
 .badge{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#1a1410;flex:none}
 .nm{font-size:15px;font-weight:700}
 .desc{font-size:12px;color:var(--muted);line-height:1.45;min-height:2.5em}
-.meta{display:flex;align-items:center;gap:8px;margin-top:2px;font-size:11px;color:var(--muted)}
+.meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:8px;font-size:11px;color:var(--muted)}
+.card.st-live{border-color:#3c7a5a;background:#1c241d}
+.card.st-developing{border-color:#D8453B;background:#241a18}
+.card.st-passive{border-color:#57564f;background:#201f1d}
+.stsel{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:7px;font-size:11px;padding:3px 5px;color-scheme:dark;cursor:pointer}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
 .dot.ok{background:var(--ok)}.dot.bad{background:var(--warn)}
 .ver{font-variant-numeric:tabular-nums}
@@ -55,7 +59,7 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <div class="hdrrow">
     <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0">v2026-07-05e</span>
+      <span class="sub" style="margin:0">v2026-07-05f</span>
       <button class="iconbtn" onclick="loadAll()">Recheck</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
@@ -95,14 +99,18 @@ function show(){ $('gate').style.display='none'; $('app').style.display='block';
 
 function card(a,external){
   const p=a.path||a.url;
-  const el=document.createElement('div'); el.className='card'; el.dataset.path=p; el.dataset.ext=external?'1':'';
+  const st=external?'passive':getStatus(p);
+  const el=document.createElement('div'); el.className='card st-'+st; el.dataset.path=p; el.dataset.ext=external?'1':'';
   el.onclick=()=>openApp(p,external);
+  const sel=external?'':'<select class="stsel" onchange="changeStatus(\''+p+'\',this.value)" onclick="event.stopPropagation()"><option value="live"'+(st==='live'?' selected':'')+'>Live</option><option value="developing"'+(st==='developing'?' selected':'')+'>Developing</option><option value="passive"'+(st==='passive'?' selected':'')+'>Passive</option></select>';
   el.innerHTML=(external?'':'<div class="ord"><button class="ordbtn" title="move back" onclick="moveApp(event,\''+p+'\',-1)">&#9664;</button><button class="ordbtn" title="move forward" onclick="moveApp(event,\''+p+'\',1)">&#9654;</button></div>')+
     '<div class="top"><div class="badge" style="background:'+(a.c||'#c98a3c')+'">'+a.b+'</div><div class="nm">'+a.nm+'</div></div>'+
     '<div class="desc">'+a.desc+'</div>'+
-    '<div class="meta"><span class="dot" id="d_'+p+'"></span><span class="ver" id="v_'+p+'">'+(external?'external':'checking…')+'</span></div>';
+    '<div class="meta"><span class="ver" id="v_'+p+'">'+(external?'external':'…')+'</span>'+sel+'</div>';
   return el;
 }
+function getStatus(p){ try{ return (JSON.parse(localStorage.getItem('hubStatus')||'{}'))[p]||'live'; }catch(e){ return 'live'; } }
+function changeStatus(p,val){ let m={}; try{ m=JSON.parse(localStorage.getItem('hubStatus')||'{}'); }catch(e){} m[p]=val; localStorage.setItem('hubStatus',JSON.stringify(m)); const c=$('grid').querySelector('.card[data-path="'+p+'"]'); if(c){ c.classList.remove('st-live','st-developing','st-passive'); c.classList.add('st-'+val); } }
 function getOrder(){ try{ return JSON.parse(localStorage.getItem('hubOrder')||'[]'); }catch(e){ return []; } }
 function saveOrder(paths){ localStorage.setItem('hubOrder', JSON.stringify(paths)); }
 function orderedApps(){ const ord=getOrder(), map={}; APPS.forEach(a=>map[a.path]=a); const out=[]; ord.forEach(p=>{ if(map[p]){ out.push(map[p]); delete map[p]; } }); APPS.forEach(a=>{ if(map[a.path]) out.push(a); }); return out; }
@@ -117,15 +125,15 @@ function render(){
   const e=$('ext'); e.innerHTML=''; if(!EXT.length){ e.innerHTML='<div class="sub" style="grid-column:1/-1;margin:0">None yet.</div>'; } else EXT.forEach(a=>e.appendChild(card(a,true)));
 }
 async function checkVer(a){
-  const dot=$('d_'+a.path), ver=$('v_'+a.path); if(!ver) return;
+  const ver=$('v_'+a.path); if(!ver) return;
   try{
     const r=await fetch(a.path,{cache:'no-store'});
-    if(!r.ok){ dot.className='dot bad'; ver.textContent='unreachable ('+r.status+')'; return; }
+    if(!r.ok){ ver.textContent='—'; return; }
     const t=await r.text(); const m=t.match(/v20\d\d-\d\d-\d\d[a-z]?/);
-    dot.className='dot ok'; ver.textContent=m?m[0]:'live';
-  }catch(e){ dot.className='dot bad'; ver.textContent='unreachable'; }
+    ver.textContent=m?m[0]:'—';
+  }catch(e){ ver.textContent='—'; }
 }
-function loadAll(){ APPS.forEach(a=>{ const v=$('v_'+a.path); if(v) v.textContent='checking…'; const d=$('d_'+a.path); if(d) d.className='dot'; checkVer(a); }); }
+function loadAll(){ APPS.forEach(a=>{ const v=$('v_'+a.path); if(v) v.textContent='…'; checkVer(a); }); }
 
 // soft admin gate: reuses the cockpit key stored by the other tools
 if(localStorage.getItem('ccKey')) show(); else $('gate').style.display='block';
