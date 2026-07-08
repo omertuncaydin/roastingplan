@@ -147,7 +147,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08a</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08b</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -331,7 +331,7 @@ body.st-setup #btn{display:none}
 let AC=null, stream=null, src=null, hpF=null, lpF=null, analyser=null, buf=null, running=false, raf=null;
 let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
-let cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={}, STOPT=null, PHASE=0;
+let cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={}, STOPT=null, PHASE=0, STOPBORROWED=false;
 let LANG=localStorage.getItem('bsLang')||'en';   // declared at the very top: eval-order safe (v07e lesson)
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
@@ -380,12 +380,12 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('mapBtn').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw'].forEach(i=>{ if($(i)) $(i).value=''; });
   updateSD(); drawTimeline(); updateGauge();
-  document.body.className='st-live'+(document.documentElement.dataset.embed?' embed':'');
+  setState('st-live');
   const bcue=((badgeMap()[badgeKey()]||{}).cue||'').replace(/</g,'&lt;');
   if(bcue){ $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">'+(LANG==='tr'?'Reçete hatırlatması':'Recipe reminder')+'</h1>'
     +'<div style="font-size:23px;font-weight:800;color:var(--gold);line-height:1.35;margin:6px 0 4px">'+bcue+'</div>'
@@ -403,8 +403,8 @@ function stop(){
   if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
   $('recAudio').disabled=false;
   STOPT=(performance.now()-startT)/1000;   // the DROP moment: known exactly, never invented
-  STOPPROJ=LASTPROJ;   // freeze what the gauge said at the moment of drop, before retrospective recompute
-  if(!planActive() && valid().length>=10){ localStorage.setItem('bsRoastN',String(roastCount()+1)); refreshPlanUI(); }   // a "roast" = 10+ real cracks; test taps stay free
+  STOPPROJ=LASTPROJ; STOPBORROWED=PROJBORROWED;   // freeze projection AND its provenance at the drop; a rename later cannot launder a borrowed guess
+  try{ if(!planActive() && valid().length>=10){ localStorage.setItem('bsRoastN',String(roastCount()+1)); refreshPlanUI(); } }catch(e){}   // a "roast" = 10+ real cracks; test taps stay free
   $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):'';
   if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value;
     // a mapped coffee fills its own paperwork: bean-constant fields prefill from the map, measurements stay yours
@@ -413,12 +413,12 @@ function stop(){
       if(!$('mMoist').value&&calP.moist) $('mMoist').value=calP.moist;
       if(!$('mAw').value&&calP.aw) $('mAw').value=calP.aw;
       if(!$('mTarget').value&&calP.target) $('mTarget').value=calP.target; } }
-  renderSamples(); updateSD(); drawTimeline(); updateGauge(); updateMapBtn();   // retrospective pass: the bell is complete now, stages settle with the whole story
+  try{ renderSamples(); updateSD(); drawTimeline(); updateGauge(); updateMapBtn(); }catch(e){ console.error(e); }   // retrospective pass in a cage: a bad map must never strand the live screen before it reaches st-done
   const mb=(wav.len*2/1048576).toFixed(1);
   $('recInfo').textContent=LANG==='tr'
     ?('Seans bellekte: '+(wav.len?mb+' MB ses, ':'')+rows.length+' iz örneği, '+cracks.length+' çatlak. Sayfayı kapatmadan önce seansı kaydet.')
     :('Session kept in memory: '+(wav.len?mb+' MB audio, ':'')+rows.length+' trace samples, '+cracks.length+' cracks. Save the session before closing or reloading the page.');
-  document.body.className='st-done'+(document.documentElement.dataset.embed?' embed':'');
+  setState('st-done');
   $('btn').textContent=tt('New session'); $('btn').className='go';
   $('status').textContent=LANG==='tr'?('Durduruldu. '+cracks.length+' çatlak kaydedildi.'):('Stopped. '+cracks.length+' cracks logged.');
 }
@@ -828,12 +828,13 @@ async function cloudUser(){ if(!SB) return null; try{ const {data}=await SB.auth
 async function cloudStatus(){ const u=await cloudUser(); const el=$('cloudStat');
   if(el) el.textContent=u?((LANG==='tr'?'Bağlı: ':'Signed in: ')+u.email):(LANG==='tr'?"Eşitlemek için Guide'da giriş yap (aynı tarayıcı).":'Sign in via the Guide (same browser) to sync.');
   return u; }
+const escC=s2=>String(s2??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
 let PICK_CB=null;
 function pickModal(title,hint,items,btnLabel,cb){
   PICK_CB=cb;
   $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:17px">'+title+'</h1>'
    +'<div class="hint" style="font-size:12px;margin:0 0 6px">'+hint+'</div>'
-   +items.map((t,i)=>'<label style="display:flex;gap:9px;align-items:center;margin-top:9px;font-size:14px"><input type="checkbox" checked data-pick="'+i+'" style="width:19px;height:19px;accent-color:var(--accent)">'+t+'</label>').join('')
+   +items.map((t,i)=>'<label style="display:flex;gap:9px;align-items:center;margin-top:9px;font-size:14px"><input type="checkbox" checked data-pick="'+i+'" style="width:19px;height:19px;accent-color:var(--accent)">'+escC(t)+'</label>').join('')
    +'<button style="margin-top:14px;background:var(--accent2)" onclick="pickGo()">'+btnLabel+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(LANG==='tr'?'Vazgeç':'Cancel')+'</button>';
   $('modal').style.display='flex';
@@ -859,13 +860,19 @@ async function cloudSend(){
 async function cloudPull(){
   if(!planActive()){ showPaywall(LANG==='tr'?'Kahve bulutu':'Coffee cloud'); return; }
   const u=await cloudStatus(); if(!u){ toast(LANG==='tr'?"Önce Guide'da giriş yap.":'Sign in via the Guide first.'); return; }
-  const {data,error}=await SB.from('coffees').select('name,badge,map');
+  const {data,error}=await SB.from('coffees').select('name,badge,map').eq('owner',u.id);
   if(error||!data||!data.length){ toast(LANG==='tr'?'Bulutta kahve yok.':'No coffees in the cloud.'); return; }
   pickModal(LANG==='tr'?'Buluttan getir':'Bring from cloud',
     LANG==='tr'?'Seçilenler bu cihazdaki aynı isimli kayıtların üzerine yazılır.':'Selected entries overwrite same-named local records.',
     data.map(c=>c.name), LANG==='tr'?'Getir':'Bring', sel=>{
     const m=calMap(), b=badgeMap(); let n=0;
-    sel.forEach(i=>{ const c=data[i]; if(c.map){ m[c.name]=c.map; n++; } if(c.badge&&Object.keys(c.badge).length) b[c.name]=c.badge; });
+    sel.forEach(i=>{ const c=data[i]; if(c.map&&typeof c.map==='object'){
+      const mm={...c.map}; delete mm.grades;   // bias lessons are this device's ears: never imported
+      if(mm.bell&&!Array.isArray(mm.bell)) delete mm.bell;
+      if(mm.hist&&!Array.isArray(mm.hist)) delete mm.hist;
+      if(m[c.name]&&m[c.name].grades) mm.grades=m[c.name].grades;   // keep what this device already learned
+      m[c.name]=mm; n++; }
+      if(c.badge&&typeof c.badge==='object'&&Object.keys(c.badge).length) b[c.name]=c.badge; });
     localStorage.setItem('bsCal',JSON.stringify(m)); localStorage.setItem('bsBadge',JSON.stringify(b));
     toast((LANG==='tr'?'Buluttan alındı: ':'Brought: ')+n); updateGauge(); updateSD();
   });
@@ -938,21 +945,25 @@ function saveCalIfMapped(verbose){
   const m=calMap();
   // mapping a CUT roast over a fuller reference amputates the ghost + devSpan: warn, require a second tap
   const prevM=m[k], isCut=!(LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==='C1'));
-  if(verbose&&isCut&&prevM&&prevM.devSpan>((v[v.length-1].t-a0)*1.3)&&Date.now()-MAPWARN>8000){
-    MAPWARN=Date.now();
+  const cutOverFuller=isCut&&prevM&&prevM.devSpan>((v[v.length-1].t-a0)*1.3);
+  // guard on EVERY entry point (Map tap, session save, session load). verbose only controls
+  // toasts and the two-tap overwrite escalation; a non-verbose caller can never overwrite.
+  if(cutOverFuller&&(!verbose||Date.now()-MAPWARN>8000)){
+    if(verbose) MAPWARN=Date.now();
     // LEARN WITHOUT OVERWRITING: the cut roast's lesson (self-grade + phi point) joins the existing
     // map; the fuller reference geometry stays. Second tap within 8s = full overwrite, deliberate.
     const projAt=STOPPROJ||LASTPROJ, today=new Date().toISOString().slice(0,10);
-    if(isFinite(ag)&&projAt&&!PROJBORROWED){
+    const projBor=(STOPPROJ!=null)?STOPBORROWED:PROJBORROWED;
+    if(isFinite(ag)&&projAt&&!projBor){
       let g2=prevM.grades||[]; const resid=ag-projAt;
       if(g2.length){ const mb=g2.reduce((a2,g)=>a2+(g.meas-g.proj),0)/g2.length; if(Math.abs(resid-mb)>6) g2=[]; }
       prevM.grades=g2.concat([{proj:projAt,meas:ag,date:today}]).slice(-6);
       prevM.hist=(prevM.hist||[]).concat([{devSpan:v[v.length-1].t-a0, agtron:ag, tg, q25, ph:+PHASE.toFixed(3)||null, date:today}]).slice(-8);
       m[k]=prevM; if(m['__house']&&m['__house'].src===k) m['__house']=prevM;
       localStorage.setItem('bsCal',JSON.stringify(m));
-      toast(LANG==='tr'?"Ders kaydedildi (öz-not + φ noktası), dolu referans korundu. Tamamen üzerine yazmak için 8 sn içinde tekrar Eşle'ye dokun.":'Lesson recorded (self-grade + φ point); fuller reference kept. Tap Map again within 8s to fully overwrite instead.');
+      if(verbose) toast(LANG==='tr'?"Ders kaydedildi (öz-not + φ noktası), dolu referans korundu. Tamamen üzerine yazmak için 8 sn içinde tekrar Eşle'ye dokun.":'Lesson recorded (self-grade + φ point); fuller reference kept. Tap Map again within 8s to fully overwrite instead.');
     } else {
-      toast(LANG==='tr'?"Kesik kavurma (C1 yok). Üzerine yazmak için 8 sn içinde tekrar Eşle'ye dokun.":'Cut roast (no C1). Tap Map again within 8s to overwrite your fuller reference.');
+      if(verbose) toast(LANG==='tr'?"Kesik kavurma (C1 yok). Üzerine yazmak için 8 sn içinde tekrar Eşle'ye dokun.":'Cut roast (no C1). Tap Map again within 8s to overwrite your fuller reference.');
     }
     return;
   }
@@ -961,7 +972,8 @@ function saveCalIfMapped(verbose){
   entry.hist=entry.hist.concat([{devSpan:entry.devSpan, agtron:ag, tg, q25, ph:entry.phDrop, date:entry.date}]).slice(-8);
   let grades=(prevM&&prevM.grades)||[];
   const projAt=STOPPROJ||LASTPROJ;
-  if(isFinite(ag)&&projAt&&!PROJBORROWED){   // a borrowed map's guess is NOT this coffee's lesson
+  const projBor2=(STOPPROJ!=null)?STOPBORROWED:PROJBORROWED;
+  if(isFinite(ag)&&projAt&&!projBor2){   // a borrowed map's guess is NOT this coffee's lesson; provenance frozen at the drop
     const resid=ag-projAt;
     if(grades.length){ const mb=grades.reduce((a2,g)=>a2+(g.meas-g.proj),0)/grades.length;
       if(Math.abs(resid-mb)>6) grades=[]; }   // epoch break: this is a different bean/bag now
@@ -1171,13 +1183,13 @@ async function loadSession(file){
   SAMPLES=[]; for(const m of text.matchAll(/# sample,\d+,([\d.]+),([\d.]*)/g)) SAMPLES.push({t:+m[1], ag:m[2]?+m[2]:null});
   const dataT=[...text.matchAll(/^([\d.]+),/gm)]; STOPT=dataT.length?+dataT[dataT.length-1][1]:null; PHASE=0;   // session end = last trace row
   if(!cracks.length){ toast('No cracks in that session.'); return; }
-  LASTPROJ=null; STOPPROJ=null; $('finalCall').textContent=''; wav={chunks:[],len:0,sr:48000}; rows=[];
+  LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; $('finalCall').textContent=''; wav={chunks:[],len:0,sr:48000}; rows=[];
   if(meta.coffee){ cName.value=meta.coffee; localStorage.setItem('bsCoffee',meta.coffee); loadBadge(); renderNameplate(); }
   $('mCoffee').value=meta.coffee||''; $('mBatch').value=meta.batch_g||''; $('mAgW').value=meta.agtron_whole||''; $('mAgG').value=meta.agtron_ground||''; $('mNote').value=meta.note||'';
   $('mAgWSd').value=meta.agtron_whole_sd||''; $('mAgSd').value=meta.agtron_ground_sd||''; $('mProc').value=meta.process||''; $('mChgFc').value=meta.charge_to_fc||''; $('mDrop').value=meta.drop_after_last_s||''; $('mTarget').value=meta.target||''; $('mMoist').value=meta.moisture||''; $('mAw').value=meta.water_activity||'';
   $('metaBox').style.display='block'; $('mapBtn').style.display='block';
   $('dlZip').style.display='block'; $('dlCard').style.display='block';   // re-save allowed: corrected FP labels are the training corpus
-  document.body.className='st-done'+(document.documentElement.dataset.embed?' embed':'');
+  setState('st-done');
   refreshStats();
   updateMapBtn();
   if(parseFloat(meta.agtron_ground)){ saveCalIfMapped(true); updateGauge(); }
@@ -1330,7 +1342,8 @@ function toggleLang(){ LANG=LANG==='tr'?'en':'tr'; localStorage.setItem('bsLang'
 window.addEventListener('error',e=>{ try{ if(document.body.classList.contains('admin')) toast('JS error: '+(e.message||'?')+' @'+(e.lineno||'?')); }catch(_){} });
 window.addEventListener('unhandledrejection',e=>{ try{ if(document.body.classList.contains('admin')) toast('Async error: '+((e.reason&&e.reason.message)||e.reason||'?')); }catch(_){} });
 if(new URLSearchParams(location.search).get('embed')==='1') document.documentElement.dataset.embed='1';
-document.body.className='st-setup'+(document.documentElement.dataset.embed?' embed':'');
+function setState(n){ const b=document.body; b.classList.remove('st-setup','st-live','st-done'); b.classList.add(n); if(document.documentElement.dataset.embed) b.classList.add('embed'); }   // swap state WITHOUT clobbering admin/embed
+setState('st-setup');
 setTimeout(updateGauge,0);   // initial gauge state on load
 setTimeout(applyLang,0);
 // pinch-block is SCOPED to canvases only (CSS touch-action:none on canvas): document-level touch
@@ -1393,7 +1406,7 @@ function drawTimeline(){
     tx.beginPath(); if(tx.roundRect) tx.roundRect(bx,by,bw2,bh,[3,3,0,0]); else tx.rect(bx,by,bw2,bh); tx.fill(); });
   // GHOST REFERENCE: the mapped roast's bell shape, raced live (dashed, muted)
   const calT=calFor()||calMap()['__house'];
-  if(calT&&calT.bell&&calT.devSpan){
+  if(calT&&Array.isArray(calT.bell)&&calT.bell.length>1&&calT.devSpan){
     const gx0=X(a0c), gx1=X(a0c+calT.devSpan), gn=calT.bell.length;
     if(gx1>4&&gx0<W-4){
       tx.strokeStyle='rgba(168,153,138,0.55)'; tx.lineWidth=3; tx.setLineDash([7,6]); tx.beginPath();
@@ -1438,7 +1451,7 @@ function drawTimeline(){
     const susUp=f=>{ const th=f*peak; for(let i=a0Bin;i<peakI;i++){ let ok=true; for(let j=i;j<Math.min(i+run,peakI+1);j++) if(sm[j]<th){ ok=false; break; } if(ok) return t0+(i+0.5)*bin; } return t0+(peakI+0.5)*bin; };
     // markers settle only as the data does (per the info tab): the right side of the bell
     // exists only after real quiet; a fresh "last crack" is NOT C1, it is just the newest crack.
-    const nowS=running?(performance.now()-startT)/1000:(STOPT!=null?STOPT:v[v.length-1].t+99);
+    const nowS=running?(performance.now()-startT)/1000:(STOPT!=null?STOPT:v[v.length-1].t);   // unknown end = censored at the last crack, never invented silence
     const quiet=nowS-v[v.length-1].t;
     const nowBin=Math.min(nb-1,Math.max(0,Math.floor((Math.min(nowS,t0+span-0.01)-t0)/bin)));
     const lb=Math.min(nb-1,Math.max(0,Math.floor((v[v.length-1].t-t0)/bin)));

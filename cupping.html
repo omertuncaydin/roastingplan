@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CoffeeNutz · Cupping Forms</title>
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--accent2:#d9663f;--gold:#e6c14b;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:14px;line-height:1.45}
+.wrap{max-width:640px;margin:0 auto}
+.brand{text-align:center;font-weight:800;font-size:13px;letter-spacing:3px;color:var(--accent)}
+h1{font-size:19px;margin:6px 0 12px;text-align:center}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.lbl{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;display:block;margin:8px 0 3px}
+input[type=text],input[type=date]{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)}
+button{border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:800;background:var(--accent);color:#16130f;cursor:pointer;width:100%;margin-top:10px}
+button.sub{background:var(--panel2);color:var(--ink);border:1px solid var(--line);font-weight:600}
+.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}
+.hint{color:var(--muted);font-size:12px;margin-top:4px}
+.secttl{font-size:15px;font-weight:800;margin:14px 0 2px;color:var(--gold)}
+/* intensity bar */
+.ibar{position:relative;height:34px;border-radius:8px;margin:4px 0 2px;cursor:pointer;
+  background:linear-gradient(90deg,#efe7db 0%,#c9a97e 40%,#8a5a33 75%,#3a2416 100%);border:1px solid var(--line)}
+.ibar .tick{position:absolute;top:-3px;font-size:24px;font-weight:900;color:#16130f;transform:translateX(-50%);text-shadow:0 0 3px #fff,0 0 3px #fff;pointer-events:none}
+.iscale{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);padding:0 1px;margin-bottom:2px}
+.ival{font-size:12px;color:var(--gold);font-weight:700;min-width:34px;text-align:right}
+.irow{display:flex;align-items:center;gap:8px}.irow .ibwrap{flex:1}
+.iname{font-size:13px;font-weight:700;width:86px;flex:none}
+/* CATA */
+.cata{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.cbox{border:1px solid var(--line);border-radius:14px;padding:5px 10px;font-size:12px;color:var(--muted);cursor:pointer;user-select:none}
+.cbox.on{border-color:var(--accent);color:var(--ink);background:rgba(201,138,60,.15)}
+.cbox.sub2{font-size:11px;opacity:.9}
+.samplecard{border:1px solid var(--accent);border-radius:14px;padding:12px;margin-bottom:14px;background:var(--panel)}
+.shead{display:flex;gap:8px;align-items:center}
+.shead input{font-weight:800;font-size:17px}
+.del{width:auto;flex:none;background:none;border:1px solid var(--line);color:var(--muted);font-size:12px;padding:8px 10px;margin:0}
+textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px;font-size:14px;background:var(--panel2);color:var(--ink);min-height:34px;resize:vertical}
+.topbar{display:flex;gap:6px;margin-bottom:10px}
+.topbar button{margin:0;padding:9px;font-size:13px}
+.warn{color:var(--accent2);font-size:12px}
+a{color:var(--gold)}
+/* ============ PRINT: SCA-style sheet with placed ticks ============ */
+@media print{
+  body{background:#fff;color:#111;padding:0;font-size:11px}
+  .noprint{display:none !important}
+  .wrap{max-width:none}
+  .card{border:none;padding:0;margin:0 0 6px;background:#fff}
+  .brand{color:#555}
+  h1{font-size:14px;margin:2px 0 6px}
+  .samplecard{background:#fff;border:1.5px solid #111;border-radius:6px;padding:8px;margin-bottom:10px;break-inside:avoid;page-break-inside:avoid}
+  .samplecard:nth-of-type(2n){page-break-after:always}
+  .shead input,input[type=text],input[type=date],textarea{background:#fff;color:#111;border:none;border-bottom:1px dotted #999;border-radius:0;padding:2px 4px;font-size:11px}
+  .shead input{font-size:13px;border:1.5px solid #111;border-radius:4px}
+  .lbl{color:#333}
+  .secttl{color:#111;font-size:12px;margin:8px 0 1px}
+  .ibar{height:16px;background:linear-gradient(90deg,#f2f2f2 0%,#bbb 50%,#333 100%);border:1px solid #555;border-radius:3px}
+  .ibar .tick{top:-6px;font-size:16px;color:#000;text-shadow:none}
+  .iscale{color:#555}
+  .ival{color:#111}
+  .iname{font-size:11px;width:72px}
+  .cbox{border:1px solid #777;color:#444;padding:1px 6px;font-size:9px;border-radius:3px}
+  .cbox.on{border:1.5px solid #000;color:#000;background:#eee;font-weight:800}
+  .cbox.on::before{content:"\2713 "}
+  textarea{min-height:22px}
+  .hint,.del{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">COFFEENUTZ · NUTZACADEMY</div>
+  <h1 id="ttl">Descriptive Form</h1>
+
+  <div class="topbar noprint">
+    <button class="sub" onclick="newSession()" id="btnNew">New</button>
+    <button class="sub" onclick="exportCSV()">CSV</button>
+    <button class="sub" onclick="exportJSON()">JSON</button>
+    <button onclick="window.print()" id="btnPrint">Print / PDF</button>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div><span class="lbl" data-t="name">Name</span><input type="text" id="h_name" oninput="hd()"></div>
+      <div><span class="lbl" data-t="date">Date</span><input type="date" id="h_date" oninput="hd()"></div>
+    </div>
+    <span class="lbl" data-t="purpose">Purpose</span><input type="text" id="h_purpose" oninput="hd()">
+  </div>
+
+  <div id="samples"></div>
+  <button class="noprint" onclick="addSample()" id="btnAdd">+ Add sample</button>
+  <div class="hint noprint" style="text-align:center;margin-top:8px">
+    Autosaved on this device · prints 2 samples per page with your ticks placed ·
+    <span id="langT" style="cursor:pointer;text-decoration:underline" onclick="toggleLang()">TR</span>
+  </div>
+  <div class="hint" style="text-align:center;margin-top:6px;font-size:10px">
+    Format based on the SCA Coffee Value Assessment Descriptive Form v2 (June 2024), sca.coffee/value-assessment. Independent implementation by CoffeeNutz.
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let LANG=localStorage.getItem('bsCupLang')||'en';
+const TR={name:'İsim',date:'Tarih',purpose:'Amaç'};
+const OLF=[
+ ['Floral'],
+ ['Fruity','Berry','Dried Fruit','Citrus Fruit'],
+ ['Sour/Fermented','Sour','Fermented'],
+ ['Green/Vegetative'],
+ ['Other','Chemical','Musty/Earthy','Woody'],
+ ['Roasted','Cereal','Burnt','Tobacco'],
+ ['Nutty/Cocoa','Nutty','Cocoa'],
+ ['Spice'],
+ ['Sweet','Vanilla/Vanillin','Brown Sugar']];
+const MOUTH=['Rough (Gritty, Chalky, Sandy)','Oily','Smooth (Velvety, Silky, Syrupy)','Mouth-Drying','Metallic'];
+const TASTES=['Salty','Sour','Sweet','Bitter','Umami'];
+const INT=[['fragI','Fragrance'],['aromaI','Aroma']];
+const INT2=[['flavI','Flavor'],['afterI','Aftertaste']];
+const INT3=[['acidI','Acidity'],['sweetI','Sweetness'],['mouthI','Mouthfeel']];
+
+let S=null;
+function blankSample(){return {no:'',roast:50,fragI:null,aromaI:null,olf1:[],flavI:null,afterI:null,olf2:[],tastes:[],acidI:null,sweetI:null,mouthI:null,mouth:[],nFA:'',nFL:'',nAC:'',nSW:'',nMF:''};}
+function load(){
+  try{ S=JSON.parse(localStorage.getItem('bsCupDesc'))||null; }catch(e){ S=null; }
+  if(!S){ S={name:'',date:new Date().toISOString().slice(0,10),purpose:'',samples:[blankSample()]}; save(); }
+}
+function save(){ try{ localStorage.setItem('bsCupDesc',JSON.stringify(S)); }catch(e){} }
+function hd(){ S.name=$('h_name').value; S.date=$('h_date').value; S.purpose=$('h_purpose').value; save(); }
+function newSession(){ if(!confirm(LANG==='tr'?'Yeni oturum? Mevcut form temizlenir (önce CSV/JSON alabilirsin).':'New session? Current form is cleared (export CSV/JSON first if needed).')) return; localStorage.removeItem('bsCupDesc'); load(); render(); }
+function addSample(){ S.samples.push(blankSample()); save(); render(); }
+function delSample(i){ if(!confirm(LANG==='tr'?'Örneği sil?':'Delete sample?')) return; S.samples.splice(i,1); if(!S.samples.length) S.samples.push(blankSample()); save(); render(); }
+
+function bar(i,key,val,max){
+  const pct=val==null?null:(val/max*100);
+  return '<div class="ibwrap"><div class="iscale"><span>0 · LOW</span><span>5</span><span>MEDIUM · 10</span><span>15 · HIGH</span></div>'
+   +'<div class="ibar" onclick="setI(event,'+i+',\''+key+'\','+max+')">'
+   +(pct==null?'':'<span class="tick" style="left:'+pct+'%">&#10003;</span>')+'</div></div>'
+   +'<span class="ival">'+(val==null?'·':val)+'</span>';
+}
+function setI(ev,i,key,max){
+  const r=ev.currentTarget.getBoundingClientRect();
+  let v=Math.round(((ev.clientX-r.left)/r.width)*max*4)/4;
+  v=Math.max(0,Math.min(max,v));
+  S.samples[i][key]=v; save(); render();
+}
+function cata(i,key,list,flat){
+  let h='<div class="cata">';
+  if(flat){ list.forEach(t=>{ const on=S.samples[i][key].includes(t);
+    h+='<span class="cbox'+(on?' on':'')+'" onclick="tog('+i+',\''+key+'\',\''+esc(t).replace(/'/g,"\\'")+'\')">'+esc(t)+'</span>'; });
+  } else {
+    list.forEach(g=>{ g.forEach((t,ix)=>{ const on=S.samples[i][key].includes(t);
+      h+='<span class="cbox'+(ix?' sub2':'')+(on?' on':'')+'" onclick="tog('+i+',\''+key+'\',\''+esc(t).replace(/'/g,"\\'")+'\')">'+esc(t)+'</span>'; }); });
+  }
+  return h+'</div>';
+}
+const PARENT={}; OLF.forEach(g=>g.slice(1).forEach(c=>PARENT[c]=g[0]));
+function tog(i,key,t){
+  const a=S.samples[i][key], ix=a.indexOf(t);
+  const grouped=(key==='olf1'||key==='olf2');
+  if(ix>=0){
+    a.splice(ix,1);
+    if(grouped&&!PARENT[t]){ // parent unticked: its children go with it
+      const grp=OLF.find(g=>g[0]===t);
+      if(grp) grp.slice(1).forEach(c=>{ const j=a.indexOf(c); if(j>=0) a.splice(j,1); });
+    }
+  } else if(key==='tastes'){
+    if(a.length>=2) a.shift(); // SCA: exactly 2 main tastes; oldest drops
+    a.push(t);
+  } else {
+    const add=[t];
+    if(grouped&&PARENT[t]&&!a.includes(PARENT[t])) add.push(PARENT[t]); // SCA grouping: a child ticks its parent too
+    if(a.length+add.length>5){ flashLimit(); return; } // SCA rule: max 5 descriptors per section
+    add.forEach(x=>a.push(x));
+  }
+  save(); render();
+}
+function flashLimit(){
+  let t=$('limT');
+  if(!t){ t=document.createElement('div'); t.id='limT'; t.className='noprint';
+    t.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--accent2);color:#fff;padding:8px 14px;border-radius:10px;font-size:13px;z-index:9';
+    document.body.appendChild(t); }
+  t.textContent=LANG==='tr'?'En fazla 5 tanımlayıcı (SCA kuralı)':'Max 5 descriptors per section (SCA rule)';
+  t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',1600);
+}
+function noteBox(i,key,label){
+  return '<span class="lbl">'+label+'</span><textarea oninput="S.samples['+i+'].'+key+'=this.value;save()">'+esc(S.samples[i][key])+'</textarea>';
+}
+function irow(i,def){ return '<div class="irow"><span class="iname">'+def[1]+'</span>'+bar(i,def[0],S.samples[i][def[0]],15)+'</div>'; }
+
+function render(){
+  $('h_name').value=S.name; $('h_date').value=S.date; $('h_purpose').value=S.purpose;
+  $('samples').innerHTML=S.samples.map((sm,i)=>{
+    const rp=sm.roast==null?null:sm.roast;
+    return '<div class="samplecard">'
+    +'<div class="shead"><div style="flex:1"><span class="lbl">SAMPLE NO.</span>'
+    +'<input type="text" value="'+esc(sm.no)+'" oninput="S.samples['+i+'].no=this.value;save()"></div>'
+    +'<div style="flex:1"><span class="lbl">ROAST LEVEL (light &rarr; dark)</span>'
+    +'<div class="ibar" onclick="setI(event,'+i+',\'roast\',100)">'+(rp==null?'':'<span class="tick" style="left:'+rp+'%">&#10003;</span>')+'</div></div>'
+    +'<button class="del noprint" onclick="delSample('+i+')">&#10005;</button></div>'
+    +'<div class="secttl">Fragrance &amp; Aroma</div>'+irow(i,INT[0])+irow(i,INT[1])
+    +cata(i,'olf1',OLF,false)+noteBox(i,'nFA','Notes')
+    +'<div class="secttl">Flavor &amp; Aftertaste</div>'+irow(i,INT2[0])+irow(i,INT2[1])
+    +cata(i,'olf2',OLF,false)
+    +'<span class="lbl">Main tastes (pick 2)</span>'+cata(i,'tastes',TASTES,true)
+    +noteBox(i,'nFL','Notes')
+    +'<div class="secttl">Acidity</div>'+irow(i,INT3[0])+noteBox(i,'nAC','Notes')
+    +'<div class="secttl">Sweetness</div>'+irow(i,INT3[1])+noteBox(i,'nSW','Notes')
+    +'<div class="secttl">Mouthfeel</div>'+irow(i,INT3[2])
+    +cata(i,'mouth',MOUTH,true)+noteBox(i,'nMF','Notes')
+    +'</div>';
+  }).join('');
+  applyLang();
+}
+function toggleLang(){ LANG=LANG==='en'?'tr':'en'; localStorage.setItem('bsCupLang',LANG); applyLang(); }
+function applyLang(){
+  document.querySelectorAll('[data-t]').forEach(el=>{ const k=el.dataset.t; el.textContent=LANG==='tr'?(TR[k]||el.textContent):({name:'Name',date:'Date',purpose:'Purpose'}[k]); });
+  $('langT').textContent=LANG==='tr'?'EN':'TR';
+  $('btnAdd').textContent=LANG==='tr'?'+ Örnek ekle':'+ Add sample';
+  $('btnNew').textContent=LANG==='tr'?'Yeni':'New';
+  $('btnPrint').textContent=LANG==='tr'?'Yazdır / PDF':'Print / PDF';
+  // SCA lexicon terms intentionally stay in English in both languages
+}
+function exportJSON(){ dl(JSON.stringify(S,null,1),'cupping-'+(S.date||'session')+'.json','application/json'); }
+function exportCSV(){
+  const cols=['sample_no','roast_level','fragrance_i','aroma_i','olfactory_fa','flavor_i','aftertaste_i','olfactory_flav','main_tastes','acidity_i','sweetness_i','mouthfeel_i','mouthfeel_cata','notes_fa','notes_flavor','notes_acidity','notes_sweetness','notes_mouthfeel'];
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const rows=S.samples.map(s=>[s.no,s.roast,s.fragI,s.aromaI,s.olf1.join('; '),s.flavI,s.afterI,s.olf2.join('; '),s.tastes.join('; '),s.acidI,s.sweetI,s.mouthI,s.mouth.join('; '),s.nFA,s.nFL,s.nAC,s.nSW,s.nMF].map(q).join(','));
+  dl('name,'+q(S.name)+'\ndate,'+q(S.date)+'\npurpose,'+q(S.purpose)+'\n'+cols.join(',')+'\n'+rows.join('\n'),'cupping-'+(S.date||'session')+'.csv','text/csv');
+}
+function dl(txt,fn,mime){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([txt],{type:mime})); a.download=fn; a.click(); }
+load(); render();
+</script>
+</body>
+</html>
