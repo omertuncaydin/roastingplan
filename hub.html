@@ -106,7 +106,7 @@ function card(a,external){
   const st=external?'passive':getStatus(p);
   const el=document.createElement('div'); el.className='card st-'+st; el.dataset.path=p; el.dataset.ext=external?'1':'';
   el.onclick=()=>openApp(p,external);
-  const sel=external?'':'<select class="stsel" onchange="changeStatus(\''+p+'\',this.value)" onclick="event.stopPropagation()"><option value="live"'+(st==='live'?' selected':'')+'>Live</option><option value="developing"'+(st==='developing'?' selected':'')+'>Developing</option><option value="passive"'+(st==='passive'?' selected':'')+'>Passive</option></select>';
+  const sel=external?'':'<select class="stsel" onchange="changeStatus(\''+p+'\',this.value)" onclick="event.stopPropagation()"><option value="live"'+(st==='live'?' selected':'')+'>Live</option><option value="developing"'+(st==='developing'?' selected':'')+'>Developing</option><option value="passive"'+(st==='passive'?' selected':'')+'>Passive</option><option value="delete">Delete</option></select>';
   el.innerHTML=(external?'':'<div class="ord"><button class="ordbtn" title="move back" onclick="moveApp(event,\''+p+'\',-1)">&#9664;</button><button class="ordbtn" title="move forward" onclick="moveApp(event,\''+p+'\',1)">&#9654;</button></div>')+
     '<div class="top"><div class="badge" style="background:'+(a.c||'#c98a3c')+'">'+a.b+'</div><div class="nm">'+a.nm+'</div></div>'+
     '<div class="desc">'+a.desc+'</div>'+
