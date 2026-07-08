@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f6f2ec">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Landing Forge</title>
+<style>
+:root { color-scheme: light;
+  --bg:#f6f2ec; --card:#ffffff; --ink:#2a2118; --mut:#8a7a68; --line:#ece2d4;
+  --accent:#a35c1f; --green:#2c6a4a; --greenbg:#e6f2ea; --red:#b23b3b; --redbg:#fdeaea;
+  --blue:#2c5a7a; --bluebg:#eef4f9; --gold:#f4e8d2;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Segoe UI,Roboto,sans-serif;
+  font-size:15px;line-height:1.45;
+  padding:14px;padding-top:calc(14px + env(safe-area-inset-top));padding-left:calc(14px + env(safe-area-inset-left));padding-right:calc(14px + env(safe-area-inset-right));padding-bottom:calc(30px + env(safe-area-inset-bottom));}
+h1{font-size:22px;letter-spacing:-.3px;margin:4px 0 2px;font-weight:800}
+h1 small{font-size:11px;color:var(--mut);font-weight:400}
+.sub{color:var(--mut);font-size:12.5px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.linkish{color:var(--accent);font-weight:700;font-size:12px;background:none;border:none;padding:6px;cursor:pointer;text-decoration:none}
+input[type=search],input[type=password],input[type=text],select,textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;background:#fff;margin-bottom:8px;-webkit-appearance:none;font-family:inherit}
+textarea{min-height:64px;resize:vertical}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(60,40,20,.06)}
+details.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 14px;margin-bottom:10px}
+details.panel summary{font-size:13px;font-weight:700;color:#7a6a58;cursor:pointer;min-height:40px;display:flex;align-items:center}
+summary::-webkit-details-marker{display:none}
+details.panel summary:before{content:'▸';margin-right:7px;transition:transform .15s;display:inline-block}
+details.panel[open] summary:before{transform:rotate(90deg)}
+.klist{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:8px}
+.krow{display:flex;gap:8px;align-items:baseline;padding:10px 12px;border-bottom:1px solid #f4efe7;cursor:pointer;font-size:13.5px}
+.krow:active{background:var(--gold)}
+.krow.sel{background:var(--gold)}
+.krow .sc{font-weight:800;color:var(--accent);min-width:34px;font-variant-numeric:tabular-nums;flex:none}
+.krow .kwn{font-weight:600;flex:1}
+.badge{display:inline-block;padding:1px 8px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap;flex:none}
+.b-owned{background:#dcfce7;color:#166534}.b-active{background:#ccfbf1;color:#115e59}.b-siege{background:#ffedd5;color:#9a3412}
+.b-inv{background:#dbeafe;color:#1e40af}.b-park{background:#eee;color:#666}.b-content{background:#fef9c3;color:#854d0e}
+.meta{font-size:12px;color:var(--mut);line-height:1.5;margin-top:6px;white-space:pre-wrap}
+.optrow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.optrow label{font-size:12px;color:#5a4a38;display:flex;flex-direction:column;gap:3px;flex:1;min-width:130px}
+.btn{border:none;border-radius:13px;padding:13px 16px;font-size:15px;font-weight:700;min-height:48px;cursor:pointer;flex:1;min-width:96px}
+.btn-send{background:var(--green);color:#fff;width:100%}
+.btn-send:disabled{opacity:.5}
+.btnrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.tabs{display:flex;background:#e9dfd0;border-radius:12px;padding:3px;margin:12px 0 10px}
+.tabs button{flex:1;border:none;background:transparent;border-radius:10px;padding:10px 4px;font-size:13.5px;font-weight:700;color:#7a6a58;min-height:42px;cursor:pointer}
+.tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(60,40,20,.15)}
+.block{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden;background:#fff}
+.bhead{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f7f3ec;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#6b6257}
+.bhead .cp{margin-left:auto;background:var(--greenbg);color:var(--green);border:none;border-radius:9px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;min-height:32px}
+.bbody{padding:10px 12px;font-size:13.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.bbody.html p{margin:.4em 0}
+.bbody pre{white-space:pre-wrap;font-size:11.5px;margin:0;font-family:ui-monospace,Menlo,monospace}
+.step{border-left:3px solid var(--accent);background:#fff;border-radius:0 12px 12px 0;padding:10px 12px;margin-bottom:10px;font-size:13.5px;line-height:1.55}
+.step b.no{color:var(--accent)}
+.step .fld{margin-top:4px}
+.step .fld b{color:#5a4a38;font-weight:700;font-size:12px}
+.step a{color:var(--blue);word-break:break-all}
+.err{background:var(--redbg);color:var(--red);padding:14px;border-radius:14px;font-size:14px;white-space:pre-wrap}
+.ok{background:var(--greenbg);color:var(--green);padding:10px 14px;border-radius:12px;font-size:13px}
+.loading{color:var(--mut);font-size:15px;padding:30px 10px;text-align:center}
+.spin{display:inline-block;width:18px;height:18px;border:2.5px solid #d8ccb8;border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-4px;margin-right:8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+#gate .card{max-width:420px;margin:40px auto}
+.hist .krow .kwn{font-weight:500}
+.note{font-size:11.5px;color:var(--mut);margin:4px 2px 10px;line-height:1.5}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom));background:var(--ink);color:#fff;border-radius:14px;padding:12px 20px;font-size:14px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:20;max-width:88%}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="gate" style="display:none">
+  <div class="card">
+    <h1>Landing Forge</h1>
+    <div class="sub">Kokpit anahtarını gir; bu telefonda kalır. Council/Komuta ile aynı anahtar.</div>
+    <input type="password" id="keyIn" placeholder="Kokpit anahtarı" autocomplete="off">
+    <div class="btnrow"><button class="btn btn-send" onclick="saveKey()">Aç</button></div>
+    <div class="err" id="gateErr" style="display:none;margin-top:10px"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <h1>Landing Forge <small>keyword → sayfa + yayın rehberi</small></h1>
+  <div class="sub">
+    <span id="stamp">SEO sheet'ten canlı.</span>
+    <span><button class="linkish" onclick="loadSheets(true)">yenile ⟳</button><button class="linkish" onclick="logout()">anahtar ⏏</button></span>
+  </div>
+
+  <details class="panel" id="connPanel">
+    <summary>Bağlantı ayarları (model + API anahtarı)</summary>
+    <div class="note">Anahtar yalnızca bu cihazda saklanır (localStorage) ve doğrudan Anthropic API'ye gider; başka sunucuya gitmez. console.anthropic.com → API Keys.</div>
+    <input type="password" id="apiKey" placeholder="Anthropic API anahtarı (sk-ant-...)" autocomplete="off">
+    <div class="optrow">
+      <label>Model
+        <select id="modelSel">
+          <option value="claude-opus-4-8">Claude Opus 4.8 (en iyi, önerilen)</option>
+          <option value="claude-sonnet-5">Claude Sonnet 5 (hızlı + güçlü)</option>
+          <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (ucuz taslak)</option>
+          <option value="custom">Özel model adı…</option>
+        </select>
+      </label>
+    </div>
+    <input type="text" id="modelCustom" placeholder="Özel model string'i (ör. claude-opus-4-8)" style="display:none">
+    <div class="btnrow"><button class="btn btn-send" onclick="saveConn()">Kaydet</button></div>
+    <div class="ok" id="connOk" style="display:none;margin-top:8px"></div>
+  </details>
+
+  <div class="card">
+    <div class="bhead" style="background:none;padding:0 0 6px">1 · Keyword seç</div>
+    <input type="search" id="q" placeholder="Keyword ara..." oninput="renderPicker()">
+    <div class="klist" id="klist"><div class="loading"><span class="spin"></span>SEO sheet okunuyor...</div></div>
+    <div id="selInfo" style="display:none">
+      <div class="meta" id="selMeta"></div>
+      <div class="optrow">
+        <label>Dil
+          <select id="langSel"><option value="tr">Türkçe</option><option value="en">English</option></select>
+        </label>
+        <label>Sayfa tipi
+          <select id="typeSel">
+            <option value="page">Yeni sayfa (/pages/)</option>
+            <option value="faq">Ürün sayfasına SSS bloğu</option>
+            <option value="blog">Blog yazısı</option>
+          </select>
+        </label>
+      </div>
+      <textarea id="extra" placeholder="Ek talimat (opsiyonel): ton, dahil edilecek detay, kampanya vb."></textarea>
+      <button class="btn btn-send" id="genBtn" onclick="generate()">2 · Üret (içerik + yayın rehberi)</button>
+    </div>
+  </div>
+
+  <div id="result"></div>
+
+  <details class="panel">
+    <summary>Geçmiş üretimler (bu cihazda)</summary>
+    <div class="hist" id="hist"><div class="note">Henüz üretim yok.</div></div>
+  </details>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const FN='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/seo-proxy';
+const SEO_ID='7857520414689156', TRAIN_ID='8367277466584964';
+const API='https://api.anthropic.com/v1/messages';
+let KEY=localStorage.getItem('ccKey')||'', APIKEY=localStorage.getItem('lfApiKey')||'',
+    MODEL=localStorage.getItem('lfModel')||'claude-opus-4-8',
+    DATA=null, SEL=null, RESULT=null, BUSY=false,
+    HIST=JSON.parse(localStorage.getItem('lfHist')||'[]'), TAB='content';
+
+const $=id=>document.getElementById(id);
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+function showGate(msg){ $('gate').style.display='block'; $('app').style.display='none'; if(msg){ $('gateErr').textContent=msg; $('gateErr').style.display='block'; } }
+function saveKey(){ KEY=$('keyIn').value.trim(); if(!KEY) return; localStorage.setItem('ccKey',KEY); boot(); }
+function logout(){ localStorage.removeItem('ccKey'); KEY=''; showGate(); }
+function saveConn(){
+  APIKEY=$('apiKey').value.trim();
+  let m=$('modelSel').value;
+  if(m==='custom') m=$('modelCustom').value.trim()||'claude-opus-4-8';
+  MODEL=m;
+  localStorage.setItem('lfApiKey',APIKEY);
+  localStorage.setItem('lfModel',MODEL);
+  $('connOk').textContent='Kaydedildi. Model: '+MODEL;
+  $('connOk').style.display='block';
+}
+
+async function apiSheet(id){
+  const r=await fetch(FN+'/sheet?id='+id,{headers:{'x-cc-key':KEY}});
+  if(r.status===401){ showGate('Anahtar reddedildi.'); throw new Error('unauthorized'); }
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+const tnorm=s=>String(s||'').replace(/[İI]/g,'i').toLowerCase();
+function colIds(sheet,spec){
+  const out={};
+  for(const key in spec){
+    const c=(sheet.columns||[]).find(c=>spec[key](tnorm(c.title).trim()));
+    out[key]=c?c.id:null;
+  }
+  return out;
+}
+function cellMap(row){
+  const o={};
+  for(const c of row.cells||[]){
+    let v=c.value;
+    if(v&&typeof v==='object') v=Array.isArray(v.values)?v.values.join(', '):JSON.stringify(v);
+    o[c.columnId]=v;
+  }
+  return o;
+}
+function parseSheets(seo,tr){
+  const si=colIds(seo,{
+    kw:t=>t==='keyword', score:t=>t==='score', intent:t=>t.indexOf('intent')===0, verdict:t=>t.indexOf('verdict')===0,
+    pos:t=>t.indexOf('position')===0, target:t=>t.indexOf('target')===0,
+    ai:t=>t.indexOf('ai visibility')===0, serp:t=>t.indexOf('serp')===0, notes:t=>t==='notes'
+  });
+  const keywords=(seo.rows||[]).map(row=>{
+    const m=cellMap(row);
+    if(!m[si.kw]) return null;
+    return { kw:String(m[si.kw]), score:parseFloat(m[si.score])||0, intent:m[si.intent]||'',
+      verdict:m[si.verdict]||'', pos:m[si.pos]||'', target:m[si.target]||'',
+      ai:m[si.ai]||'', serp:m[si.serp]||'', notes:m[si.notes]||'' };
+  }).filter(Boolean).sort((a,b)=>b.score-a.score);
+  const ti=colIds(tr,{
+    start:t=>t.indexOf('start')===0, end:t=>t.indexOf('end')===0, name:t=>t.indexOf('training')===0,
+    status:t=>t==='status', lang:t=>t.indexOf('lang')===0, cap:t=>t==='cap', reg:t=>t.indexOf('reg')===0, price:t=>t.indexOf('price')===0
+  });
+  const cohorts=(tr.rows||[]).map(row=>{
+    const m=cellMap(row);
+    const name=String(m[ti.name]||'');
+    if(!name||name==='TOTAL') return null;
+    return { name, lang:String(m[ti.lang]||'Turkish'), status:String(m[ti.status]||''),
+      start:m[ti.start]||'', end:m[ti.end]||'', startTs:Date.parse(m[ti.start]||'')||0,
+      cap:parseFloat(m[ti.cap])||0, reg:parseFloat(m[ti.reg])||0, price:parseFloat(m[ti.price])||0 };
+  }).filter(Boolean);
+  return {keywords,cohorts};
+}
+function badgeOf(verdict){
+  const v=(verdict||'').toUpperCase();
+  if(v.indexOf('OWNED')===0||v.indexOf('YAPILDI')===0) return ['OWNED/YAPILDI','b-owned'];
+  if(v.indexOf('AKTİVASYON')===0||v.indexOf('TETİK')>=0) return ['TETİK','b-content'];
+  if(v.indexOf('AKTİF')===0) return ['AKTİF','b-active'];
+  if(v.indexOf('KUŞATMA')===0) return ['KUŞATMA','b-siege'];
+  if(v.indexOf('İSTİLA')>=0||v.indexOf('FIRSAT')===0) return ['İSTİLA','b-inv'];
+  if(v.indexOf('İÇERİK')>=0) return ['İÇERİK','b-content'];
+  return ['PARK','b-park'];
+}
+function programOf(kw){
+  kw=kw.toLowerCase();
+  if(/duyusal|cupping|sensory|tadım/.test(kw)) return /q grader/.test(kw)?'Q Grader':'Sensory';
+  if(/q grader|q arabica/.test(kw)) return 'Q Grader';
+  if(/barista/.test(kw)) return 'Barista';
+  if(/kavurma|roasting|kavurmahane|roastery|kavurucu/.test(kw)) return 'Roasting';
+  return null;
+}
+function nearestCohort(kw,lang){
+  const prog=programOf(kw);
+  if(!prog||!DATA) return null;
+  const want=lang==='en'?'English':'Turkish';
+  const now=Date.now();
+  const c=DATA.cohorts.filter(c=>c.name.toLowerCase().indexOf(prog.toLowerCase())>=0&&c.lang===want&&c.startTs>now&&!/Cancelled|Delivered/.test(c.status)).sort((a,b)=>a.startTs-b.startTs)[0];
+  return c||null;
+}
+
+async function boot(){
+  $('gate').style.display='none'; $('app').style.display='block';
+  $('apiKey').value=APIKEY;
+  if(['claude-opus-4-8','claude-sonnet-5','claude-haiku-4-5-20251001'].includes(MODEL)){ $('modelSel').value=MODEL; }
+  else { $('modelSel').value='custom'; $('modelCustom').style.display='block'; $('modelCustom').value=MODEL; }
+  if(!APIKEY) $('connPanel').open=true;
+  renderHist();
+  loadSheets(true);
+}
+async function loadSheets(force){
+  if(!force&&DATA) return;
+  try{
+    const [seo,tr]=await Promise.all([apiSheet(SEO_ID),apiSheet(TRAIN_ID)]);
+    DATA=parseSheets(seo,tr);
+    $('stamp').textContent='Canlı · '+DATA.keywords.length+' keyword · '+new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+    renderPicker();
+  }catch(e){ if(e.message!=='unauthorized') $('klist').innerHTML='<div class="err">Relay okunamadı: '+esc(e.message)+'</div>'; }
+}
+function renderPicker(){
+  if(!DATA) return;
+  const term=tnorm($('q').value||'');
+  const items=DATA.keywords.filter(k=>!term||tnorm(k.kw+' '+k.verdict+' '+k.target).indexOf(term)>=0);
+  $('klist').innerHTML=items.map(k=>{
+    const b=badgeOf(k.verdict);
+    const sel=SEL&&SEL.kw===k.kw?' sel':'';
+    return '<div class="krow'+sel+'" onclick="select(\''+esc(k.kw).replace(/'/g,"\\'")+'\')"><span class="sc">'+Math.round(k.score)+'</span><span class="kwn">'+esc(k.kw)+'</span><span class="badge '+b[1]+'">'+b[0]+'</span></div>';
+  }).join('')||'<div class="note" style="padding:10px">Eşleşme yok.</div>';
+}
+function select(kw){
+  SEL=DATA.keywords.find(k=>k.kw===kw);
+  if(!SEL) return;
+  renderPicker();
+  $('selInfo').style.display='block';
+  const en=/EN\/International/.test(SEL.intent);
+  $('langSel').value=en?'en':'tr';
+  const t=tnorm(SEL.target+' '+SEL.verdict);
+  $('typeSel').value=/sss|faq/.test(t)&&t.indexOf('/products/')>=0?'faq':(/blog|içerik #2/.test(t)?'blog':'page');
+  $('selMeta').textContent='Verdict: '+SEL.verdict+'\nHedef: '+(SEL.target||'-')+'\nNiyet: '+(SEL.intent||'-')+(SEL.pos?'\nKonum: '+SEL.pos:'')+(SEL.notes?'\nNot: '+SEL.notes:'');
+}
+
+function buildSystem(){
+  return [
+'You are the content engine for CoffeeNutz (coffeenutz.net), an İzmir specialty coffee roastery and SCA training academy on Shopify. Founder: Ömer Aydın, roasting since 2013 (first Turkish SCA-certified roaster), SCA Authorized Trainer since 2015, first native-Turkish Q Grader Instructor (Nov 2025), enrolled in the ZHAW CAS Coffee Excellence program (say "enrolled/joined", NEVER "completed"). Roaster-innovator first, teacher second.',
+'',
+'HARD RULES (violating any of these makes the output unusable):',
+'- NEVER use em dashes anywhere. Use commas, periods, parentheses, or " - " instead.',
+'- No atmospheric qualifier adverbs (sessizce, yavaşça, usulca, softly, quietly, gently). Concrete observational language only.',
+'- The roasting drum is "tambur" in Turkish, never "tava".',
+'- First-person instructor voice for promises ("size gösteriyorum", "I show you"), not corporate "we deliver".',
+'- Neuromarketing style: implication over assertion; state up to three concrete facts, then let the reader conclude. No hype adjectives.',
+'- Verifiable first-claims (first Turkish SCA roaster, first Türkçe Q Instructor) ARE allowed on course/landing pages.',
+'- Prices: mention ONLY if provided in the input data. Installment/financing lines ONLY for Q Grader pages.',
+'- If a nearest cohort is provided, the CTA references its real date.',
+'- Write ALL copy in the requested language (tr or en). EN pages are written in natural native English, not translated Turkish.',
+'',
+'SEO REQUIREMENTS:',
+'- title_tag ≤ 60 chars containing the exact keyword; meta_description ≤ 155 chars with keyword + one concrete differentiator.',
+'- Exactly one H1. Include a 40-60 word direct-answer definition block near the top (Google AI Overview target).',
+'- 3-6 FAQ items targeting People Also Ask phrasing.',
+'- schema_jsonld: a single JSON-LD string with FAQPage schema, plus Course schema when the page sells a course.',
+'- internal link suggestions must use existing site structure: /products/... course pages, /pages/sca-egitim-takvimi, /collections/egitimler, blog posts.',
+'',
+'OUTPUT FORMAT: return ONE valid JSON object, nothing else, no markdown fences, with exactly these keys:',
+'{"dil":"tr|en","url_handle":"kebab-case-slug","title_tag":"...","meta_description":"...","h1":"...","tanim_blogu":"40-60 word direct answer","bolumler":[{"baslik":"...","icerik_html":"<p>...</p>"}],"sss":[{"soru":"...","cevap":"..."}],"schema_jsonld":"{...}","ic_linkler":[{"nereden":"...","anchor":"...","nereye":"..."}],"gorsel_alt":["..."],"yayin_rehberi":[{"adim":1,"baslik":"...","link":"...","yapilacak":"...","gorecegin":"...","dallanma":"..."}]}',
+'',
+'yayin_rehberi rules: 8-14 numbered steps in Turkish, each with: link (the exact admin URL or tool deep-link to open, e.g. Shopify admin path, https://search.google.com/search-console), yapilacak (the precise action), gorecegin (what confirms success), dallanma (what to do if it looks different). Cover: creating/editing the right Shopify object for the page type, pasting title/meta in the SEO section, inserting the body HTML, adding the JSON-LD (custom Liquid section or theme.liquid conditional), placing each internal link at its source page, Request Indexing in Google Search Console (property sc-domain:coffeenutz.net), logging the work back into the CoffeeNutz SEO Smartsheet (Verdict → YAPILDI + date, Last Check), and the 2-3 week GSC monitoring expectation.'
+  ].join('\n');
+}
+function buildUser(){
+  const lang=$('langSel').value, type=$('typeSel').value, extra=$('extra').value.trim();
+  const co=nearestCohort(SEL.kw,lang);
+  const typeTxt={page:'Yeni Shopify sayfası (/pages/)',faq:'Mevcut ürün sayfasına eklenecek SSS/FAQ bloğu (sayfanın tamamı değil, blok + schema)',blog:'Shopify blog yazısı'}[type];
+  return [
+'KEYWORD: '+SEL.kw,
+'LANGUAGE: '+lang,
+'PAGE TYPE: '+typeTxt,
+'INTENT (from sheet): '+(SEL.intent||'-'),
+'CURRENT VERDICT/PLAN (from sheet): '+(SEL.verdict||'-'),
+'TARGET PAGE (from sheet): '+(SEL.target||'-'),
+'CURRENT POSITION: '+(SEL.pos||'unknown'),
+'SERP FEATURES: '+(SEL.serp||'-'),
+'AI VISIBILITY: '+(SEL.ai||'-'),
+'NOTES: '+(SEL.notes||'-'),
+co?('NEAREST COHORT: '+co.name+' · '+co.start+(co.end?' - '+co.end:'')+' · '+co.reg+'/'+co.cap+' kayıt'+(co.price?' · '+co.price+' TL':'')): 'NEAREST COHORT: none scheduled',
+extra?('EXTRA INSTRUCTIONS FROM ÖMER: '+extra):'',
+'',
+'Produce the landing content and the deployment guide as the specified JSON.'
+  ].filter(Boolean).join('\n');
+}
+
+async function generate(){
+  if(BUSY||!SEL) return;
+  if(!APIKEY){ $('connPanel').open=true; toast('Önce API anahtarını kaydet.'); return; }
+  BUSY=true; $('genBtn').disabled=true;
+  $('result').innerHTML='<div class="card loading"><span class="spin"></span>'+esc(MODEL)+' üretiyor... (30-90 sn)</div>';
+  try{
+    const r=await fetch(API,{method:'POST',headers:{
+      'x-api-key':APIKEY,'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true','content-type':'application/json'
+    },body:JSON.stringify({model:MODEL,max_tokens:8000,system:buildSystem(),messages:[{role:'user',content:buildUser()}]})});
+    if(!r.ok){ const t=await r.text(); throw new Error('API '+r.status+': '+t.slice(0,300)); }
+    const d=await r.json();
+    const txt=(d.content||[]).map(b=>b.text||'').join('');
+    RESULT=parseResult(txt);
+    RESULT._kw=SEL.kw; RESULT._model=MODEL; RESULT._ts=new Date().toISOString();
+    HIST.unshift({ts:RESULT._ts,kw:SEL.kw,model:MODEL,result:RESULT});
+    HIST=HIST.slice(0,15);
+    localStorage.setItem('lfHist',JSON.stringify(HIST));
+    renderHist();
+    TAB='content';
+    renderResult();
+  }catch(e){
+    $('result').innerHTML='<div class="err">Üretim hatası: '+esc(e.message)+'</div>';
+  }
+  BUSY=false; $('genBtn').disabled=false;
+}
+function parseResult(txt){
+  txt=txt.replace(/^```(json)?/m,'').replace(/```\s*$/m,'');
+  const a=txt.indexOf('{'), b=txt.lastIndexOf('}');
+  if(a<0||b<0) throw new Error('Model JSON döndürmedi. Ham çıktı başı: '+txt.slice(0,200));
+  return JSON.parse(txt.slice(a,b+1));
+}
+
+function block(title,content,html,mono){
+  const id='b'+Math.random().toString(36).slice(2,8);
+  return '<div class="block"><div class="bhead">'+esc(title)+'<button class="cp" onclick="copyBlock(\''+id+'\')">Kopyala</button></div>'+
+    '<div class="bbody'+(html?' html':'')+'" id="'+id+'"'+(html?' data-raw="'+esc(content)+'"':'')+'>'+
+    (mono?'<pre>'+esc(content)+'</pre>':(html?content:esc(content)))+'</div></div>';
+}
+function copyBlock(id){
+  const el=$(id);
+  const raw=el.getAttribute('data-raw');
+  const txt=raw?raw.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"'):el.innerText;
+  navigator.clipboard.writeText(txt).then(()=>toast('Kopyalandı')).catch(()=>toast('Kopyalanamadı'));
+}
+function fullBodyHtml(r){
+  let h='<h1>'+esc(r.h1)+'</h1>\n<p><strong>'+esc(r.tanim_blogu)+'</strong></p>\n';
+  (r.bolumler||[]).forEach(s=>{ h+='<h2>'+esc(s.baslik)+'</h2>\n'+s.icerik_html+'\n'; });
+  if((r.sss||[]).length){
+    h+='<h2>'+(r.dil==='en'?'FAQ':'Sıkça Sorulan Sorular')+'</h2>\n';
+    r.sss.forEach(f=>{ h+='<h3>'+esc(f.soru)+'</h3>\n<p>'+esc(f.cevap)+'</p>\n'; });
+  }
+  return h;
+}
+function downloadHtml(){
+  if(!RESULT) return;
+  const blob=new Blob([fullBodyHtml(RESULT)],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(RESULT.url_handle||'landing')+'.html';
+  a.click();
+}
+function renderResult(){
+  const r=RESULT;
+  if(!r){ $('result').innerHTML=''; return; }
+  let h='<div class="card"><div class="bhead" style="background:none;padding:0 0 8px">Sonuç · '+esc(r._kw)+' <span class="badge b-inv" style="margin-left:auto">'+esc(r._model)+'</span></div>';
+  h+='<div class="tabs"><button class="'+(TAB==='content'?'on':'')+'" onclick="setTab(\'content\')">1 · İçerik</button><button class="'+(TAB==='guide'?'on':'')+'" onclick="setTab(\'guide\')">2 · Yayın Rehberi</button><button class="'+(TAB==='raw'?'on':'')+'" onclick="setTab(\'raw\')">JSON</button></div>';
+  if(TAB==='content'){
+    h+=block('Title tag ('+(r.title_tag||'').length+' kr)',r.title_tag||'');
+    h+=block('Meta description ('+(r.meta_description||'').length+' kr)',r.meta_description||'');
+    h+=block('URL handle',r.url_handle||'');
+    h+=block('Gövde HTML (Shopify editörüne kaynak olarak yapıştır)',fullBodyHtml(r),true);
+    h+=block('JSON-LD schema',typeof r.schema_jsonld==='string'?r.schema_jsonld:JSON.stringify(r.schema_jsonld,null,2),false,true);
+    if((r.ic_linkler||[]).length) h+=block('İç linkler',(r.ic_linkler||[]).map(l=>'• '+l.nereden+'  →  "'+l.anchor+'"  →  '+l.nereye).join('\n'));
+    if((r.gorsel_alt||[]).length) h+=block('Görsel alt metinleri',(r.gorsel_alt||[]).map(a=>'• '+a).join('\n'));
+    h+='<div class="btnrow"><button class="btn btn-send" onclick="downloadHtml()">Gövdeyi .html indir</button></div>';
+  } else if(TAB==='guide'){
+    (r.yayin_rehberi||[]).forEach(s=>{
+      h+='<div class="step"><b class="no">'+esc(s.adim)+'.</b> <b>'+esc(s.baslik)+'</b>';
+      if(s.link) h+='<div class="fld"><b>Aç:</b> <a href="'+esc(s.link)+'" target="_blank" rel="noopener">'+esc(s.link)+'</a></div>';
+      if(s.yapilacak) h+='<div class="fld"><b>Yap:</b> '+esc(s.yapilacak)+'</div>';
+      if(s.gorecegin) h+='<div class="fld"><b>Göreceğin:</b> '+esc(s.gorecegin)+'</div>';
+      if(s.dallanma) h+='<div class="fld"><b>Farklıysa:</b> '+esc(s.dallanma)+'</div>';
+      h+='</div>';
+    });
+    if(!(r.yayin_rehberi||[]).length) h+='<div class="note">Model rehber üretmedi; JSON sekmesine bak.</div>';
+  } else {
+    h+=block('Ham JSON',JSON.stringify(r,null,2),false,true);
+  }
+  h+='</div>';
+  $('result').innerHTML=h;
+}
+function setTab(t){ TAB=t; renderResult(); }
+function renderHist(){
+  $('hist').innerHTML=HIST.map((x,i)=>'<div class="krow" onclick="openHist('+i+')"><span class="kwn">'+esc(x.kw)+'</span><span class="note">'+esc((x.ts||'').slice(0,16).replace('T',' '))+' · '+esc(x.model)+'</span></div>').join('')||'<div class="note">Henüz üretim yok.</div>';
+}
+function openHist(i){ RESULT=HIST[i].result; TAB='content'; renderResult(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+$('modelSel').addEventListener('change',e=>{ $('modelCustom').style.display=e.target.value==='custom'?'block':'none'; });
+if(KEY) boot(); else showGate();
+</script>
+</body>
+</html>

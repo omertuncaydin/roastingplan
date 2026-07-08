@@ -147,7 +147,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08d</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08e</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -1111,14 +1111,29 @@ function updateGauge(){
   proj=Math.min(AG_MAX,Math.max(AG_MIN,proj));
   const prT=Math.min(AG_MAX,Math.max(AG_MIN,FC_AG+(cal.agtron-FC_AG)*pT));
   const prE=Math.min(AG_MAX,Math.max(AG_MIN,FC_AG+(cal.agtron-FC_AG)*pE));
-  const band=Math.min(EP.BCAP,Math.max(AG_TOL, AG_TOL+Math.abs(prT-prE)/2));   // honest range: widens when estimators disagree
-  ENGINE={pT,pE,p,tq,band,devEff,projPhi,bias};
+  // UNCERTAINTY BAND: the gauge's own error bar, from its own data. Terms independent -> quadrature.
+  const dTerm=Math.abs(prT-prE)/2;   // estimator disagreement (clock vs energy)
+  let seT;   // bias-learner spread: weighted SD of residuals around the learned bias, per effective lesson count
+  if(gr.length>=2){ let ws=0,w2s=0,vs=0; gr.forEach((g,i)=>{ const w=Math.pow(1.6,i); ws+=w; w2s+=w*w; vs+=w*Math.pow((g.meas-g.proj)-bias,2); });
+    const sdw=Math.sqrt(vs/ws), neff=ws*ws/w2s; seT=Math.max(0.8, sdw/Math.sqrt(neff)); }
+  else if(gr.length===1) seT=3;   // one lesson: direction known, scatter unknown
+  else seT=5;   // pre-learning: matches observed first-call errors (4.8-6 in the field log)
+  let curveT=0;   // curve support: far from any lesson's phi, interpolation turns into guesswork
+  if(projPhi!=null){ let nd=1;
+    (cal.hist||[]).forEach(h=>{ if(h.ph>0.55) nd=Math.min(nd,Math.abs(PHASE-h.ph)); });
+    if(cal.phDrop>0.55) nd=Math.min(nd,Math.abs(PHASE-cal.phDrop));
+    curveT=Math.min(4,Math.max(0,(nd-0.08)*25)); }
+  let band=Math.sqrt(dTerm*dTerm+seT*seT+curveT*curveT);
+  if(borrowed) band=Math.max(band,6);   // borrowed geometry: honesty floor, another coffee's shape is a loan not a fact
+  band=Math.min(Math.max(EP.BCAP,7),Math.max(AG_TOL,band));
+  const bandR=Math.round(band*2)/2;
+  ENGINE={pT,pE,p,tq,band,seT,curveT,dTerm,devEff,projPhi,bias};
   LASTPROJ=Math.round(proj);
   TGT_U=(planActive()&&cal.target)?agU(cal.target):null;   // recipe target ring: Pro
   drawGauge('live',proj-band,proj+band);
   let hint=LANG==='tr'
-    ?((running?('~'+Math.round(proj)+' şimdi bırakılırsa'):('son çağrı ~'+Math.round(proj)))+' (saat '+Math.round(prT)+' · enerji '+Math.round(prE)+' · tempo '+pace.toFixed(2)+')'+bTag+'. Öngörü, ölçüm değil.')
-    :((running?('~'+Math.round(proj)+' if dropped now'):('final call ~'+Math.round(proj)))+' (clock '+Math.round(prT)+' · energy '+Math.round(prE)+' · pace '+pace.toFixed(2)+')'+bTag+'. Projection, not measurement.');
+    ?((running?('~'+Math.round(proj)+' ±'+bandR+' şimdi bırakılırsa'):('son çağrı ~'+Math.round(proj)+' ±'+bandR))+' (saat '+Math.round(prT)+' · enerji '+Math.round(prE)+' · tempo '+pace.toFixed(2)+')'+bTag+'. Öngörü, ölçüm değil; ± bandı bu kahvenin kendi ders geçmişinden.')
+    :((running?('~'+Math.round(proj)+' ±'+bandR+' if dropped now'):('final call ~'+Math.round(proj)+' ±'+bandR))+' (clock '+Math.round(prT)+' · energy '+Math.round(prE)+' · pace '+pace.toFixed(2)+')'+bTag+'. Projection, not measurement; the ± comes from this coffee\'s own lesson history.');
   if(TGT_U!=null){ hint+=' · '+(LANG==='tr'?'hedef':'target')+' '+cal.target;
     if(running&&Math.abs(proj-cal.target)<=AG_TOL) hint+=LANG==='tr'?' · TAHLİYE PENCERESİ':' · DROP WINDOW'; }
   $('agHint').textContent=hint;
