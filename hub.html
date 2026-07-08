@@ -61,7 +61,7 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <div class="hdrrow">
     <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0">v2026-07-05h</span>
+      <span class="sub" style="margin:0">v2026-07-05i</span>
       <button class="iconbtn" onclick="loadAll()">Recheck</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
@@ -114,7 +114,7 @@ function card(a,external){
   return el;
 }
 function getStatus(p){ try{ return (JSON.parse(localStorage.getItem('hubStatus')||'{}'))[p]||'live'; }catch(e){ return 'live'; } }
-function changeStatus(p,val){ if(val==='delete'){ if(!confirm('Remove this app from the hub? You can restore it from the footer link.')){ const s=$('grid').querySelector('.card[data-path="'+p+'"] .stsel'); if(s) s.value=getStatus(p); return; } const d=getDeleted(); if(!d.includes(p)){ d.push(p); setDeleted(d); } const c=$('grid').querySelector('.card[data-path="'+p+'"]'); if(c) c.remove(); renderRestore(); return; } let m={}; try{ m=JSON.parse(localStorage.getItem('hubStatus')||'{}'); }catch(e){} m[p]=val; localStorage.setItem('hubStatus',JSON.stringify(m)); const c=$('grid').querySelector('.card[data-path="'+p+'"]'); if(c){ c.classList.remove('st-live','st-developing','st-passive'); c.classList.add('st-'+val); } }
+function changeStatus(p,val){ if(val==='delete'){ const app=APPS.find(a=>a.path===p); const nm=app?app.nm:p; if(!confirm('Delete "'+nm+'" from the hub?\n\nIt will be hidden. You can bring it back with the "restore all" link under the grid.')){ const s=$('grid').querySelector('.card[data-path="'+p+'"] .stsel'); if(s) s.value=getStatus(p); return; } const d=getDeleted(); if(!d.includes(p)){ d.push(p); setDeleted(d); } const c=$('grid').querySelector('.card[data-path="'+p+'"]'); if(c) c.remove(); renderRestore(); return; } let m={}; try{ m=JSON.parse(localStorage.getItem('hubStatus')||'{}'); }catch(e){} m[p]=val; localStorage.setItem('hubStatus',JSON.stringify(m)); const c=$('grid').querySelector('.card[data-path="'+p+'"]'); if(c){ c.classList.remove('st-live','st-developing','st-passive'); c.classList.add('st-'+val); } }
 function getDeleted(){ try{ return JSON.parse(localStorage.getItem('hubDeleted')||'[]'); }catch(e){ return []; } }
 function setDeleted(arr){ localStorage.setItem('hubDeleted', JSON.stringify(arr)); }
 function renderRestore(){ const el=$('restore'); if(!el) return; const d=getDeleted(); el.innerHTML=d.length?(d.length+' hidden · <a href="#" onclick="restoreAll();return false">restore all</a>'):''; }
