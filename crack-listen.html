@@ -147,7 +147,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08i</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08j</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -396,6 +396,16 @@ async function start(){
   running=true; $('btn').textContent=tt('Drop'); $('btn').className='stop'; $('status').textContent=tt('Listening. Calibrating background for ~2s, keep it running steady.');
   loop();
 }
+function queueSamples(){ try{ if(!SAMPLES.length) return;
+  const entry={coffee:(cName.value||$('mCoffee').value||'').trim(), date:new Date().toISOString().slice(0,10),
+    a0:+(effA0(valid())||0).toFixed(1), samples:SAMPLES.map(sm=>({t:+sm.t.toFixed(1), ag:sm.ag||null}))};
+  if(!entry.coffee) entry.coffee='?';
+  const q=JSON.parse(localStorage.getItem('cnCupQueue')||'[]');
+  const sig=JSON.stringify([entry.coffee,entry.samples]);
+  if(q.some(e2=>JSON.stringify([e2.coffee,e2.samples])===sig)) return;   // same session twice = one queue entry
+  q.push(entry); localStorage.setItem('cnCupQueue',JSON.stringify(q.slice(-10)));
+  toast((LANG==='tr'?'Örnekler Guide Cup bölümüne gönderildi: ':'Samples sent to Guide Cup: ')+entry.samples.length);
+}catch(e){} }
 function stop(){
   running=false; if(raf) cancelAnimationFrame(raf);
   if(procDet){ try{ lpF.disconnect(procDet); procDet.disconnect(); }catch(e){} procDet.onaudioprocess=null; procDet=null; }
@@ -415,9 +425,7 @@ function stop(){
       if(!$('mMoist').value&&calP.moist) $('mMoist').value=calP.moist;
       if(!$('mAw').value&&calP.aw) $('mAw').value=calP.aw;
       if(!$('mTarget').value&&calP.target) $('mTarget').value=calP.target; } }
-  try{ if(SAMPLES.length){ const q=JSON.parse(localStorage.getItem('cnCupQueue')||'[]');   // sample pulls ride to the Guide's Cup section
-    q.push({coffee:(cName.value||'').trim(), date:new Date().toISOString().slice(0,10), a0:+(effA0(valid())||0).toFixed(1), samples:SAMPLES.map(sm=>({t:+sm.t.toFixed(1), ag:sm.ag||null}))});
-    localStorage.setItem('cnCupQueue',JSON.stringify(q.slice(-10))); } }catch(e){}
+  queueSamples();   // sample pulls ride to the Guide's Cup section (deduped)
   try{ renderSamples(); updateSD(); drawTimeline(); updateGauge(); updateMapBtn(); }catch(e){ console.error(e); }   // retrospective pass in a cage: a bad map must never strand the live screen before it reaches st-done
   const mb=(wav.len*2/1048576).toFixed(1);
   $('recInfo').textContent=LANG==='tr'
@@ -1247,6 +1255,7 @@ async function loadSession(file){
   cracks=[]; crackSeq=0;
   for(const m of text.matchAll(/# (\d+),([\d.]+),(\d+)(?:,(\d))?(?:,(\d*))?(?:,(\d*))?(?:,([\d.]*))?/g)) cracks.push({t:+m[2], g:+m[3], id:++crackSeq, fp:m[4]==='1', f:m[5]?+m[5]:undefined, w:m[6]?+m[6]:undefined, hf:m[7]?+m[7]:undefined});
   SAMPLES=[]; for(const m of text.matchAll(/# sample,\d+,([\d.]+),([\d.]*)/g)) SAMPLES.push({t:+m[1], ag:m[2]?+m[2]:null});
+  queueSamples();   // loaded sessions feed the Cup queue too, not only live roasts
   const dataT=[...text.matchAll(/^([\d.]+),/gm)]; STOPT=dataT.length?+dataT[dataT.length-1][1]:null; PHASE=0;   // session end = last trace row
   if(!cracks.length){ toast('No cracks in that session.'); return; }
   LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; $('finalCall').textContent=''; wav={chunks:[],len:0,sr:48000}; rows=[];
