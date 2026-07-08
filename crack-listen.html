@@ -147,7 +147,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08n</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08o</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -424,6 +424,7 @@ function chargeSave(){ const gs=[...document.querySelectorAll('[data-cg]')], ts=
   const cm=chgMap(), m=$('mEquip').value, o={};
   gs.forEach((g,i)=>{ const gv=parseFloat(g.value), tv=parseFloat(ts[i].value); if(isFinite(gv)&&isFinite(tv)) o[gv]=tv; });
   cm[m]=o; localStorage.setItem('gCharge',JSON.stringify(cm));   // the Guide reads this same key
+  localStorage.setItem('gChargeTs',new Date().toISOString()); chargePush();   // and the cloud carries it across contexts/devices
   $('modal').style.display='none'; renderBatchSel(); toast(LANG==='tr'?'Şarj tablosu kaydedildi (Guide ile ortak).':'Charge table saved (shared with the Guide).'); }
 function cupHandoff(){ const n=(cName.value||$('mCoffee').value||'').trim();
   // sampled scenario: hand the whole pull set to the Guide's cupping table; plain roast: single cup view
@@ -855,9 +856,15 @@ function showPaywall(feature){
    +(p?((tr?'Planın: ':'Your plan: ')+p.tier.toUpperCase()+' · '+p.until)
       :((feature?(feature+' '+(tr?'Pro özelliğidir.':'is a Pro feature.')+' '):'')
         +(tr?('Ücretsiz sürüm '+FREE_ROASTS+' kavurma içerir ('+Math.max(0,FREE_ROASTS-roastCount())+' kaldı).'):('The free version includes '+FREE_ROASTS+' roasts ('+Math.max(0,FREE_ROASTS-roastCount())+' left).'))
-        +'<br><br><b>$20</b>/'+(tr?'ay':'month')+' · <b>$200</b>/'+(tr?'yıl':'year')+'<br>'
-        +(tr?'Derin Kalibrasyon, numune çapaları ve reçeteler Pro ile açılır.':'Deep Calibration, sample anchors and recipes unlock with Pro.')))
+        ))
    +'</div>'
+   +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:10px;text-align:left">'
+   +'<tr style="color:var(--gold)"><th style="padding:4px 6px">'+(tr?'Plan':'Plan')+'</th><th style="padding:4px 6px">'+(tr?'Neler var':'What you get')+'</th></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Free</b></td><td style="padding:6px">'+(tr?FREE_ROASTS+' kavurma · tam dürüst motor (kademeler, ± bandı) · bu cihazda haritalar ve dersler · yazdırılabilir tadım formları':FREE_ROASTS+' roasts · full honest engine (stages, ± band) · maps and lessons on this device · printable cupping forms')+'</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Pro</b><br><span class="hint" style="font-size:11px">$20/'+(tr?'ay':'mo')+' · $200/'+(tr?'yıl':'yr')+'</span></td><td style="padding:6px">'+(tr?'Sınırsız kavurma · kahve bulutu (tüm cihazlar) · Derin Kalibrasyon numune çapaları · göstergede reçete hedefi · numuneden tadıma akış':'Unlimited roasts · coffee cloud (all your devices) · Deep Calibration sample anchors · recipe target on the gauge · samples-to-cupping flow')+'</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Special</b><br><span class="hint" style="font-size:11px">12 '+(tr?'ay':'mo')+'</span></td><td style="padding:6px">'+(tr?'Pro\'daki her şey · sınıf tadım akışları · yalnızca eğitim kaydıyla gelir, ayrı satılmaz':'Everything in Pro · class cupping flows · comes only with course enrollment, never sold alone')+'</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Fleet</b></td><td style="padding:6px">'+(tr?'Çok kavurmacılı işletmeler için · yakında':'For multi-roaster operations · coming')+'</td></tr>'
+   +'</table>'
    +'<button style="margin-top:14px;background:var(--accent2)" onclick="revealCode()">'+(tr?'Kod gir':'Enter code')+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="window.open(\'https://www.coffeenutz.net/products/crack-listener\')">'+(tr?'coffeenutz.net üzerinden edin':'Get it at coffeenutz.net')+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Kapat':'Close')+'</button>';
@@ -943,6 +950,15 @@ async function cloudPull(){
     toast((LANG==='tr'?'Buluttan alındı: ':'Brought: ')+n); updateGauge(); updateSD();
   });
 }
+async function chargePush(){ try{ if(!SB) return; const u=await cloudUser(); if(!u) return;
+  await SB.from('user_settings').upsert({owner:u.id, charge:chgMap(), updated_at:new Date().toISOString()},{onConflict:'owner'}); }catch(e){} }
+async function chargePull(){ try{ if(!SB) return; const u=await cloudUser(); if(!u) return;
+  const {data}=await SB.from('user_settings').select('charge,updated_at').eq('owner',u.id);
+  const r=data&&data[0]; if(!r||!r.charge) return;
+  const lts=localStorage.getItem('gChargeTs')||'';
+  if(!lts||r.updated_at>lts){ localStorage.setItem('gCharge',JSON.stringify(r.charge)); localStorage.setItem('gChargeTs',r.updated_at); renderEquipSel(); }
+  else if(lts>r.updated_at) chargePush();   // this side is newer: heal the cloud
+}catch(e){} }
 async function cloudAutoSync(){   // on open, signed in: pull ADDITIONS only (zero overwrite risk); differing coffees are counted, never touched
   const u=await cloudStatus(); if(!u||!SB) return;
   if(!planActive()) return;   // cloud is Pro
@@ -965,7 +981,7 @@ async function cloudAutoSync(){   // on open, signed in: pull ADDITIONS only (ze
       el.textContent=t; }
   }catch(e){}
 }
-setTimeout(cloudAutoSync,400); renderEquipSel();
+setTimeout(cloudAutoSync,400); setTimeout(chargePull,700); renderEquipSel();
 window.addEventListener('storage',e=>{ if(e&&e.key==='gCharge') renderBatchSel(); });
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) renderBatchSel(); });
 // walkthrough: opens itself for a fresh app copy, then remembers being folded
