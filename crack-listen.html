@@ -147,7 +147,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08b</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08c</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -877,7 +877,28 @@ async function cloudPull(){
     toast((LANG==='tr'?'Buluttan alındı: ':'Brought: ')+n); updateGauge(); updateSD();
   });
 }
-setTimeout(cloudStatus,400);
+async function cloudAutoSync(){   // on open, signed in: pull ADDITIONS only (zero overwrite risk); differing coffees are counted, never touched
+  const u=await cloudStatus(); if(!u||!SB) return;
+  if(!planActive()) return;   // cloud is Pro
+  try{
+    const {data,error}=await SB.from('coffees').select('name,badge,map').eq('owner',u.id);
+    if(error||!Array.isArray(data)||!data.length) return;
+    const m=calMap(), b=badgeMap(); let added=0, differ=0;
+    data.forEach(c=>{ if(!c.map||typeof c.map!=='object') return;
+      if(!m[c.name]){ const mm={...c.map}; delete mm.grades;   // bias lessons stay per-device
+        if(mm.bell&&!Array.isArray(mm.bell)) delete mm.bell;
+        if(mm.hist&&!Array.isArray(mm.hist)) delete mm.hist;
+        m[c.name]=mm; if(c.badge&&typeof c.badge==='object'&&Object.keys(c.badge).length) b[c.name]=c.badge; added++; }
+      else if(JSON.stringify({...m[c.name],grades:0})!==JSON.stringify({...c.map,grades:0})) differ++; });
+    if(added){ localStorage.setItem('bsCal',JSON.stringify(m)); localStorage.setItem('bsBadge',JSON.stringify(b)); }
+    const el=$('cloudStat');
+    if(el){ let t=(LANG==='tr'?'Bağlı: ':'Signed in: ')+u.email+' \u00b7 '+data.length+(LANG==='tr'?' kahve bulutta':' in cloud');
+      if(added) t+=' \u00b7 +'+added+(LANG==='tr'?' yeni alındı':' new pulled');
+      if(differ) t+=' \u00b7 '+differ+(LANG==='tr'?' farklı (Getir)':' differ (use Bring)');
+      el.textContent=t; }
+  }catch(e){}
+}
+setTimeout(cloudAutoSync,400);
 // walkthrough: opens itself for a fresh app copy, then remembers being folded
 try{ const cw=$('cWalk');
   if(cw){ if(!localStorage.getItem('bsWalkSeen')&&!Object.keys(calMap()).length&&roastCount()===0) cw.open=true;
