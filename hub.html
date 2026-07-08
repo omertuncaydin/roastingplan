@@ -20,6 +20,9 @@ h1{font-size:16px;font-weight:800;margin:14px 0 2px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:border-color .12s;display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit}
 .card:hover{border-color:var(--accent)}
+.card{position:relative}
+.grip{position:absolute;top:7px;right:9px;color:var(--muted);font-size:15px;cursor:grab;touch-action:none;padding:5px;line-height:1;user-select:none;-webkit-user-select:none}
+.card.dragging{opacity:.55;border-color:var(--accent)}
 .card .top{display:flex;align-items:center;gap:10px}
 .badge{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#1a1410;flex:none}
 .nm{font-size:15px;font-weight:700}
@@ -48,7 +51,7 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <div class="hdrrow">
     <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0">v2026-07-05b</span>
+      <span class="sub" style="margin:0">v2026-07-05c</span>
       <button class="iconbtn" onclick="loadAll()">Recheck</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
@@ -87,14 +90,25 @@ function lock(){ localStorage.removeItem('ccKey'); location.reload(); }
 function show(){ $('gate').style.display='none'; $('app').style.display='block'; render(); loadAll(); }
 
 function card(a,external){
-  const el=document.createElement('a'); el.className='card'; el.href=external?a.url:a.path; if(external) el.target='_blank';
-  el.innerHTML='<div class="top"><div class="badge" style="background:'+(a.c||'#c98a3c')+'">'+a.b+'</div><div class="nm">'+a.nm+'</div></div>'+
+  const p=a.path||a.url;
+  const el=document.createElement('div'); el.className='card'; el.dataset.path=p; el.dataset.ext=external?'1':'';
+  el.onclick=()=>openApp(p,external);
+  el.innerHTML=(external?'':'<span class="grip" onpointerdown="startDrag(event,\''+p+'\')">&#10303;</span>')+
+    '<div class="top"><div class="badge" style="background:'+(a.c||'#c98a3c')+'">'+a.b+'</div><div class="nm">'+a.nm+'</div></div>'+
     '<div class="desc">'+a.desc+'</div>'+
-    '<div class="meta"><span class="dot" id="d_'+(a.path||a.url)+'"></span><span class="ver" id="v_'+(a.path||a.url)+'">'+(external?'external':'checking…')+'</span></div>';
+    '<div class="meta"><span class="dot" id="d_'+p+'"></span><span class="ver" id="v_'+p+'">'+(external?'external':'checking…')+'</span></div>';
   return el;
 }
+function getOrder(){ try{ return JSON.parse(localStorage.getItem('hubOrder')||'[]'); }catch(e){ return []; } }
+function saveOrder(paths){ localStorage.setItem('hubOrder', JSON.stringify(paths)); }
+function orderedApps(){ const ord=getOrder(), map={}; APPS.forEach(a=>map[a.path]=a); const out=[]; ord.forEach(p=>{ if(map[p]){ out.push(map[p]); delete map[p]; } }); APPS.forEach(a=>{ if(map[a.path]) out.push(a); }); return out; }
+let justDragged=0;
+function openApp(dest,external){ if(Date.now()-justDragged<300) return; if(external) window.open(dest,'_blank'); else location.href=dest; }
+function startDrag(e,path){ e.preventDefault(); e.stopPropagation(); const g=$('grid').querySelector('.card[data-path="'+path+'"]'); if(!g) return; g.classList.add('dragging'); const grip=e.target; try{ grip.setPointerCapture(e.pointerId); }catch(_){ } grip.onpointermove=onDrag; grip.onpointerup=function(){ grip.onpointermove=null; grip.onpointerup=null; endDrag(); }; }
+function onDrag(e){ const dragged=$('grid').querySelector('.card.dragging'); if(!dragged) return; const cards=[...$('grid').querySelectorAll('.card')]; for(const c of cards){ if(c===dragged) continue; const r=c.getBoundingClientRect(); if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom){ const mid=r.top+r.height/2; if(e.clientY<mid) c.parentNode.insertBefore(dragged,c); else c.parentNode.insertBefore(dragged,c.nextSibling); break; } } }
+function endDrag(){ const dragged=$('grid').querySelector('.card.dragging'); if(dragged) dragged.classList.remove('dragging'); justDragged=Date.now(); saveOrder([...$('grid').querySelectorAll('.card')].map(c=>c.dataset.path)); }
 function render(){
-  const g=$('grid'); g.innerHTML=''; APPS.forEach(a=>g.appendChild(card(a,false)));
+  const g=$('grid'); g.innerHTML=''; orderedApps().forEach(a=>g.appendChild(card(a,false)));
   const e=$('ext'); e.innerHTML=''; if(!EXT.length){ e.innerHTML='<div class="sub" style="grid-column:1/-1;margin:0">None yet.</div>'; } else EXT.forEach(a=>e.appendChild(card(a,true)));
 }
 async function checkVer(a){
