@@ -27,7 +27,8 @@ h1{font-size:16px;font-weight:800;margin:14px 0 2px}
 .ord{position:absolute;top:6px;right:6px;display:flex;gap:3px}
 .ordbtn{width:28px;height:28px;padding:0;border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:7px;font-size:11px;cursor:pointer;line-height:1}
 .ordbtn:active{background:var(--accent);color:#1a1410;border-color:var(--accent)}
-.grip{color:var(--muted);font-size:15px;cursor:grab;touch-action:none;padding:5px 4px;line-height:1;user-select:none;-webkit-user-select:none}
+.metaL{display:flex;align-items:center;gap:8px;min-width:0}
+.grip{color:var(--muted);font-size:16px;cursor:grab;touch-action:none;padding:4px 6px 4px 0;line-height:1;user-select:none;-webkit-user-select:none}
 .grip:active{cursor:grabbing;color:var(--accent)}
 .sect{margin-bottom:4px}
 .sectlbl{cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
@@ -71,7 +72,7 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <div class="hdrrow">
     <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0">v2026-07-05k</span>
+      <span class="sub" style="margin:0">v2026-07-05l</span>
       <button class="iconbtn" onclick="loadAll()">Recheck</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
@@ -106,7 +107,7 @@ const APPS=[
 ];
 // external apps (cross-origin: link only, no live version). Add per Ömer.
 const EXT=[];
-const CATS=[['mon','Monetized'],['admin','Overhead'],['mgmt','Management']];
+const CATS=[['mon','Monetized'],['admin','Friction'],['mgmt','Management']];
 
 function unlock(){ const k=$('keyIn').value.trim(); if(!k) return; localStorage.setItem('ccKey',k); show(); }
 function lock(){ localStorage.removeItem('ccKey'); location.reload(); }
@@ -118,10 +119,10 @@ function card(a,external){
   const el=document.createElement('div'); el.className='card st-'+st; el.dataset.path=p; el.dataset.ext=external?'1':'';
   el.onclick=()=>openApp(p,external);
   const sel=external?'':'<select class="stsel" onchange="changeStatus(\''+p+'\',this.value)" onclick="event.stopPropagation()"><option value="live"'+(st==='live'?' selected':'')+'>Live</option><option value="developing"'+(st==='developing'?' selected':'')+'>Developing</option><option value="passive"'+(st==='passive'?' selected':'')+'>Passive</option><option value="delete">Delete</option></select>';
-  el.innerHTML=(external?'':'<div class="ord"><span class="grip" title="drag to another section" onpointerdown="startDrag(event,\''+p+'\')">&#10303;</span><button class="ordbtn" title="move back" onclick="moveApp(event,\''+p+'\',-1)">&#9664;</button><button class="ordbtn" title="move forward" onclick="moveApp(event,\''+p+'\',1)">&#9654;</button></div>')+
+  el.innerHTML=(external?'':'<div class="ord"><button class="ordbtn" title="move back" onclick="moveApp(event,\''+p+'\',-1)">&#9664;</button><button class="ordbtn" title="move forward" onclick="moveApp(event,\''+p+'\',1)">&#9654;</button></div>')+
     '<div class="top"><div class="badge" style="background:'+(a.c||'#c98a3c')+'">'+a.b+'</div><div class="nm">'+a.nm+'</div></div>'+
     '<div class="desc">'+a.desc+'</div>'+
-    '<div class="meta"><span class="ver" id="v_'+p+'">'+(external?'external':'…')+'</span>'+sel+'</div>';
+    '<div class="meta"><span class="metaL">'+(external?'':'<span class="grip" title="drag to another section" onpointerdown="startDrag(event,\''+p+'\')">&#10303;</span>')+'<span class="ver" id="v_'+p+'">'+(external?'external':'…')+'</span></span>'+sel+'</div>';
   return el;
 }
 function getStatus(p){ try{ return (JSON.parse(localStorage.getItem('hubStatus')||'{}'))[p]||'live'; }catch(e){ return 'live'; } }
@@ -152,7 +153,7 @@ function render(){
   CATS.forEach(([cat,label])=>{
     const apps=orderedInCat(cat); if(!apps.length) return;
     const sect=document.createElement('div'); sect.className='sect'+(coll.includes(cat)?' collapsed':''); sect.dataset.cat=cat;
-    const lbl=document.createElement('div'); lbl.className='grouplbl sectlbl'; lbl.innerHTML='<span class="chev">&#9656;</span> '+label+' <span class="cnt">'+apps.length+'</span>'; lbl.onclick=()=>toggleCollapse(cat);
+    const lbl=document.createElement('div'); lbl.className='grouplbl sectlbl'; lbl.innerHTML='<span class="chev">&#9656;</span> '+label+' <span class="cnt">('+apps.length+')</span>'; lbl.onclick=()=>toggleCollapse(cat);
     const g=document.createElement('div'); g.className='grid'; g.dataset.cat=cat; apps.forEach(a=>g.appendChild(card(a,false)));
     sect.appendChild(lbl); sect.appendChild(g); S.appendChild(sect);
   });
