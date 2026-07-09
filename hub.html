@@ -79,7 +79,7 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <div class="hdrrow">
     <div class="brand" onclick="location.reload()" title="refresh" style="cursor:pointer"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0">v2026-07-05q</span>
+      <span class="sub" style="margin:0">v2026-07-05r</span>
       <button class="iconbtn" onclick="loadAll()">Recheck Versions</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
@@ -178,8 +178,8 @@ async function checkVer(a){
   try{
     const r=await fetch(a.path,{cache:'no-store'});
     if(!r.ok){ ver.textContent='—'; return; }
-    const t=await r.text(); const m=t.match(/v20\d\d-\d\d-\d\d[a-z]?/);
-    ver.textContent=m?m[0]:'—';
+    const t=await r.text(); const m=t.match(/v20\d\d-\d\d-\d\d[a-z]?/) || t.match(/v\d+\.\d+(?:\.\d+)?/);
+    ver.textContent=m?m[0]:'';
   }catch(e){ ver.textContent='—'; }
 }
 function loadAll(){ APPS.forEach(a=>{ const v=$('v_'+a.path); if(v) v.textContent='…'; checkVer(a); }); }
