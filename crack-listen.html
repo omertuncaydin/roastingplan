@@ -149,7 +149,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-10a</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-10b</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -880,19 +880,19 @@ function showPaywall(feature){
         ))
    +'</div>'
    +(()=>{ const curT=p?normTier(p.tier):'free'; window.__pmark=t=>curT===t?' <span style="color:var(--gold);font-weight:800">\u00b7 '+(tr?'Mevcut Plan':'Current Plan')+'</span>':''; return ''; })()
-   +'<table style="width:100%;border-collapse:collapse;font-size:11.5px;margin-top:10px;text-align:left">'
-   +'<tr style="vertical-align:top"><th style="padding:5px 4px;vertical-align:top"></th>'
-   +'<th style="padding:5px 4px;vertical-align:top"><b style="color:var(--gold)">Lite</b>'+__pmark('free')+'<br><span class="hint" style="font-size:10.5px">'+(tr?'Ücretsiz':'Free')+'</span></th>'
-   +'<th style="padding:5px 4px;vertical-align:top"><b style="color:var(--gold)">Roaster</b>'+__pmark('pro')+'<br><span class="hint" style="font-size:10.5px">$20/'+(tr?'ay':'mo')+' · $200/'+(tr?'yıl':'yr')+'<br>'+(tr?'CoffeeNutz Kavurma sınıfıyla 12 ay dahil.':'12 months included with a CoffeeNutz Roasting class.')+'</span></th>'
-   +'<th style="padding:5px 4px;vertical-align:top"><b style="color:var(--gold)">Cupper</b>'+__pmark('special')+'<br><span class="hint" style="font-size:10.5px">'+(tr?'CoffeeNutz Q Grader sınıfıyla gelir. Asla ayrı satılmaz.':'Comes with a CoffeeNutz Q Grader class. Never sold alone.')+'</span></th></tr>'
-   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px 4px;vertical-align:top"><b>Crack Listener</b></td>'
-   +'<td style="padding:6px 4px;vertical-align:top">'+(tr?'Tam motorla ilk 20 kavurma.':'First 20 roasts, full engine.')+'</td>'
-   +'<td style="padding:6px 4px;vertical-align:top">'+(tr?'Sınırsız kavurma. Kahve bulutu, Deep Calibration, reçete hedefleri, kendi kendini notlama.':'Unlimited roasts. Coffee cloud, Deep Calibration, recipe targets, self-grading.')+'</td>'
-   +'<td style="padding:6px 4px;vertical-align:top">'+(tr?'Roaster\'daki her şey, artı yeni enstrümanlara ilk erişim.':'Everything in Roaster, plus first access to new instruments.')+'</td></tr>'
-   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px 4px;vertical-align:top"><b>CoffeeNutz Guide</b></td>'
-   +'<td style="padding:6px 4px;vertical-align:top">'+(tr?'Her modül, her sonuç. Hiçbir şey kaydedilmez.':'Every module, every result. Nothing is saved.')+'</td>'
-   +'<td style="padding:6px 4px;vertical-align:top">'+(tr?'Roast kayıtların kaydedilir ve saklanır.':'Roast records saved and kept.')+'</td>'
-   +'<td style="padding:6px 4px;vertical-align:top">'+(tr?'Cupping, Grade ve Value kalıcı olur. Sınıf tadım akışları.':'Cupping, Grade and Value all persist. Class cupping flows.')+'</td></tr>'
+   +'<table style="width:100%;border-collapse:collapse;font-size:11.5px;margin-top:10px;text-align:left;table-layout:fixed">'
+   +'<tr style="vertical-align:top"><th style="width:31%;padding:5px 4px;vertical-align:top;text-align:left"></th>'
+   +'<th style="padding:5px 4px;vertical-align:top;text-align:left;color:var(--muted);font-weight:600">Crack Listener</th>'
+   +'<th style="padding:5px 4px;vertical-align:top;text-align:left;color:var(--muted);font-weight:600">CoffeeNutz Guide</th></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Lite</b>'+__pmark('free')+'<br><span class="hint" style="font-size:10.5px">'+(tr?'Ücretsiz':'Free')+'</span></td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Tam motorla ilk 20 kavurma.':'First 20 roasts, full engine.')+'</td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Her modül, her sonuç. Hiçbir şey kaydedilmez.':'Every module, every result. Nothing is saved.')+'</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Roaster</b>'+__pmark('pro')+'<br><span class="hint" style="font-size:10.5px">$20/'+(tr?'ay':'mo')+' · $200/'+(tr?'yıl':'yr')+'<br>'+(tr?'CoffeeNutz Kavurma sınıfıyla 12 ay dahil.':'12 months included with a CoffeeNutz Roasting class.')+'</span></td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Sınırsız kavurma. Kahve bulutu, Deep Calibration, reçete hedefleri, kendi kendini notlama.':'Unlimited roasts. Coffee cloud, Deep Calibration, recipe targets, self-grading.')+'</td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast kayıtların kaydedilir ve saklanır.':'Roast records saved and kept.')+'</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Cupper</b>'+__pmark('special')+'<br><span class="hint" style="font-size:10.5px">'+(tr?'CoffeeNutz Q Grader sınıfıyla gelir. Asla ayrı satılmaz.':'Comes with a CoffeeNutz Q Grader class. Never sold alone.')+'</span></td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roaster\'daki her şey + örnek çekimlerin Guide\'da tadım seansına dönüşür. Yeni enstrümanlara ilk erişim.':'Everything in Roaster + your sample pulls become cupping sessions in the Guide. First access to new instruments.')+'</td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roaster\'daki her şey + Cupping, Grade ve Value kalıcı olur. Sınıf tadımları doğrudan Listener\'dan beslenir.':'Everything in Roaster + Cupping, Grade and Value all persist. Class cuppings fed straight from the Listener.')+'</td></tr>'
    +'</table>'
    +'<div class="hint" style="font-size:11px;margin-top:8px">'+(tr?'Cupper 3 yıl lisanslıdır, Q sertifikanın ömrü kadar: Q\'nu bizde yenilediğinde Cupper lisansın da onunla yenilenir.':'Cupper is licensed for 3 years, the life of your Q certificate: when you renew your Q with us, your Cupper license renews with it.')+'</div>'
    +'<div class="hint" style="font-size:11px;margin-top:10px">'+(tr?'Kayıtların asla silinmez. Plan sona ererse kaydetme durur, yaptığın her şey okunabilir kalır.':'Your records are never deleted. If a plan ends, saving pauses and everything you made stays readable.')+'</div>'
