@@ -537,7 +537,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-08p</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-08q</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -576,7 +576,7 @@
       <div class="secname" style="margin-bottom:10px">Your membership</div>
       <div class="hxrow"><span>Email</span><span class="tgtval" id="acEmail">-</span></div>
       <div class="hxrow"><span>Member since</span><span class="tgtval" id="acSince">-</span></div>
-      <div class="hxrow" style="border-bottom:none"><span>Plan</span><span class="tgtval" id="acPlan">-</span></div>
+      <div class="hxrow" style="border-bottom:none"><span>Plan</span><span class="chip sub" id="acPlan" onclick="showPlanInfo()" style="cursor:pointer" title="about the plans">-</span></div>
     </div>
     <div class="card">
       <div class="cgrplbl" onclick="toggleFold('passBody','gFoldPass',this)" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Change password</span><span class="foldChev" style="font-size:13px">&#9662;</span></div>
@@ -1504,6 +1504,7 @@ function printClassCard(){
 }
 // ---- reasoning popups (craft logic, not operating instructions) ----
 function infoModal(title,body){ hxBox.innerHTML=`<h1 style="margin:0 0 8px;font-size:18px">${title}</h1><div class="small" style="line-height:1.6">${body}</div><button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`; hxModal.style.display='flex'; }
+function showPlanInfo(){ infoModal('Plans in the CoffeeNutz Guide', 'You are on: <b>'+esc(MYPLAN)+'</b>.<br><br><b>Lite</b> (default): use every module and see every result, but nothing is saved between sessions. Good for trying the Guide.<br><br><b>Roaster Plan</b>: everything in Lite, and your Roast records are saved and kept.<br><br><b>Roaster &amp; Cupper Plan</b>: everything is saved. Roast, Cupping, Grade and Value all persist, so a coffee\'s full book stays with you.<br><br>How you get a plan: Guide plans come with a NutzAcademy class. The same enrollment grants a year of <b>Special</b> in the Crack Listener, which flows your roast samples into cupping sessions here in the Guide. Ask your instructor or see coffeenutz.net.'); }
 // SCA / CVA definitions for each cupping attribute
 const SEC_DEFS={
  fragrance:['Fragrance','The aromatics of the dry, ground coffee, smelled before any water is added (orthonasal). In the CVA you rate how intense it is (descriptive) and your impression of its quality (affective), separately.'],
