@@ -51,8 +51,9 @@ h1{font-size:16px;font-weight:800;margin:14px 0 2px}
 .card.st-developing{border-color:#D8453B;background:#241a18}
 .card.st-passive{border-color:#3f3e39;background:#1a1917;opacity:.45}
 .stsel{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:7px;font-size:11px;padding:3px 5px;color-scheme:dark;cursor:pointer}
-.mctl{display:flex;gap:6px;align-items:center;flex:none}
-.gsel{max-width:120px}
+.mctl{display:flex;flex-direction:column;gap:6px;align-items:stretch;flex:none;min-width:118px}
+.mctl .stsel{width:100%}
+.gsel{max-width:none}
 .restore{margin-top:14px;font-size:11px;color:var(--muted)}
 .restore a{color:var(--accent);text-decoration:none}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
@@ -78,7 +79,7 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <div class="hdrrow">
     <div class="brand" onclick="location.reload()" title="refresh" style="cursor:pointer"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0">v2026-07-05p</span>
+      <span class="sub" style="margin:0">v2026-07-05q</span>
       <button class="iconbtn" onclick="loadAll()">Recheck Versions</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
