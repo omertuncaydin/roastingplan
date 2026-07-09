@@ -28,8 +28,11 @@ h1{font-size:16px;font-weight:800;margin:14px 0 2px}
 .ordbtn{width:28px;height:28px;padding:0;border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:7px;font-size:11px;cursor:pointer;line-height:1}
 .ordbtn:active{background:var(--accent);color:#1a1410;border-color:var(--accent)}
 .metaL{display:flex;align-items:center;gap:8px;min-width:0}
-.grip{color:var(--muted);font-size:16px;cursor:grab;touch-action:none;padding:4px 6px 4px 0;line-height:1;user-select:none;-webkit-user-select:none}
-.grip:active{cursor:grabbing;color:var(--accent)}
+.grip{display:inline-flex;align-items:center;color:var(--muted);cursor:grab;touch-action:none;padding:4px 5px;border:1px solid var(--line);background:var(--panel2);border-radius:6px;line-height:1;user-select:none;-webkit-user-select:none}
+.grip:active{cursor:grabbing;color:var(--accent);border-color:var(--accent)}
+.grip svg{fill:currentColor;display:block}
+.secmove{margin-left:auto;display:flex;gap:4px}
+.slbl{font-weight:inherit}
 .sect{margin-bottom:4px}
 .sectlbl{cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
 .sectlbl .chev{display:inline-block;transition:transform .15s;transform:rotate(90deg);font-size:11px}
@@ -72,7 +75,7 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <div class="hdrrow">
     <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0">v2026-07-05l</span>
+      <span class="sub" style="margin:0">v2026-07-05m</span>
       <button class="iconbtn" onclick="loadAll()">Recheck</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
@@ -122,7 +125,7 @@ function card(a,external){
   el.innerHTML=(external?'':'<div class="ord"><button class="ordbtn" title="move back" onclick="moveApp(event,\''+p+'\',-1)">&#9664;</button><button class="ordbtn" title="move forward" onclick="moveApp(event,\''+p+'\',1)">&#9654;</button></div>')+
     '<div class="top"><div class="badge" style="background:'+(a.c||'#c98a3c')+'">'+a.b+'</div><div class="nm">'+a.nm+'</div></div>'+
     '<div class="desc">'+a.desc+'</div>'+
-    '<div class="meta"><span class="metaL">'+(external?'':'<span class="grip" title="drag to another section" onpointerdown="startDrag(event,\''+p+'\')">&#10303;</span>')+'<span class="ver" id="v_'+p+'">'+(external?'external':'…')+'</span></span>'+sel+'</div>';
+    '<div class="meta"><span class="metaL">'+(external?'':'<span class="grip" title="drag to another section" onpointerdown="startDrag(event,\''+p+'\')"><svg width="12" height="16" viewBox="0 0 12 16"><circle cx="3" cy="3" r="1.5"/><circle cx="9" cy="3" r="1.5"/><circle cx="3" cy="8" r="1.5"/><circle cx="9" cy="8" r="1.5"/><circle cx="3" cy="13" r="1.5"/><circle cx="9" cy="13" r="1.5"/></svg></span>')+'<span class="ver" id="v_'+p+'">'+(external?'external':'…')+'</span></span>'+sel+'</div>';
   return el;
 }
 function getStatus(p){ try{ return (JSON.parse(localStorage.getItem('hubStatus')||'{}'))[p]||'live'; }catch(e){ return 'live'; } }
@@ -139,6 +142,10 @@ function setCat(p,cat){ const m=getCatMap(); m[p]=cat; localStorage.setItem('hub
 function catOf(a){ return getCatMap()[a.path] || a.cat; }
 function getCollapsed(){ try{ return JSON.parse(localStorage.getItem('hubCollapsed')||'[]'); }catch(e){ return []; } }
 function toggleCollapse(cat){ let c=getCollapsed(); if(c.includes(cat)) c=c.filter(x=>x!==cat); else c.push(cat); localStorage.setItem('hubCollapsed',JSON.stringify(c)); const s=document.querySelector('#sections .sect[data-cat="'+cat+'"]'); if(s) s.classList.toggle('collapsed'); }
+function getCatOrder(){ const base=CATS.map(c=>c[0]); try{ const s=JSON.parse(localStorage.getItem('hubCatOrder')||'null'); if(Array.isArray(s)){ const v=s.filter(x=>base.includes(x)); base.forEach(x=>{ if(!v.includes(x)) v.push(x); }); return v; } }catch(e){} return base; }
+function saveCatOrder(a){ localStorage.setItem('hubCatOrder',JSON.stringify(a)); }
+function orderedCats(){ const map={}; CATS.forEach(c=>map[c[0]]=c); return getCatOrder().map(k=>map[k]).filter(Boolean); }
+function moveSection(e,cat,dir){ if(e) e.stopPropagation(); const ord=getCatOrder(); const i=ord.indexOf(cat), j=i+dir; if(i<0||j<0||j>=ord.length) return; const t=ord[i]; ord[i]=ord[j]; ord[j]=t; saveCatOrder(ord); render(); loadAll(); }
 function orderedInCat(cat){ const del=getDeleted(), ord=getOrder(); const inCat=APPS.filter(a=>catOf(a)===cat && !del.includes(a.path)); const map={}; inCat.forEach(a=>map[a.path]=a); const out=[]; ord.forEach(p=>{ if(map[p]){ out.push(map[p]); delete map[p]; } }); inCat.forEach(a=>{ if(map[a.path]) out.push(a); }); return out; }
 function saveDomOrder(){ saveOrder([...document.querySelectorAll('#sections .grid .card')].map(c=>c.dataset.path)); }
 let justDragged=0, didMove=false;
@@ -150,10 +157,10 @@ function endDrag(){ const dragged=document.querySelector('.card.dragging'); $('s
 function moveApp(e,path,dir){ if(e) e.stopPropagation(); justDragged=Date.now(); const c=findCard(path); if(!c) return; const grid=c.parentNode; const cards=[...grid.querySelectorAll('.card')]; const i=cards.indexOf(c), j=i+dir; if(i<0||j<0||j>=cards.length) return; const nb=cards[j]; if(dir>0) grid.insertBefore(nb,c); else grid.insertBefore(c,nb); saveDomOrder(); }
 function render(){
   const S=$('sections'); S.innerHTML=''; const coll=getCollapsed();
-  CATS.forEach(([cat,label])=>{
+  orderedCats().forEach(([cat,label])=>{
     const apps=orderedInCat(cat); if(!apps.length) return;
     const sect=document.createElement('div'); sect.className='sect'+(coll.includes(cat)?' collapsed':''); sect.dataset.cat=cat;
-    const lbl=document.createElement('div'); lbl.className='grouplbl sectlbl'; lbl.innerHTML='<span class="chev">&#9656;</span> '+label+' <span class="cnt">('+apps.length+')</span>'; lbl.onclick=()=>toggleCollapse(cat);
+    const lbl=document.createElement('div'); lbl.className='grouplbl sectlbl'; lbl.innerHTML='<span class="chev">&#9656;</span> <span class="slbl">'+label+'</span> <span class="cnt">('+apps.length+')</span><span class="secmove"><button class="ordbtn" title="section up" onclick="moveSection(event,\''+cat+'\',-1)">&#9650;</button><button class="ordbtn" title="section down" onclick="moveSection(event,\''+cat+'\',1)">&#9660;</button></span>'; lbl.onclick=()=>toggleCollapse(cat);
     const g=document.createElement('div'); g.className='grid'; g.dataset.cat=cat; apps.forEach(a=>g.appendChild(card(a,false)));
     sect.appendChild(lbl); sect.appendChild(g); S.appendChild(sect);
   });
