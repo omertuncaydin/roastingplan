@@ -27,6 +27,16 @@ h1{font-size:16px;font-weight:800;margin:14px 0 2px}
 .ord{position:absolute;top:6px;right:6px;display:flex;gap:3px}
 .ordbtn{width:28px;height:28px;padding:0;border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:7px;font-size:11px;cursor:pointer;line-height:1}
 .ordbtn:active{background:var(--accent);color:#1a1410;border-color:var(--accent)}
+.grip{color:var(--muted);font-size:15px;cursor:grab;touch-action:none;padding:5px 4px;line-height:1;user-select:none;-webkit-user-select:none}
+.grip:active{cursor:grabbing;color:var(--accent)}
+.sect{margin-bottom:4px}
+.sectlbl{cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
+.sectlbl .chev{display:inline-block;transition:transform .15s;transform:rotate(90deg);font-size:11px}
+.sect.collapsed .sectlbl .chev{transform:rotate(0)}
+.sect.collapsed .grid{display:none}
+.sectlbl .cnt{color:var(--muted);font-size:11px;font-weight:400}
+#sections.dragging-active .sect.collapsed .grid{display:grid}
+.sect.temp{opacity:.85}
 .card .top{display:flex;align-items:center;gap:10px}
 .badge{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#1a1410;flex:none}
 .nm{font-size:15px;font-weight:700}
@@ -61,7 +71,7 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <div class="hdrrow">
     <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0">v2026-07-05j</span>
+      <span class="sub" style="margin:0">v2026-07-05k</span>
       <button class="iconbtn" onclick="loadAll()">Recheck</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
@@ -96,7 +106,7 @@ const APPS=[
 ];
 // external apps (cross-origin: link only, no live version). Add per Ömer.
 const EXT=[];
-const CATS=[['mon','Monetized'],['admin','Admin'],['mgmt','Management']];
+const CATS=[['mon','Monetized'],['admin','Overhead'],['mgmt','Management']];
 
 function unlock(){ const k=$('keyIn').value.trim(); if(!k) return; localStorage.setItem('ccKey',k); show(); }
 function lock(){ localStorage.removeItem('ccKey'); location.reload(); }
@@ -108,7 +118,7 @@ function card(a,external){
   const el=document.createElement('div'); el.className='card st-'+st; el.dataset.path=p; el.dataset.ext=external?'1':'';
   el.onclick=()=>openApp(p,external);
   const sel=external?'':'<select class="stsel" onchange="changeStatus(\''+p+'\',this.value)" onclick="event.stopPropagation()"><option value="live"'+(st==='live'?' selected':'')+'>Live</option><option value="developing"'+(st==='developing'?' selected':'')+'>Developing</option><option value="passive"'+(st==='passive'?' selected':'')+'>Passive</option><option value="delete">Delete</option></select>';
-  el.innerHTML=(external?'':'<div class="ord"><button class="ordbtn" title="move back" onclick="moveApp(event,\''+p+'\',-1)">&#9664;</button><button class="ordbtn" title="move forward" onclick="moveApp(event,\''+p+'\',1)">&#9654;</button></div>')+
+  el.innerHTML=(external?'':'<div class="ord"><span class="grip" title="drag to another section" onpointerdown="startDrag(event,\''+p+'\')">&#10303;</span><button class="ordbtn" title="move back" onclick="moveApp(event,\''+p+'\',-1)">&#9664;</button><button class="ordbtn" title="move forward" onclick="moveApp(event,\''+p+'\',1)">&#9654;</button></div>')+
     '<div class="top"><div class="badge" style="background:'+(a.c||'#c98a3c')+'">'+a.b+'</div><div class="nm">'+a.nm+'</div></div>'+
     '<div class="desc">'+a.desc+'</div>'+
     '<div class="meta"><span class="ver" id="v_'+p+'">'+(external?'external':'…')+'</span>'+sel+'</div>';
@@ -123,20 +133,28 @@ function renderRestore(){ const el=$('restore'); if(!el) return; const d=getDele
 function restoreAll(){ setDeleted([]); render(); loadAll(); }
 function getOrder(){ try{ return JSON.parse(localStorage.getItem('hubOrder')||'[]'); }catch(e){ return []; } }
 function saveOrder(paths){ localStorage.setItem('hubOrder', JSON.stringify(paths)); }
-function orderedInCat(cat){ const del=getDeleted(), ord=getOrder(); const inCat=APPS.filter(a=>a.cat===cat && !del.includes(a.path)); const map={}; inCat.forEach(a=>map[a.path]=a); const out=[]; ord.forEach(p=>{ if(map[p]){ out.push(map[p]); delete map[p]; } }); inCat.forEach(a=>{ if(map[a.path]) out.push(a); }); return out; }
+function getCatMap(){ try{ return JSON.parse(localStorage.getItem('hubCat')||'{}'); }catch(e){ return {}; } }
+function setCat(p,cat){ const m=getCatMap(); m[p]=cat; localStorage.setItem('hubCat',JSON.stringify(m)); }
+function catOf(a){ return getCatMap()[a.path] || a.cat; }
+function getCollapsed(){ try{ return JSON.parse(localStorage.getItem('hubCollapsed')||'[]'); }catch(e){ return []; } }
+function toggleCollapse(cat){ let c=getCollapsed(); if(c.includes(cat)) c=c.filter(x=>x!==cat); else c.push(cat); localStorage.setItem('hubCollapsed',JSON.stringify(c)); const s=document.querySelector('#sections .sect[data-cat="'+cat+'"]'); if(s) s.classList.toggle('collapsed'); }
+function orderedInCat(cat){ const del=getDeleted(), ord=getOrder(); const inCat=APPS.filter(a=>catOf(a)===cat && !del.includes(a.path)); const map={}; inCat.forEach(a=>map[a.path]=a); const out=[]; ord.forEach(p=>{ if(map[p]){ out.push(map[p]); delete map[p]; } }); inCat.forEach(a=>{ if(map[a.path]) out.push(a); }); return out; }
 function saveDomOrder(){ saveOrder([...document.querySelectorAll('#sections .grid .card')].map(c=>c.dataset.path)); }
-let justDragged=0;
+let justDragged=0, didMove=false;
 function openApp(dest,external){ if(Date.now()-justDragged<300) return; if(external) window.open(dest,'_blank'); else location.href=dest; }
-function startDrag(e,path){ e.preventDefault(); e.stopPropagation(); const g=$('grid').querySelector('.card[data-path="'+path+'"]'); if(!g) return; g.classList.add('dragging'); const grip=e.target; try{ grip.setPointerCapture(e.pointerId); }catch(_){ } grip.onpointermove=onDrag; grip.onpointerup=function(){ grip.onpointermove=null; grip.onpointerup=null; endDrag(); }; }
-function onDrag(e){ e.preventDefault(); const dragged=$('grid').querySelector('.card.dragging'); if(!dragged) return; const cards=[...$('grid').querySelectorAll('.card')].filter(c=>c!==dragged); let best=null,bd=Infinity; for(const c of cards){ const r=c.getBoundingClientRect(); const dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2); const d=dx*dx+dy*dy; if(d<bd){ bd=d; best=c; } } if(best){ const r=best.getBoundingClientRect(); const before = e.clientY < r.top+r.height/2-2 || (Math.abs(e.clientY-(r.top+r.height/2))<=r.height/2 && e.clientX < r.left+r.width/2); best.parentNode.insertBefore(dragged, before?best:best.nextSibling); } }
-function endDrag(){ const dragged=$('grid').querySelector('.card.dragging'); if(dragged) dragged.classList.remove('dragging'); justDragged=Date.now(); saveOrder([...$('grid').querySelectorAll('.card')].map(c=>c.dataset.path)); }
+function revealEmptySections(){ const S=$('sections'); CATS.forEach(([cat,label])=>{ if(!S.querySelector('.sect[data-cat="'+cat+'"]')){ const sect=document.createElement('div'); sect.className='sect temp'; sect.dataset.cat=cat; const lbl=document.createElement('div'); lbl.className='grouplbl sectlbl'; lbl.innerHTML='<span class="chev">&#9656;</span> '+label+' <span class="cnt">drop here</span>'; const g=document.createElement('div'); g.className='grid'; g.dataset.cat=cat; g.style.minHeight='56px'; sect.appendChild(lbl); sect.appendChild(g); S.appendChild(sect); } }); }
+function startDrag(e,path){ e.preventDefault(); e.stopPropagation(); const c=findCard(path); if(!c) return; didMove=false; c.classList.add('dragging'); $('sections').classList.add('dragging-active'); revealEmptySections(); const grip=e.currentTarget; try{ grip.setPointerCapture(e.pointerId); }catch(_){ } grip.onpointermove=onDrag; grip.onpointerup=function(){ grip.onpointermove=null; grip.onpointerup=null; endDrag(); }; }
+function onDrag(e){ e.preventDefault(); didMove=true; const dragged=document.querySelector('.card.dragging'); if(!dragged) return; const grids=[...document.querySelectorAll('#sections .grid')]; let tg=null; for(const g of grids){ const r=g.parentNode.getBoundingClientRect(); if(e.clientY>=r.top&&e.clientY<=r.bottom){ tg=g; break; } } if(!tg){ let bd=Infinity; for(const g of grids){ const r=g.getBoundingClientRect(); const dy=Math.abs(e.clientY-(r.top+r.height/2)); if(dy<bd){ bd=dy; tg=g; } } } if(!tg) return; const cards=[...tg.querySelectorAll('.card')].filter(c=>c!==dragged); if(!cards.length){ tg.appendChild(dragged); return; } let best=null,bd=Infinity; for(const c of cards){ const r=c.getBoundingClientRect(); const dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2); const d=dx*dx+dy*dy; if(d<bd){ bd=d; best=c; } } const r=best.getBoundingClientRect(); const before=e.clientY<r.top+r.height/2-2||(Math.abs(e.clientY-(r.top+r.height/2))<=r.height/2&&e.clientX<r.left+r.width/2); tg.insertBefore(dragged, before?best:best.nextSibling); }
+function endDrag(){ const dragged=document.querySelector('.card.dragging'); $('sections').classList.remove('dragging-active'); if(dragged) dragged.classList.remove('dragging'); if(!dragged||!didMove){ [...document.querySelectorAll('#sections .sect.temp')].forEach(s=>s.remove()); return; } justDragged=Date.now(); const grid=dragged.parentNode; const cat=grid&&grid.dataset?grid.dataset.cat:null; if(cat) setCat(dragged.dataset.path,cat); saveDomOrder(); render(); loadAll(); }
 function moveApp(e,path,dir){ if(e) e.stopPropagation(); justDragged=Date.now(); const c=findCard(path); if(!c) return; const grid=c.parentNode; const cards=[...grid.querySelectorAll('.card')]; const i=cards.indexOf(c), j=i+dir; if(i<0||j<0||j>=cards.length) return; const nb=cards[j]; if(dir>0) grid.insertBefore(nb,c); else grid.insertBefore(c,nb); saveDomOrder(); }
 function render(){
-  const S=$('sections'); S.innerHTML='';
+  const S=$('sections'); S.innerHTML=''; const coll=getCollapsed();
   CATS.forEach(([cat,label])=>{
     const apps=orderedInCat(cat); if(!apps.length) return;
-    const lbl=document.createElement('div'); lbl.className='grouplbl'; lbl.textContent=label; S.appendChild(lbl);
-    const g=document.createElement('div'); g.className='grid'; g.dataset.cat=cat; apps.forEach(a=>g.appendChild(card(a,false))); S.appendChild(g);
+    const sect=document.createElement('div'); sect.className='sect'+(coll.includes(cat)?' collapsed':''); sect.dataset.cat=cat;
+    const lbl=document.createElement('div'); lbl.className='grouplbl sectlbl'; lbl.innerHTML='<span class="chev">&#9656;</span> '+label+' <span class="cnt">'+apps.length+'</span>'; lbl.onclick=()=>toggleCollapse(cat);
+    const g=document.createElement('div'); g.className='grid'; g.dataset.cat=cat; apps.forEach(a=>g.appendChild(card(a,false)));
+    sect.appendChild(lbl); sect.appendChild(g); S.appendChild(sect);
   });
   const e=$('ext'); e.innerHTML=''; if(!EXT.length){ e.innerHTML='<div class="sub" style="grid-column:1/-1;margin:0">None yet.</div>'; } else EXT.forEach(a=>e.appendChild(card(a,true)));
   renderRestore();
