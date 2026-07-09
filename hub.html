@@ -48,7 +48,7 @@ h1{font-size:16px;font-weight:800;margin:14px 0 2px}
 .meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:8px;font-size:11px;color:var(--muted)}
 .card.st-live{border-color:#3c7a5a;background:#1c241d}
 .card.st-developing{border-color:#D8453B;background:#241a18}
-.card.st-passive{border-color:#57564f;background:#201f1d}
+.card.st-passive{border-color:#3f3e39;background:#1a1917;opacity:.45}
 .stsel{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:7px;font-size:11px;padding:3px 5px;color-scheme:dark;cursor:pointer}
 .restore{margin-top:14px;font-size:11px;color:var(--muted)}
 .restore a{color:var(--accent);text-decoration:none}
@@ -73,9 +73,9 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
 
 <div id="app" class="wrap" style="display:none">
   <div class="hdrrow">
-    <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
+    <div class="brand" onclick="location.reload()" title="refresh" style="cursor:pointer"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0">v2026-07-05m</span>
+      <span class="sub" style="margin:0">v2026-07-05n</span>
       <button class="iconbtn" onclick="loadAll()">Recheck</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
