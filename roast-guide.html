@@ -537,7 +537,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-08q</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-09b</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -594,7 +594,7 @@
       <div class="small" style="margin-bottom:10px">Assign a plan to a learner by email. Works even before they sign up. No plan = Lite (use and see, cannot keep).</div>
       <label class="fld" for="entEmail">Learner email</label><input type="email" id="entEmail" autocomplete="off" oninput="lookupEntitlement()">
       <label class="fld" for="entPlan" style="margin-top:10px">Plan</label>
-      <select id="entPlan"><option>Roaster Plan</option><option>Roaster &amp; Cupper Plan</option></select>
+      <select id="entPlan"><option>Roaster</option><option>Cupper</option></select>
       <button class="btn" style="margin-top:12px" onclick="saveEntitlement()">Save plan</button>
       <div class="small" id="entMsg" style="margin-top:8px;color:var(--accent2)"></div>
       <div class="cgrplbl" style="margin-top:14px">Provisioned members</div>
@@ -1090,9 +1090,9 @@ function renderLog(){ const tb=logTbl.querySelector('tbody'); tb.innerHTML='';
     tr.innerHTML=`<td style="white-space:nowrap">${r.date}<div class="exlbl" data-hx="${r.id}">Heuristics</div></td>`+
       `<td class="num"><b style="color:var(--accent2)">#${batch}</b></td>`+
       `<td>${esc(r.bean)}<div class="exlbl" data-log="${r.id}">Log</div></td>`+
-      `<td class="num"><b class="tgtval">${r.targetAg!=null?r.targetAg:'—'}</b></td>`+
+      `<td class="num"><b class="tgtval">${r.targetAg!=null?r.targetAg:'-'}</b></td>`+
       `<td><button class="delx" data-del="${r.id}">×</button></td>`; tb.appendChild(tr);
-    const sr=document.createElement('tr'); sr.className='agrow slide'; sr.innerHTML=`<td colspan="5"><div class="aglbl" style="margin-bottom:5px">Actual Agtron</div><div class="slidewrap"><button class="step" data-dec="${r.id}">−</button><input type="range" class="agslider" min="40" max="130" step="1" value="${sv}" data-rng="${r.id}"><button class="step" data-inc="${r.id}">+</button><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'—'}" style="width:54px;text-align:center"></div></td>`; tb.appendChild(sr);
+    const sr=document.createElement('tr'); sr.className='agrow slide'; sr.innerHTML=`<td colspan="5"><div class="aglbl" style="margin-bottom:5px">Actual Agtron</div><div class="slidewrap"><button class="step" data-dec="${r.id}">−</button><input type="range" class="agslider" min="40" max="130" step="1" value="${sv}" data-rng="${r.id}"><button class="step" data-inc="${r.id}">+</button><input class="act" type="number" inputmode="numeric" min="0" max="150" step="1" value="${av}" data-id="${r.id}" placeholder="${r.targetAg!=null?r.targetAg:'-'}" style="width:54px;text-align:center"></div></td>`; tb.appendChild(sr);
     const corr=corrLine(r); const cr=document.createElement('tr'); cr.className='corr'+(corr?'':' hide'); cr.dataset.corr=r.id; cr.innerHTML=`<td colspan="5" style="text-align:left">${corr||''}</td>`; tb.appendChild(cr); });
   tb.querySelectorAll('[data-hx]').forEach(b=>b.onclick=()=>openHx(b.dataset.hx));
   tb.querySelectorAll('[data-log]').forEach(b=>b.onclick=()=>openLog(b.dataset.log));
@@ -1359,7 +1359,7 @@ function showDistInfo(){ hxBox.innerHTML=`<h1 style="margin:0 0 8px;font-size:18
   `<button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`;
   hxModal.style.display='flex'; }
 function renderValueCard(){ const s=valSample.value; const c=CUPS.find(x=>x.sample===s); const g=GRADES.find(x=>x.sample===s);
-  const desc=c?distinctDescriptors(c):[]; const fit=c?(c.total||cupTotal(c)).toFixed(2):'—'; const D=c?distinctiveness(c):null;
+  const desc=c?distinctDescriptors(c):[]; const fit=c?(c.total||cupTotal(c)).toFixed(2):'-'; const D=c?distinctiveness(c):null;
   const dot=on=>`<span class="pdot ${on?'full':''}"></span>`;
   let h='<div class="card">';
   h+=`<div class="twowin"><div class="w fit"><div class="wl">Fit <button class="iconbtn" style="padding:2px 8px;font-size:11px" onclick="toggleScore()">${T(isScoreSecured(s)?'Reveal':'Hide')}</button></div><div class="wv${isScoreSecured(s)?' secured':''}${canSave('value')?'':' qblur'}" onclick="toggleScore()" style="cursor:pointer">${fit}</div><div class="wsub">cupping score · how well it suits a target palate</div></div>`;
@@ -1372,7 +1372,7 @@ function renderValueCard(){ const s=valSample.value; const c=CUPS.find(x=>x.samp
   // pillars (lifecycle order: green grade -> roast -> cup -> value)
   const bean=BEANS.find(b=>b.name===s); const roasts=LOG.filter(l=>l.bean===s);
   h+='<div class="card"><div class="secname" style="margin-bottom:4px">Identity card</div>';
-  h+=`<div class="pillar">${dot(!!g)}<div><div class="pname">Physical (green)</div><div class="pbody">${g?(`${g.color||'color —'} · moisture ${g.moisture||'—'}% · ${gradeVerdictFor(g).ok?'specialty grade':'below specialty'}`):'Not graded yet. Open Grade.'}</div></div></div>`;
+  h+=`<div class="pillar">${dot(!!g)}<div><div class="pname">Physical (green)</div><div class="pbody">${g?(`${g.color||'color -'} · moisture ${g.moisture||'-'}% · ${gradeVerdictFor(g).ok?'specialty grade':'below specialty'}`):'Not graded yet. Open Grade.'}</div></div></div>`;
   let roastBody='Not roasted in the guide yet. Open Roast.';
   if(roasts.length){ const last=roasts[0]; roastBody=roasts.length+' roast'+(roasts.length>1?'s':'')+' · last '+last.date+' · drop '+last.target+((last.agtron!==''&&last.agtron!=null)?(' · '+last.agtron+'A'):(last.targetAg!=null?(' · target '+last.targetAg+'A'):'')); }
   h+=`<div class="pillar">${dot(roasts.length>0)}<div><div class="pname">Roast</div><div class="pbody">${roastBody}</div></div></div>`;
@@ -1430,14 +1430,17 @@ const DEFAULT_ACCESS={roast:'lite',cup:'lite',grade:'lite',value:'lite'};   // u
 let ACCESS={roast:'full',cup:'full',grade:'full',value:'full'};
 let MYEMAIL='', MYPLAN='Lite';
 // named plans -> module save access. Roaster Plan saves Roast only; Roaster & Cupper saves everything.
-const PLANS={ 'Roaster Plan':{roast:'full',cup:'lite',grade:'lite',value:'lite'}, 'Roaster & Cupper Plan':{roast:'full',cup:'full',grade:'full',value:'full'} };
+const _ACC_ROASTER={roast:'full',cup:'lite',grade:'lite',value:'lite'};
+const _ACC_CUPPER={roast:'full',cup:'full',grade:'full',value:'full'};
+const PLANS={ 'Roaster':_ACC_ROASTER, 'Cupper':_ACC_CUPPER, 'Roaster Plan':_ACC_ROASTER, 'Roaster & Cupper Plan':_ACC_CUPPER };   // old stored entitlement names alias to the same access objects
+function planLabelG(p){ return ({'Roaster Plan':'Roaster','Roaster & Cupper Plan':'Cupper','Roaster':'Roaster','Cupper':'Cupper','Lite':'Lite','Admin':'Admin'})[p]||p; }
 function canSave(m){ return (ACCESS[m]||'lite')==='full'; }
 async function loadAccess(){
   if(IS_ADMIN){ ACCESS={roast:'full',cup:'full',grade:'full',value:'full'}; MYPLAN='Admin'; return; }   // the master always has full
   ACCESS=Object.assign({},DEFAULT_ACCESS); MYPLAN='Lite';
   if(!sb||!MYEMAIL) return;
   try{ const r=await sb.from('entitlements').select('access').eq('email',MYEMAIL.toLowerCase()).maybeSingle();
-    if(r&&!r.error&&r.data&&r.data.access){ const a=r.data.access; ACCESS=Object.assign({},DEFAULT_ACCESS,a); MYPLAN=a.plan||'Roaster Plan'; } }catch(e){}
+    if(r&&!r.error&&r.data&&r.data.access){ const a=r.data.access; ACCESS=Object.assign({},DEFAULT_ACCESS,a); MYPLAN=planLabelG(a.plan)||'Roaster'; } }catch(e){}
 }
 function enrollPrompt(word){ return 'Lite access: explore freely here, but saving your '+word+' unlocks when you enroll to your class.'; }
 function liteBanner(word){ return '<div class="litebanner">Lite access. Score and explore as much as you like - saving your '+word+' unlocks when you enroll to your class.</div>'; }
@@ -1449,10 +1452,10 @@ async function saveEntitlement(){ if(!IS_ADMIN||!sb) return; const email=(entEma
   entMsg.style.color='var(--accent2)'; entMsg.textContent='Saved '+plan+' for '+email; loadEntitlements(); }
 async function lookupEntitlement(){ if(!IS_ADMIN||!sb) return; const email=(entEmail.value||'').trim().toLowerCase(); if(!email) return;
   try{ const r=await sb.from('entitlements').select('access').eq('email',email).maybeSingle(); const a=(r&&!r.error&&r.data&&r.data.access)?r.data.access:null;
-    const el=document.getElementById('entPlan'); if(el&&a&&a.plan) el.value=a.plan; }catch(e){} }
+    const el=document.getElementById('entPlan'); if(el&&a&&a.plan) el.value=planLabelG(a.plan); }catch(e){} }
 async function loadEntitlements(){ if(!IS_ADMIN||!sb){ if(typeof entList!=='undefined'&&entList) entList.innerHTML=''; return; }
   try{ const r=await sb.from('entitlements').select('*').order('email');
-    if(r&&!r.error&&r.data){ entList.innerHTML = r.data.length? r.data.map(e=>{ const a=e.access||{}; const plan=a.plan||'(custom)'; return `<div class="hxrow"><span>${esc(e.email)}</span><span class="tgtval" style="font-size:11px">${esc(plan)} <button class="delx" data-delent="${esc(e.email)}">×</button></span></div>`; }).join('') : '<div class="small">No members provisioned yet.</div>';
+    if(r&&!r.error&&r.data){ entList.innerHTML = r.data.length? r.data.map(e=>{ const a=e.access||{}; const plan=a.plan?planLabelG(a.plan):'(custom)'; return `<div class="hxrow"><span>${esc(e.email)}</span><span class="tgtval" style="font-size:11px">${esc(plan)} <button class="delx" data-delent="${esc(e.email)}">×</button></span></div>`; }).join('') : '<div class="small">No members provisioned yet.</div>';
       entList.querySelectorAll('[data-delent]').forEach(b=>b.onclick=()=>delEntitlement(b.dataset.delent)); } }catch(e){} }
 async function delEntitlement(email){ if(!IS_ADMIN||!sb) return; if(!confirm('Remove access row for '+email+'?')) return; const r=await sb.from('entitlements').delete().eq('email',email); if(r&&!r.error) loadEntitlements(); }
 // admin: live EN -> TR translation editor (overrides merge over built-in DICT, stored in settings.tr_dict)
@@ -1504,7 +1507,7 @@ function printClassCard(){
 }
 // ---- reasoning popups (craft logic, not operating instructions) ----
 function infoModal(title,body){ hxBox.innerHTML=`<h1 style="margin:0 0 8px;font-size:18px">${title}</h1><div class="small" style="line-height:1.6">${body}</div><button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`; hxModal.style.display='flex'; }
-function showPlanInfo(){ infoModal('Plans in the CoffeeNutz Guide', 'You are on: <b>'+esc(MYPLAN)+'</b>.<br><br><b>Lite</b> (default): use every module and see every result, but nothing is saved between sessions. Good for trying the Guide.<br><br><b>Roaster Plan</b>: everything in Lite, and your Roast records are saved and kept.<br><br><b>Roaster &amp; Cupper Plan</b>: everything is saved. Roast, Cupping, Grade and Value all persist, so a coffee\'s full book stays with you.<br><br>How you get a plan: Guide plans come with a NutzAcademy class. The same enrollment grants a year of <b>Special</b> in the Crack Listener, which flows your roast samples into cupping sessions here in the Guide. Ask your instructor or see coffeenutz.net.'); }
+function showPlanInfo(){ infoModal('Plans', 'You are on: <b>'+esc(planLabelG(MYPLAN))+'</b>.<br><br><b>Lite</b> (free, the default): try both instruments. Listener: your first 20 roasts with the full engine. Guide: use every module and see every result; nothing is saved.<br><br><b>Roaster</b> ($20/month or $200/year): everything in Lite, unlimited. Listener: coffee cloud, Deep Calibration, recipe targets, self-grading. Guide: your Roast records are saved and kept.<br><br><b>Cupper</b> (comes with a CoffeeNutz Q Grader class, never sold alone). Everything in the Roaster tier, plus Cupping, Grade and Value all persist. Class cupping flows and first access to new instruments. Licensed for 3 years, the life of your Q certificate: when you renew your Q with us, your Cupper license renews with it.<br><br>Your records are never deleted. If a plan ends, saving pauses and everything you made stays readable.'); }
 // SCA / CVA definitions for each cupping attribute
 const SEC_DEFS={
  fragrance:['Fragrance','The aromatics of the dry, ground coffee, smelled before any water is added (orthonasal). In the CVA you rate how intense it is (descriptive) and your impression of its quality (affective), separately.'],
@@ -1546,7 +1549,7 @@ function showStageInfo(){ infoModal(T('Stage guide'),
 async function renderAccount(){
   if(sb){ try{ const u=await sb.auth.getUser(); const usr=u&&u.data&&u.data.user; if(usr){ acEmail.textContent=usr.email||'-'; acSince.textContent=usr.created_at?usr.created_at.slice(0,10):'-'; } }catch(e){} }
   else { acEmail.textContent='offline'; acSince.textContent='-'; }
-  const ap=document.getElementById('acPlan'); if(ap) ap.textContent=MYPLAN;
+  const ap=document.getElementById('acPlan'); if(ap) ap.textContent=planLabelG(MYPLAN);
   const cc=document.getElementById('classCard'); if(cc){ cc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) renderClassQRs(); }
   const ec=document.getElementById('engineCard'); if(ec){ ec.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadEngine(); }
   const mc=document.getElementById('memberCard'); if(mc){ mc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadEntitlements(); }
@@ -1616,7 +1619,7 @@ const DICT={ tr:{
  "Your membership":"Üyeliğiniz","Member since":"Üyelik tarihi","Plan":"Plan","Change password":"Şifre değiştir","New password":"Yeni şifre",
  "Confirm new password":"Yeni şifreyi onayla","Update password":"Şifreyi güncelle","Log out":"Çıkış yap","Member access":"Üye erişimi",
  "Learner email":"Öğrenci e-postası","Save plan":"Planı kaydet","Provisioned members":"Tanımlı üyeler",
- "Roaster Plan":"Kavurucu Planı","Roaster & Cupper Plan":"Kavurucu ve Tadımcı Planı","Admin":"Yönetici",
+ "Lite":"Lite","Roaster":"Roaster","Cupper":"Cupper","Admin":"Yönetici",
  // CVA lexicon - kept English on purpose (edit here to translate)
  "Floral":"Floral","Fruity":"Fruity","Berry":"Berry","Dried Fruit":"Dried Fruit","Citrus Fruit":"Citrus Fruit","Sour/Fermented":"Sour/Fermented",
  "Sour":"Sour","Fermented":"Fermented","Green/Vegetative":"Green/Vegetative","Other":"Other","Chemical":"Chemical","Musty/Earthy":"Musty/Earthy","Woody":"Woody",

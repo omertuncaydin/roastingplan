@@ -149,7 +149,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-08s</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-09a</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -166,11 +166,11 @@ body.st-setup #btn{display:none}
   <summary>how it works · 5 steps</summary>
   <div class="card">
     <div class="wstep"><div class="wnum">1</div><div><div class="wtitle">Name your coffee</div><div class="wbody">Tap the nameplate and give the bean its name; every coffee carries its own map, memory and details.</div></div></div>
-    <div class="wstep"><div class="wnum">2</div><div><div class="wtitle">The first roast is the reference</div><div class="wbody">Roast this coffee to the DARKEST level you serve, and after Drop fill the measured color and tap Map. If you pull samples to cup and analyze while roasting, tap "Sample pulled" at each pull (Pro): every measured sample deepens the calibration, and with the Special plan your samples feed cupping sessions in the Guide - the path to this coffee's best recipe.</div></div></div>
+    <div class="wstep"><div class="wnum">2</div><div><div class="wtitle">The first roast is the reference</div><div class="wbody">Roast this coffee to the DARKEST level you serve, and after Drop fill the measured color and tap Map. If you pull samples to cup and analyze while roasting, tap "Sample pulled" at each pull (Roaster): every measured sample deepens the calibration, and with the Cupper plan your samples feed cupping sessions in the Guide - the path to this coffee's best recipe.</div></div></div>
     <div class="wstep"><div class="wnum">3</div><div><div class="wtitle">Set up every roast the same way</div><div class="wbody">Open the listener 1-2 minutes before first crack, phone in the same spot near the drum, set Trigger and High-pass once and leave them alone.</div></div></div>
     <div class="wstep"><div class="wnum">4</div><div><div class="wtitle">Roast by the bell</div><div class="wbody">The stages pin themselves as they are earned, the ghost races your reference roast, and the gauge shows the color if you dropped right now. When you drop the beans, tap Drop.</div></div></div>
     <div class="wstep"><div class="wnum">5</div><div><div class="wtitle">Measure, fill, tap the button</div><div class="wbody">After cooling, enter the measured color and tap the Map button - on early-cut roasts it says "Record lesson" and keeps your reference safe. Every measured roast makes the next prediction better; that is the app learning your coffee. Save the session (.zip) as your archive.</div></div></div>
-    <div class="wfree">Your first 20 roasts are free. Pro unlocks samples, recipes and Deep Calibration.</div>
+    <div class="wfree">Your first 20 roasts are free. Roaster unlocks samples, recipes and Deep Calibration.</div>
   </div>
   </details>
 
@@ -249,7 +249,7 @@ body.st-setup #btn{display:none}
         <input type="text" id="mProc" placeholder="Process (washed/natural)" style="flex:1.2;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
         <input type="text" id="mMoist" placeholder="Moisture %" inputmode="decimal" style="flex:0.8;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
         <input type="text" id="mAw" placeholder="Aw" inputmode="decimal" style="flex:0.6;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
-        <input type="text" id="mTarget" placeholder="Target Agtron (recipe · Pro)" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="mTarget" placeholder="Target Agtron (recipe · Roaster)" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
       </div>
       <div class="lbl" style="color:var(--gold);margin:10px 0 5px">ground agtron · the number that teaches the app</div>
       <div style="display:flex;gap:6px;margin-bottom:6px">
@@ -836,15 +836,18 @@ if(localStorage.getItem('bsAdmin')==='1') document.body.classList.add('admin');
 // ---- plans: free = 10 roasts, Pro $20/mo · $200/yr, Special = 12 months included.
 // v1 gate is HONOR-BASED (localStorage): real enforcement lands with the accounts layer + server codes.
 const FREE_ROASTS=20;
+function normTier(t){ return t==='roaster'?'pro':(t==='cupper'?'special':t); }   // old stored 'pro'/'special' and future 'roaster'/'cupper' both resolve
+const PLAN_LABEL={free:'Lite',pro:'Roaster',special:'Cupper',admin:'Admin'};
+function planLabel(t){ return PLAN_LABEL[normTier(t)]||t; }
 function planActive(){ try{ const p=JSON.parse(localStorage.getItem('bsPlan')||'null'); return (p&&new Date(p.until)>=new Date())?p:null; }catch(e){ return null; } }
 function roastCount(){ return +(localStorage.getItem('bsRoastN')||0); }
 function refreshPlanUI(){ const p=planActive(), el=$('planTag'); if(!el) return;
   const adm=document.body.classList.contains('admin')?' · +ADMIN':'';
-  el.textContent=(p?((p.tier==='special'?'SPECIAL':'PRO')+' · '+p.until)
+  el.textContent=(p?(planLabel(p.tier)+' · '+p.until)
     :(LANG==='tr'?('ücretsiz · '+Math.max(0,FREE_ROASTS-roastCount())+'/'+FREE_ROASTS+' kavurma'):('free · '+Math.max(0,FREE_ROASTS-roastCount())+'/'+FREE_ROASTS+' roasts')))+adm; }
 function grantPlan(tier,months,code){ const u=new Date(); u.setMonth(u.getMonth()+months);
   localStorage.setItem('bsPlan',JSON.stringify({tier,until:u.toISOString().slice(0,10),code}));
-  toast((tier==='special'?'Special':'Pro')+' · '+(LANG==='tr'?'şu tarihe kadar aktif: ':'active until ')+u.toISOString().slice(0,10));
+  toast(planLabel(tier)+' · '+(LANG==='tr'?'şu tarihe kadar aktif: ':'active until ')+u.toISOString().slice(0,10));
   refreshPlanUI(); hideCode(); $('modal').style.display='none'; }
 function revealCode(){ $('modal').style.display='none'; const r=$('codeRow'); r.style.display='flex'; window.scrollTo({top:0,behavior:'smooth'}); setTimeout(()=>{ const i=$('licInput'); if(i) i.focus(); },350); }
 function hideCode(){ const r=$('codeRow'); if(r) r.style.display='none'; const i=$('licInput'); if(i) i.value=''; }
@@ -861,7 +864,7 @@ async function applyCode(){ const el=$('licInput'), c=((el&&el.value)||'').repla
     const j=await r.json().catch(()=>({}));
     if(r.ok&&j.until){
       localStorage.setItem('bsPlan',JSON.stringify({tier:j.tier,until:j.until,code:c}));
-      toast((j.tier==='special'?'Special':'Pro')+' · '+(LANG==='tr'?'şu tarihe kadar aktif: ':'active until ')+j.until);
+      toast(planLabel(j.tier)+' · '+(LANG==='tr'?'şu tarihe kadar aktif: ':'active until ')+j.until);
       refreshPlanUI(); hideCode(); $('modal').style.display='none';
     } else toast((LANG==='tr'?'Kod reddedildi: ':'Code rejected: ')+(j.error||r.status));
   }catch(e){ toast(LANG==='tr'?'Sunucuya ulaşılamadı; sonra tekrar dene.':'Could not reach the server; try again later.'); }
@@ -869,21 +872,21 @@ async function applyCode(){ const el=$('licInput'), c=((el&&el.value)||'').repla
 function showPaywall(feature){
   const p=planActive();
   const tr=LANG==='tr';
-  $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">Crack Listener Pro</h1>'
+  $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">'+(tr?'Planlar':'Plans')+'</h1>'
    +'<div class="hint" style="font-size:13px;margin:0">'
-   +(p?((tr?'Planın: ':'Your plan: ')+p.tier.toUpperCase()+' · '+p.until)
-      :((feature?(feature+' '+(tr?'Pro özelliğidir.':'is a Pro feature.')+' '):'')
+   +(p?((tr?'Planın: ':'Your plan: ')+planLabel(p.tier)+' · '+p.until)
+      :((feature?(feature+' '+(tr?'Roaster özelliğidir.':'is a Roaster feature.')+' '):'')
         +(tr?('Ücretsiz sürüm '+FREE_ROASTS+' kavurma içerir ('+Math.max(0,FREE_ROASTS-roastCount())+' kaldı).'):('The free version includes '+FREE_ROASTS+' roasts ('+Math.max(0,FREE_ROASTS-roastCount())+' left).'))
         ))
    +'</div>'
-   +(()=>{ const curT=p?p.tier:'free'; window.__pmark=t=>curT===t?' <span style="color:var(--gold);font-weight:800">\u00b7 '+(tr?'Mevcut Plan':'Current Plan')+'</span>':''; return ''; })()
+   +(()=>{ const curT=p?normTier(p.tier):'free'; window.__pmark=t=>curT===t?' <span style="color:var(--gold);font-weight:800">\u00b7 '+(tr?'Mevcut Plan':'Current Plan')+'</span>':''; return ''; })()
    +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:10px;text-align:left">'
    +'<tr style="color:var(--gold)"><th style="padding:4px 6px">'+(tr?'Plan':'Plan')+'</th><th style="padding:4px 6px">'+(tr?'Neler var':'What you get')+'</th></tr>'
-   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Free</b>'+__pmark('free')+'</td><td style="padding:6px">'+(tr?FREE_ROASTS+' kavurma · tam dürüst motor (kademeler, ± bandı) · bu cihazda haritalar ve dersler · yazdırılabilir tadım formları':FREE_ROASTS+' roasts · full honest engine (stages, ± band) · maps and lessons on this device · printable cupping forms')+'</td></tr>'
-   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Pro</b>'+__pmark('pro')+'<br><span class="hint" style="font-size:11px">$20/'+(tr?'ay':'mo')+' · $200/'+(tr?'yıl':'yr')+'</span></td><td style="padding:6px">'+(tr?'Sınırsız kavurma · kahve bulutu (tüm cihazlar) · Derin Kalibrasyon numune çapaları · göstergede reçete hedefi · numuneden tadıma akış':'Unlimited roasts · coffee cloud (all your devices) · Deep Calibration sample anchors · recipe target on the gauge · samples-to-cupping flow')+'</td></tr>'
-   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Special</b>'+__pmark('special')+'<br><span class="hint" style="font-size:11px">12 '+(tr?'ay':'mo')+'</span></td><td style="padding:6px">'+(tr?'Pro\'daki her şey · sınıf tadım akışları · her yeni araca ilk erişim · yalnızca eğitim kaydıyla gelir, ayrı satılmaz':'Everything in Pro · class cupping flows · first access to every new instrument · comes only with course enrollment, never sold alone')+'</td></tr>'
-   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Fleet</b></td><td style="padding:6px">'+(tr?'Kazan başına lisans · ekip genelinde ortak kahve kaydı · yönetici görünümü · yakında':'Per-drum licensing · shared coffee registry · manager view for the team · coming')+'</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Lite</b>'+__pmark('free')+'<br><span class="hint" style="font-size:11px">'+(tr?'Ücretsiz':'Free')+'</span></td><td style="padding:6px">'+(tr?'İki enstrümanı da dene. Listener: tam motorla ilk 20 kavurman. Guide: her modülü kullan, her sonucu gör; hiçbir şey kaydedilmez.':'Try both instruments. Listener: your first 20 roasts with the full engine. Guide: use every module and see every result; nothing is saved.')+'</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Roaster</b>'+__pmark('pro')+'<br><span class="hint" style="font-size:11px">$20/'+(tr?'ay':'mo')+' · $200/'+(tr?'yıl':'yr')+'</span></td><td style="padding:6px">'+(tr?'Lite\'taki her şey, sınırsız. Listener: kahve bulutu, Deep Calibration, reçete hedefleri, kendi kendini notlama. Guide: Roast kayıtların kaydedilir ve saklanır.':'Everything in Lite, unlimited. Listener: coffee cloud, Deep Calibration, recipe targets, self-grading. Guide: your Roast records are saved and kept.')+'</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:6px;vertical-align:top"><b>Cupper</b>'+__pmark('special')+'<br><span class="hint" style="font-size:11px">'+(tr?'CoffeeNutz Q Grader sınıfıyla gelir. Asla ayrı satılmaz.':'Comes with a CoffeeNutz Q Grader class. Never sold alone.')+'</span></td><td style="padding:6px">'+(tr?'Roaster katmanındaki her şey, artı Cupping, Grade ve Value kalıcı olur. Sınıf tadım akışları ve yeni enstrümanlara ilk erişim. 3 yıl lisanslı, Q sertifikanın ömrü kadar: Q\'nu bizde yenilediğinde Cupper lisansın da onunla yenilenir.':'Everything in the Roaster tier, plus Cupping, Grade and Value all persist. Class cupping flows and first access to new instruments. Licensed for 3 years, the life of your Q certificate: when you renew your Q with us, your Cupper license renews with it.')+'</td></tr>'
    +'</table>'
+   +'<div class="hint" style="font-size:11px;margin-top:10px">'+(tr?'Kayıtların asla silinmez. Plan sona ererse kaydetme durur, yaptığın her şey okunabilir kalır.':'Your records are never deleted. If a plan ends, saving pauses and everything you made stays readable.')+'</div>'
    +'<button style="margin-top:14px;background:var(--accent2)" onclick="revealCode()">'+(tr?'Kod gir':'Enter code')+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="window.open(\'https://www.coffeenutz.net/products/crack-listener\')">'+(tr?'coffeenutz.net üzerinden edin':'Get it at coffeenutz.net')+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Kapat':'Close')+'</button>';
@@ -1438,14 +1441,14 @@ const EN2TR={
 'Name your coffee':'Kahveni adlandır',
 'Tap the nameplate and give the bean its name; every coffee carries its own map, memory and details.':'İsim plakasına dokun ve çekirdeğe adını ver; her kahve kendi haritasını, hafızasını ve detaylarını taşır.',
 'The first roast is the reference':'İlk kavurma referanstır',
-'Roast this coffee to the DARKEST level you serve, and after Drop fill the measured color and tap Map. If you pull samples to cup and analyze while roasting, tap "Sample pulled" at each pull (Pro): every measured sample deepens the calibration, and with the Special plan your samples feed cupping sessions in the Guide - the path to this coffee\'s best recipe.':'Bu kahveyi servis ettiğin EN KOYU seviyeye kavur; Drop sonrası ölçtüğün rengi gir ve Eşle\'ye dokun. Kavururken tatmak ve analiz için numune çekiyorsan her çekişte "Numune çekildi"ye dokun (Pro): ölçülen her numune kalibrasyonu derinleştirir, Special planda ise numunelerin Guide\'daki cupping seanslarına akar - bu kahvenin en iyi reçetesine giden yol.',
+'Roast this coffee to the DARKEST level you serve, and after Drop fill the measured color and tap Map. If you pull samples to cup and analyze while roasting, tap "Sample pulled" at each pull (Roaster): every measured sample deepens the calibration, and with the Cupper plan your samples feed cupping sessions in the Guide - the path to this coffee\'s best recipe.':'Bu kahveyi servis ettiğin EN KOYU seviyeye kavur; Drop sonrası ölçtüğün rengi gir ve Eşle\'ye dokun. Kavururken tatmak ve analiz için numune çekiyorsan her çekişte "Numune çekildi"ye dokun (Roaster): ölçülen her numune kalibrasyonu derinleştirir, Cupper planında ise numunelerin Guide\'daki cupping seanslarına akar - bu kahvenin en iyi reçetesine giden yol.',
 'Set up every roast the same way':'Her kavurmayı aynı şekilde kur',
 'Open the listener 1-2 minutes before first crack, phone in the same spot near the drum, set Trigger and High-pass once and leave them alone.':'Dinleyiciyi ilk çatlaktan 1-2 dakika önce aç, telefon kazanın yanında hep aynı yerde; Tetik ve Yüksek geçireni bir kez ayarla, sonra dokunma.',
 'Roast by the bell':'Çana göre kavur',
 'The stages pin themselves as they are earned, the ghost races your reference roast, and the gauge shows the color if you dropped right now. When you drop the beans, tap Drop.':'Evreler hak edildikçe kendini işaretler, hayalet referans kavurmanla yarışır, gösterge şu an bıraksan oluşacak rengi söyler. Çekirdekleri bıraktığında Drop\'a dokun.',
 'Measure, fill, tap the button':'Ölç, doldur, düğmeye dokun',
 'After cooling, enter the measured color and tap the Map button - on early-cut roasts it says "Record lesson" and keeps your reference safe. Every measured roast makes the next prediction better; that is the app learning your coffee. Save the session (.zip) as your archive.':'Soğuduktan sonra ölçtüğün rengi gir ve Eşle düğmesine dokun - erken kesilen kavurmalarda "Dersi kaydet" yazar ve referansını korur. Ölçülen her kavurma bir sonraki tahmini iyileştirir; uygulamanın kahveni öğrenmesi budur. Seansı (.zip) arşivin olarak kaydet.',
-'Your first 20 roasts are free. Pro unlocks samples, recipes and Deep Calibration.':'İlk 20 kavurman ücretsiz. Pro; numuneleri, reçeteleri ve Derin Kalibrasyonu açar.',
+'Your first 20 roasts are free. Roaster unlocks samples, recipes and Deep Calibration.':'İlk 20 kavurman ücretsiz. Roaster; numuneleri, reçeteleri ve Derin Kalibrasyonu açar.',
 'the probe reads the drum, the beans speak':'prob kazanı okur, çekirdekler konuşur','CoffeeNutz cockpit:':'CoffeeNutz kokpiti:','tap to listen':'dinlemek için dokun','the crack analyzer · the probe reads the drum, the beans speak':'çatlak analizörü · prob kazanı okur, çekirdekler konuşur',
 'Tap start, hold the phone near the drum, disable the case if it covers the mic.':'Başlata dokun, telefonu kazana yaklaştır, kılıf mikrofonu kapatıyorsa çıkar.',
 'Everything is kept for the whole session; save after Stop. Keep the screen on.':'Her şey seans boyunca bellekte tutulur; Durdur sonrası kaydet. Ekranı açık tut.',
