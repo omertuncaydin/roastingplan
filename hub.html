@@ -51,6 +51,8 @@ h1{font-size:16px;font-weight:800;margin:14px 0 2px}
 .card.st-developing{border-color:#D8453B;background:#241a18}
 .card.st-passive{border-color:#3f3e39;background:#1a1917;opacity:.45}
 .stsel{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:7px;font-size:11px;padding:3px 5px;color-scheme:dark;cursor:pointer}
+.mctl{display:flex;gap:6px;align-items:center;flex:none}
+.gsel{max-width:120px}
 .restore{margin-top:14px;font-size:11px;color:var(--muted)}
 .restore a{color:var(--accent);text-decoration:none}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
@@ -76,8 +78,8 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <div class="hdrrow">
     <div class="brand" onclick="location.reload()" title="refresh" style="cursor:pointer"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0">v2026-07-05o</span>
-      <button class="iconbtn" onclick="loadAll()">Recheck</button>
+      <span class="sub" style="margin:0">v2026-07-05p</span>
+      <button class="iconbtn" onclick="loadAll()">Recheck Versions</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
   </div>
@@ -123,10 +125,11 @@ function card(a,external){
   const el=document.createElement('div'); el.className='card st-'+st; el.dataset.path=p; el.dataset.ext=external?'1':'';
   el.onclick=()=>openApp(p,external);
   const sel=external?'':'<select class="stsel" onchange="changeStatus(\''+p+'\',this.value)" onclick="event.stopPropagation()"><option value="live"'+(st==='live'?' selected':'')+'>Live</option><option value="developing"'+(st==='developing'?' selected':'')+'>Developing</option><option value="passive"'+(st==='passive'?' selected':'')+'>Passive</option><option value="delete">Delete</option></select>';
+  const gsel=external?'':'<select class="stsel gsel" title="group" onchange="changeGroup(\''+p+'\',this.value)" onclick="event.stopPropagation()">'+CATS.map(c=>'<option value="'+c[0]+'"'+(catOf(a)===c[0]?' selected':'')+'>'+c[1]+'</option>').join('')+'</select>';
   el.innerHTML=(external?'':'<div class="ord"><button class="ordbtn" title="move back" onclick="moveApp(event,\''+p+'\',-1)">&#9664;</button><button class="ordbtn" title="move forward" onclick="moveApp(event,\''+p+'\',1)">&#9654;</button></div>')+
-    '<div class="top">'+(external?'':'<span class="grip" title="hold and drag to another group" onpointerdown="startDrag(event,\''+p+'\')" onclick="event.stopPropagation()"><svg width="12" height="16" viewBox="0 0 12 16"><circle cx="3" cy="3" r="1.5"/><circle cx="9" cy="3" r="1.5"/><circle cx="3" cy="8" r="1.5"/><circle cx="9" cy="8" r="1.5"/><circle cx="3" cy="13" r="1.5"/><circle cx="9" cy="13" r="1.5"/></svg></span>')+'<div class="badge" style="background:'+(a.c||'#c98a3c')+'">'+a.b+'</div><div class="nm">'+a.nm+'</div></div>'+
+    '<div class="top"><div class="badge" style="background:'+(a.c||'#c98a3c')+'">'+a.b+'</div><div class="nm">'+a.nm+'</div></div>'+
     '<div class="desc">'+a.desc+'</div>'+
-    '<div class="meta"><span class="ver" id="v_'+p+'">'+(external?'external':'…')+'</span>'+sel+'</div>';
+    '<div class="meta"><span class="ver" id="v_'+p+'">'+(external?'external':'…')+'</span><span class="mctl">'+gsel+sel+'</span></div>';
   return el;
 }
 function getStatus(p){ try{ return (JSON.parse(localStorage.getItem('hubStatus')||'{}'))[p]||'live'; }catch(e){ return 'live'; } }
@@ -141,6 +144,7 @@ function saveOrder(paths){ localStorage.setItem('hubOrder', JSON.stringify(paths
 function getCatMap(){ try{ return JSON.parse(localStorage.getItem('hubCat')||'{}'); }catch(e){ return {}; } }
 function setCat(p,cat){ const m=getCatMap(); m[p]=cat; localStorage.setItem('hubCat',JSON.stringify(m)); }
 function catOf(a){ return getCatMap()[a.path] || a.cat; }
+function changeGroup(p,cat){ setCat(p,cat); render(); loadAll(); }
 function getCollapsed(){ try{ return JSON.parse(localStorage.getItem('hubCollapsed')||'[]'); }catch(e){ return []; } }
 function toggleCollapse(cat){ let c=getCollapsed(); if(c.includes(cat)) c=c.filter(x=>x!==cat); else c.push(cat); localStorage.setItem('hubCollapsed',JSON.stringify(c)); const s=document.querySelector('#sections .sect[data-cat="'+cat+'"]'); if(s) s.classList.toggle('collapsed'); }
 function getCatOrder(){ const base=CATS.map(c=>c[0]); try{ const s=JSON.parse(localStorage.getItem('hubCatOrder')||'null'); if(Array.isArray(s)){ const v=s.filter(x=>base.includes(x)); base.forEach(x=>{ if(!v.includes(x)) v.push(x); }); return v; } }catch(e){} return base; }
