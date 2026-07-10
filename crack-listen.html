@@ -149,7 +149,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-10h</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-10i</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -355,7 +355,7 @@ body.st-setup #btn{display:none}
 let AC=null, stream=null, src=null, hpF=null, lpF=null, analyser=null, buf=null, running=false, raf=null;
 let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
-let BCLIVE=null, cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={}, STOPT=null, PHASE=0, STOPBORROWED=false;
+let BCLIVE=null, cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={}, STOPT=null, PHASE=0, STOPBORROWED=false, PHPEAK=0, PHPEAKT=0, PHREV=0;
 let LANG=localStorage.getItem('bsLang')||'en';   // declared at the very top: eval-order safe (v07e lesson)
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
@@ -404,7 +404,7 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('mapBtn').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHASE_DISP=0; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -758,7 +758,7 @@ function drawCockpit(id,o){
 }
 // gain phase dial: phi = cumulative gain / total bell gain, THE thesis axis. Honest display:
 // while the peak is unwitnessed the true total is unknown, so the value is a lower bound and says so.
-let PHASE_DISP=0;   // DISPLAY-ONLY glide toward the true phase. The ledger (PHASE: lessons, phDrop, curve) is untouched; delete this block to revert to raw display (milestone: crack-listen-MILESTONE-v2026-07-10h.html)
+let PHASE_DISP=0;   // DISPLAY-ONLY glide toward the true phase. The ledger (PHASE: lessons, phDrop, curve) is untouched; delete this block to revert to raw display (milestone: crack-listen-MILESTONE-v2026-07-10g.html)
 function updatePhase(){
   const c=$('phaseG'); if(!c) return;
   const v=valid();
@@ -767,8 +767,11 @@ function updatePhase(){
   if(!running){ PHASE_DISP=ph; }   // done/loaded sessions show the true value instantly, no glide theater
   else{ PHASE_DISP+=(ph-PHASE_DISP)*0.12; if(Math.abs(ph-PHASE_DISP)<0.004) PHASE_DISP=ph; }   // regime switches release as a ramp (~2-4 s), not a leap
   const shown=Math.max(0,Math.min(1,PHASE_DISP));
+  // honesty note: if PHASE was revised DOWN within the last ~10s (the bell grew past a false peak), say so.
+  const nowP=running?(performance.now()-startT)/1000:(STOPT!=null?STOPT:(v.length?v[v.length-1].t:0));
+  const revised=PHREV>0 && (nowP-PHREV)>=0 && (nowP-PHREV)<10;
   drawCockpit('phaseG',{u:shown, tick:0.5, num:(lb?'\u2265':'')+shown.toFixed(2),
-    sub:lb?tt('lower bound until the peak is heard'):tt('phase confirmed')});
+    sub:revised?tt('revised, the bell grew'):(lb?tt('lower bound until the peak is heard'):tt('phase confirmed'))});
 }
 // bean voice dial: valid cracks in the last 30s vs the minimum the projection needs (8, provisional).
 // Alarm only mid-FC; past the bell's peak the fall is natural and the dial stands down.
@@ -1369,7 +1372,7 @@ async function loadSession(file){
   for(const m of text.matchAll(/# (\d+),([\d.]+),(\d+)(?:,(\d))?(?:,(\d*))?(?:,(\d*))?(?:,([\d.]*))?/g)) cracks.push({t:+m[2], g:+m[3], id:++crackSeq, fp:m[4]==='1', f:m[5]?+m[5]:undefined, w:m[6]?+m[6]:undefined, hf:m[7]?+m[7]:undefined});
   SAMPLES=[]; for(const m of text.matchAll(/# sample,\d+,([\d.]+),([\d.]*)/g)) SAMPLES.push({t:+m[1], ag:m[2]?+m[2]:null});
   queueSamples();   // loaded sessions feed the Cup queue too, not only live roasts
-  const dataT=[...text.matchAll(/^([\d.]+),/gm)]; STOPT=dataT.length?+dataT[dataT.length-1][1]:null; PHASE=0;   // session end = last trace row
+  const dataT=[...text.matchAll(/^([\d.]+),/gm)]; STOPT=dataT.length?+dataT[dataT.length-1][1]:null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0;   // session end = last trace row
   if(!cracks.length){ toast('No cracks in that session.'); return; }
   LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; $('finalCall').textContent=''; wav={chunks:[],len:0,sr:48000}; rows=[];
   if(meta.coffee){ cName.value=meta.coffee; localStorage.setItem('bsCoffee',meta.coffee); loadBadge(); renderNameplate(); }
@@ -1507,7 +1510,7 @@ const EN2TR={
 'Only during a live session.':'Yalnızca canlı seans sırasında.','Stop the live session first.':'Önce canlı seansı durdur.',
 'Not enough cracks for a card.':'Kart için yeterli çatlak yok.','Mapping needs: coffee name + Agtron ground + at least 5 cracks.':'Eşleme için: kahve adı + öğütülmüş Agtron + en az 5 çatlak.',
 'Maps exported. Import them on the other device.':'Haritalar dışa aktarıldı. Diğer cihazda içe aktar.',
-'listening for first crack...':'ilk çatlak dinleniyor...','the DEV window draws itself from the first crack':'DEV penceresi ilk çatlaktan kendini çizer','window':'pencere','with ref':'referansla','gain':'gain','Sessions & cloud':'Seanslar ve bulut','the valid pops, one by one':'geçerli patlamalar, tek tek','gain phase':'gain evresi','position inside the bell of first crack':'ilk çatlak çanındaki konum','lower bound until the peak is heard':'tepe duyulana dek alt sınır','phase confirmed':'evre doğrulandı','Charge temps':'\u015earj s\u0131cakl\u0131klar\u0131','Extras':'Ekstralar','ground agtron \u00b7 the number that teaches the app':'\u00f6\u011f\u00fct\u00fclm\u00fc\u015f agtron \u00b7 uygulamay\u0131 e\u011fiten say\u0131',"Fields arrive from this coffee's last save.":'Alanlar bu kahvenin son kayd\u0131ndan gelir.'};
+'listening for first crack...':'ilk çatlak dinleniyor...','the DEV window draws itself from the first crack':'DEV penceresi ilk çatlaktan kendini çizer','window':'pencere','with ref':'referansla','gain':'gain','Sessions & cloud':'Seanslar ve bulut','the valid pops, one by one':'geçerli patlamalar, tek tek','gain phase':'gain evresi','position inside the bell of first crack':'ilk çatlak çanındaki konum','lower bound until the peak is heard':'tepe duyulana dek alt sınır','phase confirmed':'evre doğrulandı','revised, the bell grew':'düzeltildi, çan büyüdü','Charge temps':'\u015earj s\u0131cakl\u0131klar\u0131','Extras':'Ekstralar','ground agtron \u00b7 the number that teaches the app':'\u00f6\u011f\u00fct\u00fclm\u00fc\u015f agtron \u00b7 uygulamay\u0131 e\u011fiten say\u0131',"Fields arrive from this coffee's last save.":'Alanlar bu kahvenin son kayd\u0131ndan gelir.'};
 const SAMP_TR=['Çekirdek artık saklanamaz.','Kaşık dışarı, gerçek içeri.','Renk uçuşta yakalandı.','Gösterge için bir çapa daha.'];
 function tt(s){ return LANG==='tr'?(EN2TR[s]||s):s; }
 const I18N_ORIG=new Map();
@@ -1646,12 +1649,39 @@ function drawTimeline(){
     // CENSORING RULE (Omer's A1-cut test, 2026-07-07): a peak only exists if its decline was
     // witnessed WHILE cracks were still coming. A maximum at the cut is the edge of the data, not B1.
     const peakInterior=(lb-peakI)>=run;
-    const pastPeak=peakInterior && nowBin>peakI && sm[nowBin]<0.7*peak; PASTPEAK=pastPeak;
+    // LIVE PEAK-WITNESS (v07i): the naive sub-peak test fired on a transient lull mid-rise and, because
+    // PHASE was a running max, the false confidence stuck when the bell outgrew the fake peak. Three
+    // independent witnesses must now agree before a LIVE flip. The vetoes gate on `running` only, so the
+    // retrospective record (B1/C1 censoring, already correct) is left exactly as it was.
+    const baseSub=peakInterior && nowBin>peakI && sm[nowBin]<0.7*peak;
+    let pastPeak=baseSub;
+    if(running && baseSub){
+      // W1 TREND: a bell still climbing has no witnessed peak. Mean smoothed slope over the last 3 bins <= 0.
+      const bk=Math.max(0,nowBin-3), wTrend=(sm[nowBin]-sm[bk])<=0;
+      // W3 PERSISTENCE: the decline must hold across the existing `run` window (not a one-bin dip), with the
+      // global max sitting behind that window (no fresh max inside the run).
+      let held=0; for(let i=nowBin;i>Math.max(0,nowBin-run);i--){ if(sm[i]<0.7*peak) held++; else break; }
+      const wPersist=(held>=run)&&((nowBin-peakI)>=run);
+      // W2 RHYTHM: a real crown slows the cadence. Median of the last ~5 gaps must beat the prior ~5 by 1.3x.
+      // Under ~12 cracks the rhythm witness abstains (does not veto).
+      let wRhythm=true;
+      if(v.length>=12){ const gt=v.map(c=>c.t), gg=[]; for(let i=1;i<gt.length;i++) gg.push(gt[i]-gt[i-1]);
+        const l5=gg.slice(-5), p5=gg.slice(-10,-5), md=a=>{ const q=[...a].sort((x,y)=>x-y); return q.length?q[Math.floor(q.length/2)]:0; };
+        wRhythm=(l5.length>=3 && p5.length>=3)?(md(l5)>1.3*md(p5)):true; }
+      pastPeak=wTrend && wPersist && wRhythm;
+    }
+    PASTPEAK=pastPeak;
     // stepless envelope PHASE 0-1 (Omer's thesis: color follows the loudness phase, not the clock).
     // Rising half: rate/peak maps 0->0.5, capped there until a REAL peak is proven. Monotonic, mic-invariant.
     const smNow=sm[Math.min(nowBin,lb)]||0;
     const phRaw=pastPeak?(0.5+0.5*(1-(sm[nowBin]||0)/(peak||1))):Math.min(0.5,0.5*smNow/(peak||1));
-    PHASE=Math.max(PHASE,Math.min(1,phRaw));
+    // REVISABLE PHASE (v07i): remember the envelope height (and its time) that justified a witnessed peak. If
+    // the bell later grows a NEW, LATER, taller max, the earlier confirmation was false: revert to the rising
+    // cap (<=0.5) and let PHASE FALL. Monotone (running max) everywhere else, so honest confidence is never
+    // manufactured, only ever withdrawn.
+    if(pastPeak){ PHPEAK=peak; PHPEAKT=t0+(peakI+0.5)*bin; PHASE=Math.max(PHASE,Math.min(1,phRaw)); }
+    else if(PHASE>0.5 && PHPEAK>0 && (t0+(peakI+0.5)*bin)>PHPEAKT+bin && peak>PHPEAK*1.05){ PHASE=Math.min(0.5,phRaw); PHPEAK=0; PHREV=nowS; }
+    else PHASE=Math.max(PHASE,Math.min(1,phRaw));
     // parameter-free rise tagging: A1 = steepest sustained rise (max slope of the envelope),
     // B0 = the deceleration knee before the crown (most negative curvature). No 30/70 constants;
     // legacy thresholds only as fallback when the rise is too short to differentiate.
