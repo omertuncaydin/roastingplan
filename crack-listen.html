@@ -149,7 +149,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-10g</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-10h</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -404,7 +404,7 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('mapBtn').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHASE_DISP=0; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -758,12 +758,16 @@ function drawCockpit(id,o){
 }
 // gain phase dial: phi = cumulative gain / total bell gain, THE thesis axis. Honest display:
 // while the peak is unwitnessed the true total is unknown, so the value is a lower bound and says so.
+let PHASE_DISP=0;   // DISPLAY-ONLY glide toward the true phase. The ledger (PHASE: lessons, phDrop, curve) is untouched; delete this block to revert to raw display (milestone: crack-listen-MILESTONE-v2026-07-10h.html)
 function updatePhase(){
   const c=$('phaseG'); if(!c) return;
   const v=valid();
-  if(!v.length){ drawCockpit('phaseG',{dim:true,num:'\u00b7 \u00b7 \u00b7',sub:running?tt('waiting for cracks'):''}); return; }
+  if(!v.length){ PHASE_DISP=0; drawCockpit('phaseG',{dim:true,num:'\u00b7 \u00b7 \u00b7',sub:running?tt('waiting for cracks'):''}); return; }
   const ph=Math.max(0,Math.min(1,PHASE||0)), lb=!PASTPEAK;
-  drawCockpit('phaseG',{u:ph, tick:0.5, num:(lb?'\u2265':'')+ph.toFixed(2),
+  if(!running){ PHASE_DISP=ph; }   // done/loaded sessions show the true value instantly, no glide theater
+  else{ PHASE_DISP+=(ph-PHASE_DISP)*0.12; if(Math.abs(ph-PHASE_DISP)<0.004) PHASE_DISP=ph; }   // regime switches release as a ramp (~2-4 s), not a leap
+  const shown=Math.max(0,Math.min(1,PHASE_DISP));
+  drawCockpit('phaseG',{u:shown, tick:0.5, num:(lb?'\u2265':'')+shown.toFixed(2),
     sub:lb?tt('lower bound until the peak is heard'):tt('phase confirmed')});
 }
 // bean voice dial: valid cracks in the last 30s vs the minimum the projection needs (8, provisional).
