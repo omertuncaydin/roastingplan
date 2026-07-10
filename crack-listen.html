@@ -149,7 +149,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-10c</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-10d</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -209,6 +209,7 @@ body.st-setup #btn{display:none}
     <div class="lbl">session timeline · DEV <span class="info" onclick="showInfo('tl')">&#9432;</span></div>
     <canvas id="tl" width="900" height="180"></canvas>
     <div class="ctl"><label>Bin <span class="info" onclick="showInfo('bin')">&#9432;</span></label><button class="pm" onclick="nudge('bin',-1)">&minus;</button><input type="range" id="bin" min="1" max="10" step="1" value="4" oninput="document.getElementById('binV').textContent=this.value+' s';drawTimeline()"><button class="pm" onclick="nudge('bin',1)">+</button><span class="v" id="binV">4 s</span></div>
+    <div class="card" id="cPhase" style="margin-top:10px;text-align:center"><div class="lbl">gain phase <span class="info" onclick="showInfo('phase')">&#9432;</span></div><canvas id="phaseG" width="300" height="240" style="width:62%;max-width:230px;height:auto;background:none;margin:4px auto 0;display:block"></canvas><div class="hint" style="margin-top:2px;font-size:11px">position inside the bell of first crack</div></div>
     <div id="dialGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px">
       <div class="card"><div class="lbl">total gain <span class="info" onclick="showInfo('tg')">&#9432;</span></div><canvas id="tgArc" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas><div class="hint" id="tgRef" style="margin-top:2px;font-size:11px"></div></div>
       <div class="card"><div class="lbl">pace <span class="info" onclick="showInfo('pace')">&#9432;</span></div><canvas id="paceG" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas><div class="hint" style="margin-top:2px;font-size:11px">vs reference</div></div>
@@ -280,13 +281,15 @@ body.st-setup #btn{display:none}
         <input type="text" id="bCue" placeholder="Power cue · shown when listening starts (e.g. at cinnamon drop to P6)" style="width:100%;border:1px solid var(--accent);border-radius:9px;padding:9px;font-size:16px;background:var(--panel2);color:var(--ink);margin-top:6px">
         <div class="hint"><span>Saved per coffee on this phone; the batch card pulls from here.</span> <span>Fields arrive from this coffee's last save.</span></div>
       </details>
-      <button class="go" id="noMeterBtn" onclick="showLevels()" style="display:block;background:#5a4a38;margin-top:8px">No color meter? Estimate it</button>
       <button class="go" id="mapBtn" onclick="saveCalIfMapped(true);updateGauge()" style="display:none;background:var(--accent2);margin-top:8px">Map this coffee (save color)</button>
-      <button class="go" id="cupGo" onclick="cupHandoff()" style="display:none;background:#3a2f26;margin-top:8px">Cup this coffee &#8599;</button>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="go" id="noMeterBtn" onclick="showLevels()" style="display:block;flex:1;background:#5a4a38;font-size:12px;padding:10px 4px;margin-top:0">No color meter? Estimate it</button>
+        <button class="go" id="cupGo" onclick="cupHandoff()" style="display:none;flex:1;background:#3a2f26;font-size:12px;padding:10px 4px;margin-top:0">Cup this coffee &#8599;</button>
+        <button class="go" id="dlCard" onclick="makeBatchCard()" style="display:none;flex:1;background:#3a2f26;font-size:12px;padding:10px 4px;margin-top:0">Batch card (PNG)</button>
+      </div>
     </div>
     <div class="row" style="margin-top:10px">
       <button class="go" id="dlZip" onclick="saveSession()" style="display:none">Save session (.zip)</button>
-      <button class="go" id="dlCard" onclick="makeBatchCard()" style="display:none;background:var(--accent)">Batch card (PNG)</button>
     </div>
     <div class="lbl" style="margin-top:14px">coffee cloud · Guide account <span class="info" onclick="showInfo('cloud')">&#9432;</span></div>
     <div class="hint" id="cloudStat">·</div>
@@ -309,15 +312,17 @@ body.st-setup #btn{display:none}
   </div>
 
   <div class="row" id="cStats" style="margin-top:12px">
-    <div class="card"><div class="lbl">counted cracks <span class="info" onclick="showInfo('cnt')">&#9432;</span></div><div class="n" id="cnt">0</div></div>
-    <div class="card"><div class="lbl">rate /min <span class="info" onclick="showInfo('rateI')">&#9432;</span></div><div class="n" id="rate">0</div></div>
-    <div class="card"><div class="lbl">last gain <span class="info" onclick="showInfo('lastg')">&#9432;</span></div><div class="n" id="last">0</div></div>
-    <div class="card"><div class="lbl">peak gain <span class="info" onclick="showInfo('peakg')">&#9432;</span></div><div class="n" id="peak">0</div></div>
+    <div class="card" style="text-align:center"><div class="lbl">counted cracks <span class="info" onclick="showInfo('cnt')">&#9432;</span></div><div class="n" id="cnt" style="font-size:34px">0</div></div>
   </div>
+  <span id="rate" style="display:none">0</span>
 
   <details class="fold" id="cTune" style="margin-top:12px">
   <summary>tuning &amp; trace</summary>
   <div class="card">
+    <div class="row" style="margin-bottom:10px">
+      <div class="card" style="background:var(--panel2)"><div class="lbl">last gain <span class="info" onclick="showInfo('lastg')">&#9432;</span></div><div class="n" id="last">0</div></div>
+      <div class="card" style="background:var(--panel2)"><div class="lbl">peak gain <span class="info" onclick="showInfo('peakg')">&#9432;</span></div><div class="n" id="peak">0</div></div>
+    </div>
     <div class="lbl">gain trace (cracks marked)</div>
     <canvas id="cv" width="900" height="300"></canvas>
     <div class="ctl"><label>Trigger &times; <span class="info" onclick="showInfo('sens')">&#9432;</span></label><button class="pm" onclick="nudge('sens',-1)">&minus;</button><input type="range" id="sens" min="2" max="30" step="0.5" value="5"><button class="pm" onclick="nudge('sens',1)">+</button><span class="v" id="sensV">5.0x</span></div>
@@ -666,6 +671,7 @@ $('log').addEventListener('touchstart',e=>{ swRow=e.target.closest('.lr'); if(e.
 $('log').addEventListener('touchmove',e=>{ if(!swRow) return; const dx=e.touches[0].clientX-swX; if(dx<0) swRow.style.transform='translateX('+Math.max(dx,-100)+'px)'; },{passive:true});
 $('log').addEventListener('touchend',e=>{ if(!swRow) return; const dx=e.changedTouches[0].clientX-swX; if(dx<-60) delCrack(+swRow.dataset.id); else swRow.style.transform=''; swRow=null; });
 const INFO={
+ phase:['Gain phase (phi)','Your position inside the bell of first crack: cumulative crack gain heard so far, divided by the total gain of the whole bell, 0 at the first pop and 1 at silence. The thesis this app is built on: equal phase gives equal ground color, whatever the roast speed. While the bell is still rising the true total is unknown, so the dial shows a LOWER BOUND with a \u2265 sign; once the peak is witnessed the value firms up and the dial says so. It never pretends to know the whole bell before hearing it.'],
  tg:['Total gain vs reference','Sum of all valid crack gains this session, on a dial scaled to 110% of the reference roast\'s total. Green zone = 95-105%: the batch spoke about as much as your mapped reference. The gold tick is exactly 100%.'],
  pace:['Pace vs reference','How fast this roast reached 25% of the reference total gain, against the reference\'s own time to the same point. Center tick = same speed; left of it = faster, right = slower. It locks once the 25% point is passed, and the color projection uses it to correct the clock.'],
  even:['Evenness, gain spread','Spread (SD) of crack gains this session vs the same number in your reference roast. Center = same spread as the reference; left = tighter (more uniform pops), right = looser. A relative proxy for batch evenness until color-SD studies calibrate it into a score.'],
@@ -704,6 +710,7 @@ const INFO={
  cap:['Session capture, the whole story','While listening, the app keeps three things: the raw microphone audio as WAV (tapped BEFORE the high-pass, ~5.5 MB per minute), a per-frame CSV (time, loudness, floor, ratio, your slider settings, every crack), and your crack log edits: ticked rows travel as labeled false positives, swiped rows are removed. Fill the roast record (coffee, batch, Agtron) after Stop and it rides inside the CSV header; the Agtron ground value is also what unlocks the color gauge for that coffee. Save session packs WAV + CSV into one zip. Everything lives only in this page’s memory: close or reload without saving and the session is gone.']
 };
 const INFO_TR={
+ phase:['Gain evresi (phi)','İlk çatlak çanındaki konumun: şu ana dek duyulan birikimli çatlak gain\u0027i bölü çanın tüm toplamı; ilk patlamada 0, sessizlikte 1. Tez: eşit evre, kavurma hızı ne olursa olsun eşit öğütülmüş renk verir. Çan hâlâ yükselirken gerçek toplam bilinemez, bu yüzden kadran \u2265 işaretiyle bir ALT SINIR gösterir; tepe duyulunca değer kesinleşir ve kadran bunu söyler. Çanı duymadan bildiğini iddia etmez.'],
  tg:['Referansa göre toplam gain','Bu seanstaki tüm geçerli çatlakların gain toplamı; kadran referans kavurmanın toplamının %110\'una ölçekli. Yeşil bölge = %95-105: parti, eşlenmiş referansın kadar konuştu. Altın çizgi tam %100.'],
  pace:['Referansa göre tempo','Bu kavurmanın referans toplam kazancın %25\'ine ulaşma hızı, referansın aynı noktaya kendi süresine oranla. Orta çizgi = aynı hız; solu daha hızlı, sağı daha yavaş. %25 noktası geçilince kilitlenir; renk öngörüsü saati bununla düzeltir.'],
  even:['Homojenlik, gain dağılımı','Bu seanstaki çatlakların gain yayılımı (SS), referans kavurmanın aynı değerine oranla. Orta = referansla aynı yayılım; sol = daha sıkı (daha tekdüze patlamalar), sağ = daha gevşek. Renk-SS çalışmaları kalibre edene kadar göreli bir homojenlik vekilidir.'],
@@ -749,6 +756,16 @@ function drawCockpit(id,o){
   g.font='600 20px -apple-system,sans-serif'; g.fillStyle='#a8998a'; g.fillText(o.sub||'',cx,cy+46);
   g.textAlign='start';
 }
+// gain phase dial: phi = cumulative gain / total bell gain, THE thesis axis. Honest display:
+// while the peak is unwitnessed the true total is unknown, so the value is a lower bound and says so.
+function updatePhase(){
+  const c=$('phaseG'); if(!c) return;
+  const v=valid();
+  if(!v.length){ drawCockpit('phaseG',{dim:true,num:'\u00b7 \u00b7 \u00b7',sub:running?tt('waiting for cracks'):''}); return; }
+  const ph=Math.max(0,Math.min(1,PHASE||0)), lb=!PASTPEAK;
+  drawCockpit('phaseG',{u:ph, tick:0.5, num:(lb?'\u2265':'')+ph.toFixed(2),
+    sub:lb?tt('lower bound until the peak is heard'):tt('phase confirmed')});
+}
 // bean voice dial: valid cracks in the last 30s vs the minimum the projection needs (8, provisional).
 // Alarm only mid-FC; past the bell's peak the fall is natural and the dial stands down.
 function updateVoice(){
@@ -782,7 +799,7 @@ function updateSD(){
     $('tgRef').textContent=tt('ref')+' '+cal.tg;
   } else { drawCockpit('tgArc',{dim:true,num:cum?String(cum):'· · ·',sub:cum?tt('no reference'):''}); $('tgRef').textContent=''; }
   $('pur').textContent=cracks.length?Math.round(v.length/cracks.length*100)+'%':'-';
-  updatePace(); updateVoice();
+  updatePace(); updateVoice(); updatePhase();
   // evenness: this session's crack-gain spread vs the reference roast's own spread (relative, like everything here)
   const gsd=v.length>1?sd(v.map(c=>c.g)):null;
   if(gsd!=null&&cal&&cal.gsd){
@@ -1486,7 +1503,7 @@ const EN2TR={
 'Only during a live session.':'Yalnızca canlı seans sırasında.','Stop the live session first.':'Önce canlı seansı durdur.',
 'Not enough cracks for a card.':'Kart için yeterli çatlak yok.','Mapping needs: coffee name + Agtron ground + at least 5 cracks.':'Eşleme için: kahve adı + öğütülmüş Agtron + en az 5 çatlak.',
 'Maps exported. Import them on the other device.':'Haritalar dışa aktarıldı. Diğer cihazda içe aktar.',
-'listening for first crack...':'ilk çatlak dinleniyor...','the DEV window draws itself from the first crack':'DEV penceresi ilk çatlaktan kendini çizer','window':'pencere','with ref':'referansla','gain':'gain','Sessions & cloud':'Seanslar ve bulut','Charge temps':'\u015earj s\u0131cakl\u0131klar\u0131','Extras':'Ekstralar','ground agtron \u00b7 the number that teaches the app':'\u00f6\u011f\u00fct\u00fclm\u00fc\u015f agtron \u00b7 uygulamay\u0131 e\u011fiten say\u0131',"Fields arrive from this coffee's last save.":'Alanlar bu kahvenin son kayd\u0131ndan gelir.'};
+'listening for first crack...':'ilk çatlak dinleniyor...','the DEV window draws itself from the first crack':'DEV penceresi ilk çatlaktan kendini çizer','window':'pencere','with ref':'referansla','gain':'gain','Sessions & cloud':'Seanslar ve bulut','gain phase':'gain evresi','position inside the bell of first crack':'ilk çatlak çanındaki konum','lower bound until the peak is heard':'tepe duyulana dek alt sınır','phase confirmed':'evre doğrulandı','Charge temps':'\u015earj s\u0131cakl\u0131klar\u0131','Extras':'Ekstralar','ground agtron \u00b7 the number that teaches the app':'\u00f6\u011f\u00fct\u00fclm\u00fc\u015f agtron \u00b7 uygulamay\u0131 e\u011fiten say\u0131',"Fields arrive from this coffee's last save.":'Alanlar bu kahvenin son kayd\u0131ndan gelir.'};
 const SAMP_TR=['Çekirdek artık saklanamaz.','Kaşık dışarı, gerçek içeri.','Renk uçuşta yakalandı.','Gösterge için bir çapa daha.'];
 function tt(s){ return LANG==='tr'?(EN2TR[s]||s):s; }
 const I18N_ORIG=new Map();
