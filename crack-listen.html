@@ -149,7 +149,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-10f</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-10g</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -209,7 +209,6 @@ body.st-setup #btn{display:none}
     <div class="lbl">session timeline · DEV <span class="info" onclick="showInfo('tl')">&#9432;</span></div>
     <canvas id="tl" width="900" height="180"></canvas>
     <div class="ctl"><label>Bin <span class="info" onclick="showInfo('bin')">&#9432;</span></label><button class="pm" onclick="nudge('bin',-1)">&minus;</button><input type="range" id="bin" min="1" max="10" step="1" value="4" oninput="document.getElementById('binV').textContent=this.value+' s';drawTimeline()"><button class="pm" onclick="nudge('bin',1)">+</button><span class="v" id="binV">4 s</span></div>
-    <div class="card" id="cPhase" style="margin-top:10px;text-align:center"><div class="lbl">gain phase <span class="info" onclick="showInfo('phase')">&#9432;</span></div><canvas id="phaseG" width="300" height="240" style="width:62%;max-width:230px;height:auto;background:none;margin:4px auto 0;display:block"></canvas><div class="hint" style="margin-top:2px;font-size:11px">position inside the bell of first crack</div></div>
     <div id="dialGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px">
       <div class="card"><div class="lbl">total gain <span class="info" onclick="showInfo('tg')">&#9432;</span></div><canvas id="tgArc" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas><div class="hint" id="tgRef" style="margin-top:2px;font-size:11px"></div></div>
       <div class="card"><div class="lbl">pace <span class="info" onclick="showInfo('pace')">&#9432;</span></div><canvas id="paceG" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas><div class="hint" style="margin-top:2px;font-size:11px">vs reference</div></div>
@@ -312,7 +311,8 @@ body.st-setup #btn{display:none}
   </div>
 
   <div class="row" id="cStats" style="margin-top:12px">
-    <div class="card" style="text-align:center"><div class="lbl">counted cracks <span class="info" onclick="showInfo('cnt')">&#9432;</span></div><div class="n" id="cnt" style="font-size:34px">0</div></div>
+    <div class="card" id="cPhase" style="flex:1;min-width:0;text-align:center"><div class="lbl">gain phase <span class="info" onclick="showInfo('phase')">&#9432;</span></div><canvas id="phaseG" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas><div class="hint" style="margin-top:2px;font-size:11px">position inside the bell of first crack</div></div>
+    <div class="card" style="flex:1;min-width:0;text-align:center;display:flex;flex-direction:column;justify-content:center"><div class="lbl">counted cracks <span class="info" onclick="showInfo('cnt')">&#9432;</span></div><div class="n" id="cnt" style="font-size:54px;font-variant-numeric:tabular-nums;line-height:1.1;margin-top:6px">0</div><div style="width:56px;height:2px;background:var(--gold);margin:10px auto 0"></div><div class="hint" style="font-size:11px;margin-top:8px">the valid pops, one by one</div></div>
   </div>
   <span id="rate" style="display:none">0</span>
 
@@ -1503,7 +1503,7 @@ const EN2TR={
 'Only during a live session.':'Yalnızca canlı seans sırasında.','Stop the live session first.':'Önce canlı seansı durdur.',
 'Not enough cracks for a card.':'Kart için yeterli çatlak yok.','Mapping needs: coffee name + Agtron ground + at least 5 cracks.':'Eşleme için: kahve adı + öğütülmüş Agtron + en az 5 çatlak.',
 'Maps exported. Import them on the other device.':'Haritalar dışa aktarıldı. Diğer cihazda içe aktar.',
-'listening for first crack...':'ilk çatlak dinleniyor...','the DEV window draws itself from the first crack':'DEV penceresi ilk çatlaktan kendini çizer','window':'pencere','with ref':'referansla','gain':'gain','Sessions & cloud':'Seanslar ve bulut','gain phase':'gain evresi','position inside the bell of first crack':'ilk çatlak çanındaki konum','lower bound until the peak is heard':'tepe duyulana dek alt sınır','phase confirmed':'evre doğrulandı','Charge temps':'\u015earj s\u0131cakl\u0131klar\u0131','Extras':'Ekstralar','ground agtron \u00b7 the number that teaches the app':'\u00f6\u011f\u00fct\u00fclm\u00fc\u015f agtron \u00b7 uygulamay\u0131 e\u011fiten say\u0131',"Fields arrive from this coffee's last save.":'Alanlar bu kahvenin son kayd\u0131ndan gelir.'};
+'listening for first crack...':'ilk çatlak dinleniyor...','the DEV window draws itself from the first crack':'DEV penceresi ilk çatlaktan kendini çizer','window':'pencere','with ref':'referansla','gain':'gain','Sessions & cloud':'Seanslar ve bulut','the valid pops, one by one':'geçerli patlamalar, tek tek','gain phase':'gain evresi','position inside the bell of first crack':'ilk çatlak çanındaki konum','lower bound until the peak is heard':'tepe duyulana dek alt sınır','phase confirmed':'evre doğrulandı','Charge temps':'\u015earj s\u0131cakl\u0131klar\u0131','Extras':'Ekstralar','ground agtron \u00b7 the number that teaches the app':'\u00f6\u011f\u00fct\u00fclm\u00fc\u015f agtron \u00b7 uygulamay\u0131 e\u011fiten say\u0131',"Fields arrive from this coffee's last save.":'Alanlar bu kahvenin son kayd\u0131ndan gelir.'};
 const SAMP_TR=['Çekirdek artık saklanamaz.','Kaşık dışarı, gerçek içeri.','Renk uçuşta yakalandı.','Gösterge için bir çapa daha.'];
 function tt(s){ return LANG==='tr'?(EN2TR[s]||s):s; }
 const I18N_ORIG=new Map();
