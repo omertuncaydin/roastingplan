@@ -149,7 +149,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-10b</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-10c</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -288,19 +288,22 @@ body.st-setup #btn{display:none}
       <button class="go" id="dlZip" onclick="saveSession()" style="display:none">Save session (.zip)</button>
       <button class="go" id="dlCard" onclick="makeBatchCard()" style="display:none;background:var(--accent)">Batch card (PNG)</button>
     </div>
-    <div class="row" style="margin-top:8px">
-      <button class="go" style="background:#5a4a38" onclick="document.getElementById('loadF').click()">Load session (.zip / .csv)</button>
-    </div>
-    <div class="row" style="margin-top:8px">
-      <button class="go" style="background:#3a2f26;font-size:13px" onclick="exportMaps()">Export maps</button>
-      <button class="go" style="background:#3a2f26;font-size:13px" onclick="document.getElementById('mapsF').click()">Import maps</button>
-    </div>
     <div class="lbl" style="margin-top:14px">coffee cloud · Guide account <span class="info" onclick="showInfo('cloud')">&#9432;</span></div>
     <div class="hint" id="cloudStat">·</div>
-    <div class="row" style="margin-top:8px">
-      <button class="go" style="background:#3a2f26;font-size:13px" onclick="cloudSend()">Send coffees to cloud</button>
-      <button class="go" style="background:#3a2f26;font-size:13px" onclick="cloudPull()">Bring from cloud</button>
-    </div>
+    <details id="arcFold" style="margin-top:10px">
+      <summary style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;cursor:pointer;padding:8px 0;border-top:1px solid var(--line)">Sessions &amp; cloud</summary>
+      <div class="row" style="margin-top:8px">
+        <button class="go" style="background:#5a4a38" onclick="document.getElementById('loadF').click()">Load session (.zip / .csv)</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="go" style="background:#3a2f26;font-size:13px" onclick="exportMaps()">Export maps</button>
+        <button class="go" style="background:#3a2f26;font-size:13px" onclick="document.getElementById('mapsF').click()">Import maps</button>
+      </div>
+      <div class="row" style="margin-top:8px;margin-bottom:6px">
+        <button class="go" style="background:#3a2f26;font-size:13px" onclick="cloudSend()">Send coffees to cloud</button>
+        <button class="go" style="background:#3a2f26;font-size:13px" onclick="cloudPull()">Bring from cloud</button>
+      </div>
+    </details>
     <input type="file" id="mapsF" accept=".json" style="display:none" onchange="importMaps(this.files[0])">
     <input type="file" id="loadF" accept=".zip,.csv" style="display:none" onchange="loadSession(this.files[0])">
   </div>
@@ -1483,7 +1486,7 @@ const EN2TR={
 'Only during a live session.':'Yalnızca canlı seans sırasında.','Stop the live session first.':'Önce canlı seansı durdur.',
 'Not enough cracks for a card.':'Kart için yeterli çatlak yok.','Mapping needs: coffee name + Agtron ground + at least 5 cracks.':'Eşleme için: kahve adı + öğütülmüş Agtron + en az 5 çatlak.',
 'Maps exported. Import them on the other device.':'Haritalar dışa aktarıldı. Diğer cihazda içe aktar.',
-'listening for first crack...':'ilk çatlak dinleniyor...','the DEV window draws itself from the first crack':'DEV penceresi ilk çatlaktan kendini çizer','window':'pencere','with ref':'referansla','gain':'gain','Charge temps':'\u015earj s\u0131cakl\u0131klar\u0131','Extras':'Ekstralar','ground agtron \u00b7 the number that teaches the app':'\u00f6\u011f\u00fct\u00fclm\u00fc\u015f agtron \u00b7 uygulamay\u0131 e\u011fiten say\u0131',"Fields arrive from this coffee's last save.":'Alanlar bu kahvenin son kayd\u0131ndan gelir.'};
+'listening for first crack...':'ilk çatlak dinleniyor...','the DEV window draws itself from the first crack':'DEV penceresi ilk çatlaktan kendini çizer','window':'pencere','with ref':'referansla','gain':'gain','Sessions & cloud':'Seanslar ve bulut','Charge temps':'\u015earj s\u0131cakl\u0131klar\u0131','Extras':'Ekstralar','ground agtron \u00b7 the number that teaches the app':'\u00f6\u011f\u00fct\u00fclm\u00fc\u015f agtron \u00b7 uygulamay\u0131 e\u011fiten say\u0131',"Fields arrive from this coffee's last save.":'Alanlar bu kahvenin son kayd\u0131ndan gelir.'};
 const SAMP_TR=['Çekirdek artık saklanamaz.','Kaşık dışarı, gerçek içeri.','Renk uçuşta yakalandı.','Gösterge için bir çapa daha.'];
 function tt(s){ return LANG==='tr'?(EN2TR[s]||s):s; }
 const I18N_ORIG=new Map();
