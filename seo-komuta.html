@@ -84,6 +84,24 @@ details.inline[open] summary:before{transform:rotate(90deg)}
 #gate .card{max-width:420px;margin:40px auto}
 .queue .qh{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:8px 0 3px}
 .queue .qdep{color:#a89a88;font-size:11px}
+.planbtn{margin-top:9px;background:var(--bluebg);color:var(--blue);border:none;border-radius:11px;padding:9px 14px;font-size:12.5px;font-weight:700;cursor:pointer;min-height:38px}
+#planBg{position:fixed;inset:0;background:rgba(42,33,24,.45);z-index:30}
+#planSheet{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-radius:20px 20px 0 0;box-shadow:0 -6px 30px rgba(0,0,0,.25);z-index:31;max-height:82vh;overflow:auto;padding:14px 16px calc(20px + env(safe-area-inset-bottom))}
+.pshead{display:flex;align-items:center;gap:8px;position:sticky;top:-14px;background:var(--card);padding:6px 0 8px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.pshead b{font-size:15.5px;flex:1}
+.pstep{display:flex;gap:10px;align-items:flex-start;border-left:3px solid var(--accent);background:#fbf8f3;border-radius:0 12px 12px 0;padding:10px 12px;margin-bottom:9px;font-size:13.5px;line-height:1.55}
+.pstep input{width:22px;height:22px;margin-top:2px;accent-color:var(--green);flex:none}
+.pstep.done{opacity:.55}
+.pstep.done .pt{text-decoration:line-through}
+.pstep .fld{margin-top:3px;font-size:12.5px}
+.pstep .fld b{color:#5a4a38;font-size:11.5px}
+.pstep a{color:var(--blue);word-break:break-all}
+.pmeta{font-size:11.5px;color:var(--mut);margin:6px 2px 10px;line-height:1.5}
+.pnote{font-size:12px;color:var(--mut);background:#f7f3ec;border-radius:10px;padding:9px 12px;margin-top:10px;line-height:1.5}
+#planSheet input[type=password],#planSheet input[type=text],#planSheet select{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font-size:16px;background:#fff;margin-bottom:8px;-webkit-appearance:none;font-family:inherit}
+.pbtn{border:none;border-radius:13px;padding:12px 16px;font-size:14.5px;font-weight:700;min-height:46px;cursor:pointer;width:100%;background:var(--green);color:#fff;margin-top:4px}
+.pbtn.sec{background:#f1eae0;color:#5a4a38}
+.pbtn:disabled{opacity:.5}
 </style>
 </head>
 <body>
@@ -98,7 +116,7 @@ details.inline[open] summary:before{transform:rotate(90deg)}
 </div>
 
 <div id="app" style="display:none">
-  <h1>SEO Komuta</h1>
+  <h1>SEO Komuta <small style="font-size:11px;color:var(--mut);font-weight:400">v1.1 görev planı (2026-07-08)</small></h1>
   <div class="sub">
     <span id="stamp">Canlı, Smartsheet'ten.</span>
     <span style="display:flex;gap:2px;align-items:center">
@@ -148,6 +166,14 @@ details.inline[open] summary:before{transform:rotate(90deg)}
   </details>
   <div class="count" id="count"></div>
   <div id="list" class="loading"><span class="spin"></span>Smartsheet okunuyor...</div>
+</div>
+
+<div id="planWrap" style="display:none">
+  <div id="planBg" onclick="closePlan()"></div>
+  <div id="planSheet">
+    <div class="pshead"><b id="planKw"></b><button class="linkish" onclick="closePlan()">kapat ✕</button></div>
+    <div id="planBody"></div>
+  </div>
 </div>
 
 <script>
@@ -364,6 +390,7 @@ function card(r,i){
   if(r.aiVis) meta.push('<b>AI:</b> '+esc(r.aiVis));
   if(r.last) meta.push('<b>Son kontrol:</b> '+esc(r.last));
   if(meta.length) h+='<details class="inline"><summary>Detay</summary><div class="meta">'+meta.join('<br>')+'</div></details>';
+  h+='<button class="planbtn" onclick="openPlan(\''+esc(r.kw).replace(/'/g,"\\'")+'\')">☑︎ Görev planı</button>';
   return h+'</div>';
 }
 
@@ -414,6 +441,105 @@ async function boot(force){
     render();
     buildQueue();
   }catch(e){ if(e.message!=='unauthorized') $('list').innerHTML='<div class="err">Relay\'e ulaşılamadı: '+esc(e.message)+'</div>'; }
+}
+
+// ---- Görev planı (bottom sheet) ----
+const AAPI='https://api.anthropic.com/v1/messages';
+let PLANKW=null, PBUSY=false;
+function vhash(s){ let h=5381; s=String(s||''); for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0; return String(h); }
+function planKey(kw){ return 'skPlan::'+kw; }
+function doneKey(kw){ return 'skPlanDone::'+kw; }
+function getCreds(){ return { key:localStorage.getItem('lfApiKey')||'', model:localStorage.getItem('lfModel')||'claude-opus-4-8' }; }
+function rowOf(kw){ return DATA&&DATA.keywords.find(k=>k.kw===kw); }
+
+function openPlan(kw){
+  PLANKW=kw;
+  $('planKw').textContent=kw;
+  $('planWrap').style.display='block';
+  document.body.style.overflow='hidden';
+  renderPlan();
+}
+function closePlan(){ $('planWrap').style.display='none'; document.body.style.overflow=''; PLANKW=null; }
+
+function renderPlan(){
+  const kw=PLANKW; if(!kw) return;
+  const r=rowOf(kw); if(!r){ $('planBody').innerHTML='<div class="err">Satır bulunamadı.</div>'; return; }
+  const creds=getCreds();
+  if(!creds.key){
+    $('planBody').innerHTML='<div class="pmeta">Anthropic API anahtarı gerekli. Bir kez kaydet; Landing Forge ile ortak kullanılır ve yalnızca bu cihazda durur.</div>'+
+      '<input type="password" id="pApiKey" placeholder="Anthropic API anahtarı (sk-ant-...)" autocomplete="off">'+
+      '<select id="pModel"><option value="claude-opus-4-8">Claude Opus 4.8 (önerilen)</option><option value="claude-sonnet-5">Claude Sonnet 5</option><option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option></select>'+
+      '<button class="pbtn" onclick="savePlanCreds()">Kaydet</button>';
+    return;
+  }
+  const cached=JSON.parse(localStorage.getItem(planKey(kw))||'null');
+  if(PBUSY){ $('planBody').innerHTML='<div class="loading"><span class="spin"></span>'+esc(creds.model)+' plan üretiyor...</div>'; return; }
+  if(!cached){
+    $('planBody').innerHTML='<div class="pmeta">Verdict: '+esc(r.verdict)+'</div>'+
+      '<button class="pbtn" onclick="genPlan()">Alt görevleri üret ('+esc(creds.model)+')</button>';
+    return;
+  }
+  const stale=cached.vh!==vhash(r.verdict);
+  const done=JSON.parse(localStorage.getItem(doneKey(kw))||'[]');
+  let h='<div class="pmeta">Üretildi: '+esc((cached.ts||'').slice(0,16).replace('T',' '))+' · '+esc(cached.model)+(stale?' · <b style="color:var(--red)">Verdict o zamandan beri değişmiş, yeniden üretmeyi düşün</b>':'')+'</div>';
+  (cached.steps||[]).forEach((s,i)=>{
+    const dn=!!done[i];
+    h+='<div class="pstep'+(dn?' done':'')+'"><input type="checkbox" '+(dn?'checked':'')+' onchange="tickPlan('+i+',this)"><div class="pt"><b>'+esc(s.adim||i+1)+'. '+esc(s.baslik||'')+'</b>';
+    if(s.link) h+='<div class="fld"><b>Aç:</b> <a href="'+esc(s.link)+'" target="_blank" rel="noopener">'+esc(s.link)+'</a></div>';
+    if(s.yapilacak) h+='<div class="fld"><b>Yap:</b> '+esc(s.yapilacak)+'</div>';
+    if(s.gorecegin) h+='<div class="fld"><b>Göreceğin:</b> '+esc(s.gorecegin)+'</div>';
+    if(s.dallanma) h+='<div class="fld"><b>Farklıysa:</b> '+esc(s.dallanma)+'</div>';
+    h+='</div></div>';
+  });
+  const allDone=(cached.steps||[]).length&&(cached.steps||[]).every((s,i)=>done[i]);
+  if(allDone) h+='<div class="pnote"><b>Hepsi tamam.</b> Claude\'a bildir: sheet\'te bu satır YAPILDI + tarih olarak işlensin (app sheet\'e yazmaz, tek kaynak Smartsheet).</div>';
+  else h+='<div class="pnote">İşaretler bu cihazda saklanır. Bitince Claude\'a bildir; Verdict sheet\'te güncellensin.</div>';
+  h+='<button class="pbtn sec" style="margin-top:10px" onclick="genPlan()">Yeniden üret</button>';
+  $('planBody').innerHTML=h;
+}
+function savePlanCreds(){
+  const k=$('pApiKey').value.trim(); if(!k) return;
+  localStorage.setItem('lfApiKey',k);
+  localStorage.setItem('lfModel',$('pModel').value);
+  renderPlan();
+}
+function tickPlan(i,el){
+  const done=JSON.parse(localStorage.getItem(doneKey(PLANKW))||'[]');
+  done[i]=el.checked;
+  localStorage.setItem(doneKey(PLANKW),JSON.stringify(done));
+  renderPlan();
+}
+async function genPlan(){
+  const kw=PLANKW, r=rowOf(kw), creds=getCreds();
+  if(!r||!creds.key||PBUSY) return;
+  PBUSY=true; renderPlan();
+  const auto=computeAutoR(r.kw,r.intent,DATA.cohorts);
+  const sys=[
+    'You are the SEO operations assistant for CoffeeNutz (coffeenutz.net, Shopify store of an İzmir roastery + SCA academy; Google Search Console property sc-domain:coffeenutz.net; Smartsheet is the single source of record).',
+    'TASK: given one keyword row from the SEO command sheet, output the MINIMAL concrete subtask checklist to execute the next move already described in the verdict. Do not invent new strategy; translate the verdict into executable steps. If the verdict is OWNED/YAPILDI monitoring-only, output the monitoring checklist.',
+    'RULES: Turkish. Never use em dashes. 3 to 8 steps, each genuinely small (minutes to an hour). Real deep-links where possible (Shopify admin paths like https://admin.shopify.com/, https://search.google.com/search-console, the exact site URLs from the row). Last step is always: report completion to Claude so the sheet row gets YAPILDI + date.',
+    'OUTPUT: ONLY a valid JSON array, no fences, items: {"adim":1,"baslik":"...","link":"...","yapilacak":"...","gorecegin":"...","dallanma":"..."}'
+  ].join('\n');
+  const usr=['KEYWORD: '+r.kw,'VERDICT: '+(r.verdict||'-'),'TARGET PAGE: '+(r.target||'-'),'INTENT: '+(r.intent||'-'),'POSITION: '+(r.pos||'-'),'AI VISIBILITY: '+(r.aiVis||'-'),'NOTES: '+(r.notes||'-'),'NEAREST COHORT: '+(auto?auto.label:'-'),'TODAY: '+new Date().toISOString().slice(0,10)].join('\n');
+  try{
+    const resp=await fetch(AAPI,{method:'POST',headers:{
+      'x-api-key':creds.key,'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true','content-type':'application/json'
+    },body:JSON.stringify({model:creds.model,max_tokens:3000,system:sys,messages:[{role:'user',content:usr}]})});
+    if(!resp.ok){ const t=await resp.text(); throw new Error('API '+resp.status+': '+t.slice(0,200)); }
+    const d=await resp.json();
+    let txt=(d.content||[]).map(b=>b.text||'').join('').replace(/^```(json)?/m,'').replace(/```\s*$/m,'');
+    const a=txt.indexOf('['), b=txt.lastIndexOf(']');
+    if(a<0||b<0) throw new Error('Model JSON listesi döndürmedi.');
+    const steps=JSON.parse(txt.slice(a,b+1));
+    localStorage.setItem(planKey(kw),JSON.stringify({vh:vhash(r.verdict),ts:new Date().toISOString(),model:creds.model,steps}));
+    localStorage.setItem(doneKey(kw),'[]');
+  }catch(e){
+    PBUSY=false;
+    $('planBody').innerHTML='<div class="err">Plan üretilemedi: '+esc(e.message)+'</div><button class="pbtn sec" style="margin-top:10px" onclick="renderPlan()">Geri</button>';
+    return;
+  }
+  PBUSY=false; renderPlan();
 }
 
 document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{ FILTER=b.dataset.f; localStorage.setItem('skFilter',FILTER); render(); });
