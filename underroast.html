@@ -76,9 +76,10 @@
 </head>
 <body>
   <div class="hud">
-    <span class="chip pill" id="verPill">v2026-07-13a</span>
+    <span class="chip pill" id="verPill">v2026-07-13b</span>
     <button class="chip" id="refreshChip">Refresh</button>
     <span class="grow"></span>
+    <span class="chip pill" id="kulakPill">Kulak 0</span>
     <button class="chip act" id="muteChip">Ses ✓</button>
     <button class="chip on" id="langTr">TR</button>
     <button class="chip" id="langEn">EN</button>
@@ -121,7 +122,7 @@
 "use strict";
 /* ============================================================
    UNDERROAST · bir kavurma masalı · a roasting tale
-   A CoffeeNutz game. Chapter 1 vertical slice. v2026-07-13a
+   A CoffeeNutz game. Chapter 1 vertical slice. v2026-07-13b
    Homage, not copy: no Undertale assets, names, likenesses or
    text. Original characters and music. The single credits line
    "a CoffeeNutz game · with love to Undertale" is the only nod.
@@ -139,7 +140,7 @@
      are never presented as a measurement.
    ============================================================ */
 
-var VERSION = 'v2026-07-13a';
+var VERSION = 'v2026-07-13b';
 
 /* ---------- BILINGUAL STRING TABLE (tr + en for every line) ---------- */
 var S = {
@@ -161,8 +162,8 @@ var S = {
   intro5:{tr:'Ve o çekirdek sensin.', en:'And that bean is you.'},
 
   /* green room */
-  n_fasulye:{tr:'FASULYE', en:'FASULYE'},
-  f1:{tr:'Ya ben hiç üçüncü çekim olamazsam?', en:'What if I never become third wave?'},
+  n_yesil:{tr:'YEŞİL', en:'YEŞİL'},
+  f1:{tr:'Daha yeşilim. Ya hiç üçüncü çekim olamazsam?', en:'I am still green. What if I never become third wave?'},
   f2:{tr:'Herkes kaliteli olmamı bekliyor. Ya yanarsam?', en:'Everyone expects me to be specialty. What if I burn?'},
   f3:{tr:'Ama sen dinliyorsun. Belki dinlemek yeter.', en:'But you listen. Maybe listening is enough.'},
   n_ceko:{tr:'ÇEKO', en:'ÇEKO'},
@@ -230,7 +231,27 @@ var S = {
   t_saved:{tr:'Kaydedildi', en:'Saved'},
   t_ladder_fail:{tr:'Sıralama yüklenemedi', en:'Could not load the ladder'},
   mute_on:{tr:'Ses ✓', en:'Sound ✓'},
-  mute_off:{tr:'Ses ✕', en:'Sound ✕'}
+  mute_off:{tr:'Ses ✕', en:'Sound ✕'},
+
+  /* KULAK (calibration by sound) */
+  kulak_hud:{tr:'Kulak', en:'Ear'},
+  q_deeper:{tr:'Hangisi daha derindi?', en:'Which was deeper?'},
+  opt_first:{tr:'İlki', en:'First'},
+  opt_second:{tr:'İkincisi', en:'Second'},
+  p_calibrated:{tr:'Kulak doğuştan değil. Kalibre edilir.', en:'An ear is not born. It is calibrated.'},
+  p_retry:{tr:'Yaklaştın. Bir daha duy.', en:'Close. Hear it again.'},
+  ceko_bench:{tr:'Gel, tezgâha otur. Kulağını çalıştıralım.', en:'Come, sit at the bench. Let us train your ear.'},
+  q_speed:{tr:'İlki hızlı mı yavaş mı?', en:'Was the first fast or slow?'},
+  opt_fast:{tr:'Hızlı', en:'Fast'},
+  opt_slow:{tr:'Yavaş', en:'Slow'},
+  q_count:{tr:'Kaç çıtırtı?', en:'How many cracks?'},
+  drill_good:{tr:'İşte bu. Kulağın oturuyor.', en:'There it is. Your ear is settling in.'},
+  ceko_coach:{tr:'Sayma. Duy.', en:'Do not count. Hear.'},
+  drill_retry:{tr:'Olsun. Bir daha duy.', en:'It is fine. Hear it once more.'},
+  t_bell:{tr:'Sesin şekli var. Buna çan deriz.', en:'Sound has a shape. We call it the bell.'},
+  prob_mock:{tr:'Kulak seviyesi mi? Benim DERECEM var.', en:'An ear level? I have a PROBE reading.'},
+  kulak_cal:{tr:'Kulak kalibrasyonun', en:'Your ear calibration'},
+  duel_thesis:{tr:'Gerçek kavurmada da aynı: kulak kalibre edilir. Crack Listener bunun için var.', en:'It is the same in real roasting: the ear calibrates. That is what the Crack Listener is for.'}
 };
 function T(key){ var e = S[key]; if(!e) return key; return e[game.lang] || e.tr; }
 function bi(key){ var e = S[key]; if(!e) return key; return e.tr + ' · ' + e.en; }
@@ -445,8 +466,8 @@ function drawSoul(x,y){
 /* ---------- GAME STATE ---------- */
 var game = {
   lang:'tr', muted:false, mode:'title',
-  room:'green', px:150, py:196, facing:'up',
-  flags:{ fasulye:false, ceko:false, plaque:false, saved:false, tamburDone:false },
+  room:'green', px:150, py:196, facing:'up', kulak:0, kulakDrill:0,
+  flags:{ yesil:false, ceko:false, plaque:false, plaqueAward:false, saved:false, tamburDone:false, tamburKulak:false },
   menuIdx:0,
   dialog:{ active:false, queue:[], i:0, speaker:'', full:'', shown:0, acc:0, done:false, onDone:null },
   enc:null, duel:null, saveExists:false, ticker:0
@@ -455,7 +476,7 @@ var SAVE_KEY = 'underroast_save';
 
 function hasSave(){ try{ return !!localStorage.getItem(SAVE_KEY); }catch(e){ return false; } }
 function doSave(){
-  var data = { ver:VERSION, room:game.room, px:game.px, py:game.py, flags:game.flags };
+  var data = { ver:VERSION, room:game.room, px:game.px, py:game.py, kulak:game.kulak, kulakDrill:game.kulakDrill, flags:game.flags };
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(data)); game.saveExists=true; return true; }catch(e){ return false; }
 }
 function loadSave(){
@@ -531,12 +552,12 @@ function drawDialogBox(){
   if(d.done){ txt('▶', bx+bw-16, by+bh-16, '#e6c14b', 9); }
 }
 function nameFor(sp){
-  var map = { player:'', fasulye:T('n_fasulye'), ceko:T('n_ceko'), plaque:T('n_plaque'),
+  var map = { player:'', yesil:T('n_yesil'), ceko:T('n_ceko'), plaque:T('n_plaque'),
     table:T('n_table'), tambur:T('n_tambur'), prob:T('n_prob'), narr:'' };
   return map[sp] !== undefined ? map[sp] : '';
 }
 function drawPortrait(sp, x, y){
-  if(sp==='fasulye') drawBeanNPC(x+13,y+12,'worry');
+  if(sp==='yesil') drawBeanNPC(x+13,y+12,'worry');
   else if(sp==='ceko') drawBeanNPC(x+13,y+12,'cool');
   else if(sp==='tambur'){ ctx&&ctx.save&&ctx.save(); drawTambur(x-16,y+4); ctx&&ctx.restore&&ctx.restore(); }
   else if(sp==='prob') drawProb(x+14,y-6);
@@ -545,16 +566,158 @@ function drawPortrait(sp, x, y){
   else drawPlayer(x+13,y+12);
 }
 
+/* ---------- KULAK (calibration by sound) - the thesis as a mechanic ---------- */
+function addKulak(n){ game.kulak = clamp((game.kulak||0) + n, 0, 100); updateKulakHud(); return game.kulak; }
+function drillReward(){
+  // drills contribute at most 50 to KULAK
+  if((game.kulakDrill||0) >= 50) return 0;
+  var give = Math.min(10, 50 - (game.kulakDrill||0));
+  game.kulakDrill = (game.kulakDrill||0) + give;
+  addKulak(give);
+  return give;
+}
+function updateKulakHud(){
+  if(typeof document==='undefined') return;
+  var kp = document.getElementById('kulakPill');
+  if(kp) kp.textContent = T('kulak_hud') + ' ' + (game.kulak||0);
+}
+function drawEarIcon(x,y){
+  px(x+1,y,4,2,'#e6c14b'); px(x,y+1,6,6,'#e6c14b');
+  px(x+2,y+2,3,3,'#0f0b08'); px(x+2,y+7,2,2,'#e6c14b');
+}
+function drawKulakBadge(){
+  if(!ctx) return;
+  drawEarIcon(288,4);
+  txt(String(game.kulak||0), 298, 4, '#e6c14b', 9, 'left', true);
+}
+function drawGainEnvelope(pairs, x, y, w, h, color){
+  if(!ctx) return 0;
+  if(!pairs || !pairs.length) return 0;
+  var t0=pairs[0][0], t1=pairs[pairs.length-1][0], span=Math.max(0.001, t1-t0);
+  var nb=Math.max(1, Math.min(48, Math.round(w/4)));
+  var bins=new Array(nb); for(var i=0;i<nb;i++) bins[i]=0;
+  var maxB=1;
+  for(var k=0;k<pairs.length;k++){
+    var bi2=Math.min(nb-1, Math.floor((pairs[k][0]-t0)/span*(nb-1)));
+    bins[bi2]+=pairs[k][1];
+  }
+  for(var m=0;m<nb;m++){ if(bins[m]>maxB) maxB=bins[m]; }
+  var bw2=w/nb, drawn=0;
+  for(var n=0;n<nb;n++){
+    var hh=(bins[n]/maxB)*h;
+    px(x + n*bw2, y+h-hh, Math.max(1,bw2-1), hh, color); drawn++;
+  }
+  return drawn;
+}
+
+/* -- the DINLE plaque: first calibration lesson (two pops, which was deeper) -- */
+function playPlaquePops(deeperFirst){
+  var deep=function(){ beep(180,0.13,'square',0.16); };
+  var shallow=function(){ beep(620,0.05,'square',0.07); };
+  var first = deeperFirst?deep:shallow, second = deeperFirst?shallow:deep;
+  first(); if(typeof setTimeout==='function') setTimeout(second, 380);
+}
+function startPlaque(){
+  game.mode='listen';
+  var deeperFirst = Math.random()<0.5;
+  playPlaquePops(deeperFirst);
+  game.listen = { kind:'plaque', optCount:2, prompt:'q_deeper', opts:['opt_first','opt_second'],
+    idx:0, correctIdx: deeperFirst?0:1, deeperFirst:deeperFirst };
+}
+
+/* -- Ceko's corner: repeatable ear-training drill on the real session slice -- */
+function drillSlice(){
+  var span = 8 + Math.random()*2;              // 8-10 s slice of the real session
+  var maxStart = Math.max(0, DUEL.lastT - span);
+  var start = Math.random()*maxStart;
+  var times=[], pairs=[];
+  for(var i=0;i<DUEL.cracks.length;i++){
+    var t=DUEL.cracks[i][0];
+    if(t>=start && t<start+span){ times.push(t); pairs.push(DUEL.cracks[i]); }
+  }
+  return { start:start, span:span, times:times, pairs:pairs };
+}
+function playDrillSlice(sl, speed){
+  speed = speed || 3;
+  if(typeof setTimeout!=='function') return;
+  for(var i=0;i<sl.times.length;i++){
+    (function(t){ setTimeout(function(){ sfx('pop'); }, Math.max(0,(t-sl.start)/speed*1000)); })(sl.times[i]);
+  }
+}
+function startDrill(){
+  game.mode='listen';
+  var qType = Math.random()<0.5 ? 'speed' : 'count';
+  if(qType==='count'){
+    var sl = drillSlice(), tries=0;
+    while(sl.times.length < 3 && tries<8){ sl=drillSlice(); tries++; }
+    playDrillSlice(sl);
+    var count = sl.times.length;
+    var choices = [count, Math.max(0,count-2), count+3];
+    for(var s=choices.length-1;s>0;s--){ var rr=Math.floor(Math.random()*(s+1)); var tmp=choices[s]; choices[s]=choices[rr]; choices[rr]=tmp; }
+    var correctIdx = choices.indexOf(count);
+    game.listen = { kind:'drill', qType:'count', optCount:3, prompt:'q_count',
+      opts:[String(choices[0]),String(choices[1]),String(choices[2])], idx:0, correctIdx:correctIdx, slice:sl };
+  } else {
+    var s1=drillSlice(), s2=drillSlice(), guard=0;
+    while(guard<8 && (s1.times.length/s1.span) === (s2.times.length/s2.span)){ s2=drillSlice(); guard++; }
+    playDrillSlice(s1); playDrillSlice(s2, 3);
+    var d1=s1.times.length/s1.span, d2=s2.times.length/s2.span;
+    var faster = d1 > d2;
+    game.listen = { kind:'drill', qType:'speed', optCount:2, prompt:'q_speed',
+      opts:['opt_fast','opt_slow'], idx:0, correctIdx: faster?0:1, slice:s1, slice2:s2 };
+  }
+}
+function answerListen(idx){
+  var L=game.listen; if(!L) return false;
+  if(typeof idx!=='number') idx=L.idx;
+  var correct = (idx===L.correctIdx);
+  if(correct){
+    sfx('good');
+    if(L.kind==='plaque'){
+      if(!game.flags.plaqueAward){ game.flags.plaqueAward=true; addKulak(10); }
+      game.flags.plaque=true;
+      game.mode='room';
+      startDialog(['p_calibrated'], null, ['plaque']);
+    } else {
+      drillReward();
+      game.mode='room';
+      startDialog(['drill_good','ceko_coach'], null, ['ceko','ceko']);
+    }
+  } else {
+    sfx('cancel');
+    if(L.kind==='plaque'){ playPlaquePops(L.deeperFirst); startDialog(['p_retry'], null, ['plaque']); }
+    else { startDialog(['drill_retry'], null, ['ceko']); }
+  }
+  return correct;
+}
+function drawListen(){
+  px(0,0,W,H,'#241c16');
+  px(16,16,W-32,H-32,'#1c1510');
+  var L=game.listen;
+  txt('DINLE · LISTEN', 20, 22, '#a8998a', 8, 'left');
+  if(!L) return;
+  var rows = wrap(T(L.prompt), 260);
+  for(var r=0;r<rows.length;r++){ txt(rows[r], W/2, 60+r*14, '#e6c14b', 11, 'center', true); }
+  var y0 = 120;
+  for(var i=0;i<L.optCount;i++){
+    var label = S[L.opts[i]] ? T(L.opts[i]) : L.opts[i];
+    var sel = (i===L.idx);
+    if(sel){ txt('▶', W/2 - measure(label)/2 - 14, y0+i*22, '#e6c14b', 11, 'left', true); }
+    txt(label, W/2, y0+i*22, sel?'#f3ede4':'#a8998a', 12, 'center', sel);
+  }
+}
+
 /* ---------- ROOMS ---------- */
 function roomInteractables(){
   if(game.room==='green'){
     return [
-      { id:'fasulye', x:56, y:78, w:16, h:16, solid:true, action:function(){
-          game.flags.fasulye=true; startDialog(['f1','f2','f3'], null, ['fasulye','fasulye','fasulye']); } },
+      { id:'yesil', x:56, y:78, w:16, h:16, solid:true, action:function(){
+          game.flags.yesil=true; startDialog(['f1','f2','f3'], null, ['yesil','yesil','yesil']); } },
       { id:'ceko', x:230, y:96, w:16, h:16, solid:true, action:function(){
-          game.flags.ceko=true; startDialog(['c1','c2','c3'], null, ['ceko','ceko','ceko']); } },
+          if(!game.flags.ceko){ game.flags.ceko=true; startDialog(['c1','c2','c3','ceko_bench'], startDrill, ['ceko','ceko','ceko','ceko']); }
+          else { startDrill(); } } },
       { id:'plaque', x:150, y:34, w:36, h:14, solid:true, action:function(){
-          game.flags.plaque=true; startDialog(['p1','p2'], null, ['plaque','plaque']); } },
+          startDialog(['p1','p2'], startPlaque, ['plaque','plaque']); } },
       { id:'table', x:150, y:150, w:44, h:18, solid:true, action:function(){
           doSave(); startDialog(['save_line'], function(){ toast(T('t_saved')); }, ['table']); } },
       { id:'door', x:150, y:24, w:36, h:14, solid:false, door:true, prompt:true, action:function(){
@@ -656,7 +819,8 @@ function startEncounter(){
   game.enc = {
     sub:'intro', hp:5, listen:0, menuIdx:0,
     box:{x:96,y:56,w:128,h:78},
-    soul:{x:160,y:95}, projs:[], waveT:0, spawnT:0, invuln:0, waves:0
+    soul:{x:160,y:95}, projs:[], waveT:0, spawnT:0, invuln:0, waves:0,
+    survived:[], slice:null, schedule:[], spawnIdx:0, waveSpeed:6
   };
   startDialog(['t_intro1','t_intro2'], function(){ game.enc.sub='menu'; }, ['tambur','tambur']);
 }
@@ -675,10 +839,32 @@ function encSelect(idx, opts){
   }
 }
 function backToMenu(){ if(game.enc){ game.enc.sub='menu'; } }
+function tamburSlice(waveIx){
+  var starts=[46, 96, 32], span=12;
+  var start=starts[((waveIx||1)-1) % starts.length];
+  var times=[], pairs=[];
+  for(var i=0;i<DUEL.cracks.length;i++){
+    var t=DUEL.cracks[i][0];
+    if(t>=start && t<start+span){ times.push(t); pairs.push(DUEL.cracks[i]); }
+  }
+  return { start:start, span:span, times:times, pairs:pairs };
+}
+function spawnTamburProj(e){
+  var b=e.box;
+  var fromLeft = (e.spawnIdx % 2 === 0);
+  var sx = fromLeft ? b.x-6 : b.x+b.w+6;
+  var sy = b.y + b.h - 6 - (e.spawnIdx % 3)*4;
+  var vx = (fromLeft?1:-1) * (b.w/1.6) / 2.4;
+  var vy = -(b.h) / 1.2;
+  e.projs.push({ x:sx, y:sy, vx:vx, vy:vy, r:4, rot:0 });
+}
 function startWave(){
   var e = game.enc; if(!e) return;
   e.sub='dodge'; e.waveT=0; e.spawnT=0; e.projs=[]; e.waves++;
   e.soul.x = e.box.x + e.box.w/2; e.soul.y = e.box.y + e.box.h/2;
+  e.slice = tamburSlice(e.waves);
+  e.schedule = e.slice.times.slice();
+  e.spawnIdx = 0; e.waveSpeed = 6;
 }
 function encHit(force){
   var e = game.enc; if(!e || e.sub!=='dodge') return;
@@ -696,27 +882,28 @@ function encResolveAshamed(){
 }
 function finishEncounter(reason){
   game.flags.tamburDone = true;
-  startDialog(['prob_taunt','prob_drag'], function(){ startDuel(); }, ['prob','prob']);
+  if(!game.flags.tamburKulak){ game.flags.tamburKulak = true; addKulak(10); }
+  if(game.enc) game.enc.sub = 'bell';
+  startDialog(['t_bell'], function(){
+    startDialog(['prob_taunt','prob_drag'], function(){ startDuel(); }, ['prob','prob']);
+  }, ['tambur']);
 }
 function updateEncounter(dt){
   var e = game.enc; if(!e) return;
   if(e.invuln>0) e.invuln -= dt;
   if(e.sub!=='dodge') return;
-  e.waveT += dt; e.spawnT += dt;
+  e.waveT += dt;
   // soul movement
   var b=e.box, sp=90*dt/1000;
   if(input.left) e.soul.x -= sp; if(input.right) e.soul.x += sp;
   if(input.up) e.soul.y -= sp; if(input.down) e.soul.y += sp;
   e.soul.x = clamp(e.soul.x, b.x+4, b.x+b.w-4); e.soul.y = clamp(e.soul.y, b.y+4, b.y+b.h-4);
-  // spawn tumbling beans that arc through the box
-  if(e.spawnT > 650){
-    e.spawnT = 0;
-    var fromLeft = Math.random()<0.5;
-    var sx = fromLeft ? b.x-6 : b.x+b.w+6;
-    var sy = b.y + b.h - 6 - Math.random()*10;
-    var vx = (fromLeft?1:-1) * (b.w/1.6) / 2.4;
-    var vy = -(b.h) / 1.2;
-    e.projs.push({ x:sx, y:sy, vx:vx, vy:vy, r:4, rot:0 });
+  // projectiles spawn ON THE REAL CRACK TIMESTAMPS of the slice (the wave is the sound made visible)
+  var sessT = e.slice ? (e.slice.start + (e.waveT/1000)*e.waveSpeed) : 0;
+  while(e.slice && e.spawnIdx < e.schedule.length && e.schedule[e.spawnIdx] <= sessT){
+    if(e.projs.length < 6) spawnTamburProj(e);   // fairness: cap simultaneous projectiles
+    e.survived.push(e.slice.pairs[e.spawnIdx]);  // record exactly what was thrown
+    e.spawnIdx++;
     sfx('pop');
   }
   // update projectiles (parabolic arc)
@@ -728,8 +915,8 @@ function updateEncounter(dt){
     if(Math.hypot(p.x-e.soul.x, p.y-e.soul.y) < 7){ encHit(false); }
     if(p.x < b.x-16 || p.x > b.x+b.w+16 || p.y > b.y+b.h+20){ e.projs.splice(i,1); }
   }
-  // end of wave
-  if(e.waveT > 12000){ e.projs=[]; e.sub='menu'; }
+  // end of wave: schedule spent and the box is clear (or a hard safety cap)
+  if((e.spawnIdx >= e.schedule.length && e.projs.length===0) || e.waveT > 15000){ e.projs=[]; e.sub='menu'; }
 }
 function drawEncounter(){
   px(0,0,W,H,'#0f0b08');
@@ -748,6 +935,11 @@ function drawEncounter(){
     txt(T('wave_hint'), b.x, b.y+b.h+6, '#a8998a', 8, 'left');
   } else if(e.sub==='menu'){
     drawEncounterMenu();
+  } else if(e.sub==='bell'){
+    var bb=e.box;
+    px(bb.x-2,bb.y-2,bb.w+4,bb.h+4,'#f3ede4'); px(bb.x,bb.y,bb.w,bb.h,'#0f0b08');
+    drawGainEnvelope(e.survived, bb.x+4, bb.y+4, bb.w-8, bb.h-8, '#c98a3c');
+    txt(T('kulak_hud')+' +10', bb.x, bb.y+bb.h+6, '#6fae4f', 8, 'left');
   }
   // dialog drawn separately by main render
 }
@@ -769,7 +961,7 @@ function drawEncounterMenu(){
 function startDuel(){
   game.mode='duel';
   game.duel = { sub:'target', realT:0, crackIdx:0, dropped:false, result:null, speed:4 };
-  startDialog(['prob_target'], function(){ game.duel.sub='play'; game.duel.realT=0; game.duel.crackIdx=0; }, ['prob']);
+  startDialog(['prob_mock','prob_target'], function(){ game.duel.sub='play'; game.duel.realT=0; game.duel.crackIdx=0; }, ['prob','prob']);
 }
 function duelDrop(atReal){
   var d = game.duel; if(!d || d.sub!=='play' || d.dropped) return;
@@ -808,20 +1000,36 @@ function drawDuel(){
   txt(T('n_prob'), 172, 20, '#c9ccd2', 9, 'left', true);
   txt(T('lab_target')+': 88', 12, 20, '#e6c14b', 10, 'left', true);
   var d = game.duel; if(!d) return;
-  // growing pixel bell (2s bins of cumulative gain up to realT)
+  // KULAK changes what the ear can PERCEIVE, never the score.
+  var kk = game.kulak||0;
+  var fine = kk>=30, showTicks = kk>=60, bright = kk>=80;
   var bx=20, by=92, bw=280, bh=100;
   px(bx-2,by-2,bw+4,bh+4,'#3a2f26'); px(bx,by,bw,bh,'#160f0a');
-  var binW=2, nb=Math.ceil((DUEL.lastT+0.001)/binW);
+  var binW = fine?1:2, nb=Math.ceil((DUEL.lastT+0.001)/binW);
   var bins=new Array(nb); for(var i=0;i<nb;i++) bins[i]=0;
-  var maxBin=1;
+  var maxBin=1, maxIdx=0;
   for(var k=0;k<DUEL.cracks.length;k++){ var b2=Math.min(nb-1,Math.floor(DUEL.cracks[k][0]/binW)); bins[b2]+=DUEL.cracks[k][1]; }
-  for(var m=0;m<nb;m++){ if(bins[m]>maxBin) maxBin=bins[m]; }
+  for(var m=0;m<nb;m++){ if(bins[m]>maxBin){ maxBin=bins[m]; maxIdx=m; } }
   var bw2=(bw)/nb, upto = d.sub==='play' ? d.realT : (d.result?d.result.real:DUEL.lastT);
   for(var n=0;n<nb;n++){
     var filled = (n*binW) <= upto;
     var hh = (bins[n]/maxBin)*(bh-6);
-    px(bx + n*bw2, by+bh-hh, Math.max(1,bw2-1), hh, filled ? '#c98a3c' : '#2a221b');
+    var col = filled ? '#c98a3c' : '#2a221b';
+    if(bright && filled && Math.abs(n-maxIdx) <= 1) col = '#e6c14b'; // subtle brightness near the peak
+    px(bx + n*bw2, by+bh-hh, Math.max(1,bw2-1), hh, col);
   }
+  var ticks = 0;
+  if(showTicks){
+    // faint, REAL stage marks computed from the crack pattern: first crack and the peak
+    var mk = [DUEL.cracks[0][0], maxIdx*binW];
+    for(var q=0;q<mk.length;q++){
+      if(mk[q] > upto) continue;
+      var tickX = bx + (mk[q]/DUEL.lastT)*bw;
+      px(tickX|0, by, 1, bh, '#6b4a2a');
+      ticks++;
+    }
+  }
+  d.bellInfo = { bars:nb, fine:fine, ticks:ticks, showTicks:showTicks, bright:bright };
   if(d.sub==='play'){
     var dl = T('duel_drop');
     px(110,200,100,28,'#d9663f'); txt(dl, 160-measure(dl)/2, 208, '#fff', 12, 'left', true);
@@ -845,6 +1053,8 @@ function showEndCard(){
       '<div><div class="sw" style="background:'+agtronColor(d.probAg)+'"></div><div class="resnum" style="color:var(--muted)">'+probAg+'</div><div class="reslab">'+T('lab_prob')+'</div></div>'+
     '</div>'+
     '<div class="frame">'+S.prob_frame.tr+'<span class="en">'+S.prob_frame.en+'</span></div>'+
+    '<div class="frame">'+S.kulak_cal.tr+': '+(game.kulak||0)+'/100<span class="en">'+S.kulak_cal.en+': '+(game.kulak||0)+'/100</span></div>'+
+    '<div class="frame">'+S.duel_thesis.tr+'<span class="en">'+S.duel_thesis.en+'</span></div>'+
     '<div id="postWrap">'+
       '<button class="btn" id="btnOpenPost">'+S.post_open.tr+' <span class="en">· '+S.post_open.en+'</span></button>'+
       '<form class="postForm hidden" id="postForm">'+
@@ -919,15 +1129,18 @@ function titleConfirm(){
 }
 function newGame(){
   startMusic();
-  game.flags={ fasulye:false, ceko:false, plaque:false, saved:false, tamburDone:false };
+  game.kulak=0; game.kulakDrill=0;
+  game.flags={ yesil:false, ceko:false, plaque:false, plaqueAward:false, saved:false, tamburDone:false, tamburKulak:false };
   game.mode='intro';
   startDialog(['intro1','intro2','intro3','intro4','intro5'], function(){ enterGreenRoom(true); }, ['narr','narr','narr','narr','narr']);
 }
 function continueGame(){
   var d = loadSave(); if(!d){ newGame(); return; }
   startMusic();
-  game.flags = Object.assign({ fasulye:false, ceko:false, plaque:false, saved:false, tamburDone:false }, d.flags||{});
+  game.flags = Object.assign({ yesil:false, ceko:false, plaque:false, plaqueAward:false, saved:false, tamburDone:false, tamburKulak:false }, d.flags||{});
   game.room = d.room; game.px = d.px; game.py = d.py;
+  game.kulak = d.kulak||0; game.kulakDrill = d.kulakDrill||0;
+  updateKulakHud();
   game.mode = 'room';
 }
 function enterGreenRoom(fresh){
@@ -970,6 +1183,11 @@ function onConfirm(){
     if(it){ sfx('select'); it.action(); }
     return;
   }
+  if(game.mode==='listen'){
+    var L=game.listen;
+    if(L){ sfx('select'); answerListen(L.idx); }
+    return;
+  }
   if(game.mode==='encounter'){
     var e=game.enc;
     if(e && e.sub==='menu'){ sfx('select'); encSelect(e.menuIdx, {}); }
@@ -993,6 +1211,10 @@ function onDir(dir, pressed){
     var n = titleMenuItems().length;
     if(dir==='up'){ game.menuIdx=(game.menuIdx-1+n)%n; sfx('move'); }
     if(dir==='down'){ game.menuIdx=(game.menuIdx+1)%n; sfx('move'); }
+  } else if(game.mode==='listen' && game.listen && !game.dialog.active){
+    var L=game.listen;
+    if(dir==='left'){ L.idx=(L.idx-1+L.optCount)%L.optCount; sfx('move'); }
+    if(dir==='right'){ L.idx=(L.idx+1)%L.optCount; sfx('move'); }
   } else if(game.mode==='encounter' && game.enc && game.enc.sub==='menu'){
     var e=game.enc;
     if(dir==='left'||dir==='up') { e.menuIdx=(e.menuIdx+3)%4; sfx('move'); }
@@ -1044,9 +1266,10 @@ function render(dt){
     for(var i=0;i<starBeans.length;i++){ var b=starBeans[i]; b.y+=b.s*dt/30; if(b.y>H){b.y=0;b.x=Math.random()*W;} px(b.x,b.y,2,3,'#3c6e2a'); }
     drawDialogBox(); return;
   }
-  if(game.mode==='room'){ if(game.room==='green') drawGreenRoom(); else drawDrumHall(); drawDialogBox(); return; }
-  if(game.mode==='encounter'){ drawEncounter(); drawDialogBox(); return; }
-  if(game.mode==='duel'){ drawDuel(); drawDialogBox(); return; }
+  if(game.mode==='room'){ if(game.room==='green') drawGreenRoom(); else drawDrumHall(); drawKulakBadge(); drawDialogBox(); return; }
+  if(game.mode==='listen'){ drawListen(); drawKulakBadge(); drawDialogBox(); return; }
+  if(game.mode==='encounter'){ drawEncounter(); drawKulakBadge(); drawDialogBox(); return; }
+  if(game.mode==='duel'){ drawDuel(); drawKulakBadge(); drawDialogBox(); return; }
   if(game.mode==='end'){ px(0,0,W,H,'#0f0b08'); txt(T('ec_title'), W/2, 110, '#e6c14b', 14, 'center', true); return; }
 }
 
@@ -1058,6 +1281,7 @@ function setLang(l){
   if(tr) tr.classList.toggle('on', l==='tr');
   if(en) en.classList.toggle('on', l==='en');
   var mc=document.getElementById('muteChip'); if(mc) mc.textContent=T(game.muted?'mute_off':'mute_on');
+  updateKulakHud();
   // live-swap open overlays
   if(!document.getElementById('ladderOverlay').classList.contains('hidden')) openLadder();
   if(game.mode==='end') showEndCard();
@@ -1108,7 +1332,9 @@ window.__UNDERROAST__ = {
   startDialog:startDialog, advanceDialog:advanceDialog, updateDialog:updateDialog,
   interactById:function(id){ var l=roomInteractables(); for(var i=0;i<l.length;i++){ if(l[i].id===id){ l[i].action(); return true; } } return false; },
   startEncounter:startEncounter, encSelect:encSelect, encHit:encHit, setHP:function(h){ if(game.enc) game.enc.hp=h; },
-  startWave:startWave,
+  startWave:startWave, tamburSlice:tamburSlice, updateEncounter:updateEncounter, finishEncounter:finishEncounter,
+  addKulak:addKulak, drillReward:drillReward, startPlaque:startPlaque, startDrill:startDrill, answerListen:answerListen,
+  drawDuel:drawDuel, drawEncounter:drawEncounter, render:render, updateKulakHud:updateKulakHud,
   startDuel:startDuel, duelDrop:duelDrop, updateDuel:updateDuel,
   submitScore:submitScore, postScore:postScore, fetchLadderTop5:fetchLadderTop5,
   showEndCard:showEndCard,
