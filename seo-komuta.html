@@ -116,7 +116,7 @@ details.inline[open] summary:before{transform:rotate(90deg)}
 </div>
 
 <div id="app" style="display:none">
-  <h1>SEO Komuta <small style="font-size:11px;color:var(--mut);font-weight:400">v1.1 görev planı (2026-07-08)</small></h1>
+  <h1>SEO Komuta <small style="font-size:11px;color:var(--mut);font-weight:400">v1.2 görev planı, sheet'ten (2026-07-08)</small></h1>
   <div class="sub">
     <span id="stamp">Canlı, Smartsheet'ten.</span>
     <span style="display:flex;gap:2px;align-items:center">
@@ -178,7 +178,8 @@ details.inline[open] summary:before{transform:rotate(90deg)}
 
 <script>
 const FN='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/seo-proxy';
-const SEO_ID='7857520414689156', TRAIN_ID='8367277466584964';
+const SEO_ID='7857520414689156', TRAIN_ID='8367277466584964', PLAN_ID='5426834902747012';
+let PLANS=null; // keyword -> {vh, uret, steps[]}
 const FACTORS=["R","V","W","H","S","C","E","B"];
 let weights=Object.assign({R:1,V:1,W:1,H:1,S:0,C:0,B:0,E:1},JSON.parse(localStorage.getItem("seoKomutaW3")||"{}"));
 let autoR=JSON.parse(localStorage.getItem("seoKomutaAutoR")||"true");
@@ -434,8 +435,9 @@ async function boot(force){
   $('list').classList.add('loading');
   $('list').innerHTML='<span class="spin"></span>Smartsheet okunuyor...';
   try{
-    const [seo,tr]=await Promise.all([api('/sheet?id='+SEO_ID),api('/sheet?id='+TRAIN_ID)]);
+    const [seo,tr,pl]=await Promise.all([api('/sheet?id='+SEO_ID),api('/sheet?id='+TRAIN_ID),api('/sheet?id='+PLAN_ID).catch(()=>null)]);
     DATA=parseSheets(seo,tr);
+    PLANS=pl?parsePlans(pl):null;
     LOADED=Date.now();
     $('stamp').textContent='Canlı · '+new Date(LOADED).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
     render();
@@ -444,6 +446,23 @@ async function boot(force){
 }
 
 // ---- Görev planı (bottom sheet) ----
+function parsePlans(sheet){
+  const ci=colIds(sheet,{
+    kw:t=>t==='keyword', adim:t=>t.indexOf('ad')===0, baslik:t=>t.indexOf('ba')===0,
+    link:t=>t==='link', yap:t=>t.indexOf('yap')===0, gor:t=>t.indexOf('görec')===0||t.indexOf('gorec')===0,
+    fark:t=>t.indexOf('farkl')===0, vh:t=>t==='vh', uret:t=>t.indexOf('üret')===0||t.indexOf('uret')===0
+  });
+  const out={};
+  for(const row of sheet.rows||[]){
+    const m=cellMap(row);
+    const kw=m[ci.kw]; if(!kw) continue;
+    const k=String(kw);
+    if(!out[k]) out[k]={vh:String(m[ci.vh]||''),uret:String(m[ci.uret]||''),steps:[]};
+    out[k].steps.push({adim:parseFloat(m[ci.adim])||out[k].steps.length+1,baslik:m[ci.baslik]||'',link:m[ci.link]||'',yapilacak:m[ci.yap]||'',gorecegin:m[ci.gor]||'',dallanma:m[ci.fark]||''});
+  }
+  for(const k in out) out[k].steps.sort((a,b)=>a.adim-b.adim);
+  return out;
+}
 const AAPI='https://api.anthropic.com/v1/messages';
 let PLANKW=null, PBUSY=false;
 function vhash(s){ let h=5381; s=String(s||''); for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0; return String(h); }
@@ -465,23 +484,20 @@ function renderPlan(){
   const kw=PLANKW; if(!kw) return;
   const r=rowOf(kw); if(!r){ $('planBody').innerHTML='<div class="err">Satır bulunamadı.</div>'; return; }
   const creds=getCreds();
-  if(!creds.key){
-    $('planBody').innerHTML='<div class="pmeta">Anthropic API anahtarı gerekli. Bir kez kaydet; Landing Forge ile ortak kullanılır ve yalnızca bu cihazda durur.</div>'+
-      '<input type="password" id="pApiKey" placeholder="Anthropic API anahtarı (sk-ant-...)" autocomplete="off">'+
-      '<select id="pModel"><option value="claude-opus-4-8">Claude Opus 4.8 (önerilen)</option><option value="claude-sonnet-5">Claude Sonnet 5</option><option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option></select>'+
-      '<button class="pbtn" onclick="savePlanCreds()">Kaydet</button>';
-    return;
-  }
-  const cached=JSON.parse(localStorage.getItem(planKey(kw))||'null');
   if(PBUSY){ $('planBody').innerHTML='<div class="loading"><span class="spin"></span>'+esc(creds.model)+' plan üretiyor...</div>'; return; }
+  // 1) Öncelik: plan sheet'i (ücretsiz yol, Claude plan üzerinden üretilir)
+  const sp=PLANS&&PLANS[kw];
+  const cached=sp?{vh:sp.vh,ts:sp.uret,model:'plan sheet',steps:sp.steps}:JSON.parse(localStorage.getItem(planKey(kw))||'null');
   if(!cached){
-    $('planBody').innerHTML='<div class="pmeta">Verdict: '+esc(r.verdict)+'</div>'+
-      '<button class="pbtn" onclick="genPlan()">Alt görevleri üret ('+esc(creds.model)+')</button>';
+    let h='<div class="pmeta">Verdict: '+esc(r.verdict)+'</div>'+
+      '<div class="pnote"><b>Ücretsiz yol:</b> Claude\'a "'+esc(kw)+' için görev planı üret" de; plan Smartsheet\'e yazılır ve burada görünür. API anahtarı gerekmez.</div>';
+    if(creds.key) h+='<button class="pbtn sec" style="margin-top:10px" onclick="genPlan()">Şimdi API ile üret (ücretli · '+esc(creds.model)+')</button>';
+    $('planBody').innerHTML=h;
     return;
   }
   const stale=cached.vh!==vhash(r.verdict);
   const done=JSON.parse(localStorage.getItem(doneKey(kw))||'[]');
-  let h='<div class="pmeta">Üretildi: '+esc((cached.ts||'').slice(0,16).replace('T',' '))+' · '+esc(cached.model)+(stale?' · <b style="color:var(--red)">Verdict o zamandan beri değişmiş, yeniden üretmeyi düşün</b>':'')+'</div>';
+  let h='<div class="pmeta">Kaynak: '+esc(cached.model)+' · '+esc(String(cached.ts||'').slice(0,16).replace('T',' '))+(stale?' · <b style="color:var(--red)">Verdict o zamandan beri değişmiş; Claude\'a "planı yenile" de</b>':'')+'</div>';
   (cached.steps||[]).forEach((s,i)=>{
     const dn=!!done[i];
     h+='<div class="pstep'+(dn?' done':'')+'"><input type="checkbox" '+(dn?'checked':'')+' onchange="tickPlan('+i+',this)"><div class="pt"><b>'+esc(s.adim||i+1)+'. '+esc(s.baslik||'')+'</b>';
@@ -493,8 +509,8 @@ function renderPlan(){
   });
   const allDone=(cached.steps||[]).length&&(cached.steps||[]).every((s,i)=>done[i]);
   if(allDone) h+='<div class="pnote"><b>Hepsi tamam.</b> Claude\'a bildir: sheet\'te bu satır YAPILDI + tarih olarak işlensin (app sheet\'e yazmaz, tek kaynak Smartsheet).</div>';
-  else h+='<div class="pnote">İşaretler bu cihazda saklanır. Bitince Claude\'a bildir; Verdict sheet\'te güncellensin.</div>';
-  h+='<button class="pbtn sec" style="margin-top:10px" onclick="genPlan()">Yeniden üret</button>';
+  else h+='<div class="pnote">İşaretler bu cihazda saklanır. Bitince Claude\'a bildir; Verdict sheet\'te güncellensin. Planı tazelemenin ücretsiz yolu: Claude\'a "planı yenile" de.</div>';
+  if(getCreds().key) h+='<button class="pbtn sec" style="margin-top:10px" onclick="genPlan()">API ile yeniden üret (ücretli, yalnızca bu cihazda)</button>';
   $('planBody').innerHTML=h;
 }
 function savePlanCreds(){
