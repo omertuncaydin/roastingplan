@@ -10,17 +10,6 @@
     --accent:#c98a3c; --accent2:#3c7a5a; --gold:#e6c14b;
     --ink:#f3ede4; --muted:#a8998a; --line:#3a2f26; --warn:#d9663f;
   }
-  /* ===== THEME PALETTES (v2026-07-13b) ===== */
-  body.theme-mdrn{
-    --bg:#17181c; --panel:#1f2025; --panel2:#191a1e;
-    --accent:#e6c14b; --accent2:#9a9ba1; --gold:#e6c14b;
-    --ink:#e9e9ec; --muted:#9a9ba1; --line:#32333a; --warn:#cf9d5a;
-  }
-  body.theme-arc{
-    --bg:#0a0a0f; --panel:#12121a; --panel2:#0e0e15;
-    --accent:#ffb000; --accent2:#33ff66; --gold:#ffb000;
-    --ink:#f0ead8; --muted:#9a9f84; --line:#2a2a3a; --warn:#ff3355;
-  }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
@@ -159,71 +148,9 @@
   .stageList li .en{color:var(--muted); font-size:.9em}
   .stageClose2{font-size:12px; color:var(--muted); text-align:center; margin-bottom:12px}
   .stageClose2 a{display:block; margin-top:6px; color:var(--accent); text-decoration:none}
-  /* ===== THEME SELECTOR (chip pair, styled like TR/EN) ===== */
-  .themeTog{display:inline-flex; gap:4px}
-  .themeTog button{background:none; border:1px solid var(--line); color:var(--muted); padding:4px 9px; border-radius:999px; cursor:pointer; font-size:11px; font-weight:700; letter-spacing:.04em}
-  .themeTog button.on{color:var(--accent); border-color:var(--accent)}
-  .cursor{display:none}
-  /* ===== MDRN skin (modern minimal, premium tool) ===== */
-  body.theme-mdrn{letter-spacing:0}
-  body.theme-mdrn .wordmark{color:var(--muted); font-weight:600; letter-spacing:.18em}
-  body.theme-mdrn button.big{background:var(--accent); color:#17181c; border-radius:12px; font-weight:700}
-  body.theme-mdrn button.big.ghost{background:transparent; color:var(--ink)}
-  body.theme-mdrn button.drop{background:var(--warn); color:#17181c}
-  body.theme-mdrn .rankRow{background:none; border:0; border-bottom:1px solid var(--line); border-radius:0; margin:0}
-  body.theme-mdrn .chip.on,body.theme-mdrn .chip.correct{color:#17181c}
-  body.theme-mdrn .stageChip{color:#17181c}
-  /* ===== ARC skin (arcade, phosphor CRT) ===== */
-  body.theme-arc{
-    font-family:"SF Mono",ui-monospace,Menlo,Consolas,"Courier New",monospace;
-    letter-spacing:.03em;
-    text-shadow:0 0 1px rgba(255,176,0,.22);
-  }
-  body.theme-arc::after{
-    content:""; position:fixed; inset:0; pointer-events:none; z-index:60;
-    background:repeating-linear-gradient(to bottom, rgba(255,255,255,.06) 0, rgba(255,255,255,.06) 1px, transparent 1px, transparent 2px);
-  }
-  body.theme-arc .panel,
-  body.theme-arc .tipMini,
-  body.theme-arc .chip,
-  body.theme-arc .instr,
-  body.theme-arc canvas.bell,
-  body.theme-arc .rankRow,
-  body.theme-arc .links a,
-  body.theme-arc .speedRes,
-  body.theme-arc .stageCard{border-width:2px; border-radius:0}
-  body.theme-arc .lang button,
-  body.theme-arc .themeTog button{border-radius:0}
-  body.theme-arc .wordmark{color:var(--accent2); letter-spacing:.26em; font-weight:700; text-shadow:0 0 4px rgba(51,255,102,.35)}
-  body.theme-arc h1{text-shadow:0 0 5px rgba(255,176,0,.32)}
-  body.theme-arc .cursor{display:inline-block; margin-left:3px; color:var(--accent); font-weight:800; animation:arcBlink 1.05s steps(1,end) infinite}
-  @keyframes arcBlink{0%,49.9%{opacity:1} 50%,100%{opacity:0}}
-  body.theme-arc .wheelNum,
-  body.theme-arc .matchBig,
-  body.theme-arc .deltaBig,
-  body.theme-arc .rNum{text-shadow:0 0 8px rgba(255,176,0,.4); letter-spacing:.02em}
-  body.theme-arc .roundTag,
-  body.theme-arc .ladderSub,
-  body.theme-arc .event{color:var(--accent2)}
-  body.theme-arc button.big{
-    border:2px solid #1a1a22; border-radius:0; font-weight:800; letter-spacing:.05em;
-    background:var(--accent); color:#0a0a0f;
-    box-shadow:inset 0 -4px 0 rgba(0,0,0,.38), inset 0 2px 0 rgba(255,255,255,.12);
-  }
-  body.theme-arc button.big:active{transform:none; box-shadow:inset 0 3px 0 rgba(0,0,0,.45)}
-  body.theme-arc button.big.ghost{background:transparent; color:var(--ink); border:2px solid var(--line); box-shadow:none}
-  body.theme-arc button.drop{
-    background:var(--warn); color:#0a0a0f; border:2px solid #2a0a12; border-radius:0;
-    box-shadow:inset 0 -5px 0 rgba(0,0,0,.4), inset 0 2px 0 rgba(255,255,255,.14);
-  }
-  body.theme-arc button.drop:active{transform:none; box-shadow:inset 0 4px 0 rgba(0,0,0,.5)}
-  body.theme-arc button.small{border-radius:0}
-  body.theme-arc .stageChip{border-radius:0; color:#0a0a0f; font-weight:800}
-  body.theme-arc .chip.on,body.theme-arc .chip.correct{color:#0a0a0f}
-  body.theme-arc .lang button.on{color:var(--accent); border-color:var(--accent)}
 </style>
 </head>
-<body class="theme-mdrn">
+<body>
 <div class="lang">
   <button id="langTr" class="on">TR</button>
   <button id="langEn">EN</button>
@@ -232,14 +159,10 @@
   <header>
     <div class="wordmark">CoffeeNutz</div>
     <h1 id="evtName" class="event hidden"></h1>
-    <h1>Agtron Challenge<span class="cursor" aria-hidden="true">_</span><span class="en" style="display:block;font-size:15px;color:var(--muted);font-weight:500">Kulağın Kaç Agtron? · How Many Agtron Is Your Ear?</span></h1>
+    <h1>Agtron Challenge<span class="en" style="display:block;font-size:15px;color:var(--muted);font-weight:500">Kulağın Kaç Agtron? · How Many Agtron Is Your Ear?</span></h1>
     <div style="display:flex;justify-content:center;gap:8px;align-items:center;margin-top:8px">
-      <span style="border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:11px;color:var(--muted)">v2026-07-13b</span>
+      <span style="border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:11px;color:var(--muted)">v2026-07-13a</span>
       <button style="border:1px solid var(--accent);border-radius:999px;padding:4px 11px;font-size:11px;color:var(--accent);background:none;cursor:pointer" onclick="location.href=location.pathname+location.search.replace(/[?&]v=\d+/,'')+(location.search?'&':'?')+'v='+Date.now()">Refresh</button>
-      <span class="themeTog" id="themeTog">
-        <button id="thArc" type="button">ARC</button>
-        <button id="thMdrn" type="button">MDRN</button>
-      </span>
     </div>
   </header>
 
@@ -393,7 +316,7 @@
       Çıtırtı zamanları gerçektir: 2026-07-07 ve 2026-07-10 tarihlerinde ölçülmüş altı gerçek kavrumdan (Ethiopia Yirgacheffe Gr.2 ve Ethiopia Rumudamo, bir tam çan ile kavurucusunun erken indirdiği partiler). Pop sesleri o gerçek anlarda sentezlenir. Renk modeli her kahvenin kendi ölçülmüş Agtron değerine göre kurulur.
       <span class="en" style="display:block; margin-top:3px">Crack timings are real, from six measured roasts on 2026-07-07 and 2026-07-10 (Ethiopia Yirgacheffe Gr.2 and Ethiopia Rumudamo, one full bell plus batches the roaster dropped early). The pop sounds are synthesized at those real moments. The color model is built from each coffee's own measured Agtron.</span>
     </div>
-    <div style="margin-top:8px">Agtron Challenge · <a href="https://guide.coffeenutz.net/crack-game.html">guide.coffeenutz.net/crack-game</a> · v2026-07-13b</div>
+    <div style="margin-top:8px">Agtron Challenge · <a href="https://guide.coffeenutz.net/crack-game.html">guide.coffeenutz.net/crack-game</a> · v2026-07-13a</div>
   </footer>
 </div>
 
@@ -418,7 +341,7 @@
 <script>
 "use strict";
 /* ============================================================
-   Agtron Challenge · Kulağın Kaç Agtron? · CoffeeNutz crack game · v2026-07-13b
+   Agtron Challenge · Kulağın Kaç Agtron? · CoffeeNutz crack game · v2026-07-13a
    HONESTY: this is not a measurement. Crack timings are REAL,
    measured from six roasts on 2026-07-07 and 2026-07-10
    (Ethiopia Yirgacheffe Gr.2 and Ethiopia Rumudamo). One full
@@ -669,7 +592,6 @@ function agtronColor(ag){
 /* --- STATE ----------------------------------------------------- */
 var state = {
   lang: 'tr',
-  theme: 'mdrn',
   event: null,
   match: null,        // { round, usedIds[], roundDeltas[], dots[] }
   sample: null,
@@ -686,65 +608,6 @@ var state = {
   matchScore: null
 };
 
-/* --- THEME SKINS (two skins, one game logic) -------------------
-   MDRN: modern minimal, graphite + CoffeeNutz gold, smooth bell,
-   filtered-noise pop. ARC: arcade phosphor CRT, amber/green/red,
-   chunky pixel bell, square-wave chiptune pop. Canvas, share card and
-   pop sound all read the active THEME. Game logic never reads it. */
-var THEMES = {
-  mdrn: {
-    key:'mdrn',
-    bg:'#17181c', panel:'#1f2025', line:'#32333a', ink:'#e9e9ec', muted:'#9a9ba1',
-    accent:'#e6c14b', accent2:'#9a9ba1', gold:'#e6c14b', warn:'#cf9d5a',
-    barOn:'#e6c14b', barEmpty:'#26272c', baseLine:'#32333a',
-    pin:'#e6c14b', you:'#e9e9ec', youInk:'#17181c',
-    font:'-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif',
-    mono:false, bell:'smooth', pinBracket:false, pop:'noise'
-  },
-  arc: {
-    key:'arc',
-    bg:'#0a0a0f', panel:'#12121a', line:'#2a2a3a', ink:'#f0ead8', muted:'#9a9f84',
-    accent:'#ffb000', accent2:'#33ff66', gold:'#ffb000', warn:'#ff3355',
-    barOn:'#ffb000', barEmpty:'#1a1a22', baseLine:'#33ff66',
-    pin:'#33ff66', you:'#ff3355', youInk:'#0a0a0f',
-    font:'\"SF Mono\",ui-monospace,Menlo,Consolas,\"Courier New\",monospace',
-    mono:true, bell:'pixel', pinBracket:true, pop:'chip'
-  }
-};
-var THEME = THEMES.mdrn;
-function getTheme(){ return THEME; }
-function setTheme(name){
-  if(name!=='arc' && name!=='mdrn') name='mdrn';
-  state.theme = name;
-  THEME = THEMES[name];
-  try{ localStorage.setItem('agTheme', name); }catch(e){}
-  if(document.body){
-    document.body.classList.toggle('theme-arc', name==='arc');
-    document.body.classList.toggle('theme-mdrn', name==='mdrn');
-  }
-  var a=$('thArc'), m=$('thMdrn');
-  if(a) a.classList.toggle('on', name==='arc');
-  if(m) m.classList.toggle('on', name==='mdrn');
-  rerenderActive();
-}
-/* Side-effect-free repaint of any visible bell canvas after a skin flip. */
-function rerenderActive(){
-  try{
-    var rev=$('scrReveal'), pl=$('scrPlay'), mt=$('scrMatch');
-    if(pl && !pl.classList.contains('hidden') && state.sample){
-      drawBell($('bell'), state.sample, 0);
-    }
-    if(rev && !rev.classList.contains('hidden') && state.sample && state.roundResult){
-      drawBell($('bellResult'), state.sample, state.roundResult.elapsed, {pins:true, you:state.roundResult.elapsed});
-    }
-    if(mt && !mt.classList.contains('hidden') && state.match && state.match.dots){
-      var best=null;
-      state.match.dots.forEach(function(d){ if(best===null || d.delta<best.delta) best=d; });
-      if(best && best.sample) drawBell($('bellBest'), best.sample, best.elapsed);
-    }
-  }catch(e){}
-}
-
 /* --- AUDIO ----------------------------------------------------- */
 var AC = null;
 function ensureAudio(){
@@ -756,7 +619,6 @@ function ensureAudio(){
   return AC;
 }
 function playPop(g){
-  if(THEME && THEME.pop==='chip'){ playPopChip(g); return; }
   var ac = ensureAudio();
   if(!ac) return;
   try{
@@ -781,34 +643,6 @@ function playPop(g){
     gain.gain.value = amp;
     src.connect(bp); bp.connect(gain); gain.connect(ac.destination);
     src.start();
-  }catch(e){/* silent */}
-}
-/* ARC chiptune pop: short square-wave blip with a tiny pitch drop, gain
-   scaled by crack g. Same scheduling path and honesty as the noise pop. */
-function playPopChip(g){
-  var ac = ensureAudio();
-  if(!ac) return;
-  try{
-    if(ac.state === 'suspended' && ac.resume) ac.resume();
-    var t0 = (typeof ac.currentTime === 'number') ? ac.currentTime : 0;
-    var osc = ac.createOscillator();
-    osc.type = 'square';
-    var f0 = 820 + Math.min(g,60)/60*760;
-    if(osc.frequency && osc.frequency.setValueAtTime){
-      osc.frequency.setValueAtTime(f0, t0);
-      if(osc.frequency.exponentialRampToValueAtTime)
-        osc.frequency.exponentialRampToValueAtTime(Math.max(90, f0*0.55), t0+0.05);
-    } else if(osc.frequency){ osc.frequency.value = f0; }
-    var gain = ac.createGain();
-    var amp = 0.05 + Math.min(g,60)/60*0.30;
-    if(gain.gain && gain.gain.setValueAtTime){
-      gain.gain.setValueAtTime(amp, t0);
-      if(gain.gain.exponentialRampToValueAtTime)
-        gain.gain.exponentialRampToValueAtTime(0.0001, t0+0.085);
-    } else if(gain.gain){ gain.gain.value = amp; }
-    osc.connect(gain); gain.connect(ac.destination);
-    if(osc.start) osc.start(t0);
-    if(osc.stop) osc.stop(t0+0.09);
   }catch(e){/* silent */}
 }
 
@@ -839,24 +673,16 @@ function drawBell(canvas, s, uptoTime, opts){
   if(maxBin<=0) maxBin=1;
   var nb = data.nb;
   var bw = (W - pad*2) / nb;
-  var TH = THEME || THEMES.mdrn;
-  ctx.strokeStyle = TH.baseLine; ctx.lineWidth = TH.mono?2:1;
+  ctx.strokeStyle = '#3a2f26'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(pad, base+.5); ctx.lineTo(W-pad, base+.5); ctx.stroke();
   for(var b=0;b<nb;b++){
     var v = data.bins[b];
     var h = (v/maxBin)*(base-pad);
-    var x = pad + b*bw, bwi = Math.max(1,bw-2);
-    if(TH.bell==='pixel'){
-      var step = 4, blocks = Math.max(v>0?1:0, Math.round(h/step));
-      ctx.fillStyle = v>0 ? TH.barOn : TH.barEmpty;
-      for(var pbk=0; pbk<blocks; pbk++){ ctx.fillRect(Math.round(x)+1, base-(pbk+1)*step+1, Math.round(bwi), step-1); }
-      if(blocks===0){ ctx.fillStyle = TH.barEmpty; ctx.fillRect(Math.round(x)+1, base-step+1, Math.round(bwi), step-1); }
-    } else {
-      ctx.fillStyle = v>0 ? TH.barOn : TH.barEmpty;
-      ctx.fillRect(x+1, base-h, bwi, h);
-    }
+    var x = pad + b*bw;
+    ctx.fillStyle = v>0 ? '#c98a3c' : '#2a221b';
+    ctx.fillRect(x+1, base-h, Math.max(1,bw-2), h);
   }
-  ctx.fillStyle = TH.muted; ctx.font = '10px ' + TH.font;
+  ctx.fillStyle = '#a8998a'; ctx.font = '10px -apple-system,sans-serif';
   ctx.fillText('2 sn / çubuk · 2 s / bar', pad+2, 12);
   // Stage pins + YOU marker. Reveal only (opts.pins); never during play.
   if(opts && opts.pins && s.stages && s.stages.length){
@@ -865,24 +691,24 @@ function drawBell(canvas, s, uptoTime, opts){
     ctx.textAlign = 'center';
     for(var pi=0; pi<s.stages.length; pi++){
       var nm = s.stages[pi][0], ts = s.stages[pi][1], xg = xForT(ts);
-      ctx.strokeStyle = TH.pin; ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#e6c14b'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(xg, base-6); ctx.lineTo(xg, base+3); ctx.stroke();
-      ctx.fillStyle = TH.pin; ctx.font = '700 9px ' + TH.font;
-      ctx.fillText(TH.pinBracket ? ('['+nm+']') : nm, xg, base+13);
+      ctx.fillStyle = '#e6c14b'; ctx.font = '700 9px -apple-system,sans-serif';
+      ctx.fillText(nm, xg, base+13);
     }
     if(typeof opts.you === 'number'){
       var xy = xForT(opts.you);
-      ctx.strokeStyle = TH.you; ctx.lineWidth = 2;
+      ctx.strokeStyle = '#f3ede4'; ctx.lineWidth = 2;
       if(ctx.setLineDash) ctx.setLineDash([4,3]);
       ctx.beginPath(); ctx.moveTo(xy, pad+6); ctx.lineTo(xy, base); ctx.stroke();
       if(ctx.setLineDash) ctx.setLineDash([]);
       var yl = 'SEN · YOU';
-      ctx.font = '700 10px ' + TH.font;
+      ctx.font = '700 10px -apple-system,sans-serif';
       var tw = ctx.measureText ? (ctx.measureText(yl).width||0) : 0, lx = xy;
       if(lx - tw/2 < pad) lx = pad + tw/2;
       if(lx + tw/2 > W-pad) lx = W-pad - tw/2;
-      ctx.fillStyle = TH.youInk; ctx.fillText(yl, lx+0.6, pad+11.6);
-      ctx.fillStyle = TH.you; ctx.fillText(yl, lx, pad+11);
+      ctx.fillStyle = '#1a1410'; ctx.fillText(yl, lx+0.6, pad+11.6);
+      ctx.fillStyle = '#f3ede4'; ctx.fillText(yl, lx, pad+11);
     }
     ctx.textAlign = 'start';
   }
@@ -895,18 +721,12 @@ function drawBellBarsOn(ctx, s, uptoTime, x, y, w, h){
   for(var i=0;i<full.length;i++) if(full[i]>maxBin) maxBin=full[i];
   if(maxBin<=0) maxBin=1;
   var nb = data.nb, bw = w/nb, base = y+h;
-  var TH = THEME || THEMES.mdrn;
-  ctx.strokeStyle = TH.baseLine; ctx.lineWidth = 2;
+  ctx.strokeStyle = '#3a2f26'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(x, base+.5); ctx.lineTo(x+w, base+.5); ctx.stroke();
   for(var b=0;b<nb;b++){
-    var vv = data.bins[b], bh = (vv/maxBin)*h, bx = x + b*bw, bwi = Math.max(1,bw-2);
-    ctx.fillStyle = vv>0 ? TH.barOn : TH.barEmpty;
-    if(TH.bell==='pixel'){
-      var step2 = 8, blk = Math.max(vv>0?1:0, Math.round(bh/step2));
-      for(var qbk=0; qbk<blk; qbk++){ ctx.fillRect(Math.round(bx)+1, base-(qbk+1)*step2+1, Math.round(bwi), step2-1); }
-    } else {
-      ctx.fillRect(bx+1, base-bh, bwi, bh);
-    }
+    var vv = data.bins[b], bh = (vv/maxBin)*h, bx = x + b*bw;
+    ctx.fillStyle = vv>0 ? '#c98a3c' : '#2a221b';
+    ctx.fillRect(bx+1, base-bh, Math.max(1,bw-2), bh);
   }
 }
 
@@ -1278,31 +1098,30 @@ function buildShareCanvas(){
   cv.width=W; cv.height=H;
   var ctx = cv.getContext('2d');
   if(!ctx) return cv;
-  var TH = THEME || THEMES.mdrn;
   var score = (state.matchScore!=null) ? Math.round(state.matchScore*10)/10 : 0;
   var dots = (state.match && state.match.dots) ? state.match.dots : [];
-  ctx.fillStyle = TH.bg; ctx.fillRect(0,0,W,H);
-  ctx.fillStyle = TH.panel; roundRect(ctx, 60,60,W-120,H-120,(TH.mono?6:40)); ctx.fill();
-  ctx.strokeStyle = TH.line; ctx.lineWidth=2; roundRect(ctx,60,60,W-120,H-120,(TH.mono?6:40)); ctx.stroke();
+  ctx.fillStyle = '#1a1410'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = '#241c16'; roundRect(ctx, 60,60,W-120,H-120,40); ctx.fill();
+  ctx.strokeStyle = '#3a2f26'; ctx.lineWidth=2; roundRect(ctx,60,60,W-120,H-120,40); ctx.stroke();
   ctx.textAlign='center';
-  ctx.fillStyle = TH.accent; ctx.font = '700 46px ' + TH.font;
+  ctx.fillStyle = '#c98a3c'; ctx.font = '700 46px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('C O F F E E N U T Z', W/2, 190);
   var y = 260;
   if(state.event){
-    ctx.fillStyle=TH.accent2; ctx.font='700 34px ' + TH.font;
+    ctx.fillStyle='#3c7a5a'; ctx.font='700 34px -apple-system,Helvetica,Arial,sans-serif';
     ctx.fillText(String(state.event).toUpperCase(), W/2, y); y+=60;
   }
-  ctx.fillStyle=TH.ink; ctx.font='800 60px ' + TH.font;
+  ctx.fillStyle='#f3ede4'; ctx.font='800 60px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('Agtron Challenge', W/2, y+70);
-  ctx.fillStyle=TH.muted; ctx.font='500 30px ' + TH.font;
+  ctx.fillStyle='#a8998a'; ctx.font='500 30px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('Kulağın Kaç Agtron? · How Many Agtron Is Your Ear?', W/2, y+120);
   // match score
   var yMain = 720;
-  ctx.fillStyle=TH.muted; ctx.font='600 34px ' + TH.font;
+  ctx.fillStyle='#a8998a'; ctx.font='600 34px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('MAÇ SKORU · MATCH SCORE (3)', W/2, yMain-40);
-  ctx.fillStyle=TH.gold; ctx.font='800 150px ' + TH.font;
+  ctx.fillStyle='#e6c14b'; ctx.font='800 150px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText(score.toFixed(1), W/2, yMain+130);
-  ctx.fillStyle=TH.muted; ctx.font='500 30px ' + TH.font;
+  ctx.fillStyle='#a8998a'; ctx.font='500 30px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('Düşük iyidir · Lower is better', W/2, yMain+185);
   // three round dots
   var dyc = yMain+330, dr=54, gap=250;
@@ -1311,45 +1130,45 @@ function buildShareCanvas(){
     var cx = startX + i*gap;
     var dd = dots[i];
     ctx.beginPath(); ctx.arc(cx, dyc, dr, 0, Math.PI*2);
-    ctx.fillStyle = dd ? agtronColor(dd.mine) : TH.barEmpty; ctx.fill();
-    ctx.lineWidth=3; ctx.strokeStyle=TH.line; ctx.stroke();
-    ctx.fillStyle=TH.muted; ctx.font='600 30px ' + TH.font;
+    ctx.fillStyle = dd ? agtronColor(dd.mine) : '#2a221b'; ctx.fill();
+    ctx.lineWidth=3; ctx.strokeStyle='#3a2f26'; ctx.stroke();
+    ctx.fillStyle='#a8998a'; ctx.font='600 30px -apple-system,Helvetica,Arial,sans-serif';
     var dl = dd ? ('R'+(i+1)+' Δ'+(Math.round(dd.delta*10)/10).toFixed(1)) : ('R'+(i+1));
     ctx.fillText(dl, cx, dyc+dr+46);
   }
   // verdict
   var yV = dyc+dr+120;
   var v = verdictForMatch(state.matchScore!=null?state.matchScore:0);
-  ctx.fillStyle=TH.gold; ctx.font='700 54px ' + TH.font;
+  ctx.fillStyle='#e6c14b'; ctx.font='700 54px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText(v[0], W/2, yV);
-  ctx.fillStyle=TH.muted; ctx.font='500 40px ' + TH.font;
+  ctx.fillStyle='#a8998a'; ctx.font='500 40px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText(v[1], W/2, yV+54);
   // best round bell + the app that draws it live (plain text on the card)
   var bestDot = null, dds = (state.match && state.match.dots) ? state.match.dots : [];
   for(var bi=0; bi<dds.length; bi++){ if(bestDot===null || dds[bi].delta < bestDot.delta) bestDot = dds[bi]; }
   var yBell = yV + 118;
-  ctx.fillStyle=TH.muted; ctx.font='600 30px ' + TH.font;
+  ctx.fillStyle='#a8998a'; ctx.font='600 30px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('En iyi turun çanı · The bell of your best round', W/2, yBell);
   if(bestDot && bestDot.sample){ drawBellBarsOn(ctx, bestDot.sample, bestDot.elapsed, W/2-330, yBell+22, 660, 140); }
-  ctx.fillStyle=TH.ink; ctx.font='500 30px ' + TH.font;
+  ctx.fillStyle='#f3ede4'; ctx.font='500 30px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('Bu çanı gerçek zamanda çizen bir uygulama var.', W/2, yBell+206);
-  ctx.fillStyle=TH.muted; ctx.font='500 27px ' + TH.font;
+  ctx.fillStyle='#a8998a'; ctx.font='500 27px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('There is an app that draws this bell live.', W/2, yBell+244);
-  ctx.fillStyle=TH.accent; ctx.font='700 32px ' + TH.font;
+  ctx.fillStyle='#c98a3c'; ctx.font='700 32px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('guide.coffeenutz.net/crack-listen', W/2, yBell+286);
   // Stage grammar credit when the final round's sample carried stages.
   var lastDot = dds.length ? dds[dds.length-1] : null, finalS = lastDot ? lastDot.sample : null;
   if(finalS && finalS.stages && finalS.stages.length){
-    ctx.fillStyle=TH.accent2; ctx.font='600 26px ' + TH.font;
+    ctx.fillStyle='#3c7a5a'; ctx.font='600 26px -apple-system,Helvetica,Arial,sans-serif';
     ctx.fillText('Evre dilbilgisi: CoffeeNutz · Stage grammar by CoffeeNutz', W/2, yBell+330);
   }
   // honesty + handle
-  ctx.fillStyle=TH.accent2; ctx.font='600 27px ' + TH.font;
+  ctx.fillStyle='#3c7a5a'; ctx.font='600 27px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('Oyun bir ölçüm değildir. · The game is not a measurement.', W/2, H-160);
-  ctx.fillStyle=TH.accent; ctx.font='700 34px ' + TH.font;
+  ctx.fillStyle='#c98a3c'; ctx.font='700 34px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('guide.coffeenutz.net/crack-game', W/2, H-112);
-  ctx.fillStyle=TH.muted; ctx.font='500 24px ' + TH.font;
-  ctx.fillText('Yirgacheffe Gr.2 & Rumudamo · 6 gerçek kavrum · v2026-07-13b', W/2, H-70);
+  ctx.fillStyle='#a8998a'; ctx.font='500 24px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('Yirgacheffe Gr.2 & Rumudamo · 6 gerçek kavrum · v2026-07-13a', W/2, H-70);
   return cv;
 }
 function roundRect(ctx,x,y,w,h,r){
@@ -1528,11 +1347,6 @@ function initGame(){
   var bop = $('btnOpenPost'); if(bop) bop.addEventListener('click', function(){ var pf=$('postForm'); if(pf) pf.classList.toggle('hidden'); });
   var bps = $('btnPostSubmit'); if(bps) bps.addEventListener('click', function(e){ if(e&&e.preventDefault) e.preventDefault(); submitScore(); });
   var pfrm = $('postForm'); if(pfrm) pfrm.addEventListener('submit', function(e){ if(e&&e.preventDefault) e.preventDefault(); submitScore(); });
-  var savedTheme = 'mdrn';
-  try{ var _st = localStorage.getItem('agTheme'); if(_st==='arc'||_st==='mdrn') savedTheme=_st; }catch(e){}
-  var _ta=$('thArc'); if(_ta) _ta.addEventListener('click', function(){ setTheme('arc'); });
-  var _tm=$('thMdrn'); if(_tm) _tm.addEventListener('click', function(){ setTheme('mdrn'); });
-  setTheme(savedTheme);
   setLang('tr');
   show('scrStart');
 }
@@ -1571,13 +1385,7 @@ window.__CRACKGAME__ = {
   submitScore: submitScore,
   renderLadderList: renderLadderList,
   fetchLadderRows: fetchLadderRows,
-  openLadder: openLadder,
-  setTheme: setTheme,
-  getTheme: getTheme,
-  THEMES: THEMES,
-  drawBellBarsOn: drawBellBarsOn,
-  playPop: playPop,
-  playPopChip: playPopChip
+  openLadder: openLadder
 };
 
 if(document.readyState === 'loading'){
