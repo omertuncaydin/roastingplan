@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>UNDERROAST · bir kavurma masalı · a roasting tale</title>
+<style>
+  :root{
+    --bg:#0f0b08; --ink:#f3ede4; --muted:#a8998a; --line:#3a2f26;
+    --accent:#c98a3c; --gold:#e6c14b; --green:#6fae4f; --warn:#d9663f; --panel:#241c16;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);height:100%}
+  body{
+    color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    display:flex; flex-direction:column; align-items:center; min-height:100%;
+    overflow-x:hidden; touch-action:manipulation; user-select:none; -webkit-user-select:none;
+  }
+  .hud{width:100%; max-width:520px; display:flex; align-items:center; gap:6px; padding:8px 10px 4px; flex-wrap:wrap}
+  .hud .grow{flex:1}
+  .chip{background:none; border:1px solid var(--line); color:var(--muted); padding:4px 9px; border-radius:999px; font-size:11px; cursor:pointer; font-weight:600}
+  .chip.on{color:var(--gold); border-color:var(--accent)}
+  .chip.pill{cursor:default}
+  .chip.act{color:var(--accent); border-color:var(--accent)}
+  .stage{position:relative; width:100%; max-width:520px; padding:0 8px}
+  canvas#screen{
+    display:block; width:100%; height:auto; aspect-ratio:4/3;
+    image-rendering:pixelated; image-rendering:crisp-edges;
+    background:#0f0b08; border:1px solid var(--line); border-radius:8px; touch-action:none;
+  }
+  .controls{width:100%; max-width:520px; display:flex; justify-content:space-between; align-items:center; padding:12px 14px 22px; gap:10px}
+  .dpad{display:grid; grid-template-columns:repeat(3,46px); grid-template-rows:repeat(3,46px); gap:4px}
+  .dpad button{background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:9px; font-size:18px; cursor:pointer}
+  .dpad .empty{background:none; border:none}
+  .dpad button:active{background:var(--accent); color:#1a1410}
+  .abwrap{display:flex; gap:14px; align-items:center}
+  .abtn{width:60px; height:60px; border-radius:50%; border:2px solid var(--line); background:var(--panel); color:var(--ink); font-size:20px; font-weight:800; cursor:pointer}
+  .abtn.a{border-color:var(--accent); color:var(--gold)}
+  .abtn:active{background:var(--accent); color:#1a1410}
+  .overlay{position:fixed; inset:0; background:rgba(10,8,6,.9); display:flex; align-items:flex-start; justify-content:center; padding:18px; z-index:40; overflow:auto}
+  .card{max-width:460px; width:100%; background:var(--panel); border:2px solid var(--accent); border-radius:14px; padding:18px 16px; margin:auto 0}
+  .card h2{font-size:18px; margin:0 0 4px; text-align:center; letter-spacing:.06em}
+  .card .sub{font-size:12px; color:var(--muted); text-align:center; margin:0 0 12px}
+  .card .en{color:var(--muted); font-size:.86em}
+  .rankList{list-style:none; margin:8px 0; padding:0}
+  .rankRow{display:flex; gap:10px; align-items:center; padding:8px 10px; border:1px solid var(--line); border-radius:9px; margin-bottom:6px; background:var(--bg)}
+  .rankRow.g1{border-color:var(--gold)} .rankRow.g2{border-color:#c9c4bb} .rankRow.g3{border-color:#b07a43}
+  .rankRow .pos{width:26px; text-align:center; font-weight:800; color:var(--muted); font-variant-numeric:tabular-nums}
+  .rankRow.g1 .pos{color:var(--gold)}
+  .rankRow .who{flex:1; min-width:0; font-size:14px}
+  .rankRow .who .co{display:block; font-size:11px; color:var(--muted)}
+  .rankRow .sc{font-weight:800; color:var(--gold); font-variant-numeric:tabular-nums}
+  .resline{display:flex; justify-content:space-around; text-align:center; gap:8px; margin:10px 0}
+  .sw{width:56px; height:56px; border-radius:50%; border:2px solid var(--line); margin:0 auto 6px}
+  .resnum{font-size:22px; font-weight:800}
+  .reslab{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em}
+  .frame{font-size:13px; text-align:center; color:var(--gold); font-weight:600; margin:8px 0; line-height:1.5}
+  .frame .en{display:block; color:var(--muted); font-weight:500; margin-top:2px}
+  .btn{display:block; width:100%; padding:13px; font-size:15px; font-weight:800; background:var(--accent); color:#1a1410; border:none; border-radius:10px; cursor:pointer; margin-top:8px}
+  .btn.ghost{background:transparent; border:1px solid var(--line); color:var(--ink)}
+  .btn .en{color:rgba(26,20,16,.7); font-size:.8em; font-weight:600}
+  .btn.ghost .en{color:var(--muted)}
+  .postForm input[type=text]{width:100%; padding:11px; margin:6px 0; background:var(--bg); border:1px solid var(--line); border-radius:9px; color:var(--ink); font-size:14px}
+  .consent{display:flex; gap:8px; align-items:flex-start; font-size:12px; color:var(--muted); margin:8px 0; line-height:1.4}
+  .consent input{margin-top:2px}
+  .links{display:flex; gap:8px; margin-top:12px}
+  .links a{flex:1; text-align:center; text-decoration:none; padding:11px 8px; border:1px solid var(--line); border-radius:9px; color:var(--ink); font-size:12px; font-weight:600}
+  .links a .en{display:block; font-size:10px; color:var(--muted); font-weight:500; margin-top:2px}
+  .honest{font-size:11px; color:var(--muted); line-height:1.55; margin-top:14px; border-top:1px solid var(--line); padding-top:10px}
+  .honest b{color:var(--accent)}
+  .toast{position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--panel); border:1px solid var(--accent); color:var(--ink); padding:10px 15px; border-radius:9px; font-size:13px; z-index:60; max-width:90%; text-align:center}
+  .hidden{display:none !important}
+  .credits{width:100%; max-width:520px; text-align:center; font-size:11px; color:var(--muted); padding:2px 10px 16px}
+  @media (min-width:560px){ .controls{opacity:.85} }
+</style>
+</head>
+<body>
+  <div class="hud">
+    <span class="chip pill" id="verPill">v2026-07-13a</span>
+    <button class="chip" id="refreshChip">Refresh</button>
+    <span class="grow"></span>
+    <button class="chip act" id="muteChip">Ses ✓</button>
+    <button class="chip on" id="langTr">TR</button>
+    <button class="chip" id="langEn">EN</button>
+  </div>
+
+  <div class="stage">
+    <canvas id="screen" width="320" height="240"></canvas>
+  </div>
+
+  <div class="controls">
+    <div class="dpad">
+      <span class="empty"></span><button data-k="up">▲</button><span class="empty"></span>
+      <button data-k="left">◀</button><span class="empty"></span><button data-k="right">▶</button>
+      <span class="empty"></span><button data-k="down">▼</button><span class="empty"></span>
+    </div>
+    <div class="abwrap">
+      <button class="abtn" id="btnB">B</button>
+      <button class="abtn a" id="btnA">A</button>
+    </div>
+  </div>
+
+  <div class="credits" id="creditsLine">a CoffeeNutz game · with love to Undertale</div>
+
+  <!-- LADDER overlay -->
+  <div class="overlay hidden" id="ladderOverlay">
+    <div class="card">
+      <h2 id="ladderTitle">SIRALAMA</h2>
+      <div class="sub" id="ladderSub">Düşük iyidir · Lower is better</div>
+      <ol class="rankList" id="ladderList"></ol>
+      <button class="btn ghost" id="ladderBack">Geri <span class="en">· Back</span></button>
+    </div>
+  </div>
+
+  <!-- END overlay -->
+  <div class="overlay hidden" id="endOverlay">
+    <div class="card" id="endCard"></div>
+  </div>
+
+<script>
+"use strict";
+/* ============================================================
+   UNDERROAST · bir kavurma masalı · a roasting tale
+   A CoffeeNutz game. Chapter 1 vertical slice. v2026-07-13a
+   Homage, not copy: no Undertale assets, names, likenesses or
+   text. Original characters and music. The single credits line
+   "a CoffeeNutz game · with love to Undertale" is the only nod.
+
+   HONESTY:
+   - The crack timings used in the Prob duel are REAL, taken from
+     the full reference bell measured on 2026-07-07 14:00
+     (Ethiopia Yirgacheffe Gr.2, Bullet 600 g, washed). The crack
+     array [[t,g]...] and the anchor color model below are copied
+     from crack-game.html (SAMPLE id 'y1400') without change. In
+     the duel they play back in fast-forward so a round stays short;
+     the pattern and the model are the real ones. The game is not a
+     measurement.
+   - Prob's announced numbers are FICTION, framed as his boast, and
+     are never presented as a measurement.
+   ============================================================ */
+
+var VERSION = 'v2026-07-13a';
+
+/* ---------- BILINGUAL STRING TABLE (tr + en for every line) ---------- */
+var S = {
+  title_sub:   {tr:'bir kavurma masalı', en:'a roasting tale'},
+  m_start:     {tr:'BAŞLA', en:'START'},
+  m_continue:  {tr:'DEVAM', en:'CONTINUE'},
+  m_ladder:    {tr:'SIRALAMA', en:'LADDER'},
+  press_prompt:{tr:'A / Enter', en:'A / Enter'},
+  ladder_title:{tr:'SIRALAMA', en:'LADDER'},
+  ladder_sub:  {tr:'Düşük iyidir · Lower is better', en:'Lower is better · Düşük iyidir'},
+  ladder_empty:{tr:'Henüz kayıt yok', en:'No entries yet'},
+  ladder_back: {tr:'Geri', en:'Back'},
+
+  /* intro */
+  intro1:{tr:'Eski bir kahvecinin döşemesi gıcırdıyor.', en:'The floorboards of an old coffee shop creak.'},
+  intro2:{tr:'Yeşil bir çekirdek tahtaların arasından kayıyor.', en:'A green bean slips between the planks.'},
+  intro3:{tr:'Aşağı düşüyor, çok aşağı.', en:'Down it falls, far down.'},
+  intro4:{tr:'Altta bir yer var: Kavurmahane.', en:'Below there is a place: the Roastery.'},
+  intro5:{tr:'Ve o çekirdek sensin.', en:'And that bean is you.'},
+
+  /* green room */
+  n_fasulye:{tr:'FASULYE', en:'FASULYE'},
+  f1:{tr:'Ya ben hiç üçüncü çekim olamazsam?', en:'What if I never become third wave?'},
+  f2:{tr:'Herkes kaliteli olmamı bekliyor. Ya yanarsam?', en:'Everyone expects me to be specialty. What if I burn?'},
+  f3:{tr:'Ama sen dinliyorsun. Belki dinlemek yeter.', en:'But you listen. Maybe listening is enough.'},
+  n_ceko:{tr:'ÇEKO', en:'ÇEKO'},
+  c1:{tr:'Selam. Ben bir kez fincan oldum, biliyor musun?', en:'Hey. I was a cup once, you know?'},
+  c2:{tr:'Sütsüz. Filtre. Tek başına.', en:'No milk. Filter. On its own.'},
+  c3:{tr:'O günden beri kendimi özel sayarım.', en:'Been calling myself special ever since.'},
+  n_plaque:{tr:'TABELA', en:'PLAQUE'},
+  p1:{tr:'DİNLE: Kavurmada kulak, bir terazidir.', en:'LISTEN: In roasting, the ear is a scale.'},
+  p2:{tr:'Çatlağı duy, çekirdeği anla.', en:'Hear the crack, know the bean.'},
+  n_table:{tr:'CUPPING MASASI', en:'CUPPING TABLE'},
+  save_line:{tr:'Kokusu sana kararlılık veriyor.', en:'The aroma fills you with determination.'},
+  door_prompt:{tr:'Kuzeye bir kapı. Aç.', en:'A door north. Open it.'},
+
+  /* Tambur encounter */
+  n_tambur:{tr:'TAMBUR', en:'TAMBUR'},
+  t_intro1:{tr:'Dur. Ben Tambur. Çok sert dönüyorum.', en:'Stop. I am Tambur. I spin too rough.'},
+  t_intro2:{tr:'Herkesi yakmaktan korkuyorum.', en:'I am afraid I burn everyone.'},
+  a_listen:{tr:'DİNLE', en:'LISTEN'},
+  a_look:{tr:'BAK', en:'LOOK'},
+  a_bag:{tr:'ÇANTA', en:'BAG'},
+  a_hug:{tr:'SARIL', en:'HUG'},
+  act_look:{tr:'Tambur kocaman bir davul. Yüzü endişeli.', en:'Tambur is a big drum. Its face looks worried.'},
+  act_bag:{tr:'Çantanda bir avuç yeşil çekirdek var.', en:'Your bag holds a handful of green beans.'},
+  act_hug:{tr:'Sıcak metale sarılıyorsun. Tambur şaşırıyor.', en:'You hug the warm metal. Tambur is surprised.'},
+  t_listen1:{tr:'Dönüşünü dinliyorsun. İçinde bir ritim var.', en:'You listen to its spin. There is a rhythm inside.'},
+  t_resolve:{tr:'Kimse yanmak zorunda değil.', en:'No one has to burn.'},
+  t_ashamed:{tr:'Tambur duruyor. Utanıyor.', en:'Tambur stops. It is ashamed.'},
+  hp_label:{tr:'CAN', en:'HP'},
+  wave_hint:{tr:'Kaç! Ok tuşları · Dodge! Move', en:'Dodge! Arrow keys · Kaç'},
+
+  /* Prob duel */
+  n_prob:{tr:'PROB', en:'PROB'},
+  prob_taunt:{tr:'Kulak mı? Bilim BENİM. Derecem var.', en:'An ear? I AM science. I have a probe.'},
+  prob_drag:{tr:'Gel. Şimdi ölçelim.', en:'Come. Now we measure.'},
+  prob_target:{tr:'Hedef: 88 Agtron. Kulağın bunu yakalar mı?', en:'Target: 88 Agtron. Can your ear catch it?'},
+  duel_hint:{tr:'Kulağınla yakala. Bırak: A / Z', en:'Catch it with your ear. Drop: A / Z'},
+  duel_drop:{tr:'DÜŞÜR', en:'DROP'},
+  duel_wait:{tr:'Dinle...', en:'Listen...'},
+  prob_boast:{tr:'Derecem 88 diyor! Kesinlikle 88!', en:'My probe says 88! Definitely 88!'},
+  prob_frame:{tr:'Prob kazanı okudu, çekirdeği değil.', en:'Prob read the drum, not the bean.'},
+  you_closer:{tr:'Senin kulağın daha yakın çıktı.', en:'Your ear landed closer.'},
+  lab_you:{tr:'Kulağın', en:'Your ear'},
+  lab_prob:{tr:'Prob', en:'Prob'},
+  lab_target:{tr:'Hedef', en:'Target'},
+
+  /* end + post */
+  ec_title:{tr:'BÖLÜM 1 SONU', en:'END OF CHAPTER 1'},
+  ec_cont:{tr:'Devam edecek: İlk Çatlak Köprüsü', en:'To be continued: First Crack Bridge'},
+  post_open:{tr:'Sıralamaya yaz', en:'Post to the ladder'},
+  post_name:{tr:'Ad Soyad · Full name', en:'Full name · Ad Soyad'},
+  post_company:{tr:'Firma (isteğe bağlı) · Company (optional)', en:'Company (optional)'},
+  post_consent:{tr:'Adım ve skorum herkese açık sıralamada görünsün.', en:'Show my name and score on the public ladder.'},
+  post_submit:{tr:'Gönder', en:'Post'},
+  link_agtron:{tr:"Agtron Challenge'ı oyna", en:'Play the Agtron Challenge'},
+  link_listen:{tr:"Crack Listener'ı aç", en:'Open the Crack Listener'},
+  honest1:{tr:'Çıtırtı zamanları gerçektir: 2026-07-07 tarihli tam çandan (Ethiopia Yirgacheffe Gr.2). Düelloda hızlandırılmış çalınır. Oyun bir ölçüm değildir.',
+           en:'Crack timings are real, from the 2026-07-07 full bell (Ethiopia Yirgacheffe Gr.2). In the duel they play in fast-forward. The game is not a measurement.'},
+  honest2:{tr:"Prob'un rakamları kurgudur, onun övünmesidir; ölçüm değildir.", en:"Prob's numbers are fiction, his boast, not a measurement."},
+
+  /* toasts */
+  t_name_req:{tr:'İsim gerekli', en:'Name required'},
+  t_consent_req:{tr:'Onay gerekli', en:'Consent required'},
+  t_posted:{tr:'Sıralamaya yazıldı', en:'Posted to the ladder'},
+  t_offline:{tr:'Çevrimdışı, yazılamadı', en:'Offline, could not post'},
+  t_saved:{tr:'Kaydedildi', en:'Saved'},
+  t_ladder_fail:{tr:'Sıralama yüklenemedi', en:'Could not load the ladder'},
+  mute_on:{tr:'Ses ✓', en:'Sound ✓'},
+  mute_off:{tr:'Ses ✕', en:'Sound ✕'}
+};
+function T(key){ var e = S[key]; if(!e) return key; return e[game.lang] || e.tr; }
+function bi(key){ var e = S[key]; if(!e) return key; return e.tr + ' · ' + e.en; }
+
+/* ---------- DUEL SAMPLE + AGTRON MODEL (copied from crack-game.html, id 'y1400') ----------
+   Full reference bell. Ethiopia Yirgacheffe Gr.2, Bullet 600 g, washed,
+   roasted 2026-07-07 14:00. First crack through earned silence.
+   Measured ground Agtron 67. Anchor curve kept exactly. This is the real
+   crack array and the real anchor color model; see crack-game.html.        */
+var DUEL = {
+  coffee:'Ethiopia Yirgacheffe Gr.2', date:'2026-07-07',
+  terminalAg:67,
+  anchors:[[0,115],[1308,108],[2617,104],[2943,102],[5500,67]],
+  cracks:[
+    [0.0,51],[2.66,52],[19.84,43],[27.45,45],[32.7,35],[32.85,44],[36.82,43],[37.29,57],[38.5,43],
+    [38.84,38],[41.9,53],[43.66,48],[43.79,36],[44.8,43],[46.42,38],[46.59,42],[46.72,36],[47.59,46],
+    [49.06,34],[50.06,43],[52.65,39],[53.07,34],[53.24,34],[53.71,35],[54.16,38],[54.8,44],[55.53,44],
+    [56.1,43],[56.19,39],[57.15,39],[57.25,45],[57.49,42],[57.85,49],[58.06,35],[59.75,39],[59.84,54],
+    [60.92,55],[61.35,43],[62.76,37],[63.12,38],[65.43,37],[65.64,44],[65.72,66],[66.73,38],[66.88,46],
+    [67.13,49],[68.05,43],[69.29,36],[70.48,35],[70.97,42],[71.44,41],[71.8,34],[72.12,47],[72.34,40],
+    [73.45,35],[74.43,45],[74.68,35],[75.56,68],[76.65,53],[77.12,41],[78.37,44],[79.78,42],[80.29,51],
+    [81.6,49],[82.15,42],[82.64,42],[83.34,51],[86.42,36],[86.76,41],[87.1,35],[88.98,35],[89.68,34],
+    [90.68,41],[91.94,36],[92.16,45],[92.39,40],[96.29,43],[97.62,52],[98.26,51],[98.49,39],[99.15,39],
+    [99.96,41],[100.43,36],[100.88,43],[102.27,36],[103.53,56],[104.02,34],[106.51,38],[107.41,40],[108.43,49],
+    [109.69,36],[109.82,44],[109.95,38],[110.68,38],[112.89,46],[113.38,38],[114.24,40],[115.09,38],[115.3,36],
+    [116.05,42],[116.52,40],[116.88,66],[118.05,37],[118.23,44],[118.97,37],[124.56,44],[125.2,46],[131.54,45],
+    [131.86,35],[133.41,36],[133.54,40],[136.04,37],[136.21,58],[137.7,55],[138.53,48],[141.95,36],[143.21,45],
+    [144.87,37],[146.88,46],[148.01,38],[151.93,37],[155.75,38],[156.92,38],[157.8,42],[159.99,38],[160.44,41],
+    [162.13,34],[164.43,50],[166.48,38],[175.4,40],[183.46,39]
+  ]
+};
+DUEL.lastT = DUEL.cracks[DUEL.cracks.length-1][0];
+(function(){ var g=0; for(var i=0;i<DUEL.cracks.length;i++) g+=DUEL.cracks[i][1]; DUEL.totalGain=g; })();
+
+function clamp(v,lo,hi){ return v<lo?lo:(v>hi?hi:v); }
+function agtronFromAnchors(a, cum){
+  if(cum <= a[0][0]) return clamp(a[0][1], 60, 118);
+  for(var i=0;i<a.length-1;i++){
+    var x0=a[i][0], y0=a[i][1], x1=a[i+1][0], y1=a[i+1][1];
+    if(cum <= x1){ return clamp(y0 + (y1-y0)*(cum-x0)/(x1-x0), 60, 118); }
+  }
+  var n=a.length, px0=a[n-2][0], py0=a[n-2][1], px1=a[n-1][0], py1=a[n-1][1];
+  var slope=(py1-py0)/(px1-px0);
+  return clamp(py1 + slope*(cum-px1), 60, 118);
+}
+function agtronForSample(s, cum){
+  if(s.anchors) return agtronFromAnchors(s.anchors, cum);
+  var frac = s.totalGain>0 ? (cum/s.totalGain) : 0;
+  return clamp(115 + (s.terminalAg - 115)*frac, 60, 118);
+}
+function cumGainForSample(s, nowT){
+  var c=0, C=s.cracks;
+  for(var i=0;i<C.length;i++){ if(C[i][0] <= nowT + 1e-9) c += C[i][1]; else break; }
+  return c;
+}
+function agtronColor(ag){
+  var t = clamp((ag-60)/(118-60), 0, 1);
+  return 'rgb('+Math.round(46+t*162)+','+Math.round(28+t*118)+','+Math.round(16+t*74)+')';
+}
+
+/* ---------- SUPABASE LADDER (same pattern as crack-game.html) ---------- */
+var SUPA_URL = 'https://efjvfggwnhqkunjvoyjb.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA';
+var EVENT = 'underroast';
+
+function postScore(row){
+  if(typeof fetch !== 'function'){ toast(T('t_offline')); return Promise.resolve(false); }
+  return fetch(SUPA_URL + '/rest/v1/game_scores', {
+    method:'POST',
+    headers:{ apikey:SUPA_KEY, Authorization:'Bearer '+SUPA_KEY, 'content-type':'application/json', Prefer:'return=minimal' },
+    body: JSON.stringify(row)
+  }).then(function(res){
+    if(!res || !res.ok) throw new Error('bad');
+    toast(T('t_posted'));
+    return true;
+  }).catch(function(){ toast(T('t_offline')); return false; });
+}
+function fetchLadderTop5(){
+  if(typeof fetch !== 'function') return Promise.reject(new Error('offline'));
+  var qs = 'select=name,company,score,event&order=score.asc&limit=5&event=eq.' + encodeURIComponent(EVENT);
+  return fetch(SUPA_URL + '/rest/v1/game_scores?' + qs, {
+    headers:{ apikey:SUPA_KEY, Authorization:'Bearer '+SUPA_KEY }
+  }).then(function(res){ if(!res || !res.ok) throw new Error('bad'); return res.json(); });
+}
+
+/* ---------- AUDIO (WebAudio chiptune loop + SFX) ---------- */
+var AC = null, master = null, musicTimer = null, musicStep = 0;
+function ensureAudio(){
+  if(AC) return AC;
+  try{
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    AC = new Ctx();
+    master = AC.createGain(); master.gain.value = game.muted ? 0 : 0.5;
+    master.connect(AC.destination);
+  }catch(e){ AC = null; }
+  return AC;
+}
+function beep(freq, dur, type, vol){
+  var ac = ensureAudio(); if(!ac || !master) return;
+  try{
+    if(ac.state==='suspended' && ac.resume) ac.resume();
+    var o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || 'square'; o.frequency.value = freq;
+    var t0 = ac.currentTime;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol||0.12, t0+0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+(dur||0.09));
+    o.connect(g); g.connect(master); o.start(t0); o.stop(t0+(dur||0.09)+0.02);
+  }catch(e){}
+}
+function sfx(kind){
+  if(kind==='text') beep(660, 0.02, 'square', 0.05);
+  else if(kind==='move') beep(440, 0.04, 'square', 0.07);
+  else if(kind==='select') beep(880, 0.08, 'square', 0.10);
+  else if(kind==='cancel') beep(220, 0.08, 'square', 0.08);
+  else if(kind==='pop') beep(520+Math.random()*400, 0.05, 'square', 0.10);
+  else if(kind==='hurt') beep(150, 0.16, 'square', 0.14);
+  else if(kind==='good') { beep(523,0.09,'triangle',0.12); setTimeout(function(){beep(784,0.12,'triangle',0.12);},110); }
+}
+/* gentle 8-bar loop, A-minor pentatonic feel */
+var MEL = [440,0,523,0, 587,0,523,0, 494,0,440,0, 392,0,440,0,
+          523,0,587,0, 659,0,587,0, 523,0,494,0, 440,0,0,0];
+var BASS = [110,0,0,0, 87.31,0,0,0, 130.81,0,0,0, 98,0,0,0,
+            110,0,0,0, 130.81,0,0,0, 146.83,0,0,0, 110,0,0,0];
+function startMusic(){
+  var ac = ensureAudio(); if(!ac) return;
+  if(musicTimer) return;
+  musicStep = 0;
+  var stepMs = 190; // ~ gentle 90-ish feel
+  musicTimer = setInterval(function(){
+    if(!master) return;
+    var m = MEL[musicStep % MEL.length], b = BASS[musicStep % BASS.length];
+    if(m) beep(m, 0.17, 'square', 0.045);
+    if(b) beep(b, 0.34, 'triangle', 0.05);
+    musicStep++;
+  }, stepMs);
+}
+function setMuted(mute){
+  game.muted = mute;
+  try{ if(master) master.gain.value = mute ? 0 : 0.5; }catch(e){}
+  var mc = document.getElementById('muteChip');
+  if(mc) mc.textContent = T(mute?'mute_off':'mute_on');
+}
+
+/* ---------- CANVAS + RENDER HELPERS ---------- */
+var cvs = document.getElementById('screen');
+var ctx = cvs ? cvs.getContext('2d') : null;
+var W = 320, H = 240;
+if(ctx && 'imageSmoothingEnabled' in ctx) ctx.imageSmoothingEnabled = false;
+
+function px(x,y,w,h,c){ if(!ctx) return; ctx.fillStyle=c; ctx.fillRect(x|0,y|0,w|0,h|0); }
+function fnt(size,bold){ if(ctx) ctx.font = (bold?'bold ':'') + (size||8) + "px 'Courier New', monospace"; }
+function txt(str,x,y,c,size,align,bold){
+  if(!ctx) return;
+  fnt(size,bold); ctx.fillStyle=c||'#f3ede4'; ctx.textAlign=align||'left'; ctx.textBaseline='top';
+  ctx.fillText(str, x|0, y|0);
+}
+function measure(str){
+  if(ctx && ctx.measureText){ var m = ctx.measureText(str); if(m && typeof m.width==='number') return m.width; }
+  return str.length * 5.4;
+}
+function wrap(str, maxW){
+  var words = String(str).split(' '), rows=[], line='';
+  for(var i=0;i<words.length;i++){
+    var test = line ? line+' '+words[i] : words[i];
+    if(measure(test) > maxW && line){ rows.push(line); line = words[i]; }
+    else line = test;
+  }
+  if(line) rows.push(line);
+  return rows;
+}
+
+/* ---------- SPRITES (chunky pixel blocks, all original) ---------- */
+function drawPlayer(x,y){
+  px(x+2,y,10,3,'#3c6e2a'); px(x,y+2,14,12,'#6fae4f'); px(x+1,y+13,12,2,'#3c6e2a');
+  px(x+2,y+2,2,10,'#8fd06a'); // sheen
+  px(x+4,y+5,2,2,'#0f0b08'); px(x+9,y+5,2,2,'#0f0b08'); // eyes
+}
+function drawBeanNPC(x,y,type){
+  px(x+2,y,10,3,'#2f5a22'); px(x,y+2,14,12,'#5ea043'); px(x+1,y+13,12,2,'#2f5a22');
+  px(x+6,y+2,2,11,'#2f5a22'); // bean crease
+  if(type==='cool'){ px(x+3,y+5,3,2,'#0f0b08'); px(x+8,y+5,3,2,'#0f0b08'); px(x+3,y+4,8,1,'#0f0b08'); } // shades
+  else { px(x+4,y+5,2,2,'#0f0b08'); px(x+9,y+5,2,2,'#0f0b08'); px(x+4,y+9,6,1,'#2f5a22'); } // worried
+}
+function drawTambur(x,y){
+  // big drum body with a face
+  px(x,y+4,72,44,'#7d838c'); px(x,y+4,72,3,'#9aa0a8'); px(x,y+45,72,3,'#565b62');
+  px(x+2,y+6,68,4,'#8f959d');
+  // hoop bands
+  px(x+10,y+4,4,44,'#565b62'); px(x+58,y+4,4,44,'#565b62');
+  // lug bolts
+  for(var i=0;i<5;i++){ px(x+6+i*14, y+2, 3,3,'#e6c14b'); px(x+6+i*14, y+48, 3,3,'#e6c14b'); }
+  // worried face
+  px(x+22,y+18,6,6,'#0f0b08'); px(x+44,y+18,6,6,'#0f0b08');
+  px(x+24,y+20,2,2,'#f3ede4'); px(x+46,y+20,2,2,'#f3ede4');
+  px(x+26,y+34,20,3,'#0f0b08'); px(x+24,y+31,4,3,'#0f0b08'); px(x+44,y+31,4,3,'#0f0b08'); // frown
+}
+function drawProb(x,y){
+  // tall silver thermometer with a monocle vibe
+  px(x+3,y,6,44,'#c9ccd2'); px(x+4,y,2,44,'#eef0f4'); // stem sheen
+  px(x,y+42,12,12,'#c9ccd2'); px(x+2,y+44,8,8,'#d9663f'); // bulb
+  px(x+4,y+4,4,34,'#d9663f'); // mercury
+  // monocle
+  px(x+2,y+8,8,8,'#0f0b08'); px(x+3,y+9,6,6,'#e6c14b'); px(x+4,y+10,4,4,'#0f0b08');
+  px(x+1,y+2,2,2,'#0f0b08'); // eye brow dot
+}
+function drawSoul(x,y){
+  px(x+1,y,5,2,'#3c6e2a'); px(x,y+1,7,6,'#7ec24f'); px(x+1,y+6,5,1,'#3c6e2a');
+  px(x+2,y+2,1,1,'#0f0b08'); px(x+4,y+2,1,1,'#0f0b08');
+}
+
+/* ---------- GAME STATE ---------- */
+var game = {
+  lang:'tr', muted:false, mode:'title',
+  room:'green', px:150, py:196, facing:'up',
+  flags:{ fasulye:false, ceko:false, plaque:false, saved:false, tamburDone:false },
+  menuIdx:0,
+  dialog:{ active:false, queue:[], i:0, speaker:'', full:'', shown:0, acc:0, done:false, onDone:null },
+  enc:null, duel:null, saveExists:false, ticker:0
+};
+var SAVE_KEY = 'underroast_save';
+
+function hasSave(){ try{ return !!localStorage.getItem(SAVE_KEY); }catch(e){ return false; } }
+function doSave(){
+  var data = { ver:VERSION, room:game.room, px:game.px, py:game.py, flags:game.flags };
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(data)); game.saveExists=true; return true; }catch(e){ return false; }
+}
+function loadSave(){
+  try{
+    var raw = localStorage.getItem(SAVE_KEY); if(!raw) return null;
+    var d = JSON.parse(raw); if(!d || !d.room) return null; return d;
+  }catch(e){ return null; }
+}
+
+/* ---------- DIALOG SYSTEM ---------- */
+function startDialog(keys, onDone, speakers){
+  game.dialog.queue = keys.slice();
+  game.dialog.speakers = speakers || null;
+  game.dialog.i = 0;
+  game.dialog.onDone = onDone || null;
+  game.dialog.active = true;
+  loadDialogLine();
+}
+function loadDialogLine(){
+  var d = game.dialog;
+  var key = d.queue[d.i];
+  d.speaker = d.speakers ? (d.speakers[d.i] || d.speakers[0] || '') : d.speaker;
+  d.full = T(key);
+  d.shown = 0; d.acc = 0; d.done = false;
+}
+function advanceDialog(){
+  var d = game.dialog; if(!d.active) return;
+  if(!d.done){ d.shown = d.full.length; d.done = true; return; }
+  d.i++;
+  if(d.i >= d.queue.length){
+    d.active = false;
+    var cb = d.onDone; d.onDone = null;
+    if(cb) cb();
+    return;
+  }
+  loadDialogLine();
+}
+function updateDialog(dt){
+  var d = game.dialog; if(!d.active || d.done) return;
+  d.acc += dt;
+  while(d.acc >= 28 && d.shown < d.full.length){
+    d.acc -= 28; d.shown++;
+    if(d.shown % 2 === 0) sfx('text');
+  }
+  if(d.shown >= d.full.length) d.done = true;
+}
+function drawDialogBox(){
+  var d = game.dialog; if(!d.active) return;
+  var bx=6, by=150, bw=308, bh=84;
+  px(bx,by,bw,bh,'#f3ede4');            // 3px white border
+  px(bx+3,by+3,bw-6,bh-6,'#0f0b08');    // inner
+  // portrait
+  var portrait = d.speaker;
+  px(bx+8,by+10,40,40,'#241c16'); px(bx+8,by+10,40,2,'#3a2f26');
+  drawPortrait(portrait, bx+8, by+10);
+  // name
+  if(portrait) txt(nameFor(portrait), bx+8, by+54, '#e6c14b', 8, 'left', true);
+  // text
+  var tx = bx+58, tw = bw-58-10;
+  var rows = wrap(d.full, tw);
+  var budget = d.shown, yy = by+12;
+  fnt(9,false);
+  for(var r=0;r<rows.length;r++){
+    var row = rows[r];
+    var take = row.length;
+    var show;
+    if(budget >= take){ show = row; budget -= (take+1); }
+    else { show = row.substring(0, Math.max(0,budget)); budget = 0; }
+    txt(show, tx, yy, '#f3ede4', 9);
+    yy += 12;
+    if(budget<=0 && !(d.done)) break;
+  }
+  if(d.done){ txt('▶', bx+bw-16, by+bh-16, '#e6c14b', 9); }
+}
+function nameFor(sp){
+  var map = { player:'', fasulye:T('n_fasulye'), ceko:T('n_ceko'), plaque:T('n_plaque'),
+    table:T('n_table'), tambur:T('n_tambur'), prob:T('n_prob'), narr:'' };
+  return map[sp] !== undefined ? map[sp] : '';
+}
+function drawPortrait(sp, x, y){
+  if(sp==='fasulye') drawBeanNPC(x+13,y+12,'worry');
+  else if(sp==='ceko') drawBeanNPC(x+13,y+12,'cool');
+  else if(sp==='tambur'){ ctx&&ctx.save&&ctx.save(); drawTambur(x-16,y+4); ctx&&ctx.restore&&ctx.restore(); }
+  else if(sp==='prob') drawProb(x+14,y-6);
+  else if(sp==='table'){ px(x+8,y+22,24,10,'#7d5730'); px(x+14,y+16,3,6,'#c9ccd2'); px(x+20,y+16,3,6,'#c9ccd2'); }
+  else if(sp==='plaque'){ px(x+8,y+10,24,20,'#7d838c'); px(x+11,y+14,18,2,'#0f0b08'); px(x+11,y+18,14,2,'#0f0b08'); px(x+11,y+22,16,2,'#0f0b08'); }
+  else drawPlayer(x+13,y+12);
+}
+
+/* ---------- ROOMS ---------- */
+function roomInteractables(){
+  if(game.room==='green'){
+    return [
+      { id:'fasulye', x:56, y:78, w:16, h:16, solid:true, action:function(){
+          game.flags.fasulye=true; startDialog(['f1','f2','f3'], null, ['fasulye','fasulye','fasulye']); } },
+      { id:'ceko', x:230, y:96, w:16, h:16, solid:true, action:function(){
+          game.flags.ceko=true; startDialog(['c1','c2','c3'], null, ['ceko','ceko','ceko']); } },
+      { id:'plaque', x:150, y:34, w:36, h:14, solid:true, action:function(){
+          game.flags.plaque=true; startDialog(['p1','p2'], null, ['plaque','plaque']); } },
+      { id:'table', x:150, y:150, w:44, h:18, solid:true, action:function(){
+          doSave(); startDialog(['save_line'], function(){ toast(T('t_saved')); }, ['table']); } },
+      { id:'door', x:150, y:24, w:36, h:14, solid:false, door:true, prompt:true, action:function(){
+          enterDrumHall(); } }
+    ];
+  }
+  if(game.room==='drum'){
+    return [
+      { id:'tambur', x:160, y:96, w:72, h:52, solid:true, trigger:true, action:function(){ startEncounter(); } }
+    ];
+  }
+  return [];
+}
+function drawGreenRoom(){
+  // walls + wood floor
+  px(0,0,W,H,'#241c16');
+  px(16,16,W-32,H-32,'#6b4a2a');
+  for(var yy=16; yy<H-16; yy+=12){ px(16,yy,W-32,1,'#5c3f24'); }
+  // north wall band + plaque
+  px(16,16,W-32,10,'#3a2f26');
+  // door frame (north)
+  px(132,16,56,10,'#2a221b'); px(140,10,40,8,'#7d5730');
+  // plaque on wall
+  px(132,30,36,14,'#7d838c'); px(135,33,30,2,'#0f0b08'); px(135,37,22,2,'#0f0b08');
+  // cupping table
+  px(128,150,44,18,'#7d5730'); px(128,150,44,3,'#93693e');
+  px(138,156,4,6,'#c9ccd2'); px(150,156,4,6,'#c9ccd2'); px(162,156,4,6,'#c9ccd2');
+  // NPCs
+  drawBeanNPC(56,78,'worry'); drawBeanNPC(230,96,'cool');
+  // player
+  drawPlayer(game.px-7, game.py-8);
+  // prompts
+  drawProximityPrompt();
+  // header label
+  txt('KAVURMAHANE · THE ROASTERY', 20, 4, '#a8998a', 8, 'left');
+}
+function drawDrumHall(){
+  px(0,0,W,H,'#1a1410');
+  px(16,16,W-32,H-32,'#2a221b');
+  for(var xx=16; xx<W-16; xx+=16){ px(xx,16,1,H-32,'#221a14'); }
+  // gate north
+  var gateColor = game.flags.tamburDone ? '#3c6e2a' : '#565b62';
+  px(132,16,56,12,gateColor); px(140,14,40,4,'#7d838c');
+  // Tambur
+  drawTambur(124,74);
+  // player
+  drawPlayer(game.px-7, game.py-8);
+  drawProximityPrompt();
+  txt('DAVUL SALONU · DRUM HALL', 20, 4, '#a8998a', 8, 'left');
+}
+function nearestInteractable(){
+  var list = roomInteractables(), best=null, bd=1e9;
+  for(var i=0;i<list.length;i++){
+    var it=list[i], cx=it.x, cy=it.y;
+    var d = Math.hypot(cx-game.px, cy-game.py);
+    if(d < 30 && d < bd){ bd=d; best=it; }
+  }
+  return best;
+}
+function drawProximityPrompt(){
+  if(game.dialog.active) return;
+  var it = nearestInteractable();
+  if(it){ txt('A', game.px-3, game.py-26, '#e6c14b', 10, 'left', true); }
+}
+
+/* ---------- OVERWORLD MOVEMENT ---------- */
+function roomBounds(){ return { x0:22, y0:44, x1:W-22, y1:H-22 }; }
+function solidsForRoom(){
+  var list = roomInteractables(), solids=[];
+  for(var i=0;i<list.length;i++){ if(list[i].solid) solids.push(list[i]); }
+  return solids;
+}
+function moveOverworld(dt){
+  if(game.dialog.active) return;
+  var b = roomBounds(), sp = 78 * dt/1000, nx=game.px, ny=game.py;
+  if(input.left){ nx -= sp; game.facing='left'; }
+  if(input.right){ nx += sp; game.facing='right'; }
+  if(input.up){ ny -= sp; game.facing='up'; }
+  if(input.down){ ny += sp; game.facing='down'; }
+  nx = clamp(nx, b.x0, b.x1); ny = clamp(ny, b.y0, b.y1);
+  // solid collision (bounding circle)
+  var solids = solidsForRoom();
+  for(var i=0;i<solids.length;i++){
+    var s=solids[i];
+    if(Math.hypot(s.x-nx, s.y-ny) < 20){
+      // block: keep old axis that reduces overlap
+      if(Math.hypot(s.x-nx, s.y-game.py) >= 20) ny = game.py;
+      else if(Math.hypot(s.x-game.px, s.y-ny) >= 20) nx = game.px;
+      else { nx = game.px; ny = game.py; }
+    }
+  }
+  game.px = nx; game.py = ny;
+}
+
+/* ---------- ENCOUNTER (Tambur) ---------- */
+function startEncounter(){
+  if(game.flags.tamburDone) return;
+  game.mode='encounter';
+  game.enc = {
+    sub:'intro', hp:5, listen:0, menuIdx:0,
+    box:{x:96,y:56,w:128,h:78},
+    soul:{x:160,y:95}, projs:[], waveT:0, spawnT:0, invuln:0, waves:0
+  };
+  startDialog(['t_intro1','t_intro2'], function(){ game.enc.sub='menu'; }, ['tambur','tambur']);
+}
+var ENC_ACTS = ['a_listen','a_look','a_bag','a_hug'];
+function encSelect(idx, opts){
+  var e = game.enc; if(!e) return;
+  opts = opts || {};
+  if(idx===0){ // DİNLE
+    e.listen++;
+    if(e.listen>=2){ encResolveCalm(); return; }
+    startDialog(['t_listen1'], function(){ opts.skipDodge ? backToMenu() : startWave(); }, ['narr']);
+  } else {
+    var key = idx===1 ? 'act_look' : (idx===2 ? 'act_bag' : 'act_hug');
+    var spk = idx===3 ? 'narr' : (idx===1 ? 'narr' : 'player');
+    startDialog([key], function(){ opts.skipDodge ? backToMenu() : startWave(); }, ['narr']);
+  }
+}
+function backToMenu(){ if(game.enc){ game.enc.sub='menu'; } }
+function startWave(){
+  var e = game.enc; if(!e) return;
+  e.sub='dodge'; e.waveT=0; e.spawnT=0; e.projs=[]; e.waves++;
+  e.soul.x = e.box.x + e.box.w/2; e.soul.y = e.box.y + e.box.h/2;
+}
+function encHit(force){
+  var e = game.enc; if(!e || e.sub!=='dodge') return;
+  if(!force && e.invuln>0) return;
+  e.hp -= 1; e.invuln = 900; sfx('hurt');
+  if(e.hp <= 1){ e.hp = 1; encResolveAshamed(); }
+}
+function encResolveCalm(){
+  var e = game.enc; e.sub='resolve';
+  startDialog(['t_resolve'], function(){ finishEncounter('calm'); }, ['tambur']);
+}
+function encResolveAshamed(){
+  var e = game.enc; e.sub='resolve'; e.projs=[];
+  startDialog(['t_ashamed'], function(){ finishEncounter('ashamed'); }, ['narr']);
+}
+function finishEncounter(reason){
+  game.flags.tamburDone = true;
+  startDialog(['prob_taunt','prob_drag'], function(){ startDuel(); }, ['prob','prob']);
+}
+function updateEncounter(dt){
+  var e = game.enc; if(!e) return;
+  if(e.invuln>0) e.invuln -= dt;
+  if(e.sub!=='dodge') return;
+  e.waveT += dt; e.spawnT += dt;
+  // soul movement
+  var b=e.box, sp=90*dt/1000;
+  if(input.left) e.soul.x -= sp; if(input.right) e.soul.x += sp;
+  if(input.up) e.soul.y -= sp; if(input.down) e.soul.y += sp;
+  e.soul.x = clamp(e.soul.x, b.x+4, b.x+b.w-4); e.soul.y = clamp(e.soul.y, b.y+4, b.y+b.h-4);
+  // spawn tumbling beans that arc through the box
+  if(e.spawnT > 650){
+    e.spawnT = 0;
+    var fromLeft = Math.random()<0.5;
+    var sx = fromLeft ? b.x-6 : b.x+b.w+6;
+    var sy = b.y + b.h - 6 - Math.random()*10;
+    var vx = (fromLeft?1:-1) * (b.w/1.6) / 2.4;
+    var vy = -(b.h) / 1.2;
+    e.projs.push({ x:sx, y:sy, vx:vx, vy:vy, r:4, rot:0 });
+    sfx('pop');
+  }
+  // update projectiles (parabolic arc)
+  var grav = (e.box.h) / 0.9;
+  for(var i=e.projs.length-1;i>=0;i--){
+    var p=e.projs[i];
+    p.vy += grav * dt/1000;
+    p.x += p.vx * dt/1000; p.y += p.vy * dt/1000; p.rot += dt/120;
+    if(Math.hypot(p.x-e.soul.x, p.y-e.soul.y) < 7){ encHit(false); }
+    if(p.x < b.x-16 || p.x > b.x+b.w+16 || p.y > b.y+b.h+20){ e.projs.splice(i,1); }
+  }
+  // end of wave
+  if(e.waveT > 12000){ e.projs=[]; e.sub='menu'; }
+}
+function drawEncounter(){
+  px(0,0,W,H,'#0f0b08');
+  // Tambur up top
+  drawTambur(124,10);
+  var e = game.enc; if(!e) return;
+  // HP
+  txt(T('hp_label')+' ', 12, 66, '#a8998a', 9, 'left');
+  for(var i=0;i<5;i++){ px(44+i*14, 66, 10, 8, i < e.hp ? '#6fae4f' : '#3a2f26'); }
+  if(e.sub==='dodge'){
+    var b=e.box;
+    px(b.x-2,b.y-2,b.w+4,b.h+4,'#f3ede4'); px(b.x,b.y,b.w,b.h,'#0f0b08');
+    for(var j=0;j<e.projs.length;j++){ var p=e.projs[j]; drawSoulBean(p.x-4,p.y-4); }
+    var blink = e.invuln>0 && (Math.floor(e.ticker0||0)%2===0);
+    if(!blink) drawSoul(e.soul.x-3, e.soul.y-3);
+    txt(T('wave_hint'), b.x, b.y+b.h+6, '#a8998a', 8, 'left');
+  } else if(e.sub==='menu'){
+    drawEncounterMenu();
+  }
+  // dialog drawn separately by main render
+}
+function drawSoulBean(x,y){ px(x+1,y,6,2,'#3c6e2a'); px(x,y+1,8,6,'#5ea043'); px(x+3,y+2,1,4,'#3c6e2a'); }
+function drawEncounterMenu(){
+  var e = game.enc;
+  var bx=6, by=150, bw=308, bh=84;
+  px(bx,by,bw,bh,'#f3ede4'); px(bx+3,by+3,bw-6,bh-6,'#0f0b08');
+  var cols=[bx+20, bx+164], rows=[by+18, by+50];
+  for(var i=0;i<4;i++){
+    var cx=cols[i%2], cy=rows[Math.floor(i/2)];
+    var sel = (i===e.menuIdx);
+    if(sel){ drawSoul(cx-16, cy+2); }
+    txt(T(ENC_ACTS[i]), cx, cy, sel?'#e6c14b':'#f3ede4', 11, 'left', sel);
+  }
+}
+
+/* ---------- DUEL (Prob / Agtron Challenge round) ---------- */
+function startDuel(){
+  game.mode='duel';
+  game.duel = { sub:'target', realT:0, crackIdx:0, dropped:false, result:null, speed:4 };
+  startDialog(['prob_target'], function(){ game.duel.sub='play'; game.duel.realT=0; game.duel.crackIdx=0; }, ['prob']);
+}
+function duelDrop(atReal){
+  var d = game.duel; if(!d || d.sub!=='play' || d.dropped) return;
+  d.dropped = true; d.sub='reveal';
+  var real = (typeof atReal==='number') ? atReal : d.realT;
+  if(real > DUEL.lastT) real = DUEL.lastT;
+  var cum = cumGainForSample(DUEL, real);
+  var playerAg = agtronForSample(DUEL, cum);
+  var target = 88;
+  var playerDelta = Math.abs(playerAg - target);
+  // Prob boasts a scripted result that is WORSE by 6 to 9 (his fiction).
+  var worseBy = 6 + Math.floor(Math.random()*4); // 6..9
+  var probDelta = playerDelta + worseBy;
+  // Prob reads the drum lighter than the bean: target + probDelta, clamped.
+  var probAg = clamp(target + probDelta, 60, 118);
+  probDelta = Math.abs(probAg - target);
+  d.result = {
+    real:real, playerAg:playerAg, playerDelta:playerDelta,
+    probAg:probAg, probDelta:probDelta, target:target, worseBy:worseBy
+  };
+  sfx('good');
+  startDialog(['prob_boast','prob_frame','you_closer'], function(){ showEndCard(); }, ['prob','narr','narr']);
+}
+function updateDuel(dt){
+  var d = game.duel; if(!d || d.sub!=='play') return;
+  d.realT += (dt/1000) * d.speed;
+  // play pops at the real timestamps (fast-forward clock)
+  while(d.crackIdx < DUEL.cracks.length && DUEL.cracks[d.crackIdx][0] <= d.realT){
+    sfx('pop'); d.crackIdx++;
+  }
+  if(d.realT >= DUEL.lastT){ duelDrop(DUEL.lastT); }
+}
+function drawDuel(){
+  px(0,0,W,H,'#0f0b08');
+  drawProb(150,16);
+  txt(T('n_prob'), 172, 20, '#c9ccd2', 9, 'left', true);
+  txt(T('lab_target')+': 88', 12, 20, '#e6c14b', 10, 'left', true);
+  var d = game.duel; if(!d) return;
+  // growing pixel bell (2s bins of cumulative gain up to realT)
+  var bx=20, by=92, bw=280, bh=100;
+  px(bx-2,by-2,bw+4,bh+4,'#3a2f26'); px(bx,by,bw,bh,'#160f0a');
+  var binW=2, nb=Math.ceil((DUEL.lastT+0.001)/binW);
+  var bins=new Array(nb); for(var i=0;i<nb;i++) bins[i]=0;
+  var maxBin=1;
+  for(var k=0;k<DUEL.cracks.length;k++){ var b2=Math.min(nb-1,Math.floor(DUEL.cracks[k][0]/binW)); bins[b2]+=DUEL.cracks[k][1]; }
+  for(var m=0;m<nb;m++){ if(bins[m]>maxBin) maxBin=bins[m]; }
+  var bw2=(bw)/nb, upto = d.sub==='play' ? d.realT : (d.result?d.result.real:DUEL.lastT);
+  for(var n=0;n<nb;n++){
+    var filled = (n*binW) <= upto;
+    var hh = (bins[n]/maxBin)*(bh-6);
+    px(bx + n*bw2, by+bh-hh, Math.max(1,bw2-1), hh, filled ? '#c98a3c' : '#2a221b');
+  }
+  if(d.sub==='play'){
+    var dl = T('duel_drop');
+    px(110,200,100,28,'#d9663f'); txt(dl, 160-measure(dl)/2, 208, '#fff', 12, 'left', true);
+    txt(T('duel_hint'), 20, 200, '#a8998a', 8, 'left');
+  }
+}
+
+/* ---------- END CARD (HTML overlay) ---------- */
+function showEndCard(){
+  game.mode='end';
+  var d = game.duel.result;
+  var card = document.getElementById('endCard');
+  var pAg = (Math.round(d.playerAg*10)/10).toFixed(1);
+  var probAg = (Math.round(d.probAg*10)/10).toFixed(1);
+  card.innerHTML =
+    '<h2>'+T('ec_title')+'</h2>'+
+    '<div class="sub">'+T('ec_cont')+'</div>'+
+    '<div class="resline">'+
+      '<div><div class="sw" style="background:'+agtronColor(d.playerAg)+'"></div><div class="resnum" style="color:var(--gold)">'+pAg+'</div><div class="reslab">'+T('lab_you')+'</div></div>'+
+      '<div><div class="sw" style="background:'+agtronColor(88)+'"></div><div class="resnum">88</div><div class="reslab">'+T('lab_target')+'</div></div>'+
+      '<div><div class="sw" style="background:'+agtronColor(d.probAg)+'"></div><div class="resnum" style="color:var(--muted)">'+probAg+'</div><div class="reslab">'+T('lab_prob')+'</div></div>'+
+    '</div>'+
+    '<div class="frame">'+S.prob_frame.tr+'<span class="en">'+S.prob_frame.en+'</span></div>'+
+    '<div id="postWrap">'+
+      '<button class="btn" id="btnOpenPost">'+S.post_open.tr+' <span class="en">· '+S.post_open.en+'</span></button>'+
+      '<form class="postForm hidden" id="postForm">'+
+        '<input type="text" id="postName" maxlength="40" autocomplete="off" placeholder="'+T('post_name')+'">'+
+        '<input type="text" id="postCompany" maxlength="40" autocomplete="off" placeholder="'+T('post_company')+'">'+
+        '<label class="consent"><input type="checkbox" id="postConsent"><span>'+S.post_consent.tr+' <span class="en">· '+S.post_consent.en+'</span></span></label>'+
+        '<button class="btn" type="button" id="btnPostSubmit">'+S.post_submit.tr+' <span class="en">· '+S.post_submit.en+'</span></button>'+
+      '</form>'+
+    '</div>'+
+    '<div class="links">'+
+      '<a href="crack-game.html">'+S.link_agtron.tr+'<span class="en">'+S.link_agtron.en+'</span></a>'+
+      '<a href="crack-listen.html">'+S.link_listen.tr+'<span class="en">'+S.link_listen.en+'</span></a>'+
+    '</div>'+
+    '<div class="honest"><b>·</b> '+S.honest1.tr+' <span class="en" style="display:block;margin-top:3px">'+S.honest1.en+'</span>'+
+      '<div style="margin-top:6px"><b>·</b> '+S.honest2.tr+' <span class="en" style="display:block;margin-top:3px">'+S.honest2.en+'</span></div></div>';
+  document.getElementById('endOverlay').classList.remove('hidden');
+  var op = document.getElementById('btnOpenPost');
+  if(op) op.addEventListener('click', function(){ var pf=document.getElementById('postForm'); if(pf) pf.classList.toggle('hidden'); });
+  var ps = document.getElementById('btnPostSubmit');
+  if(ps) ps.addEventListener('click', function(ev){ if(ev&&ev.preventDefault) ev.preventDefault(); submitScore(); });
+}
+function submitScore(){
+  var d = game.duel && game.duel.result;
+  if(!d){ return Promise.resolve(false); }
+  var nmEl=document.getElementById('postName'), coEl=document.getElementById('postCompany'), okEl=document.getElementById('postConsent');
+  var name = nmEl ? String(nmEl.value||'').trim() : '';
+  var company = coEl ? String(coEl.value||'').trim() : '';
+  var consent = !!(okEl && okEl.checked);
+  if(!name){ toast(T('t_name_req')); return Promise.resolve(false); }
+  if(!consent){ toast(T('t_consent_req')); return Promise.resolve(false); }
+  var score = Math.round(d.playerDelta*10)/10;
+  return postScore({ name:name.slice(0,40), company:company?company.slice(0,40):null, score:score, event:EVENT });
+}
+
+/* ---------- TITLE + LADDER ---------- */
+var starBeans = [];
+(function(){ for(var i=0;i<26;i++){ starBeans.push({ x:Math.random()*W, y:Math.random()*H, s:0.2+Math.random()*0.7 }); } })();
+function titleMenuItems(){
+  var items = [{key:'m_start', act:'start'}];
+  if(game.saveExists) items.push({key:'m_continue', act:'continue'});
+  items.push({key:'m_ladder', act:'ladder'});
+  return items;
+}
+function drawTitle(dt){
+  px(0,0,W,H,'#0f0b08');
+  for(var i=0;i<starBeans.length;i++){
+    var b=starBeans[i]; b.y += b.s*dt/40; if(b.y>H){ b.y=0; b.x=Math.random()*W; }
+    px(b.x, b.y, 2, 3, i%3===0?'#3c6e2a':'#4a6e2a');
+    px(b.x, b.y, 1, 1, '#6fae4f');
+  }
+  txt('UNDERROAST', W/2, 44, '#e6c14b', 22, 'center', true);
+  txt('U N D E R R O A S T', W/2, 70, '#c98a3c', 8, 'center');
+  txt(T('title_sub'), W/2, 84, '#a8998a', 9, 'center');
+  var items = titleMenuItems();
+  var y0=126;
+  for(var m=0;m<items.length;m++){
+    var sel = (m===game.menuIdx);
+    var label = T(items[m].key);
+    if(sel){ txt('▶', W/2 - measure(label)/2 - 14, y0+m*22, '#e6c14b', 11, 'left', true); }
+    txt(label, W/2, y0+m*22, sel?'#f3ede4':'#a8998a', 12, 'center', sel);
+  }
+  txt('a CoffeeNutz game · with love to Undertale', W/2, 212, '#7a6f63', 7, 'center');
+  txt(VERSION, W/2, 224, '#7a6f63', 7, 'center');
+}
+function titleConfirm(){
+  var items = titleMenuItems(), it = items[game.menuIdx];
+  if(!it) return;
+  sfx('select');
+  if(it.act==='start'){ newGame(); }
+  else if(it.act==='continue'){ continueGame(); }
+  else if(it.act==='ladder'){ openLadder(); }
+}
+function newGame(){
+  startMusic();
+  game.flags={ fasulye:false, ceko:false, plaque:false, saved:false, tamburDone:false };
+  game.mode='intro';
+  startDialog(['intro1','intro2','intro3','intro4','intro5'], function(){ enterGreenRoom(true); }, ['narr','narr','narr','narr','narr']);
+}
+function continueGame(){
+  var d = loadSave(); if(!d){ newGame(); return; }
+  startMusic();
+  game.flags = Object.assign({ fasulye:false, ceko:false, plaque:false, saved:false, tamburDone:false }, d.flags||{});
+  game.room = d.room; game.px = d.px; game.py = d.py;
+  game.mode = 'room';
+}
+function enterGreenRoom(fresh){
+  game.mode='room'; game.room='green';
+  if(fresh){ game.px=160; game.py=196; game.facing='up'; }
+}
+function enterDrumHall(){
+  game.mode='room'; game.room='drum'; game.px=160; game.py=200; game.facing='up';
+  sfx('select');
+}
+function openLadder(){
+  var ov=document.getElementById('ladderOverlay'), list=document.getElementById('ladderList');
+  document.getElementById('ladderTitle').textContent = T('ladder_title');
+  document.getElementById('ladderSub').textContent = T('ladder_sub');
+  document.getElementById('ladderBack').firstChild.textContent = T('ladder_back')+' ';
+  list.innerHTML = '<li class="rankRow"><span class="who">...</span></li>';
+  ov.classList.remove('hidden');
+  fetchLadderTop5().then(function(rows){
+    list.innerHTML='';
+    if(!rows || !rows.length){ list.innerHTML = '<li class="rankRow"><span class="who">'+T('ladder_empty')+'</span></li>'; return; }
+    for(var i=0;i<rows.length;i++){
+      var r=rows[i], li=document.createElement('li');
+      li.className='rankRow'+(i===0?' g1':(i===1?' g2':(i===2?' g3':'')));
+      var co = r.company ? '<span class="co">'+esc(r.company)+'</span>' : '';
+      var sc = Number(r.score);
+      li.innerHTML = '<span class="pos">'+(i+1)+'.</span><span class="who">'+esc(r.name||'')+co+'</span><span class="sc">'+(isFinite(sc)?sc.toFixed(1):'--')+'</span>';
+      list.appendChild(li);
+    }
+  }).catch(function(){ list.innerHTML = '<li class="rankRow"><span class="who">'+T('t_ladder_fail')+'</span></li>'; });
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+/* ---------- INPUT ---------- */
+var input = { up:false, down:false, left:false, right:false };
+function onConfirm(){
+  if(game.mode==='title'){ titleConfirm(); return; }
+  if(game.dialog.active){ if(!game.dialog.done) sfx('text'); else sfx('select'); advanceDialog(); return; }
+  if(game.mode==='room'){
+    var it = nearestInteractable();
+    if(it){ sfx('select'); it.action(); }
+    return;
+  }
+  if(game.mode==='encounter'){
+    var e=game.enc;
+    if(e && e.sub==='menu'){ sfx('select'); encSelect(e.menuIdx, {}); }
+    return;
+  }
+  if(game.mode==='duel'){
+    var d=game.duel;
+    if(d && d.sub==='play'){ duelDrop(); }
+    return;
+  }
+}
+function onCancel(){
+  if(game.dialog.active){ advanceDialog(); return; }
+  sfx('cancel');
+}
+function onDir(dir, pressed){
+  input[dir] = pressed;
+  if(!pressed) return;
+  // menu navigation
+  if(game.mode==='title' && !game.dialog.active){
+    var n = titleMenuItems().length;
+    if(dir==='up'){ game.menuIdx=(game.menuIdx-1+n)%n; sfx('move'); }
+    if(dir==='down'){ game.menuIdx=(game.menuIdx+1)%n; sfx('move'); }
+  } else if(game.mode==='encounter' && game.enc && game.enc.sub==='menu'){
+    var e=game.enc;
+    if(dir==='left'||dir==='up') { e.menuIdx=(e.menuIdx+3)%4; sfx('move'); }
+    if(dir==='right'||dir==='down') { e.menuIdx=(e.menuIdx+1)%4; sfx('move'); }
+  }
+}
+var KEYMAP = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right',
+  w:'up', s:'down', a:'left', d:'right', W:'up', S:'down', A:'left', D:'right' };
+document.addEventListener('keydown', function(ev){
+  ensureAudio(); if(AC && AC.state==='suspended' && AC.resume) AC.resume();
+  var k=ev.key;
+  if(KEYMAP[k]){ ev.preventDefault(); onDir(KEYMAP[k], true); return; }
+  if(k==='z'||k==='Z'||k==='Enter'||k===' '){ ev.preventDefault(); onConfirm(); return; }
+  if(k==='x'||k==='X'||k==='Escape'){ ev.preventDefault(); onCancel(); return; }
+});
+document.addEventListener('keyup', function(ev){ var k=ev.key; if(KEYMAP[k]){ onDir(KEYMAP[k], false); } });
+
+/* ---------- TOAST ---------- */
+var toastEl=null, toastTimer=null;
+function toast(msg){
+  if(typeof document==='undefined') return;
+  if(!toastEl){ toastEl=document.createElement('div'); toastEl.className='toast'; }
+  toastEl.textContent=msg;
+  if(!toastEl.parentNode) document.body.appendChild(toastEl);
+  toastEl.style.display='block';
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){ if(toastEl) toastEl.style.display='none'; }, 2200);
+}
+
+/* ---------- MAIN LOOP ---------- */
+var lastTs=0;
+function loop(ts){
+  var dt = lastTs ? Math.min(60, ts-lastTs) : 16; lastTs=ts;
+  update(dt); render(dt);
+  if(typeof requestAnimationFrame==='function') requestAnimationFrame(loop);
+}
+function update(dt){
+  game.ticker += dt;
+  updateDialog(dt);
+  if(game.mode==='room') moveOverworld(dt);
+  else if(game.mode==='encounter'){ if(game.enc) game.enc.ticker0=(game.enc.ticker0||0)+dt/120; updateEncounter(dt); }
+  else if(game.mode==='duel') updateDuel(dt);
+}
+function render(dt){
+  if(!ctx) return;
+  if(game.mode==='title'){ drawTitle(dt); return; }
+  if(game.mode==='intro'){ px(0,0,W,H,'#0f0b08');
+    // falling bean motif
+    for(var i=0;i<starBeans.length;i++){ var b=starBeans[i]; b.y+=b.s*dt/30; if(b.y>H){b.y=0;b.x=Math.random()*W;} px(b.x,b.y,2,3,'#3c6e2a'); }
+    drawDialogBox(); return;
+  }
+  if(game.mode==='room'){ if(game.room==='green') drawGreenRoom(); else drawDrumHall(); drawDialogBox(); return; }
+  if(game.mode==='encounter'){ drawEncounter(); drawDialogBox(); return; }
+  if(game.mode==='duel'){ drawDuel(); drawDialogBox(); return; }
+  if(game.mode==='end'){ px(0,0,W,H,'#0f0b08'); txt(T('ec_title'), W/2, 110, '#e6c14b', 14, 'center', true); return; }
+}
+
+/* ---------- LANGUAGE + CHIPS WIRING ---------- */
+function setLang(l){
+  game.lang = l;
+  document.documentElement.lang = l;
+  var tr=document.getElementById('langTr'), en=document.getElementById('langEn');
+  if(tr) tr.classList.toggle('on', l==='tr');
+  if(en) en.classList.toggle('on', l==='en');
+  var mc=document.getElementById('muteChip'); if(mc) mc.textContent=T(game.muted?'mute_off':'mute_on');
+  // live-swap open overlays
+  if(!document.getElementById('ladderOverlay').classList.contains('hidden')) openLadder();
+  if(game.mode==='end') showEndCard();
+}
+function wireUI(){
+  var lt=document.getElementById('langTr'), le=document.getElementById('langEn');
+  if(lt) lt.addEventListener('click', function(){ setLang('tr'); });
+  if(le) le.addEventListener('click', function(){ setLang('en'); });
+  var mc=document.getElementById('muteChip'); if(mc) mc.addEventListener('click', function(){ setMuted(!game.muted); });
+  var rc=document.getElementById('refreshChip');
+  if(rc) rc.addEventListener('click', function(){ location.href = location.pathname + '?v=' + Date.now(); });
+  var lb=document.getElementById('ladderBack'); if(lb) lb.addEventListener('click', function(){ document.getElementById('ladderOverlay').classList.add('hidden'); });
+  // dpad
+  var dp=document.querySelectorAll('.dpad button[data-k]');
+  Array.prototype.forEach.call(dp, function(btn){
+    var k=btn.getAttribute('data-k');
+    var down=function(ev){ if(ev&&ev.preventDefault) ev.preventDefault(); ensureAudio(); onDir(k,true); };
+    var up=function(ev){ if(ev&&ev.preventDefault) ev.preventDefault(); onDir(k,false); };
+    btn.addEventListener('touchstart', down, {passive:false}); btn.addEventListener('touchend', up, {passive:false});
+    btn.addEventListener('mousedown', down); btn.addEventListener('mouseup', up); btn.addEventListener('mouseleave', up);
+  });
+  var ba=document.getElementById('btnA'); if(ba){ ba.addEventListener('click', function(ev){ ev.preventDefault(); ensureAudio(); onConfirm(); }); }
+  var bb=document.getElementById('btnB'); if(bb){ bb.addEventListener('click', function(ev){ ev.preventDefault(); onCancel(); }); }
+  // start audio on first touch anywhere
+  document.addEventListener('touchstart', function once(){ ensureAudio(); if(AC&&AC.state==='suspended'&&AC.resume) AC.resume(); startMusic(); document.removeEventListener('touchstart', once); }, {passive:true});
+}
+
+/* ---------- BOOT ---------- */
+function boot(){
+  game.saveExists = hasSave();
+  game.mode = 'title'; game.menuIdx = 0;
+  setLang('tr'); setMuted(false);
+  wireUI();
+  if(typeof requestAnimationFrame==='function') requestAnimationFrame(loop);
+}
+if(typeof document!=='undefined'){
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+}
+
+/* ---------- HEADLESS TEST HARNESS ---------- */
+window.__UNDERROAST__ = {
+  game:game, S:S, T:T, DUEL:DUEL,
+  agtronForSample:agtronForSample, cumGainForSample:cumGainForSample, agtronColor:agtronColor,
+  setLang:setLang, boot:boot,
+  newGame:newGame, continueGame:continueGame, enterGreenRoom:enterGreenRoom, enterDrumHall:enterDrumHall,
+  hasSave:hasSave, doSave:doSave, loadSave:loadSave,
+  startDialog:startDialog, advanceDialog:advanceDialog, updateDialog:updateDialog,
+  interactById:function(id){ var l=roomInteractables(); for(var i=0;i<l.length;i++){ if(l[i].id===id){ l[i].action(); return true; } } return false; },
+  startEncounter:startEncounter, encSelect:encSelect, encHit:encHit, setHP:function(h){ if(game.enc) game.enc.hp=h; },
+  startWave:startWave,
+  startDuel:startDuel, duelDrop:duelDrop, updateDuel:updateDuel,
+  submitScore:submitScore, postScore:postScore, fetchLadderTop5:fetchLadderTop5,
+  showEndCard:showEndCard,
+  onDir:onDir, onConfirm:onConfirm
+};
+</script>
+</body>
+</html>
