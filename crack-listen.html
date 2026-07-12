@@ -149,7 +149,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-11e</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-12a</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -276,7 +276,9 @@ body.st-setup #btn{display:none}
         <button class="go" id="noMeterBtn" onclick="showLevels()" style="display:block;flex:1;background:#5a4a38;font-size:12px;padding:10px 4px;margin-top:0">No color meter? Estimate it</button>
         <button class="go" id="cupGo" onclick="cupHandoff()" style="display:none;flex:1;background:#3a2f26;font-size:12px;padding:10px 4px;margin-top:0">Cup this coffee &#8599;</button>
         <button class="go" id="dlCard" onclick="makeBatchCard()" style="display:none;flex:1;background:#3a2f26;font-size:12px;padding:10px 4px;margin-top:0">Batch card (PNG)</button>
+        <button class="go" id="dlStory" onclick="makeStoryCard()" style="display:none;flex:1;background:#3a2f26;font-size:12px;padding:10px 4px;margin-top:0">Story card</button>
       </div>
+      <button class="go" id="gameAdd" onclick="openGameConsent()" style="display:none;background:var(--accent);margin-top:8px">Oyuna ekle · Add to the Crack Game</button>
     </div>
 
     <div class="lbl" style="margin-top:14px">coffee cloud · Guide account <span class="info" onclick="showInfo('cloud')">&#9432;</span></div>
@@ -403,7 +405,7 @@ async function start(){
     src.connect(proc); proc.connect(AC.destination); // raw tap, before the high-pass; output stays silent
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
-  $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('mapBtn').style.display='none';
+  $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('dlStory').style.display='none'; $('gameAdd').style.display='none'; $('mapBtn').style.display='none';
   bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
@@ -468,7 +470,7 @@ function stop(){
   STOPPROJ=LASTPROJ; STOPBORROWED=PROJBORROWED;   // freeze projection AND its provenance at the drop; a rename later cannot launder a borrowed guess
   try{ if(!planActive() && valid().length>=10){ localStorage.setItem('bsRoastN',String(roastCount()+1)); refreshPlanUI(); } }catch(e){}   // a "roast" = 10+ real cracks; test taps stay free
   $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):'';
-  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value;
+  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('dlStory').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value;
     // a mapped coffee fills its own paperwork: bean-constant fields prefill from the map, measurements stay yours
     const calP=calFor();
     if(calP){ if(!$('mProc').value&&calP.proc) $('mProc').value=calP.proc;
@@ -977,6 +979,7 @@ async function cloudStatus(){ const u=await cloudUser(); const el=$('cloudStat')
   return u; }
 const escC=s2=>String(s2??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
 let CLOUDNAMES=[];
+let COMMNAMES=[];   // approved community coffee names (globe-chip) · filled by commNamesSync
 // chip colors: origin guessed from the name (Ethiopia yellow, Colombia brown...), unknown names get a stable hash color
 const CHIP_PAL=['#c98a3c','#8a6aa8','#4a9a6a','#c94f3c','#3c9a9a','#a06a38','#e6c14b','#b0687f'];
 const ORIGIN_HUES=[[/(ethiop|etiyop|yirga|sidam|guji|harrar)/,'#e6c14b'],[/(colomb|kolomb)/,'#a06a38'],[/kenya/,'#c94f3c'],[/(brazil|brezil)/,'#4a9a6a'],[/(costa|kosta|chirrip)/,'#3c9a9a'],[/(guatemala|huehue)/,'#8a6aa8'],[/(panama|geisha|gesha)/,'#b0687f'],[/(sumatra|endonez|indones|mandheling)/,'#5a7a3c'],[/(hondura|nikaragua|nicarag|salvador)/,'#c98a3c'],[/(rwanda|ruanda|burundi)/,'#d97f4f']];
@@ -988,7 +991,7 @@ function renderNameChips(){ const el=$('nameChips'); if(!el) return;
   let m={}; try{ m=JSON.parse(localStorage.getItem('bsCal'))||{}; }catch(e){}
   const names=new Set(Object.keys(m).filter(k=>k!=='__house')); CLOUDNAMES.forEach(n=>names.add(n));
   el.innerHTML=[...names].sort().map(n=>{ const c=chipColor(n),cp=chipParts(c);
-    return '<span class="hpill" style="cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border:1.5px solid '+c+';background:'+cp.bg+';color:'+cp.tx+'" data-cn="'+escC(n)+'">'+(m[n]?'':'\u2601 ')+escC(n)+'</span>'; }).join('')
+    return '<span class="hpill" style="cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border:1.5px solid '+c+';background:'+cp.bg+';color:'+cp.tx+'" data-cn="'+escC(n)+'">'+(m[n]?'':((COMMNAMES.indexOf(n)>=0&&CLOUDNAMES.indexOf(n)<0)?'\ud83c\udf10 ':'\u2601 '))+escC(n)+'</span>'; }).join('')
     ||'<span class="hint" style="font-size:11px">'+(LANG==='tr'?'Kayıtlı kahve yok; adını yaz, eşle.':'No known coffees yet; type a name and map it.')+'</span>';
   el.querySelectorAll('[data-cn]').forEach(x=>x.onpointerdown=ev=>{ ev.preventDefault(); pickCoffee(x.dataset.cn); });   // pointerdown beats the input blur
 }
@@ -1003,6 +1006,7 @@ async function pickCoffee(n){
         m[n]=mm; localStorage.setItem('bsCal',JSON.stringify(m));
         if(c.badge&&typeof c.badge==='object'&&Object.keys(c.badge).length){ const b=badgeMap(); b[n]=c.badge; localStorage.setItem('bsBadge',JSON.stringify(b)); }
         toast((LANG==='tr'?'Buluttan alındı: ':'Pulled from cloud: ')+n); } } }catch(e){} }
+  if(!calMap()[n]&&!calMap()[(n||'').trim().toLowerCase()]){ try{ await communityPull(n); }catch(e){} }   // no local map, no own cloud map -> community prior (borrowed)
   loadBadge(); closeName(); updateGauge();
 }
 let PICK_CB=null;
@@ -1243,13 +1247,14 @@ function updateGauge(){
   if(!k){ drawGauge('nocoffee'); $('agHint').textContent=tt('Name the coffee; each bean carries its own color map.'); return; }
   let cal=calFor(), borrowed=false;
   if(!cal){ const h=calMap()['__house']; if(h){ cal=h; borrowed=true; } }
+  if(cal&&cal.communal) borrowed=true;   // COMMUNITY PRIOR: a pooled map is another roaster's shape; borrowed until this device measures its own. Keeps PROJBORROWED true so no lesson is ever written against it.
   if(!cal){ drawGauge('locked');
     const keys=Object.keys(calMap()).filter(x=>x!=='__house');
     $('agHint').textContent=tt('Unmapped on THIS device/app copy.')+' '+(keys.length?(tt('Mapped here:')+' '+keys.join(', ')+'.'):tt('No maps yet: load a session or roast, fill Agtron ground, tap Map. Note: Safari tab and Home-Screen app keep SEPARATE maps.'));
     return; }
   PROJBORROWED=borrowed;
   const dcTag=(cal.anchors&&cal.anchors.length>=3)?(' · '+(LANG==='tr'?'derin kalibrasyon':'deep calibration')):'';
-  const bTag=(borrowed?(' · '+tt('borrowed house map')+' ('+(cal.src||'?')+')'):'')+dcTag;
+  const bTag=(borrowed?(' · '+(cal.communal?tt('community map'):tt('borrowed house map'))+' ('+(cal.src||'?')+')'):'')+dcTag;
   const v=valid();
   if(!v.length){ drawGauge('wait'); $('agHint').textContent=tt('Mapped on')+' '+cal.date+' (Agtron '+cal.agtron+')'+bTag+'. '+tt('Projection starts at first crack.'); return; }
   if(v.length<5){ drawGauge('wait'); $('agHint').textContent=(LANG==='tr'?('Çatlaklar toplanıyor ('+v.length+'/5); birkaç pat henüz ilk çatlak değildir.'):('Gathering cracks ('+v.length+'/5) before projecting; a couple of pops is not a first crack yet.')); return; }
@@ -1385,6 +1390,158 @@ function makeBatchCard(){
   x.fillText('BU PARTİNİN ÇATLAMA EĞRİSİ · guide.coffeenutz.net', L, H-64);
   c.toBlob(blob=>{ dl(blob,'batch-'+(cName.value||'coffee').replace(/\s+/g,'_')+'-'+new Date().toISOString().slice(0,10)+'.png'); },'image/png');
 }
+
+// ===== GROWTH v2026-07-12a: story card, Crack Game consent submission, community prior =====
+const APPVER='v2026-07-12a';
+// ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
+function makeStoryCard(){
+  const v=valid();
+  if(v.length<3){ toast(tt('Not enough cracks for a card.')); return; }
+  const W=1080,H=1920, c=document.createElement('canvas'); c.width=W; c.height=H;
+  const x=c.getContext('2d');
+  x.fillStyle='#1a1410'; x.fillRect(0,0,W,H);
+  x.fillStyle='#241c16'; x.fillRect(48,48,W-96,H-96);
+  x.strokeStyle='#3a2f26'; x.lineWidth=3; x.strokeRect(48,48,W-96,H-96);
+  const L=110; let y=210; x.textAlign='left';
+  x.fillStyle='#e6c14b'; x.font='800 64px -apple-system,Helvetica,sans-serif'; x.fillText('COFFEENUTZ', L, y); y+=46;
+  x.fillStyle='#a8998a'; x.font='600 30px -apple-system,Helvetica,sans-serif'; x.fillText('çatlak analizörü · the crack analyzer', L, y); y+=96;
+  const nm=(cName.value||($('mCoffee')&&$('mCoffee').value)||'coffee');
+  x.fillStyle='#f3ede4'; x.font='800 72px -apple-system,Helvetica,sans-serif'; x.fillText(nm.length>22?nm.slice(0,21)+'…':nm, L, y); y+=58;
+  const today=new Date(), dd=n=>String(n).padStart(2,'0');
+  const tarih=dd(today.getDate())+'.'+dd(today.getMonth()+1)+'.'+today.getFullYear();
+  x.fillStyle='#a8998a'; x.font='600 34px -apple-system,Helvetica,sans-serif'; x.fillText(tarih, L, y); y+=64;
+  // the bell: gain per 5 s bins over the crack window
+  const gx=L, gy=y+20, gw=W-2*L, gh=540;
+  const bin=5, t0=v[0].t, ext=Math.max(1,v[v.length-1].t-t0);
+  const nb=Math.max(1,Math.ceil((ext+bin)/bin)), counts=new Array(nb).fill(0);
+  for(const cr of v){ const i=Math.min(nb-1,Math.max(0,Math.floor((cr.t-t0)/bin))); counts[i]+=cr.g; }
+  const sig=Math.max(1.0,nb/9), sm=new Array(nb).fill(0);
+  for(let i=0;i<nb;i++){ let s=0,ws=0; for(let j=0;j<nb;j++){ const w=Math.exp(-0.5*((j-i)/sig)*((j-i)/sig)); s+=counts[j]*w; ws+=w; } sm[i]=s/ws; }
+  const peak=Math.max.apply(null,sm)||1, maxC=Math.max.apply(null,counts)||1;
+  x.strokeStyle='#3a2f26'; x.lineWidth=2; x.beginPath(); x.moveTo(gx,gy+gh); x.lineTo(gx+gw,gy+gh); x.stroke();
+  x.fillStyle='rgba(201,138,60,0.28)'; const bw=Math.max(3,gw/nb-3);
+  counts.forEach((n,i)=>{ if(!n) return; const h2=(n/maxC)*(gh-40); x.fillRect(gx+(i/nb)*gw, gy+gh-h2, bw, h2); });
+  x.strokeStyle='#e6c14b'; x.lineWidth=7; x.lineCap='round'; x.lineJoin='round'; x.beginPath();
+  for(let i=0;i<nb;i++){ const px=gx+((i+0.5)/nb)*gw, py=gy+gh-(sm[i]/peak)*(gh-40); i?x.lineTo(px,py):x.moveTo(px,py); }
+  x.stroke();
+  x.fillStyle='#a8998a'; x.font='600 26px -apple-system,Helvetica,sans-serif'; x.fillText('çan · the bell · gain / 5 s', gx, gy+gh+44);
+  y=gy+gh+128;
+  // phi at drop (>= flag when the peak was never witnessed = lower bound)
+  const lb=!PASTPEAK, phv=(isFinite(PHASE)?PHASE:0);
+  x.fillStyle='#a8998a'; x.font='600 30px -apple-system,Helvetica,sans-serif'; x.fillText('gain evresi · gain phase (drop)', L, y);
+  x.fillStyle='#f3ede4'; x.font='800 60px -apple-system,Helvetica,sans-serif'; x.fillText((lb?'≥ ':'')+phv.toFixed(2), L, y+62); y+=150;
+  // projected color: always labelled a projection, never a measurement
+  const proj=(STOPPROJ!=null?STOPPROJ:LASTPROJ);
+  if(proj!=null){
+    x.fillStyle='#a8998a'; x.font='600 30px -apple-system,Helvetica,sans-serif'; x.fillText('öngörü · projection', L, y);
+    x.fillStyle='#e6c14b'; x.font='800 60px -apple-system,Helvetica,sans-serif'; x.fillText('~'+proj+' Agtron', L, y+62); y+=150;
+  }
+  const ag=parseFloat($('mAgG').value);
+  if(isFinite(ag)){
+    x.fillStyle='#a8998a'; x.font='600 30px -apple-system,Helvetica,sans-serif'; x.fillText('ölçülen renk · measured color', L, y);
+    x.fillStyle='#3c7a5a'; x.font='800 60px -apple-system,Helvetica,sans-serif'; x.fillText(ag+' Agtron', L, y+62); y+=150;
+  }
+  x.fillStyle='#8a7a68'; x.font='600 30px -apple-system,Helvetica,sans-serif'; x.fillText('guide.coffeenutz.net/crack-listen', L, H-150);
+  x.fillStyle='#5a4a38'; x.font='500 26px -apple-system,Helvetica,sans-serif'; x.fillText(APPVER, L, H-104);
+  c.toBlob(blob=>{ dl(blob,'story-'+nm.replace(/\s+/g,'_')+'-'+new Date().toISOString().slice(0,10)+'.png'); },'image/png');
+}
+// ---- Crack Game consent submission (the crack DB write side) ----
+async function supaGet(qs){
+  const r=await fetch(SUPA_URL+'/rest/v1/game_samples?'+qs,{headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY}});
+  if(!r.ok) throw new Error('http '+r.status);
+  return await r.json();
+}
+async function supaPost(row){
+  const r=await fetch(SUPA_URL+'/rest/v1/game_samples',{method:'POST',headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY,'content-type':'application/json',prefer:'return=representation'},body:JSON.stringify(row)});
+  if(!r.ok) throw new Error('http '+r.status);
+  const d=await r.json(); return Array.isArray(d)?d[0]:d;
+}
+function updateGameAddBtn(){ const b=$('gameAdd'); if(!b) return;
+  const ag=parseFloat($('mAgG').value), done=document.body.classList.contains('st-done');
+  b.style.display=(done&&isFinite(ag)&&valid().length>=5)?'block':'none';
+}
+function openGameConsent(){
+  const v=valid(), ag=parseFloat($('mAgG').value), k=(cName.value||($('mCoffee')&&$('mCoffee').value)||'').trim();
+  if(!k||!isFinite(ag)||v.length<5){ toast(tt('Mapping needs: coffee name + Agtron ground + at least 5 cracks.')); return; }
+  $('modalBox').innerHTML=
+    '<h1 style="margin:0 0 6px;font-size:18px">'+(LANG==='tr'?"Crack Game'e ekle":'Add to the Crack Game')+'</h1>'
+   +'<div class="hint" style="font-size:12.5px;margin:0 0 10px;line-height:1.45">'+(LANG==='tr'
+      ?'Paylaşılan veri: çatlak zamanları ve gainleri, kahve adı, ölçülen renk (Agtron). SES YOK, KONUM YOK.'
+      :'Shared data: crack times and gains, coffee name, measured color (Agtron). NO audio, NO location.')+'</div>'
+   +'<input type="text" id="gcCredit" placeholder="'+(LANG==='tr'?'İsim / rumuz (isteğe bağlı)':'Name / handle (optional)')+'" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink);margin-bottom:6px">'
+   +'<input type="text" id="gcCompany" placeholder="'+(LANG==='tr'?'Kavurmacı / firma (isteğe bağlı)':'Roastery / company (optional)')+'" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink);margin-bottom:10px">'
+   +'<label style="display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.45"><input type="checkbox" id="gcConsent" style="width:20px;height:20px;flex:none;accent-color:var(--accent);margin-top:1px"><span>Bu verilerin CoffeeNutz Crack Game ve halka açık tekrar oynatmada kullanılmasına izin veriyorum. · I consent to this data being used in the CoffeeNutz Crack Game and public replays.</span></label>'
+   +'<button style="margin-top:14px;background:var(--accent2)" onclick="gameSubmit()">'+(LANG==='tr'?'Gönder':'Send')+'</button>'
+   +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(LANG==='tr'?'Vazgeç':'Cancel')+'</button>';
+  $('modal').style.display='flex';
+}
+async function gameSubmit(){
+  const cb=document.getElementById('gcConsent');
+  if(!cb||!cb.checked){ toast(LANG==='tr'?'Devam için onay kutusunu işaretle.':'Tick the consent box to continue.'); return; }
+  const v=valid(), ag=parseFloat($('mAgG').value);
+  if(v.length<5||!isFinite(ag)){ toast(tt('Mapping needs: coffee name + Agtron ground + at least 5 cracks.')); return; }
+  const t0=v[0].t, cracks=v.map(c=>[+(c.t-t0).toFixed(2), c.g]);   // rebased so the first crack is t=0
+  const credit=(document.getElementById('gcCredit').value||'').trim(), company=(document.getElementById('gcCompany').value||'').trim();
+  const row={ coffee:(cName.value||($('mCoffee')&&$('mCoffee').value)||'').trim(), cracks, terminal_ag:ag,
+    credit:credit||null, company:company||null, approved:false, replay_ok:true };
+  $('modal').style.display='none';
+  let rec=null;
+  try{ rec=await supaPost(row); }catch(e){ toast(LANG==='tr'?'Gönderilemedi (çevrimdışı?). İnternet gelince tekrar dene.':'Send failed (offline?). Try again when back online.'); return; }
+  toast('Gönderildi, onay sonrası oyunda. · Sent, in the game after approval.');
+  const id=rec&&rec.id; if(id) setTimeout(()=>openReplayOffer(id),450);
+}
+function openReplayOffer(id){
+  const url='https://guide.coffeenutz.net/replay?id='+id;
+  $('modalBox').innerHTML=
+    '<h1 style="margin:0 0 6px;font-size:18px">'+(LANG==='tr'?'Tekrar hazır':'Replay ready')+'</h1>'
+   +'<div class="hint" style="font-size:12.5px;margin:0 0 10px;line-height:1.45">'+(LANG==='tr'?'Bu çanın kendini çizişini paylaşabilirsin. Bağlantı hemen çalışır.':'Share this bell drawing itself. The link works right away.')+'</div>'
+   +'<input type="text" id="gcReplayUrl" readonly value="'+escC(url)+'" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:14px;background:var(--panel2);color:var(--ink);margin-bottom:10px">'
+   +'<button style="background:var(--accent)" onclick="copyReplay()">Tekrar bağlantısını kopyala · Copy replay link</button>'
+   +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(LANG==='tr'?'Kapat':'Close')+'</button>';
+  $('modal').style.display='flex';
+}
+function copyReplay(){ const el=document.getElementById('gcReplayUrl'); if(!el) return; const u=el.value;
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(u); }catch(e){}
+  try{ el.focus(); el.select(); document.execCommand('copy'); }catch(e){}
+  toast(LANG==='tr'?'Kopyalandı.':'Copied.');
+}
+// ---- COMMUNITY PRIOR: pooled maps v1. A median approved sample becomes a BORROWED starting map. ----
+async function commNamesSync(){
+  try{ const rows=await supaGet('select=coffee&approved=eq.true');
+    if(Array.isArray(rows)){ const set=new Set(); rows.forEach(r=>{ if(r&&r.coffee) set.add(String(r.coffee)); });
+      COMMNAMES=Array.from(set);
+      if($('nameEdit')&&$('nameEdit').style.display==='block') renderNameChips(); }
+  }catch(e){}
+}
+async function communityPull(n){
+  const key=(n||'').trim(); if(!key) return false;
+  let rows;
+  try{ rows=await supaGet('select=coffee,cracks,terminal_ag&approved=eq.true&coffee=ilike.'+encodeURIComponent(key)); }catch(e){ return false; }
+  if(!Array.isArray(rows)||!rows.length) return false;
+  const cand=rows.filter(r=>Array.isArray(r.cracks)&&r.cracks.length>=5&&isFinite(parseFloat(r.terminal_ag)));
+  if(!cand.length) return false;
+  const srt=cand.slice().sort((a,b)=>parseFloat(a.terminal_ag)-parseFloat(b.terminal_ag));
+  const med=srt[Math.floor(srt.length/2)];
+  const cr=med.cracks.map(p=>({t:parseFloat(p[0]),g:parseFloat(p[1])})).filter(c=>isFinite(c.t)&&isFinite(c.g)).sort((a,b)=>a.t-b.t);
+  if(cr.length<5) return false;
+  const a0=cr[0].t, tg=cr.reduce((s,c)=>s+c.g,0);
+  let cum=0,q25=null; for(const c of cr){ cum+=c.g; if(cum>=tg*0.25){ q25=+(c.t-a0).toFixed(2); break; } }
+  const devSpan=+(cr[cr.length-1].t-a0).toFixed(2);
+  // SHAPED like a real map entry, but deliberately WITHOUT grades / hist / bell, and flagged communal:true.
+  // updateGauge()'s borrowed hook keys on .communal -> PROJBORROWED stays true -> saveCalIfMapped never writes
+  // a lesson or grade from a borrowed guess. Only the user's OWN measured roast (which overwrites m[k] with a
+  // graded, non-communal entry) starts teaching. This is the exact honesty guarantee.
+  const map={ a0:0, devSpan, agtron:+parseFloat(med.terminal_ag), q25, tg,
+    gsd:null, phDrop:null, moist:null, aw:null, proc:null,
+    date:new Date().toISOString().slice(0,10), src:key.toLowerCase(), communal:true, communalN:cand.length };
+  const m=calMap(); m[key.toLowerCase()]=map; localStorage.setItem('bsCal',JSON.stringify(m));
+  if(COMMNAMES.indexOf(key)<0) COMMNAMES.push(key);
+  toast('Topluluk haritası: '+cand.length+' kavurmadan, ödünç. · Community map from '+cand.length+' roasts, borrowed.');
+  return true;
+}
+try{ if($('mAgG')) $('mAgG').addEventListener('input',updateGameAddBtn); }catch(e){}
+setTimeout(commNamesSync,900);
+
 // ---- load a saved session back in (.zip from this app, store-method, or bare .csv) ----
 async function loadSession(file){
   if(!file) return;
@@ -1416,7 +1573,7 @@ async function loadSession(file){
   $('mCoffee').value=meta.coffee||''; $('mBatch').value=meta.batch_g||''; $('mAgW').value=meta.agtron_whole||''; $('mAgG').value=meta.agtron_ground||''; $('mNote').value=meta.note||'';
   $('mAgWSd').value=meta.agtron_whole_sd||''; $('mAgSd').value=meta.agtron_ground_sd||''; $('mProc').value=meta.process||''; $('mChgFc').value=meta.charge_to_fc||''; if(meta.machine) $('mEquip').value=meta.machine; $('mChgT').value=meta.charge_c||''; $('mDrop').value=meta.drop_after_last_s||''; $('mTarget').value=meta.target||''; $('mMoist').value=meta.moisture||''; $('mAw').value=meta.water_activity||'';
   $('metaBox').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block';
-  $('dlZip').style.display='block'; $('dlCard').style.display='block';   // re-save allowed: corrected FP labels are the training corpus
+  $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('dlStory').style.display='block';   // re-save allowed: corrected FP labels are the training corpus
   setState('st-done');
   try{ isoSweep(STOPT); }catch(e){}   // ISOLATED FIRST CRACK: one retrospective pass for loaded sessions
   refreshStats();
@@ -1431,6 +1588,7 @@ function updateMapBtn(){ const b=$('mapBtn'); if(!b) return;
   const isCut=!(LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==='C1'));
   const fuller=prev&&v.length&&prev.devSpan>((v[v.length-1].t-effA0(v))*1.3);
   b.textContent=(isCut&&fuller)?(LANG==='tr'?'Dersi kaydet (referansı koru)':'Record lesson (keep reference)'):tt('Map this coffee (save color)');
+  updateGameAddBtn();
 }
 // ---- SampleInRoast: tryer pulls become color anchors ----
 const SAMP_LINES=['The bean cannot hide now.','Spoon out, truth in.','Color caught mid-flight.','One more anchor for the gauge.'];
@@ -1543,7 +1701,7 @@ const EN2TR={
 'Name the coffee; each bean carries its own color map.':'Kahveyi adlandır; her çekirdek kendi renk haritasını taşır.',
 'Unmapped on THIS device/app copy.':'BU cihaz/uygulama kopyasında eşlenmemiş.','Mapped here:':'Burada eşli:',
 'No maps yet: load a session or roast, fill Agtron ground, tap Map. Note: Safari tab and Home-Screen app keep SEPARATE maps.':"Henüz harita yok: bir seans yükle ya da kavur, öğütülmüş Agtron'u doldur, Eşle'ye dokun. Not: Safari sekmesi ve ana ekran uygulaması AYRI harita tutar.",
-'Mapped on':'Eşleme tarihi:','Projection starts at first crack.':'Öngörü ilk çatlakla başlar.','borrowed house map':'ödünç ev haritası',
+'Mapped on':'Eşleme tarihi:','Projection starts at first crack.':'Öngörü ilk çatlakla başlar.','borrowed house map':'ödünç ev haritası','community map':'topluluk haritası',
 'Listening. Calibrating background for ~2s, keep it running steady.':'Dinliyor. ~2 sn arka plan kalibrasyonu, düzeni bozmadan çalıştır.',
 'Only during a live session.':'Yalnızca canlı seans sırasında.','Stop the live session first.':'Önce canlı seansı durdur.',
 'Not enough cracks for a card.':'Kart için yeterli çatlak yok.','Mapping needs: coffee name + Agtron ground + at least 5 cracks.':'Eşleme için: kahve adı + öğütülmüş Agtron + en az 5 çatlak.',

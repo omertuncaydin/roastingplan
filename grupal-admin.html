@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · kampanya kokpiti</title>
 <meta name="robots" content="noindex">
+<!-- grupal-admin.html · v2026-07-12a -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -40,6 +41,7 @@ a{color:var(--gold)}
       <span class="lbl">kampanyalar</span>
       <div id="campList"></div>
       <button style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)" onclick="blank()">+ Yeni kampanya</button>
+      <div class="hint" style="margin-top:12px">Davet sıralaması (referral ranks) herkese açık sayfada ancak <b>/state</b> yanıtı <code>ref_ranks</code> (ya da <code>referral_ranks</code>) alanını taşırsa görünür. Beklenen biçim: <code>[{name, count}]</code>, davet sayısına göre azalan. Alan yoksa bölüm gizli kalır. Bunu göstermek için grupal-proxy /state çıktısına bu diziyi eklemek gerekir (proxy bu araçtan değiştirilmez).</div>
     </div>
 
     <div class="card">
@@ -57,8 +59,10 @@ a{color:var(--gold)}
       <input id="f_unit" placeholder="2 x 500g çekirdek">
       <span class="lbl">teslimat taahhüdü</span>
       <input id="f_ships" placeholder="hedefe ulaşıldıktan sonra 10 iş günü içinde kavrulur ve kargolanır">
-      <span class="lbl">bitiş tarihi</span>
+      <span class="lbl">bitiş tarihi (son gün)</span>
       <input id="f_end" type="date">
+      <span class="lbl">kavurma günü (ops.)</span>
+      <input id="f_roast" type="date">
       <span class="lbl">fiyat merdiveni (katılımcı → fiyat)</span>
       <div class="row"><input id="l1a" inputmode="numeric" placeholder="60"><input id="l1p" placeholder="950 TL"></div>
       <div class="row" style="margin-top:6px"><input id="l2a" inputmode="numeric" placeholder="100"><input id="l2p" placeholder="875 TL"></div>
@@ -86,6 +90,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
+const VERSION='v2026-07-12a';
 const $=id=>document.getElementById(id);
 let KEY=localStorage.getItem('grupalKey')||'';
 let CAMPS=[];
@@ -104,7 +109,7 @@ function renderList(){
 }
 function blank(){
   ['f_slug','f_title','f_lot','f_target','f_cap','f_unit','f_ships','f_dep','f_deptxt','f_pay','l1a','l1p','l2a','l2p','l3a','l3p'].forEach(i=>$(i).value='');
-  $('f_status').value='open'; $('f_end').value=''; $('msg').textContent='Yeni kampanya formu.'; $('linkOut').textContent='';
+  $('f_status').value='open'; $('f_end').value=''; $('f_roast').value=''; $('msg').textContent='Yeni kampanya formu.'; $('linkOut').textContent='';
 }
 function pick(i){
   const c=CAMPS[i];
@@ -113,6 +118,7 @@ function pick(i){
   $('f_ships').value=c.ships_by||''; $('f_dep').value=c.deposit_url||''; $('f_deptxt').value=c.deposit_txt||'';
   $('f_pay').value=c.pay_url||''; $('f_status').value=c.status||'open';
   $('f_end').value=(c.end_at||'').slice(0,10);
+  $('f_roast').value=(c.roast_date||'').slice(0,10);
   const L=c.ladder||[];
   [['l1a','l1p',0],['l2a','l2p',1],['l3a','l3p',2]].forEach(([a,p,ix])=>{ $(a).value=L[ix]?L[ix].at:''; $(p).value=L[ix]?L[ix].price:''; });
   $('msg').textContent='Yüklendi: '+c.slug; showLink(c.slug);
@@ -128,6 +134,7 @@ async function save(){
     target:parseInt($('f_target').value)||0, cap:parseInt($('f_cap').value)||null,
     unit:$('f_unit').value, ships_by:$('f_ships').value,
     end_at:$('f_end').value?($('f_end').value+'T23:59:59+03:00'):null,
+    roast_date:$('f_roast').value?($('f_roast').value+'T09:00:00+03:00'):null,
     ladder, deposit_url:$('f_dep').value, deposit_txt:$('f_deptxt').value,
     pay_url:$('f_pay').value, status:$('f_status').value };
   if(!body.slug||!body.title||!body.target||!body.end_at){ $('msg').textContent='Slug, başlık, hedef ve bitiş tarihi zorunlu.'; return; }

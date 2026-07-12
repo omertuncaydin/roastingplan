@@ -126,6 +126,7 @@
     <button class="big" id="btnStart">Maça başla <span class="btn-en">· Start match</span></button>
     <p class="fineprint">Mikrofon kullanılmaz, izin istenmez. Sesli oynanır, hoparlörünü aç.
       <span class="en">No microphone, no permissions. Play with sound, turn your speaker on.</span></p>
+    <div id="communityLine" class="fineprint hidden" style="color:var(--accent2)"></div>
   </section>
 
   <!-- WHEEL -->
@@ -148,6 +149,10 @@
   <!-- PLAY -->
   <section id="scrPlay" class="hidden">
     <div class="panel">
+      <div class="wheelBox" style="padding:0 0 6px">
+        <div class="wheelLabel">Hedef Agtron <span class="en">· Target Agtron</span></div>
+        <div class="wheelNum" id="playTarget">--</div>
+      </div>
       <div class="playhint">Kulağınla yakala <span class="en" style="display:block">Catch it with your ear</span></div>
       <canvas class="bell" id="bell" width="488" height="150"></canvas>
     </div>
@@ -176,6 +181,7 @@
       </div>
       <div class="instr hidden" id="cutMsg"></div>
       <div class="instr" id="instrCall"></div>
+      <div class="instr hidden" id="creditLine"></div>
       <canvas class="bell" id="bellResult" width="488" height="150"></canvas>
       <div class="speedBox hidden" id="speedBox">
         <div class="speedQ">Bu kavurma hızlı mıydı, orta mı, yavaş mı? <span class="en" style="display:block">Was this roast fast, medium or slow?</span></div>
@@ -197,6 +203,9 @@
       <div class="matchBig" id="matchScore">--</div>
       <div class="matchSub">Üç rauntun toplam farkı, düşük iyidir <span class="en" style="display:block">Sum of three round deltas, lower is better</span></div>
       <div class="dots" id="dots"></div>
+      <div class="matchLabel" style="margin-top:14px">En iyi turun çanı <span class="en">· The bell of your best round</span></div>
+      <canvas class="bell" id="bellBest" width="488" height="150"></canvas>
+      <div class="instr" id="bestBellApp">Bu çanı gerçek zamanda çizen bir uygulama var. <span class="en" style="display:block;margin-top:4px;color:var(--muted)">There is an app that draws this bell live.</span><a href="https://guide.coffeenutz.net/crack-listen" style="display:block;margin-top:6px;color:var(--accent)">guide.coffeenutz.net/crack-listen</a></div>
       <div class="verdict" id="verdict"></div>
       <div class="instr" id="matchNote"></div>
     </div>
@@ -222,14 +231,14 @@
       Çıtırtı zamanları gerçektir: 2026-07-07 ve 2026-07-10 tarihlerinde ölçülmüş altı gerçek kavrumdan (Ethiopia Yirgacheffe Gr.2 ve Ethiopia Rumudamo, bir tam çan ile kavurucusunun erken indirdiği partiler). Pop sesleri o gerçek anlarda sentezlenir. Renk modeli her kahvenin kendi ölçülmüş Agtron değerine göre kurulur.
       <span class="en" style="display:block; margin-top:3px">Crack timings are real, from six measured roasts on 2026-07-07 and 2026-07-10 (Ethiopia Yirgacheffe Gr.2 and Ethiopia Rumudamo, one full bell plus batches the roaster dropped early). The pop sounds are synthesized at those real moments. The color model is built from each coffee's own measured Agtron.</span>
     </div>
-    <div style="margin-top:8px">kulaktesti · <a href="https://guide.coffeenutz.net">guide.coffeenutz.net</a> · v2026-07-12a</div>
+    <div style="margin-top:8px"><a href="https://guide.coffeenutz.net/crack-game.html">guide.coffeenutz.net/crack-game</a> · v2026-07-12b</div>
   </footer>
 </div>
 
 <script>
 "use strict";
 /* ============================================================
-   Kulağın Kaç Agtron? · CoffeeNutz crack game · v2026-07-12a
+   Kulağın Kaç Agtron? · CoffeeNutz crack game · v2026-07-12b
    HONESTY: this is not a measurement. Crack timings are REAL,
    measured from six roasts on 2026-07-07 and 2026-07-10
    (Ethiopia Yirgacheffe Gr.2 and Ethiopia Rumudamo). One full
@@ -351,6 +360,80 @@ for(var si=0; si<SAMPLES.length; si++){
   sp.lastT = sp.cracks[sp.cracks.length-1][0];
   var tg = 0; for(var ci=0; ci<sp.cracks.length; ci++) tg += sp.cracks[ci][1];
   sp.totalGain = tg;
+}
+
+/* Round pool: built-in samples plus any community roasts merged at load. */
+var POOL = SAMPLES.slice();
+
+/* --- COMMUNITY SAMPLES (read side) ------------------------------------
+   Community-submitted crack recordings from Supabase. Offline-safe: any
+   failure leaves the built-ins untouched and stays silent. */
+var SUPA_URL = 'https://efjvfggwnhqkunjvoyjb.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA';
+/* 2 s-bin peak of crack activity -> speed. null if still rising at the cut. */
+function computeSpeedFor(s){
+  var data = binGains(s, s.lastT), bins = data.bins, binW = data.binW, nb = data.nb;
+  var peak = 0, peakIdx = 0;
+  for(var i=0;i<nb;i++){ if(bins[i] > peak){ peak = bins[i]; peakIdx = i; } }
+  if(peakIdx >= nb-1) return { rise:null, speed:null }; // envelope never came down
+  var rise = peakIdx*binW;
+  var speed = rise < 30 ? 'fast' : (rise > 45 ? 'slow' : 'medium');
+  return { rise:rise, speed:speed };
+}
+/* Turn one Supabase row into a playable sample object. cracks is jsonb
+   [[t,g],...]; rebase defensively so the first crack sits at t=0. Color model
+   is the two-point curve 115 -> terminal_ag (anchors null). */
+function communityToSample(row){
+  if(!row || !Array.isArray(row.cracks) || !row.cracks.length) return null;
+  var raw = row.cracks, reb = [];
+  var t0 = Number(raw[0][0]); if(!isFinite(t0)) t0 = 0;
+  for(var i=0;i<raw.length;i++){
+    var t = Number(raw[i][0]) - t0, g = Number(raw[i][1]);
+    if(!isFinite(t) || !isFinite(g)) continue;
+    if(t < 0) t = 0;
+    reb.push([t, g]);
+  }
+  if(!reb.length) return null;
+  reb.sort(function(a,b){ return a[0]-b[0]; });
+  if(reb[0][0] !== 0){ var s0 = reb[0][0]; for(var j=0;j<reb.length;j++) reb[j][0] -= s0; }
+  var ta = Number(row.terminal_ag); if(!isFinite(ta)) return null;
+  var s = {
+    id: 'c_' + (row.id != null ? row.id : Math.random().toString(36).slice(2)),
+    coffee: String(row.coffee || 'Topluluk kavurması · Community roast'),
+    date: '', cut: false, terminalAg: ta, anchors: null, riseToPeakS: null,
+    speed: null, cracks: reb, community: true,
+    credit: row.credit ? String(row.credit) : null,
+    company: row.company ? String(row.company) : null
+  };
+  s.lastT = reb[reb.length-1][0];
+  var gsum = 0; for(var k=0;k<reb.length;k++) gsum += reb[k][1];
+  s.totalGain = gsum;
+  var sp = computeSpeedFor(s);
+  s.riseToPeakS = sp.rise; s.speed = sp.speed;
+  return s;
+}
+function showCommunityLine(n){
+  var el = $('communityLine'); if(!el) return;
+  el.textContent = n + ' topluluk kavurması yüklendi · ' + n + ' community roasts loaded';
+  el.classList.remove('hidden');
+}
+function loadCommunitySamples(){
+  if(typeof fetch !== 'function') return Promise.resolve(0);
+  var url = SUPA_URL + '/rest/v1/game_samples?approved=eq.true&select=id,coffee,credit,company,cracks,terminal_ag';
+  return fetch(url, { headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY } })
+    .then(function(res){ if(!res || !res.ok) throw new Error('bad'); return res.json(); })
+    .then(function(rows){
+      if(!Array.isArray(rows)) return 0;
+      var added = 0;
+      for(var i=0;i<rows.length;i++){
+        var s = communityToSample(rows[i]);
+        if(s){ POOL.push(s); added++; }
+      }
+      state.communityCount = added;
+      if(added > 0) showCommunityLine(added);
+      return added;
+    })
+    .catch(function(){ return 0; }); // offline-safe, silent
 }
 
 /* --- COLOR MODEL ------------------------------------------------
@@ -493,6 +576,22 @@ function drawBell(canvas, s, uptoTime){
   ctx.fillStyle = '#a8998a'; ctx.font = '10px -apple-system,sans-serif';
   ctx.fillText('2 sn / çubuk · 2 s / bar', pad+2, 12);
 }
+/* Draw the bell bars onto an arbitrary 2D context within a rect (share card). */
+function drawBellBarsOn(ctx, s, uptoTime, x, y, w, h){
+  if(!ctx || !s) return;
+  var data = binGains(s, uptoTime);
+  var full = binGains(s, s.lastT).bins, maxBin = 0;
+  for(var i=0;i<full.length;i++) if(full[i]>maxBin) maxBin=full[i];
+  if(maxBin<=0) maxBin=1;
+  var nb = data.nb, bw = w/nb, base = y+h;
+  ctx.strokeStyle = '#3a2f26'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x, base+.5); ctx.lineTo(x+w, base+.5); ctx.stroke();
+  for(var b=0;b<nb;b++){
+    var vv = data.bins[b], bh = (vv/maxBin)*h, bx = x + b*bw;
+    ctx.fillStyle = vv>0 ? '#c98a3c' : '#2a221b';
+    ctx.fillRect(bx+1, base-bh, Math.max(1,bw-2), bh);
+  }
+}
 
 /* --- DOM helpers ----------------------------------------------- */
 function $(id){ return document.getElementById(id); }
@@ -534,7 +633,7 @@ function startMatch(){
 }
 function setupRound(){
   state.match.round += 1;
-  var pool = SAMPLES.filter(function(s){ return state.match.usedIds.indexOf(s.id) < 0; });
+  var pool = POOL.filter(function(s){ return state.match.usedIds.indexOf(s.id) < 0; });
   var s = pool[Math.floor(Math.random()*pool.length)];
   state.sample = s;
   state.match.usedIds.push(s.id);
@@ -549,11 +648,34 @@ function setupRound(){
   spinTarget(false);
   show('scrWheel');
 }
-/* Fortune wheel: pick an integer target from the sample's honestly
-   reachable range [floor(terminalAg)+1 .. 112]. One re-spin allowed. */
+/* Color trajectory: the Agtron the roast actually traversed, sampled at
+   each crack (cumulative gain -> Agtron via this sample's own curve). */
+function colorTrajectory(s){
+  var arr = [], cum = 0, C = s.cracks;
+  for(var i=0;i<C.length;i++){ cum += C[i][1]; arr.push(agtronForSample(s, cum)); }
+  return arr;
+}
+function percentileOf(sorted, p){
+  var n = sorted.length; if(!n) return 0;
+  var idx = (p/100)*(n-1), lo = Math.floor(idx), hi = Math.ceil(idx);
+  if(lo===hi) return sorted[lo];
+  return sorted[lo] + (sorted[hi]-sorted[lo])*(idx-lo);
+}
+/* Meaty middle: 25th..80th percentile of the colors the roast traversed,
+   as an integer band. */
+function colorBand(s){
+  var arr = colorTrajectory(s).slice().sort(function(a,b){ return a-b; });
+  var p25 = percentileOf(arr, 25), p80 = percentileOf(arr, 80);
+  var lo = Math.ceil(Math.min(p25,p80)), hi = Math.floor(Math.max(p25,p80));
+  if(hi < lo) hi = lo;
+  return { lo: lo, hi: hi };
+}
+/* Fortune wheel: pick an integer target from the 25th..80th percentile band
+   of this sample's own color trajectory. One re-spin allowed. */
 function spinTarget(isReroll){
   var s = state.sample;
-  var lo = Math.floor(s.terminalAg) + 1, hi = 112;
+  var band = colorBand(s);
+  var lo = band.lo, hi = band.hi;
   if(lo > hi) lo = hi;
   var t, guard=0;
   do {
@@ -590,6 +712,7 @@ function playRound(){
   state.playing = true;
   state.overshoot = false;
   state.startClock = now();
+  var pt = $('playTarget'); if(pt) pt.textContent = state.roundTarget;
   drawBell($('bell'), s, 0);
   show('scrPlay');
   s.cracks.forEach(function(c){
@@ -654,6 +777,15 @@ function renderReveal(){
     'Aletin bu düşüşteki kararı: <b>' + mineR.toFixed(1) + ' Agtron</b>. Oyun da alet de aynı modeli kullanır; bu ayrı bir ölçüm değil, aynı andaki tahmindir.' +
     '<span class="en" style="display:block;margin-top:4px;color:var(--muted)">The instrument’s call at your drop: <b>' + mineR.toFixed(1) + ' Agtron</b>. The game and the instrument share one model; this is the projection at that same moment, not a separate measurement.</span>';
 
+  var cl = $('creditLine');
+  if(cl){
+    if(s.community && s.credit){
+      var comp = s.company ? (', ' + s.company) : '';
+      cl.classList.remove('hidden');
+      cl.innerHTML = 'Kavuran · Roasted by: <b>' + escapeHtml(String(s.credit)) + escapeHtml(String(comp)) + '</b>';
+    } else { cl.classList.add('hidden'); cl.innerHTML=''; }
+  }
+
   drawBell($('bellResult'), s, r.elapsed);
 
   var sb = $('speedBox'), sr = $('speedRes');
@@ -711,7 +843,7 @@ function setNextLabel(){
 }
 function nextRound(){
   state.match.roundDeltas.push(state.currentDelta);
-  state.match.dots.push({ mine: state.roundResult.mine, target: state.roundResult.target, delta: state.currentDelta });
+  state.match.dots.push({ mine: state.roundResult.mine, target: state.roundResult.target, delta: state.currentDelta, sample: state.sample, elapsed: state.roundResult.elapsed });
   if(state.match.round >= 3){ finishMatch(); }
   else { setupRound(); }
 }
@@ -743,6 +875,9 @@ function renderMatch(){
     wrap.appendChild(disc); wrap.appendChild(lbl);
     dots.appendChild(wrap);
   });
+  var best = null;
+  state.match.dots.forEach(function(d){ if(best===null || d.delta < best.delta) best = d; });
+  if(best && best.sample){ drawBell($('bellBest'), best.sample, best.elapsed); }
   var v = verdictForMatch(state.matchScore);
   $('verdict').innerHTML = v[0] + '<span class="en">' + v[1] + '</span>';
   $('matchNote').innerHTML =
@@ -838,19 +973,32 @@ function buildShareCanvas(){
     ctx.fillText(dl, cx, dyc+dr+46);
   }
   // verdict
-  var yV = dyc+dr+140;
+  var yV = dyc+dr+120;
   var v = verdictForMatch(state.matchScore!=null?state.matchScore:0);
   ctx.fillStyle='#e6c14b'; ctx.font='700 54px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText(v[0], W/2, yV);
   ctx.fillStyle='#a8998a'; ctx.font='500 40px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText(v[1], W/2, yV+54);
+  // best round bell + the app that draws it live (plain text on the card)
+  var bestDot = null, dds = (state.match && state.match.dots) ? state.match.dots : [];
+  for(var bi=0; bi<dds.length; bi++){ if(bestDot===null || dds[bi].delta < bestDot.delta) bestDot = dds[bi]; }
+  var yBell = yV + 118;
+  ctx.fillStyle='#a8998a'; ctx.font='600 30px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('En iyi turun çanı · The bell of your best round', W/2, yBell);
+  if(bestDot && bestDot.sample){ drawBellBarsOn(ctx, bestDot.sample, bestDot.elapsed, W/2-330, yBell+22, 660, 140); }
+  ctx.fillStyle='#f3ede4'; ctx.font='500 30px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('Bu çanı gerçek zamanda çizen bir uygulama var.', W/2, yBell+206);
+  ctx.fillStyle='#a8998a'; ctx.font='500 27px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('There is an app that draws this bell live.', W/2, yBell+244);
+  ctx.fillStyle='#c98a3c'; ctx.font='700 32px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('guide.coffeenutz.net/crack-listen', W/2, yBell+286);
   // honesty + handle
-  ctx.fillStyle='#3c7a5a'; ctx.font='600 30px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText('Oyun bir ölçüm değildir. · The game is not a measurement.', W/2, H-230);
-  ctx.fillStyle='#c98a3c'; ctx.font='700 40px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText('kulaktesti · guide.coffeenutz.net', W/2, H-150);
-  ctx.fillStyle='#a8998a'; ctx.font='500 26px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText('Yirgacheffe Gr.2 & Rumudamo · 6 gerçek kavrum · v2026-07-12a', W/2, H-100);
+  ctx.fillStyle='#3c7a5a'; ctx.font='600 27px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('Oyun bir ölçüm değildir. · The game is not a measurement.', W/2, H-160);
+  ctx.fillStyle='#c98a3c'; ctx.font='700 34px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('guide.coffeenutz.net/crack-game', W/2, H-112);
+  ctx.fillStyle='#a8998a'; ctx.font='500 24px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('Yirgacheffe Gr.2 & Rumudamo · 6 gerçek kavrum · v2026-07-12b', W/2, H-70);
   return cv;
 }
 function roundRect(ctx,x,y,w,h,r){
@@ -901,6 +1049,7 @@ function initEvent(){
 /* --- WIRING ---------------------------------------------------- */
 function initGame(){
   initEvent();
+  loadCommunitySamples();
   $('btnStart').addEventListener('click', startMatch);
   $('btnReroll').addEventListener('click', function(){ if(!state.rerolled) spinTarget(true); });
   $('btnPlay').addEventListener('click', playRound);
@@ -922,6 +1071,7 @@ function initGame(){
 window.__CRACKGAME__ = {
   state: state,
   SAMPLES: SAMPLES,
+  POOL: POOL,
   agtronForSample: agtronForSample,
   cumGainForSample: cumGainForSample,
   agtronColor: agtronColor,
@@ -935,6 +1085,12 @@ window.__CRACKGAME__ = {
   finishMatch: finishMatch,
   verdictForMatch: verdictForMatch,
   buildShareCanvas: buildShareCanvas,
+  colorBand: colorBand,
+  drawBell: drawBell,
+  renderReveal: renderReveal,
+  renderMatch: renderMatch,
+  loadCommunitySamples: loadCommunitySamples,
+  communityToSample: communityToSample,
   readLB: readLB,
   setEvent: function(e){ state.event=e; }
 };

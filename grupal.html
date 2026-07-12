@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · birlikte kavur, birlikte kazan</title>
 <meta name="description" content="Grup-Al: yeterli katılımcı toplanırsa kampanya başlar. Hedefe ulaşılmazsa kimseden ücret alınmaz.">
+<!-- grupal.html · v2026-07-12a -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -31,6 +32,14 @@ button:active{transform:scale(.99)}
 .share{background:var(--panel2);border:1px dashed var(--accent);border-radius:12px;padding:14px;text-align:center;margin-top:12px;display:none}
 .share code{color:var(--gold);font-size:15px;word-break:break-all}
 #payBlock{display:none;text-align:center}
+.deadline{text-align:center;font-weight:800;font-size:15px;color:var(--gold);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:4px 0 14px;font-variant-numeric:tabular-nums}
+.shipline{text-align:center;color:var(--muted);font-size:12.5px;margin:2px 0 8px;line-height:1.45}
+.refund{text-align:center;color:var(--ink);font-size:12.5px;margin:0 0 6px;line-height:1.45}
+.ranks .lbl{margin-bottom:8px}
+.rankrow{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px;margin-bottom:6px}
+.rankrow .pos{color:var(--gold);font-weight:800;margin-right:8px}
+.rankrow .cnt{color:var(--muted);font-variant-numeric:tabular-nums}
+#ranksReward{margin-top:8px;text-align:center}
 </style>
 </head>
 <body>
@@ -38,6 +47,7 @@ button:active{transform:scale(.99)}
   <div class="brand">GRUP-AL</div>
   <h1 id="title">yükleniyor...</h1>
   <div class="sub" id="lot"></div>
+  <div class="deadline" id="deadline" style="display:none"></div>
 
   <div class="card">
     <div class="lbl">katılımcı</div>
@@ -50,6 +60,15 @@ button:active{transform:scale(.99)}
     <div class="count" id="leftTxt"></div>
     <div class="ladder" id="ladder"></div>
     <div class="count" id="endTxt"></div>
+  </div>
+
+  <div class="refund">Grup dolmazsa kapora iade edilir. Açık ve net. · If the lot does not fill, deposits are refunded. Plain and clear.</div>
+  <div class="shipline">Türkiye'nin her yerine kargoyla. Parti bir kavurma günüdür, bir adres değil.</div>
+
+  <div class="card ranks" id="ranksCard" style="display:none">
+    <div class="lbl">Davet sıralaması · Referral ranks</div>
+    <div id="ranksList"></div>
+    <div class="hint" id="ranksReward">En çok davet eden kavurma gününde ilk seçimi yapar. · The top referrer picks first on roast day.</div>
   </div>
 
   <div class="guarantee" id="guaranteeTxt">Kapora ile yerini kilitlersin. Hedef dolmazsa kaporan iade edilir; hedef dolunca kapora fiyattan düşülür.</div>
@@ -77,6 +96,7 @@ button:active{transform:scale(.99)}
       <div class="hint" id="depTxt" style="margin-top:6px"></div>
     </div>
     <div id="lockedBadge" style="display:none;border:1px solid var(--green);border-radius:10px;padding:10px;margin-bottom:10px;font-weight:700">Yerin kilitli ✓</div>
+    <button id="cardBtn" style="display:none;background:var(--panel2);color:var(--ink);border:1px solid var(--accent);margin-bottom:10px" onclick="downloadCard()">Kartını indir · Download your card</button>
     <div style="font-size:14px;margin-bottom:6px">Hedefi birlikte dolduralım:</div>
     <code id="shareLink"></code>
     <button style="margin-top:10px;background:var(--green);color:#fff" onclick="doShare()">Bağlantıyı paylaş</button>
@@ -89,8 +109,10 @@ button:active{transform:scale(.99)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 const SLUG=new URLSearchParams(location.search).get('k')||'ornek-kampanya';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-let PAYURL=null, STATE=null, DEPLINK=null;
+const VERSION='v2026-07-12a';
+let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
+function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
 
 async function load(){
   try{
@@ -114,8 +136,13 @@ async function load(){
     const myRef=localStorage.getItem('grupal_'+SLUG);
     if(s.deposit_url&&myRef){ DEPLINK=s.deposit_url+(s.deposit_url.includes('?')?'&':'?')+'attributes[ref]='+encodeURIComponent(myRef)+'&attributes[k]='+encodeURIComponent(SLUG); }
     if(myRef) checkMine(myRef);
-    const end=new Date(s.end_at), days=Math.max(0,Math.ceil((end-Date.now())/864e5));
-    $('endTxt').textContent='Kampanya bitişine '+days+' gün';
+    if(s.end_at){
+      const end=new Date(s.end_at), days=Math.max(0,Math.ceil((end-Date.now())/864e5));
+      $('endTxt').textContent='Kampanya bitişine '+days+' gün';
+      $('deadline').textContent='Son gün · Last day: '+fmtDate(s.end_at)+' ('+days+' gün kaldı)';
+      $('deadline').style.display='block';
+    } else { $('endTxt').textContent=''; $('deadline').style.display='none'; }
+    renderRanks(s.ref_ranks||s.referral_ranks);
     $('ladder').innerHTML=(s.ladder||[]).map(r=>'<div class="rung'+((s.locked||0)>=r.at?' hit':'')+'"><span>'+r.at+' kilitli katılımcıda</span><b>'+r.price+'</b></div>').join('');
     if((s.status==='funded'||s.status==='paying')&&PAYURL){ $('payBlock').style.display='block'; }
   }catch(e){ $('title').textContent='Bağlantı hatası, tekrar deneyin'; }
@@ -142,10 +169,73 @@ async function checkMine(ref){
   try{
     const r=await fetch(API+'/mine?slug='+encodeURIComponent(SLUG)+'&ref='+encodeURIComponent(ref));
     const j=await r.json();
+    MINE=j;
     const lockedish=j.status==='locked'||j.status==='paid';
     $('lockedBadge').style.display=lockedish?'block':'none';
     $('lockRow').style.display=(!lockedish&&DEPLINK)?'block':'none';
+    $('cardBtn').style.display=lockedish?'block':'none';
   }catch(e){}
+}
+function renderRanks(ranks){
+  if(!Array.isArray(ranks)||!ranks.length){ $('ranksCard').style.display='none'; return; }
+  const top=ranks.filter(x=>x&&(x.name||x.first_name)).slice(0,3);
+  if(!top.length){ $('ranksCard').style.display='none'; return; }
+  const first=n=>String(n||'').trim().split(/\s+/)[0]||'-';
+  $('ranksList').innerHTML=top.map((x,i)=>'<div class="rankrow"><span><span class="pos">'+(i+1)+'.</span>'+first(x.name||x.first_name)+'</span><span class="cnt">'+(x.count!=null?x.count:(x.referrals||0))+' davet</span></div>').join('');
+  $('ranksCard').style.display='block';
+}
+function downloadCard(){
+  const s=STATE||{}; const W=1080,H=1920;
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const g=cv.getContext('2d');
+  g.fillStyle='#16130f'; g.fillRect(0,0,W,H);
+  g.fillStyle='#221c15'; g.fillRect(60,60,W-120,H-120);
+  g.strokeStyle='#3a2f26'; g.lineWidth=2; g.strokeRect(60,60,W-120,H-120);
+  const cx=W/2;
+  g.textAlign='center';
+  g.fillStyle='#c98a3c'; g.font='800 64px -apple-system,Segoe UI,Roboto,sans-serif';
+  g.save(); g.translate(0,0);
+  // letter-spaced wordmark
+  (function(){ const t='GRUP-AL', sp=18; g.font='800 64px -apple-system,Segoe UI,Roboto,sans-serif';
+    let tot=0; for(const ch of t){ tot+=g.measureText(ch).width+sp; } tot-=sp; let x=cx-tot/2;
+    for(const ch of t){ g.textAlign='left'; g.fillText(ch,x,240); x+=g.measureText(ch).width+sp; } g.textAlign='center'; })();
+  g.restore();
+  g.fillStyle='#a8998a'; g.font='500 30px -apple-system,Segoe UI,Roboto,sans-serif';
+  g.fillText('Yerin kilitli · Your spot is locked', cx, 320);
+  // campaign name
+  g.fillStyle='#f3ede4'; g.font='800 56px -apple-system,Segoe UI,Roboto,sans-serif';
+  wrap(g, s.title||'Kavurma günü lotu', cx, 470, W-200, 64);
+  if(s.lot){ g.fillStyle='#a8998a'; g.font='400 32px -apple-system,Segoe UI,Roboto,sans-serif'; wrap(g, s.lot, cx, 560, W-220, 42); }
+  // spot number
+  const spot=(MINE&&(MINE.spot||MINE.position))||s.locked||0;
+  g.fillStyle='#e6c14b'; g.font='800 200px -apple-system,Segoe UI,Roboto,sans-serif';
+  g.fillText('#'+spot, cx, 900);
+  g.fillStyle='#a8998a'; g.font='500 34px -apple-system,Segoe UI,Roboto,sans-serif';
+  g.fillText('senin yerin · your spot', cx, 960);
+  // counter N/M
+  g.fillStyle='#3c7a5a'; g.font='800 120px -apple-system,Segoe UI,Roboto,sans-serif';
+  g.fillText((s.locked||0)+' / '+(s.target||0), cx, 1180);
+  g.fillStyle='#a8998a'; g.font='500 34px -apple-system,Segoe UI,Roboto,sans-serif';
+  g.fillText('kilitli · locked', cx, 1240);
+  let y=1380;
+  const rd=s.roast_date||s.roast_day;
+  if(rd){ g.fillStyle='#c98a3c'; g.font='700 40px -apple-system,Segoe UI,Roboto,sans-serif'; g.fillText('Kavurma günü · Roast day: '+fmtDate(rd), cx, y); y+=80; }
+  if(s.end_at){ g.fillStyle='#c98a3c'; g.font='700 40px -apple-system,Segoe UI,Roboto,sans-serif'; g.fillText('Son gün · Last day: '+fmtDate(s.end_at), cx, y); y+=80; }
+  // referral link
+  const link=($('shareLink').textContent||'').trim();
+  if(link){ g.fillStyle='#a8998a'; g.font='500 30px -apple-system,Segoe UI,Roboto,sans-serif'; g.fillText('Davet bağlantın · Your invite link', cx, 1620);
+    g.fillStyle='#e6c14b'; g.font='600 26px -apple-system,Segoe UI,Roboto,sans-serif'; wrap(g, link, cx, 1670, W-200, 36); }
+  g.fillStyle='#a8998a'; g.font='600 30px -apple-system,Segoe UI,Roboto,sans-serif';
+  g.fillText('CoffeeNutz · Grup-Al · birlikte kavur', cx, 1820);
+  cv.toBlob(function(b){ const u=URL.createObjectURL(b); const a=document.createElement('a');
+    a.href=u; a.download='grupal-'+(SLUG||'kart')+'.png'; document.body.appendChild(a); a.click();
+    a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000); }, 'image/png');
+}
+function wrap(g,text,x,y,maxW,lh){
+  const words=String(text).split(/\s+/); let line='', yy=y;
+  for(const w of words){ const test=line?line+' '+w:w;
+    if(g.measureText(test).width>maxW&&line){ g.fillText(line,x,yy); line=w; yy+=lh; } else line=test; }
+  if(line) g.fillText(line,x,yy);
 }
 function doShare(){
   const link=$('shareLink').textContent;
