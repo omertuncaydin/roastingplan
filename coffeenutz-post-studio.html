@@ -108,7 +108,7 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Post Studio <span style="opacity:.55">v2026-07-12b</span></div>
+    <div class="brandline">CoffeeNutz Post Studio <span style="opacity:.55">v2026-07-12c</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
     <button class="btn" onclick="document.getElementById('jsonFile').click()">Load</button>
@@ -166,6 +166,8 @@ function wave(amp,cycles){
   return '<svg viewBox="0 0 1000 '+(amp*2)+'" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="'+d+'" fill="none" stroke="currentColor" stroke-width="4"/></svg>';
 }
 function esc(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+/* Turkish-correct uppercasing (i -> İ, ı -> I); CSS text-transform gets English casing wrong */
+function trUp(s){return (s||"").toLocaleUpperCase('tr-TR')}
 
 /* =============== card renderers (native px) =============== */
 function slideCard(sl, idx, total, th){
@@ -195,7 +197,7 @@ function slideCard(sl, idx, total, th){
         + '</div>';
   }
   return card(W,H,dark,
-    '<div class="k-top" style="font-size:24px"><span class="kk">'+esc(state.carousel.kicker)+'</span><span class="kr">'+(sl.tag?esc(sl.tag):esc(state.carousel.series))+'</span></div>'
+    '<div class="k-top" style="font-size:24px"><span class="kk">'+esc(trUp(state.carousel.kicker))+'</span><span class="kr">'+(sl.tag?esc(trUp(sl.tag)):esc(trUp(state.carousel.series)))+'</span></div>'
     + mid
     + '<div class="foot" style="font-size:23px"><span class="fl">'+esc(state.brand.handle)+'</span><span class="fr">'+String(idx+1).padStart(2,"0")+" / "+String(total).padStart(2,"0")+'</span></div>',
     P);
@@ -206,33 +208,33 @@ function announceCard(kind){
   const dims={igfeed:[1080,1350], igstory:[1080,1920], linkedin:[1200,627], banner:[1920,820]}[kind];
   const W=dims[0],H=dims[1];
   const s=W/1080; /* type scale relative to 1080 width */
-  const meta = esc(a.dateline)+"\n"+esc(a.city)+"\n"+esc(a.seats)+"\n"+esc(a.lang);
+  const meta = esc(trUp(a.dateline))+"\n"+esc(trUp(a.city))+"\n"+esc(trUp(a.seats))+"\n"+esc(trUp(a.lang));
   const priceBlock =
     '<div class="pricegrid" style="padding:'+(26*s)+'px 0;margin:'+(40*s)+'px 0 0">'
-    + '<div class="pg-row"><span class="pg-l" style="font-size:'+(22*s)+'px">Yatirim</span><span class="pg-r" style="font-size:'+(52*s)+'px">'+esc(a.price)+'</span></div>'
+    + '<div class="pg-row"><span class="pg-l" style="font-size:'+(22*s)+'px">'+trUp('Yatırım')+'</span><span class="pg-r" style="font-size:'+(52*s)+'px">'+esc(a.price)+'</span></div>'
     + '<div style="font-family:var(--mono);font-size:'+(21*s)+'px;letter-spacing:.06em;margin-top:'+(12*s)+'px;opacity:.85">'+esc(a.installment)+'</div>'
     + '</div>';
-  const cta='<div class="cta" style="font-size:'+(24*s)+'px;padding:'+(16*s)+'px '+(28*s)+'px;margin-top:'+(44*s)+'px">'+esc(a.cta)+' &#8594; '+esc(state.brand.site)+'</div>';
+  const cta='<div class="cta" style="font-size:'+(24*s)+'px;padding:'+(16*s)+'px '+(28*s)+'px;margin-top:'+(44*s)+'px">'+esc(trUp(a.cta))+' &#8594; '+esc(trUp(state.brand.site))+'</div>';
 
   if(kind==="igstory"){
     return card(W,H,dark,
-      '<div class="k-top" style="font-size:26px"><span class="kk">'+esc(a.kicker)+'</span><span class="kr">'+esc(state.brand.wordmark)+'</span></div>'
+      '<div class="k-top" style="font-size:26px"><span class="kk">'+esc(trUp(a.kicker))+'</span><span class="kr">'+esc(trUp(state.brand.wordmark))+'</span></div>'
       + '<div style="margin:auto 0">'
       + '<h1 style="font-size:96px;max-width:880px">'+esc(a.title)+'</h1>'
       + '<div class="wavebox" style="height:60px;margin:56px 0;width:46%">'+wave(16,5)+'</div>'
       + '<div class="metaline" style="font-size:34px">'+meta+'</div>'
       + cta.replace('margin-top:'+(44)+'px','margin-top:64px')
       + '</div>'
-      + '<div class="foot" style="font-size:24px"><span class="fl">'+esc(state.brand.handle)+'</span><span class="fr">Detay profildeki linkte</span></div>', 100);
+      + '<div class="foot" style="font-size:24px"><span class="fl">'+esc(state.brand.handle)+'</span><span class="fr">'+trUp('Detay profildeki linkte')+'</span></div>', 100);
   }
   if(kind==="banner"||kind==="linkedin"){
     const pad = kind==="banner"?90:64;
     return card(W,H,dark,
       '<div style="display:flex;gap:'+(60*s)+'px;height:100%;align-items:center">'
       + '<div style="flex:1.35">'
-      +   '<div class="k-top" style="font-size:'+(22*s)+'px"><span class="kk">'+esc(a.kicker)+'</span></div>'
+      +   '<div class="k-top" style="font-size:'+(22*s)+'px"><span class="kk">'+esc(trUp(a.kicker))+'</span></div>'
       +   '<h1 style="font-size:'+(kind==="banner"?84:64*s)+'px;margin-top:'+(22*s)+'px">'+esc(a.title)+'</h1>'
-      +   '<div class="metaline" style="font-size:'+(24*s)+'px;margin-top:'+(28*s)+'px">'+esc(a.dateline)+'  &#183;  '+esc(a.city)+'\n'+esc(a.seats)+'  &#183;  '+esc(a.lang)+'</div>'
+      +   '<div class="metaline" style="font-size:'+(24*s)+'px;margin-top:'+(28*s)+'px">'+esc(trUp(a.dateline))+'  &#183;  '+esc(trUp(a.city))+'\n'+esc(trUp(a.seats))+'  &#183;  '+esc(trUp(a.lang))+'</div>'
       +   cta
       + '</div>'
       + '<div style="flex:1;align-self:stretch;display:flex;flex-direction:column;justify-content:center">'
@@ -242,7 +244,7 @@ function announceCard(kind){
   }
   /* igfeed */
   return card(W,H,dark,
-    '<div class="k-top" style="font-size:24px"><span class="kk">'+esc(a.kicker)+'</span><span class="kr">'+esc(state.brand.wordmark)+'</span></div>'
+    '<div class="k-top" style="font-size:24px"><span class="kk">'+esc(trUp(a.kicker))+'</span><span class="kr">'+esc(trUp(state.brand.wordmark))+'</span></div>'
     + '<div style="margin-top:90px">'
     + '<h1 style="font-size:88px;max-width:880px">'+esc(a.title)+'</h1>'
     + '<div class="wavebox" style="height:44px;margin:44px 0;width:38%">'+wave(15,5)+'</div>'
@@ -251,11 +253,11 @@ function announceCard(kind){
     + priceBlock
     + cta
     + '</div>'
-    + '<div class="foot" style="font-size:23px"><span class="fl">'+esc(state.brand.handle)+'</span><span class="fr">'+esc(a.extra)+'</span></div>', 92);
+    + '<div class="foot" style="font-size:23px"><span class="fl">'+esc(state.brand.handle)+'</span><span class="fr">'+esc(trUp(a.extra))+'</span></div>', 92);
 }
 
 function card(W,H,dark,inner,pad){
-  return '<div class="card'+(dark?' dark':'')+'" style="width:'+W+'px;height:'+H+'px">'
+  return '<div class="card'+(dark?' dark':'')+'" lang="tr" style="width:'+W+'px;height:'+H+'px">'
        + '<div class="pad" style="padding:'+pad+'px">'+inner+'</div></div>';
 }
 
