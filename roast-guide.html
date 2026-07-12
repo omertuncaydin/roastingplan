@@ -129,6 +129,10 @@
   .sec:last-child{border-bottom:none}
   .sechd{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
   .secname{font-size:15px;font-weight:700}
+  details.adminfold>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  details.adminfold>summary::-webkit-details-marker{display:none}
+  details.adminfold>summary::after{content:'▾';font-size:13px;color:var(--muted);font-weight:400}
+  details.adminfold[open]>summary::after{content:'▴'}
   .ival{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
   .iwrap{display:flex;align-items:center;gap:9px;margin-bottom:10px}
   .iwrap .scale{font-size:9px;color:var(--muted);width:34px;text-transform:uppercase;letter-spacing:.4px}
@@ -563,7 +567,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-11e</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-11f</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -617,9 +621,11 @@
     </div>
     <div class="card"><button class="btn ghost" style="border:none;background:transparent;padding:4px" onclick="doLogout()">Log out</button></div>
     <div class="card hide" id="memberCard">
-      <div class="secname" style="margin-bottom:6px">Member access</div>
-      <div class="small" style="margin-bottom:10px">Assign a plan to a learner by email. Works even before they sign up. No plan = Lite (use and see, cannot keep).</div>
-      <label class="fld" for="entEmail">Learner email</label><input type="email" id="entEmail" autocomplete="off" oninput="lookupEntitlement()">
+      <details class="adminfold">
+      <summary class="secname">Member access</summary>
+      <div class="small" style="margin:6px 0 10px">Assign a plan to a learner by email. Works even before they sign up. No plan = Lite (use and see, cannot keep).</div>
+      <label class="fld" for="entName">Name</label><input type="text" id="entName" autocomplete="off">
+      <label class="fld" for="entEmail" style="margin-top:10px">Learner email</label><input type="email" id="entEmail" autocomplete="off" oninput="lookupEntitlement()">
       <label class="fld" for="entPlan" style="margin-top:10px">Plan</label>
       <select id="entPlan"><option>Roaster</option><option>Cupper</option></select>
       <label class="fld" for="entReason" style="margin-top:10px">Reason</label>
@@ -628,13 +634,16 @@
       <div class="small" id="entMsg" style="margin-top:8px;color:var(--accent2)"></div>
       <div class="cgrplbl" style="margin-top:14px">Provisioned members</div>
       <div id="entList"></div>
+      </details>
     </div>
     <div class="card hide" id="trCard">
-      <div class="secname" style="margin-bottom:6px">Translations (EN &rarr; TR)</div>
+      <details class="adminfold">
+      <summary class="secname">Translations (EN &rarr; TR)</summary>
       <div class="small" style="margin-bottom:10px">Edit the Turkish shown when the app is in TR. Saved for everyone; English stays the source. Full reference: <a href="https://github.com/omertuncaydin/roastingplan/blob/main/tr-strings.md" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">tr-strings.md</a></div>
       <div id="trList"></div>
       <button class="btn" style="margin-top:10px" onclick="saveTranslations()">Save translations</button>
       <div class="small" id="trMsg" style="margin-top:8px;color:var(--accent2)"></div>
+      </details>
     </div>
     <div class="small" style="margin-top:10px">Your recipes, roast history, cuppings and gradings are private to this account. Nobody else can see them.</div>
   </div>
@@ -1477,21 +1486,33 @@ async function loadAccess(){
 function enrollPrompt(word){ return 'Lite access: explore freely here, but saving your '+word+' unlocks when you enroll to your class.'; }
 function liteBanner(word){ return '<div class="litebanner">Lite access. Score and explore as much as you like - saving your '+word+' unlocks when you enroll to your class.</div>'; }
 // admin: provision learners by email + plan
-async function saveEntitlementFor(email,plan,reason,note){ if(!IS_ADMIN||!sb) return {error:{message:'not admin'}}; email=(email||'').trim().toLowerCase(); if(!email) return {error:{message:'no email'}};
-  const _reason=reason||'user'; const _note=(_reason==='other')?(note||''):''; const _mo=(plan==='Cupper')?36:12; const _u=new Date(); _u.setMonth(_u.getMonth()+_mo); const access=Object.assign({},PLANS[plan]||{},{plan,until:_u.toISOString().slice(0,10),reason:_reason,note:_note});
+async function saveEntitlementFor(email,plan,reason,note,name){ if(!IS_ADMIN||!sb) return {error:{message:'not admin'}}; email=(email||'').trim().toLowerCase(); if(!email) return {error:{message:'no email'}};
+  const _reason=reason||'user'; const _note=(_reason==='other')?(note||''):''; const _mo=(plan==='Cupper')?36:12; const _u=new Date(); _u.setMonth(_u.getMonth()+_mo); const access=Object.assign({},PLANS[plan]||{},{plan,until:_u.toISOString().slice(0,10),reason:_reason,note:_note,name:(name||'').trim()});
   return await sb.from('entitlements').upsert({email,access,updated_at:new Date().toISOString()},{onConflict:'email'}).select(); }
 async function saveEntitlement(){ if(!IS_ADMIN||!sb) return; const email=(entEmail.value||'').trim().toLowerCase(); if(!email){ entMsg.style.color='var(--warn)'; entMsg.textContent='Enter an email.'; return; }
-  const plan=document.getElementById('entPlan').value; const _rsel=document.getElementById('entReason'); const _reason=_rsel?_rsel.value:'user'; const _note=(_reason==='other')?(ENT_NOTE||''):'';
-  const r=await saveEntitlementFor(email,plan,_reason,_note);
+  const plan=document.getElementById('entPlan').value; const _rsel=document.getElementById('entReason'); const _reason=_rsel?_rsel.value:'user'; const _note=(_reason==='other')?(ENT_NOTE||''):''; const _nel=document.getElementById('entName'); const _name=_nel?_nel.value:'';
+  const r=await saveEntitlementFor(email,plan,_reason,_note,_name);
   if(r&&r.error){ entMsg.style.color='var(--warn)'; entMsg.textContent='Save failed: '+r.error.message; return; }
   entMsg.style.color='var(--accent2)'; entMsg.textContent='Saved '+plan+' for '+email; loadEntitlements(); }
 async function lookupEntitlement(){ if(!IS_ADMIN||!sb) return; const email=(entEmail.value||'').trim().toLowerCase(); if(!email) return;
   try{ const r=await sb.from('entitlements').select('access').eq('email',email).maybeSingle(); const a=(r&&!r.error&&r.data&&r.data.access)?r.data.access:null;
-    const el=document.getElementById('entPlan'); if(el&&a&&a.plan) el.value=planLabelG(a.plan); const rs=document.getElementById('entReason'); if(rs&&a&&a.reason){ rs.value=a.reason; ENT_NOTE=a.note||''; } }catch(e){} }
-let ENT_ROWS=[], ENT_SEL=new Set();
+    const el=document.getElementById('entPlan'); if(el&&a&&a.plan) el.value=planLabelG(a.plan); const rs=document.getElementById('entReason'); if(rs&&a&&a.reason){ rs.value=a.reason; ENT_NOTE=a.note||''; } const nm=document.getElementById('entName'); if(nm) nm.value=(a&&a.name)||''; }catch(e){} }
+let ENT_ROWS=[], ENT_SEL=new Set(), ENT_STAGE={plan:'',reason:'',note:''};
+function renderEntStage(){ const el=document.getElementById('entStageInd'); const ok=document.getElementById('entBulkApprove'); const has=!!(ENT_STAGE.plan||ENT_STAGE.reason);
+  if(el){ const parts=[]; if(ENT_STAGE.plan) parts.push('plan \u2192 '+ENT_STAGE.plan); if(ENT_STAGE.reason) parts.push('reason \u2192 '+ENT_STAGE.reason); el.textContent=has?('Staged (not saved): '+parts.join(', ')+' \u00b7 press Approve'):''; el.style.display=has?'':'none'; }
+  if(ok){ ok.disabled=!has; ok.style.opacity=has?'1':'.5'; } }
+async function bulkApprove(){ if(!IS_ADMIN||!sb||!ENT_SEL.size) return; const plan=ENT_STAGE.plan, reason=ENT_STAGE.reason, note=ENT_STAGE.note; if(!plan&&!reason) return;
+  const emails=[...ENT_SEL]; let ok=0;
+  for(const em of emails){ const row=ENT_ROWS.find(e=>e.email===em); const a=(row&&row.access)||{};
+    const p=plan||(a.plan?planLabelG(a.plan):'Roaster')||'Roaster';
+    const rs=reason||a.reason||'user';
+    const nt=(rs==='other')?((reason==='other')?(note||''):(a.note||'')):'';
+    const r=await saveEntitlementFor(em,p,rs,nt,a.name||''); if(r&&!r.error) ok++; }
+  if(typeof entMsg!=='undefined'&&entMsg){ entMsg.style.color='var(--accent2)'; entMsg.textContent='Approved changes for '+ok+' member(s).'; }
+  ENT_STAGE={plan:'',reason:'',note:''}; loadEntitlements(); }
 async function loadEntitlements(){ if(!IS_ADMIN||!sb){ if(typeof entList!=='undefined'&&entList) entList.innerHTML=''; return; }
   try{ const r=await sb.from('entitlements').select('*').order('email');
-    if(r&&!r.error&&r.data){ ENT_ROWS=r.data; ENT_SEL=new Set(); renderEntList(); } }catch(e){} }
+    if(r&&!r.error&&r.data){ ENT_ROWS=r.data; ENT_SEL=new Set(); ENT_STAGE={plan:'',reason:'',note:''}; renderEntList(); } }catch(e){} }
 function renderEntList(){ if(typeof entList==='undefined'||!entList) return;
   if(!ENT_ROWS.length){ entList.innerHTML='<div class="small">No members provisioned yet.</div>'; return; }
   const allSel=ENT_ROWS.length>0 && ENT_SEL.size===ENT_ROWS.length; const nSel=ENT_SEL.size;
@@ -1499,25 +1520,28 @@ function renderEntList(){ if(typeof entList==='undefined'||!entList) return;
     +'<span class="small" style="color:var(--accent2);font-weight:700">'+nSel+' selected</span>'
     +'<select id="entBulkPlan" style="width:auto;flex:0 0 auto"><option value="">Set plan</option><option value="Roaster">Roaster</option><option value="Cupper">Cupper</option></select>'
     +'<select id="entBulkReason" style="width:auto;flex:0 0 auto"><option value="">Set reason</option><option value="user">user</option><option value="learner">learner</option><option value="promotion">promotion</option><option value="other">other</option></select>'
+    +'<button class="btn" id="entBulkApprove" style="width:auto;padding:8px 14px;margin:0" disabled>Approve</button>'
     +'<button class="btn ghost" id="entBulkRemove" style="width:auto;padding:8px 14px;margin:0;color:var(--dark);border-color:var(--dark)">Remove</button>'
+    +'<span class="small" id="entStageInd" style="flex:1 0 100%;color:var(--warn);display:none;font-weight:600"></span>'
     +'</div>';
-  h+='<div class="hxrow" style="align-items:center"><input type="checkbox" id="entSelAll" style="margin-right:8px"'+(allSel?' checked':'')+'><span class="small" style="flex:1;color:var(--muted)">Select all</span></div>';
-  h+=ENT_ROWS.map(e=>{ const a=e.access||{}; const plan=a.plan?planLabelG(a.plan):'(custom)'; const ck=ENT_SEL.has(e.email)?' checked':'';
-    return '<div class="hxrow" style="align-items:center"><input type="checkbox" class="entRowCk" data-entck="'+esc(e.email)+'" style="margin-right:8px"'+ck+'><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">'+esc(e.email)+'</span><span style="font-size:11px;flex:0 0 auto;padding:0 8px;text-align:center">'+entReasonCell(a)+'</span><span class="tgtval" style="font-size:11px;flex:0 0 auto">'+esc(plan)+' <button class="delx" data-delent="'+esc(e.email)+'">×</button></span></div>'; }).join('');
+  h+='<div class="hxrow" style="align-items:center"><input type="checkbox" id="entSelAll" style="margin-right:8px"'+(allSel?' checked':'')+'><span class="small" style="flex:0 0 auto;min-width:64px;max-width:96px;color:var(--muted);margin-right:6px">Name</span><span class="small" style="flex:1;color:var(--muted)">Select all</span></div>';
+  h+=ENT_ROWS.map(e=>{ const a=e.access||{}; const plan=a.plan?planLabelG(a.plan):'(custom)'; const ck=ENT_SEL.has(e.email)?' checked':''; const nm=((a.name||'').trim());
+    return '<div class="hxrow" style="align-items:center"><input type="checkbox" class="entRowCk" data-entck="'+esc(e.email)+'" style="margin-right:8px"'+ck+'><span class="entNameCell" style="flex:0 0 auto;min-width:64px;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;margin-right:6px">'+(nm?esc(nm):'-')+'</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">'+esc(e.email)+'</span><span style="font-size:11px;flex:0 0 auto;padding:0 8px;text-align:center">'+entReasonCell(a)+'</span><span class="tgtval" style="font-size:11px;flex:0 0 auto">'+esc(plan)+' <button class="delx" data-delent="'+esc(e.email)+'">×</button></span></div>'; }).join('');
   entList.innerHTML=h;
   const sa=document.getElementById('entSelAll'); if(sa) sa.onclick=()=>{ if(sa.checked) ENT_ROWS.forEach(e=>ENT_SEL.add(e.email)); else ENT_SEL.clear(); renderEntList(); };
   entList.querySelectorAll('[data-entck]').forEach(ck=>ck.onclick=()=>{ if(ck.checked) ENT_SEL.add(ck.dataset.entck); else ENT_SEL.delete(ck.dataset.entck); renderEntList(); });
   entList.querySelectorAll('[data-delent]').forEach(b=>b.onclick=()=>delEntitlement(b.dataset.delent));
-  const bp=document.getElementById('entBulkPlan'); if(bp) bp.onchange=()=>{ const v=bp.value; bp.value=''; if(v) bulkSetPlan(v); };
-  const br=document.getElementById('entBulkReason'); if(br) br.onchange=()=>{ const v=br.value; br.value=''; if(v) bulkSetReason(v); };
-  const brm=document.getElementById('entBulkRemove'); if(brm) brm.onclick=bulkRemove; }
+  const bp=document.getElementById('entBulkPlan'); if(bp){ bp.value=ENT_STAGE.plan||''; bp.onchange=()=>{ ENT_STAGE.plan=bp.value; renderEntStage(); }; }
+  const br=document.getElementById('entBulkReason'); if(br){ br.value=ENT_STAGE.reason||''; br.onchange=()=>{ ENT_STAGE.reason=br.value; if(br.value==='other'){ const t=prompt('Note for the selected members (free text):', ENT_STAGE.note||''); ENT_STAGE.note=(t==null)?'':t; } else { ENT_STAGE.note=''; } renderEntStage(); }; }
+  const bok=document.getElementById('entBulkApprove'); if(bok) bok.onclick=bulkApprove;
+  const brm=document.getElementById('entBulkRemove'); if(brm) brm.onclick=bulkRemove; renderEntStage(); }
 async function bulkSetPlan(plan){ if(!IS_ADMIN||!sb||!ENT_SEL.size) return; const emails=[...ENT_SEL]; let ok=0;
-  for(const em of emails){ const row=ENT_ROWS.find(e=>e.email===em); const a=(row&&row.access)||{}; const r=await saveEntitlementFor(em,plan,a.reason||'user',a.note||''); if(r&&!r.error) ok++; }
+  for(const em of emails){ const row=ENT_ROWS.find(e=>e.email===em); const a=(row&&row.access)||{}; const r=await saveEntitlementFor(em,plan,a.reason||'user',a.note||'',a.name||''); if(r&&!r.error) ok++; }
   if(typeof entMsg!=='undefined'&&entMsg){ entMsg.style.color='var(--accent2)'; entMsg.textContent='Set '+plan+' for '+ok+' member(s).'; } loadEntitlements(); }
 async function bulkSetReason(reason){ if(!IS_ADMIN||!sb||!ENT_SEL.size) return; let note='';
   if(reason==='other'){ const t=prompt('Note for the selected members (free text):',''); note=(t==null)?'':t; }   // 'other' prompts once, applied to all
   const emails=[...ENT_SEL]; let ok=0;
-  for(const em of emails){ const row=ENT_ROWS.find(e=>e.email===em); const a=(row&&row.access)||{}; const plan=(a.plan?planLabelG(a.plan):'Roaster')||'Roaster'; const r=await saveEntitlementFor(em,plan,reason,note); if(r&&!r.error) ok++; }
+  for(const em of emails){ const row=ENT_ROWS.find(e=>e.email===em); const a=(row&&row.access)||{}; const plan=(a.plan?planLabelG(a.plan):'Roaster')||'Roaster'; const r=await saveEntitlementFor(em,plan,reason,note,a.name||''); if(r&&!r.error) ok++; }
   if(typeof entMsg!=='undefined'&&entMsg){ entMsg.style.color='var(--accent2)'; entMsg.textContent='Set reason for '+ok+' member(s).'; } loadEntitlements(); }
 async function bulkRemove(){ if(!IS_ADMIN||!sb||!ENT_SEL.size) return; const emails=[...ENT_SEL];
   if(!confirm('Remove access for '+emails.length+' selected member(s)?')) return; let ok=0;
