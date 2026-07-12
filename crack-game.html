@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kulağın Kaç Agtron? · How Many Agtron Is Your Ear?</title>
+<style>
+  :root{
+    --bg:#1a1410; --panel:#241c16; --panel2:#201a15;
+    --accent:#c98a3c; --accent2:#3c7a5a; --gold:#e6c14b;
+    --ink:#f3ede4; --muted:#a8998a; --line:#3a2f26; --warn:#d9663f;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.45; -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  .wrap{max-width:520px; margin:0 auto; padding:18px 16px 40px; min-height:100vh; display:flex; flex-direction:column}
+  .lang{position:absolute; top:12px; right:14px; font-size:12px; color:var(--muted)}
+  .lang button{background:none; border:1px solid var(--line); color:var(--muted); padding:3px 8px; border-radius:6px; cursor:pointer; font-size:12px}
+  .lang button.on{color:var(--gold); border-color:var(--accent)}
+  header{margin:8px 0 14px}
+  .wordmark{font-size:13px; letter-spacing:.22em; text-transform:uppercase; color:var(--accent); font-weight:700}
+  h1{font-size:23px; margin:6px 0 2px; line-height:1.2}
+  .sub{font-size:13px; color:var(--muted); margin:0}
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; margin:12px 0}
+  .en{color:var(--muted); font-size:.86em}
+  p.howto{font-size:14px; color:var(--ink)}
+  p.howto .en{display:block; margin-top:4px}
+  .targetBox{text-align:center; padding:10px 0}
+  .targetLabel{font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted)}
+  .targetLabel .en{text-transform:none; letter-spacing:0}
+  .targetBig{font-size:64px; font-weight:800; color:var(--gold); line-height:1; margin:4px 0}
+  .chips{display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap}
+  .chip{background:var(--panel2); border:1px solid var(--line); color:var(--muted); padding:8px 14px; border-radius:999px; cursor:pointer; font-size:13px; font-weight:600}
+  .chip .en{display:block; font-size:10px; margin-top:2px}
+  .chip.on{color:var(--bg); background:var(--accent); border-color:var(--accent)}
+  button.big{
+    display:block; width:100%; padding:16px; font-size:18px; font-weight:800;
+    background:var(--accent); color:#1a1410; border:none; border-radius:12px; cursor:pointer;
+    margin-top:8px;
+  }
+  button.big:active{transform:translateY(1px)}
+  button.drop{background:var(--warn); color:#fff; font-size:22px; padding:22px}
+  button.ghost{background:transparent; border:1px solid var(--line); color:var(--ink)}
+  button.ghost .en{color:var(--muted)}
+  .btn-en{font-size:.72em; opacity:.8; font-weight:600}
+  canvas.bell{width:100%; height:150px; display:block; background:var(--panel2); border:1px solid var(--line); border-radius:10px; margin:6px 0}
+  .elapsed{text-align:center; font-size:44px; font-weight:800; font-variant-numeric:tabular-nums; color:var(--ink); margin:6px 0 2px}
+  .elapsed small{font-size:15px; color:var(--muted); font-weight:600}
+  .playhint{text-align:center; color:var(--muted); font-size:13px; margin-bottom:8px}
+  .resultTop{display:flex; align-items:center; justify-content:space-around; text-align:center; gap:8px}
+  .swatch{width:78px; height:78px; border-radius:50%; border:2px solid var(--line); margin:0 auto 6px}
+  .rNum{font-size:30px; font-weight:800; line-height:1}
+  .rLab{font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+  .rLab .en{text-transform:none; letter-spacing:0; display:block}
+  .deltaBox{text-align:center; margin:14px 0 6px}
+  .deltaBig{font-size:52px; font-weight:800; line-height:1}
+  .deltaLab{font-size:12px; color:var(--muted)}
+  .verdict{text-align:center; font-size:19px; font-weight:700; color:var(--gold); margin:8px 0 2px}
+  .verdict .en{display:block; font-size:13px; color:var(--muted); font-weight:600; margin-top:2px}
+  .instr{text-align:center; font-size:13px; color:var(--muted); margin-top:10px; background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px}
+  .instr b{color:var(--ink)}
+  .event{text-align:center; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent2); margin:2px 0 8px; font-weight:700}
+  .lb{margin-top:6px}
+  .lb h3{font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 0 6px}
+  .lb h3 .en{text-transform:none; letter-spacing:0; color:var(--muted)}
+  .lb ol{margin:0; padding-left:22px; font-size:14px}
+  .lb li{padding:2px 0}
+  .lb li span.d{color:var(--muted); font-size:12px; margin-left:6px}
+  .row2{display:flex; gap:8px}
+  .row2>button{flex:1}
+  footer{margin-top:auto; padding-top:18px; text-align:center; font-size:11px; color:var(--muted); line-height:1.6}
+  footer .honest{color:var(--accent2); font-weight:600}
+  footer a{color:var(--muted)}
+  .links{display:flex; gap:8px; margin-top:10px}
+  .links a{flex:1; text-align:center; text-decoration:none; padding:12px; border:1px solid var(--line); border-radius:10px; color:var(--ink); font-size:13px; font-weight:600}
+  .links a .en{display:block; font-size:11px; color:var(--muted); font-weight:500}
+  .hidden{display:none !important}
+  .fineprint{font-size:11px; color:var(--muted); margin-top:10px; line-height:1.5}
+</style>
+</head>
+<body>
+<div class="lang">
+  <button id="langTr" class="on">TR</button>
+  <button id="langEn">EN</button>
+</div>
+<div class="wrap">
+  <header>
+    <div class="wordmark">CoffeeNutz</div>
+    <h1 id="evtName" class="event hidden"></h1>
+    <h1>Kulağın Kaç Agtron?<span class="en" style="display:block;font-size:15px;color:var(--muted);font-weight:500">How Many Agtron Is Your Ear?</span></h1>
+  </header>
+
+  <!-- START -->
+  <section id="scrStart">
+    <div class="panel">
+      <p class="howto">
+        Gerçek bir kavrumun çıtırtılarını duyacaksın. Renginin hedefe ulaştığını düşündüğün an <b>DÜŞÜR</b>'e bas. Ekran karar veremez, kulağın verir.
+        <span class="en">You will hear the cracks of a real roast. The moment you think the color has reached the target, hit <b>DROP</b>. The screen does not decide, your ear does.</span>
+      </p>
+    </div>
+    <div class="panel targetBox">
+      <div class="targetLabel">Hedef Agtron <span class="en">Target Agtron</span></div>
+      <div class="targetBig" id="targetBig">88</div>
+      <div class="chips" id="chips">
+        <button class="chip" data-t="75">Koyu<span class="en">Dark · 75</span></button>
+        <button class="chip on" data-t="88">Hedef<span class="en">Target · 88</span></button>
+        <button class="chip" data-t="100">Açık<span class="en">Light · 100</span></button>
+      </div>
+    </div>
+    <button class="big" id="btnStart">Başla <span class="btn-en">· Start</span></button>
+    <p class="fineprint">Mikrofon kullanılmaz, izin istenmez. Sesli oynanır, hoparlörünü aç.
+      <span class="en">No microphone, no permissions. Play with sound, turn your speaker on.</span></p>
+  </section>
+
+  <!-- PLAY -->
+  <section id="scrPlay" class="hidden">
+    <div class="panel">
+      <div class="playhint">Hedef <b id="playTarget">88</b> Agtron · sadece kulağınla <span class="en" style="display:block">Target Agtron · with your ear only</span></div>
+      <div class="elapsed"><span id="elapsed">0.0</span><small>s</small></div>
+      <canvas class="bell" id="bell" width="488" height="150"></canvas>
+    </div>
+    <button class="big drop" id="btnDrop">DÜŞÜR <span class="btn-en">· DROP</span></button>
+  </section>
+
+  <!-- RESULT -->
+  <section id="scrResult" class="hidden">
+    <div class="panel">
+      <div class="resultTop">
+        <div>
+          <div class="swatch" id="swMine"></div>
+          <div class="rNum" id="numMine" style="color:var(--gold)">--</div>
+          <div class="rLab">Kulağın<span class="en">Your ear</span></div>
+        </div>
+        <div>
+          <div class="swatch" id="swTarget"></div>
+          <div class="rNum" id="numTarget">--</div>
+          <div class="rLab">Hedef<span class="en">Target</span></div>
+        </div>
+      </div>
+      <div class="deltaBox">
+        <div class="deltaBig" id="deltaBig">--</div>
+        <div class="deltaLab">Agtron fark <span class="en">· Agtron delta</span></div>
+      </div>
+      <div class="verdict" id="verdict"></div>
+      <div class="instr" id="instrCall"></div>
+      <canvas class="bell" id="bellResult" width="488" height="150"></canvas>
+    </div>
+    <div class="lb hidden" id="lbBox">
+      <div class="panel">
+        <h3>Sıralama <span class="en">· Leaderboard</span></h3>
+        <ol id="lbList"></ol>
+      </div>
+    </div>
+    <button class="big" id="btnShare">Kart indir <span class="btn-en">· Download share card</span></button>
+    <div class="row2" style="margin-top:8px">
+      <button class="big ghost" id="btnReplay">Tekrar <span class="btn-en en">· Replay</span></button>
+    </div>
+    <div class="links">
+      <a href="https://guide.coffeenutz.net/crack-listen.html">Uygulamayı dene<span class="en">Try the app</span></a>
+      <a href="https://www.coffeenutz.net">Sınıflar<span class="en">Classes</span></a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="honest">Oyun bir ölçüm değildir. · The game is not a measurement.</div>
+    <div style="margin-top:6px">
+      Çıtırtı zamanları gerçektir: 2026-07-07 tarihli ölçülmüş bir Ethiopia Yirgacheffe Gr.2 kavrumundan. Pop sesleri o gerçek anlarda sentezlenir. Renk modeli bu kahvenin ölçülmüş kavrumları arasında ara değer üretir.
+      <span class="en" style="display:block; margin-top:3px">Crack timings are real, from an actual measured roast of Ethiopia Yirgacheffe Gr.2 on 2026-07-07. The pop sounds are synthesized at those real moments. The color model interpolates between this coffee's actually measured roasts.</span>
+    </div>
+    <div style="margin-top:8px">kulaktesti · <a href="https://guide.coffeenutz.net">guide.coffeenutz.net</a> · v2026-07-11b</div>
+  </footer>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   Kulağın Kaç Agtron? · CoffeeNutz crack game · v2026-07-11b
+   HONESTY: this is not a measurement. Crack timings are REAL,
+   measured from Ethiopia Yirgacheffe Gr.2 on 2026-07-07.
+   ============================================================ */
+
+/* REAL crack record: Ethiopia Yirgacheffe Gr.2, Bullet 600 g, washed,
+   roasted 2026-07-07 14:00, the full reference bell: first crack
+   through earned silence, measured agtron_ground=67 at the end.
+   Each entry [t, g]: t seconds rebased so the first crack = 0
+   (raw first crack was at 139.72 s), g = crack gain. Total
+   cumulative gain = 5533, landing on the ~67 Agtron anchor below. */
+var CRACKS = [
+  [0.0,51],[2.66,52],[19.84,43],[27.45,45],[32.7,35],[32.85,44],[36.82,43],[37.29,57],[38.5,43],
+  [38.84,38],[41.9,53],[43.66,48],[43.79,36],[44.8,43],[46.42,38],[46.59,42],[46.72,36],[47.59,46],
+  [49.06,34],[50.06,43],[52.65,39],[53.07,34],[53.24,34],[53.71,35],[54.16,38],[54.8,44],[55.53,44],
+  [56.1,43],[56.19,39],[57.15,39],[57.25,45],[57.49,42],[57.85,49],[58.06,35],[59.75,39],[59.84,54],
+  [60.92,55],[61.35,43],[62.76,37],[63.12,38],[65.43,37],[65.64,44],[65.72,66],[66.73,38],[66.88,46],
+  [67.13,49],[68.05,43],[69.29,36],[70.48,35],[70.97,42],[71.44,41],[71.8,34],[72.12,47],[72.34,40],
+  [73.45,35],[74.43,45],[74.68,35],[75.56,68],[76.65,53],[77.12,41],[78.37,44],[79.78,42],[80.29,51],
+  [81.6,49],[82.15,42],[82.64,42],[83.34,51],[86.42,36],[86.76,41],[87.1,35],[88.98,35],[89.68,34],
+  [90.68,41],[91.94,36],[92.16,45],[92.39,40],[96.29,43],[97.62,52],[98.26,51],[98.49,39],[99.15,39],
+  [99.96,41],[100.43,36],[100.88,43],[102.27,36],[103.53,56],[104.02,34],[106.51,38],[107.41,40],[108.43,49],
+  [109.69,36],[109.82,44],[109.95,38],[110.68,38],[112.89,46],[113.38,38],[114.24,40],[115.09,38],[115.3,36],
+  [116.05,42],[116.52,40],[116.88,66],[118.05,37],[118.23,44],[118.97,37],[124.56,44],[125.2,46],[131.54,45],
+  [131.86,35],[133.41,36],[133.54,40],[136.04,37],[136.21,58],[137.7,55],[138.53,48],[141.95,36],[143.21,45],
+  [144.87,37],[146.88,46],[148.01,38],[151.93,37],[155.75,38],[156.92,38],[157.8,42],[159.99,38],[160.44,41],
+  [162.13,34],[164.43,50],[166.48,38],[175.4,40],[183.46,39]
+];
+var LAST_T = CRACKS[CRACKS.length-1][0]; // 42.37 s
+
+/* --- COLOR MODEL ------------------------------------------------
+   Piecewise-linear on cumulative crack gain, from Ömer's measured
+   Yirgacheffe anchors (the full reference bell):
+     cumGain 1308 -> Agtron 108
+     cumGain 2617 -> Agtron 104   (this roast's landing point)
+     cumGain 2943 -> Agtron 102
+     cumGain 5500 -> Agtron  67
+   Below 1308 extrapolate gently toward ~115 at cumGain 0.
+   Result clamped to 60..118.
+--------------------------------------------------------------- */
+var ANCHORS = [[0,115],[1308,108],[2617,104],[2943,102],[5500,67]];
+function agtronFromCum(cum){
+  var a = ANCHORS;
+  if(cum <= a[0][0]) return clamp(a[0][1], 60, 118);
+  for(var i=0;i<a.length-1;i++){
+    var x0=a[i][0], y0=a[i][1], x1=a[i+1][0], y1=a[i+1][1];
+    if(cum <= x1){
+      var v = y0 + (y1-y0)*(cum-x0)/(x1-x0);
+      return clamp(v, 60, 118);
+    }
+  }
+  // beyond the last anchor: extend the final segment's slope
+  var n=a.length;
+  var px0=a[n-2][0], py0=a[n-2][1], px1=a[n-1][0], py1=a[n-1][1];
+  var slope=(py1-py0)/(px1-px0);
+  return clamp(py1 + slope*(cum-px1), 60, 118);
+}
+function clamp(v,lo,hi){ return v<lo?lo:(v>hi?hi:v); }
+
+/* cumulative gain at a given elapsed time (sum of crack gains with t <= now) */
+function cumGainAt(now){
+  var c=0;
+  for(var i=0;i<CRACKS.length;i++){ if(CRACKS[i][0] <= now + 1e-9) c += CRACKS[i][1]; else break; }
+  return c;
+}
+
+/* Agtron -> approximate roasted-bean color (for swatches / card).
+   Purely cosmetic; lighter Agtron = lighter brown. */
+function agtronColor(ag){
+  var t = clamp((ag-60)/(118-60), 0, 1); // 0 dark .. 1 light
+  // simple brown ramp: lighter Agtron -> lighter brown
+  var R = Math.round(46 + t*162);
+  var G = Math.round(28 + t*118);
+  var B = Math.round(16 + t*74);
+  return 'rgb('+R+','+G+','+B+')';
+}
+
+/* --- STATE ----------------------------------------------------- */
+var state = {
+  target: 88,
+  lang: 'tr',
+  startClock: 0,
+  raf: 0,
+  playing: false,
+  timers: [],
+  crackIdx: 0,
+  firedGain: 0,        // sum of gains of cracks already fired (audio+visual)
+  result: null,
+  event: null
+};
+
+/* --- AUDIO ----------------------------------------------------- */
+var AC = null;
+function ensureAudio(){
+  if(AC) return AC;
+  try{
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    AC = new Ctx();
+  }catch(e){ AC = null; }
+  return AC;
+}
+/* synthesized pop: short filtered noise burst, amplitude scaled by crack gain g */
+function playPop(g){
+  var ac = ensureAudio();
+  if(!ac) return;
+  try{
+    if(ac.state === 'suspended' && ac.resume) ac.resume();
+    var dur = 0.05 + Math.min(g,60)/60*0.03;
+    var sr = ac.sampleRate || 44100;
+    var n = Math.max(1, Math.floor(sr*dur));
+    var buf = ac.createBuffer(1, n, sr);
+    var d = buf.getChannelData(0);
+    for(var i=0;i<n;i++){
+      var env = Math.pow(1 - i/n, 2.2);       // fast decay
+      d[i] = (Math.random()*2-1) * env;
+    }
+    var src = ac.createBufferSource();
+    src.buffer = buf;
+    var bp = ac.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 1600 + Math.random()*1400;
+    bp.Q.value = 0.9;
+    var gain = ac.createGain();
+    var amp = 0.12 + Math.min(g,60)/60*0.5;    // gain-scaled by crack g
+    gain.gain.value = amp;
+    src.connect(bp); bp.connect(gain); gain.connect(ac.destination);
+    src.start();
+  }catch(e){/* silent */}
+}
+
+/* --- BELL SKETCH (gain per 2 s bars) --------------------------- */
+function binGains(uptoTime){
+  var binW = 2; // seconds
+  var nb = Math.ceil((LAST_T+0.001)/binW);
+  var bins = new Array(nb); for(var i=0;i<nb;i++) bins[i]=0;
+  for(var k=0;k<CRACKS.length;k++){
+    var t=CRACKS[k][0], g=CRACKS[k][1];
+    if(t > uptoTime + 1e-9) break;
+    var b=Math.min(nb-1, Math.floor(t/binW));
+    bins[b]+=g;
+  }
+  return {bins:bins, binW:binW, nb:nb};
+}
+function drawBell(canvas, uptoTime){
+  if(!canvas) return;
+  var ctx = canvas.getContext('2d');
+  if(!ctx) return;
+  var W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  var pad = 10, base = H - 16;
+  var data = binGains(uptoTime);
+  var maxBin = 0;
+  var fullAll = binGains(LAST_T).bins;
+  for(var i=0;i<fullAll.length;i++) if(fullAll[i]>maxBin) maxBin=fullAll[i];
+  if(maxBin<=0) maxBin=1;
+  var nb = data.nb;
+  var bw = (W - pad*2) / nb;
+  // baseline
+  ctx.strokeStyle = '#3a2f26'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad, base+.5); ctx.lineTo(W-pad, base+.5); ctx.stroke();
+  for(var b=0;b<nb;b++){
+    var v = data.bins[b];
+    var h = (v/maxBin)*(base-pad);
+    var x = pad + b*bw;
+    ctx.fillStyle = v>0 ? '#c98a3c' : '#2a221b';
+    ctx.fillRect(x+1, base-h, Math.max(1,bw-2), h);
+  }
+  // grid label
+  ctx.fillStyle = '#a8998a'; ctx.font = '10px -apple-system,sans-serif';
+  ctx.fillText('2 sn / çubuk · 2 s / bar', pad+2, 12);
+}
+
+/* --- DOM helpers ----------------------------------------------- */
+function $(id){ return document.getElementById(id); }
+function show(id){
+  ['scrStart','scrPlay','scrResult'].forEach(function(s){
+    var el=$(s); if(!el) return;
+    if(s===id) el.classList.remove('hidden'); else el.classList.add('hidden');
+  });
+}
+
+/* --- LANG ------------------------------------------------------ */
+function setLang(l){
+  state.lang = l;
+  document.documentElement.lang = l;
+  $('langTr').classList.toggle('on', l==='tr');
+  $('langEn').classList.toggle('on', l==='en');
+  // EN spans are always shown as secondary; toggle just re-emphasizes.
+  document.body.classList.toggle('en-primary', l==='en');
+}
+
+/* --- GAMEPLAY -------------------------------------------------- */
+function clearTimers(){
+  state.timers.forEach(function(t){ clearTimeout(t); });
+  state.timers = [];
+  if(state.raf) cancelAnimationFrame(state.raf);
+  state.raf = 0;
+}
+function startGame(){
+  ensureAudio();
+  if(AC && AC.state==='suspended' && AC.resume) AC.resume();
+  state.playing = true;
+  state.crackIdx = 0;
+  state.firedGain = 0;
+  state.startClock = now();
+  clearTimers();
+  $('playTarget').textContent = state.target;
+  show('scrPlay');
+  drawBell($('bell'), 0);
+  // schedule each real crack at its real timestamp (1x)
+  CRACKS.forEach(function(c){
+    var id = setTimeout(function(){
+      if(!state.playing) return;
+      state.firedGain += c[1];
+      playPop(c[1]);
+      var el = now() - state.startClock;
+      drawBell($('bell'), el/1000);
+    }, c[0]*1000);
+    state.timers.push(id);
+  });
+  // overshoot: recording runs out -> auto drop
+  var endId = setTimeout(function(){
+    if(state.playing) doDrop(true);
+  }, (LAST_T + 0.4)*1000);
+  state.timers.push(endId);
+  tick();
+}
+function tick(){
+  if(!state.playing) return;
+  var el = (now() - state.startClock)/1000;
+  $('elapsed').textContent = el.toFixed(1);
+  state.raf = requestAnimationFrame(tick);
+}
+function now(){
+  return (typeof performance!=='undefined' && performance.now) ? performance.now() : Date.now();
+}
+
+function doDrop(overshoot){
+  if(!state.playing) return;
+  state.playing = false;
+  clearTimers();
+  var el = (now() - state.startClock)/1000;
+  if(el > LAST_T) el = LAST_T;
+  if(overshoot) el = LAST_T;
+  var cum = cumGainAt(el);
+  var mine = agtronFromCum(cum);
+  var target = state.target;
+  var delta = Math.abs(mine - target);
+  state.result = {
+    elapsed: el, cum: cum, mine: mine, target: target,
+    delta: delta, overshoot: !!overshoot
+  };
+  renderResult();
+  maybeLeaderboard();
+}
+
+/* --- VERDICT --------------------------------------------------- */
+function verdictFor(delta){
+  if(delta <= 2) return ['Kulağın kalibre!','Your ear is calibrated!'];
+  if(delta <= 5) return ['Roaster kulağı.','A roaster’s ear.'];
+  if(delta <= 10) return ['Az kaldı.','Close.'];
+  return ['Prob almana gerek yok, uygulama var.','No probe needed, there is an app.'];
+}
+
+/* --- RESULT SCREEN --------------------------------------------- */
+function renderResult(){
+  var r = state.result;
+  var mineR = Math.round(r.mine*10)/10;
+  var tgt = r.target;
+  var deltaR = Math.round(r.delta*10)/10;
+  $('numMine').textContent = mineR.toFixed(1);
+  $('numTarget').textContent = tgt;
+  $('swMine').style.background = agtronColor(r.mine);
+  $('swTarget').style.background = agtronColor(tgt);
+  $('deltaBig').textContent = (r.mine>=tgt?'+':'−') + deltaR.toFixed(1);
+  var v = verdictFor(r.delta);
+  $('verdict').innerHTML = v[0] + '<span class="en">' + v[1] + '</span>';
+  // The instrument uses the SAME model, so it is the same number at this drop.
+  $('instrCall').innerHTML =
+    'Aletin bu düşüşteki kararı: <b>' + mineR.toFixed(1) + ' Agtron</b>. Oyun da alet de aynı modeli kullanır; bu ayrı bir ölçüm değil, aynı andaki tahmindir.' +
+    '<span class="en" style="display:block;margin-top:4px;color:var(--muted)">The instrument’s call at your drop: <b>' + mineR.toFixed(1) + ' Agtron</b>. The game and the instrument share one model; this is not a separate measurement, it is the projection at that same moment.</span>';
+  drawBell($('bellResult'), r.elapsed);
+  show('scrResult');
+}
+
+/* --- LEADERBOARD (local, event mode) --------------------------- */
+var LB_KEY_BASE = 'cnutz_crackgame_lb';
+function lbKey(){ return LB_KEY_BASE + (state.event? ('_'+state.event) : ''); }
+function readLB(){
+  try{ var raw = localStorage.getItem(lbKey()); return raw? JSON.parse(raw): []; }
+  catch(e){ return []; }
+}
+function writeLB(list){
+  try{ localStorage.setItem(lbKey(), JSON.stringify(list)); }catch(e){}
+}
+function maybeLeaderboard(){
+  if(!state.event) return;
+  $('lbBox').classList.remove('hidden');
+  var r = state.result;
+  // prompt for name on good scores (delta <= 5)
+  if(r.delta <= 5 && typeof prompt === 'function'){
+    var nm = null;
+    try{ nm = prompt(state.lang==='en'?'Good ear! Name for the leaderboard:':'Güzel kulak! Sıralama için isim:'); }catch(e){ nm=null; }
+    if(nm){
+      var list = readLB();
+      list.push({ name:String(nm).slice(0,18), delta:Math.round(r.delta*10)/10, ag:Math.round(r.mine*10)/10, target:r.target, ts:Date.now() });
+      list.sort(function(a,b){ return a.delta - b.delta; });
+      list = list.slice(0,10);
+      writeLB(list);
+    }
+  }
+  renderLB();
+}
+function renderLB(){
+  var list = readLB();
+  var ol = $('lbList');
+  if(!ol) return;
+  ol.innerHTML = '';
+  list.forEach(function(e){
+    var li = document.createElement('li');
+    var d = (e.delta<=0?'':'Δ') + e.delta.toFixed(1);
+    li.innerHTML = escapeHtml(e.name) + ' <span class="d">' + e.ag.toFixed(1) + ' Agtron · Δ' + e.delta.toFixed(1) + '</span>';
+    ol.appendChild(li);
+  });
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+/* --- SHARE CARD (1080x1920 PNG) -------------------------------- */
+function buildShareCanvas(){
+  var W=1080, H=1920;
+  var cv = document.createElement('canvas');
+  cv.width=W; cv.height=H;
+  var ctx = cv.getContext('2d');
+  if(!ctx) return cv;
+  var r = state.result || {mine:0,target:state.target,delta:0,elapsed:0};
+  var mineR = Math.round(r.mine*10)/10;
+  // bg
+  ctx.fillStyle = '#1a1410'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = '#241c16'; roundRect(ctx, 60,60,W-120,H-120,40); ctx.fill();
+  ctx.strokeStyle = '#3a2f26'; ctx.lineWidth=2; roundRect(ctx,60,60,W-120,H-120,40); ctx.stroke();
+  // wordmark
+  ctx.textAlign='center';
+  ctx.fillStyle = '#c98a3c'; ctx.font = '700 46px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('C O F F E E N U T Z', W/2, 190);
+  // event
+  var y = 260;
+  if(state.event){
+    ctx.fillStyle='#3c7a5a'; ctx.font='700 34px -apple-system,Helvetica,Arial,sans-serif';
+    ctx.fillText(state.event.toUpperCase(), W/2, y); y+=60;
+  }
+  // title
+  ctx.fillStyle='#f3ede4'; ctx.font='800 60px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('Kulağın Kaç Agtron?', W/2, y+70);
+  ctx.fillStyle='#a8998a'; ctx.font='500 34px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('How Many Agtron Is Your Ear?', W/2, y+120);
+  // my agtron big
+  var yMain = 760;
+  ctx.fillStyle='#a8998a'; ctx.font='600 34px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('KULAĞIM · MY EAR', W/2, yMain-60);
+  // swatch
+  ctx.beginPath(); ctx.arc(W/2, yMain+70, 70, 0, Math.PI*2);
+  ctx.fillStyle = agtronColor(r.mine); ctx.fill();
+  ctx.lineWidth=3; ctx.strokeStyle='#3a2f26'; ctx.stroke();
+  ctx.fillStyle='#e6c14b'; ctx.font='800 130px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText(mineR.toFixed(1) + ' Agtron', W/2, yMain+300);
+  // target + delta
+  var yT = yMain+420;
+  ctx.fillStyle='#f3ede4'; ctx.font='600 44px -apple-system,Helvetica,Arial,sans-serif';
+  var sign = (r.mine>=r.target?'+':'−');
+  ctx.fillText('Hedef · Target ' + r.target + '     Δ ' + sign + (Math.round(r.delta*10)/10).toFixed(1), W/2, yT);
+  // verdict
+  var v = verdictFor(r.delta);
+  ctx.fillStyle='#e6c14b'; ctx.font='700 50px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText(v[0], W/2, yT+90);
+  ctx.fillStyle='#a8998a'; ctx.font='500 38px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText(v[1], W/2, yT+140);
+  // bell sketch
+  drawBellOnCard(ctx, 120, yT+200, W-240, 260, r.elapsed);
+  // honesty + handle
+  ctx.fillStyle='#3c7a5a'; ctx.font='600 30px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('Oyun bir ölçüm değildir. · The game is not a measurement.', W/2, H-220);
+  ctx.fillStyle='#c98a3c'; ctx.font='700 40px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('kulaktesti · guide.coffeenutz.net', W/2, H-140);
+  ctx.fillStyle='#a8998a'; ctx.font='500 26px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('Ethiopia Yirgacheffe Gr.2 · 2026-07-07 · v2026-07-11b', W/2, H-95);
+  return cv;
+}
+function drawBellOnCard(ctx, x, y, w, h, uptoTime){
+  var data = binGains(uptoTime);
+  var full = binGains(LAST_T).bins;
+  var maxBin=1; for(var i=0;i<full.length;i++) if(full[i]>maxBin) maxBin=full[i];
+  var nb=data.nb, bw=w/nb, base=y+h;
+  ctx.strokeStyle='#3a2f26'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x, base); ctx.lineTo(x+w, base); ctx.stroke();
+  for(var b=0;b<nb;b++){
+    var val=data.bins[b];
+    var bh=(val/maxBin)*h;
+    ctx.fillStyle = val>0? '#c98a3c':'#2a221b';
+    ctx.fillRect(x+b*bw+2, base-bh, Math.max(2,bw-4), bh);
+  }
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function downloadShare(){
+  var cv = buildShareCanvas();
+  function finish(blob){
+    if(!blob) return;
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'kulagin-kac-agtron.png';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); if(a.parentNode) a.parentNode.removeChild(a); }, 1500);
+  }
+  if(cv.toBlob){ cv.toBlob(finish, 'image/png'); }
+  else if(cv.toDataURL){
+    var a=document.createElement('a'); a.href=cv.toDataURL('image/png'); a.download='kulagin-kac-agtron.png';
+    document.body.appendChild(a); a.click(); if(a.parentNode) a.parentNode.removeChild(a);
+  }
+}
+
+/* --- EVENT MODE ------------------------------------------------ */
+function initEvent(){
+  var q = {};
+  try{
+    var s = (typeof location!=='undefined' && location.search)? location.search.replace(/^\?/,''):'';
+    s.split('&').forEach(function(kv){ if(!kv) return; var p=kv.split('='); q[decodeURIComponent(p[0])]=decodeURIComponent(p[1]||''); });
+  }catch(e){}
+  if(q.event){
+    state.event = q.event;
+    var el = $('evtName');
+    el.textContent = q.event;
+    el.classList.remove('hidden');
+    $('lbBox').classList.remove('hidden');
+    renderLB();
+  }
+}
+
+/* --- WIRING ---------------------------------------------------- */
+function initGame(){
+  initEvent();
+  // chips
+  var chips = document.querySelectorAll('#chips .chip');
+  Array.prototype.forEach.call(chips, function(ch){
+    ch.addEventListener('click', function(){
+      Array.prototype.forEach.call(chips, function(c){ c.classList.remove('on'); });
+      ch.classList.add('on');
+      state.target = parseInt(ch.getAttribute('data-t'),10);
+      $('targetBig').textContent = state.target;
+    });
+  });
+  $('btnStart').addEventListener('click', startGame);
+  $('btnDrop').addEventListener('click', function(){ doDrop(false); });
+  $('btnReplay').addEventListener('click', function(){ show('scrStart'); });
+  $('btnShare').addEventListener('click', downloadShare);
+  $('langTr').addEventListener('click', function(){ setLang('tr'); });
+  $('langEn').addEventListener('click', function(){ setLang('en'); });
+  setLang('tr');
+  show('scrStart');
+}
+
+// Expose a small harness API for headless testing
+window.__CRACKGAME__ = {
+  state: state,
+  CRACKS: CRACKS,
+  ANCHORS: ANCHORS,
+  agtronFromCum: agtronFromCum,
+  cumGainAt: cumGainAt,
+  startGame: startGame,
+  doDrop: doDrop,
+  buildShareCanvas: buildShareCanvas,
+  readLB: readLB,
+  setTarget: function(t){ state.target=t; var el=$('targetBig'); if(el) el.textContent=t; },
+  setEvent: function(e){ state.event=e; }
+};
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', initGame);
+}else{
+  initGame();
+}
+</script>
+</body>
+</html>
