@@ -567,7 +567,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-11f</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-12a</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -643,6 +643,15 @@
       <div id="trList"></div>
       <button class="btn" style="margin-top:10px" onclick="saveTranslations()">Save translations</button>
       <div class="small" id="trMsg" style="margin-top:8px;color:var(--accent2)"></div>
+      </details>
+    </div>
+    <div class="card hide" id="submitCard">
+      <details class="adminfold">
+      <summary class="secname">Agtron Challenge &middot; G&ouml;nderiler &middot; Submissions</summary>
+      <div class="small" style="margin:6px 0 8px;color:var(--muted)">Community crack submissions. Listen before you approve.</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><button class="iconbtn" onclick="loadSubmissions()">Refresh &middot; Yenile</button><span class="small" id="gsCount" style="color:var(--accent2);font-weight:700"></span></div>
+      <div id="gsList"></div>
+      <div class="small" id="gsMsg" style="margin-top:8px"></div>
       </details>
     </div>
     <div class="small" style="margin-top:10px">Your recipes, roast history, cuppings and gradings are private to this account. Nobody else can see them.</div>
@@ -1559,6 +1568,117 @@ async function saveTranslations(){ if(!IS_ADMIN||!sb) return; const keys=Object.
   if(r&&r.error){ trMsg.style.color='var(--warn)'; trMsg.textContent='Save failed: '+r.error.message; return; }
   trMsg.style.color='var(--accent2)'; trMsg.textContent='Saved. Toggle to TR to see it.'; applyLang(); }
 
+// ===================== Agtron Challenge submissions review (admin) =====================
+// Community crack submissions land in game_samples (anon INSERT, approved=false). Omer's
+// signed-in session gains SELECT/UPDATE/DELETE via game-samples-admin.sql (JWT-email policy),
+// so this whole card is client-side. Nothing here touches plan/paywall/entitlements.
+let GS_ROWS=[], GS_AC=null, GS_PLAY=null;
+const GS_SPEED=4, GS_CAP=30;   // play at 4x, cap playback at 30 s
+function gsHonest(){ return '<b>game-samples-admin.sql</b> çalıştırılmalı ve admin e-postasıyla giriş yapılmalı. <span style="color:var(--muted)">Run game-samples-admin.sql and sign in with the admin email to use this card.</span>'; }
+function gsMsg(t,warn){ const m=document.getElementById('gsMsg'); if(!m) return; m.style.color=warn?'var(--warn)':'var(--accent2)'; m.innerHTML=t; }
+function gsNorm(d){ let cr=[]; try{ cr=Array.isArray(d.cracks)?d.cracks:JSON.parse(d.cracks||'[]'); }catch(e){ cr=[]; }
+  cr=(cr||[]).filter(c=>Array.isArray(c)&&c.length>=2).map(c=>[+c[0],+c[1]]);
+  const span=cr.length?(cr[cr.length-1][0]-cr[0][0]):0;
+  return {id:d.id, coffee:d.coffee||'', cracks:cr, terminal_ag:d.terminal_ag, credit:d.credit||'', company:d.company||'', replay_ok:!!d.replay_ok, approved:!!d.approved, created_at:d.created_at||'', span:span}; }
+async function loadSubmissions(){
+  const list=document.getElementById('gsList'), cnt=document.getElementById('gsCount'); if(!list) return;
+  if(!IS_ADMIN||!sb){ GS_ROWS=[]; list.innerHTML=''; if(cnt) cnt.textContent=''; gsMsg(gsHonest(),true); return; }
+  let r; try{ r=await sb.from('game_samples').select('*').order('created_at',{ascending:false}); }catch(e){ r={error:{message:String(e)}}; }
+  if(!r||r.error){ GS_ROWS=[]; list.innerHTML=''; if(cnt) cnt.textContent=''; gsMsg(gsHonest(),true); return; }
+  GS_ROWS=(r.data||[]).map(gsNorm); gsMsg('',false); gsRenderRows();
+  // Empty could mean no submissions yet OR the admin policy is missing (RLS hides rows silently).
+  if(!GS_ROWS.length) gsMsg('Henüz görünen gönderi yok. '+gsHonest(),false);
+}
+function gsRenderRows(){
+  const list=document.getElementById('gsList'), cnt=document.getElementById('gsCount'); if(!list) return;
+  const pending=GS_ROWS.filter(r=>!r.approved).length;
+  if(cnt) cnt.textContent=GS_ROWS.length+' '+T('total')+' · '+pending+' '+T('pending');
+  if(!GS_ROWS.length){ list.innerHTML=''; return; }
+  list.innerHTML=GS_ROWS.map(function(r){
+    const playing=!!(GS_PLAY&&GS_PLAY.id===r.id);
+    const chip=r.approved
+      ? '<span class="chip sub">'+T('Approved')+' · Onaylı</span>'
+      : '<span class="chip">'+T('Pending')+' · Bekliyor</span>';
+    return '<div class="gsrow" style="border:1px solid var(--line,#3a2f26);border-radius:12px;padding:10px;margin-bottom:10px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.coffee||'-')+'</b>'+chip+'</div>'
+      +'<div class="small" style="margin-top:2px">'+esc(r.credit||'-')+(r.company?(' · '+esc(r.company)):'')+'</div>'
+      +'<div class="small" style="color:var(--muted)">'+r.cracks.length+' '+T('cracks')+' · '+r.span.toFixed(1)+' '+T('s span')+' · Ag '+esc(String(r.terminal_ag))+' · '+esc(String(r.created_at||'').slice(0,10))+'</div>'
+      +'<canvas class="gsbell" width="260" height="64" style="width:100%;max-width:300px;height:auto;margin-top:6px;background:#1a140f;border-radius:8px"></canvas>'
+      +'<div class="gsprog" style="height:3px;background:var(--accent);width:0%;margin-top:6px;border-radius:2px;'+(playing?'':'display:none;')+'"></div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">'
+      +'<button class="iconbtn" data-gsplay="'+esc(r.id)+'">'+(playing?('■ '+T('Stop')):('▶ '+T('Listen')))+'</button>'
+      +'<button class="iconbtn" data-gsapprove="'+esc(r.id)+'">'+(r.approved?T('Unapprove'):T('Approve'))+'</button>'
+      +'<button class="iconbtn" data-gscopy="'+esc(r.id)+'">'+T('Copy replay link')+'</button>'
+      +'<button class="delx" data-gsdel="'+esc(r.id)+'" style="margin-left:auto">×</button>'
+      +'</div></div>';
+  }).join('');
+  list.querySelectorAll('[data-gsplay]').forEach(b=>b.onclick=()=>gsTogglePlay(b.getAttribute('data-gsplay')));
+  list.querySelectorAll('[data-gsapprove]').forEach(b=>b.onclick=()=>gsToggleApprove(b.getAttribute('data-gsapprove')));
+  list.querySelectorAll('[data-gscopy]').forEach(b=>b.onclick=()=>gsCopyLink(b.getAttribute('data-gscopy')));
+  list.querySelectorAll('[data-gsdel]').forEach(b=>b.onclick=()=>gsDelete(b.getAttribute('data-gsdel')));
+  const cvs=list.querySelectorAll('.gsbell'); GS_ROWS.forEach((r,i)=>{ if(cvs[i]) gsDrawBell(cvs[i],r); });
+}
+function gsDrawBell(canvas,r){
+  if(!canvas||!canvas.getContext) return; const ctx=canvas.getContext('2d'); if(!ctx) return;
+  const W=canvas.width, H=canvas.height, pad=8, base=H-13; ctx.clearRect(0,0,W,H);
+  const cr=r.cracks, binW=2, lastT=cr.length?cr[cr.length-1][0]:0;
+  const nb=Math.max(1,Math.ceil((lastT+0.001)/binW)), bins=new Array(nb).fill(0);
+  for(let k=0;k<cr.length;k++){ const b=Math.min(nb-1,Math.floor(cr[k][0]/binW)); bins[b]+=(cr[k][1]||0); }
+  let maxBin=1; for(let j=0;j<nb;j++) if(bins[j]>maxBin) maxBin=bins[j];
+  const bw=(W-pad*2)/nb;
+  ctx.strokeStyle='#3a2f26'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(pad,base+0.5); ctx.lineTo(W-pad,base+0.5); ctx.stroke();
+  for(let b2=0;b2<nb;b2++){ const v=bins[b2], h=(v/maxBin)*(base-pad), x=pad+b2*bw; ctx.fillStyle=v>0?'#c98a3c':'#2a221b'; ctx.fillRect(x+1,base-h,Math.max(1,bw-2),h); }
+  ctx.fillStyle='#a8998a'; ctx.font='9px -apple-system,sans-serif'; ctx.fillText('2 sn / çubuk · 2 s / bar',pad+2,11);
+}
+function gsEnsureAudio(){ if(GS_AC) return GS_AC; try{ const Ctx=window.AudioContext||window.webkitAudioContext; GS_AC=new Ctx(); }catch(e){ GS_AC=null; } return GS_AC; }
+function gsPop(ac,g,when){ // pop-synth (copied from crack-game playPop), scheduled at absolute time
+  try{
+    const dur=0.05+Math.min(g,60)/60*0.03, sr=ac.sampleRate||44100, n=Math.max(1,Math.floor(sr*dur));
+    const buf=ac.createBuffer(1,n,sr), d=buf.getChannelData(0);
+    for(let i=0;i<n;i++){ const env=Math.pow(1-i/n,2.2); d[i]=(Math.random()*2-1)*env; }
+    const src=ac.createBufferSource(); src.buffer=buf;
+    const bp=ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1600+Math.random()*1400; bp.Q.value=0.9;
+    const gain=ac.createGain(); gain.gain.value=0.12+Math.min(g,60)/60*0.5;
+    src.connect(bp); bp.connect(gain); gain.connect(ac.destination);
+    src.start(when); return src;
+  }catch(e){ return null; }
+}
+function gsPlay(id){
+  const row=GS_ROWS.find(r=>r.id===id); if(!row) return;
+  gsStop();
+  const ac=gsEnsureAudio(); if(!ac){ gsMsg('Audio unavailable.',true); return; }
+  try{ if(ac.state==='suspended'&&ac.resume) ac.resume(); }catch(e){}
+  const cr=row.cracks, t0=(ac.currentTime||0)+0.05;
+  const span=cr.length?cr[cr.length-1][0]:0;
+  const playDur=Math.min(span/GS_SPEED, GS_CAP);
+  GS_PLAY={id:id, sources:[], raf:null, ac:ac, dur:playDur, startClock:(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now()};
+  for(let k=0;k<cr.length;k++){ const when=cr[k][0]/GS_SPEED; if(when>GS_CAP) continue; const s=gsPop(ac,cr[k][1],t0+when); if(s) GS_PLAY.sources.push(s); }
+}
+function gsStop(){ if(!GS_PLAY) return; try{ GS_PLAY.sources.forEach(s=>{ try{ if(s&&s.stop) s.stop(); }catch(_){} }); }catch(_){}
+  if(GS_PLAY.raf!=null&&typeof cancelAnimationFrame!=='undefined'){ try{ cancelAnimationFrame(GS_PLAY.raf); }catch(_){} }
+  GS_PLAY=null; }
+function gsProgEl(){ if(!GS_PLAY) return null; const idx=GS_ROWS.findIndex(r=>r.id===GS_PLAY.id); if(idx<0) return null; const list=document.getElementById('gsList'); if(!list) return null; return list.querySelectorAll('.gsprog')[idx]||null; }
+function gsTick(){ if(!GS_PLAY) return; const now=(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now();
+  const el=(now-GS_PLAY.startClock)/1000, pct=GS_PLAY.dur>0?Math.min(100,(el/GS_PLAY.dur)*100):100;
+  const p=gsProgEl(); if(p){ p.style.display=''; p.style.width=pct+'%'; }
+  if(el>=GS_PLAY.dur){ gsStop(); gsRenderRows(); return; }
+  if(typeof requestAnimationFrame!=='undefined'){ GS_PLAY.raf=requestAnimationFrame(gsTick); } }
+function gsTogglePlay(id){ if(GS_PLAY&&GS_PLAY.id===id){ gsStop(); gsRenderRows(); return; } gsPlay(id); gsRenderRows(); gsTick(); }
+async function gsToggleApprove(id){ if(!IS_ADMIN||!sb) return; const r=GS_ROWS.find(x=>x.id===id); if(!r) return; const nv=!r.approved;
+  let res; try{ res=await sb.from('game_samples').update({approved:nv}).eq('id',id); }catch(e){ res={error:{message:String(e)}}; }
+  if(res&&res.error){ gsMsg('Update failed: '+esc(res.error.message),true); return; }
+  r.approved=nv; gsMsg((nv?T('Approved'):T('Unapprove'))+' · '+esc(r.coffee||id),false); gsRenderRows(); }
+async function gsDelete(id){ if(!IS_ADMIN||!sb) return;
+  if(!confirm(T('Delete this submission? This cannot be undone.'))) return;
+  let res; try{ res=await sb.from('game_samples').delete().eq('id',id); }catch(e){ res={error:{message:String(e)}}; }
+  if(res&&res.error){ gsMsg('Delete failed: '+esc(res.error.message),true); return; }
+  if(GS_PLAY&&GS_PLAY.id===id) gsStop();
+  GS_ROWS=GS_ROWS.filter(x=>x.id!==id); gsMsg(T('Deleted'),false); gsRenderRows(); }
+function gsCopyLink(id){ const url='https://guide.coffeenutz.net/replay?id='+encodeURIComponent(id);
+  try{ if(navigator&&navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url); }
+    else { const ta=document.createElement('textarea'); ta.value=url; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); }catch(_){} document.body.removeChild(ta); } }catch(e){}
+  gsMsg(T('Replay link copied')+': '+esc(url),false); }
+
 // ---- classroom QRs (admin only): lazy-load qrcodejs, draw one QR per exam link ----
 function renderClassQRs(){
   const box=document.getElementById('classQRs'); if(!box||box.dataset.done) return;
@@ -1679,6 +1799,7 @@ async function renderAccount(){
   const ec=document.getElementById('engineCard'); if(ec){ ec.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadEngine(); }
   const mc=document.getElementById('memberCard'); if(mc){ mc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadEntitlements(); }
   const tc=document.getElementById('trCard'); if(tc){ tc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) renderTranslations(); }
+  const gc=document.getElementById('submitCard'); if(gc){ gc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadSubmissions(); }
 }
 async function changePassword(){ const p1=acPass1.value, p2=acPass2.value;
   if((p1||'').length<6){ acPassMsg.style.color='var(--warn)'; acPassMsg.textContent='Use at least 6 characters.'; return; }
@@ -1744,6 +1865,10 @@ const DICT={ tr:{
  "Your membership":"Üyeliğiniz","Member since":"Üyelik tarihi","Plan":"Plan","Change password":"Şifre değiştir","New password":"Yeni şifre",
  "Confirm new password":"Yeni şifreyi onayla","Update password":"Şifreyi güncelle","Log out":"Çıkış yap","Member access":"Üye erişimi",
  "Learner email":"Öğrenci e-postası","Save plan":"Planı kaydet","Provisioned members":"Tanımlı üyeler",
+ "Pending":"Bekliyor","Approved":"Onaylı","Approve":"Onayla","Unapprove":"Onayı kaldır","Listen":"Dinle","Stop":"Durdur",
+ "Copy replay link":"Replay linkini kopyala","Replay link copied":"Replay linki kopyalandı","Deleted":"Silindi",
+ "Delete this submission? This cannot be undone.":"Bu gönderi silinsin mi? Geri alınamaz.",
+ "total":"toplam","pending":"bekliyor","cracks":"çatlak","s span":"sn aralık",
  "Lite":"Lite","Roaster":"Roaster","Cupper":"Cupper","Admin":"Yönetici",
  // CVA lexicon - kept English on purpose (edit here to translate)
  "Floral":"Floral","Fruity":"Fruity","Berry":"Berry","Dried Fruit":"Dried Fruit","Citrus Fruit":"Citrus Fruit","Sour/Fermented":"Sour/Fermented",

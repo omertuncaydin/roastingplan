@@ -129,6 +129,25 @@
   .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%); background:var(--panel); border:1px solid var(--accent); color:var(--ink); padding:11px 16px; border-radius:10px; font-size:13px; z-index:50; max-width:90%; text-align:center}
   .hidden{display:none !important}
   .fineprint{font-size:11px; color:var(--muted); margin-top:10px; line-height:1.5}
+  .stageWrap{text-align:center}
+  .stageChip{display:inline-block; margin:8px auto 0; padding:6px 14px; font-size:12px; font-weight:700; color:#1a1410; background:var(--gold); border:none; border-radius:999px; cursor:pointer; animation:stagePulse 1.8s ease-in-out infinite}
+  .stageChip .en{color:#5a4a1a}
+  @keyframes stagePulse{0%,100%{box-shadow:0 0 0 0 rgba(230,193,75,.55)} 50%{box-shadow:0 0 0 7px rgba(230,193,75,0)}}
+  .stageLink{display:inline-block; margin:8px auto 0; padding:2px 4px; font-size:12px; font-weight:600; color:var(--gold); background:none; border:none; cursor:pointer; text-decoration:underline; text-underline-offset:3px}
+  .stageOverlay{position:fixed; inset:0; background:rgba(12,9,6,.82); display:flex; align-items:center; justify-content:center; padding:20px; z-index:50}
+  .stageCard{position:relative; max-width:440px; width:100%; background:var(--panel); border:1px solid var(--accent); border-radius:16px; padding:22px 20px 18px; max-height:90vh; overflow:auto; box-shadow:0 12px 40px rgba(0,0,0,.5)}
+  .stageX{position:absolute; top:8px; right:12px; background:none; border:none; color:var(--muted); font-size:24px; line-height:1; cursor:pointer}
+  .stageTitle{font-size:19px; font-weight:800; color:var(--ink); text-align:center; margin:2px 0 4px}
+  .stageTitle .en{display:block; font-size:.7em; font-weight:600; color:var(--muted); margin-top:2px}
+  .stageSubtitle{font-size:12px; color:var(--accent); text-align:center; margin-bottom:14px}
+  .stageSubtitle .en{color:var(--muted); display:block; margin-top:2px}
+  .stageList{list-style:none; margin:0 0 14px; padding:0}
+  .stageList li{display:flex; gap:12px; align-items:baseline; padding:8px 0; border-top:1px solid var(--line)}
+  .stageList li b{color:var(--gold); font-size:15px; font-weight:800; min-width:26px; font-variant-numeric:tabular-nums}
+  .stageList li>span{font-size:13px; color:var(--ink)}
+  .stageList li .en{color:var(--muted); font-size:.9em}
+  .stageClose2{font-size:12px; color:var(--muted); text-align:center; margin-bottom:12px}
+  .stageClose2 a{display:block; margin-top:6px; color:var(--accent); text-decoration:none}
 </style>
 </head>
 <body>
@@ -142,7 +161,7 @@
     <h1 id="evtName" class="event hidden"></h1>
     <h1>Agtron Challenge<span class="en" style="display:block;font-size:15px;color:var(--muted);font-weight:500">Kulağın Kaç Agtron? · How Many Agtron Is Your Ear?</span></h1>
     <div style="display:flex;justify-content:center;gap:8px;align-items:center;margin-top:8px">
-      <span style="border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:11px;color:var(--muted)">v2026-07-12h</span>
+      <span style="border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:11px;color:var(--muted)">v2026-07-12i</span>
       <button style="border:1px solid var(--accent);border-radius:999px;padding:4px 11px;font-size:11px;color:var(--accent);background:none;cursor:pointer" onclick="location.href=location.pathname+location.search.replace(/[?&]v=\d+/,'')+(location.search?'&':'?')+'v='+Date.now()">Refresh</button>
     </div>
   </header>
@@ -221,6 +240,10 @@
       <div class="instr" id="instrCall"></div>
       <div class="instr hidden" id="creditLine"></div>
       <canvas class="bell" id="bellResult" width="488" height="150"></canvas>
+      <div class="stageWrap hidden" id="stageWrap">
+        <button class="stageChip hidden" id="stageChip">Evreler? <span class="en">· The stages?</span></button>
+        <button class="stageLink hidden" id="stageLink">Evreler · Stages</button>
+      </div>
       <div class="speedBox hidden" id="speedBox">
         <div class="speedQ">Bu kavurma hızlı mıydı, orta mı, yavaş mı? <span class="en" style="display:block">Was this roast fast, medium or slow?</span></div>
         <div class="chips" id="speedChips">
@@ -293,14 +316,32 @@
       Çıtırtı zamanları gerçektir: 2026-07-07 ve 2026-07-10 tarihlerinde ölçülmüş altı gerçek kavrumdan (Ethiopia Yirgacheffe Gr.2 ve Ethiopia Rumudamo, bir tam çan ile kavurucusunun erken indirdiği partiler). Pop sesleri o gerçek anlarda sentezlenir. Renk modeli her kahvenin kendi ölçülmüş Agtron değerine göre kurulur.
       <span class="en" style="display:block; margin-top:3px">Crack timings are real, from six measured roasts on 2026-07-07 and 2026-07-10 (Ethiopia Yirgacheffe Gr.2 and Ethiopia Rumudamo, one full bell plus batches the roaster dropped early). The pop sounds are synthesized at those real moments. The color model is built from each coffee's own measured Agtron.</span>
     </div>
-    <div style="margin-top:8px">Agtron Challenge · <a href="https://guide.coffeenutz.net/crack-game.html">guide.coffeenutz.net/crack-game</a> · v2026-07-12h</div>
+    <div style="margin-top:8px">Agtron Challenge · <a href="https://guide.coffeenutz.net/crack-game.html">guide.coffeenutz.net/crack-game</a> · v2026-07-12i</div>
   </footer>
+</div>
+
+<div class="stageOverlay hidden" id="stageOverlay">
+  <div class="stageCard">
+    <button class="stageX" id="stageClose" aria-label="Kapat">×</button>
+    <div class="stageTitle">Kavurmanın Evreleri <span class="en">· The Stages of the Roast</span></div>
+    <div class="stageSubtitle">Bir CoffeeNutz icadı <span class="en">· A CoffeeNutz invention (Acoustic Roast Mapping)</span></div>
+    <ul class="stageList">
+      <li><b>A0</b> <span>İlk patlama <span class="en">· The first pop</span></span></li>
+      <li><b>A1</b> <span>Hızlanma: yükselişin en dik anı <span class="en">· Acceleration: the steepest climb</span></span></li>
+      <li><b>B0</b> <span>Yavaşlama dirseği <span class="en">· The deceleration knee</span></span></li>
+      <li><b>B1</b> <span>Taç: en yoğun an <span class="en">· The crown: peak activity</span></span></li>
+      <li><b>C0</b> <span>Düşüş doğrulandı <span class="en">· The decline, confirmed</span></span></li>
+      <li><b>C1</b> <span>Hak edilmiş sessizlik <span class="en">· The earned silence</span></span></li>
+    </ul>
+    <div class="stageClose2">Bu dilbilgisi Crack Listener'da canlı çalışır. <span class="en" style="display:block;margin-top:2px">· This grammar runs live in the Crack Listener.</span><a href="https://guide.coffeenutz.net/crack-listen.html">guide.coffeenutz.net/crack-listen</a></div>
+    <button class="big ghost" id="stageCloseBtn">Kapat <span class="btn-en en">· Close</span></button>
+  </div>
 </div>
 
 <script>
 "use strict";
 /* ============================================================
-   Agtron Challenge · Kulağın Kaç Agtron? · CoffeeNutz crack game · v2026-07-12h
+   Agtron Challenge · Kulağın Kaç Agtron? · CoffeeNutz crack game · v2026-07-12i
    HONESTY: this is not a measurement. Crack timings are REAL,
    measured from six roasts on 2026-07-07 and 2026-07-10
    (Ethiopia Yirgacheffe Gr.2 and Ethiopia Rumudamo). One full
@@ -330,6 +371,7 @@ var SAMPLES = [
   { id:'y1400', coffee:'Ethiopia Yirgacheffe Gr.2', date:'2026-07-07', cut:false,
     terminalAg:67, anchors:[[0,115],[1308,108],[2617,104],[2943,102],[5500,67]],
     riseToPeakS:57, speed:'slow',
+    stages:[["A0",0],["A1",31.78],["B0",47.78],["B1",63.78],["C0",96.98]],
     cracks:[
       [0.0,51],[2.66,52],[19.84,43],[27.45,45],[32.7,35],[32.85,44],[36.82,43],[37.29,57],[38.5,43],
       [38.84,38],[41.9,53],[43.66,48],[43.79,36],[44.8,43],[46.42,38],[46.59,42],[46.72,36],[47.59,46],
@@ -352,6 +394,7 @@ var SAMPLES = [
      Rise-to-peak ~27 s: fast. */
   { id:'y1440', coffee:'Ethiopia Yirgacheffe Gr.2', date:'2026-07-07', cut:true,
     terminalAg:102.8, anchors:null, riseToPeakS:27, speed:'fast',
+    stages:[["A0",0],["A1",3.8],["B0",15.8],["B1",27.8]],
     cracks:[
       [0.0,42],[1.94,51],[2.34,50],[2.86,38],[3.94,52],[5.57,38],[7.17,34],[10.3,35],[10.83,47],[11.75,45],
       [12.9,40],[13.67,37],[14.78,39],[14.91,35],[15.34,42],[15.44,47],[16.4,36],[16.64,39],[17.23,48],[18.73,36],
@@ -366,6 +409,7 @@ var SAMPLES = [
      Rise-to-peak ~37 s: medium. */
   { id:'r1817', coffee:'Ethiopia Rumudamo', date:'2026-07-07', cut:true,
     terminalAg:100.4, anchors:null, riseToPeakS:37, speed:'medium',
+    stages:[["A0",0.04],["A1",28.34],["B0",32.34]],
     cracks:[
       [0.0,58],[0.57,47],[2.58,44],[5.35,44],[6.87,41],[8.1,35],[10.81,44],[11.92,37],[13.27,40],[15.19,55],
       [15.87,37],[16.91,46],[17.85,43],[18.22,41],[18.94,38],[19.07,41],[19.58,45],[19.79,42],[20.65,33],[21.86,33],
@@ -380,6 +424,7 @@ var SAMPLES = [
      The crack envelope was still rising at the cut, so speed is unknown (null). */
   { id:'r2001', coffee:'Ethiopia Rumudamo', date:'2026-07-07', cut:true,
     terminalAg:106, anchors:null, riseToPeakS:null, speed:null,
+    stages:[["A0",0.03],["A1",22.73],["B0",26.73]],
     cracks:[
       [0.0,38],[0.24,38],[1.26,49],[7.49,45],[10.86,37],[12.53,33],[12.63,40],[12.76,38],[14.96,46],[15.34,39],
       [15.98,42],[17.45,32],[18.26,40],[21.7,34],[21.98,38],[22.21,33],[23.41,43],[23.68,42],[23.77,41],[23.9,36],
@@ -391,6 +436,7 @@ var SAMPLES = [
      Rise-to-peak ~53 s: slow. */
   { id:'u1147', coffee:'Ethiopia Yirgacheffe Gr.2', date:'2026-07-10', cut:true,
     terminalAg:102, anchors:null, riseToPeakS:53, speed:'slow',
+    stages:[["A0",0],["A1",15],["B0",39]],
     cracks:[
       [0.0,37],[1.87,41],[2.38,40],[3.86,38],[6.76,35],[9.66,35],[13.05,35],[14.46,37],[14.57,40],[16.08,43],
       [17.62,37],[18.83,34],[18.92,36],[19.24,41],[19.88,38],[21.67,34],[22.8,53],[23.84,54],[24.19,42],[24.91,37],
@@ -406,6 +452,7 @@ var SAMPLES = [
      Rise-to-peak ~51 s: slow. */
   { id:'u1259', coffee:'Ethiopia Yirgacheffe Gr.2', date:'2026-07-10', cut:true,
     terminalAg:101, anchors:null, riseToPeakS:51, speed:'slow',
+    stages:[["A0",0.05],["A1",46.25],["B0",50.25],["B1",50.25],["C0",61.85]],
     cracks:[
       [0.0,52],[7.83,46],[11.69,35],[13.57,36],[14.04,45],[16.79,35],[18.16,44],[18.56,38],[21.64,49],[22.7,37],
       [24.24,44],[25.41,49],[26.86,36],[28.63,37],[29.04,42],[29.96,46],[30.6,41],[30.79,47],[34.03,48],[34.82,38],
@@ -612,7 +659,7 @@ function binGains(s, uptoTime){
   }
   return {bins:bins, binW:binW, nb:nb};
 }
-function drawBell(canvas, s, uptoTime){
+function drawBell(canvas, s, uptoTime, opts){
   if(!canvas || !s) return;
   var ctx = canvas.getContext('2d');
   if(!ctx) return;
@@ -637,6 +684,34 @@ function drawBell(canvas, s, uptoTime){
   }
   ctx.fillStyle = '#a8998a'; ctx.font = '10px -apple-system,sans-serif';
   ctx.fillText('2 sn / çubuk · 2 s / bar', pad+2, 12);
+  // Stage pins + YOU marker. Reveal only (opts.pins); never during play.
+  if(opts && opts.pins && s.stages && s.stages.length){
+    var binW2 = data.binW;
+    var xForT = function(t){ var xx = pad + (t/binW2)*bw; if(xx<pad) xx=pad; if(xx>W-pad) xx=W-pad; return xx; };
+    ctx.textAlign = 'center';
+    for(var pi=0; pi<s.stages.length; pi++){
+      var nm = s.stages[pi][0], ts = s.stages[pi][1], xg = xForT(ts);
+      ctx.strokeStyle = '#e6c14b'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(xg, base-6); ctx.lineTo(xg, base+3); ctx.stroke();
+      ctx.fillStyle = '#e6c14b'; ctx.font = '700 9px -apple-system,sans-serif';
+      ctx.fillText(nm, xg, base+13);
+    }
+    if(typeof opts.you === 'number'){
+      var xy = xForT(opts.you);
+      ctx.strokeStyle = '#f3ede4'; ctx.lineWidth = 2;
+      if(ctx.setLineDash) ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(xy, pad+6); ctx.lineTo(xy, base); ctx.stroke();
+      if(ctx.setLineDash) ctx.setLineDash([]);
+      var yl = 'SEN · YOU';
+      ctx.font = '700 10px -apple-system,sans-serif';
+      var tw = ctx.measureText ? (ctx.measureText(yl).width||0) : 0, lx = xy;
+      if(lx - tw/2 < pad) lx = pad + tw/2;
+      if(lx + tw/2 > W-pad) lx = W-pad - tw/2;
+      ctx.fillStyle = '#1a1410'; ctx.fillText(yl, lx+0.6, pad+11.6);
+      ctx.fillStyle = '#f3ede4'; ctx.fillText(yl, lx, pad+11);
+    }
+    ctx.textAlign = 'start';
+  }
 }
 /* Draw the bell bars onto an arbitrary 2D context within a rect (share card). */
 function drawBellBarsOn(ctx, s, uptoTime, x, y, w, h){
@@ -819,6 +894,27 @@ function doDrop(overshoot){
   renderReveal();
 }
 
+/* --- STAGE CELEBRATION (Acoustic Roast Mapping; a CoffeeNutz invention) --
+   Hidden during play; surfaced only on the reveal so the ear learns where it
+   landed inside the anatomy of first crack. Never assists a live drop. */
+function renderStageUI(s){
+  var chip=$('stageChip'), link=$('stageLink'), wrap=$('stageWrap');
+  if(!chip||!link) return;
+  var has = !!(s && s.stages && s.stages.length);
+  if(!has){ chip.classList.add('hidden'); link.classList.add('hidden'); if(wrap) wrap.classList.add('hidden'); return; }
+  if(wrap) wrap.classList.remove('hidden');
+  var seen=false; try{ seen = localStorage.getItem('cn_stages_seen')==='1'; }catch(e){}
+  if(seen){ chip.classList.add('hidden'); link.classList.remove('hidden'); }
+  else { chip.classList.remove('hidden'); link.classList.add('hidden'); }
+}
+function openStageOverlay(){
+  try{ localStorage.setItem('cn_stages_seen','1'); }catch(e){}
+  var chip=$('stageChip'); if(chip) chip.classList.add('hidden');
+  var link=$('stageLink'); if(link) link.classList.remove('hidden');
+  var ov=$('stageOverlay'); if(ov) ov.classList.remove('hidden');
+}
+function closeStageOverlay(){ var ov=$('stageOverlay'); if(ov) ov.classList.add('hidden'); }
+
 /* --- REVEAL SCREEN --------------------------------------------- */
 function renderReveal(){
   var r = state.roundResult, s = state.sample;
@@ -853,7 +949,8 @@ function renderReveal(){
     } else { cl.classList.add('hidden'); cl.innerHTML=''; }
   }
 
-  drawBell($('bellResult'), s, r.elapsed);
+  drawBell($('bellResult'), s, r.elapsed, {pins:true, you:r.elapsed});
+  renderStageUI(s);
 
   var sb = $('speedBox'), sr = $('speedRes');
   sr.classList.add('hidden'); sr.innerHTML='';
@@ -1059,13 +1156,19 @@ function buildShareCanvas(){
   ctx.fillText('There is an app that draws this bell live.', W/2, yBell+244);
   ctx.fillStyle='#c98a3c'; ctx.font='700 32px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('guide.coffeenutz.net/crack-listen', W/2, yBell+286);
+  // Stage grammar credit when the final round's sample carried stages.
+  var lastDot = dds.length ? dds[dds.length-1] : null, finalS = lastDot ? lastDot.sample : null;
+  if(finalS && finalS.stages && finalS.stages.length){
+    ctx.fillStyle='#3c7a5a'; ctx.font='600 26px -apple-system,Helvetica,Arial,sans-serif';
+    ctx.fillText('Evre dilbilgisi: CoffeeNutz · Stage grammar by CoffeeNutz', W/2, yBell+330);
+  }
   // honesty + handle
   ctx.fillStyle='#3c7a5a'; ctx.font='600 27px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('Oyun bir ölçüm değildir. · The game is not a measurement.', W/2, H-160);
   ctx.fillStyle='#c98a3c'; ctx.font='700 34px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('guide.coffeenutz.net/crack-game', W/2, H-112);
   ctx.fillStyle='#a8998a'; ctx.font='500 24px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText('Yirgacheffe Gr.2 & Rumudamo · 6 gerçek kavrum · v2026-07-12h', W/2, H-70);
+  ctx.fillText('Yirgacheffe Gr.2 & Rumudamo · 6 gerçek kavrum · v2026-07-12i', W/2, H-70);
   return cv;
 }
 function roundRect(ctx,x,y,w,h,r){
@@ -1230,6 +1333,11 @@ function initGame(){
     ch.addEventListener('click', function(){ answerSpeed(ch.getAttribute('data-sp')); });
   });
   $('btnNext').addEventListener('click', nextRound);
+  var _sc=$('stageChip'); if(_sc) _sc.addEventListener('click', openStageOverlay);
+  var _sl=$('stageLink'); if(_sl) _sl.addEventListener('click', openStageOverlay);
+  var _sx=$('stageClose'); if(_sx) _sx.addEventListener('click', closeStageOverlay);
+  var _scb=$('stageCloseBtn'); if(_scb) _scb.addEventListener('click', closeStageOverlay);
+  var _sov=$('stageOverlay'); if(_sov) _sov.addEventListener('click', function(e){ if(e.target===_sov) closeStageOverlay(); });
   $('btnReplay').addEventListener('click', function(){ show('scrStart'); });
   $('btnShare').addEventListener('click', downloadShare);
   $('langTr').addEventListener('click', function(){ setLang('tr'); });
@@ -1264,6 +1372,9 @@ window.__CRACKGAME__ = {
   colorBand: colorBand,
   drawBell: drawBell,
   renderReveal: renderReveal,
+  renderStageUI: renderStageUI,
+  openStageOverlay: openStageOverlay,
+  closeStageOverlay: closeStageOverlay,
   renderMatch: renderMatch,
   loadCommunitySamples: loadCommunitySamples,
   communityToSample: communityToSample,
