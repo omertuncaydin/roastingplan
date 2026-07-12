@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zine Sign-off</title>
+<style>
+  :root{
+    --paper:#E4DCCA; --ink:#1F2320; --amber:#BC7D15;
+    --bg:#141613; --fg:#d9d3c5; --dim:#8f897b; --line:#2c2f2a; --panel:#1b1e1a;
+    --mono:'IBM Plex Mono','Courier New',monospace;
+    --serif:'Spectral',Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--fg);font-family:var(--serif);line-height:1.55;display:flex;justify-content:center;padding:28px 16px 60px}
+  .wrap{width:100%;max-width:640px}
+  .kick{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--amber)}
+  h1{font-family:var(--serif);font-weight:600;font-size:26px;margin:6px 0 4px}
+  .from{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.04em;margin-bottom:18px}
+  .note{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:4px;padding:12px 14px;font-size:14px;color:var(--fg);margin:16px 0}
+  label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin:16px 0 5px}
+  textarea,input{width:100%;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:11px 12px;font-family:var(--serif);font-size:15px;line-height:1.5}
+  input{font-family:var(--mono);font-size:13px}
+  textarea{min-height:230px;resize:vertical}
+  textarea:focus,input:focus{outline:none;border-color:var(--amber)}
+  .grid{display:flex;gap:12px;flex-wrap:wrap}
+  .grid>div{flex:1;min-width:180px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+  button{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:12px 16px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
+  button:hover{border-color:var(--amber);color:#fff}
+  button.primary{background:var(--amber);border-color:var(--amber);color:#1a1408;font-weight:600}
+  button.primary:hover{color:#000}
+  .foot{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:26px;letter-spacing:.04em}
+  a{color:var(--amber)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="kick">CoffeeNutz Zine</div>
+    <h1>Guest sign-off</h1>
+    <div class="from" id="fromLine"></div>
+
+    <div class="note">
+      This is the text prepared for your page. You may edit it freely. When you approve and send,
+      you are giving permission to print this text, with your name and role, in the issue.
+    </div>
+
+    <label for="text">Your text</label>
+    <textarea id="text" placeholder="Your text will appear here."></textarea>
+
+    <div class="grid">
+      <div>
+        <label for="name">Name</label>
+        <input id="name" placeholder="Your name">
+      </div>
+      <div>
+        <label for="role">Role or title</label>
+        <input id="role" placeholder="Your role">
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="primary" id="approve">Approve and send</button>
+      <button id="download">Download signed copy</button>
+    </div>
+
+    <div class="foot" id="foot"></div>
+  </div>
+
+<script>
+  function b64d(s){ if(!s) return ''; try{ return decodeURIComponent(escape(atob(s))); }catch(e){ try{ return atob(s); }catch(_){ return ''; } } }
+  function qp(k){ try{ return new URLSearchParams(location.search).get(k); }catch(e){ return null; } }
+
+  var pText=b64d(qp('t')||'');
+  var pName=qp('n')||'';
+  var pRole=qp('r')||'';
+  var pFrom=qp('from')||'';
+
+  document.getElementById('text').value=pText;
+  document.getElementById('name').value=pName;
+  document.getElementById('role').value=pRole;
+  document.getElementById('fromLine').textContent=pFrom?('Sent by '+pFrom):'A note is waiting for your approval.';
+
+  function todayISO(){ return new Date().toISOString().slice(0,10); }
+  function vals(){
+    return {
+      text:document.getElementById('text').value,
+      name:document.getElementById('name').value.trim(),
+      role:document.getElementById('role').value.trim(),
+      date:todayISO()
+    };
+  }
+  function signedText(v){
+    return v.text.trim()+'\n\n'
+      + '---\n'
+      + 'Name: '+v.name+'\n'
+      + 'Role: '+v.role+'\n'
+      + 'Date: '+v.date+'\n'
+      + 'APPROVED';
+  }
+
+  document.getElementById('approve').addEventListener('click', function(){
+    var v=vals();
+    var subject='Zine sign-off: '+(v.name||'guest');
+    var body=signedText(v);
+    var href='mailto:omertunc.aydin@gmail.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+    window.location.href=href;
+    document.getElementById('foot').textContent='Your mail app should open with the approval ready to send. If it does not, use Download signed copy and email the file.';
+  });
+
+  document.getElementById('download').addEventListener('click', function(){
+    var v=vals();
+    var body=signedText(v);
+    var blob=new Blob([body],{type:'text/plain;charset=utf-8'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    var safe=(v.name||'guest').replace(/[^0-9a-z]+/gi,'-').replace(/^-+|-+$/g,'').toLowerCase()||'guest';
+    a.href=url; a.download='zine-signoff-'+safe+'.txt';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    document.getElementById('foot').textContent='Signed copy downloaded. You can email that file to CoffeeNutz.';
+  });
+</script>
+</body>
+</html>

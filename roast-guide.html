@@ -193,9 +193,21 @@
       <div style="text-align:right;margin-bottom:4px"><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
       <div class="small" style="margin-bottom:14px" data-i18n="Sign in to load your recipes.">Sign in to load your recipes.</div>
       <label class="fld" for="loginEmail" data-i18n="Email">Email</label><input type="email" id="loginEmail" autocomplete="username">
-      <label class="fld" for="loginPass" style="margin-top:8px" data-i18n="Password">Password</label><input type="password" id="loginPass" autocomplete="current-password">
-      <button class="btn" style="margin-top:14px" onclick="doLogin()" data-i18n="Log in">Log in</button>
+      <label class="fld" for="loginPass" id="loginPassLbl" style="margin-top:8px" data-i18n="Password">Password</label><input type="password" id="loginPass" autocomplete="current-password">
+      <button class="btn" id="loginBtn" style="margin-top:14px" onclick="doLogin()" data-i18n="Log in">Log in</button>
+      <button class="btn hide" id="signupBtn" style="margin-top:14px" onclick="doSignUp()" data-i18n="Create account">Create account</button>
+      <button class="btn hide" id="resetBtn" style="margin-top:14px" onclick="doReset()" data-i18n="Send reset link">Send reset link</button>
       <div class="small" id="loginMsg" style="margin-top:10px;color:var(--warn)"></div>
+      <div class="small" id="authModes" style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap">
+        <a href="#" onclick="setAuthMode('signin',event)" style="color:var(--accent);text-decoration:underline;cursor:pointer" data-i18n="Sign in">Sign in</a>
+        <a href="#" onclick="setAuthMode('signup',event)" style="color:var(--accent);text-decoration:underline;cursor:pointer" data-i18n="Create account">Create account</a>
+        <a href="#" onclick="setAuthMode('reset',event)" style="color:var(--accent);text-decoration:underline;cursor:pointer" data-i18n="Forgot password?">Forgot password?</a>
+      </div>
+      <div class="hide" id="recoveryBox" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+        <div class="secname" style="margin-bottom:6px" data-i18n="Set new password">Set new password</div>
+        <label class="fld" for="recPass" data-i18n="New password">New password</label><input type="password" id="recPass" autocomplete="new-password">
+        <button class="btn" style="margin-top:12px" onclick="doRecoverySet()" data-i18n="Update password">Update password</button>
+      </div>
       <div class="small" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><span data-i18n="If you are a former student, copy this address and email us for your account:">If you are a former student, copy this address and email us for your account:</span> <a href="#" id="copyMail" onclick="copyEmail(event)" title="Copy" style="color:var(--accent);text-decoration:underline;cursor:pointer">info@coffeenutz.net</a></div>
     </div>
   </div>
@@ -413,6 +425,16 @@
     </div>
     <div class="scorebar" id="cupScoreBar"><span class="sv" id="cupSV" onclick="toggleScore()">79.00</span><span class="sl">cupping<br>score <span class="info" onclick="showScoreInfo()">&#9432;</span></span><button class="iconbtn" id="cupScoreToggle" onclick="toggleScore()" data-i18n="Reveal">Reveal</button></div>
     <div id="cupLiteBanner"></div>
+    <div class="card" id="cupTimerCard">
+      <div class="cgrplbl" data-i18n="Cupping Timer">Cupping Timer</div>
+      <div class="cuprow" style="align-items:center;gap:12px;margin-top:6px">
+        <button class="btn" id="cupTimerBtn" style="margin:0;width:auto" onclick="cupTimerStart()" data-i18n="Start when you wet the grounds">Start when you wet the grounds</button>
+        <span id="cupTimerClock" style="font-variant-numeric:tabular-nums;font-size:22px;font-weight:700;color:var(--accent)">0:00</span>
+        <button class="iconbtn" id="cupTimerReset" onclick="cupTimerReset()" data-i18n="Reset">Reset</button>
+      </div>
+      <div id="cupTimerStages" style="margin-top:10px"></div>
+      <div class="small" style="margin-top:6px;color:var(--muted)" data-i18n="Optional. It never blocks your cupping.">Optional. It never blocks your cupping.</div>
+    </div>
     <div class="card">
       <div class="cuprow" style="gap:10px;flex-wrap:wrap;align-items:flex-start">
         <div style="flex:1;min-width:120px"><label class="fld" for="cupDate" data-i18n="Date">Date</label><input type="date" id="cupDate" oninput="cup.date=this.value"></div>
@@ -537,7 +559,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-11a</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-11b</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -595,6 +617,8 @@
       <label class="fld" for="entEmail">Learner email</label><input type="email" id="entEmail" autocomplete="off" oninput="lookupEntitlement()">
       <label class="fld" for="entPlan" style="margin-top:10px">Plan</label>
       <select id="entPlan"><option>Roaster</option><option>Cupper</option></select>
+      <label class="fld" for="entReason" style="margin-top:10px">Reason</label>
+      <select id="entReason" onchange="onEntReasonChange(this)"><option value="user">user</option><option value="learner">learner</option><option value="promotion">promotion</option><option value="other">other</option></select>
       <button class="btn" style="margin-top:12px" onclick="saveEntitlement()">Save plan</button>
       <div class="small" id="entMsg" style="margin-top:8px;color:var(--accent2)"></div>
       <div class="cgrplbl" style="margin-top:14px">Provisioned members</div>
@@ -1446,16 +1470,16 @@ function enrollPrompt(word){ return 'Lite access: explore freely here, but savin
 function liteBanner(word){ return '<div class="litebanner">Lite access. Score and explore as much as you like - saving your '+word+' unlocks when you enroll to your class.</div>'; }
 // admin: provision learners by email + plan
 async function saveEntitlement(){ if(!IS_ADMIN||!sb) return; const email=(entEmail.value||'').trim().toLowerCase(); if(!email){ entMsg.style.color='var(--warn)'; entMsg.textContent='Enter an email.'; return; }
-  const plan=document.getElementById('entPlan').value; const _mo=(plan==='Cupper')?36:12; const _u=new Date(); _u.setMonth(_u.getMonth()+_mo); const access=Object.assign({},PLANS[plan]||{},{plan,until:_u.toISOString().slice(0,10)});
+  const plan=document.getElementById('entPlan').value; const _rsel=document.getElementById('entReason'); const _reason=_rsel?_rsel.value:'user'; const _note=(_reason==='other')?(ENT_NOTE||''):''; const _mo=(plan==='Cupper')?36:12; const _u=new Date(); _u.setMonth(_u.getMonth()+_mo); const access=Object.assign({},PLANS[plan]||{},{plan,until:_u.toISOString().slice(0,10),reason:_reason,note:_note});
   const r=await sb.from('entitlements').upsert({email,access,updated_at:new Date().toISOString()},{onConflict:'email'}).select();
   if(r&&r.error){ entMsg.style.color='var(--warn)'; entMsg.textContent='Save failed: '+r.error.message; return; }
   entMsg.style.color='var(--accent2)'; entMsg.textContent='Saved '+plan+' for '+email; loadEntitlements(); }
 async function lookupEntitlement(){ if(!IS_ADMIN||!sb) return; const email=(entEmail.value||'').trim().toLowerCase(); if(!email) return;
   try{ const r=await sb.from('entitlements').select('access').eq('email',email).maybeSingle(); const a=(r&&!r.error&&r.data&&r.data.access)?r.data.access:null;
-    const el=document.getElementById('entPlan'); if(el&&a&&a.plan) el.value=planLabelG(a.plan); }catch(e){} }
+    const el=document.getElementById('entPlan'); if(el&&a&&a.plan) el.value=planLabelG(a.plan); const rs=document.getElementById('entReason'); if(rs&&a&&a.reason){ rs.value=a.reason; ENT_NOTE=a.note||''; } }catch(e){} }
 async function loadEntitlements(){ if(!IS_ADMIN||!sb){ if(typeof entList!=='undefined'&&entList) entList.innerHTML=''; return; }
   try{ const r=await sb.from('entitlements').select('*').order('email');
-    if(r&&!r.error&&r.data){ entList.innerHTML = r.data.length? r.data.map(e=>{ const a=e.access||{}; const plan=a.plan?planLabelG(a.plan):'(custom)'; return `<div class="hxrow"><span>${esc(e.email)}</span><span class="tgtval" style="font-size:11px">${esc(plan)} <button class="delx" data-delent="${esc(e.email)}">×</button></span></div>`; }).join('') : '<div class="small">No members provisioned yet.</div>';
+    if(r&&!r.error&&r.data){ entList.innerHTML = r.data.length? r.data.map(e=>{ const a=e.access||{}; const plan=a.plan?planLabelG(a.plan):'(custom)'; const rTag=a.reason?('<span class="chip sub" style="font-size:10px;margin-left:4px"'+(a.note?(' title="'+esc(a.note).replace(/"/g,'&quot;')+'"'):'')+'>'+esc(a.reason)+'</span>'):''; return `<div class="hxrow"><span>${esc(e.email)}</span><span class="tgtval" style="font-size:11px">${esc(plan)}${rTag} <button class="delx" data-delent="${esc(e.email)}">×</button></span></div>`; }).join('') : '<div class="small">No members provisioned yet.</div>';
       entList.querySelectorAll('[data-delent]').forEach(b=>b.onclick=()=>delEntitlement(b.dataset.delent)); } }catch(e){} }
 async function delEntitlement(email){ if(!IS_ADMIN||!sb) return; if(!confirm('Remove access row for '+email+'?')) return; const r=await sb.from('entitlements').delete().eq('email',email); if(r&&!r.error) loadEntitlements(); }
 // admin: live EN -> TR translation editor (overrides merge over built-in DICT, stored in settings.tr_dict)
@@ -1674,7 +1698,7 @@ function applyLang(){ try{ localStorage.setItem('cnLang',LANG); }catch(e){}
   document.querySelectorAll('.langBtn').forEach(b=>{ b.textContent = LANG==='en'?'TR':'EN'; });
   if(typeof show==='function') show(CURVIEW); }
 function toggleLang(){ LANG = LANG==='en'?'tr':'en'; applyLang(); }
-function hardRefresh(){ try{ const base=location.href.split('?')[0]; location.href=base+'?v='+Date.now(); }catch(e){ location.reload(); } }   // cache-bust reload for the home-screen app
+function hardRefresh(){ try{ localStorage.setItem('cnLastView', CURVIEW||''); }catch(e){} try{ const base=location.href.split('?')[0]; location.href=base+'?v='+Date.now(); }catch(e){ location.reload(); } }   // cache-bust reload for the home-screen app; remembers current view
 function copyEmail(e){ if(e&&e.preventDefault) e.preventDefault(); const a='info@coffeenutz.net';
   try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(a); } else { const t=document.createElement('textarea'); t.value=a; t.style.position='fixed'; t.style.opacity='0'; document.body.appendChild(t); t.focus(); t.select(); document.execCommand('copy'); document.body.removeChild(t); } }catch(err){}
   const el=document.getElementById('copyMail'); if(el){ el.textContent=T('Copied!'); setTimeout(()=>{ el.textContent=a; },1200); } }
@@ -1816,6 +1840,64 @@ function cupStarred(){ const starred=CALIB.samples.filter(s=>s.cup); const note=
 function esc(s){ return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 function buildBeans(){ const cur=bean.value; bean.innerHTML=`<option value="">${T('Pick your coffee')}</option><option value="__newrecipe__">${T('Add new coffee')}</option>`; getRecipes().filter(r=>r.active).forEach(r=>{ const o=document.createElement('option'); o.value=r.name; o.textContent=r.name+(REGISTRY.some(c=>c.name===r.name)?' \u2601':''); bean.appendChild(o); }); REGISTRY.filter(c=>!getRecipes().some(r=>r.name===c.name&&r.active)).forEach(c=>{ const o=document.createElement('option'); o.value=c.name; o.textContent=c.name+' \u2601'; bean.appendChild(o); }); if(cur&&(getRecipes().some(r=>r.name===cur&&r.active)||REGISTRY.some(c=>c.name===cur))) bean.value=cur; else bean.value=''; refresh(); }
 
+// ---- lightweight toast (none existed) ----
+function toast(msg){ try{ let t=document.getElementById('cnToast'); if(!t){ t=document.createElement('div'); t.id='cnToast'; t.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--panel,#241c16);color:var(--ink,#f3ede4);border:1px solid var(--line,#3a2f26);border-radius:10px;padding:10px 16px;font-size:13px;z-index:200;max-width:86%;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.45);opacity:0;transition:opacity .2s'; document.body.appendChild(t); } t.textContent=msg; requestAnimationFrame(()=>{ t.style.opacity='1'; }); clearTimeout(t._h); t._h=setTimeout(()=>{ t.style.opacity='0'; },3200); }catch(e){} }
+// ---- member reason note ----
+let ENT_NOTE='';
+function onEntReasonChange(sel){ if(sel&&sel.value==='other'){ const t=prompt('Note for this member (free text):', ENT_NOTE||''); ENT_NOTE=(t==null)?'':t; } else { ENT_NOTE=''; } }
+// ---- self-serve auth: sign in / create / forgot / recovery ----
+let AUTH_MODE='signin';
+function setAuthMode(m,e){ if(e&&e.preventDefault) e.preventDefault(); AUTH_MODE=m;
+  const tog=(id,on)=>{ const el=document.getElementById(id); if(el) el.classList.toggle('hide',!on); };
+  const needPass=(m!=='reset');
+  tog('loginPass',needPass); tog('loginPassLbl',needPass);
+  tog('loginBtn', m==='signin'); tog('signupBtn', m==='signup'); tog('resetBtn', m==='reset');
+  tog('recoveryBox', false);
+  const lm=document.getElementById('loginMsg'); if(lm){ lm.style.color='var(--warn)'; lm.textContent=''; } }
+async function doSignUp(){ if(!sb){ loginMsg.textContent='No connection to server.'; return; }
+  const email=(loginEmail.value||'').trim(); const pass=loginPass.value||'';
+  if(pass.length<8){ loginMsg.style.color='var(--warn)'; loginMsg.textContent='Password needs at least 8 characters.'; return; }
+  loginMsg.style.color='var(--muted)'; loginMsg.textContent='Creating account...';
+  const res=await sb.auth.signUp({email,password:pass});
+  if(res.error){ loginMsg.style.color='var(--warn)'; loginMsg.textContent=res.error.message; return; }
+  if(res.data&&res.data.session){ loginMsg.textContent=''; hideLogin(); loadFromServer(); }
+  else { loginMsg.style.color='var(--accent2)'; loginMsg.textContent='Check your email to confirm, then sign in.'; setAuthMode('signin'); } }
+async function doReset(){ if(!sb){ loginMsg.textContent='No connection to server.'; return; }
+  const email=(loginEmail.value||'').trim();
+  try{ await sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin+location.pathname}); }catch(e){}
+  toast('Reset link sent if the account exists.');
+  loginMsg.style.color='var(--accent2)'; loginMsg.textContent='Reset link sent if the account exists.'; }
+async function doRecoverySet(){ if(!sb){ loginMsg.textContent='No connection to server.'; return; }
+  const el=document.getElementById('recPass'); const p=el?el.value:'';
+  if((p||'').length<8){ loginMsg.style.color='var(--warn)'; loginMsg.textContent='Password needs at least 8 characters.'; return; }
+  const r=await sb.auth.updateUser({password:p});
+  if(r&&r.error){ loginMsg.style.color='var(--warn)'; loginMsg.textContent=r.error.message; return; }
+  if(el) el.value=''; const rb=document.getElementById('recoveryBox'); if(rb) rb.classList.add('hide');
+  toast('Password updated. You are signed in.'); hideLogin(); loadFromServer(); }
+// ---- optional cupping timer (never blocks the workflow) ----
+const CUP_STAGES=[
+ {t:0,    text:'Timer running. You wet the grounds.'},
+ {t:180,  text:'3 minutes passed. Break the crust.'},
+ {t:420,  text:'7 minutes passed. You can liquor the coffee.'},
+ {t:900,  text:'15 minutes. Good to check with liquoring once again.'},
+ {t:1320, text:'22 minutes. Coffees are too cold now, time to end the process.'}
+];
+let cupTimerT0=null, cupTimerTick=null, cupTimerStageIx=-1;
+function cupTimerElapsed(){ return cupTimerT0==null?0:(performance.now()-cupTimerT0)/1000; }
+function cupTimerStageFor(sec){ let ix=-1; for(let i=0;i<CUP_STAGES.length;i++){ if(sec>=CUP_STAGES[i].t) ix=i; } return ix; }
+function renderCupTimerStages(cur){ const el=document.getElementById('cupTimerStages'); if(!el) return;
+  el.innerHTML=CUP_STAGES.map((s,i)=>{ const on=(i===cur); return '<div class="small" style="padding:5px 8px;margin:2px 0;border-radius:6px;'+(on?'background:var(--accent);color:#1a1410;font-weight:700':'color:var(--muted)')+'">'+fmt(s.t)+' &middot; '+esc(s.text)+'</div>'; }).join(''); }
+function cupTimerUpdate(){ const sec=cupTimerElapsed(); const cl=document.getElementById('cupTimerClock'); if(cl) cl.textContent=fmt(sec);
+  const ix=cupTimerStageFor(sec);
+  if(ix!==cupTimerStageIx){ cupTimerStageIx=ix; renderCupTimerStages(ix);
+    if(ix>=0){ toast(CUP_STAGES[ix].text); try{ if(navigator.vibrate) navigator.vibrate(200); }catch(e){} } } }
+function cupTimerStart(){ if(cupTimerT0!=null) return; cupTimerT0=performance.now(); cupTimerStageIx=-1;
+  const b=document.getElementById('cupTimerBtn'); if(b){ b.textContent=T('Running'); b.disabled=true; }
+  cupTimerUpdate(); if(cupTimerTick) clearInterval(cupTimerTick); cupTimerTick=setInterval(cupTimerUpdate,500); }
+function cupTimerReset(){ if(cupTimerTick){ clearInterval(cupTimerTick); cupTimerTick=null; } cupTimerT0=null; cupTimerStageIx=-1;
+  const cl=document.getElementById('cupTimerClock'); if(cl) cl.textContent='0:00';
+  const b=document.getElementById('cupTimerBtn'); if(b){ b.textContent=T('Start when you wet the grounds'); b.disabled=false; }
+  renderCupTimerStages(-1); }
 // ===================== auth + server load =====================
 function showLogin(){ loginOverlay.style.display='flex'; }
 function hideLogin(){ loginOverlay.style.display='none'; }
@@ -1843,10 +1925,13 @@ async function seedServer(){
 }
 function initApp(){
   try{ if(typeof supabase!=='undefined') sb=supabase.createClient(SUPA_URL, SUPA_KEY); }catch(e){ console.warn('sb init',e); }
+  try{ if(sb&&sb.auth&&sb.auth.onAuthStateChange) sb.auth.onAuthStateChange((evt)=>{ if(evt==='PASSWORD_RECOVERY'){ showLogin(); const rb=document.getElementById('recoveryBox'); if(rb) rb.classList.remove('hide'); const lm=document.getElementById('loginMsg'); if(lm){ lm.style.color='var(--accent2)'; lm.textContent='Enter a new password below to finish resetting.'; } } }); }catch(e){}
   bean.addEventListener('change',()=>{ if(bean.value==='__newrecipe__'){ bean.value=''; show('recipes'); newRecipe(); return; } refresh(); }); equip.addEventListener('change',refresh);
   show('roast');   // set main/sub nav state (subnav emerges under Roast)
   try{ const l=localStorage.getItem('cnLang'); if(l==='tr'||l==='en') LANG=l; }catch(e){}
   applyLang();
+  try{ if(typeof renderCupTimerStages==='function') renderCupTimerStages(-1); }catch(e){}
+  try{ const lv=localStorage.getItem('cnLastView'); if(lv){ localStorage.removeItem('cnLastView'); if(document.getElementById('view-'+lv)) show(lv); } }catch(e){}
   if(!sb){ RECIPES=loadCache(); afterRecipes(); return; }   // offline / library blocked -> cache mode
   sb.auth.getSession().then(({data})=>{ if(data.session){ hideLogin(); loadFromServer(); } else { showLogin(); } });
 }

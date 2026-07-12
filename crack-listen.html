@@ -149,7 +149,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-11b</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-11c</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -361,8 +361,9 @@ let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
 const $=id=>document.getElementById(id);
 // tunable engine RULES: defaults here, overridable from the Guide's "Listener engine rules" card (localStorage bsEngine)
-let EP={FC_AG:125,FOLLOW:30,WSNAP:5,VSIG:3.5,MADF:400,BFLOOR:2,BCAP:6,PMIN:0.5,PMAX:2,A1:0.30,B0:0.70,QUIET_B1:6,QUIET_C:12,VMIN:8,MAXDK:0.8};
+let EP={FC_AG:125,FOLLOW:30,WSNAP:5,VSIG:3.5,MADF:400,BFLOOR:2,BCAP:6,PMIN:0.5,PMAX:2,A1:0.30,B0:0.70,QUIET_B1:6,QUIET_C:12,VMIN:8,MAXDK:0.8,ISO:7};
 try{ EP=Object.assign(EP,JSON.parse(localStorage.getItem('bsEngine')||'{}')); }catch(e){}
+let ISOFLAGGED=new Set(), ISO_CONFIRMED=false;   // ISOLATED FIRST CRACK engine state (flagged-once ids + dormant latch)
 
 const sens=$('sens'), hp=$('hp');
 function fmtHz(v){ return v>=1000 ? (v/1000).toFixed(1).replace(/\.0$/,'')+'k Hz' : v+' Hz'; }
@@ -403,7 +404,7 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('mapBtn').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -463,6 +464,7 @@ function stop(){
   if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
   $('recAudio').disabled=false;
   STOPT=(performance.now()-startT)/1000;   // the DROP moment: known exactly, never invented
+  try{ isoSweep(STOPT); }catch(e){}   // ISOLATED FIRST CRACK: one retrospective pass at drop
   STOPPROJ=LASTPROJ; STOPBORROWED=PROJBORROWED;   // freeze projection AND its provenance at the drop; a rename later cannot launder a borrowed guess
   try{ if(!planActive() && valid().length>=10){ localStorage.setItem('bsRoastN',String(roastCount()+1)); refreshPlanUI(); } }catch(e){}   // a "roast" = 10+ real cracks; test taps stay free
   $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):'';
@@ -564,6 +566,7 @@ function loop(){
   $('mfloor').style.left=bgGain+'%';
   const recent=cracks.filter(c=> !c.fp && (now-startT)/1000 - c.t <= 10).length;
   $('rate').textContent=Math.round(recent*6);            // cracks in last 10s -> per minute
+  isoUpdate((now-startT)/1000);                          // ISOLATED FIRST CRACK: per-frame O(1) check
 
   // trace
   trace.push({g:gain, crack:crackFlash}); crackFlash=false; if(trace.length>TRACE_MAX) trace.shift();
@@ -653,10 +656,29 @@ function renderStageStrip(){ const el=$('stageStrip'); if(!el) return;
 function fmtT(t){ return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'); }
 function valid(){ return cracks.filter(c=>!c.fp); }
 function renderLog(){
-  $('log').innerHTML=cracks.map((c,i)=>'<div class="lr'+(c.fp?' fpr':'')+'" data-id="'+c.id+'"><span><input type="checkbox" '+(c.fp?'checked':'')+' onchange="fpCrack('+c.id+',this.checked)" style="width:16px;height:16px;accent-color:var(--warn);vertical-align:-3px"> #'+(i+1)+' &nbsp; '+fmtT(c.t)+(c.auto?' <b style="color:var(--warn);font-size:10px">'+(c.why==='voice'?'VOICE':'AUTO')+'</b>':'')+'</span><span>'+(c.f?((c.f/1000).toFixed(1)+'k · '):'')+'gain <b>'+c.g+'</b></span></div>').reverse().join('');
+  $('log').innerHTML=cracks.map((c,i)=>'<div class="lr'+(c.fp?' fpr':'')+'" data-id="'+c.id+'"><span><input type="checkbox" '+(c.fp?'checked':'')+' onchange="fpCrack('+c.id+',this.checked)" style="width:16px;height:16px;accent-color:var(--warn);vertical-align:-3px"> #'+(i+1)+' &nbsp; '+fmtT(c.t)+(c.auto?' <b style="color:var(--warn);font-size:10px">'+(c.why==='voice'?'VOICE':c.why==='iso'?'ISO':'AUTO')+'</b>':'')+'</span><span>'+(c.f?((c.f/1000).toFixed(1)+'k · '):'')+'gain <b>'+c.g+'</b></span></div>').reverse().join('');
 }
 function fpCrack(id,ck){ const c=cracks.find(c=>c.id===id); if(c){ c.fp=ck; refreshStats(); } }
 function delCrack(id){ const i=cracks.findIndex(c=>c.id===id); if(i>=0){ cracks.splice(i,1); refreshStats(); } }
+// ISOLATED FIRST CRACK rule (deterministic): if the FIRST valid crack is not followed
+// by another valid crack within EP.ISO seconds, and it does not anchor the real
+// first-crack body (effA0 three-witness within EP.FOLLOW), auto-mark it fp with
+// why='iso' so valid() excludes it exactly like a human FP. Applied iteratively to
+// each new leader; O(1) once a leader is confirmed (engine goes dormant).
+function isoUpdate(nowS){
+  if(ISO_CONFIRMED) return;                                                       // dormant: a leader was confirmed, never run again
+  const v=valid();
+  if(!v.length) return;                                                           // never flag with 0 valid cracks
+  const lead=v[0];                                                                // current leader = first valid crack
+  if(v.length>=2 && v[1].t-lead.t<=EP.ISO){ ISO_CONFIRMED=true; return; }          // fast successor within window: leader confirmed
+  if(v.length>=3 && v[2].t-lead.t<=EP.FOLLOW){ ISO_CONFIRMED=true; return; }       // real first-crack body (three-witness): leader confirmed
+  if(ISOFLAGGED.has(lead.id)) return;                                             // only auto-flag a given id ONCE (untick guard, no loop)
+  const stale = (nowS-lead.t>EP.ISO) && ISOFLAGGED.size===0;                       // FIRST leader only: live deadline, no successor yet
+  const lateNoBody = v.length>=3 && v[1].t-lead.t>EP.ISO && v[2].t-lead.t>EP.FOLLOW; // full lookahead proves isolation
+  if(stale||lateNoBody){ lead.fp=true; lead.auto=true; lead.why='iso'; ISOFLAGGED.add(lead.id); refreshStats(); }
+}
+// retrospective pass: iterate the leader chain once with full data (stop / session load)
+function isoSweep(nowS){ for(let i=0;i<cracks.length+2 && !ISO_CONFIRMED;i++){ const n=ISOFLAGGED.size; isoUpdate(nowS); if(ISOFLAGGED.size===n) break; } }
 function refreshStats(){
   const v=valid();
   peakGain=v.reduce((m,c)=>Math.max(m,c.g),0);
@@ -1381,7 +1403,7 @@ async function loadSession(file){
   }
   if(!text){ toast('No CSV found in that file.'); return; }
   const meta={}; for(const m of text.matchAll(/# meta,([^,]+),([^\n]*)/g)) meta[m[1]]=m[2].trim();
-  cracks=[]; crackSeq=0;
+  cracks=[]; crackSeq=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false;
   for(const m of text.matchAll(/# (\d+),([\d.]+),(\d+)(?:,(\d))?(?:,(\d*))?(?:,(\d*))?(?:,([\d.]*))?/g)) cracks.push({t:+m[2], g:+m[3], id:++crackSeq, fp:m[4]==='1', f:m[5]?+m[5]:undefined, w:m[6]?+m[6]:undefined, hf:m[7]?+m[7]:undefined});
   SAMPLES=[]; for(const m of text.matchAll(/# sample,\d+,([\d.]+),([\d.]*)/g)) SAMPLES.push({t:+m[1], ag:m[2]?+m[2]:null});
   queueSamples();   // loaded sessions feed the Cup queue too, not only live roasts
@@ -1394,6 +1416,7 @@ async function loadSession(file){
   $('metaBox').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block';
   $('dlZip').style.display='block'; $('dlCard').style.display='block';   // re-save allowed: corrected FP labels are the training corpus
   setState('st-done');
+  try{ isoSweep(STOPT); }catch(e){}   // ISOLATED FIRST CRACK: one retrospective pass for loaded sessions
   refreshStats();
   updateMapBtn();
   if(parseFloat(meta.agtron_ground)){ saveCalIfMapped(true); updateGauge(); }
