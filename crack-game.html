@@ -142,7 +142,7 @@
     <h1 id="evtName" class="event hidden"></h1>
     <h1>Agtron Challenge<span class="en" style="display:block;font-size:15px;color:var(--muted);font-weight:500">Kulağın Kaç Agtron? · How Many Agtron Is Your Ear?</span></h1>
     <div style="display:flex;justify-content:center;gap:8px;align-items:center;margin-top:8px">
-      <span style="border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:11px;color:var(--muted)">v2026-07-12g</span>
+      <span style="border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:11px;color:var(--muted)">v2026-07-12h</span>
       <button style="border:1px solid var(--accent);border-radius:999px;padding:4px 11px;font-size:11px;color:var(--accent);background:none;cursor:pointer" onclick="location.href=location.pathname+location.search.replace(/[?&]v=\d+/,'')+(location.search?'&':'?')+'v='+Date.now()">Refresh</button>
     </div>
   </header>
@@ -256,18 +256,18 @@
     <div class="panel" id="postBox">
       <button class="big" id="btnOpenPost">Sıralamaya yaz <span class="btn-en">· Post to the ladder</span></button>
       <form class="postForm hidden" id="postForm">
-        <input type="text" id="postName" maxlength="40" autocomplete="off" placeholder="Adın · Your name">
+        <input type="text" id="postName" maxlength="40" autocomplete="off" placeholder="Ad Soyad · Full name">
         <input type="text" id="postCompany" maxlength="40" autocomplete="off" placeholder="Firma (isteğe bağlı) · Company (optional)">
         <label class="consent"><input type="checkbox" id="postConsent"><span>Adım ve skorum herkese açık sıralamada görünsün. <span class="en">· Show my name and score on the public ladder.</span></span></label>
         <button class="big" type="button" id="btnPostSubmit">Gönder <span class="btn-en">· Post</span></button>
       </form>
     </div>
-    <button class="big" id="btnShare">Kart indir <span class="btn-en">· Download share card</span></button>
+    <button class="big" id="btnShare">Paylaş <span class="btn-en">· Share</span></button>
     <div class="row2" style="margin-top:8px">
       <button class="big ghost" id="btnReplay">Yeni maç <span class="btn-en en">· New match</span></button>
     </div>
     <div class="links">
-      <a href="https://guide.coffeenutz.net/crack-listen.html">Kavurma uygulamasına git<span class="en">Go to the roasting app</span></a>
+      <a href="https://guide.coffeenutz.net/crack-listen.html">Crack Listener uygulamasına git<span class="en">Go to Crack Listener</span></a>
       <a href="https://www.coffeenutz.net/collections/egitimler">Sınıflar<span class="en">Classes</span></a>
     </div>
   </section>
@@ -293,14 +293,14 @@
       Çıtırtı zamanları gerçektir: 2026-07-07 ve 2026-07-10 tarihlerinde ölçülmüş altı gerçek kavrumdan (Ethiopia Yirgacheffe Gr.2 ve Ethiopia Rumudamo, bir tam çan ile kavurucusunun erken indirdiği partiler). Pop sesleri o gerçek anlarda sentezlenir. Renk modeli her kahvenin kendi ölçülmüş Agtron değerine göre kurulur.
       <span class="en" style="display:block; margin-top:3px">Crack timings are real, from six measured roasts on 2026-07-07 and 2026-07-10 (Ethiopia Yirgacheffe Gr.2 and Ethiopia Rumudamo, one full bell plus batches the roaster dropped early). The pop sounds are synthesized at those real moments. The color model is built from each coffee's own measured Agtron.</span>
     </div>
-    <div style="margin-top:8px">Agtron Challenge · <a href="https://guide.coffeenutz.net/crack-game.html">guide.coffeenutz.net/crack-game</a> · v2026-07-12g</div>
+    <div style="margin-top:8px">Agtron Challenge · <a href="https://guide.coffeenutz.net/crack-game.html">guide.coffeenutz.net/crack-game</a> · v2026-07-12h</div>
   </footer>
 </div>
 
 <script>
 "use strict";
 /* ============================================================
-   Agtron Challenge · Kulağın Kaç Agtron? · CoffeeNutz crack game · v2026-07-12g
+   Agtron Challenge · Kulağın Kaç Agtron? · CoffeeNutz crack game · v2026-07-12h
    HONESTY: this is not a measurement. Crack timings are REAL,
    measured from six roasts on 2026-07-07 and 2026-07-10
    (Ethiopia Yirgacheffe Gr.2 and Ethiopia Rumudamo). One full
@@ -1065,7 +1065,7 @@ function buildShareCanvas(){
   ctx.fillStyle='#c98a3c'; ctx.font='700 34px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('guide.coffeenutz.net/crack-game', W/2, H-112);
   ctx.fillStyle='#a8998a'; ctx.font='500 24px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText('Yirgacheffe Gr.2 & Rumudamo · 6 gerçek kavrum · v2026-07-12g', W/2, H-70);
+  ctx.fillText('Yirgacheffe Gr.2 & Rumudamo · 6 gerçek kavrum · v2026-07-12h', W/2, H-70);
   return cv;
 }
 function roundRect(ctx,x,y,w,h,r){
@@ -1081,10 +1081,20 @@ function downloadShare(){
   var cv = buildShareCanvas();
   function finish(blob){
     if(!blob) return;
+    try{
+      var f = new File([blob], 'agtron-challenge.png', {type:'image/png'});
+      if(navigator.canShare && navigator.canShare({files:[f]}) && navigator.share){
+        navigator.share({files:[f], title:'Agtron Challenge'}).catch(function(){ fallbackDl(blob); });
+        return;
+      }
+    }catch(e){}
+    fallbackDl(blob);
+  }
+  function fallbackDl(blob){
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = 'kulagin-kac-agtron.png';
+    a.download = 'agtron-challenge.png';
     document.body.appendChild(a);
     a.click();
     setTimeout(function(){ URL.revokeObjectURL(url); if(a.parentNode) a.parentNode.removeChild(a); }, 1500);
