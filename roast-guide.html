@@ -417,7 +417,7 @@
 
   <!-- CUP (CVA combined: descriptive + affective) -->
   <div id="view-cup" class="hide">
-    <button class="btn ghost" style="margin-bottom:10px" onclick="show('flight')" data-i18n="Build Cupping Session">Build Cupping Session</button>
+    <button class="btn" style="margin-bottom:14px;padding:17px;font-size:17px;letter-spacing:.3px" onclick="show('flight')" data-i18n="Build Cupping Session">Build Cupping Session</button>
     <div class="subnav" id="cupModes">
       <button id="cm-descriptive" class="on" onclick="setCupMode('descriptive')" data-i18n="Descriptive">Descriptive</button>
       <button id="cm-affective" onclick="setCupMode('affective')" data-i18n="Affective">Affective</button>
@@ -425,6 +425,7 @@
     </div>
     <div class="scorebar" id="cupScoreBar"><span class="sv" id="cupSV" onclick="toggleScore()">79.00</span><span class="sl">cupping<br>score <span class="info" onclick="showScoreInfo()">&#9432;</span></span><button class="iconbtn" id="cupScoreToggle" onclick="toggleScore()" data-i18n="Reveal">Reveal</button></div>
     <div id="cupLiteBanner"></div>
+    <div id="cupTimerSlot"></div>
     <div class="card" id="cupTimerCard">
       <button class="chip sub" id="cupTimerToggle" onclick="toggleCupTimer()" style="cursor:pointer"><span data-i18n="Cupping Timer">Cupping Timer</span> <span class="foldChev" id="cupTimerChev">&#9656;</span></button>
       <div id="cupTimerBody" class="hide" style="margin-top:10px">
@@ -476,6 +477,7 @@
       <button id="fm-affective" onclick="setFlMode('affective')" data-i18n="Affective">Affective</button>
       <button id="fm-combined" onclick="setFlMode('combined')" data-i18n="Combined">Combined</button>
     </div>
+    <div id="flTimerSlot"></div>
     <div class="card">
       <div class="secname" style="margin-bottom:8px" data-i18n="Cupping Session">Cupping Session</div>
       <div class="small" style="margin-bottom:10px">Score one attribute across the whole table, then move to the next - the way a cupper actually works the table.</div>
@@ -561,7 +563,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-11c</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-11d</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1475,19 +1477,54 @@ async function loadAccess(){
 function enrollPrompt(word){ return 'Lite access: explore freely here, but saving your '+word+' unlocks when you enroll to your class.'; }
 function liteBanner(word){ return '<div class="litebanner">Lite access. Score and explore as much as you like - saving your '+word+' unlocks when you enroll to your class.</div>'; }
 // admin: provision learners by email + plan
+async function saveEntitlementFor(email,plan,reason,note){ if(!IS_ADMIN||!sb) return {error:{message:'not admin'}}; email=(email||'').trim().toLowerCase(); if(!email) return {error:{message:'no email'}};
+  const _reason=reason||'user'; const _note=(_reason==='other')?(note||''):''; const _mo=(plan==='Cupper')?36:12; const _u=new Date(); _u.setMonth(_u.getMonth()+_mo); const access=Object.assign({},PLANS[plan]||{},{plan,until:_u.toISOString().slice(0,10),reason:_reason,note:_note});
+  return await sb.from('entitlements').upsert({email,access,updated_at:new Date().toISOString()},{onConflict:'email'}).select(); }
 async function saveEntitlement(){ if(!IS_ADMIN||!sb) return; const email=(entEmail.value||'').trim().toLowerCase(); if(!email){ entMsg.style.color='var(--warn)'; entMsg.textContent='Enter an email.'; return; }
-  const plan=document.getElementById('entPlan').value; const _rsel=document.getElementById('entReason'); const _reason=_rsel?_rsel.value:'user'; const _note=(_reason==='other')?(ENT_NOTE||''):''; const _mo=(plan==='Cupper')?36:12; const _u=new Date(); _u.setMonth(_u.getMonth()+_mo); const access=Object.assign({},PLANS[plan]||{},{plan,until:_u.toISOString().slice(0,10),reason:_reason,note:_note});
-  const r=await sb.from('entitlements').upsert({email,access,updated_at:new Date().toISOString()},{onConflict:'email'}).select();
+  const plan=document.getElementById('entPlan').value; const _rsel=document.getElementById('entReason'); const _reason=_rsel?_rsel.value:'user'; const _note=(_reason==='other')?(ENT_NOTE||''):'';
+  const r=await saveEntitlementFor(email,plan,_reason,_note);
   if(r&&r.error){ entMsg.style.color='var(--warn)'; entMsg.textContent='Save failed: '+r.error.message; return; }
   entMsg.style.color='var(--accent2)'; entMsg.textContent='Saved '+plan+' for '+email; loadEntitlements(); }
 async function lookupEntitlement(){ if(!IS_ADMIN||!sb) return; const email=(entEmail.value||'').trim().toLowerCase(); if(!email) return;
   try{ const r=await sb.from('entitlements').select('access').eq('email',email).maybeSingle(); const a=(r&&!r.error&&r.data&&r.data.access)?r.data.access:null;
     const el=document.getElementById('entPlan'); if(el&&a&&a.plan) el.value=planLabelG(a.plan); const rs=document.getElementById('entReason'); if(rs&&a&&a.reason){ rs.value=a.reason; ENT_NOTE=a.note||''; } }catch(e){} }
+let ENT_ROWS=[], ENT_SEL=new Set();
 async function loadEntitlements(){ if(!IS_ADMIN||!sb){ if(typeof entList!=='undefined'&&entList) entList.innerHTML=''; return; }
   try{ const r=await sb.from('entitlements').select('*').order('email');
-    if(r&&!r.error&&r.data){ entList.innerHTML = r.data.length? r.data.map(e=>{ const a=e.access||{}; const plan=a.plan?planLabelG(a.plan):'(custom)'; return `<div class="hxrow"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(e.email)}</span><span style="font-size:11px;flex:0 0 auto;padding:0 8px;text-align:center">${entReasonCell(a)}</span><span class="tgtval" style="font-size:11px;flex:0 0 auto">${esc(plan)} <button class="delx" data-delent="${esc(e.email)}">×</button></span></div>`; }).join('') : '<div class="small">No members provisioned yet.</div>';
-      entList.querySelectorAll('[data-delent]').forEach(b=>b.onclick=()=>delEntitlement(b.dataset.delent)); } }catch(e){} }
-async function delEntitlement(email){ if(!IS_ADMIN||!sb) return; if(!confirm('Remove access row for '+email+'?')) return; const r=await sb.from('entitlements').delete().eq('email',email); if(r&&!r.error) loadEntitlements(); }
+    if(r&&!r.error&&r.data){ ENT_ROWS=r.data; ENT_SEL=new Set(); renderEntList(); } }catch(e){} }
+function renderEntList(){ if(typeof entList==='undefined'||!entList) return;
+  if(!ENT_ROWS.length){ entList.innerHTML='<div class="small">No members provisioned yet.</div>'; return; }
+  const allSel=ENT_ROWS.length>0 && ENT_SEL.size===ENT_ROWS.length; const nSel=ENT_SEL.size;
+  let h='<div id="entBulkBar" class="'+(nSel?'':'hide')+'" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;padding:8px;border:1px solid var(--accent2);border-radius:10px;background:#15281a">'
+    +'<span class="small" style="color:var(--accent2);font-weight:700">'+nSel+' selected</span>'
+    +'<select id="entBulkPlan" style="width:auto;flex:0 0 auto"><option value="">Set plan</option><option value="Roaster">Roaster</option><option value="Cupper">Cupper</option></select>'
+    +'<select id="entBulkReason" style="width:auto;flex:0 0 auto"><option value="">Set reason</option><option value="user">user</option><option value="learner">learner</option><option value="promotion">promotion</option><option value="other">other</option></select>'
+    +'<button class="btn ghost" id="entBulkRemove" style="width:auto;padding:8px 14px;margin:0;color:var(--dark);border-color:var(--dark)">Remove</button>'
+    +'</div>';
+  h+='<div class="hxrow" style="align-items:center"><input type="checkbox" id="entSelAll" style="margin-right:8px"'+(allSel?' checked':'')+'><span class="small" style="flex:1;color:var(--muted)">Select all</span></div>';
+  h+=ENT_ROWS.map(e=>{ const a=e.access||{}; const plan=a.plan?planLabelG(a.plan):'(custom)'; const ck=ENT_SEL.has(e.email)?' checked':'';
+    return '<div class="hxrow" style="align-items:center"><input type="checkbox" class="entRowCk" data-entck="'+esc(e.email)+'" style="margin-right:8px"'+ck+'><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">'+esc(e.email)+'</span><span style="font-size:11px;flex:0 0 auto;padding:0 8px;text-align:center">'+entReasonCell(a)+'</span><span class="tgtval" style="font-size:11px;flex:0 0 auto">'+esc(plan)+' <button class="delx" data-delent="'+esc(e.email)+'">×</button></span></div>'; }).join('');
+  entList.innerHTML=h;
+  const sa=document.getElementById('entSelAll'); if(sa) sa.onclick=()=>{ if(sa.checked) ENT_ROWS.forEach(e=>ENT_SEL.add(e.email)); else ENT_SEL.clear(); renderEntList(); };
+  entList.querySelectorAll('[data-entck]').forEach(ck=>ck.onclick=()=>{ if(ck.checked) ENT_SEL.add(ck.dataset.entck); else ENT_SEL.delete(ck.dataset.entck); renderEntList(); });
+  entList.querySelectorAll('[data-delent]').forEach(b=>b.onclick=()=>delEntitlement(b.dataset.delent));
+  const bp=document.getElementById('entBulkPlan'); if(bp) bp.onchange=()=>{ const v=bp.value; bp.value=''; if(v) bulkSetPlan(v); };
+  const br=document.getElementById('entBulkReason'); if(br) br.onchange=()=>{ const v=br.value; br.value=''; if(v) bulkSetReason(v); };
+  const brm=document.getElementById('entBulkRemove'); if(brm) brm.onclick=bulkRemove; }
+async function bulkSetPlan(plan){ if(!IS_ADMIN||!sb||!ENT_SEL.size) return; const emails=[...ENT_SEL]; let ok=0;
+  for(const em of emails){ const row=ENT_ROWS.find(e=>e.email===em); const a=(row&&row.access)||{}; const r=await saveEntitlementFor(em,plan,a.reason||'user',a.note||''); if(r&&!r.error) ok++; }
+  if(typeof entMsg!=='undefined'&&entMsg){ entMsg.style.color='var(--accent2)'; entMsg.textContent='Set '+plan+' for '+ok+' member(s).'; } loadEntitlements(); }
+async function bulkSetReason(reason){ if(!IS_ADMIN||!sb||!ENT_SEL.size) return; let note='';
+  if(reason==='other'){ const t=prompt('Note for the selected members (free text):',''); note=(t==null)?'':t; }   // 'other' prompts once, applied to all
+  const emails=[...ENT_SEL]; let ok=0;
+  for(const em of emails){ const row=ENT_ROWS.find(e=>e.email===em); const a=(row&&row.access)||{}; const plan=(a.plan?planLabelG(a.plan):'Roaster')||'Roaster'; const r=await saveEntitlementFor(em,plan,reason,note); if(r&&!r.error) ok++; }
+  if(typeof entMsg!=='undefined'&&entMsg){ entMsg.style.color='var(--accent2)'; entMsg.textContent='Set reason for '+ok+' member(s).'; } loadEntitlements(); }
+async function bulkRemove(){ if(!IS_ADMIN||!sb||!ENT_SEL.size) return; const emails=[...ENT_SEL];
+  if(!confirm('Remove access for '+emails.length+' selected member(s)?')) return; let ok=0;
+  for(const em of emails){ const r=await deleteEntitlementRow(em); if(r&&!r.error) ok++; }
+  if(typeof entMsg!=='undefined'&&entMsg){ entMsg.style.color='var(--accent2)'; entMsg.textContent='Removed '+ok+' member(s).'; } loadEntitlements(); }
+async function deleteEntitlementRow(email){ if(!IS_ADMIN||!sb) return {error:{message:'not admin'}}; return await sb.from('entitlements').delete().eq('email',email); }
+async function delEntitlement(email){ if(!IS_ADMIN||!sb) return; if(!confirm('Remove access row for '+email+'?')) return; const r=await deleteEntitlementRow(email); if(r&&!r.error) loadEntitlements(); }
 // admin: live EN -> TR translation editor (overrides merge over built-in DICT, stored in settings.tr_dict)
 function renderTranslations(){ const el=document.getElementById('trList'); if(!el) return; const keys=Object.keys(DICT.tr);
   el.innerHTML=keys.map((k,i)=>`<div style="margin-bottom:10px"><div class="small" style="color:var(--muted);margin-bottom:3px">${esc(k)}</div><input type="text" data-trk="${i}" value="${esc(DICT.tr[k]).replace(/"/g,'&quot;')}"></div>`).join(''); }
@@ -1751,7 +1788,7 @@ function show(v){
   const sub=document.getElementById('subnav'); if(sub) sub.classList.toggle('hide',g!=='roast');   // sub-tabs only emerge under Roast
   ROAST_GROUP.forEach(x=>{ const b=document.getElementById('nav-'+x); if(b) b.classList.toggle('on',x===v); });
   if(v==='recipes') renderRecipes(); if(v==='hist') renderLog(); if(v==='rules') renderRules();
-  if(v==='cup') renderCup(); if(v==='grade') renderGrade(); if(v==='value') renderValue(); if(v==='account') renderAccount(); if(v==='flight') renderFlight();
+  if(v==='cup'){ mountCupTimer('cupTimerSlot'); renderCup(); } if(v==='grade') renderGrade(); if(v==='value') renderValue(); if(v==='account') renderAccount(); if(v==='flight'){ mountCupTimer('flTimerSlot'); renderFlight(); }
   updateLogo(); }
 function renderRules(){ const ids=['ru_A1','ru_B0','ru_B1','ru_C0','ru_C1','ru_C2','ru_fcBase','ru_fcDouble','ru_secPerAg','ru_learnN','ru_cinToA0','ru_agTol'];
   ['A1','B0','B1','C0','C1','C2'].forEach(c=>{ const el=document.getElementById('ru_'+c); if(el) el.value=RULES.offs[c]; }); ['fcBase','fcDouble','secPerAg','learnN','cinToA0','agTol'].forEach(k=>{ const el=document.getElementById('ru_'+k); if(el) el.value=RULES[k]; });
@@ -1910,6 +1947,7 @@ function cupTimerReset(){ if(cupTimerTick){ clearInterval(cupTimerTick); cupTime
   const b=document.getElementById('cupTimerBtn'); if(b){ b.textContent=T('Start when you wet the grounds'); b.disabled=false; }
   renderCupTimerStages(-1); }
 function toggleCupTimer(){ const b=document.getElementById('cupTimerBody'); if(!b) return; const open=!b.classList.contains('hide'); b.classList.toggle('hide', open); const ch=document.getElementById('cupTimerChev'); if(ch) ch.innerHTML=open?'&#9656;':'&#9662;'; }   // hidden by default; expands only on tap, no persistence
+function mountCupTimer(slotId){ const card=document.getElementById('cupTimerCard'), slot=document.getElementById(slotId); if(card&&slot&&card.parentNode!==slot) slot.appendChild(card); }   // one timer component, physically moved between Cup and the built Session; no duplicated logic or IDs
 // ===================== auth + server load =====================
 function showLogin(){ loginOverlay.style.display='flex'; }
 function hideLogin(){ loginOverlay.style.display='none'; }
