@@ -426,7 +426,8 @@
     <div class="scorebar" id="cupScoreBar"><span class="sv" id="cupSV" onclick="toggleScore()">79.00</span><span class="sl">cupping<br>score <span class="info" onclick="showScoreInfo()">&#9432;</span></span><button class="iconbtn" id="cupScoreToggle" onclick="toggleScore()" data-i18n="Reveal">Reveal</button></div>
     <div id="cupLiteBanner"></div>
     <div class="card" id="cupTimerCard">
-      <div class="cgrplbl" data-i18n="Cupping Timer">Cupping Timer</div>
+      <button class="chip sub" id="cupTimerToggle" onclick="toggleCupTimer()" style="cursor:pointer"><span data-i18n="Cupping Timer">Cupping Timer</span> <span class="foldChev" id="cupTimerChev">&#9656;</span></button>
+      <div id="cupTimerBody" class="hide" style="margin-top:10px">
       <div class="cuprow" style="align-items:center;gap:12px;margin-top:6px">
         <button class="btn" id="cupTimerBtn" style="margin:0;width:auto" onclick="cupTimerStart()" data-i18n="Start when you wet the grounds">Start when you wet the grounds</button>
         <span id="cupTimerClock" style="font-variant-numeric:tabular-nums;font-size:22px;font-weight:700;color:var(--accent)">0:00</span>
@@ -434,6 +435,7 @@
       </div>
       <div id="cupTimerStages" style="margin-top:10px"></div>
       <div class="small" style="margin-top:6px;color:var(--muted)" data-i18n="Optional. It never blocks your cupping.">Optional. It never blocks your cupping.</div>
+      </div>
     </div>
     <div class="card">
       <div class="cuprow" style="gap:10px;flex-wrap:wrap;align-items:flex-start">
@@ -559,7 +561,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-11b</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-11c</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -576,6 +578,7 @@
       <div class="rulegrid">
         <label>FC color anchor (Agtron)<input type="text" id="ep_FC_AG" inputmode="decimal"></label>
         <label>A0 follower window (s)<input type="text" id="ep_FOLLOW" inputmode="decimal"></label>
+        <label>Isolated-crack window (s)<input type="text" id="ep_ISO" inputmode="decimal"></label>
         <label>Width reject (ms slots)<input type="text" id="ep_WSNAP" inputmode="decimal"></label>
         <label>Voice gate (sigmas)<input type="text" id="ep_VSIG" inputmode="decimal"></label>
         <label>Voice spread floor (Hz)<input type="text" id="ep_MADF" inputmode="decimal"></label>
@@ -734,7 +737,7 @@ function addPending(r){ const p=loadPending(); p.push(r); try{localStorage.setIt
 async function flushPending(){ if(!sb) return; const p=loadPending(); if(!p.length) return;
   const res=await sb.from('roast_logs').insert(p.map(toLogPayload)).select('*'); if(res&&!res.error) localStorage.removeItem(LOG_PENDING); }
 async function loadServerData(){
-  if(!sb){ LOG=loadLogCache(); applyRules(); recomputeLearning(); return; }
+  if(!sb){ LOG=loadLogCache(); applyRules(); recomputeLearning(); ENT_READY=true; syncAccountUI(); return; }
   try{ const u=await sb.auth.getUser(); MYUID=u&&u.data&&u.data.user? u.data.user.id : null; const email=u&&u.data&&u.data.user? u.data.user.email : ''; MYEMAIL=email||''; IS_ADMIN=(email===ADMIN_EMAIL); }catch(e){}
   try{ const sr=await sb.from('settings').select('*').eq('id',1).maybeSingle(); if(sr&&!sr.error&&sr.data){ const d=sr.data.rules; if(d){ RULES={ offs:Object.assign({},DEFAULT_RULES.offs,d.offs||{}), fcBase:d.fcBase??7, fcDouble:d.fcDouble??12, secPerAg:d.secPerAg??4, learnN:d.learnN??5, cinToA0:d.cinToA0??15, agTol:d.agTol??2 }; } const df=sr.data.defaults; if(df){ SAVED_DEFAULTS={ offs:Object.assign({},DEFAULT_RULES.offs,df.offs||{}), fcBase:df.fcBase??7, fcDouble:df.fcDouble??12, secPerAg:df.secPerAg??4, learnN:df.learnN??5, cinToA0:df.cinToA0??15, agTol:df.agTol??2 }; } if(sr.data.tr_dict&&typeof sr.data.tr_dict==='object') Object.assign(DICT.tr, sr.data.tr_dict); } }catch(e){}
   applyRules();
@@ -1452,19 +1455,22 @@ try{ const qs=new URLSearchParams(location.search), qc=qs.get('cup'), qf=qs.get(
 const MODULES=['roast','cup','grade','value'];
 const DEFAULT_ACCESS={roast:'lite',cup:'lite',grade:'lite',value:'lite'};   // unknown / unprovisioned account = use freely, save nothing
 let ACCESS={roast:'full',cup:'full',grade:'full',value:'full'};
-let MYEMAIL='', MYPLAN='Lite', MYFOUNDING=null;
+let MYEMAIL='', MYPLAN='Lite', MYFOUNDING=null; let ENT_READY=false;   // account tier is known only after the entitlement fetch resolves
 // named plans -> module save access. Roaster Plan saves Roast only; Roaster & Cupper saves everything.
 const _ACC_ROASTER={roast:'full',cup:'lite',grade:'lite',value:'lite'};
 const _ACC_CUPPER={roast:'full',cup:'full',grade:'full',value:'full'};
 const PLANS={ 'Roaster':_ACC_ROASTER, 'Cupper':_ACC_CUPPER, 'Roaster Plan':_ACC_ROASTER, 'Roaster & Cupper Plan':_ACC_CUPPER };   // old stored entitlement names alias to the same access objects
 function planLabelG(p){ return ({'Roaster Plan':'Roaster','Roaster & Cupper Plan':'Cupper','Roaster':'Roaster','Cupper':'Cupper','Lite':'Local','Admin':'Admin'})[p]||p; }
+function accountChipText(){ return ENT_READY ? (planLabelG(MYPLAN)+((MYFOUNDING!=null&&MYFOUNDING!=='')?(' \u00b7 Founding No. '+MYFOUNDING):'')) : '\u2026'; }   // neutral placeholder until the tier resolves; never a default tier
+function syncAccountUI(){ const ap=document.getElementById('acPlan'); if(ap) ap.textContent=accountChipText(); if(CURVIEW==='account'&&typeof renderAccount==='function') renderAccount(); }   // repaint chip + account view once the real tier is known
 function canSave(m){ return (ACCESS[m]||'lite')==='full'; }
 async function loadAccess(){
-  if(IS_ADMIN){ ACCESS={roast:'full',cup:'full',grade:'full',value:'full'}; MYPLAN='Admin'; return; }   // the master always has full
+  if(IS_ADMIN){ ACCESS={roast:'full',cup:'full',grade:'full',value:'full'}; MYPLAN='Admin'; ENT_READY=true; syncAccountUI(); return; }   // the master always has full
   ACCESS=Object.assign({},DEFAULT_ACCESS); MYPLAN='Lite'; MYFOUNDING=null;
-  if(!sb||!MYEMAIL) return;
+  if(!sb||!MYEMAIL){ ENT_READY=true; syncAccountUI(); return; }
   try{ const r=await sb.from('entitlements').select('*').eq('email',MYEMAIL.toLowerCase()).maybeSingle();
     if(r&&!r.error&&r.data&&r.data.access){ const a=r.data.access; ACCESS=Object.assign({},DEFAULT_ACCESS,a); MYPLAN=planLabelG(a.plan)||'Roaster'; MYFOUNDING=(r.data.founding_no!=null)?r.data.founding_no:((a&&a.founding_no!=null)?a.founding_no:null); } }catch(e){}
+  ENT_READY=true; syncAccountUI();   // tier resolved: chip + account view are now safe to paint
 }
 function enrollPrompt(word){ return 'Lite access: explore freely here, but saving your '+word+' unlocks when you enroll to your class.'; }
 function liteBanner(word){ return '<div class="litebanner">Lite access. Score and explore as much as you like - saving your '+word+' unlocks when you enroll to your class.</div>'; }
@@ -1479,7 +1485,7 @@ async function lookupEntitlement(){ if(!IS_ADMIN||!sb) return; const email=(entE
     const el=document.getElementById('entPlan'); if(el&&a&&a.plan) el.value=planLabelG(a.plan); const rs=document.getElementById('entReason'); if(rs&&a&&a.reason){ rs.value=a.reason; ENT_NOTE=a.note||''; } }catch(e){} }
 async function loadEntitlements(){ if(!IS_ADMIN||!sb){ if(typeof entList!=='undefined'&&entList) entList.innerHTML=''; return; }
   try{ const r=await sb.from('entitlements').select('*').order('email');
-    if(r&&!r.error&&r.data){ entList.innerHTML = r.data.length? r.data.map(e=>{ const a=e.access||{}; const plan=a.plan?planLabelG(a.plan):'(custom)'; const rTag=a.reason?('<span class="chip sub" style="font-size:10px;margin-left:4px"'+(a.note?(' title="'+esc(a.note).replace(/"/g,'&quot;')+'"'):'')+'>'+esc(a.reason)+'</span>'):''; return `<div class="hxrow"><span>${esc(e.email)}</span><span class="tgtval" style="font-size:11px">${esc(plan)}${rTag} <button class="delx" data-delent="${esc(e.email)}">×</button></span></div>`; }).join('') : '<div class="small">No members provisioned yet.</div>';
+    if(r&&!r.error&&r.data){ entList.innerHTML = r.data.length? r.data.map(e=>{ const a=e.access||{}; const plan=a.plan?planLabelG(a.plan):'(custom)'; return `<div class="hxrow"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(e.email)}</span><span style="font-size:11px;flex:0 0 auto;padding:0 8px;text-align:center">${entReasonCell(a)}</span><span class="tgtval" style="font-size:11px;flex:0 0 auto">${esc(plan)} <button class="delx" data-delent="${esc(e.email)}">×</button></span></div>`; }).join('') : '<div class="small">No members provisioned yet.</div>';
       entList.querySelectorAll('[data-delent]').forEach(b=>b.onclick=()=>delEntitlement(b.dataset.delent)); } }catch(e){} }
 async function delEntitlement(email){ if(!IS_ADMIN||!sb) return; if(!confirm('Remove access row for '+email+'?')) return; const r=await sb.from('entitlements').delete().eq('email',email); if(r&&!r.error) loadEntitlements(); }
 // admin: live EN -> TR translation editor (overrides merge over built-in DICT, stored in settings.tr_dict)
@@ -1607,7 +1613,7 @@ function showStageInfo(){ infoModal(T('Stage guide'),
 async function renderAccount(){
   if(sb){ try{ const u=await sb.auth.getUser(); const usr=u&&u.data&&u.data.user; if(usr){ acEmail.textContent=usr.email||'-'; acSince.textContent=usr.created_at?usr.created_at.slice(0,10):'-'; } }catch(e){} }
   else { acEmail.textContent='offline'; acSince.textContent='-'; }
-  const ap=document.getElementById('acPlan'); if(ap) ap.textContent=planLabelG(MYPLAN)+((MYFOUNDING!=null&&MYFOUNDING!=='')?(' · Founding No. '+MYFOUNDING):'');
+  const ap=document.getElementById('acPlan'); if(ap) ap.textContent=accountChipText();
   const cc=document.getElementById('classCard'); if(cc){ cc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) renderClassQRs(); }
   const ec=document.getElementById('engineCard'); if(ec){ ec.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadEngine(); }
   const mc=document.getElementById('memberCard'); if(mc){ mc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadEntitlements(); }
@@ -1845,6 +1851,11 @@ function toast(msg){ try{ let t=document.getElementById('cnToast'); if(!t){ t=do
 // ---- member reason note ----
 let ENT_NOTE='';
 function onEntReasonChange(sel){ if(sel&&sel.value==='other'){ const t=prompt('Note for this member (free text):', ENT_NOTE||''); ENT_NOTE=(t==null)?'':t; } else { ENT_NOTE=''; } }
+function entReasonCell(a){ const r=(a&&a.reason)||''; if(!r) return '';
+  if(r==='other'){ const n=((a.note||'').trim());   // reason "other" surfaces the entered text, never the word "other"
+    if(!n) return '<span class="chip sub" style="font-size:10px" title="other (empty note)">(none)</span>';
+    const show=n.length>18?(n.slice(0,18)+'\u2026'):n; return '<span class="chip sub" style="font-size:10px" title="'+esc(n).replace(/"/g,'&quot;')+'">'+esc(show)+'</span>'; }
+  const show=r.length>18?(r.slice(0,18)+'\u2026'):r; return '<span class="chip sub" style="font-size:10px" title="'+esc(r).replace(/"/g,'&quot;')+'">'+esc(show)+'</span>'; }
 // ---- self-serve auth: sign in / create / forgot / recovery ----
 let AUTH_MODE='signin';
 function setAuthMode(m,e){ if(e&&e.preventDefault) e.preventDefault(); AUTH_MODE=m;
@@ -1898,6 +1909,7 @@ function cupTimerReset(){ if(cupTimerTick){ clearInterval(cupTimerTick); cupTime
   const cl=document.getElementById('cupTimerClock'); if(cl) cl.textContent='0:00';
   const b=document.getElementById('cupTimerBtn'); if(b){ b.textContent=T('Start when you wet the grounds'); b.disabled=false; }
   renderCupTimerStages(-1); }
+function toggleCupTimer(){ const b=document.getElementById('cupTimerBody'); if(!b) return; const open=!b.classList.contains('hide'); b.classList.toggle('hide', open); const ch=document.getElementById('cupTimerChev'); if(ch) ch.innerHTML=open?'&#9656;':'&#9662;'; }   // hidden by default; expands only on tap, no persistence
 // ===================== auth + server load =====================
 function showLogin(){ loginOverlay.style.display='flex'; }
 function hideLogin(){ loginOverlay.style.display='none'; }
@@ -1937,7 +1949,7 @@ function initApp(){
 }
 initApp();
 // ---- Listener engine rules (admin): writes localStorage bsEngine; crack-listen.html reads it on load ----
-const EP_DEF={FC_AG:125,FOLLOW:30,WSNAP:5,VSIG:3.5,MADF:400,BFLOOR:2,BCAP:6,PMIN:0.5,PMAX:2,A1:0.30,B0:0.70,QUIET_B1:6,QUIET_C:12,VMIN:8,MAXDK:0.8};
+const EP_DEF={FC_AG:125,FOLLOW:30,WSNAP:5,VSIG:3.5,MADF:400,BFLOOR:2,BCAP:6,PMIN:0.5,PMAX:2,A1:0.30,B0:0.70,QUIET_B1:6,QUIET_C:12,VMIN:8,MAXDK:0.8,ISO:7};
 function loadEngine(){ let e={}; try{ e=JSON.parse(localStorage.getItem('bsEngine')||'{}'); }catch(_){}
   Object.keys(EP_DEF).forEach(k=>{ const i=document.getElementById('ep_'+k); if(i) i.value=(k in e)?e[k]:EP_DEF[k]; }); }
 function saveEngine(){ if(!IS_ADMIN) return; const out={};

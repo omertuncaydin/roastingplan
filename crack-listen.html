@@ -149,7 +149,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-11c</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-11d</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -660,21 +660,23 @@ function renderLog(){
 }
 function fpCrack(id,ck){ const c=cracks.find(c=>c.id===id); if(c){ c.fp=ck; refreshStats(); } }
 function delCrack(id){ const i=cracks.findIndex(c=>c.id===id); if(i>=0){ cracks.splice(i,1); refreshStats(); } }
-// ISOLATED FIRST CRACK rule (deterministic): if the FIRST valid crack is not followed
-// by another valid crack within EP.ISO seconds, and it does not anchor the real
-// first-crack body (effA0 three-witness within EP.FOLLOW), auto-mark it fp with
-// why='iso' so valid() excludes it exactly like a human FP. Applied iteratively to
-// each new leader; O(1) once a leader is confirmed (engine goes dormant).
+// ISOLATED-CRACK rule (deterministic, owner's escalating-window form): every leader gets an
+// isolation deadline. The FIRST leader's window is EP.ISO seconds; each SUBSEQUENT leader's
+// window is the previous window x1.5, Math.round to the nearest whole second (7 -> 11 -> 16 -> 24 ...
+// = round(EP.ISO * 1.5^k), k = leaders already flagged). A leader whose next valid crack lands
+// inside its window is confirmed and the rule goes dormant for the session; a leader with no
+// successor inside its window is auto-marked fp/why='iso' (once only via ISOFLAGGED, untick-safe).
+// Live check is O(1) per frame; isoSweep replays the leader chain retrospectively at stop / load.
 function isoUpdate(nowS){
   if(ISO_CONFIRMED) return;                                                       // dormant: a leader was confirmed, never run again
   const v=valid();
   if(!v.length) return;                                                           // never flag with 0 valid cracks
   const lead=v[0];                                                                // current leader = first valid crack
-  if(v.length>=2 && v[1].t-lead.t<=EP.ISO){ ISO_CONFIRMED=true; return; }          // fast successor within window: leader confirmed
-  if(v.length>=3 && v[2].t-lead.t<=EP.FOLLOW){ ISO_CONFIRMED=true; return; }       // real first-crack body (three-witness): leader confirmed
+  const win=Math.round(EP.ISO*Math.pow(1.5,ISOFLAGGED.size));                      // escalating window: first leader EP.ISO, each next x1.5 (Math.round)
+  if(v.length>=2 && v[1].t-lead.t<=win){ ISO_CONFIRMED=true; return; }             // successor within THIS leader's window: confirmed, dormant for the session
   if(ISOFLAGGED.has(lead.id)) return;                                             // only auto-flag a given id ONCE (untick guard, no loop)
-  const stale = (nowS-lead.t>EP.ISO) && ISOFLAGGED.size===0;                       // FIRST leader only: live deadline, no successor yet
-  const lateNoBody = v.length>=3 && v[1].t-lead.t>EP.ISO && v[2].t-lead.t>EP.FOLLOW; // full lookahead proves isolation
+  const stale = nowS-lead.t>win;                                                   // live deadline passed with no successor yet
+  const lateNoBody = v.length>=2 && v[1].t-lead.t>win;                             // full lookahead: successor lands past the window -> isolated
   if(stale||lateNoBody){ lead.fp=true; lead.auto=true; lead.why='iso'; ISOFLAGGED.add(lead.id); refreshStats(); }
 }
 // retrospective pass: iterate the leader chain once with full data (stop / session load)

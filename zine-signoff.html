@@ -27,10 +27,12 @@
   .grid{display:flex;gap:12px;flex-wrap:wrap}
   .grid>div{flex:1;min-width:180px}
   .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
-  button{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:12px 16px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
-  button:hover{border-color:var(--amber);color:#fff}
-  button.primary{background:var(--amber);border-color:var(--amber);color:#1a1408;font-weight:600}
-  button.primary:hover{color:#000}
+  button,a.btnlink{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:12px 16px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--fg);text-decoration:none;display:inline-block;line-height:1.2}
+  button:hover,a.btnlink:hover{border-color:var(--amber);color:#fff}
+  button.primary,a.btnlink.primary{background:var(--amber);border-color:var(--amber);color:#1a1408;font-weight:600}
+  button.primary:hover,a.btnlink.primary:hover{color:#000}
+  .delivery{margin-top:22px}
+  .delivery[hidden]{display:none}
   .foot{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:26px;letter-spacing:.04em}
   a{color:var(--amber)}
 </style>
@@ -42,7 +44,7 @@
     <div class="from" id="fromLine"></div>
 
     <div class="note">
-      This is the text prepared for your page. You may edit it freely. When you approve and send,
+      This is the text prepared for your page. You may edit it freely. When you approve,
       you are giving permission to print this text, with your name and role, in the issue.
     </div>
 
@@ -61,8 +63,17 @@
     </div>
 
     <div class="row">
-      <button class="primary" id="approve">Approve and send</button>
+      <button class="primary" id="approve">Approve</button>
       <button id="download">Download signed copy</button>
+    </div>
+
+    <div class="delivery" id="delivery" hidden>
+      <div class="note">Approved. Pick a way to send it, all three work, use whichever opens for you.</div>
+      <div class="row">
+        <a class="btnlink primary" id="mailBtn" href="#">Send by email</a>
+        <button id="copyBtn">Copy signed text</button>
+        <a class="btnlink" id="waBtn" href="#" target="_blank" rel="noopener noreferrer">Share on WhatsApp</a>
+      </div>
     </div>
 
     <div class="foot" id="foot"></div>
@@ -100,14 +111,110 @@
       + 'APPROVED';
   }
 
+  // Short confirmation line, used for the WhatsApp share and as the head of a shortened
+  // mailto body. Kept well under any practical URL/body length limit.
+  function confirmationLine(v){
+    var who = v.name || 'A guest';
+    var head = who+' approved the CoffeeNutz zine text';
+    if(v.role) head += ' ('+v.role+')';
+    head += ' on '+v.date+'.';
+    return head;
+  }
+
+  // Mailto bodies over roughly 1500 characters fail to open in a number of mail clients.
+  // If the signed text fits, send it whole. If not, send a short confirmation plus a
+  // preview of the first ~200 characters, with a note that the full text is attached or
+  // downloaded separately (use Copy signed text or Download signed copy).
+  var MAILTO_BODY_LIMIT = 1500;
+  var PREVIEW_CHARS = 200;
+  function mailBody(v){
+    var full = signedText(v);
+    if(full.length <= MAILTO_BODY_LIMIT) return full;
+    var trimmedText = v.text.trim();
+    var preview = trimmedText.slice(0, PREVIEW_CHARS).trim();
+    var lines = [
+      confirmationLine(v),
+      '',
+      preview + (trimmedText.length > PREVIEW_CHARS ? '…' : ''),
+      '',
+      '(The full approved text is longer than fits here. It is attached as the downloaded file, or use Copy signed text to paste it in full.)'
+    ];
+    return lines.join('\n');
+  }
+
+  // WhatsApp text is always a short confirmation, never the full signed text.
+  function waText(v){
+    var trimmedText = v.text.trim();
+    var preview = trimmedText.slice(0, 160).trim();
+    var line = confirmationLine(v) + (preview ? (' “'+preview+(trimmedText.length>160?'…':'')+'”') : '');
+    return line;
+  }
+
   document.getElementById('approve').addEventListener('click', function(){
     var v=vals();
     var subject='Zine sign-off: '+(v.name||'guest');
-    var body=signedText(v);
-    var href='mailto:omertunc.aydin@gmail.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
-    window.location.href=href;
-    document.getElementById('foot').textContent='Your mail app should open with the approval ready to send. If it does not, use Download signed copy and email the file.';
+    var mBody=mailBody(v);
+    var mailHref='mailto:omertunc.aydin@gmail.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(mBody);
+    var waHref='https://wa.me/?text='+encodeURIComponent(waText(v));
+
+    var mailBtn=document.getElementById('mailBtn');
+    mailBtn.setAttribute('href', mailHref);
+    var waBtn=document.getElementById('waBtn');
+    waBtn.setAttribute('href', waHref);
+
+    // freeze the approved text for the Copy button, matches what was just approved
+    document.getElementById('copyBtn').dataset.signedText = signedText(v);
+
+    document.getElementById('delivery').hidden=false;
+    document.getElementById('foot').textContent='Approved. Choose email, copy, or WhatsApp below to send it, or download a copy.';
   });
+
+  document.getElementById('copyBtn').addEventListener('click', function(ev){
+    var btn=ev.currentTarget;
+    var t=btn.dataset.signedText || signedText(vals());
+    copySignedText(t, btn);
+  });
+
+  function copySignedText(t, btn){
+    function ok(){ showCopyConfirmation(btn); }
+    function fail(){ fallbackCopyText(t, btn); }
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        var p = navigator.clipboard.writeText(t);
+        if(p && typeof p.then==='function'){ p.then(ok, fail); return; }
+        ok(); return;
+      }
+    }catch(e){}
+    fallbackCopyText(t, btn);
+  }
+
+  function fallbackCopyText(t, btn){
+    try{
+      var ta=document.createElement('textarea');
+      ta.value=t;
+      ta.style.position='fixed';
+      ta.style.top='0';
+      ta.style.left='0';
+      ta.style.opacity='0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      var okCopy=false;
+      try{ okCopy=document.execCommand('copy'); }catch(e2){ okCopy=false; }
+      document.body.removeChild(ta);
+      if(okCopy){ showCopyConfirmation(btn); }
+      else { document.getElementById('foot').textContent='Could not copy automatically. Select the text in the box above and copy it by hand.'; }
+    }catch(e){
+      document.getElementById('foot').textContent='Could not copy automatically. Select the text in the box above and copy it by hand.';
+    }
+  }
+
+  function showCopyConfirmation(btn){
+    var original=btn.textContent;
+    btn.textContent='Copied';
+    document.getElementById('foot').textContent='Signed text copied. Paste it into an email or message.';
+    setTimeout(function(){ btn.textContent=original; }, 1800);
+  }
 
   document.getElementById('download').addEventListener('click', function(){
     var v=vals();
