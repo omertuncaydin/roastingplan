@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Kulağın Kaç Agtron? · How Many Agtron Is Your Ear?</title>
+<title>Agtron Challenge · Kulağın Kaç Agtron? · How Many Agtron Is Your Ear?</title>
 <style>
   :root{
     --bg:#1a1410; --panel:#241c16; --panel2:#201a15;
@@ -99,6 +99,27 @@
   .links{display:flex; gap:8px; margin-top:10px}
   .links a{flex:1; text-align:center; text-decoration:none; padding:12px; border:1px solid var(--line); border-radius:10px; color:var(--ink); font-size:13px; font-weight:600}
   .links a .en{display:block; font-size:11px; color:var(--muted); font-weight:500}
+  /* tap-through onboarding */
+  #onboard{padding-top:4px}
+  .obCard{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:26px 20px; margin:12px 0; text-align:center; cursor:pointer}
+  .obNum{font-size:60px; font-weight:800; color:var(--accent); line-height:1; margin-bottom:4px}
+  .obTitle{font-size:21px; font-weight:800; color:var(--ink); margin:2px 0}
+  .obTitle .en{display:block; font-size:14px; color:var(--muted); font-weight:600; margin-top:3px}
+  .obVisual{margin:18px auto 6px; min-height:100px; display:flex; align-items:center; justify-content:center}
+  .obHint{font-size:14px; color:var(--muted); margin:8px 0 4px; line-height:1.5}
+  .obTap{display:block; width:100%; padding:14px; font-size:16px; font-weight:800; background:transparent; border:1px solid var(--line); color:var(--ink); border-radius:12px; cursor:pointer; margin-top:14px}
+  .obTap .en{color:var(--muted); font-size:.8em; font-weight:600}
+  .obTap.obPlay{background:var(--accent); color:#1a1410; border:none}
+  .obTap.obPlay .en{color:#1a1410; opacity:.75}
+  .obSkip{display:block; margin:16px auto 0; background:none; border:none; color:var(--muted); font-size:13px; cursor:pointer; text-decoration:underline}
+  .obWheel{width:100px; height:100px; border-radius:50%; border:3px solid var(--accent); display:flex; align-items:center; justify-content:center; font-size:40px; font-weight:800; color:var(--gold); font-variant-numeric:tabular-nums}
+  .obBars{display:flex; align-items:flex-end; gap:6px; height:90px}
+  .obBars i{display:block; width:9px; background:var(--accent); border-radius:2px}
+  .obDrop{width:150px; height:75px; background:var(--warn); border-radius:80px 80px 0 0; display:flex; align-items:flex-end; justify-content:center; padding-bottom:10px; color:#fff; font-weight:800; font-size:15px}
+  .obPills{display:flex; gap:8px}
+  .obPills span{background:var(--panel2); border:1px solid var(--line); color:var(--muted); padding:8px 14px; border-radius:999px; font-size:13px; font-weight:600}
+  .obReplayRow{text-align:right; margin:0 0 8px}
+  .obReplay{display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; padding:0; border-radius:50%; background:var(--panel2); border:1px solid var(--line); color:var(--muted); font-size:15px; font-weight:700; cursor:pointer}
   .hidden{display:none !important}
   .fineprint{font-size:11px; color:var(--muted); margin-top:10px; line-height:1.5}
 </style>
@@ -112,21 +133,51 @@
   <header>
     <div class="wordmark">CoffeeNutz</div>
     <h1 id="evtName" class="event hidden"></h1>
-    <h1>Kulağın Kaç Agtron?<span class="en" style="display:block;font-size:15px;color:var(--muted);font-weight:500">How Many Agtron Is Your Ear?</span></h1>
+    <h1>Agtron Challenge<span class="en" style="display:block;font-size:15px;color:var(--muted);font-weight:500">Kulağın Kaç Agtron? · How Many Agtron Is Your Ear?</span></h1>
   </header>
 
   <!-- START -->
   <section id="scrStart">
-    <div class="panel">
-      <p class="howto">
-        Üç raunt. Her raunt gerçek bir kavrum, gerçek çıtırtılar. Çark sana bir hedef Agtron verir. Dinlersin, ekranda sayı yok, sadece çıtırtı ve büyüyen çan. Renginin hedefe ulaştığını düşündüğün an <b>DÜŞÜR</b>'e bas. Ekran karar veremez, kulağın verir.
-        <span class="en">Three rounds. Each round is a real roast with real cracks. The wheel gives you a target Agtron. You listen, no numbers on screen, only the cracks and the growing bell. The moment you think the color has reached the target, hit <b>DROP</b>. The screen does not decide, your ear does.</span>
-      </p>
+    <!-- TAP-THROUGH ONBOARDING -->
+    <div id="onboard" class="hidden">
+      <div class="obCard hidden" data-card="1">
+        <div class="obNum">1</div>
+        <div class="obTitle">Hedefini çevir<span class="en">Spin your target</span></div>
+        <div class="obVisual"><div class="obWheel">88</div></div>
+        <div class="obHint">Beğenmedin mi? Bir kez daha çevir.</div>
+        <button class="obTap">Dokun <span class="en">· Tap</span></button>
+      </div>
+      <div class="obCard hidden" data-card="2">
+        <div class="obNum">2</div>
+        <div class="obTitle">Sadece dinle<span class="en">Only listen</span></div>
+        <div class="obVisual"><div class="obBars"><i style="height:22%"></i><i style="height:48%"></i><i style="height:72%"></i><i style="height:100%"></i><i style="height:64%"></i><i style="height:38%"></i><i style="height:20%"></i></div></div>
+        <div class="obHint">Gerçek bir kavurmanın çatlakları. Saat yok, sayı yok.</div>
+        <button class="obTap">Dokun <span class="en">· Tap</span></button>
+      </div>
+      <div class="obCard hidden" data-card="3">
+        <div class="obNum">3</div>
+        <div class="obTitle">Kulağın dediğinde bırak<span class="en">Drop when your ear says so</span></div>
+        <div class="obVisual"><div class="obDrop">DÜŞÜR</div></div>
+        <div class="obHint">3 tur. Toplam fark puanın.</div>
+        <button class="obTap">Dokun <span class="en">· Tap</span></button>
+      </div>
+      <div class="obCard hidden" data-card="4">
+        <div class="obNum">4</div>
+        <div class="obTitle">Bonus: kavurma hızı tahmini<span class="en">Bonus: guess the roast speed</span></div>
+        <div class="obVisual"><div class="obPills"><span>Hızlı</span><span>Orta</span><span>Yavaş</span></div></div>
+        <div class="obHint">Kavurma hızını doğru bilirsen farkın yarıya iner.</div>
+        <button class="obTap obPlay" id="btnObPlay">Oyna <span class="en">· Play</span></button>
+      </div>
+      <button class="obSkip" id="btnSkip">Atla · Skip</button>
     </div>
-    <button class="big" id="btnStart">Maça başla <span class="btn-en">· Start match</span></button>
-    <p class="fineprint">Mikrofon kullanılmaz, izin istenmez. Sesli oynanır, hoparlörünü aç.
-      <span class="en">No microphone, no permissions. Play with sound, turn your speaker on.</span></p>
-    <div id="communityLine" class="fineprint hidden" style="color:var(--accent2)"></div>
+    <!-- NORMAL START -->
+    <div id="startMain" class="hidden">
+      <div class="obReplayRow"><button class="obReplay hidden" id="btnReplayOnboard" title="Nasıl oynanır · How to play">?</button></div>
+      <button class="big" id="btnStart">Maça başla <span class="btn-en">· Start match</span></button>
+      <p class="fineprint">Mikrofon kullanılmaz, izin istenmez. Sesli oynanır, hoparlörünü aç.
+        <span class="en">No microphone, no permissions. Play with sound, turn your speaker on.</span></p>
+      <div id="communityLine" class="fineprint hidden" style="color:var(--accent2)"></div>
+    </div>
   </section>
 
   <!-- WHEEL -->
@@ -231,14 +282,14 @@
       Çıtırtı zamanları gerçektir: 2026-07-07 ve 2026-07-10 tarihlerinde ölçülmüş altı gerçek kavrumdan (Ethiopia Yirgacheffe Gr.2 ve Ethiopia Rumudamo, bir tam çan ile kavurucusunun erken indirdiği partiler). Pop sesleri o gerçek anlarda sentezlenir. Renk modeli her kahvenin kendi ölçülmüş Agtron değerine göre kurulur.
       <span class="en" style="display:block; margin-top:3px">Crack timings are real, from six measured roasts on 2026-07-07 and 2026-07-10 (Ethiopia Yirgacheffe Gr.2 and Ethiopia Rumudamo, one full bell plus batches the roaster dropped early). The pop sounds are synthesized at those real moments. The color model is built from each coffee's own measured Agtron.</span>
     </div>
-    <div style="margin-top:8px"><a href="https://guide.coffeenutz.net/crack-game.html">guide.coffeenutz.net/crack-game</a> · v2026-07-12b</div>
+    <div style="margin-top:8px">Agtron Challenge · <a href="https://guide.coffeenutz.net/crack-game.html">guide.coffeenutz.net/crack-game</a> · v2026-07-12c</div>
   </footer>
 </div>
 
 <script>
 "use strict";
 /* ============================================================
-   Kulağın Kaç Agtron? · CoffeeNutz crack game · v2026-07-12b
+   Agtron Challenge · Kulağın Kaç Agtron? · CoffeeNutz crack game · v2026-07-12c
    HONESTY: this is not a measurement. Crack timings are REAL,
    measured from six roasts on 2026-07-07 and 2026-07-10
    (Ethiopia Yirgacheffe Gr.2 and Ethiopia Rumudamo). One full
@@ -948,9 +999,9 @@ function buildShareCanvas(){
     ctx.fillText(String(state.event).toUpperCase(), W/2, y); y+=60;
   }
   ctx.fillStyle='#f3ede4'; ctx.font='800 60px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText('Kulağın Kaç Agtron?', W/2, y+70);
-  ctx.fillStyle='#a8998a'; ctx.font='500 34px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText('How Many Agtron Is Your Ear?', W/2, y+120);
+  ctx.fillText('Agtron Challenge', W/2, y+70);
+  ctx.fillStyle='#a8998a'; ctx.font='500 30px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('Kulağın Kaç Agtron? · How Many Agtron Is Your Ear?', W/2, y+120);
   // match score
   var yMain = 720;
   ctx.fillStyle='#a8998a'; ctx.font='600 34px -apple-system,Helvetica,Arial,sans-serif';
@@ -998,7 +1049,7 @@ function buildShareCanvas(){
   ctx.fillStyle='#c98a3c'; ctx.font='700 34px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('guide.coffeenutz.net/crack-game', W/2, H-112);
   ctx.fillStyle='#a8998a'; ctx.font='500 24px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText('Yirgacheffe Gr.2 & Rumudamo · 6 gerçek kavrum · v2026-07-12b', W/2, H-70);
+  ctx.fillText('Yirgacheffe Gr.2 & Rumudamo · 6 gerçek kavrum · v2026-07-12c', W/2, H-70);
   return cv;
 }
 function roundRect(ctx,x,y,w,h,r){
@@ -1046,6 +1097,60 @@ function initEvent(){
   }
 }
 
+/* --- TAP-THROUGH ONBOARDING ------------------------------------ */
+var OB_KEY = 'agtronOnboardDone';
+var obCurrent = 0;
+function obDone(){
+  try{ return localStorage.getItem(OB_KEY) === '1'; }catch(e){ return false; }
+}
+function setObDone(){
+  try{ localStorage.setItem(OB_KEY, '1'); }catch(e){}
+}
+function obCards(){ return document.querySelectorAll('#onboard .obCard'); }
+function showOnboardCard(i){
+  obCurrent = i;
+  var cards = obCards();
+  Array.prototype.forEach.call(cards, function(c, idx){
+    if(idx === i) c.classList.remove('hidden'); else c.classList.add('hidden');
+  });
+}
+function openOnboard(){
+  var sm = $('startMain'); if(sm) sm.classList.add('hidden');
+  var ob = $('onboard'); if(ob) ob.classList.remove('hidden');
+  showOnboardCard(0);
+}
+function completeOnboard(){
+  setObDone();
+  var ob = $('onboard'); if(ob) ob.classList.add('hidden');
+  var sm = $('startMain'); if(sm) sm.classList.remove('hidden');
+  var rep = $('btnReplayOnboard'); if(rep) rep.classList.remove('hidden');
+}
+function advanceOnboard(){
+  var n = obCards().length;
+  if(obCurrent >= n - 1){ completeOnboard(); }
+  else { showOnboardCard(obCurrent + 1); }
+}
+function skipOnboard(){ completeOnboard(); }
+function wireOnboard(){
+  var cards = obCards();
+  Array.prototype.forEach.call(cards, function(c){
+    c.addEventListener('click', advanceOnboard);
+  });
+  var sk = $('btnSkip');
+  if(sk) sk.addEventListener('click', function(e){ if(e && e.stopPropagation) e.stopPropagation(); skipOnboard(); });
+  var rep = $('btnReplayOnboard');
+  if(rep) rep.addEventListener('click', openOnboard);
+}
+function initOnboard(){
+  if(obDone()){
+    var ob = $('onboard'); if(ob) ob.classList.add('hidden');
+    var sm = $('startMain'); if(sm) sm.classList.remove('hidden');
+    var rep = $('btnReplayOnboard'); if(rep) rep.classList.remove('hidden');
+  } else {
+    openOnboard();
+  }
+}
+
 /* --- WIRING ---------------------------------------------------- */
 function initGame(){
   initEvent();
@@ -1063,8 +1168,10 @@ function initGame(){
   $('btnShare').addEventListener('click', downloadShare);
   $('langTr').addEventListener('click', function(){ setLang('tr'); });
   $('langEn').addEventListener('click', function(){ setLang('en'); });
+  wireOnboard();
   setLang('tr');
   show('scrStart');
+  initOnboard();
 }
 
 // Small harness API for headless testing
@@ -1092,7 +1199,15 @@ window.__CRACKGAME__ = {
   loadCommunitySamples: loadCommunitySamples,
   communityToSample: communityToSample,
   readLB: readLB,
-  setEvent: function(e){ state.event=e; }
+  setEvent: function(e){ state.event=e; },
+  initOnboard: initOnboard,
+  openOnboard: openOnboard,
+  advanceOnboard: advanceOnboard,
+  skipOnboard: skipOnboard,
+  completeOnboard: completeOnboard,
+  showOnboardCard: showOnboardCard,
+  obDone: obDone,
+  OB_KEY: OB_KEY
 };
 
 if(document.readyState === 'loading'){
