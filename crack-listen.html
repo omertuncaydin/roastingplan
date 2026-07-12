@@ -149,7 +149,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-12c</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-12d</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -166,7 +166,7 @@ body.st-setup #btn{display:none}
   <summary>how it works · 5 steps</summary>
   <div class="card">
     <div class="wstep"><div class="wnum">1</div><div><div class="wtitle">Name your coffee</div><div class="wbody">Tap the nameplate and give the bean its name; every coffee carries its own map, memory and details.</div></div></div>
-    <div class="wstep"><div class="wnum">2</div><div><div class="wtitle">The first roast is the reference</div><div class="wbody">Roast this coffee to the DARKEST level you serve, and after Drop fill the measured color and tap Map. If you pull samples to cup and analyze while roasting, tap "Sample pulled" at each pull: every measured sample deepens the calibration, and with the Cupper plan your samples feed cupping sessions in the Guide - the path to this coffee's best recipe.</div></div></div>
+    <div class="wstep"><div class="wnum">2</div><div><div class="wtitle">The first roast is the reference</div><div class="wbody">Roast this coffee to the DARKEST level you serve, and after Drop fill the measured color and tap Map. If you pull samples to cup and analyze while roasting, tap "Sample pulled" at each pull: every measured sample deepens the calibration, and with the Cupper plan your samples feed cupping sessions in the Guide - the path to this coffee's best recipe. Every coffee enters first crack at its own color: for the truest start, drop a small sample at A0 once, measure it ground, and enter it as A0 Agtron.</div></div></div>
     <div class="wstep"><div class="wnum">3</div><div><div class="wtitle">Set up every roast the same way</div><div class="wbody">Open the listener 1-2 minutes before first crack, phone in the same spot near the drum, set Trigger and High-pass once and leave them alone.</div></div></div>
     <div class="wstep"><div class="wnum">4</div><div><div class="wtitle">Roast by the bell</div><div class="wbody">The stages pin themselves as they are earned, the ghost races your reference roast, and the gauge shows the color if you dropped right now. When you drop the beans, tap Drop.</div></div></div>
     <div class="wstep"><div class="wnum">5</div><div><div class="wtitle">Measure, fill, tap the button</div><div class="wbody">After cooling, enter the measured color and tap the Map button - on early-cut roasts it says "Record lesson" and keeps your reference safe. Every measured roast makes the next prediction better; that is the app learning your coffee. Save the session (.zip) as your archive.</div></div></div>
@@ -259,10 +259,12 @@ body.st-setup #btn{display:none}
       </div>
       <details id="xtraFold" style="margin:2px 0 6px">
         <summary style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;cursor:pointer;padding:7px 0">Extras</summary>
-        <div style="display:flex;gap:6px;margin:2px 0 8px">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:2px 0 8px">
           <input type="text" id="mChgFc" placeholder="Charge→FC (m:ss)" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
           <input type="text" id="mDrop" placeholder="Drop after last (s)" inputmode="numeric" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
           <input type="text" id="mAgWSd" placeholder="Whole SD" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
+          <input type="text" id="mA0Ag" placeholder="A0 Agtron" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
+          <span class="info" onclick="showInfo('a0ag')" style="flex:0 0 auto;align-self:center">&#9432;</span>
         </div>
       </details>
       <input type="text" id="mNote" placeholder="Note (machine, phone position, cup notes)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
@@ -409,7 +411,7 @@ async function start(){
   bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
-  ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw'].forEach(i=>{ if($(i)) $(i).value=''; });
+  ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw','mA0Ag'].forEach(i=>{ if($(i)) $(i).value=''; });
   updateSD(); drawTimeline(); updateGauge();
   setState('st-live');
   const bcue=((badgeMap()[badgeKey()]||{}).cue||'').replace(/</g,'&lt;');
@@ -476,6 +478,7 @@ function stop(){
     if(calP){ if(!$('mProc').value&&calP.proc) $('mProc').value=calP.proc;
       if(!$('mMoist').value&&calP.moist) $('mMoist').value=calP.moist;
       if(!$('mAw').value&&calP.aw) $('mAw').value=calP.aw;
+      if(!$('mA0Ag').value&&isFinite(calP.fc_ag)) $('mA0Ag').value=calP.fc_ag;   // A0 color is a bean constant: prefill from the map like proc/moist
       if(!$('mTarget').value&&calP.target) $('mTarget').value=calP.target; }
     let lmAll={}; try{ lmAll=JSON.parse(localStorage.getItem('bsLastMeta'))||{}; }catch(e){}
     const lm=lmAll[(cName.value||'').trim().toLowerCase()]||{};   // last save fills what the map does not
@@ -594,7 +597,7 @@ function wavHeader(){
 }
 function csvText(){
   const mv=id=>($(id)&&$(id).value||'').replace(/,/g,';').trim();
-  let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,machine,'+mv('mEquip')+'\n# meta,charge_c,'+mv('mChgT')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,moisture,'+mv('mMoist')+'\n# meta,water_activity,'+mv('mAw')+'\n# meta,target,'+mv('mTarget')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n'+SAMPLES.map((s,i)=>'# sample,'+(i+1)+','+s.t.toFixed(1)+','+(s.ag||'')+'\n').join('');
+  let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,machine,'+mv('mEquip')+'\n# meta,charge_c,'+mv('mChgT')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,moisture,'+mv('mMoist')+'\n# meta,water_activity,'+mv('mAw')+'\n# meta,a0_agtron,'+mv('mA0Ag')+'\n# meta,target,'+mv('mTarget')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n'+SAMPLES.map((s,i)=>'# sample,'+(i+1)+','+s.t.toFixed(1)+','+(s.ag||'')+'\n').join('');
   s+='t_s,rms,gain,bg_gain,ratio,trigger_x,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
   const vv=valid(), fss=vv.filter(c=>c.f).map(c=>c.f);
   if(vv.length>1) s+='\n# stats,total_gain,'+vv.reduce((a,c)=>a+c.g,0)+',time_sd,'+sd(vv.map(c=>c.t)).toFixed(2)+',gain_sd,'+sd(vv.map(c=>c.g)).toFixed(2)+(fss.length>1?',f_mean,'+Math.round(fss.reduce((a,b)=>a+b,0)/fss.length)+',f_sd,'+Math.round(sd(fss)):'')+(LASTPROJ?',proj_final,'+LASTPROJ:'')+(STOPPROJ?',proj_stop,'+STOPPROJ:'')+(PHASE?',phase_final,'+PHASE.toFixed(3):'');
@@ -732,7 +735,8 @@ const INFO={
  hp:['High-pass','Everything below this frequency is cut before detection: drum rumble, fan, motor hum. Raise it until the background floor stops riding the roar; lower it if real cracks arrive thin. The raw WAV is recorded before this filter, so recordings are never affected.'],
  bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.'],
  tl:['Session timeline, the whole story','Gold ticks on the floor: every valid crack. Thick green with the soft fill: the smoothed crack rate, the bell. Grey dashed: the GHOST of your mapped reference roast, raced live, with the lap chip telling you how far ahead or behind you are. The gold floor edge is DEV progress from A0. The window centers the crack activity and snaps to standard sizes (top-right badge).<br><br>The gain stages ride the bell:<br>&bull; <b>A0</b> · the literal first crack (confirmed by followers, a lone pop cannot claim it)<br>&bull; <b>A1</b> · the acceleration point: steepest sustained rise of the envelope<br>&bull; <b>B0</b> · the deceleration knee: rise still climbing but bending toward the crown<br>&bull; <b>B1</b> · the crown (appears once the fall is real)<br>&bull; <b>C0</b> · the confirmed decline: live once the bell has fallen for 20% of the FC span (the reference span when mapped, estimated from this roast\'s own rise when not), settling at the B1-C1 midpoint when C1 is known<br>&bull; <b>C1</b> · the definite last crack, earned only by OBSERVED silence: 10s minimum, longer for slow roasts (3x the recent crack gap). A roast stopped before that ends with a <b>DROP</b> chip at the stop moment instead: nothing is invented beyond the evidence<br><br>Right-side markers settle as the data does; thresholds are provisional until labeled sessions calibrate them.'],
- cap:['Session capture, the whole story','While listening, the app keeps three things: the raw microphone audio as WAV (tapped BEFORE the high-pass, ~5.5 MB per minute), a per-frame CSV (time, loudness, floor, ratio, your slider settings, every crack), and your crack log edits: ticked rows travel as labeled false positives, swiped rows are removed. Fill the roast record (coffee, batch, Agtron) after Stop and it rides inside the CSV header; the Agtron ground value is also what unlocks the color gauge for that coffee. Save session packs WAV + CSV into one zip. Everything lives only in this page’s memory: close or reload without saving and the session is gone.']
+ cap:['Session capture, the whole story','While listening, the app keeps three things: the raw microphone audio as WAV (tapped BEFORE the high-pass, ~5.5 MB per minute), a per-frame CSV (time, loudness, floor, ratio, your slider settings, every crack), and your crack log edits: ticked rows travel as labeled false positives, swiped rows are removed. Fill the roast record (coffee, batch, Agtron) after Stop and it rides inside the CSV header; the Agtron ground value is also what unlocks the color gauge for that coffee. Save session packs WAV + CSV into one zip. Everything lives only in this page’s memory: close or reload without saving and the session is gone.'],
+ a0ag:['A0 Agtron, color at first crack','This is where the gauge STARTS at first crack: the ground color of THIS coffee at the very first pop, before any development. Leave it blank and the app uses its global default of 125. Every coffee is a little different, and an error here shifts a light-drop projection almost one-to-one at the start, then fades to nothing by the color you mapped at drop: the darker you take the roast, the less A0 matters. To measure it, run one sacrifice roast: at the first crack pull a small sample, cool it, grind it and read its Agtron, then enter that number here once. It rides with the map from then on.']
 };
 const INFO_TR={
  phase:['Gain evresi (phi)','İlk çatlak çanındaki konumun: şu ana dek duyulan birikimli çatlak gain\u0027i bölü çanın tüm toplamı; ilk patlamada 0, sessizlikte 1. Tez: eşit evre, kavurma hızı ne olursa olsun eşit öğütülmüş renk verir. Çan hâlâ yükselirken gerçek toplam bilinemez, bu yüzden kadran \u2265 işaretiyle bir ALT SINIR gösterir; tepe duyulunca değer kesinleşir ve kadran bunu söyler. Çanı duymadan bildiğini iddia etmez.'],
@@ -751,7 +755,8 @@ const INFO_TR={
  hp:['Yüksek geçiren','Bu frekansın altındaki her şey algılamadan önce kesilir: kazan uğultusu, fan, motor. Taban gürlemeyle yükselmeyi bırakana kadar yükselt; gerçek çatlaklar cılız gelirse düşür. Ham WAV bu filtreden ÖNCE kaydedilir.'],
  bin:['Aralık genişliği','Zaman çizgisi histogramının çubuk genişliği. Küçük aralık dokuyu, büyük aralık biçimi gösterir. Yalnızca görünüm; algılama matematiğini değiştirmez.'],
  tl:['Seans zaman çizgisi, bütün hikâye','Tabandaki altın çizgiler: her geçerli çatlak. Dolgulu kalın yeşil: yumuşatılmış çatlak hızı, yani çan. Gri kesikli: eşlenmiş referans kavurmanın HAYALETİ, canlı yarışta; tur çipi önde mi geride mi olduğunu söyler. Altın taban kenarı A0\'dan itibaren DEV ilerlemesi.<br><br>Gain evreleri çanın üstünde:<br>&bull; <b>A0</b> · gerçek ilk çatlak (takipçilerle doğrulanır)<br>&bull; <b>A1</b> · ivmelenme noktası: zarfın en dik kalıcı yükselişi<br>&bull; <b>B0</b> · yavaşlama dirseği: yükseliş sürerken taca doğru bükülme<br>&bull; <b>B1</b> · taç (düşüş gerçekleşince görünür)<br>&bull; <b>C0</b> · doğrulanmış düşüş: canlıda çan FC süresinin %20\'si kadar düştüğünde (eşliyken referans süre, değilken bu kavurmanın kendi yükselişinden tahmin), C1 bilinince B1-C1 orta noktasına oturur<br>&bull; <b>C1</b> · kesin son çatlak, yalnızca GÖZLENEN sessizlikle kazanılır: en az 10 sn, yavaş kavurmalarda daha uzun (son çatlak aralığının 3 katı). Daha önce durdurulan kavurma <b>DROP</b> çipiyle biter: kanıtın ötesinde hiçbir şey uydurulmaz<br><br>Sağ taraf işaretleri veri oturdukça oturur.'],
- cap:['Seans kaydı, bütün hikâye','Dinlerken uygulama üç şey tutar: ham mikrofon sesi WAV olarak (yüksek geçirenden ÖNCE, ~5,5 MB/dk), kare başına CSV (zaman, gürlük, taban, oran, ayarların, her çatlak) ve çatlak kaydı düzenlemelerin. Kavurma kaydını Durdur\'dan sonra doldur; öğütülmüş Agtron değeri o kahvenin renk göstergesini de açar. Seansı kaydet WAV + CSV\'yi tek zip yapar. Her şey yalnızca bu sayfanın belleğinde yaşar: kaydetmeden kapatırsan seans gider.']
+ cap:['Seans kaydı, bütün hikâye','Dinlerken uygulama üç şey tutar: ham mikrofon sesi WAV olarak (yüksek geçirenden ÖNCE, ~5,5 MB/dk), kare başına CSV (zaman, gürlük, taban, oran, ayarların, her çatlak) ve çatlak kaydı düzenlemelerin. Kavurma kaydını Durdur\'dan sonra doldur; öğütülmüş Agtron değeri o kahvenin renk göstergesini de açar. Seansı kaydet WAV + CSV\'yi tek zip yapar. Her şey yalnızca bu sayfanın belleğinde yaşar: kaydetmeden kapatırsan seans gider.'],
+ a0ag:['A0 Agtron, ilk çatlaktaki renk','Göstergenin ilk çatlakta BAŞLADIĞI yer: bu kahvenin ilk patlama anındaki, henüz hiç gelişme olmadan öğütülmüş rengi. Boş bırakırsan uygulama 125 varsayılanını kullanır. Her kahve biraz farklıdır ve buradaki bir hata, açık bir Drop öngörüsünü başlangıçta neredeyse birebir kaydırır, sonra Drop\'ta eşlediğin renge doğru sıfıra iner: kavurmayı ne kadar koyu alırsan A0 o kadar az önemlidir. Ölçmek için bir fedakârlık kavurması yap: ilk çatlakta küçük bir örnek çek, soğut, öğüt ve Agtron\'unu oku, sonra o sayıyı buraya bir kez gir. O andan sonra haritayla birlikte taşınır.']
 };
 function showInfo(k){ const d=(LANG==='tr'&&INFO_TR[k])?INFO_TR[k]:INFO[k]; $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">'+d[0]+'</h1><div class="hint" style="font-size:13px;margin:0">'+d[1]+'</div><button style="margin-top:14px;background:var(--accent2)" onclick="document.getElementById(\'modal\').style.display=\'none\'">Close</button>'; $('modal').style.display='flex'; }
 
@@ -1172,6 +1177,7 @@ function saveCalIfMapped(verbose){
       if(g2.length){ const mb=g2.reduce((a2,g)=>a2+(g.meas-g.proj),0)/g2.length; if(Math.abs(resid-mb)>6) g2=[]; }
       prevM.grades=g2.concat([{proj:projAt,meas:ag,date:today}]).slice(-6);
       prevM.hist=(prevM.hist||[]).concat([{devSpan:v[v.length-1].t-a0, agtron:ag, tg, q25, ph:+PHASE.toFixed(3)||null, date:today}]).slice(-8);
+      { const fcP=parseFloat($('mA0Ag').value); if(isFinite(fcP)) prevM.fc_ag=fcP; }   // update A0 color if newly entered; otherwise the fuller reference keeps its own
       m[k]=prevM; if(m['__house']&&m['__house'].src===k) m['__house']=prevM;
       localStorage.setItem('bsCal',JSON.stringify(m));
       if(verbose) toast(LANG==='tr'?"Ders kaydedildi (öz-not + φ noktası), dolu referans korundu. Tamamen üzerine yazmak için 8 sn içinde tekrar Eşle'ye dokun.":'Lesson recorded (self-grade + φ point); fuller reference kept. Tap Map again within 8s to fully overwrite instead.');
@@ -1202,6 +1208,9 @@ function saveCalIfMapped(verbose){
   for(const c of v){ const rel=(c.t-a0)/(entry.devSpan||1); if(rel>=0&&rel<=1) bshape[Math.min(BP-1,Math.floor(rel*BP))]+=c.g; }
   const sm2=bshape.map((_,i)=>{ let s2=0,w2=0; for(let j=0;j<BP;j++){ const g2=Math.exp(-0.5*((j-i)/2)*((j-i)/2)); s2+=bshape[j]*g2; w2+=g2; } return s2/w2; });
   const pk2=Math.max(...sm2)||1; entry.bell=sm2.map(x2=>+(x2/pk2).toFixed(3));
+  { const fcParsed=parseFloat($('mA0Ag').value);   // per-coffee A0 color: write if given, else keep any earlier calibration (never silently drop)
+    if(isFinite(fcParsed)) entry.fc_ag=fcParsed;
+    else if(prevM&&isFinite(prevM.fc_ag)) entry.fc_ag=prevM.fc_ag; }
   m[k]=entry; m['__house']=entry;   // every map also becomes the house default: unmapped beans borrow it
   localStorage.setItem('bsCal',JSON.stringify(m));
   toast('Color map saved for "'+k+'" ('+entry.hist.length+' roast'+(entry.hist.length>1?'s':'')+' in its history).');
@@ -1266,8 +1275,13 @@ function updateGauge(){
   PROJBORROWED=borrowed;
   const dcTag=(cal.anchors&&cal.anchors.length>=3)?(' · '+(LANG==='tr'?'derin kalibrasyon':'deep calibration')):'';
   const bTag=(borrowed?(' · '+(cal.communal?tt('community map'):tt('borrowed house map'))+' ('+(cal.src||'?')+')'):'')+dcTag;
+  // per-coffee A0 color: the projection's starting color at first crack. Global EP.FC_AG (125) unless this map
+  // carries a sane fc_ag (80..140). The intercept error hits light drops hardest (weight 1 at A0, 0 at the mapped terminal).
+  const fcActive=isFinite(cal.fc_ag)&&cal.fc_ag>=80&&cal.fc_ag<=140;
+  const fcAg=fcActive?cal.fc_ag:FC_AG;
+  const a0Tag=fcActive?(' · A0 '+cal.fc_ag):'';
   const v=valid();
-  if(!v.length){ drawGauge('wait'); $('agHint').textContent=tt('Mapped on')+' '+cal.date+' (Agtron '+cal.agtron+')'+bTag+'. '+tt('Projection starts at first crack.'); return; }
+  if(!v.length){ drawGauge('wait'); $('agHint').textContent=tt('Mapped on')+' '+cal.date+' (Agtron '+cal.agtron+')'+bTag+a0Tag+'. '+tt('Projection starts at first crack.'); return; }
   if(v.length<5){ drawGauge('wait'); $('agHint').textContent=(LANG==='tr'?('Çatlaklar toplanıyor ('+v.length+'/5); birkaç pat henüz ilk çatlak değildir.'):('Gathering cracks ('+v.length+'/5) before projecting; a couple of pops is not a first crack yet.')); return; }
   // live: clock runs. done/loaded: retrospective final call at last crack + coast (Drop after last, if filled)
   const nowDev=running?((performance.now()-startT)/1000):(v[v.length-1].t+(parseFloat($('mDrop').value)||0));
@@ -1283,18 +1297,18 @@ function updateGauge(){
   let proj;
   const devEff=p*cal.devSpan;
   if(cal.anchors&&cal.anchors.length){
-    const pts=[{dt:0,ag:FC_AG}].concat(cal.anchors).concat([{dt:cal.devSpan,ag:cal.agtron}]).sort((x,y)=>x.dt-y.dt);
+    const pts=[{dt:0,ag:fcAg}].concat(cal.anchors).concat([{dt:cal.devSpan,ag:cal.agtron}]).sort((x,y)=>x.dt-y.dt);
     let i=0; while(i<pts.length-1&&devEff>pts[i+1].dt) i++;
     const a=pts[i], b2=pts[Math.min(i+1,pts.length-1)];
     proj=(b2.dt>a.dt)?a.ag+(b2.ag-a.ag)*(devEff-a.dt)/(b2.dt-a.dt):b2.ag;
     if(devEff>cal.devSpan){ const l1=pts[pts.length-2],l2=pts[pts.length-1];
       const sl=(l2.dt>l1.dt)?(l2.ag-l1.ag)/(l2.dt-l1.dt):0; proj=l2.ag+sl*(devEff-cal.devSpan); }
-  } else proj=FC_AG+(cal.agtron-FC_AG)*p;
+  } else proj=fcAg+(cal.agtron-fcAg)*p;
   // RECURSIVE CALIBRATION 1: the phi->color curve learned from this coffee's whole history.
   // Every mapped roast contributes its (phase-at-drop, measured color) point; FC_AG anchors phi~0.
   // Monotone-enforced (color never lightens as phi grows). Active from 4 points.
   let projPhi=null;
-  { const pts=[[0.001,FC_AG]];
+  { const pts=[[0.001,fcAg]];
     (cal.hist||[]).forEach(h=>{ if(h.ph>0.55&&isFinite(h.agtron)) pts.push([h.ph,h.agtron]); });   // >0.55: censored (capped 0.5) points are bounds, NOT curve values
     if(cal.phDrop>0.55&&isFinite(cal.agtron)) pts.push([cal.phDrop,cal.agtron]);
     pts.sort((x,y)=>x[0]-y[0]);
@@ -1311,10 +1325,10 @@ function updateGauge(){
   // recency-weighted) feeds back as a per-coffee correction, capped at +/-6.
   let bias=0; const gr=(cal.grades||[]);
   if(gr.length){ let ws=0,bs=0; gr.forEach((g,i)=>{ const w=Math.pow(1.6,i); ws+=w; bs+=w*(g.meas-g.proj); }); bias=Math.max(-6,Math.min(6,bs/ws)); proj+=bias; }
-  proj=Math.max(proj, FC_AG-devCur*EP.MAXDK);   // physics floor: real beans cannot darken faster than MAXDK Agtron/s of DEV
+  proj=Math.max(proj, fcAg-devCur*EP.MAXDK);   // physics floor: real beans cannot darken faster than MAXDK Agtron/s of DEV, measured from this coffee's A0 color
   proj=Math.min(AG_MAX,Math.max(AG_MIN,proj));
-  const prT=Math.min(AG_MAX,Math.max(AG_MIN,FC_AG+(cal.agtron-FC_AG)*pT));
-  const prE=Math.min(AG_MAX,Math.max(AG_MIN,FC_AG+(cal.agtron-FC_AG)*pE));
+  const prT=Math.min(AG_MAX,Math.max(AG_MIN,fcAg+(cal.agtron-fcAg)*pT));
+  const prE=Math.min(AG_MAX,Math.max(AG_MIN,fcAg+(cal.agtron-fcAg)*pE));
   // UNCERTAINTY BAND: the gauge's own error bar, from its own data. Terms independent -> quadrature.
   const dTerm=Math.abs(prT-prE)/2;   // estimator disagreement (clock vs energy)
   let seT;   // bias-learner spread: weighted SD of residuals around the learned bias, per effective lesson count
@@ -1402,8 +1416,8 @@ function makeBatchCard(){
   c.toBlob(blob=>{ dl(blob,'batch-'+(cName.value||'coffee').replace(/\s+/g,'_')+'-'+new Date().toISOString().slice(0,10)+'.png'); },'image/png');
 }
 
-// ===== GROWTH v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-12c';
+// ===== GROWTH v2026-07-12d: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
+const APPVER='v2026-07-12d';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -1583,6 +1597,8 @@ async function loadSession(file){
   if(meta.coffee){ cName.value=meta.coffee; localStorage.setItem('bsCoffee',meta.coffee); loadBadge(); renderNameplate(); }
   $('mCoffee').value=meta.coffee||''; $('mBatch').value=meta.batch_g||''; $('mAgW').value=meta.agtron_whole||''; $('mAgG').value=meta.agtron_ground||''; $('mNote').value=meta.note||'';
   $('mAgWSd').value=meta.agtron_whole_sd||''; $('mAgSd').value=meta.agtron_ground_sd||''; $('mProc').value=meta.process||''; $('mChgFc').value=meta.charge_to_fc||''; if(meta.machine) $('mEquip').value=meta.machine; $('mChgT').value=meta.charge_c||''; $('mDrop').value=meta.drop_after_last_s||''; $('mTarget').value=meta.target||''; $('mMoist').value=meta.moisture||''; $('mAw').value=meta.water_activity||'';
+  $('mA0Ag').value=meta.a0_agtron||'';   // A0 color from the CSV meta if the session carried one
+  if(!$('mA0Ag').value){ const cf=calFor(); if(cf&&isFinite(cf.fc_ag)) $('mA0Ag').value=cf.fc_ag; }   // else prefill from this coffee's map, like proc/moist
   $('metaBox').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block';
   $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('dlStory').style.display='block';   // re-save allowed: corrected FP labels are the training corpus
   setState('st-done');
@@ -1684,7 +1700,7 @@ const EN2TR={
 'Name your coffee':'Kahveni adlandır',
 'Tap the nameplate and give the bean its name; every coffee carries its own map, memory and details.':'İsim plakasına dokun ve çekirdeğe adını ver; her kahve kendi haritasını, hafızasını ve detaylarını taşır.',
 'The first roast is the reference':'İlk kavurma referanstır',
-'Roast this coffee to the DARKEST level you serve, and after Drop fill the measured color and tap Map. If you pull samples to cup and analyze while roasting, tap "Sample pulled" at each pull: every measured sample deepens the calibration, and with the Cupper plan your samples feed cupping sessions in the Guide - the path to this coffee\'s best recipe.':'Bu kahveyi servis ettiğin EN KOYU seviyeye kavur; Drop sonrası ölçtüğün rengi gir ve Eşle\'ye dokun. Kavururken tatmak ve analiz için numune çekiyorsan her çekişte "Numune çekildi"ye dokun: ölçülen her numune kalibrasyonu derinleştirir, Cupper planında ise numunelerin Guide\'daki cupping seanslarına akar - bu kahvenin en iyi reçetesine giden yol.',
+'Roast this coffee to the DARKEST level you serve, and after Drop fill the measured color and tap Map. If you pull samples to cup and analyze while roasting, tap "Sample pulled" at each pull: every measured sample deepens the calibration, and with the Cupper plan your samples feed cupping sessions in the Guide - the path to this coffee\'s best recipe. Every coffee enters first crack at its own color: for the truest start, drop a small sample at A0 once, measure it ground, and enter it as A0 Agtron.':'Bu kahveyi servis ettiğin EN KOYU seviyeye kavur; Drop sonrası ölçtüğün rengi gir ve Eşle\'ye dokun. Kavururken tatmak ve analiz için numune çekiyorsan her çekişte "Numune çekildi"ye dokun: ölçülen her numune kalibrasyonu derinleştirir, Cupper planında ise numunelerin Guide\'daki cupping seanslarına akar - bu kahvenin en iyi reçetesine giden yol. Her kahve ilk çatlağa kendi renginde girer: en doğru başlangıç için bir kez küçük bir örneği A0\'da indir, öğütülmüş rengini ölç ve A0 Agtron olarak gir.',
 'Set up every roast the same way':'Her kavurmayı aynı şekilde kur',
 'Open the listener 1-2 minutes before first crack, phone in the same spot near the drum, set Trigger and High-pass once and leave them alone.':'Dinleyiciyi ilk çatlaktan 1-2 dakika önce aç, telefon kazanın yanında hep aynı yerde; Tetik ve Yüksek geçireni bir kez ayarla, sonra dokunma.',
 'Roast by the bell':'Çana göre kavur',
@@ -1702,7 +1718,7 @@ const EN2TR={
 'tryer samples (fill measured Agtron)':"tryer numuneleri (ölçülen Agtron'u doldur)",
 'Coffee':'Kahve','Batch g':'Parti g','Agtron whole':'Agtron çekirdek','Agtron ground':'Agtron öğütülmüş',
 'Process (washed/natural)':'İşlem (yıkanmış/natürel)','Charge→FC (m:ss)':'Şarj→FC (d:ss)','Drop after last (s)':'Son çatlaktan sonra tahliye (sn)',
-'Whole SD':'Çekirdek SS','Ground SD':'Öğütülmüş SS','Note (machine, phone position, cup notes)':'Not (makine, telefon konumu, fincan notları)',
+'Whole SD':'Çekirdek SS','A0 Agtron':'A0 Agtron','Ground SD':'Öğütülmüş SS','Note (machine, phone position, cup notes)':'Not (makine, telefon konumu, fincan notları)',
 'Subtitle (e.g. chirripó washed)':'Alt başlık (örn. chirripó yıkanmış)','Harvest year':'Hasat yılı','Process':'İşlem','Notes (e.g. plum, hazelnut)':'Notlar (örn. mürdüm eriği, fıstık)',
 'strong voice':'güçlü ses','thin voice':'incelen ses','silence will harm them':'sessizlik onlara zarar verir','fading':'sönümleniyor',
 'quiet, as it should be':'sessiz, olması gerektiği gibi','waiting for cracks':'çatlak bekleniyor','needs a mapped ref':'eşlenmiş referans gerek',
