@@ -84,8 +84,8 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
       <button class="linkish" onclick="lock()">lock</button>
     </div>
   </div>
-  <h1>Your apps</h1>
-  <div class="sub">Tap a card to open. Arrows reorder within a group. Version is read live.</div>
+  <h1>Your apps <button class="ordbtn" style="width:auto;padding:4px 12px;font-size:13px;vertical-align:middle" onclick="newCard()">+ New card</button></h1>
+  <div class="sub">Tap a card to open. Arrows reorder within a group. Version is read live. <span style="opacity:.5">hub v2026-07-11a</span></div>
   <div id="sections"></div>
   <div id="restore" class="restore"></div>
 
@@ -115,6 +115,21 @@ const APPS=[
 ];
 // external apps (cross-origin: link only, no live version). Add per Ömer.
 const EXT=[];
+// user-created cards live in localStorage and behave like built-ins
+function getCustom(){ try{ return JSON.parse(localStorage.getItem('hubCustom')||'[]'); }catch(e){ return []; } }
+function saveCustom(a){ localStorage.setItem('hubCustom', JSON.stringify(a)); }
+function allApps(){ return APPS.concat(getCustom()); }
+function newCard(){
+  const nm=(prompt('Card name:')||'').trim(); if(!nm) return;
+  let url=(prompt('Link (path like /crack-game or full https URL):')||'').trim(); if(!url) return;
+  if(!/^https?:/i.test(url) && url[0]!=='/') url='/'+url;
+  const desc=(prompt('One line description (optional):')||'').trim();
+  const cust=getCustom();
+  if(allApps().some(a=>(a.path||a.url)===url)){ alert('A card with that link already exists.'); return; }
+  const b=nm.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+  cust.push({nm:nm, path:url, desc:desc||url, b:b, c:'#8a6d3b', cat:'mgmt', custom:1});
+  saveCustom(cust); render(); loadAll();
+}
 const CATS=[['mon','Monetized'],['admin','Friction'],['mgmt','Management']];
 
 function unlock(){ const k=$('keyIn').value.trim(); if(!k) return; localStorage.setItem('ccKey',k); show(); }
@@ -136,7 +151,7 @@ function card(a,external){
 }
 function getStatus(p){ try{ return (JSON.parse(localStorage.getItem('hubStatus')||'{}'))[p]||'live'; }catch(e){ return 'live'; } }
 function findCard(p){ return document.querySelector('#sections .card[data-path="'+p+'"]'); }
-function changeStatus(p,val){ if(val==='delete'){ const app=APPS.find(a=>a.path===p); const nm=app?app.nm:p; if(!confirm('Delete "'+nm+'" from the hub?\n\nIt will be hidden. You can bring it back with the "restore all" link under the grid.')){ const c0=findCard(p), s=c0&&c0.querySelector('.stsel'); if(s) s.value=getStatus(p); return; } const d=getDeleted(); if(!d.includes(p)){ d.push(p); setDeleted(d); } const c=findCard(p); if(c) c.remove(); renderRestore(); return; } let m={}; try{ m=JSON.parse(localStorage.getItem('hubStatus')||'{}'); }catch(e){} m[p]=val; localStorage.setItem('hubStatus',JSON.stringify(m)); const c=findCard(p); if(c){ c.classList.remove('st-live','st-developing','st-passive'); c.classList.add('st-'+val); } }
+function changeStatus(p,val){ if(val==='delete'){ const cust=getCustom(); const ci=cust.findIndex(a=>a.path===p); if(ci>=0){ if(confirm('Remove this custom card for good?')){ cust.splice(ci,1); saveCustom(cust); const c=findCard(p); if(c) c.remove(); } else { const c0=findCard(p), s0=c0&&c0.querySelector('.stsel'); if(s0) s0.value=getStatus(p); } return; } const app=APPS.find(a=>a.path===p); const nm=app?app.nm:p; if(!confirm('Delete "'+nm+'" from the hub?\n\nIt will be hidden. You can bring it back with the "restore all" link under the grid.')){ const c0=findCard(p), s=c0&&c0.querySelector('.stsel'); if(s) s.value=getStatus(p); return; } const d=getDeleted(); if(!d.includes(p)){ d.push(p); setDeleted(d); } const c=findCard(p); if(c) c.remove(); renderRestore(); return; } let m={}; try{ m=JSON.parse(localStorage.getItem('hubStatus')||'{}'); }catch(e){} m[p]=val; localStorage.setItem('hubStatus',JSON.stringify(m)); const c=findCard(p); if(c){ c.classList.remove('st-live','st-developing','st-passive'); c.classList.add('st-'+val); } }
 function getDeleted(){ try{ return JSON.parse(localStorage.getItem('hubDeleted')||'[]'); }catch(e){ return []; } }
 function setDeleted(arr){ localStorage.setItem('hubDeleted', JSON.stringify(arr)); }
 function renderRestore(){ const el=$('restore'); if(!el) return; const d=getDeleted(); el.innerHTML=d.length?(d.length+' hidden · <a href="#" onclick="restoreAll();return false">restore all</a>'):''; }
@@ -153,7 +168,7 @@ function getCatOrder(){ const base=CATS.map(c=>c[0]); try{ const s=JSON.parse(lo
 function saveCatOrder(a){ localStorage.setItem('hubCatOrder',JSON.stringify(a)); }
 function orderedCats(){ const map={}; CATS.forEach(c=>map[c[0]]=c); return getCatOrder().map(k=>map[k]).filter(Boolean); }
 function moveSection(e,cat,dir){ if(e) e.stopPropagation(); const ord=getCatOrder(); const i=ord.indexOf(cat), j=i+dir; if(i<0||j<0||j>=ord.length) return; const t=ord[i]; ord[i]=ord[j]; ord[j]=t; saveCatOrder(ord); render(); loadAll(); }
-function orderedInCat(cat){ const del=getDeleted(), ord=getOrder(); const inCat=APPS.filter(a=>catOf(a)===cat && !del.includes(a.path)); const map={}; inCat.forEach(a=>map[a.path]=a); const out=[]; ord.forEach(p=>{ if(map[p]){ out.push(map[p]); delete map[p]; } }); inCat.forEach(a=>{ if(map[a.path]) out.push(a); }); return out; }
+function orderedInCat(cat){ const del=getDeleted(), ord=getOrder(); const inCat=allApps().filter(a=>catOf(a)===cat && !del.includes(a.path)); const map={}; inCat.forEach(a=>map[a.path]=a); const out=[]; ord.forEach(p=>{ if(map[p]){ out.push(map[p]); delete map[p]; } }); inCat.forEach(a=>{ if(map[a.path]) out.push(a); }); return out; }
 function saveDomOrder(){ saveOrder([...document.querySelectorAll('#sections .grid .card')].map(c=>c.dataset.path)); }
 let justDragged=0, didMove=false;
 function openApp(dest,external){ if(Date.now()-justDragged<300) return; if(external) window.open(dest,'_blank'); else location.href=dest; }
@@ -183,7 +198,7 @@ async function checkVer(a){
     ver.textContent=m?m[0]:'—';
   }catch(e){ ver.textContent="couldn't load"; }
 }
-function loadAll(){ APPS.forEach(a=>{ const v=$('v_'+a.path); if(v) v.textContent='…'; checkVer(a); }); }
+function loadAll(){ allApps().forEach(a=>{ if(/^https?:/i.test(a.path)){ const v=$('v_'+a.path); if(v) v.textContent='external'; return; } const v=$('v_'+a.path); if(v) v.textContent='…'; checkVer(a); }); }
 
 // soft admin gate: reuses the cockpit key stored by the other tools
 if(localStorage.getItem('ccKey')) show(); else $('gate').style.display='block';

@@ -30,28 +30,29 @@
   .en{color:var(--muted); font-size:.86em}
   p.howto{font-size:14px; color:var(--ink)}
   p.howto .en{display:block; margin-top:4px}
-  .targetBox{text-align:center; padding:10px 0}
-  .targetLabel{font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted)}
-  .targetLabel .en{text-transform:none; letter-spacing:0}
-  .targetBig{font-size:64px; font-weight:800; color:var(--gold); line-height:1; margin:4px 0}
-  .chips{display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap}
-  .chip{background:var(--panel2); border:1px solid var(--line); color:var(--muted); padding:8px 14px; border-radius:999px; cursor:pointer; font-size:13px; font-weight:600}
-  .chip .en{display:block; font-size:10px; margin-top:2px}
-  .chip.on{color:var(--bg); background:var(--accent); border-color:var(--accent)}
+  .roundTag{text-align:center; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent2); font-weight:700; margin-bottom:6px}
+  .roundTag .en{text-transform:none; letter-spacing:0; color:var(--muted)}
+  .sampleName{text-align:center; font-size:15px; font-weight:700; color:var(--ink); margin-bottom:10px}
+  .wheelBox{text-align:center; padding:6px 0 4px}
+  .wheelLabel{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+  .wheelLabel .en{text-transform:none; letter-spacing:0; display:block; margin-top:2px}
+  .wheelNum{font-size:72px; font-weight:800; color:var(--gold); line-height:1; margin:6px 0 2px; font-variant-numeric:tabular-nums}
+  .wheelNum.spinning{color:var(--accent); opacity:.85}
+  .wheelSub{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+  .wheelSub .en{text-transform:none; letter-spacing:0}
   button.big{
     display:block; width:100%; padding:16px; font-size:18px; font-weight:800;
     background:var(--accent); color:#1a1410; border:none; border-radius:12px; cursor:pointer;
     margin-top:8px;
   }
   button.big:active{transform:translateY(1px)}
+  button.big:disabled{opacity:.45; cursor:default}
   button.drop{background:var(--warn); color:#fff; font-size:22px; padding:22px}
   button.ghost{background:transparent; border:1px solid var(--line); color:var(--ink)}
   button.ghost .en{color:var(--muted)}
   .btn-en{font-size:.72em; opacity:.8; font-weight:600}
   canvas.bell{width:100%; height:150px; display:block; background:var(--panel2); border:1px solid var(--line); border-radius:10px; margin:6px 0}
-  .elapsed{text-align:center; font-size:44px; font-weight:800; font-variant-numeric:tabular-nums; color:var(--ink); margin:6px 0 2px}
-  .elapsed small{font-size:15px; color:var(--muted); font-weight:600}
-  .playhint{text-align:center; color:var(--muted); font-size:13px; margin-bottom:8px}
+  .playhint{text-align:center; color:var(--muted); font-size:15px; margin:6px 0 4px}
   .resultTop{display:flex; align-items:center; justify-content:space-around; text-align:center; gap:8px}
   .swatch{width:78px; height:78px; border-radius:50%; border:2px solid var(--line); margin:0 auto 6px}
   .rNum{font-size:30px; font-weight:800; line-height:1}
@@ -65,6 +66,25 @@
   .instr{text-align:center; font-size:13px; color:var(--muted); margin-top:10px; background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px}
   .instr b{color:var(--ink)}
   .event{text-align:center; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent2); margin:2px 0 8px; font-weight:700}
+  .speedBox{margin-top:14px; border-top:1px solid var(--line); padding-top:12px}
+  .speedQ{text-align:center; font-size:14px; font-weight:600; color:var(--ink); margin-bottom:8px}
+  .speedQ .en{color:var(--muted); font-weight:500}
+  .chips{display:flex; gap:8px; justify-content:center; margin-top:4px; flex-wrap:wrap}
+  .chip{background:var(--panel2); border:1px solid var(--line); color:var(--muted); padding:8px 14px; border-radius:999px; cursor:pointer; font-size:13px; font-weight:600}
+  .chip .en{display:block; font-size:10px; margin-top:2px}
+  .chip.on{color:var(--bg); background:var(--accent); border-color:var(--accent)}
+  .chip.correct{color:var(--bg); background:var(--accent2); border-color:var(--accent2)}
+  .chip:disabled{cursor:default}
+  .speedRes{text-align:center; font-size:13px; color:var(--gold); margin-top:10px}
+  .speedRes .en{display:block; color:var(--muted)}
+  .matchLabel{text-align:center; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted)}
+  .matchLabel .en{text-transform:none; letter-spacing:0}
+  .matchBig{text-align:center; font-size:70px; font-weight:800; color:var(--gold); line-height:1; margin:4px 0}
+  .matchSub{text-align:center; font-size:12px; color:var(--muted); margin-bottom:8px}
+  .dots{display:flex; gap:14px; justify-content:center; margin:12px 0 4px}
+  .dot{text-align:center}
+  .dot .d{width:44px; height:44px; border-radius:50%; border:2px solid var(--line); margin:0 auto 4px}
+  .dot .dl{font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums}
   .lb{margin-top:6px}
   .lb h3{font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 0 6px}
   .lb h3 .en{text-transform:none; letter-spacing:0; color:var(--muted)}
@@ -99,37 +119,45 @@
   <section id="scrStart">
     <div class="panel">
       <p class="howto">
-        Gerçek bir kavrumun çıtırtılarını duyacaksın. Renginin hedefe ulaştığını düşündüğün an <b>DÜŞÜR</b>'e bas. Ekran karar veremez, kulağın verir.
-        <span class="en">You will hear the cracks of a real roast. The moment you think the color has reached the target, hit <b>DROP</b>. The screen does not decide, your ear does.</span>
+        Üç raunt. Her raunt gerçek bir kavrum, gerçek çıtırtılar. Çark sana bir hedef Agtron verir. Dinlersin, ekranda sayı yok, sadece çıtırtı ve büyüyen çan. Renginin hedefe ulaştığını düşündüğün an <b>DÜŞÜR</b>'e bas. Ekran karar veremez, kulağın verir.
+        <span class="en">Three rounds. Each round is a real roast with real cracks. The wheel gives you a target Agtron. You listen, no numbers on screen, only the cracks and the growing bell. The moment you think the color has reached the target, hit <b>DROP</b>. The screen does not decide, your ear does.</span>
       </p>
     </div>
-    <div class="panel targetBox">
-      <div class="targetLabel">Hedef Agtron <span class="en">Target Agtron</span></div>
-      <div class="targetBig" id="targetBig">88</div>
-      <div class="chips" id="chips">
-        <button class="chip" data-t="75">Koyu<span class="en">Dark · 75</span></button>
-        <button class="chip on" data-t="88">Hedef<span class="en">Target · 88</span></button>
-        <button class="chip" data-t="100">Açık<span class="en">Light · 100</span></button>
-      </div>
-    </div>
-    <button class="big" id="btnStart">Başla <span class="btn-en">· Start</span></button>
+    <button class="big" id="btnStart">Maça başla <span class="btn-en">· Start match</span></button>
     <p class="fineprint">Mikrofon kullanılmaz, izin istenmez. Sesli oynanır, hoparlörünü aç.
       <span class="en">No microphone, no permissions. Play with sound, turn your speaker on.</span></p>
+  </section>
+
+  <!-- WHEEL -->
+  <section id="scrWheel" class="hidden">
+    <div class="panel">
+      <div class="roundTag">Raunt <b id="wheelRound">1</b> / 3 <span class="en">· Round</span></div>
+      <div class="sampleName" id="wheelSample"></div>
+      <div class="wheelBox">
+        <div class="wheelLabel">Çark hedefini verdi <span class="en">The wheel set your target</span></div>
+        <div class="wheelNum" id="wheelNum">--</div>
+        <div class="wheelSub">Hedef Agtron <span class="en">· Target Agtron</span></div>
+      </div>
+      <div class="row2" style="margin-top:6px">
+        <button class="big ghost" id="btnReroll">Bir kez daha çevir <span class="btn-en en">· Re-spin (1)</span></button>
+      </div>
+    </div>
+    <button class="big" id="btnPlay">Dinle ve düşür <span class="btn-en">· Listen and drop</span></button>
   </section>
 
   <!-- PLAY -->
   <section id="scrPlay" class="hidden">
     <div class="panel">
-      <div class="playhint">Hedef <b id="playTarget">88</b> Agtron · sadece kulağınla <span class="en" style="display:block">Target Agtron · with your ear only</span></div>
-      <div class="elapsed"><span id="elapsed">0.0</span><small>s</small></div>
+      <div class="playhint">Kulağınla yakala <span class="en" style="display:block">Catch it with your ear</span></div>
       <canvas class="bell" id="bell" width="488" height="150"></canvas>
     </div>
     <button class="big drop" id="btnDrop">DÜŞÜR <span class="btn-en">· DROP</span></button>
   </section>
 
-  <!-- RESULT -->
-  <section id="scrResult" class="hidden">
+  <!-- REVEAL (per round) -->
+  <section id="scrReveal" class="hidden">
     <div class="panel">
+      <div class="roundTag">Raunt <b id="revRound">1</b> / 3 <span class="en">· Round</span></div>
       <div class="resultTop">
         <div>
           <div class="swatch" id="swMine"></div>
@@ -144,11 +172,33 @@
       </div>
       <div class="deltaBox">
         <div class="deltaBig" id="deltaBig">--</div>
-        <div class="deltaLab">Agtron fark <span class="en">· Agtron delta</span></div>
+        <div class="deltaLab">Bu rauntun farkı <span class="en">· This round delta</span></div>
       </div>
-      <div class="verdict" id="verdict"></div>
+      <div class="instr hidden" id="cutMsg"></div>
       <div class="instr" id="instrCall"></div>
       <canvas class="bell" id="bellResult" width="488" height="150"></canvas>
+      <div class="speedBox hidden" id="speedBox">
+        <div class="speedQ">Bu kavurma hızlı mıydı, orta mı, yavaş mı? <span class="en" style="display:block">Was this roast fast, medium or slow?</span></div>
+        <div class="chips" id="speedChips">
+          <button class="chip" data-sp="fast">Hızlı<span class="en">Fast</span></button>
+          <button class="chip" data-sp="medium">Orta<span class="en">Medium</span></button>
+          <button class="chip" data-sp="slow">Yavaş<span class="en">Slow</span></button>
+        </div>
+        <div class="speedRes hidden" id="speedRes"></div>
+      </div>
+    </div>
+    <button class="big" id="btnNext">Sonraki raunt <span class="btn-en">· Next round</span></button>
+  </section>
+
+  <!-- MATCH END -->
+  <section id="scrMatch" class="hidden">
+    <div class="panel">
+      <div class="matchLabel">Maç skoru <span class="en">· Match score</span></div>
+      <div class="matchBig" id="matchScore">--</div>
+      <div class="matchSub">Üç rauntun toplam farkı, düşük iyidir <span class="en" style="display:block">Sum of three round deltas, lower is better</span></div>
+      <div class="dots" id="dots"></div>
+      <div class="verdict" id="verdict"></div>
+      <div class="instr" id="matchNote"></div>
     </div>
     <div class="lb hidden" id="lbBox">
       <div class="panel">
@@ -158,7 +208,7 @@
     </div>
     <button class="big" id="btnShare">Kart indir <span class="btn-en">· Download share card</span></button>
     <div class="row2" style="margin-top:8px">
-      <button class="big ghost" id="btnReplay">Tekrar <span class="btn-en en">· Replay</span></button>
+      <button class="big ghost" id="btnReplay">Yeni maç <span class="btn-en en">· New match</span></button>
     </div>
     <div class="links">
       <a href="https://guide.coffeenutz.net/crack-listen.html">Uygulamayı dene<span class="en">Try the app</span></a>
@@ -169,59 +219,149 @@
   <footer>
     <div class="honest">Oyun bir ölçüm değildir. · The game is not a measurement.</div>
     <div style="margin-top:6px">
-      Çıtırtı zamanları gerçektir: 2026-07-07 tarihli ölçülmüş bir Ethiopia Yirgacheffe Gr.2 kavrumundan. Pop sesleri o gerçek anlarda sentezlenir. Renk modeli bu kahvenin ölçülmüş kavrumları arasında ara değer üretir.
-      <span class="en" style="display:block; margin-top:3px">Crack timings are real, from an actual measured roast of Ethiopia Yirgacheffe Gr.2 on 2026-07-07. The pop sounds are synthesized at those real moments. The color model interpolates between this coffee's actually measured roasts.</span>
+      Çıtırtı zamanları gerçektir: 2026-07-07 ve 2026-07-10 tarihlerinde ölçülmüş altı gerçek kavrumdan (Ethiopia Yirgacheffe Gr.2 ve Ethiopia Rumudamo, bir tam çan ile kavurucusunun erken indirdiği partiler). Pop sesleri o gerçek anlarda sentezlenir. Renk modeli her kahvenin kendi ölçülmüş Agtron değerine göre kurulur.
+      <span class="en" style="display:block; margin-top:3px">Crack timings are real, from six measured roasts on 2026-07-07 and 2026-07-10 (Ethiopia Yirgacheffe Gr.2 and Ethiopia Rumudamo, one full bell plus batches the roaster dropped early). The pop sounds are synthesized at those real moments. The color model is built from each coffee's own measured Agtron.</span>
     </div>
-    <div style="margin-top:8px">kulaktesti · <a href="https://guide.coffeenutz.net">guide.coffeenutz.net</a> · v2026-07-11b</div>
+    <div style="margin-top:8px">kulaktesti · <a href="https://guide.coffeenutz.net">guide.coffeenutz.net</a> · v2026-07-12a</div>
   </footer>
 </div>
 
 <script>
 "use strict";
 /* ============================================================
-   Kulağın Kaç Agtron? · CoffeeNutz crack game · v2026-07-11b
+   Kulağın Kaç Agtron? · CoffeeNutz crack game · v2026-07-12a
    HONESTY: this is not a measurement. Crack timings are REAL,
-   measured from Ethiopia Yirgacheffe Gr.2 on 2026-07-07.
+   measured from six roasts on 2026-07-07 and 2026-07-10
+   (Ethiopia Yirgacheffe Gr.2 and Ethiopia Rumudamo). One full
+   reference bell plus five batches the roaster dropped early.
+   Each sample's color model is anchored on that coffee's own
+   measured ground Agtron. See per-sample notes below.
    ============================================================ */
 
-/* REAL crack record: Ethiopia Yirgacheffe Gr.2, Bullet 600 g, washed,
-   roasted 2026-07-07 14:00, the full reference bell: first crack
-   through earned silence, measured agtron_ground=67 at the end.
-   Each entry [t, g]: t seconds rebased so the first crack = 0
-   (raw first crack was at 139.72 s), g = crack gain. Total
-   cumulative gain = 5533, landing on the ~67 Agtron anchor below. */
-var CRACKS = [
-  [0.0,51],[2.66,52],[19.84,43],[27.45,45],[32.7,35],[32.85,44],[36.82,43],[37.29,57],[38.5,43],
-  [38.84,38],[41.9,53],[43.66,48],[43.79,36],[44.8,43],[46.42,38],[46.59,42],[46.72,36],[47.59,46],
-  [49.06,34],[50.06,43],[52.65,39],[53.07,34],[53.24,34],[53.71,35],[54.16,38],[54.8,44],[55.53,44],
-  [56.1,43],[56.19,39],[57.15,39],[57.25,45],[57.49,42],[57.85,49],[58.06,35],[59.75,39],[59.84,54],
-  [60.92,55],[61.35,43],[62.76,37],[63.12,38],[65.43,37],[65.64,44],[65.72,66],[66.73,38],[66.88,46],
-  [67.13,49],[68.05,43],[69.29,36],[70.48,35],[70.97,42],[71.44,41],[71.8,34],[72.12,47],[72.34,40],
-  [73.45,35],[74.43,45],[74.68,35],[75.56,68],[76.65,53],[77.12,41],[78.37,44],[79.78,42],[80.29,51],
-  [81.6,49],[82.15,42],[82.64,42],[83.34,51],[86.42,36],[86.76,41],[87.1,35],[88.98,35],[89.68,34],
-  [90.68,41],[91.94,36],[92.16,45],[92.39,40],[96.29,43],[97.62,52],[98.26,51],[98.49,39],[99.15,39],
-  [99.96,41],[100.43,36],[100.88,43],[102.27,36],[103.53,56],[104.02,34],[106.51,38],[107.41,40],[108.43,49],
-  [109.69,36],[109.82,44],[109.95,38],[110.68,38],[112.89,46],[113.38,38],[114.24,40],[115.09,38],[115.3,36],
-  [116.05,42],[116.52,40],[116.88,66],[118.05,37],[118.23,44],[118.97,37],[124.56,44],[125.2,46],[131.54,45],
-  [131.86,35],[133.41,36],[133.54,40],[136.04,37],[136.21,58],[137.7,55],[138.53,48],[141.95,36],[143.21,45],
-  [144.87,37],[146.88,46],[148.01,38],[151.93,37],[155.75,38],[156.92,38],[157.8,42],[159.99,38],[160.44,41],
-  [162.13,34],[164.43,50],[166.48,38],[175.4,40],[183.46,39]
+/* Each sample:
+     id           short key
+     coffee, date honest provenance (shown to the player)
+     cracks       [t, g]; t seconds rebased so first crack = 0, fp=0 only
+     terminalAg   measured ground Agtron at the end of THIS recording
+     anchors      full-bell piecewise curve, or null (cut samples use a
+                  two-point cumGain->Agtron line: 0->115 down to
+                  totalGain->terminalAg, result clamped 60..118)
+     riseToPeakS  seconds to the 2 s-bin peak of crack activity (honesty)
+     speed        'fast' <30 s, 'medium' 30-45 s, 'slow' >45 s, or null
+                  when the envelope never peaked before the cut (unknown)
+     cut          true if the roaster dropped it before earned silence
+*/
+var SAMPLES = [
+  /* FULL REFERENCE BELL. Ethiopia Yirgacheffe Gr.2, Bullet 600 g, washed,
+     roasted 2026-07-07 14:00. First crack through earned silence.
+     Measured ground Agtron 67. Total gain 5533 -> lands on the 67 anchor.
+     Anchor curve kept exactly from v2026-07-11b. Rise-to-peak ~57 s: slow. */
+  { id:'y1400', coffee:'Ethiopia Yirgacheffe Gr.2', date:'2026-07-07', cut:false,
+    terminalAg:67, anchors:[[0,115],[1308,108],[2617,104],[2943,102],[5500,67]],
+    riseToPeakS:57, speed:'slow',
+    cracks:[
+      [0.0,51],[2.66,52],[19.84,43],[27.45,45],[32.7,35],[32.85,44],[36.82,43],[37.29,57],[38.5,43],
+      [38.84,38],[41.9,53],[43.66,48],[43.79,36],[44.8,43],[46.42,38],[46.59,42],[46.72,36],[47.59,46],
+      [49.06,34],[50.06,43],[52.65,39],[53.07,34],[53.24,34],[53.71,35],[54.16,38],[54.8,44],[55.53,44],
+      [56.1,43],[56.19,39],[57.15,39],[57.25,45],[57.49,42],[57.85,49],[58.06,35],[59.75,39],[59.84,54],
+      [60.92,55],[61.35,43],[62.76,37],[63.12,38],[65.43,37],[65.64,44],[65.72,66],[66.73,38],[66.88,46],
+      [67.13,49],[68.05,43],[69.29,36],[70.48,35],[70.97,42],[71.44,41],[71.8,34],[72.12,47],[72.34,40],
+      [73.45,35],[74.43,45],[74.68,35],[75.56,68],[76.65,53],[77.12,41],[78.37,44],[79.78,42],[80.29,51],
+      [81.6,49],[82.15,42],[82.64,42],[83.34,51],[86.42,36],[86.76,41],[87.1,35],[88.98,35],[89.68,34],
+      [90.68,41],[91.94,36],[92.16,45],[92.39,40],[96.29,43],[97.62,52],[98.26,51],[98.49,39],[99.15,39],
+      [99.96,41],[100.43,36],[100.88,43],[102.27,36],[103.53,56],[104.02,34],[106.51,38],[107.41,40],[108.43,49],
+      [109.69,36],[109.82,44],[109.95,38],[110.68,38],[112.89,46],[113.38,38],[114.24,40],[115.09,38],[115.3,36],
+      [116.05,42],[116.52,40],[116.88,66],[118.05,37],[118.23,44],[118.97,37],[124.56,44],[125.2,46],[131.54,45],
+      [131.86,35],[133.41,36],[133.54,40],[136.04,37],[136.21,58],[137.7,55],[138.53,48],[141.95,36],[143.21,45],
+      [144.87,37],[146.88,46],[148.01,38],[151.93,37],[155.75,38],[156.92,38],[157.8,42],[159.99,38],[160.44,41],
+      [162.13,34],[164.43,50],[166.48,38],[175.4,40],[183.46,39]
+    ] },
+  /* CUT BATCH. Ethiopia Yirgacheffe Gr.2, washed, 2026-07-07 14:40.
+     Roaster dropped it early; measured ground Agtron 102.8. Total gain 2649.
+     Rise-to-peak ~27 s: fast. */
+  { id:'y1440', coffee:'Ethiopia Yirgacheffe Gr.2', date:'2026-07-07', cut:true,
+    terminalAg:102.8, anchors:null, riseToPeakS:27, speed:'fast',
+    cracks:[
+      [0.0,42],[1.94,51],[2.34,50],[2.86,38],[3.94,52],[5.57,38],[7.17,34],[10.3,35],[10.83,47],[11.75,45],
+      [12.9,40],[13.67,37],[14.78,39],[14.91,35],[15.34,42],[15.44,47],[16.4,36],[16.64,39],[17.23,48],[18.73,36],
+      [18.83,37],[19.07,35],[19.15,47],[20.73,37],[21.07,39],[21.16,45],[21.31,45],[21.71,45],[22.67,35],[23.02,39],
+      [24.23,44],[25.0,38],[25.13,38],[25.71,43],[26.28,33],[26.58,43],[26.66,35],[26.77,47],[26.88,39],[27.05,51],
+      [28.22,47],[28.35,47],[29.24,38],[29.46,42],[29.93,40],[30.1,52],[30.25,49],[31.12,43],[31.29,34],[31.55,38],
+      [32.21,38],[32.64,39],[33.26,54],[33.34,41],[33.62,49],[34.98,41],[36.05,45],[36.95,52],[37.31,39],[37.54,40],
+      [38.67,35],[39.42,45],[39.61,55]
+    ] },
+  /* CUT BATCH. Ethiopia Rumudamo, washed, 2026-07-07 18:17.
+     Roaster dropped it early; measured ground Agtron 100.4. Total gain 2818.
+     Rise-to-peak ~37 s: medium. */
+  { id:'r1817', coffee:'Ethiopia Rumudamo', date:'2026-07-07', cut:true,
+    terminalAg:100.4, anchors:null, riseToPeakS:37, speed:'medium',
+    cracks:[
+      [0.0,58],[0.57,47],[2.58,44],[5.35,44],[6.87,41],[8.1,35],[10.81,44],[11.92,37],[13.27,40],[15.19,55],
+      [15.87,37],[16.91,46],[17.85,43],[18.22,41],[18.94,38],[19.07,41],[19.58,45],[19.79,42],[20.65,33],[21.86,33],
+      [22.08,49],[23.44,41],[25.51,38],[26.15,39],[26.7,33],[27.15,37],[27.28,50],[27.75,33],[27.94,35],[28.86,40],
+      [29.1,51],[29.41,41],[29.93,41],[30.03,40],[30.31,44],[30.82,48],[30.97,35],[31.25,36],[31.74,40],[31.93,48],
+      [32.04,40],[33.04,35],[33.17,41],[33.26,38],[33.49,35],[33.64,51],[33.72,43],[33.81,38],[34.88,33],[35.2,43],
+      [35.35,49],[35.79,51],[36.11,49],[36.22,51],[36.48,40],[36.58,47],[36.84,53],[37.05,41],[37.2,37],[37.65,36],
+      [38.44,33],[38.54,35],[38.7,34],[39.02,36],[39.34,49],[39.68,39],[40.17,43],[40.72,35]
+    ] },
+  /* CUT BATCH. Ethiopia Rumudamo, washed, 2026-07-07 20:01.
+     Roaster dropped it early; measured ground Agtron 106. Total gain 1329.
+     The crack envelope was still rising at the cut, so speed is unknown (null). */
+  { id:'r2001', coffee:'Ethiopia Rumudamo', date:'2026-07-07', cut:true,
+    terminalAg:106, anchors:null, riseToPeakS:null, speed:null,
+    cracks:[
+      [0.0,38],[0.24,38],[1.26,49],[7.49,45],[10.86,37],[12.53,33],[12.63,40],[12.76,38],[14.96,46],[15.34,39],
+      [15.98,42],[17.45,32],[18.26,40],[21.7,34],[21.98,38],[22.21,33],[23.41,43],[23.68,42],[23.77,41],[23.9,36],
+      [25.05,57],[25.45,39],[25.65,38],[26.01,44],[26.8,33],[27.25,46],[27.67,53],[28.18,46],[28.27,58],[28.57,50],
+      [29.36,36],[29.51,45]
+    ] },
+  /* CUT BATCH. Ethiopia Yirgacheffe Gr.2, washed, 2026-07-10 11:47.
+     Roaster dropped it early; measured ground Agtron 102. Total gain 2943.
+     Rise-to-peak ~53 s: slow. */
+  { id:'u1147', coffee:'Ethiopia Yirgacheffe Gr.2', date:'2026-07-10', cut:true,
+    terminalAg:102, anchors:null, riseToPeakS:53, speed:'slow',
+    cracks:[
+      [0.0,37],[1.87,41],[2.38,40],[3.86,38],[6.76,35],[9.66,35],[13.05,35],[14.46,37],[14.57,40],[16.08,43],
+      [17.62,37],[18.83,34],[18.92,36],[19.24,41],[19.88,38],[21.67,34],[22.8,53],[23.84,54],[24.19,42],[24.91,37],
+      [26.79,42],[28.07,48],[28.54,55],[29.07,42],[29.43,50],[30.69,43],[30.8,41],[32.04,35],[32.38,40],[33.44,38],
+      [34.45,36],[34.77,35],[35.43,43],[35.56,38],[36.15,38],[36.6,35],[36.71,47],[37.07,50],[38.69,36],[38.89,32],
+      [39.14,37],[40.08,39],[40.34,55],[42.17,32],[42.32,42],[43.45,48],[44.69,37],[44.77,34],[45.39,35],[45.56,37],
+      [45.69,50],[46.27,40],[47.18,36],[47.46,46],[48.78,43],[49.04,40],[49.17,36],[50.21,33],[50.57,37],[52.0,51],
+      [52.09,40],[52.8,44],[52.99,51],[53.82,40],[54.67,34],[55.08,38],[55.46,49],[56.34,36],[56.42,32],[56.61,42],
+      [56.7,46],[58.02,72]
+    ] },
+  /* CUT BATCH. Ethiopia Yirgacheffe Gr.2, washed, 2026-07-10 12:59.
+     Roaster dropped it early; measured ground Agtron 101. Total gain 2467.
+     Rise-to-peak ~51 s: slow. */
+  { id:'u1259', coffee:'Ethiopia Yirgacheffe Gr.2', date:'2026-07-10', cut:true,
+    terminalAg:101, anchors:null, riseToPeakS:51, speed:'slow',
+    cracks:[
+      [0.0,52],[7.83,46],[11.69,35],[13.57,36],[14.04,45],[16.79,35],[18.16,44],[18.56,38],[21.64,49],[22.7,37],
+      [24.24,44],[25.41,49],[26.86,36],[28.63,37],[29.04,42],[29.96,46],[30.6,41],[30.79,47],[34.03,48],[34.82,38],
+      [35.18,54],[37.89,40],[38.15,37],[38.32,39],[39.53,34],[39.64,44],[40.75,55],[40.96,41],[43.22,35],[44.55,41],
+      [44.7,42],[45.02,46],[45.31,39],[46.06,41],[46.53,40],[47.53,36],[48.32,39],[49.24,41],[49.97,40],[50.71,37],
+      [50.95,50],[51.61,52],[51.89,45],[52.21,38],[53.1,42],[53.55,35],[54.57,40],[55.11,46],[55.64,43],[56.77,44],
+      [57.16,45],[58.12,42],[59.93,33],[60.1,45],[60.29,39],[61.98,38],[62.83,43],[63.88,46],[64.58,35]
+    ] }
 ];
-var LAST_T = CRACKS[CRACKS.length-1][0]; // 42.37 s
+
+/* precompute lastT and totalGain per sample */
+for(var si=0; si<SAMPLES.length; si++){
+  var sp = SAMPLES[si];
+  sp.lastT = sp.cracks[sp.cracks.length-1][0];
+  var tg = 0; for(var ci=0; ci<sp.cracks.length; ci++) tg += sp.cracks[ci][1];
+  sp.totalGain = tg;
+}
 
 /* --- COLOR MODEL ------------------------------------------------
-   Piecewise-linear on cumulative crack gain, from Ömer's measured
-   Yirgacheffe anchors (the full reference bell):
-     cumGain 1308 -> Agtron 108
-     cumGain 2617 -> Agtron 104   (this roast's landing point)
-     cumGain 2943 -> Agtron 102
-     cumGain 5500 -> Agtron  67
-   Below 1308 extrapolate gently toward ~115 at cumGain 0.
-   Result clamped to 60..118.
+   Full bell: piecewise-linear on cumulative crack gain from Ömer's
+   measured Yirgacheffe anchors.
+   Cut samples: two-point line, cumGain 0 -> Agtron 115 down to
+   totalGain -> that batch's measured terminal Agtron. Result clamped
+   to 60..118.
 --------------------------------------------------------------- */
-var ANCHORS = [[0,115],[1308,108],[2617,104],[2943,102],[5500,67]];
-function agtronFromCum(cum){
-  var a = ANCHORS;
+function clamp(v,lo,hi){ return v<lo?lo:(v>hi?hi:v); }
+function agtronFromAnchors(a, cum){
   if(cum <= a[0][0]) return clamp(a[0][1], 60, 118);
   for(var i=0;i<a.length-1;i++){
     var x0=a[i][0], y0=a[i][1], x1=a[i+1][0], y1=a[i+1][1];
@@ -230,26 +370,27 @@ function agtronFromCum(cum){
       return clamp(v, 60, 118);
     }
   }
-  // beyond the last anchor: extend the final segment's slope
   var n=a.length;
   var px0=a[n-2][0], py0=a[n-2][1], px1=a[n-1][0], py1=a[n-1][1];
   var slope=(py1-py0)/(px1-px0);
   return clamp(py1 + slope*(cum-px1), 60, 118);
 }
-function clamp(v,lo,hi){ return v<lo?lo:(v>hi?hi:v); }
-
-/* cumulative gain at a given elapsed time (sum of crack gains with t <= now) */
-function cumGainAt(now){
-  var c=0;
-  for(var i=0;i<CRACKS.length;i++){ if(CRACKS[i][0] <= now + 1e-9) c += CRACKS[i][1]; else break; }
+function agtronForSample(s, cum){
+  if(s.anchors) return agtronFromAnchors(s.anchors, cum);
+  var frac = s.totalGain>0 ? (cum/s.totalGain) : 0;
+  var v = 115 + (s.terminalAg - 115)*frac;
+  return clamp(v, 60, 118);
+}
+/* cumulative gain at elapsed time (sum of crack gains with t <= now) */
+function cumGainForSample(s, now){
+  var c=0, C=s.cracks;
+  for(var i=0;i<C.length;i++){ if(C[i][0] <= now + 1e-9) c += C[i][1]; else break; }
   return c;
 }
 
-/* Agtron -> approximate roasted-bean color (for swatches / card).
-   Purely cosmetic; lighter Agtron = lighter brown. */
+/* Agtron -> approximate roasted-bean color (cosmetic). */
 function agtronColor(ag){
-  var t = clamp((ag-60)/(118-60), 0, 1); // 0 dark .. 1 light
-  // simple brown ramp: lighter Agtron -> lighter brown
+  var t = clamp((ag-60)/(118-60), 0, 1);
   var R = Math.round(46 + t*162);
   var G = Math.round(28 + t*118);
   var B = Math.round(16 + t*74);
@@ -258,16 +399,21 @@ function agtronColor(ag){
 
 /* --- STATE ----------------------------------------------------- */
 var state = {
-  target: 88,
   lang: 'tr',
-  startClock: 0,
-  raf: 0,
+  event: null,
+  match: null,        // { round, usedIds[], roundDeltas[], dots[] }
+  sample: null,
+  roundTarget: null,
+  rerolled: false,
   playing: false,
+  startClock: 0,
   timers: [],
-  crackIdx: 0,
-  firedGain: 0,        // sum of gains of cracks already fired (audio+visual)
-  result: null,
-  event: null
+  raf: 0,
+  overshoot: false,
+  roundResult: null,
+  currentDelta: null,
+  speedAnswered: false,
+  matchScore: null
 };
 
 /* --- AUDIO ----------------------------------------------------- */
@@ -280,7 +426,6 @@ function ensureAudio(){
   }catch(e){ AC = null; }
   return AC;
 }
-/* synthesized pop: short filtered noise burst, amplitude scaled by crack gain g */
 function playPop(g){
   var ac = ensureAudio();
   if(!ac) return;
@@ -292,7 +437,7 @@ function playPop(g){
     var buf = ac.createBuffer(1, n, sr);
     var d = buf.getChannelData(0);
     for(var i=0;i<n;i++){
-      var env = Math.pow(1 - i/n, 2.2);       // fast decay
+      var env = Math.pow(1 - i/n, 2.2);
       d[i] = (Math.random()*2-1) * env;
     }
     var src = ac.createBufferSource();
@@ -302,7 +447,7 @@ function playPop(g){
     bp.frequency.value = 1600 + Math.random()*1400;
     bp.Q.value = 0.9;
     var gain = ac.createGain();
-    var amp = 0.12 + Math.min(g,60)/60*0.5;    // gain-scaled by crack g
+    var amp = 0.12 + Math.min(g,60)/60*0.5;
     gain.gain.value = amp;
     src.connect(bp); bp.connect(gain); gain.connect(ac.destination);
     src.start();
@@ -310,33 +455,32 @@ function playPop(g){
 }
 
 /* --- BELL SKETCH (gain per 2 s bars) --------------------------- */
-function binGains(uptoTime){
-  var binW = 2; // seconds
-  var nb = Math.ceil((LAST_T+0.001)/binW);
+function binGains(s, uptoTime){
+  var binW = 2;
+  var nb = Math.ceil((s.lastT+0.001)/binW);
   var bins = new Array(nb); for(var i=0;i<nb;i++) bins[i]=0;
-  for(var k=0;k<CRACKS.length;k++){
-    var t=CRACKS[k][0], g=CRACKS[k][1];
+  for(var k=0;k<s.cracks.length;k++){
+    var t=s.cracks[k][0], g=s.cracks[k][1];
     if(t > uptoTime + 1e-9) break;
     var b=Math.min(nb-1, Math.floor(t/binW));
     bins[b]+=g;
   }
   return {bins:bins, binW:binW, nb:nb};
 }
-function drawBell(canvas, uptoTime){
-  if(!canvas) return;
+function drawBell(canvas, s, uptoTime){
+  if(!canvas || !s) return;
   var ctx = canvas.getContext('2d');
   if(!ctx) return;
   var W = canvas.width, H = canvas.height;
   ctx.clearRect(0,0,W,H);
   var pad = 10, base = H - 16;
-  var data = binGains(uptoTime);
+  var data = binGains(s, uptoTime);
   var maxBin = 0;
-  var fullAll = binGains(LAST_T).bins;
+  var fullAll = binGains(s, s.lastT).bins;
   for(var i=0;i<fullAll.length;i++) if(fullAll[i]>maxBin) maxBin=fullAll[i];
   if(maxBin<=0) maxBin=1;
   var nb = data.nb;
   var bw = (W - pad*2) / nb;
-  // baseline
   ctx.strokeStyle = '#3a2f26'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(pad, base+.5); ctx.lineTo(W-pad, base+.5); ctx.stroke();
   for(var b=0;b<nb;b++){
@@ -346,15 +490,15 @@ function drawBell(canvas, uptoTime){
     ctx.fillStyle = v>0 ? '#c98a3c' : '#2a221b';
     ctx.fillRect(x+1, base-h, Math.max(1,bw-2), h);
   }
-  // grid label
   ctx.fillStyle = '#a8998a'; ctx.font = '10px -apple-system,sans-serif';
   ctx.fillText('2 sn / çubuk · 2 s / bar', pad+2, 12);
 }
 
 /* --- DOM helpers ----------------------------------------------- */
 function $(id){ return document.getElementById(id); }
+var SCREENS = ['scrStart','scrWheel','scrPlay','scrReveal','scrMatch'];
 function show(id){
-  ['scrStart','scrPlay','scrResult'].forEach(function(s){
+  SCREENS.forEach(function(s){
     var el=$(s); if(!el) return;
     if(s===id) el.classList.remove('hidden'); else el.classList.add('hidden');
   });
@@ -366,105 +510,248 @@ function setLang(l){
   document.documentElement.lang = l;
   $('langTr').classList.toggle('on', l==='tr');
   $('langEn').classList.toggle('on', l==='en');
-  // EN spans are always shown as secondary; toggle just re-emphasizes.
   document.body.classList.toggle('en-primary', l==='en');
 }
 
-/* --- GAMEPLAY -------------------------------------------------- */
+/* --- TIMERS ---------------------------------------------------- */
 function clearTimers(){
   state.timers.forEach(function(t){ clearTimeout(t); });
   state.timers = [];
-  if(state.raf) cancelAnimationFrame(state.raf);
+  if(state.raf && typeof cancelAnimationFrame==='function') cancelAnimationFrame(state.raf);
   state.raf = 0;
-}
-function startGame(){
-  ensureAudio();
-  if(AC && AC.state==='suspended' && AC.resume) AC.resume();
-  state.playing = true;
-  state.crackIdx = 0;
-  state.firedGain = 0;
-  state.startClock = now();
-  clearTimers();
-  $('playTarget').textContent = state.target;
-  show('scrPlay');
-  drawBell($('bell'), 0);
-  // schedule each real crack at its real timestamp (1x)
-  CRACKS.forEach(function(c){
-    var id = setTimeout(function(){
-      if(!state.playing) return;
-      state.firedGain += c[1];
-      playPop(c[1]);
-      var el = now() - state.startClock;
-      drawBell($('bell'), el/1000);
-    }, c[0]*1000);
-    state.timers.push(id);
-  });
-  // overshoot: recording runs out -> auto drop
-  var endId = setTimeout(function(){
-    if(state.playing) doDrop(true);
-  }, (LAST_T + 0.4)*1000);
-  state.timers.push(endId);
-  tick();
-}
-function tick(){
-  if(!state.playing) return;
-  var el = (now() - state.startClock)/1000;
-  $('elapsed').textContent = el.toFixed(1);
-  state.raf = requestAnimationFrame(tick);
 }
 function now(){
   return (typeof performance!=='undefined' && performance.now) ? performance.now() : Date.now();
 }
 
+/* --- MATCH / ROUND FLOW ---------------------------------------- */
+function startMatch(){
+  ensureAudio();
+  if(AC && AC.state==='suspended' && AC.resume) AC.resume();
+  state.match = { round:0, usedIds:[], roundDeltas:[], dots:[] };
+  state.matchScore = null;
+  setupRound();
+}
+function setupRound(){
+  state.match.round += 1;
+  var pool = SAMPLES.filter(function(s){ return state.match.usedIds.indexOf(s.id) < 0; });
+  var s = pool[Math.floor(Math.random()*pool.length)];
+  state.sample = s;
+  state.match.usedIds.push(s.id);
+  state.rerolled = false;
+  state.speedAnswered = false;
+  state.roundResult = null;
+  state.currentDelta = null;
+  $('wheelRound').textContent = state.match.round;
+  $('wheelSample').textContent = s.coffee + ' · ' + s.date;
+  var rr = $('btnReroll');
+  rr.disabled = false;
+  spinTarget(false);
+  show('scrWheel');
+}
+/* Fortune wheel: pick an integer target from the sample's honestly
+   reachable range [floor(terminalAg)+1 .. 112]. One re-spin allowed. */
+function spinTarget(isReroll){
+  var s = state.sample;
+  var lo = Math.floor(s.terminalAg) + 1, hi = 112;
+  if(lo > hi) lo = hi;
+  var t, guard=0;
+  do {
+    t = lo + Math.floor(Math.random()*(hi - lo + 1));
+    guard++;
+  } while(isReroll && t === state.roundTarget && hi > lo && guard < 40);
+  state.roundTarget = t;
+  animateWheel(t, lo, hi);
+  if(isReroll){
+    state.rerolled = true;
+    var rr = $('btnReroll'); if(rr) rr.disabled = true;
+  }
+}
+function animateWheel(target, lo, hi){
+  var el = $('wheelNum'); if(!el) return;
+  el.textContent = target;            // deterministic final value
+  var ticks = 14, i = 0;
+  el.classList.add('spinning');
+  function step(){
+    if(i >= ticks){ el.textContent = target; el.classList.remove('spinning'); return; }
+    el.textContent = lo + Math.floor(Math.random()*(hi - lo + 1));
+    i++;
+    var id = setTimeout(step, 40 + i*9);
+    state.timers.push(id);
+  }
+  var id0 = setTimeout(step, 30);
+  state.timers.push(id0);
+}
+function playRound(){
+  ensureAudio();
+  if(AC && AC.state==='suspended' && AC.resume) AC.resume();
+  var s = state.sample;
+  clearTimers();
+  state.playing = true;
+  state.overshoot = false;
+  state.startClock = now();
+  drawBell($('bell'), s, 0);
+  show('scrPlay');
+  s.cracks.forEach(function(c){
+    var id = setTimeout(function(){
+      if(!state.playing) return;
+      playPop(c[1]);
+      var el = (now() - state.startClock)/1000;
+      drawBell($('bell'), s, el);
+    }, c[0]*1000);
+    state.timers.push(id);
+  });
+  var endId = setTimeout(function(){
+    if(state.playing) doDrop(true);
+  }, (s.lastT + 0.4)*1000);
+  state.timers.push(endId);
+}
 function doDrop(overshoot){
   if(!state.playing) return;
   state.playing = false;
   clearTimers();
+  var s = state.sample;
   var el = (now() - state.startClock)/1000;
-  if(el > LAST_T) el = LAST_T;
-  if(overshoot) el = LAST_T;
-  var cum = cumGainAt(el);
-  var mine = agtronFromCum(cum);
-  var target = state.target;
-  var delta = Math.abs(mine - target);
-  state.result = {
-    elapsed: el, cum: cum, mine: mine, target: target,
-    delta: delta, overshoot: !!overshoot
+  if(el > s.lastT) el = s.lastT;
+  if(overshoot) el = s.lastT;
+  state.overshoot = !!overshoot;
+  var cum = cumGainForSample(s, el);
+  var mine = agtronForSample(s, cum);
+  var target = state.roundTarget;
+  var special = (s.cut && !!overshoot);
+  var mineShown = special ? s.terminalAg : mine;
+  var delta = Math.abs(mineShown - target);
+  state.roundResult = {
+    elapsed: el, cum: cum, mine: mineShown, target: target,
+    rawDelta: delta, special: special
   };
-  renderResult();
-  maybeLeaderboard();
+  state.currentDelta = delta;
+  renderReveal();
 }
 
-/* --- VERDICT --------------------------------------------------- */
-function verdictFor(delta){
-  if(delta <= 2) return ['Kulağın kalibre!','Your ear is calibrated!'];
-  if(delta <= 5) return ['Roaster kulağı.','A roaster’s ear.'];
-  if(delta <= 10) return ['Az kaldı.','Close.'];
-  return ['Prob almana gerek yok, uygulama var.','No probe needed, there is an app.'];
-}
-
-/* --- RESULT SCREEN --------------------------------------------- */
-function renderResult(){
-  var r = state.result;
+/* --- REVEAL SCREEN --------------------------------------------- */
+function renderReveal(){
+  var r = state.roundResult, s = state.sample;
+  $('revRound').textContent = state.match.round;
   var mineR = Math.round(r.mine*10)/10;
-  var tgt = r.target;
-  var deltaR = Math.round(r.delta*10)/10;
   $('numMine').textContent = mineR.toFixed(1);
-  $('numTarget').textContent = tgt;
+  $('numTarget').textContent = r.target;
   $('swMine').style.background = agtronColor(r.mine);
-  $('swTarget').style.background = agtronColor(tgt);
-  $('deltaBig').textContent = (r.mine>=tgt?'+':'−') + deltaR.toFixed(1);
-  var v = verdictFor(r.delta);
-  $('verdict').innerHTML = v[0] + '<span class="en">' + v[1] + '</span>';
-  // The instrument uses the SAME model, so it is the same number at this drop.
+  $('swTarget').style.background = agtronColor(r.target);
+  updateDeltaDisplay();
+
+  var cm = $('cutMsg');
+  if(r.special){
+    cm.classList.remove('hidden');
+    cm.innerHTML = 'Bu parti hedefe hiç ulaşmadan kavurucusu tarafından indirildi. Fark, bu partinin indiği gerçek renge göre sayılır.' +
+      '<span class="en" style="display:block;margin-top:4px;color:var(--muted)">This batch was dropped by its roaster before your target was ever reachable. The delta is scored to the color it was actually dropped at.</span>';
+  } else {
+    cm.classList.add('hidden'); cm.innerHTML='';
+  }
+
+  // instrument honesty: the app and the game share one model.
   $('instrCall').innerHTML =
     'Aletin bu düşüşteki kararı: <b>' + mineR.toFixed(1) + ' Agtron</b>. Oyun da alet de aynı modeli kullanır; bu ayrı bir ölçüm değil, aynı andaki tahmindir.' +
-    '<span class="en" style="display:block;margin-top:4px;color:var(--muted)">The instrument’s call at your drop: <b>' + mineR.toFixed(1) + ' Agtron</b>. The game and the instrument share one model; this is not a separate measurement, it is the projection at that same moment.</span>';
-  drawBell($('bellResult'), r.elapsed);
-  show('scrResult');
+    '<span class="en" style="display:block;margin-top:4px;color:var(--muted)">The instrument’s call at your drop: <b>' + mineR.toFixed(1) + ' Agtron</b>. The game and the instrument share one model; this is the projection at that same moment, not a separate measurement.</span>';
+
+  drawBell($('bellResult'), s, r.elapsed);
+
+  var sb = $('speedBox'), sr = $('speedRes');
+  sr.classList.add('hidden'); sr.innerHTML='';
+  state.speedAnswered = false;
+  resetSpeedChips();
+  if(s.speed){ sb.classList.remove('hidden'); }
+  else { sb.classList.add('hidden'); }
+
+  setNextLabel();
+  show('scrReveal');
+}
+function updateDeltaDisplay(){
+  var d = Math.round(state.currentDelta*10)/10;
+  $('deltaBig').textContent = d.toFixed(1);
+}
+function resetSpeedChips(){
+  var chips = document.querySelectorAll('#speedChips .chip');
+  Array.prototype.forEach.call(chips, function(c){
+    c.classList.remove('on','correct'); c.disabled=false;
+  });
+}
+function answerSpeed(ans){
+  var s = state.sample;
+  if(!s.speed || state.speedAnswered) return;
+  state.speedAnswered = true;
+  var correct = (ans === s.speed);
+  if(correct){ state.currentDelta = state.currentDelta/2; }
+  updateDeltaDisplay();
+  var chips = document.querySelectorAll('#speedChips .chip');
+  Array.prototype.forEach.call(chips, function(c){
+    c.disabled = true;
+    var sp = c.getAttribute('data-sp');
+    if(sp === s.speed) c.classList.add('correct');
+    if(sp === ans && !correct) c.classList.add('on');
+  });
+  var labTr = {fast:'hızlı', medium:'orta', slow:'yavaş'}[s.speed];
+  var labEn = {fast:'fast', medium:'medium', slow:'slow'}[s.speed];
+  var sr = $('speedRes'); sr.classList.remove('hidden');
+  if(correct){
+    sr.innerHTML = 'Doğru, ' + labTr + '. Bu rauntun farkı yarıya indi.' +
+      '<span class="en">Correct, ' + labEn + '. This round delta is halved.</span>';
+  } else {
+    sr.innerHTML = 'Bu kavurma ' + labTr + 'ydı. Fark aynı kalır.' +
+      '<span class="en">This roast was ' + labEn + '. The delta stays as is.</span>';
+  }
+}
+function setNextLabel(){
+  var b = $('btnNext');
+  if(state.match.round >= 3){
+    b.innerHTML = 'Maç sonucunu gör <span class="btn-en">· See match result</span>';
+  } else {
+    b.innerHTML = 'Sonraki raunt <span class="btn-en">· Next round</span>';
+  }
+}
+function nextRound(){
+  state.match.roundDeltas.push(state.currentDelta);
+  state.match.dots.push({ mine: state.roundResult.mine, target: state.roundResult.target, delta: state.currentDelta });
+  if(state.match.round >= 3){ finishMatch(); }
+  else { setupRound(); }
 }
 
-/* --- LEADERBOARD (local, event mode) --------------------------- */
+/* --- MATCH END ------------------------------------------------- */
+function verdictForMatch(score){
+  if(score <= 6)  return ['Kulağın kalibre!','Your ear is calibrated!'];
+  if(score <= 15) return ['Roaster kulağı.',"A roaster's ear."];
+  if(score <= 30) return ['Az kaldı.','Close.'];
+  return ['Prob almana gerek yok, uygulama var.','No probe needed, there is an app.'];
+}
+function finishMatch(){
+  var score = 0;
+  for(var i=0;i<state.match.roundDeltas.length;i++) score += state.match.roundDeltas[i];
+  state.matchScore = score;
+  renderMatch();
+  maybeLeaderboard();
+}
+function renderMatch(){
+  var score = Math.round(state.matchScore*10)/10;
+  $('matchScore').textContent = score.toFixed(1);
+  var dots = $('dots'); dots.innerHTML='';
+  state.match.dots.forEach(function(d, idx){
+    var wrap = document.createElement('div'); wrap.className='dot';
+    var disc = document.createElement('div'); disc.className='d';
+    disc.style.background = agtronColor(d.mine);
+    var lbl = document.createElement('div'); lbl.className='dl';
+    lbl.textContent = 'R'+(idx+1)+' Δ'+(Math.round(d.delta*10)/10).toFixed(1);
+    wrap.appendChild(disc); wrap.appendChild(lbl);
+    dots.appendChild(wrap);
+  });
+  var v = verdictForMatch(state.matchScore);
+  $('verdict').innerHTML = v[0] + '<span class="en">' + v[1] + '</span>';
+  $('matchNote').innerHTML =
+    'Üç rauntun toplam Agtron farkı. Oyun bir ölçüm değildir; renk modeli her kahvenin kendi ölçülmüş kavrumundan gelir.' +
+    '<span class="en" style="display:block;margin-top:4px;color:var(--muted)">The summed Agtron delta across three rounds. The game is not a measurement; the color model comes from each coffee’s own measured roast.</span>';
+  show('scrMatch');
+}
+
+/* --- LEADERBOARD (local, event mode; lower score is better) ----- */
 var LB_KEY_BASE = 'cnutz_crackgame_lb';
 function lbKey(){ return LB_KEY_BASE + (state.event? ('_'+state.event) : ''); }
 function readLB(){
@@ -477,15 +764,14 @@ function writeLB(list){
 function maybeLeaderboard(){
   if(!state.event) return;
   $('lbBox').classList.remove('hidden');
-  var r = state.result;
-  // prompt for name on good scores (delta <= 5)
-  if(r.delta <= 5 && typeof prompt === 'function'){
+  var score = state.matchScore;
+  if(score <= 15 && typeof prompt === 'function'){
     var nm = null;
     try{ nm = prompt(state.lang==='en'?'Good ear! Name for the leaderboard:':'Güzel kulak! Sıralama için isim:'); }catch(e){ nm=null; }
     if(nm){
       var list = readLB();
-      list.push({ name:String(nm).slice(0,18), delta:Math.round(r.delta*10)/10, ag:Math.round(r.mine*10)/10, target:r.target, ts:Date.now() });
-      list.sort(function(a,b){ return a.delta - b.delta; });
+      list.push({ name:String(nm).slice(0,18), score:Math.round(score*10)/10, ts:Date.now() });
+      list.sort(function(a,b){ return a.score - b.score; }); // lower is better
       list = list.slice(0,10);
       writeLB(list);
     }
@@ -499,8 +785,8 @@ function renderLB(){
   ol.innerHTML = '';
   list.forEach(function(e){
     var li = document.createElement('li');
-    var d = (e.delta<=0?'':'Δ') + e.delta.toFixed(1);
-    li.innerHTML = escapeHtml(e.name) + ' <span class="d">' + e.ag.toFixed(1) + ' Agtron · Δ' + e.delta.toFixed(1) + '</span>';
+    var sc = (typeof e.score==='number') ? e.score : (e.delta||0);
+    li.innerHTML = escapeHtml(e.name) + ' <span class="d">maç · match ' + sc.toFixed(1) + '</span>';
     ol.appendChild(li);
   });
 }
@@ -513,72 +799,59 @@ function buildShareCanvas(){
   cv.width=W; cv.height=H;
   var ctx = cv.getContext('2d');
   if(!ctx) return cv;
-  var r = state.result || {mine:0,target:state.target,delta:0,elapsed:0};
-  var mineR = Math.round(r.mine*10)/10;
-  // bg
+  var score = (state.matchScore!=null) ? Math.round(state.matchScore*10)/10 : 0;
+  var dots = (state.match && state.match.dots) ? state.match.dots : [];
   ctx.fillStyle = '#1a1410'; ctx.fillRect(0,0,W,H);
   ctx.fillStyle = '#241c16'; roundRect(ctx, 60,60,W-120,H-120,40); ctx.fill();
   ctx.strokeStyle = '#3a2f26'; ctx.lineWidth=2; roundRect(ctx,60,60,W-120,H-120,40); ctx.stroke();
-  // wordmark
   ctx.textAlign='center';
   ctx.fillStyle = '#c98a3c'; ctx.font = '700 46px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('C O F F E E N U T Z', W/2, 190);
-  // event
   var y = 260;
   if(state.event){
     ctx.fillStyle='#3c7a5a'; ctx.font='700 34px -apple-system,Helvetica,Arial,sans-serif';
-    ctx.fillText(state.event.toUpperCase(), W/2, y); y+=60;
+    ctx.fillText(String(state.event).toUpperCase(), W/2, y); y+=60;
   }
-  // title
   ctx.fillStyle='#f3ede4'; ctx.font='800 60px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('Kulağın Kaç Agtron?', W/2, y+70);
   ctx.fillStyle='#a8998a'; ctx.font='500 34px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('How Many Agtron Is Your Ear?', W/2, y+120);
-  // my agtron big
-  var yMain = 760;
+  // match score
+  var yMain = 720;
   ctx.fillStyle='#a8998a'; ctx.font='600 34px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText('KULAĞIM · MY EAR', W/2, yMain-60);
-  // swatch
-  ctx.beginPath(); ctx.arc(W/2, yMain+70, 70, 0, Math.PI*2);
-  ctx.fillStyle = agtronColor(r.mine); ctx.fill();
-  ctx.lineWidth=3; ctx.strokeStyle='#3a2f26'; ctx.stroke();
-  ctx.fillStyle='#e6c14b'; ctx.font='800 130px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText(mineR.toFixed(1) + ' Agtron', W/2, yMain+300);
-  // target + delta
-  var yT = yMain+420;
-  ctx.fillStyle='#f3ede4'; ctx.font='600 44px -apple-system,Helvetica,Arial,sans-serif';
-  var sign = (r.mine>=r.target?'+':'−');
-  ctx.fillText('Hedef · Target ' + r.target + '     Δ ' + sign + (Math.round(r.delta*10)/10).toFixed(1), W/2, yT);
+  ctx.fillText('MAÇ SKORU · MATCH SCORE (3)', W/2, yMain-40);
+  ctx.fillStyle='#e6c14b'; ctx.font='800 150px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText(score.toFixed(1), W/2, yMain+130);
+  ctx.fillStyle='#a8998a'; ctx.font='500 30px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('Düşük iyidir · Lower is better', W/2, yMain+185);
+  // three round dots
+  var dyc = yMain+330, dr=54, gap=250;
+  var startX = W/2 - gap;
+  for(var i=0;i<3;i++){
+    var cx = startX + i*gap;
+    var dd = dots[i];
+    ctx.beginPath(); ctx.arc(cx, dyc, dr, 0, Math.PI*2);
+    ctx.fillStyle = dd ? agtronColor(dd.mine) : '#2a221b'; ctx.fill();
+    ctx.lineWidth=3; ctx.strokeStyle='#3a2f26'; ctx.stroke();
+    ctx.fillStyle='#a8998a'; ctx.font='600 30px -apple-system,Helvetica,Arial,sans-serif';
+    var dl = dd ? ('R'+(i+1)+' Δ'+(Math.round(dd.delta*10)/10).toFixed(1)) : ('R'+(i+1));
+    ctx.fillText(dl, cx, dyc+dr+46);
+  }
   // verdict
-  var v = verdictFor(r.delta);
-  ctx.fillStyle='#e6c14b'; ctx.font='700 50px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText(v[0], W/2, yT+90);
-  ctx.fillStyle='#a8998a'; ctx.font='500 38px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText(v[1], W/2, yT+140);
-  // bell sketch
-  drawBellOnCard(ctx, 120, yT+200, W-240, 260, r.elapsed);
+  var yV = dyc+dr+140;
+  var v = verdictForMatch(state.matchScore!=null?state.matchScore:0);
+  ctx.fillStyle='#e6c14b'; ctx.font='700 54px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText(v[0], W/2, yV);
+  ctx.fillStyle='#a8998a'; ctx.font='500 40px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText(v[1], W/2, yV+54);
   // honesty + handle
   ctx.fillStyle='#3c7a5a'; ctx.font='600 30px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText('Oyun bir ölçüm değildir. · The game is not a measurement.', W/2, H-220);
+  ctx.fillText('Oyun bir ölçüm değildir. · The game is not a measurement.', W/2, H-230);
   ctx.fillStyle='#c98a3c'; ctx.font='700 40px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText('kulaktesti · guide.coffeenutz.net', W/2, H-140);
+  ctx.fillText('kulaktesti · guide.coffeenutz.net', W/2, H-150);
   ctx.fillStyle='#a8998a'; ctx.font='500 26px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText('Ethiopia Yirgacheffe Gr.2 · 2026-07-07 · v2026-07-11b', W/2, H-95);
+  ctx.fillText('Yirgacheffe Gr.2 & Rumudamo · 6 gerçek kavrum · v2026-07-12a', W/2, H-100);
   return cv;
-}
-function drawBellOnCard(ctx, x, y, w, h, uptoTime){
-  var data = binGains(uptoTime);
-  var full = binGains(LAST_T).bins;
-  var maxBin=1; for(var i=0;i<full.length;i++) if(full[i]>maxBin) maxBin=full[i];
-  var nb=data.nb, bw=w/nb, base=y+h;
-  ctx.strokeStyle='#3a2f26'; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.moveTo(x, base); ctx.lineTo(x+w, base); ctx.stroke();
-  for(var b=0;b<nb;b++){
-    var val=data.bins[b];
-    var bh=(val/maxBin)*h;
-    ctx.fillStyle = val>0? '#c98a3c':'#2a221b';
-    ctx.fillRect(x+b*bw+2, base-bh, Math.max(2,bw-4), bh);
-  }
 }
 function roundRect(ctx,x,y,w,h,r){
   ctx.beginPath();
@@ -628,18 +901,15 @@ function initEvent(){
 /* --- WIRING ---------------------------------------------------- */
 function initGame(){
   initEvent();
-  // chips
-  var chips = document.querySelectorAll('#chips .chip');
-  Array.prototype.forEach.call(chips, function(ch){
-    ch.addEventListener('click', function(){
-      Array.prototype.forEach.call(chips, function(c){ c.classList.remove('on'); });
-      ch.classList.add('on');
-      state.target = parseInt(ch.getAttribute('data-t'),10);
-      $('targetBig').textContent = state.target;
-    });
-  });
-  $('btnStart').addEventListener('click', startGame);
+  $('btnStart').addEventListener('click', startMatch);
+  $('btnReroll').addEventListener('click', function(){ if(!state.rerolled) spinTarget(true); });
+  $('btnPlay').addEventListener('click', playRound);
   $('btnDrop').addEventListener('click', function(){ doDrop(false); });
+  var chips = document.querySelectorAll('#speedChips .chip');
+  Array.prototype.forEach.call(chips, function(ch){
+    ch.addEventListener('click', function(){ answerSpeed(ch.getAttribute('data-sp')); });
+  });
+  $('btnNext').addEventListener('click', nextRound);
   $('btnReplay').addEventListener('click', function(){ show('scrStart'); });
   $('btnShare').addEventListener('click', downloadShare);
   $('langTr').addEventListener('click', function(){ setLang('tr'); });
@@ -648,18 +918,24 @@ function initGame(){
   show('scrStart');
 }
 
-// Expose a small harness API for headless testing
+// Small harness API for headless testing
 window.__CRACKGAME__ = {
   state: state,
-  CRACKS: CRACKS,
-  ANCHORS: ANCHORS,
-  agtronFromCum: agtronFromCum,
-  cumGainAt: cumGainAt,
-  startGame: startGame,
+  SAMPLES: SAMPLES,
+  agtronForSample: agtronForSample,
+  cumGainForSample: cumGainForSample,
+  agtronColor: agtronColor,
+  startMatch: startMatch,
+  setupRound: setupRound,
+  spinTarget: spinTarget,
+  playRound: playRound,
   doDrop: doDrop,
+  answerSpeed: answerSpeed,
+  nextRound: nextRound,
+  finishMatch: finishMatch,
+  verdictForMatch: verdictForMatch,
   buildShareCanvas: buildShareCanvas,
   readLB: readLB,
-  setTarget: function(t){ state.target=t; var el=$('targetBig'); if(el) el.textContent=t; },
   setEvent: function(e){ state.event=e; }
 };
 
