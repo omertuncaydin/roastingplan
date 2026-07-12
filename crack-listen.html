@@ -149,7 +149,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-12a</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-12b</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -1205,6 +1205,17 @@ function saveCalIfMapped(verbose){
   m[k]=entry; m['__house']=entry;   // every map also becomes the house default: unmapped beans borrow it
   localStorage.setItem('bsCal',JSON.stringify(m));
   toast('Color map saved for "'+k+'" ('+entry.hist.length+' roast'+(entry.hist.length>1?'s':'')+' in its history).');
+  if(verbose) maybeOfferGame();
+}
+// consent gate, auto-offered ONCE per session after a real Map; admin (Omer) approves or deletes
+// every submission in the game_samples table, nothing enters the game without him.
+let GAMEOFFERED=false;
+function maybeOfferGame(){
+  if(GAMEOFFERED) return;
+  const ag=parseFloat($('mAgG').value);
+  if(!isFinite(ag)||valid().length<5) return;
+  GAMEOFFERED=true;
+  try{ updateGameAddBtn(); openGameConsent(); }catch(e){}
 }
 function lerpHex(a,b,t){ const pa=[1,3,5].map(i=>parseInt(a.substr(i,2),16)), pb=[1,3,5].map(i=>parseInt(b.substr(i,2),16)); return '#'+pa.map((x,i)=>Math.round(x+(pb[i]-x)*t).toString(16).padStart(2,'0')).join(''); }
 function colorForU(u){ const s=[[0,'#4f9e3a'],[0.20,'#cfd23f'],[0.35,'#d9a93c'],[0.50,'#b9742f'],[0.68,'#8a4f26'],[0.85,'#5e3418'],[1,'#34200f']];
@@ -1391,8 +1402,8 @@ function makeBatchCard(){
   c.toBlob(blob=>{ dl(blob,'batch-'+(cName.value||'coffee').replace(/\s+/g,'_')+'-'+new Date().toISOString().slice(0,10)+'.png'); },'image/png');
 }
 
-// ===== GROWTH v2026-07-12a: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-12a';
+// ===== GROWTH v2026-07-12b: story card, Crack Game consent submission, community prior =====
+const APPVER='v2026-07-12b';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
