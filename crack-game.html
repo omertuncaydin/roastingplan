@@ -99,27 +99,34 @@
   .links{display:flex; gap:8px; margin-top:10px}
   .links a{flex:1; text-align:center; text-decoration:none; padding:12px; border:1px solid var(--line); border-radius:10px; color:var(--ink); font-size:13px; font-weight:600}
   .links a .en{display:block; font-size:11px; color:var(--muted); font-weight:500}
-  /* tap-through onboarding */
-  #onboard{padding-top:4px}
-  .obCard{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:26px 20px; margin:12px 0; text-align:center; cursor:pointer}
-  .obNum{font-size:60px; font-weight:800; color:var(--accent); line-height:1; margin-bottom:4px}
-  .obTitle{font-size:21px; font-weight:800; color:var(--ink); margin:2px 0}
-  .obTitle .en{display:block; font-size:14px; color:var(--muted); font-weight:600; margin-top:3px}
-  .obVisual{margin:18px auto 6px; min-height:100px; display:flex; align-items:center; justify-content:center}
-  .obHint{font-size:14px; color:var(--muted); margin:8px 0 4px; line-height:1.5}
-  .obTap{display:block; width:100%; padding:14px; font-size:16px; font-weight:800; background:transparent; border:1px solid var(--line); color:var(--ink); border-radius:12px; cursor:pointer; margin-top:14px}
-  .obTap .en{color:var(--muted); font-size:.8em; font-weight:600}
-  .obTap.obPlay{background:var(--accent); color:#1a1410; border:none}
-  .obTap.obPlay .en{color:#1a1410; opacity:.75}
-  .obSkip{display:block; margin:16px auto 0; background:none; border:none; color:var(--muted); font-size:13px; cursor:pointer; text-decoration:underline}
-  .obWheel{width:100px; height:100px; border-radius:50%; border:3px solid var(--accent); display:flex; align-items:center; justify-content:center; font-size:40px; font-weight:800; color:var(--gold); font-variant-numeric:tabular-nums}
-  .obBars{display:flex; align-items:flex-end; gap:6px; height:90px}
-  .obBars i{display:block; width:9px; background:var(--accent); border-radius:2px}
-  .obDrop{width:150px; height:75px; background:var(--warn); border-radius:80px 80px 0 0; display:flex; align-items:flex-end; justify-content:center; padding-bottom:10px; color:#fff; font-weight:800; font-size:15px}
-  .obPills{display:flex; gap:8px}
-  .obPills span{background:var(--panel2); border:1px solid var(--line); color:var(--muted); padding:8px 14px; border-radius:999px; font-size:13px; font-weight:600}
-  .obReplayRow{text-align:right; margin:0 0 8px}
-  .obReplay{display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; padding:0; border-radius:50%; background:var(--panel2); border:1px solid var(--line); color:var(--muted); font-size:15px; font-weight:700; cursor:pointer}
+  /* tips strip (static, start screen) */
+  .tips{margin-top:16px}
+  .tipsLabel{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); text-align:center; margin-bottom:8px}
+  .tipsLabel .en{text-transform:none; letter-spacing:0}
+  .tipsGrid{display:flex; flex-wrap:wrap; gap:8px}
+  .tipMini{flex:1 1 110px; min-width:110px; background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px}
+  .tipMini .n{font-size:20px; font-weight:800; color:var(--gold); line-height:1}
+  .tipMini .tr{font-size:12px; font-weight:600; color:var(--ink); margin-top:5px; line-height:1.3}
+  .tipMini .en{display:block; font-size:10px; color:var(--muted); margin-top:2px; line-height:1.3}
+  /* small button + global ladder */
+  button.small{width:auto; display:inline-block; padding:8px 14px; font-size:13px; font-weight:700; margin-top:12px}
+  .ladderNote{text-align:center; font-size:12px; color:var(--muted); margin:2px 0 12px}
+  .rankList{list-style:none; margin:0; padding:0}
+  .rankRow{display:flex; align-items:center; gap:10px; padding:9px 10px; border:1px solid var(--line); border-radius:10px; margin-bottom:6px; background:var(--panel2)}
+  .rankRow .pos{font-size:16px; font-weight:800; color:var(--muted); width:30px; text-align:center; font-variant-numeric:tabular-nums}
+  .rankRow.g1{border-color:var(--gold)} .rankRow.g1 .pos{color:var(--gold)}
+  .rankRow.g2{border-color:#c9c4bb} .rankRow.g2 .pos{color:#d8d3ca}
+  .rankRow.g3{border-color:#b07a43} .rankRow.g3 .pos{color:#cf9257}
+  .rankRow .who{flex:1; min-width:0}
+  .rankRow .who .nm{font-size:14px; font-weight:600; color:var(--ink)}
+  .rankRow .who .co{display:block; font-size:11px; color:var(--muted)}
+  .rankRow .sc{font-size:17px; font-weight:800; color:var(--gold); font-variant-numeric:tabular-nums}
+  .ladderSub{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent2); font-weight:700; margin:14px 0 8px}
+  .ladderSub .en{text-transform:none; letter-spacing:0; color:var(--muted)}
+  .postForm input[type=text]{width:100%; padding:11px; margin:6px 0; background:var(--panel2); border:1px solid var(--line); border-radius:9px; color:var(--ink); font-size:14px}
+  .consent{display:flex; gap:8px; align-items:flex-start; font-size:12px; color:var(--muted); margin:8px 0 4px; line-height:1.4}
+  .consent input{margin-top:2px}
+  .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%); background:var(--panel); border:1px solid var(--accent); color:var(--ink); padding:11px 16px; border-radius:10px; font-size:13px; z-index:50; max-width:90%; text-align:center}
   .hidden{display:none !important}
   .fineprint{font-size:11px; color:var(--muted); margin-top:10px; line-height:1.5}
 </style>
@@ -134,49 +141,29 @@
     <div class="wordmark">CoffeeNutz</div>
     <h1 id="evtName" class="event hidden"></h1>
     <h1>Agtron Challenge<span class="en" style="display:block;font-size:15px;color:var(--muted);font-weight:500">Kulağın Kaç Agtron? · How Many Agtron Is Your Ear?</span></h1>
+    <div style="display:flex;justify-content:center;gap:8px;align-items:center;margin-top:8px">
+      <span style="border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:11px;color:var(--muted)">v2026-07-12g</span>
+      <button style="border:1px solid var(--accent);border-radius:999px;padding:4px 11px;font-size:11px;color:var(--accent);background:none;cursor:pointer" onclick="location.href=location.pathname+location.search.replace(/[?&]v=\d+/,'')+(location.search?'&':'?')+'v='+Date.now()">Refresh</button>
+    </div>
   </header>
 
   <!-- START -->
   <section id="scrStart">
-    <!-- TAP-THROUGH ONBOARDING -->
-    <div id="onboard" class="hidden">
-      <div class="obCard hidden" data-card="1">
-        <div class="obNum">1</div>
-        <div class="obTitle">Hedefini çevir<span class="en">Spin your target</span></div>
-        <div class="obVisual"><div class="obWheel">88</div></div>
-        <div class="obHint">Beğenmedin mi? Bir kez daha çevir.</div>
-        <button class="obTap">Dokun <span class="en">· Tap</span></button>
-      </div>
-      <div class="obCard hidden" data-card="2">
-        <div class="obNum">2</div>
-        <div class="obTitle">Sadece dinle<span class="en">Only listen</span></div>
-        <div class="obVisual"><div class="obBars"><i style="height:22%"></i><i style="height:48%"></i><i style="height:72%"></i><i style="height:100%"></i><i style="height:64%"></i><i style="height:38%"></i><i style="height:20%"></i></div></div>
-        <div class="obHint">Gerçek bir kavurmanın çatlakları, gerçek zamanında. Sesini aç.</div>
-        <button class="obTap">Dokun <span class="en">· Tap</span></button>
-      </div>
-      <div class="obCard hidden" data-card="3">
-        <div class="obNum">3</div>
-        <div class="obTitle">Kulağın dediğinde bırak<span class="en">Drop when your ear says so</span></div>
-        <div class="obVisual"><div class="obDrop">DÜŞÜR</div></div>
-        <div class="obHint">3 tur. Toplam fark puanın.</div>
-        <button class="obTap">Dokun <span class="en">· Tap</span></button>
-      </div>
-      <div class="obCard hidden" data-card="4">
-        <div class="obNum">4</div>
-        <div class="obTitle">Bonus: kavurma hızı tahmini<span class="en">Bonus: guess the roast speed</span></div>
-        <div class="obVisual"><div class="obPills"><span>Hızlı</span><span>Orta</span><span>Yavaş</span></div></div>
-        <div class="obHint">Kavurma hızını doğru bilirsen farkın yarıya iner.</div>
-        <button class="obTap obPlay" id="btnObPlay">Oyna <span class="en">· Play</span></button>
-      </div>
-      <button class="obSkip" id="btnSkip">Atla · Skip</button>
-    </div>
-    <!-- NORMAL START -->
-    <div id="startMain" class="hidden">
-      <div class="obReplayRow"><button class="obReplay hidden" id="btnReplayOnboard" title="Nasıl oynanır · How to play">?</button></div>
-      <button class="big" id="btnStart">Maça başla <span class="btn-en">· Start match</span></button>
+    <div id="startMain">
+      <button class="big" id="btnStart">Maça Başla <span class="btn-en">· Start the Match</span></button>
       <p class="fineprint">Mikrofon kullanılmaz, izin istenmez. Sesli oynanır, hoparlörünü aç.
         <span class="en">No microphone, no permissions. Play with sound, turn your speaker on.</span></p>
       <div id="communityLine" class="fineprint hidden" style="color:var(--accent2)"></div>
+      <div class="tips" id="tipsStrip">
+        <div class="tipsLabel">İpucu <span class="en">· How it goes</span></div>
+        <div class="tipsGrid">
+          <div class="tipMini"><div class="n">1</div><div class="tr">Hedefini çevir<span class="en">Spin your target</span></div></div>
+          <div class="tipMini"><div class="n">2</div><div class="tr">Sadece dinle<span class="en">Only listen</span></div></div>
+          <div class="tipMini"><div class="n">3</div><div class="tr">Kulağın dediğinde bırak<span class="en">Drop when your ear says so</span></div></div>
+          <div class="tipMini"><div class="n">4</div><div class="tr">Bonus: kavurma hızı tahmini<span class="en">Bonus: guess the roast speed</span></div></div>
+        </div>
+      </div>
+      <div style="text-align:center"><button class="ghost small" id="btnLadder">Sıralama <span class="btn-en en">· Ladder</span></button></div>
     </div>
   </section>
 
@@ -194,7 +181,7 @@
         <button class="big ghost" id="btnReroll">Bir kez daha çevir <span class="btn-en en">· Re-spin (1)</span></button>
       </div>
     </div>
-    <button class="big" id="btnPlay">Dinle ve düşür <span class="btn-en">· Listen and drop</span></button>
+    <button class="big" id="btnPlay">Kavurmaya Başla <span class="btn-en">· Start the Roast</span></button>
   </section>
 
   <!-- PLAY -->
@@ -266,14 +253,38 @@
         <ol id="lbList"></ol>
       </div>
     </div>
+    <div class="panel" id="postBox">
+      <button class="big" id="btnOpenPost">Sıralamaya yaz <span class="btn-en">· Post to the ladder</span></button>
+      <form class="postForm hidden" id="postForm">
+        <input type="text" id="postName" maxlength="40" autocomplete="off" placeholder="Adın · Your name">
+        <input type="text" id="postCompany" maxlength="40" autocomplete="off" placeholder="Firma (isteğe bağlı) · Company (optional)">
+        <label class="consent"><input type="checkbox" id="postConsent"><span>Adım ve skorum herkese açık sıralamada görünsün. <span class="en">· Show my name and score on the public ladder.</span></span></label>
+        <button class="big" type="button" id="btnPostSubmit">Gönder <span class="btn-en">· Post</span></button>
+      </form>
+    </div>
     <button class="big" id="btnShare">Kart indir <span class="btn-en">· Download share card</span></button>
     <div class="row2" style="margin-top:8px">
       <button class="big ghost" id="btnReplay">Yeni maç <span class="btn-en en">· New match</span></button>
     </div>
     <div class="links">
-      <a href="https://guide.coffeenutz.net/crack-listen.html">Uygulamayı dene<span class="en">Try the app</span></a>
-      <a href="https://www.coffeenutz.net">Sınıflar<span class="en">Classes</span></a>
+      <a href="https://guide.coffeenutz.net/crack-listen.html">Kavurma uygulamasına git<span class="en">Go to the roasting app</span></a>
+      <a href="https://www.coffeenutz.net/collections/egitimler">Sınıflar<span class="en">Classes</span></a>
     </div>
+  </section>
+
+  <!-- LADDER (global) -->
+  <section id="scrLadder" class="hidden">
+    <div class="panel">
+      <h3 style="font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 4px">Sıralama <span class="en" style="text-transform:none;letter-spacing:0">· Ladder</span></h3>
+      <div class="ladderNote">Düşük iyidir · Lower is better</div>
+      <div class="ladderSub" id="ladderAllLabel">Tüm zamanlar <span class="en">· All time</span></div>
+      <ol class="rankList" id="ladderAll"></ol>
+      <div id="ladderEventWrap" class="hidden">
+        <div class="ladderSub" id="ladderEventLabel">Etkinlik <span class="en">· This event</span></div>
+        <ol class="rankList" id="ladderEvent"></ol>
+      </div>
+    </div>
+    <button class="big ghost" id="btnLadderBack">Geri <span class="btn-en en">· Back</span></button>
   </section>
 
   <footer>
@@ -282,14 +293,14 @@
       Çıtırtı zamanları gerçektir: 2026-07-07 ve 2026-07-10 tarihlerinde ölçülmüş altı gerçek kavrumdan (Ethiopia Yirgacheffe Gr.2 ve Ethiopia Rumudamo, bir tam çan ile kavurucusunun erken indirdiği partiler). Pop sesleri o gerçek anlarda sentezlenir. Renk modeli her kahvenin kendi ölçülmüş Agtron değerine göre kurulur.
       <span class="en" style="display:block; margin-top:3px">Crack timings are real, from six measured roasts on 2026-07-07 and 2026-07-10 (Ethiopia Yirgacheffe Gr.2 and Ethiopia Rumudamo, one full bell plus batches the roaster dropped early). The pop sounds are synthesized at those real moments. The color model is built from each coffee's own measured Agtron.</span>
     </div>
-    <div style="margin-top:8px">Agtron Challenge · <a href="https://guide.coffeenutz.net/crack-game.html">guide.coffeenutz.net/crack-game</a> · v2026-07-12e</div>
+    <div style="margin-top:8px">Agtron Challenge · <a href="https://guide.coffeenutz.net/crack-game.html">guide.coffeenutz.net/crack-game</a> · v2026-07-12g</div>
   </footer>
 </div>
 
 <script>
 "use strict";
 /* ============================================================
-   Agtron Challenge · Kulağın Kaç Agtron? · CoffeeNutz crack game · v2026-07-12e
+   Agtron Challenge · Kulağın Kaç Agtron? · CoffeeNutz crack game · v2026-07-12g
    HONESTY: this is not a measurement. Crack timings are REAL,
    measured from six roasts on 2026-07-07 and 2026-07-10
    (Ethiopia Yirgacheffe Gr.2 and Ethiopia Rumudamo). One full
@@ -646,7 +657,7 @@ function drawBellBarsOn(ctx, s, uptoTime, x, y, w, h){
 
 /* --- DOM helpers ----------------------------------------------- */
 function $(id){ return document.getElementById(id); }
-var SCREENS = ['scrStart','scrWheel','scrPlay','scrReveal','scrMatch'];
+var SCREENS = ['scrStart','scrWheel','scrPlay','scrReveal','scrMatch','scrLadder'];
 function show(id){
   SCREENS.forEach(function(s){
     var el=$(s); if(!el) return;
@@ -1054,7 +1065,7 @@ function buildShareCanvas(){
   ctx.fillStyle='#c98a3c'; ctx.font='700 34px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('guide.coffeenutz.net/crack-game', W/2, H-112);
   ctx.fillStyle='#a8998a'; ctx.font='500 24px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText('Yirgacheffe Gr.2 & Rumudamo · 6 gerçek kavrum · v2026-07-12e', W/2, H-70);
+  ctx.fillText('Yirgacheffe Gr.2 & Rumudamo · 6 gerçek kavrum · v2026-07-12g', W/2, H-70);
   return cv;
 }
 function roundRect(ctx,x,y,w,h,r){
@@ -1102,58 +1113,98 @@ function initEvent(){
   }
 }
 
-/* --- TAP-THROUGH ONBOARDING ------------------------------------ */
-var OB_KEY = 'agtronOnboardDone';
-var obCurrent = 0;
-function obDone(){
-  try{ return localStorage.getItem(OB_KEY) === '1'; }catch(e){ return false; }
+/* --- TOAST ----------------------------------------------------- */
+function toast(msg){
+  try{
+    var t = document.createElement('div');
+    t.className = 'toast'; t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 3200);
+  }catch(e){}
 }
-function setObDone(){
-  try{ localStorage.setItem(OB_KEY, '1'); }catch(e){}
+
+/* --- GLOBAL LADDER (Supabase game_scores; lower score is better) - */
+function currentScoreRounded(){
+  return (state.matchScore!=null) ? Math.round(state.matchScore*10)/10 : null;
 }
-function obCards(){ return document.querySelectorAll('#onboard .obCard'); }
-function showOnboardCard(i){
-  obCurrent = i;
-  var cards = obCards();
-  Array.prototype.forEach.call(cards, function(c, idx){
-    if(idx === i) c.classList.remove('hidden'); else c.classList.add('hidden');
+/* POST one score row. Name + consent are gated by submitScore first.
+   Offline-safe: on failure we toast honestly; the local event leaderboard
+   stays as the fallback record. */
+function postScore(row){
+  if(typeof fetch !== 'function'){ toast('Çevrimdışı · Offline'); return Promise.resolve(false); }
+  return fetch(SUPA_URL + '/rest/v1/game_scores', {
+    method: 'POST',
+    headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY,
+      'content-type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify(row)
+  }).then(function(res){
+    if(!res || !res.ok) throw new Error('bad');
+    toast('Sıralamaya yazıldı · Posted to the ladder');
+    var pf = $('postForm'); if(pf) pf.classList.add('hidden');
+    var ob = $('btnOpenPost'); if(ob) ob.disabled = true;
+    return true;
+  }).catch(function(){
+    toast('Yazılamadı, çevrimdışı · Could not post, offline');
+    return false;
   });
 }
-function openOnboard(){
-  var sm = $('startMain'); if(sm) sm.classList.add('hidden');
-  var ob = $('onboard'); if(ob) ob.classList.remove('hidden');
-  showOnboardCard(0);
+/* Gate: name required, consent required, score present. Reads score from state. */
+function submitScore(){
+  var nmEl = $('postName'), coEl = $('postCompany'), okEl = $('postConsent');
+  var name = nmEl ? String(nmEl.value||'').trim() : '';
+  var company = coEl ? String(coEl.value||'').trim() : '';
+  var consent = !!(okEl && okEl.checked);
+  var score = currentScoreRounded();
+  if(!name){ toast('İsim gerekli · Name required'); return Promise.resolve(false); }
+  if(!consent){ toast('Onay gerekli · Consent required'); return Promise.resolve(false); }
+  if(score == null){ toast('Skor yok · No score'); return Promise.resolve(false); }
+  return postScore({ name: name.slice(0,40), company: company ? company.slice(0,40) : null,
+    score: score, event: state.event || null });
 }
-function completeOnboard(){
-  setObDone();
-  var ob = $('onboard'); if(ob) ob.classList.add('hidden');
-  var sm = $('startMain'); if(sm) sm.classList.remove('hidden');
-  var rep = $('btnReplayOnboard'); if(rep) rep.classList.remove('hidden');
-}
-function advanceOnboard(){
-  var n = obCards().length;
-  if(obCurrent >= n - 1){ completeOnboard(); }
-  else { showOnboardCard(obCurrent + 1); }
-}
-function skipOnboard(){ completeOnboard(); }
-function wireOnboard(){
-  var cards = obCards();
-  Array.prototype.forEach.call(cards, function(c){
-    c.addEventListener('click', advanceOnboard);
-  });
-  var sk = $('btnSkip');
-  if(sk) sk.addEventListener('click', function(e){ if(e && e.stopPropagation) e.stopPropagation(); skipOnboard(); });
-  var rep = $('btnReplayOnboard');
-  if(rep) rep.addEventListener('click', openOnboard);
-}
-function initOnboard(){
-  if(obDone()){
-    var ob = $('onboard'); if(ob) ob.classList.add('hidden');
-    var sm = $('startMain'); if(sm) sm.classList.remove('hidden');
-    var rep = $('btnReplayOnboard'); if(rep) rep.classList.remove('hidden');
-  } else {
-    openOnboard();
+/* Render a ranked list into an <ol>. rows already sorted (score asc). */
+function renderLadderList(el, rows){
+  if(!el) return;
+  el.innerHTML = '';
+  if(!rows || !rows.length){
+    var li0 = document.createElement('li'); li0.className = 'rankRow';
+    li0.innerHTML = '<span class="who"><span class="nm">Henüz kayıt yok · No entries yet</span></span>';
+    el.appendChild(li0); return;
   }
+  for(var i=0;i<rows.length;i++){
+    var r = rows[i];
+    var li = document.createElement('li');
+    li.className = 'rankRow' + (i===0?' g1':(i===1?' g2':(i===2?' g3':'')));
+    var co = r.company ? ('<span class="co">' + escapeHtml(String(r.company)) + '</span>') : '';
+    var sc = (typeof r.score==='number') ? r.score : Number(r.score);
+    li.innerHTML = '<span class="pos">' + (i+1) + '.</span>' +
+      '<span class="who"><span class="nm">' + escapeHtml(String(r.name||'')) + '</span>' + co + '</span>' +
+      '<span class="sc">' + (isFinite(sc)?sc.toFixed(1):'--') + '</span>';
+    el.appendChild(li);
+  }
+}
+/* Fetch top 10 rows (score asc). extraQs adds an event filter when needed. */
+function fetchLadderRows(extraQs){
+  var qs = 'select=name,company,score,event&order=score.asc&limit=10' + (extraQs||'');
+  return fetch(SUPA_URL + '/rest/v1/game_scores?' + qs, {
+    headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY }
+  }).then(function(res){ if(!res || !res.ok) throw new Error('bad'); return res.json(); });
+}
+/* Open the ladder view: top 10 all-time, plus top 10 for the event if present. */
+function openLadder(){
+  show('scrLadder');
+  renderLadderList($('ladderAll'), []);
+  var evWrap = $('ladderEventWrap');
+  if(state.event){ if(evWrap) evWrap.classList.remove('hidden'); }
+  else if(evWrap){ evWrap.classList.add('hidden'); }
+  if(typeof fetch !== 'function'){ toast('Çevrimdışı · Offline'); return Promise.resolve(); }
+  var jobs = [ fetchLadderRows('').then(function(rows){ renderLadderList($('ladderAll'), rows); }) ];
+  if(state.event){
+    var evLabel = $('ladderEventLabel');
+    if(evLabel) evLabel.innerHTML = escapeHtml(String(state.event)) + ' <span class="en">· This event</span>';
+    jobs.push( fetchLadderRows('&event=eq.' + encodeURIComponent(state.event))
+      .then(function(rows){ renderLadderList($('ladderEvent'), rows); }) );
+  }
+  return Promise.all(jobs).catch(function(){ toast('Sıralama yüklenemedi · Could not load the ladder'); });
 }
 
 /* --- WIRING ---------------------------------------------------- */
@@ -1173,10 +1224,13 @@ function initGame(){
   $('btnShare').addEventListener('click', downloadShare);
   $('langTr').addEventListener('click', function(){ setLang('tr'); });
   $('langEn').addEventListener('click', function(){ setLang('en'); });
-  wireOnboard();
+  var bl = $('btnLadder'); if(bl) bl.addEventListener('click', openLadder);
+  var blb = $('btnLadderBack'); if(blb) blb.addEventListener('click', function(){ show('scrStart'); });
+  var bop = $('btnOpenPost'); if(bop) bop.addEventListener('click', function(){ var pf=$('postForm'); if(pf) pf.classList.toggle('hidden'); });
+  var bps = $('btnPostSubmit'); if(bps) bps.addEventListener('click', function(e){ if(e&&e.preventDefault) e.preventDefault(); submitScore(); });
+  var pfrm = $('postForm'); if(pfrm) pfrm.addEventListener('submit', function(e){ if(e&&e.preventDefault) e.preventDefault(); submitScore(); });
   setLang('tr');
   show('scrStart');
-  initOnboard();
 }
 
 // Small harness API for headless testing
@@ -1205,14 +1259,12 @@ window.__CRACKGAME__ = {
   communityToSample: communityToSample,
   readLB: readLB,
   setEvent: function(e){ state.event=e; },
-  initOnboard: initOnboard,
-  openOnboard: openOnboard,
-  advanceOnboard: advanceOnboard,
-  skipOnboard: skipOnboard,
-  completeOnboard: completeOnboard,
-  showOnboardCard: showOnboardCard,
-  obDone: obDone,
-  OB_KEY: OB_KEY
+  toast: toast,
+  postScore: postScore,
+  submitScore: submitScore,
+  renderLadderList: renderLadderList,
+  fetchLadderRows: fetchLadderRows,
+  openLadder: openLadder
 };
 
 if(document.readyState === 'loading'){
