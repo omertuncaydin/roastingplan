@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>UNDERROAST · bir kavurma masalı · a roasting tale</title>
+<title>RoastTale · bir kavurma masalı · a roasting tale</title>
 <style>
   :root{
     --bg:#0f0b08; --ink:#f3ede4; --muted:#a8998a; --line:#3a2f26;
@@ -76,7 +76,7 @@
 </head>
 <body>
   <div class="hud">
-    <span class="chip pill" id="verPill">v2026-07-13b</span>
+    <span class="chip pill" id="verPill">v2026-07-13c</span>
     <button class="chip" id="refreshChip">Refresh</button>
     <span class="grow"></span>
     <span class="chip pill" id="kulakPill">Kulak 0</span>
@@ -113,6 +113,11 @@
     </div>
   </div>
 
+  <!-- STATS overlay (cupping table = stats station) -->
+  <div class="overlay hidden" id="statsOverlay">
+    <div class="card" id="statsCard"></div>
+  </div>
+
   <!-- END overlay -->
   <div class="overlay hidden" id="endOverlay">
     <div class="card" id="endCard"></div>
@@ -121,8 +126,8 @@
 <script>
 "use strict";
 /* ============================================================
-   UNDERROAST · bir kavurma masalı · a roasting tale
-   A CoffeeNutz game. Chapter 1 vertical slice. v2026-07-13b
+   RoastTale · bir kavurma masalı · a roasting tale
+   A CoffeeNutz game. Chapter 1 vertical slice. v2026-07-13c
    Homage, not copy: no Undertale assets, names, likenesses or
    text. Original characters and music. The single credits line
    "a CoffeeNutz game · with love to Undertale" is the only nod.
@@ -140,7 +145,7 @@
      are never presented as a measurement.
    ============================================================ */
 
-var VERSION = 'v2026-07-13b';
+var VERSION = 'v2026-07-13c';
 
 /* ---------- BILINGUAL STRING TABLE (tr + en for every line) ---------- */
 var S = {
@@ -163,10 +168,11 @@ var S = {
 
   /* green room */
   n_yesil:{tr:'YEŞİL', en:'YEŞİL'},
-  f1:{tr:'Daha yeşilim. Ya hiç üçüncü çekim olamazsam?', en:'I am still green. What if I never become third wave?'},
+  f1:{tr:'Daha yeşilim. Ya hiç üçüncü dalga olamazsam?', en:'I am still green. What if I never become third wave?'},
   f2:{tr:'Herkes kaliteli olmamı bekliyor. Ya yanarsam?', en:'Everyone expects me to be specialty. What if I burn?'},
   f3:{tr:'Ama sen dinliyorsun. Belki dinlemek yeter.', en:'But you listen. Maybe listening is enough.'},
-  n_ceko:{tr:'ÇEKO', en:'ÇEKO'},
+  n_sampler:{tr:'SAMPLER', en:'SAMPLER'},
+  n_greenbeans:{tr:'YEŞİL ÇEKİRDEKLER', en:'GREEN BEANS'},
   c1:{tr:'Selam. Ben bir kez fincan oldum, biliyor musun?', en:'Hey. I was a cup once, you know?'},
   c2:{tr:'Sütsüz. Filtre. Tek başına.', en:'No milk. Filter. On its own.'},
   c3:{tr:'O günden beri kendimi özel sayarım.', en:'Been calling myself special ever since.'},
@@ -240,18 +246,31 @@ var S = {
   opt_second:{tr:'İkincisi', en:'Second'},
   p_calibrated:{tr:'Kulak doğuştan değil. Kalibre edilir.', en:'An ear is not born. It is calibrated.'},
   p_retry:{tr:'Yaklaştın. Bir daha duy.', en:'Close. Hear it again.'},
-  ceko_bench:{tr:'Gel, tezgâha otur. Kulağını çalıştıralım.', en:'Come, sit at the bench. Let us train your ear.'},
-  q_speed:{tr:'İlki hızlı mı yavaş mı?', en:'Was the first fast or slow?'},
+  sampler_bench:{tr:'Gel, tezgâha otur. Kaç çıtırtı, onu çalışalım.', en:'Come, sit at the bench. Let us work on how many cracks.'},
+  gb_intro:{tr:'Genç çekirdekler bir oyun oynuyor: Hızlı mı yavaş mı? Sen de duy.', en:'The young beans are playing a game: fast or slow? You hear it too.'},
+  q_speed:{tr:'Hızlı mı yavaş mı?', en:'Fast or slow?'},
   opt_fast:{tr:'Hızlı', en:'Fast'},
   opt_slow:{tr:'Yavaş', en:'Slow'},
   q_count:{tr:'Kaç çıtırtı?', en:'How many cracks?'},
   drill_good:{tr:'İşte bu. Kulağın oturuyor.', en:'There it is. Your ear is settling in.'},
-  ceko_coach:{tr:'Sayma. Duy.', en:'Do not count. Hear.'},
+  sampler_coach:{tr:'Sayma. Duy.', en:'Do not count. Hear.'},
+  gb_good:{tr:'Yakaladın! Hep birlikte duyduk.', en:'You caught it! We all heard it together.'},
   drill_retry:{tr:'Olsun. Bir daha duy.', en:'It is fine. Hear it once more.'},
   t_bell:{tr:'Sesin şekli var. Buna çan deriz.', en:'Sound has a shape. We call it the bell.'},
   prob_mock:{tr:'Kulak seviyesi mi? Benim DERECEM var.', en:'An ear level? I have a PROBE reading.'},
   kulak_cal:{tr:'Kulak kalibrasyonun', en:'Your ear calibration'},
-  duel_thesis:{tr:'Gerçek kavurmada da aynı: kulak kalibre edilir. Crack Listener bunun için var.', en:'It is the same in real roasting: the ear calibrates. That is what the Crack Listener is for.'}
+  duel_thesis:{tr:'Gerçek kavurmada da aynı: kulak kalibre edilir. Crack Listener bunun için var.', en:'It is the same in real roasting: the ear calibrates. That is what the Crack Listener is for.'},
+
+  /* stats station (cupping table) */
+  stats_title:{tr:'DURUM', en:'STATS'},
+  stat_kulak:{tr:'Kulak', en:'Ear'},
+  stat_drills:{tr:'Doğru bilmece', en:'Drills correct'},
+  stat_tambur:{tr:'Tambur çözüldü', en:'Tambur resolved'},
+  stat_duel:{tr:'En iyi düello farkı', en:'Best duel delta'},
+  stat_progress:{tr:'Bölüm ilerlemesi', en:'Chapter progress'},
+  stat_yes:{tr:'Evet', en:'Yes'},
+  stat_no:{tr:'Hayır', en:'No'},
+  stats_save:{tr:'Kaydet', en:'Save'}
 };
 function T(key){ var e = S[key]; if(!e) return key; return e[game.lang] || e.tr; }
 function bi(key){ var e = S[key]; if(!e) return key; return e.tr + ' · ' + e.en; }
@@ -315,7 +334,7 @@ function agtronColor(ag){
 /* ---------- SUPABASE LADDER (same pattern as crack-game.html) ---------- */
 var SUPA_URL = 'https://efjvfggwnhqkunjvoyjb.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA';
-var EVENT = 'underroast';
+var EVENT = 'roasttale';
 
 function postScore(row){
   if(typeof fetch !== 'function'){ toast(T('t_offline')); return Promise.resolve(false); }
@@ -467,16 +486,17 @@ function drawSoul(x,y){
 var game = {
   lang:'tr', muted:false, mode:'title',
   room:'green', px:150, py:196, facing:'up', kulak:0, kulakDrill:0,
-  flags:{ yesil:false, ceko:false, plaque:false, plaqueAward:false, saved:false, tamburDone:false, tamburKulak:false },
+  drillsCorrect:0, bestDuelDelta:null,
+  flags:{ yesil:false, sampler:false, greenbeans:false, plaque:false, plaqueAward:false, saved:false, tamburDone:false, tamburKulak:false, duelDone:false },
   menuIdx:0,
   dialog:{ active:false, queue:[], i:0, speaker:'', full:'', shown:0, acc:0, done:false, onDone:null },
   enc:null, duel:null, saveExists:false, ticker:0
 };
-var SAVE_KEY = 'underroast_save';
+var SAVE_KEY = 'roasttale_save';
 
 function hasSave(){ try{ return !!localStorage.getItem(SAVE_KEY); }catch(e){ return false; } }
 function doSave(){
-  var data = { ver:VERSION, room:game.room, px:game.px, py:game.py, kulak:game.kulak, kulakDrill:game.kulakDrill, flags:game.flags };
+  var data = { ver:VERSION, room:game.room, px:game.px, py:game.py, kulak:game.kulak, kulakDrill:game.kulakDrill, drillsCorrect:game.drillsCorrect||0, bestDuelDelta:(game.bestDuelDelta==null?null:game.bestDuelDelta), flags:game.flags };
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(data)); game.saveExists=true; return true; }catch(e){ return false; }
 }
 function loadSave(){
@@ -552,13 +572,14 @@ function drawDialogBox(){
   if(d.done){ txt('▶', bx+bw-16, by+bh-16, '#e6c14b', 9); }
 }
 function nameFor(sp){
-  var map = { player:'', yesil:T('n_yesil'), ceko:T('n_ceko'), plaque:T('n_plaque'),
+  var map = { player:'', yesil:T('n_yesil'), sampler:T('n_sampler'), greenbeans:T('n_greenbeans'), plaque:T('n_plaque'),
     table:T('n_table'), tambur:T('n_tambur'), prob:T('n_prob'), narr:'' };
   return map[sp] !== undefined ? map[sp] : '';
 }
 function drawPortrait(sp, x, y){
   if(sp==='yesil') drawBeanNPC(x+13,y+12,'worry');
-  else if(sp==='ceko') drawBeanNPC(x+13,y+12,'cool');
+  else if(sp==='sampler') drawBeanNPC(x+13,y+12,'cool');
+  else if(sp==='greenbeans'){ drawBeanNPC(x+6,y+14,'worry'); drawBeanNPC(x+20,y+14,'worry'); }
   else if(sp==='tambur'){ ctx&&ctx.save&&ctx.save(); drawTambur(x-16,y+4); ctx&&ctx.restore&&ctx.restore(); }
   else if(sp==='prob') drawProb(x+14,y-6);
   else if(sp==='table'){ px(x+8,y+22,24,10,'#7d5730'); px(x+14,y+16,3,6,'#c9ccd2'); px(x+20,y+16,3,6,'#c9ccd2'); }
@@ -625,7 +646,9 @@ function startPlaque(){
     idx:0, correctIdx: deeperFirst?0:1, deeperFirst:deeperFirst };
 }
 
-/* -- Ceko's corner: repeatable ear-training drill on the real session slice -- */
+/* -- ear-training drills on the real session slice --
+   SAMPLER hosts the count drill at his bench; the GREEN BEANS host the
+   fast/slow group game near YEŞİL. Both feed the shared 50-point drill cap. -- */
 function drillSlice(){
   var span = 8 + Math.random()*2;              // 8-10 s slice of the real session
   var maxStart = Math.max(0, DUEL.lastT - span);
@@ -644,29 +667,32 @@ function playDrillSlice(sl, speed){
     (function(t){ setTimeout(function(){ sfx('pop'); }, Math.max(0,(t-sl.start)/speed*1000)); })(sl.times[i]);
   }
 }
-function startDrill(){
+/* SAMPLER's bench: count drill only ("Kaç çıtırtı?"). */
+function startCountDrill(){
   game.mode='listen';
-  var qType = Math.random()<0.5 ? 'speed' : 'count';
-  if(qType==='count'){
-    var sl = drillSlice(), tries=0;
-    while(sl.times.length < 3 && tries<8){ sl=drillSlice(); tries++; }
-    playDrillSlice(sl);
-    var count = sl.times.length;
-    var choices = [count, Math.max(0,count-2), count+3];
-    for(var s=choices.length-1;s>0;s--){ var rr=Math.floor(Math.random()*(s+1)); var tmp=choices[s]; choices[s]=choices[rr]; choices[rr]=tmp; }
-    var correctIdx = choices.indexOf(count);
-    game.listen = { kind:'drill', qType:'count', optCount:3, prompt:'q_count',
-      opts:[String(choices[0]),String(choices[1]),String(choices[2])], idx:0, correctIdx:correctIdx, slice:sl };
-  } else {
-    var s1=drillSlice(), s2=drillSlice(), guard=0;
-    while(guard<8 && (s1.times.length/s1.span) === (s2.times.length/s2.span)){ s2=drillSlice(); guard++; }
-    playDrillSlice(s1); playDrillSlice(s2, 3);
-    var d1=s1.times.length/s1.span, d2=s2.times.length/s2.span;
-    var faster = d1 > d2;
-    game.listen = { kind:'drill', qType:'speed', optCount:2, prompt:'q_speed',
-      opts:['opt_fast','opt_slow'], idx:0, correctIdx: faster?0:1, slice:s1, slice2:s2 };
-  }
+  var sl = drillSlice(), tries=0;
+  while(sl.times.length < 3 && tries<8){ sl=drillSlice(); tries++; }
+  playDrillSlice(sl);
+  var count = sl.times.length;
+  var choices = [count, Math.max(0,count-2), count+3];
+  for(var s=choices.length-1;s>0;s--){ var rr=Math.floor(Math.random()*(s+1)); var tmp=choices[s]; choices[s]=choices[rr]; choices[rr]=tmp; }
+  var correctIdx = choices.indexOf(count);
+  game.listen = { kind:'drill', qType:'count', host:'sampler', optCount:3, prompt:'q_count',
+    opts:[String(choices[0]),String(choices[1]),String(choices[2])], idx:0, correctIdx:correctIdx, slice:sl };
 }
+/* GREEN BEANS' group game near YEŞİL: fast/slow drill ("Hızlı mı yavaş mı?"). */
+function startSpeedDrill(){
+  game.mode='listen';
+  var s1=drillSlice(), s2=drillSlice(), guard=0;
+  while(guard<8 && (s1.times.length/s1.span) === (s2.times.length/s2.span)){ s2=drillSlice(); guard++; }
+  playDrillSlice(s1); playDrillSlice(s2, 3);
+  var d1=s1.times.length/s1.span, d2=s2.times.length/s2.span;
+  var faster = d1 > d2;
+  game.listen = { kind:'drill', qType:'speed', host:'green', optCount:2, prompt:'q_speed',
+    opts:['opt_fast','opt_slow'], idx:0, correctIdx: faster?0:1, slice:s1, slice2:s2 };
+}
+/* backward-compatible alias for the old single entry point */
+function startDrill(){ startCountDrill(); }
 function answerListen(idx){
   var L=game.listen; if(!L) return false;
   if(typeof idx!=='number') idx=L.idx;
@@ -680,13 +706,15 @@ function answerListen(idx){
       startDialog(['p_calibrated'], null, ['plaque']);
     } else {
       drillReward();
+      game.drillsCorrect = (game.drillsCorrect||0) + 1;
       game.mode='room';
-      startDialog(['drill_good','ceko_coach'], null, ['ceko','ceko']);
+      if(L.host==='sampler') startDialog(['drill_good','sampler_coach'], null, ['sampler','sampler']);
+      else startDialog(['drill_good','gb_good'], null, ['greenbeans','greenbeans']);
     }
   } else {
     sfx('cancel');
     if(L.kind==='plaque'){ playPlaquePops(L.deeperFirst); startDialog(['p_retry'], null, ['plaque']); }
-    else { startDialog(['drill_retry'], null, ['ceko']); }
+    else { startDialog(['drill_retry'], null, [L.host==='sampler' ? 'sampler' : 'greenbeans']); }
   }
   return correct;
 }
@@ -713,13 +741,16 @@ function roomInteractables(){
     return [
       { id:'yesil', x:56, y:78, w:16, h:16, solid:true, action:function(){
           game.flags.yesil=true; startDialog(['f1','f2','f3'], null, ['yesil','yesil','yesil']); } },
-      { id:'ceko', x:230, y:96, w:16, h:16, solid:true, action:function(){
-          if(!game.flags.ceko){ game.flags.ceko=true; startDialog(['c1','c2','c3','ceko_bench'], startDrill, ['ceko','ceko','ceko','ceko']); }
-          else { startDrill(); } } },
+      { id:'greenbeans', x:96, y:100, w:16, h:16, solid:true, action:function(){
+          if(!game.flags.greenbeans){ game.flags.greenbeans=true; startDialog(['gb_intro'], startSpeedDrill, ['greenbeans']); }
+          else { startSpeedDrill(); } } },
+      { id:'sampler', x:230, y:96, w:16, h:16, solid:true, action:function(){
+          if(!game.flags.sampler){ game.flags.sampler=true; startDialog(['c1','c2','c3','sampler_bench'], startCountDrill, ['sampler','sampler','sampler','sampler']); }
+          else { startCountDrill(); } } },
       { id:'plaque', x:150, y:34, w:36, h:14, solid:true, action:function(){
           startDialog(['p1','p2'], startPlaque, ['plaque','plaque']); } },
       { id:'table', x:150, y:150, w:44, h:18, solid:true, action:function(){
-          doSave(); startDialog(['save_line'], function(){ toast(T('t_saved')); }, ['table']); } },
+          showStatsPanel(); } },
       { id:'door', x:150, y:24, w:36, h:14, solid:false, door:true, prompt:true, action:function(){
           enterDrumHall(); } }
     ];
@@ -747,6 +778,8 @@ function drawGreenRoom(){
   px(138,156,4,6,'#c9ccd2'); px(150,156,4,6,'#c9ccd2'); px(162,156,4,6,'#c9ccd2');
   // NPCs
   drawBeanNPC(56,78,'worry'); drawBeanNPC(230,96,'cool');
+  // green beans' group game near YEŞİL (young beans playing "fast or slow?")
+  drawBeanNPC(88,100,'worry'); drawBeanNPC(104,102,'worry');
   // player
   drawPlayer(game.px-7, game.py-8);
   // prompts
@@ -972,6 +1005,8 @@ function duelDrop(atReal){
   var playerAg = agtronForSample(DUEL, cum);
   var target = 88;
   var playerDelta = Math.abs(playerAg - target);
+  game.flags.duelDone = true;
+  if(game.bestDuelDelta==null || playerDelta < game.bestDuelDelta) game.bestDuelDelta = playerDelta;
   // Prob boasts a scripted result that is WORSE by 6 to 9 (his fiction).
   var worseBy = 6 + Math.floor(Math.random()*4); // 6..9
   var probDelta = playerDelta + worseBy;
@@ -1089,6 +1124,43 @@ function submitScore(){
   return postScore({ name:name.slice(0,40), company:company?company.slice(0,40):null, score:score, event:EVENT });
 }
 
+/* ---------- STATS STATION (cupping table) ---------- */
+function chapterProgress(){
+  var steps = [ !!game.flags.yesil, !!game.flags.plaque, (game.drillsCorrect||0)>0,
+                !!game.flags.tamburDone, !!game.flags.duelDone ];
+  var done=0; for(var i=0;i<steps.length;i++){ if(steps[i]) done++; }
+  return Math.round(done/steps.length*100);
+}
+function statRow(labelKey, valTr, valEn){
+  return '<div class="frame" style="margin:4px 0">'+T(labelKey)+': '+valTr+
+         '<span class="en">'+S[labelKey].en+': '+valEn+'</span></div>';
+}
+function showStatsPanel(){
+  var card = document.getElementById('statsCard'); if(!card) return;
+  var kulak = (game.kulak||0);
+  var drills = (game.drillsCorrect||0);
+  var tamburTr = game.flags.tamburDone ? S.stat_yes.tr : S.stat_no.tr;
+  var tamburEn = game.flags.tamburDone ? S.stat_yes.en : S.stat_no.en;
+  var duelVal = (game.bestDuelDelta==null) ? '-' : String(Math.round(game.bestDuelDelta*10)/10);
+  var prog = chapterProgress()+'%';
+  card.innerHTML =
+    '<h2>'+T('stats_title')+'</h2>'+
+    '<div class="sub">'+S.n_table.tr+' · '+S.n_table.en+'</div>'+
+    statRow('stat_kulak', kulak+'/100', kulak+'/100')+
+    statRow('stat_drills', String(drills), String(drills))+
+    statRow('stat_tambur', tamburTr, tamburEn)+
+    statRow('stat_duel', duelVal, duelVal)+
+    statRow('stat_progress', prog, prog)+
+    '<button class="btn" id="btnStatsSave">'+S.stats_save.tr+' <span class="en">· '+S.stats_save.en+'</span></button>';
+  document.getElementById('statsOverlay').classList.remove('hidden');
+  var sb = document.getElementById('btnStatsSave');
+  if(sb) sb.addEventListener('click', function(){
+    document.getElementById('statsOverlay').classList.add('hidden');
+    doSave();
+    startDialog(['save_line'], function(){ toast(T('t_saved')); }, ['table']);
+  });
+}
+
 /* ---------- TITLE + LADDER ---------- */
 var starBeans = [];
 (function(){ for(var i=0;i<26;i++){ starBeans.push({ x:Math.random()*W, y:Math.random()*H, s:0.2+Math.random()*0.7 }); } })();
@@ -1105,8 +1177,8 @@ function drawTitle(dt){
     px(b.x, b.y, 2, 3, i%3===0?'#3c6e2a':'#4a6e2a');
     px(b.x, b.y, 1, 1, '#6fae4f');
   }
-  txt('UNDERROAST', W/2, 44, '#e6c14b', 22, 'center', true);
-  txt('U N D E R R O A S T', W/2, 70, '#c98a3c', 8, 'center');
+  txt('RoastTale', W/2, 44, '#e6c14b', 22, 'center', true);
+  txt('R O A S T T A L E', W/2, 70, '#c98a3c', 8, 'center');
   txt(T('title_sub'), W/2, 84, '#a8998a', 9, 'center');
   var items = titleMenuItems();
   var y0=126;
