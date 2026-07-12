@@ -154,11 +154,11 @@ function smoothGains(cr){
   for(var i=0;i<cr.length;i++){ var b=Math.min(nb-1,Math.max(0,Math.floor(cr[i].t/bin))); g[b]+=cr[i].g; }
   var sig=1.0, sm=new Array(nb).fill(0);
   for(var a=0;a<nb;a++){ var s=0,ws=0; for(var j=0;j<nb;j++){ var d=(j-a)/sig, w=Math.exp(-0.5*d*d); s+=g[j]*w; ws+=w; } sm[a]=s/ws; }
-  return {sm:sm,nb:nb,bin:bin};
+  return {sm:sm,g:g,nb:nb,bin:bin};
 }
 function computeStages(cr){
   if(!cr||!cr.length) return [];
-  var o=smoothGains(cr), sm=o.sm, nb=o.nb, bin=o.bin;
+  var o=smoothGains(cr), sm=o.sm, gb=o.g, nb=o.nb, bin=o.bin;
   var ctr=function(i){ return (i+0.5)*bin; };
   var peak=-Infinity, peakIdx=0;
   for(var i=0;i<nb;i++){ if(sm[i]>peak){ peak=sm[i]; peakIdx=i; } }
@@ -170,7 +170,8 @@ function computeStages(cr){
     var minC=Infinity, bI=-1;
     for(var k=bestI+1;k<=peakIdx;k++){ if(k-1<0||k+1>=nb) continue; var cu=sm[k-1]-2*sm[k]+sm[k+1]; if(cu<minC){ minC=cu; bI=k; } }
     if(bI>=0) stages.push(['B0', ctr(bI)]);
-    var interior = (peakIdx<=nb-3) && sm[peakIdx+1]<peak && sm[peakIdx+2]<peak;
+    var rawPeak=-Infinity, rawIdx=0; for(var rp=0;rp<nb;rp++){ if(gb[rp]>rawPeak){ rawPeak=gb[rp]; rawIdx=rp; } }
+    var interior = (peakIdx<=nb-3) && (rawIdx<=nb-3) && sm[peakIdx+1]<peak && sm[peakIdx+2]<peak && sm[nb-1] < 0.85*peak;
     if(interior){
       stages.push(['B1', ctr(peakIdx)]);
       var thr=0.7*peak, c0=-1;
