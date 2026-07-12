@@ -1,44 +1,44 @@
--- roaster-grants-2026-07-11.sql
--- 36 Shopify customers -> Roaster, 12 months (until 2027-07-11), reason 'user'.
--- NO founding_no assigned: Omer must rule whether customers consume founding slots
--- (36 customers + 60 alumni = 96/100 on day one). Add founding_no separately if yes.
--- Run AFTER founding-migration.sql ALTERs. Idempotent upsert by email.
+-- roaster-grants-2026-07-11.sql (v2: these ARE the alumni, founding numbers assigned)
+-- 36 alumni -> Roaster 12mo (until 2027-07-11), reason 'user', founding_no 1..36 in ORDER-DATE order
+-- (oldest order = No. 1; Shopify export assumed newest-first, reversed here: VERIFY the order).
+-- Cupper alumni (6) keep founding_no 37..42 + cupper_no 1..6: add via founding-migration template.
+-- Run AFTER founding-migration.sql ALTERs.
 
-INSERT INTO entitlements (email, access, updated_at) VALUES
-  ('aragozbek@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "ARA GÖZBEK"}'::jsonb, now()),
-  ('p1tuny4@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "AZİZ SİNAN VARGÜN"}'::jsonb, now()),
-  ('alirizaduzgun@outlook.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Ali Rıza Düzgün"}'::jsonb, now()),
-  ('odgnaaa@icloud.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Doğan Bircan"}'::jsonb, now()),
-  ('ferhatmete94@icloud.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Ferhat Mete"}'::jsonb, now()),
-  ('furkanbalcova981@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Furkan Balçova"}'::jsonb, now()),
-  ('gokberkcetin1@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Gökberk Çetin"}'::jsonb, now()),
-  ('hamwar_shwany@yahoo.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Hamwar Azad"}'::jsonb, now()),
-  ('hasil.hmz@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Hamza HAŞIL"}'::jsonb, now()),
-  ('cakirhsn@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Hasan Çakır"}'::jsonb, now()),
-  ('huseyinucr@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Hüseyin Uçar"}'::jsonb, now()),
-  ('mbarankaratay@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Mehmet Baran Karatay"}'::jsonb, now()),
-  ('melekiremerkus@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Melek İrem Erkuş"}'::jsonb, now()),
-  ('mzshawa@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Mhd Muaaz ALSHAWA"}'::jsonb, now()),
-  ('mustafaay1989@hotmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Mustafa Ay"}'::jsonb, now()),
-  ('aylinpektekin@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Mustafa Mujahed"}'::jsonb, now()),
-  ('s.elhamkia@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "SIMA ELHAMKIA"}'::jsonb, now()),
-  ('serap.akcay@delapau.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Saggezza A.Ş Saggezza A.Ş"}'::jsonb, now()),
-  ('s.abusheikhah@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Saleh Abusheikhah"}'::jsonb, now()),
-  ('sam_murgatroyd_101@hotmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Samuel Alan Murgatroyd"}'::jsonb, now()),
-  ('tobecreativereklam@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Serkan Yücedağ"}'::jsonb, now()),
-  ('taylankaynar@hotmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Taylan Kaynar"}'::jsonb, now()),
-  ('tevhid191@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Tevhid İlhan"}'::jsonb, now()),
-  ('togaycalikoglu@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Togay Çalıkoğlu"}'::jsonb, now()),
-  ('tolgacankok26@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Tolga Can KÖK"}'::jsonb, now()),
-  ('ufukozcan78@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Ufuk ozcan Karabacak"}'::jsonb, now()),
-  ('utkucanertan@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Utkucan Ertan"}'::jsonb, now()),
-  ('pirpirik35@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Yiğit Kuşçu"}'::jsonb, now()),
-  ('mehmetdurandal@hotmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "mehmet durandal"}'::jsonb, now()),
-  ('mmertuner@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "mert üner"}'::jsonb, now()),
-  ('mdemir.uk@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "mustafa demir"}'::jsonb, now()),
-  ('mustafasdemirdas@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "mustafa sergen demirdaş"}'::jsonb, now()),
-  ('serkanmms.6@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "serkan memiş"}'::jsonb, now()),
-  ('cagriozdemir1@hotmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Çağrı Özdemir"}'::jsonb, now()),
-  ('arkeokan11@gmai.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Çiğdem Kara"}'::jsonb, now()),
-  ('fatura@gochescoffee.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Özge Hanım"}'::jsonb, now())
-ON CONFLICT (email) DO UPDATE SET access=EXCLUDED.access, updated_at=now();
+INSERT INTO entitlements (email, access, founding_no, updated_at) VALUES
+  ('fatura@gochescoffee.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Özge Hanım"}'::jsonb, 1, now()),
+  ('ferhatmete94@icloud.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Ferhat Mete"}'::jsonb, 2, now()),
+  ('melekiremerkus@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Melek İrem Erkuş"}'::jsonb, 3, now()),
+  ('arkeokan11@gmai.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Çiğdem Kara"}'::jsonb, 4, now()),
+  ('aragozbek@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "ARA GÖZBEK"}'::jsonb, 5, now()),
+  ('hasil.hmz@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Hamza HAŞIL"}'::jsonb, 6, now()),
+  ('ufukozcan78@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Ufuk ozcan Karabacak"}'::jsonb, 7, now()),
+  ('mmertuner@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "mert üner"}'::jsonb, 8, now()),
+  ('mdemir.uk@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "mustafa demir"}'::jsonb, 9, now()),
+  ('sam_murgatroyd_101@hotmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Samuel Alan Murgatroyd"}'::jsonb, 10, now()),
+  ('p1tuny4@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "AZİZ SİNAN VARGÜN"}'::jsonb, 11, now()),
+  ('s.abusheikhah@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Saleh Abusheikhah"}'::jsonb, 12, now()),
+  ('aylinpektekin@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Mustafa Mujahed"}'::jsonb, 13, now()),
+  ('togaycalikoglu@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Togay Çalıkoğlu"}'::jsonb, 14, now()),
+  ('odgnaaa@icloud.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Doğan Bircan"}'::jsonb, 15, now()),
+  ('serap.akcay@delapau.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Saggezza A.Ş Saggezza A.Ş"}'::jsonb, 16, now()),
+  ('hamwar_shwany@yahoo.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Hamwar Azad"}'::jsonb, 17, now()),
+  ('pirpirik35@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Yiğit Kuşçu"}'::jsonb, 18, now()),
+  ('alirizaduzgun@outlook.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Ali Rıza Düzgün"}'::jsonb, 19, now()),
+  ('tevhid191@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Tevhid İlhan"}'::jsonb, 20, now()),
+  ('s.elhamkia@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "SIMA ELHAMKIA"}'::jsonb, 21, now()),
+  ('cagriozdemir1@hotmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Çağrı Özdemir"}'::jsonb, 22, now()),
+  ('taylankaynar@hotmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Taylan Kaynar"}'::jsonb, 23, now()),
+  ('serkanmms.6@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "serkan memiş"}'::jsonb, 24, now()),
+  ('mbarankaratay@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Mehmet Baran Karatay"}'::jsonb, 25, now()),
+  ('mustafasdemirdas@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "mustafa sergen demirdaş"}'::jsonb, 26, now()),
+  ('mehmetdurandal@hotmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "mehmet durandal"}'::jsonb, 27, now()),
+  ('gokberkcetin1@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Gökberk Çetin"}'::jsonb, 28, now()),
+  ('huseyinucr@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Hüseyin Uçar"}'::jsonb, 29, now()),
+  ('tobecreativereklam@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Serkan Yücedağ"}'::jsonb, 30, now()),
+  ('mustafaay1989@hotmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Mustafa Ay"}'::jsonb, 31, now()),
+  ('tolgacankok26@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Tolga Can KÖK"}'::jsonb, 32, now()),
+  ('mzshawa@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Mhd Muaaz ALSHAWA"}'::jsonb, 33, now()),
+  ('cakirhsn@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Hasan Çakır"}'::jsonb, 34, now()),
+  ('utkucanertan@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Utkucan Ertan"}'::jsonb, 35, now()),
+  ('furkanbalcova981@gmail.com', '{"roast": "full", "cup": "lite", "grade": "lite", "value": "lite", "plan": "Roaster", "until": "2027-07-11", "reason": "user", "name": "Furkan Balçova"}'::jsonb, 36, now())
+ON CONFLICT (email) DO UPDATE SET access=EXCLUDED.access, founding_no=COALESCE(entitlements.founding_no,EXCLUDED.founding_no), updated_at=now();
