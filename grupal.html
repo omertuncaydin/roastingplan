@@ -11,7 +11,7 @@
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
 <meta name="description" content="Grup-Al: yeterli katılımcı toplanırsa kampanya başlar. Hedefe ulaşılmazsa kimseden ücret alınmaz.">
-<!-- grupal.html · v2026-07-13f -->
+<!-- grupal.html · v2026-07-13g -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -35,7 +35,7 @@ h1{font-size:26px;margin:14px 0 4px;text-align:center}
 .seat.ghost .nm{opacity:.6}
 .rung{display:flex;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-size:14px}
 .rung.hit{border-color:var(--green);background:rgba(60,122,90,.12)}
-input{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:16px;background:var(--panel2);color:var(--ink);margin-top:8px}
+input,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:16px;background:var(--panel2);color:var(--ink);margin-top:8px}
 button{width:100%;border:none;border-radius:12px;padding:16px;font-size:17px;font-weight:800;background:var(--accent);color:#16130f;margin-top:12px;cursor:pointer}
 button:active{transform:scale(.99)}
 .hint{color:var(--muted);font-size:12.5px}
@@ -62,7 +62,7 @@ button:active{transform:scale(.99)}
   <div class="deadline" id="deadline" style="display:none"></div>
 
   <div class="card">
-    <div class="lbl">katılımcı</div>
+    <div class="lbl">paket</div>
     <div style="display:flex;align-items:baseline;gap:10px">
       <div class="big" id="count">·</div>
       <div class="hint" id="targetTxt"></div>
@@ -96,6 +96,13 @@ button:active{transform:scale(.99)}
     <input type="text" id="fName" placeholder="Ad Soyad">
     <input type="email" id="fEmail" placeholder="E-posta">
     <input type="tel" id="fPhone" placeholder="Telefon (ödeme penceresi SMS'i için)">
+    <select id="fQty">
+      <option value="1">1 paket · masada 1 yer</option>
+      <option value="2">2 paket · masada 2 yer</option>
+      <option value="3">3 paket · masada 3 yer</option>
+      <option value="4">4 paket · masada 4 yer</option>
+      <option value="5">5 paket · masada 5 yer</option>
+    </select>
     <label class="hint" style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;cursor:pointer;text-align:left">
       <input type="checkbox" id="fShow" checked style="width:auto;margin-top:2px">
       <span>Adım katılımcı listesinde kısaltılmış olarak görünsün ("Ayşe K." gibi)</span>
@@ -131,7 +138,7 @@ button:active{transform:scale(.99)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 const SLUG=new URLSearchParams(location.search).get('k')||'ornek-kampanya';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-07-13f';
+const VERSION='v2026-07-13g';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -156,7 +163,11 @@ async function load(){
     $('leftTxt').textContent=left>0?('Hedefe '+left+' kilitli yer kaldı'):'Hedef doldu · parti büyüdükçe birlikte alım fiyatı inmeye devam eder';
     if(s.deposit_txt) $('depTxt').textContent=s.deposit_txt;
     const myRef=localStorage.getItem('grupal_'+SLUG);
-    if(s.deposit_url&&myRef){ DEPLINK=s.deposit_url+(s.deposit_url.includes('?')?'&':'?')+'attributes[ref]='+encodeURIComponent(myRef)+'&attributes[k]='+encodeURIComponent(SLUG); }
+    if(s.deposit_url&&myRef){
+      const q=Math.max(1,Math.min(5,parseInt(localStorage.getItem('grupal_qty_'+SLUG))||1));
+      const du=s.deposit_url.replace(/:(\d+)(\?|$)/, ':'+q+'$2');
+      DEPLINK=du+(du.includes('?')?'&':'?')+'attributes[ref]='+encodeURIComponent(myRef)+'&attributes[k]='+encodeURIComponent(SLUG);
+    }
     if(myRef) checkMine(myRef);
     if(s.end_at){
       const end=new Date(s.end_at), days=Math.max(0,Math.ceil((end-Date.now())/864e5));
@@ -166,7 +177,7 @@ async function load(){
     } else { $('endTxt').textContent=''; $('deadline').style.display='none'; }
     renderRanks(s.ref_ranks||s.referral_ranks);
     renderAttendees(s);
-    $('ladder').innerHTML=(s.ladder||[]).map(r=>'<div class="rung'+((s.locked||0)>=r.at?' hit':'')+'"><span>'+r.at+' kilitli katılımcıda</span><b>'+r.price+'</b></div>').join('');
+    $('ladder').innerHTML=(s.ladder||[]).map(r=>'<div class="rung'+((s.locked||0)>=r.at?' hit':'')+'"><span>'+r.at+' kilitli pakette</span><b>'+r.price+'</b></div>').join('');
     if((s.status==='funded'||s.status==='paying')&&PAYURL){ $('payBlock').style.display='block'; }
   }catch(e){ $('title').textContent='Bağlantı hatası, tekrar deneyin'; }
 }
@@ -176,13 +187,14 @@ async function pledge(){
   $('joinBtn').disabled=true; $('joinBtn').textContent='Kaydediliyor...';
   try{
     const r=await fetch(API+'/pledge',{method:'POST',headers:{'content-type':'application/json'},
-      body:JSON.stringify({slug:SLUG,name,email,phone,qty:1,referred_by:REF,show_name:$('fShow').checked})});
+      body:JSON.stringify({slug:SLUG,name,email,phone,qty:parseInt($('fQty').value)||1,referred_by:REF,show_name:$('fShow').checked})});
     const j=await r.json();
     if(j.ok){
       const link=location.origin+location.pathname+'?k='+SLUG+'&ref='+j.ref_code;
       $('shareLink').textContent=link;
       $('shareBox').style.display='block'; $('joinCard').style.display='none';
       localStorage.setItem('grupal_'+SLUG, j.ref_code);
+      localStorage.setItem('grupal_qty_'+SLUG, String(parseInt($('fQty').value)||1));
       load();
     } else alert(j.error==='this email already pledged'?'Bu e-posta ile zaten söz verilmiş.':(j.error||'Hata'));
   }catch(e){ alert('Bağlantı hatası, tekrar deneyin.'); }
@@ -208,18 +220,20 @@ function renderAttendees(s){
   if(!locked){ $('attCard').style.display='none'; return; }
   const escA=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const pal=['#c98a3c','#e6c14b','#3c7a5a','#b9742f','#9a8a4b','#a97142'];
-  const chip=nm=>{ let h=0; for(const ch of nm) h+=ch.charCodeAt(0);
+  const chip=a=>{ const nm=(typeof a==='string')?a:(a.name||''); const q=(typeof a==='object'&&a.qty)?a.qty:1;
+    let h=0; for(const ch of nm) h+=ch.charCodeAt(0);
     const parts=nm.split(/\s+/).filter(Boolean);
     const ini=((parts[0]||'').charAt(0)+(parts[1]?parts[1].charAt(0):'')).toLocaleUpperCase('tr-TR');
-    return '<div class="seat"><div class="av" style="background:'+pal[h%pal.length]+'">'+escA(ini)+'</div><div class="nm">'+escA(nm)+'</div></div>'; };
+    return '<div class="seat"><div class="av" style="background:'+pal[h%pal.length]+'">'+escA(ini)+'</div><div class="nm">'+escA(nm)+(q>1?' ×'+q:'')+'</div></div>'; };
   let html=named.map(chip).join('');
-  for(let i=0;i<Math.max(0,locked-named.length);i++)
+  const namedSeats=named.reduce((t,a)=>t+((typeof a==='object'&&a.qty)?a.qty:1),0);
+  for(let i=0;i<Math.max(0,locked-namedSeats);i++)
     html+='<div class="seat"><div class="av" style="background:var(--panel2);color:var(--muted);border:1px solid var(--line)">✓</div><div class="nm">katılımcı</div></div>';
   const ghosts=Math.max(0,Math.min((s.target||0)-locked,24));
   for(let i=0;i<ghosts;i++)
     html+='<div class="seat ghost"><div class="av">+</div><div class="nm">boş yer</div></div>';
   $('attList').innerHTML=html;
-  $('attHint').textContent=(s.target&&locked>=s.target)?'Masa doldu, parti büyümeye devam ediyor.':'Masada '+Math.max(0,(s.target||0)-locked)+' boş yer var. Yerini kilitleyen masaya oturur.';
+  $('attHint').textContent=(s.target&&locked>=s.target)?'Masa doldu, parti büyümeye devam ediyor.':'Masada '+Math.max(0,(s.target||0)-locked)+' boş yer var. Paketini kilitleyen masaya oturur.';
   $('attCard').style.display='block';
 }
 function renderRanks(ranks){
