@@ -580,7 +580,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-13d</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-13e</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1292,7 +1292,7 @@ function renderFlightMatrix(){ const secs=flightSecs(); if(FLSEC>=secs.length) F
   const rows=document.getElementById('flRows'); rows.innerHTML=h;
   rows.querySelectorAll('input[data-fi]').forEach(s=>s.addEventListener('input',e=>{ const ci=+e.target.dataset.fi; FLIGHT.coffees[ci].cup.intens[sec.k]=+e.target.value; const lb=document.getElementById('fliv_'+ci); if(lb) lb.textContent='intensity '+e.target.value; }));
   rows.querySelectorAll('button[data-fsc]').forEach(b=>b.onclick=()=>{ const ci=+b.dataset.fsc,n=+b.dataset.n; FLIGHT.coffees[ci].cup.score[sec.k]=n; rows.querySelectorAll('button[data-fsc="'+ci+'"]').forEach(x=>x.classList.toggle('on',+x.dataset.n===n)); });
-  rows.querySelectorAll('[data-fol]').forEach(c=>c.onclick=()=>{ const p=c.dataset.fol.split('|'); toggleCata(FLIGHT.coffees[+p[0]].cup.cata[p[1]],p[2],c,5); });
+  rows.querySelectorAll('[data-fol]').forEach(c=>c.onclick=()=>{ const p=c.dataset.fol.split('|'); toggleOlfCata(FLIGHT.coffees[+p[0]].cup.cata[p[1]],p[2],c,5,h=>rows.querySelector('[data-fol="'+p[0]+'|'+p[1]+'|'+h+'"]')); });
   rows.querySelectorAll('[data-fmt]').forEach(c=>c.onclick=()=>{ const p=c.dataset.fmt.split('|'); toggleCata(FLIGHT.coffees[+p[0]].cup.cata.main,p[1],c,2); });
   rows.querySelectorAll('[data-fmo]').forEach(c=>c.onclick=()=>{ const p=c.dataset.fmo.split('|'); toggleCata(FLIGHT.coffees[+p[0]].cup.cata.mouth,p[1],c,2); });
   rows.querySelectorAll('textarea[data-fnote]').forEach(t=>t.addEventListener('input',e=>{ const ci=+e.target.dataset.fnote; const c2=FLIGHT.coffees[ci].cup; if(!c2.notes) c2.notes={}; c2.notes[nk]=e.target.value; }));
@@ -1307,7 +1307,7 @@ async function saveFlight(){ if(!canSave('cup')){ flMsg.style.color='var(--accen
 function bindCup(){
   cupSecs.querySelectorAll('input[data-int]').forEach(s=>s.addEventListener('input',e=>{ const k=e.target.dataset.int; cup.intens[k]=+e.target.value; const lb=document.getElementById('iv_'+k); if(lb) lb.textContent='intensity '+cup.intens[k]; checkCalib(); }));
   cupSecs.querySelectorAll('button[data-sc]').forEach(b=>b.onclick=()=>{ const k=b.dataset.sc,n=+b.dataset.n; cup.score[k]=n; cupSecs.querySelectorAll('button[data-sc="'+k+'"]').forEach(x=>x.classList.toggle('on',+x.dataset.n===n)); updateCupScore(); });
-  cupSecs.querySelectorAll('[data-ol]').forEach(c=>c.onclick=()=>toggleCata(cup.cata[c.dataset.key],c.dataset.ol,c,5));
+  cupSecs.querySelectorAll('[data-ol]').forEach(c=>c.onclick=()=>toggleOlfCata(cup.cata[c.dataset.key],c.dataset.ol,c,5,h=>cupSecs.querySelector('[data-ol="'+h+'"][data-key="'+c.dataset.key+'"]')));
   cupSecs.querySelectorAll('[data-mt]').forEach(c=>c.onclick=()=>toggleCata(cup.cata.main,c.dataset.mt,c,2));
   cupSecs.querySelectorAll('[data-mo]').forEach(c=>c.onclick=()=>toggleCata(cup.cata.mouth,c.dataset.mo,c,2));
   cupNU.querySelectorAll('[data-nu]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.nu; cup.nonuniform=(cup.nonuniform===i?i-1:i); renderCupCups(); updateCupScore(); });
@@ -1318,6 +1318,11 @@ function bindCup(){
 }
 function renderCupCups(){ cupNU.querySelectorAll('[data-nu]').forEach(b=>b.classList.toggle('on',+b.dataset.nu<=cup.nonuniform)); cupDF.querySelectorAll('[data-df]').forEach(b=>b.classList.toggle('on',+b.dataset.df<=cup.defective)); }
 function toggleCata(arr,val,el,max){ const i=arr.indexOf(val); if(i>=0){ arr.splice(i,1); el.classList.remove('on'); } else { if(arr.length>=max) return; arr.push(val); el.classList.add('on'); } }
+function olfHeadOf(v){ for(const g of OLF){ if(g.indexOf(v)>0) return g[0]; } return null; }   // the wheel's law: a berry is a fruit
+function toggleOlfCata(arr,val,el,max,findChip){ const head=olfHeadOf(val), adding=arr.indexOf(val)<0;
+  if(adding&&head&&arr.indexOf(head)<0&&arr.length+2>max) return;   // sub + its group need two slots; refuse whole tap, never a half-truth
+  toggleCata(arr,val,el,max);
+  if(adding&&head&&arr.indexOf(val)>=0&&arr.indexOf(head)<0){ arr.push(head); const hc=findChip(head); if(hc) hc.classList.add('on'); } }
 function checkCalib(){ const all=Object.values(cup.intens).filter(v=>v!=null); let msg=''; if(all.length>=4){ const spread=Math.max(...all)-Math.min(...all); if(spread<=3) msg='You are scoring intensity in a narrow band. When the coffee calls for it, reach toward the ends of the scale - the exam rewards confident full-range use, not safe middles.'; } if(typeof cupNudge!=='undefined'&&cupNudge) cupNudge.innerHTML=msg?`<div class="nudge">${msg}</div>`:''; }
 async function saveCup(){ if(!canSave('cup')){ cupMsg.style.color='var(--accent2)'; cupMsg.textContent=enrollPrompt('cupping'); return; }
   cupMsg.style.color='var(--accent2)'; if(!cup.sample.trim()){ cupMsg.style.color='var(--warn)'; cupMsg.textContent='Name the sample first.'; return; }
