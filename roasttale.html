@@ -1201,17 +1201,19 @@ function titleConfirm(){
 }
 function newGame(){
   startMusic();
-  game.kulak=0; game.kulakDrill=0;
-  game.flags={ yesil:false, ceko:false, plaque:false, plaqueAward:false, saved:false, tamburDone:false, tamburKulak:false };
+  game.kulak=0; game.kulakDrill=0; game.drillsCorrect=0; game.bestDuelDelta=null;
+  game.flags={ yesil:false, sampler:false, greenbeans:false, plaque:false, plaqueAward:false, saved:false, tamburDone:false, tamburKulak:false, duelDone:false };
   game.mode='intro';
   startDialog(['intro1','intro2','intro3','intro4','intro5'], function(){ enterGreenRoom(true); }, ['narr','narr','narr','narr','narr']);
 }
 function continueGame(){
   var d = loadSave(); if(!d){ newGame(); return; }
   startMusic();
-  game.flags = Object.assign({ yesil:false, ceko:false, plaque:false, plaqueAward:false, saved:false, tamburDone:false, tamburKulak:false }, d.flags||{});
+  game.flags = Object.assign({ yesil:false, sampler:false, greenbeans:false, plaque:false, plaqueAward:false, saved:false, tamburDone:false, tamburKulak:false, duelDone:false }, d.flags||{});
   game.room = d.room; game.px = d.px; game.py = d.py;
   game.kulak = d.kulak||0; game.kulakDrill = d.kulakDrill||0;
+  game.drillsCorrect = d.drillsCorrect||0;
+  game.bestDuelDelta = (d.bestDuelDelta==null ? null : d.bestDuelDelta);
   updateKulakHud();
   game.mode = 'room';
 }
@@ -1395,7 +1397,7 @@ if(typeof document!=='undefined'){
 }
 
 /* ---------- HEADLESS TEST HARNESS ---------- */
-window.__UNDERROAST__ = {
+window.__ROASTTALE__ = {
   game:game, S:S, T:T, DUEL:DUEL,
   agtronForSample:agtronForSample, cumGainForSample:cumGainForSample, agtronColor:agtronColor,
   setLang:setLang, boot:boot,
@@ -1405,7 +1407,9 @@ window.__UNDERROAST__ = {
   interactById:function(id){ var l=roomInteractables(); for(var i=0;i<l.length;i++){ if(l[i].id===id){ l[i].action(); return true; } } return false; },
   startEncounter:startEncounter, encSelect:encSelect, encHit:encHit, setHP:function(h){ if(game.enc) game.enc.hp=h; },
   startWave:startWave, tamburSlice:tamburSlice, updateEncounter:updateEncounter, finishEncounter:finishEncounter,
-  addKulak:addKulak, drillReward:drillReward, startPlaque:startPlaque, startDrill:startDrill, answerListen:answerListen,
+  addKulak:addKulak, drillReward:drillReward, startPlaque:startPlaque, startDrill:startDrill,
+  startCountDrill:startCountDrill, startSpeedDrill:startSpeedDrill, answerListen:answerListen,
+  showStatsPanel:showStatsPanel, chapterProgress:chapterProgress,
   drawDuel:drawDuel, drawEncounter:drawEncounter, render:render, updateKulakHud:updateKulakHud,
   startDuel:startDuel, duelDrop:duelDrop, updateDuel:updateDuel,
   submitScore:submitScore, postScore:postScore, fetchLadderTop5:fetchLadderTop5,
