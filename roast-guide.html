@@ -580,7 +580,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-13e</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-13f</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1178,8 +1178,8 @@ const ROASTS=['Very Light','Light','Medium-Light','Medium','Medium-Dark','Dark']
 const DEFECT_TYPES=['None','Moldy','Phenolic','Potato'];
 const CUP_SECS=[
  {k:'fragrance',l:'Fragrance',i:true},
- {k:'aroma',l:'Aroma',i:true,cata:'olf',cataKey:'fragAroma',cataLbl:'Fragrance & aroma descriptors (up to 5)'},
- {k:'flavor',l:'Flavor',i:true,cata:'olf',cataKey:'flavAfter',cataLbl:'Flavor & aftertaste descriptors (up to 5)',main:true},
+ {k:'aroma',l:'Aroma',i:true,cata:'olf',cataKey:'fragAroma',cataLbl:'Fragrance & aroma descriptors (up to 5 categories)'},
+ {k:'flavor',l:'Flavor',i:true,cata:'olf',cataKey:'flavAfter',cataLbl:'Flavor & aftertaste descriptors (up to 5 categories)',main:true},
  {k:'aftertaste',l:'Aftertaste',i:true},
  {k:'acidity',l:'Acidity',i:true},
  {k:'sweetness',l:'Sweetness',i:true},
@@ -1255,7 +1255,7 @@ function setCupMode(m){ CUPMODE=m; ['combined','descriptive','affective'].forEac
 let FLIGHT={ date:new Date().toISOString().slice(0,10), purpose:'', coffees:[] };   // coffees: [{sample, cup}]
 let FLSEC=0, FLMODE='descriptive';
 // session shows the shared descriptors on BOTH screens of each pair (fragrance+aroma share fragAroma; flavor+aftertaste share flavAfter)
-const FL_CATA={ fragrance:{type:'olf',key:'fragAroma',lbl:'Fragrance & aroma descriptors (up to 5)'}, aroma:{type:'olf',key:'fragAroma',lbl:'Fragrance & aroma descriptors (up to 5)'}, flavor:{type:'olf',key:'flavAfter',lbl:'Flavor & aftertaste descriptors (up to 5)',main:true}, aftertaste:{type:'olf',key:'flavAfter',lbl:'Flavor & aftertaste descriptors (up to 5)',main:true}, mouthfeel:{type:'mouth',lbl:'Mouthfeel quality (up to 2)'} };
+const FL_CATA={ fragrance:{type:'olf',key:'fragAroma',lbl:'Fragrance & aroma descriptors (up to 5 categories)'}, aroma:{type:'olf',key:'fragAroma',lbl:'Fragrance & aroma descriptors (up to 5 categories)'}, flavor:{type:'olf',key:'flavAfter',lbl:'Flavor & aftertaste descriptors (up to 5 categories)',main:true}, aftertaste:{type:'olf',key:'flavAfter',lbl:'Flavor & aftertaste descriptors (up to 5 categories)',main:true}, mouthfeel:{type:'mouth',lbl:'Mouthfeel quality (up to 2)'} };
 // session notes shared per pair (fragrance+aroma -> one note; flavor+aftertaste -> one note)
 const FL_NOTE={ fragrance:'fragAroma', aroma:'fragAroma', flavor:'flavAfter', aftertaste:'flavAfter', acidity:'acidity', sweetness:'sweetness', mouthfeel:'mouthfeel', overall:'overall' };
 function flightSecs(){ return CUP_SECS.filter(s=> !(FLMODE==='descriptive' && s.k==='overall')); }   // overall is affective-only
@@ -1319,10 +1319,16 @@ function bindCup(){
 function renderCupCups(){ cupNU.querySelectorAll('[data-nu]').forEach(b=>b.classList.toggle('on',+b.dataset.nu<=cup.nonuniform)); cupDF.querySelectorAll('[data-df]').forEach(b=>b.classList.toggle('on',+b.dataset.df<=cup.defective)); }
 function toggleCata(arr,val,el,max){ const i=arr.indexOf(val); if(i>=0){ arr.splice(i,1); el.classList.remove('on'); } else { if(arr.length>=max) return; arr.push(val); el.classList.add('on'); } }
 function olfHeadOf(v){ for(const g of OLF){ if(g.indexOf(v)>0) return g[0]; } return null; }   // the wheel's law: a berry is a fruit
-function toggleOlfCata(arr,val,el,max,findChip){ const head=olfHeadOf(val), adding=arr.indexOf(val)<0;
-  if(adding&&head&&arr.indexOf(head)<0&&arr.length+2>max) return;   // sub + its group need two slots; refuse whole tap, never a half-truth
-  toggleCata(arr,val,el,max);
-  if(adding&&head&&arr.indexOf(val)>=0&&arr.indexOf(head)<0){ arr.push(head); const hc=findChip(head); if(hc) hc.classList.add('on'); } }
+function olfHeadCount(arr){ let n=0; for(const g of OLF){ if(arr.includes(g[0])) n++; } return n; }
+function toggleOlfCata(arr,val,el,max,findChip){ const i=arr.indexOf(val);
+  if(i>=0){ arr.splice(i,1); el.classList.remove('on'); return; }
+  const head=olfHeadOf(val);   // null when val itself is a main category
+  if(head){   // sub: the 5-cap counts main categories only (CVA rule), subs ride free under a lit group
+    if(arr.indexOf(head)<0){ if(olfHeadCount(arr)>=max) return; arr.push(head); const hc=findChip(head); if(hc) hc.classList.add('on'); }
+    arr.push(val); el.classList.add('on');
+  } else {
+    if(olfHeadCount(arr)>=max) return;
+    arr.push(val); el.classList.add('on'); } }
 function checkCalib(){ const all=Object.values(cup.intens).filter(v=>v!=null); let msg=''; if(all.length>=4){ const spread=Math.max(...all)-Math.min(...all); if(spread<=3) msg='You are scoring intensity in a narrow band. When the coffee calls for it, reach toward the ends of the scale - the exam rewards confident full-range use, not safe middles.'; } if(typeof cupNudge!=='undefined'&&cupNudge) cupNudge.innerHTML=msg?`<div class="nudge">${msg}</div>`:''; }
 async function saveCup(){ if(!canSave('cup')){ cupMsg.style.color='var(--accent2)'; cupMsg.textContent=enrollPrompt('cupping'); return; }
   cupMsg.style.color='var(--accent2)'; if(!cup.sample.trim()){ cupMsg.style.color='var(--warn)'; cupMsg.textContent='Name the sample first.'; return; }
