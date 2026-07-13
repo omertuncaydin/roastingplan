@@ -11,7 +11,7 @@
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
 <meta name="description" content="Grup-Al: yeterli katılımcı toplanırsa kampanya başlar. Hedefe ulaşılmazsa kimseden ücret alınmaz.">
-<!-- grupal.html · v2026-07-13g -->
+<!-- grupal.html · v2026-07-13h -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -97,11 +97,7 @@ button:active{transform:scale(.99)}
     <input type="email" id="fEmail" placeholder="E-posta">
     <input type="tel" id="fPhone" placeholder="Telefon (ödeme penceresi SMS'i için)">
     <select id="fQty">
-      <option value="1">1 paket · masada 1 yer</option>
-      <option value="2">2 paket · masada 2 yer</option>
-      <option value="3">3 paket · masada 3 yer</option>
-      <option value="4">4 paket · masada 4 yer</option>
-      <option value="5">5 paket · masada 5 yer</option>
+      <option value="1">1 paket</option>
     </select>
     <label class="hint" style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;cursor:pointer;text-align:left">
       <input type="checkbox" id="fShow" checked style="width:auto;margin-top:2px">
@@ -115,7 +111,7 @@ button:active{transform:scale(.99)}
   <div class="card" id="payBlock">
     <div class="lbl">hedef doldu · ödeme penceresi</div>
     <div style="font-size:15px;margin:10px 0">Kampanya hedefe ulaştı. Yerini tamamlamak için:</div>
-    <button onclick="window.open(PAYURL)">Ödemeye geç</button>
+    <button onclick="openPay()">Ödemeye geç</button>
   </div>
 
   <div class="share" id="shareBox">
@@ -138,7 +134,7 @@ button:active{transform:scale(.99)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 const SLUG=new URLSearchParams(location.search).get('k')||'ornek-kampanya';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-07-13g';
+const VERSION='v2026-07-13h';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -149,6 +145,10 @@ async function load(){
     const s=await r.json();
     if(s.error){ $('title').textContent='Kampanya bulunamadı'; return; }
     STATE=s; PAYURL=s.pay_url;
+    const mq=Math.max(1,Math.min(20,parseInt(s.max_qty)||5));
+    if($('fQty').options.length!==mq){ const cur=parseInt($('fQty').value)||1;
+      $('fQty').innerHTML=Array.from({length:mq},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+' paket</option>').join('');
+      $('fQty').value=String(Math.min(cur,mq)); }
     $('title').textContent=s.title;
     $('lot').textContent=s.lot||'';
     $('unitTxt').textContent=s.unit?('Birim: '+s.unit):'';
@@ -299,6 +299,14 @@ function wrap(g,text,x,y,maxW,lh){
   for(const w of words){ const test=line?line+' '+w:w;
     if(g.measureText(test).width>maxW&&line){ g.fillText(line,x,yy); line=w; yy+=lh; } else line=test; }
   if(line) g.fillText(line,x,yy);
+}
+function openPay(){
+  let u=PAYURL||''; if(!u) return;
+  const q=Math.max(1,parseInt(localStorage.getItem('grupal_qty_'+SLUG))||1);
+  u=u.replace(/:(\d+)(\?|$)/, ':'+q+'$2');
+  const myRef=localStorage.getItem('grupal_'+SLUG);
+  if(myRef) u+=(u.includes('?')?'&':'?')+'attributes[ref]='+encodeURIComponent(myRef)+'&attributes[k]='+encodeURIComponent(SLUG);
+  window.open(u);
 }
 async function doShare(){
   const link=($('shareLink').textContent||'').trim();
