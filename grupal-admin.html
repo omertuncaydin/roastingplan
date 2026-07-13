@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · kampanya kokpiti</title>
 <meta name="robots" content="noindex">
-<!-- grupal-admin.html · v2026-07-13d -->
+<!-- grupal-admin.html · v2026-07-13e -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -70,13 +70,13 @@ a{color:var(--gold)}
       <div class="row" style="margin-top:6px"><input id="l2a" inputmode="numeric" placeholder="100"><input id="l2p" placeholder="875 TL"></div>
       <div class="row" style="margin-top:6px"><input id="l3a" inputmode="numeric" placeholder=""><input id="l3p" placeholder=""></div>
       <span class="lbl">kapora linki (Shopify cart permalink)</span>
-      <input id="f_dep" placeholder="https://www.coffeenutz.net/cart/67299383692848:1">
+      <input id="f_dep" placeholder="ürün VEYA sepet linki yapıştır; kaydette çevrilir">
       <span class="lbl">kapora tutarı (₺)</span>
       <input id="f_depamt" inputmode="numeric" placeholder="300">
       <div class="hint" id="depPrev"></div>
       <span class="lbl">ödeme linki (hedef dolunca gösterilir)</span>
-      <input id="f_pay" placeholder="https://coffeenutz.net/cart/BAKIYE_VARYANT:1">
-      <div class="hint">Cart permalink kullan; sayfa adet ve ref bilgisini kendisi ekler. Bakiye ürünün fiyatı = ulaşılan basamak fiyatı eksi kapora.</div>
+      <input id="f_pay" placeholder="bakiye ürününün linkini yapıştır; kaydette çevrilir">
+      <div class="hint">Ürün linkini yapıştırman yeterli: kaydederken sepete (express checkout) çevrilir. Sayfa adet ve ref bilgisini kendisi ekler. Bakiye ürünün fiyatı = ulaşılan basamak fiyatı eksi kapora.</div>
       <span class="lbl">paket üst sınırı (kişi başına)</span>
       <input id="f_maxq" inputmode="numeric" placeholder="5">
       <span class="lbl">durum</span>
@@ -101,7 +101,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-07-13d';
+const VERSION='v2026-07-13e';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
@@ -131,6 +131,15 @@ async function plStatus(id,status){
 async function plShow(id,show){
   await fetch(API+'/admin/pledge-update',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({id,show_name:show})});
   loadPledges();
+}
+async function resolveIfProduct(field){
+  const v=$(field).value.trim();
+  if(!v||!/\/products\//.test(v)) return true;
+  const r=await fetch(API+'/admin/resolve-variant?url='+encodeURIComponent(v),{headers:{'x-cc-key':KEY}});
+  const j=await r.json().catch(()=>({}));
+  if(j&&j.cart_url){ $(field).value=j.cart_url;
+    $('msg').textContent='Ürün çevrildi: '+j.title+' ('+j.price+' TL) → sepet linki hazır.'; return true; }
+  alert('Ürün linki çevrilemedi: '+((j&&j.error)||'hata')+'\nÜrün Active olmalı.'); return false;
 }
 async function plDel(id){
   if(!confirm('Bu katılımcı kaydı kalıcı olarak silinsin mi?')) return;
@@ -180,6 +189,8 @@ function showLink(slug){
     +'<button style="margin-left:8px;padding:4px 10px;font-size:12px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;cursor:pointer" onclick="navigator.clipboard.writeText(\''+u+'\');this.textContent=\'kopyalandı ✓\'">kopyala</button>';
 }
 async function save(){
+  if(!(await resolveIfProduct('f_dep'))) return;
+  if(!(await resolveIfProduct('f_pay'))) return;
   const ladder=[];
   [['l1a','l1p'],['l2a','l2p'],['l3a','l3p']].forEach(([a,p])=>{ const at=parseInt($(a).value); if(at&&$(p).value.trim()) ladder.push({at, price:$(p).value.trim()}); });
   const body={ slug:$('f_slug').value, title:$('f_title').value, lot:$('f_lot').value,
