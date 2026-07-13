@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · kampanya kokpiti</title>
 <meta name="robots" content="noindex">
-<!-- grupal-admin.html · v2026-07-13b -->
+<!-- grupal-admin.html · v2026-07-13c -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -16,6 +16,7 @@ h1{font-size:20px;margin:8px 0 14px;text-align:center}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
 .lbl{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;display:block;margin:10px 0 4px}
 input,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;font-size:16px;background:var(--panel2);color:var(--ink)}
+.mini{width:auto;margin:0;padding:6px 10px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;cursor:pointer}
 button{width:100%;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;background:var(--accent);color:#16130f;margin-top:14px;cursor:pointer}
 .row{display:flex;gap:8px}
 .row>*{flex:1;min-width:0}
@@ -87,13 +88,52 @@ a{color:var(--gold)}
       <div class="hint" id="msg"></div>
       <div class="hint" id="linkOut"></div>
     </div>
+
+    <div class="card" id="plCard" style="display:none">
+      <span class="lbl">katılımcılar (admin)</span>
+      <div id="plList"></div>
+    </div>
   </div>
 </div>
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-07-13b';
+const VERSION='v2026-07-13c';
 const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+let CURSLUG='';
+async function loadPledges(){
+  if(!CURSLUG){ $('plCard').style.display='none'; return; }
+  const r=await fetch(API+'/admin/pledges?slug='+encodeURIComponent(CURSLUG),{headers:{'x-cc-key':KEY}});
+  if(!r.ok){ $('plCard').style.display='none'; return; }
+  const rows=await r.json();
+  $('plCard').style.display='block';
+  $('plList').innerHTML=(Array.isArray(rows)&&rows.length)?rows.map(p=>{
+    const locked=(p.status==='locked'||p.status==='paid');
+    return '<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0">'
+      +'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>'+esc(p.name)+'</b>'
+      +'<span class="hint">'+esc(p.status)+(p.show_name?' · isim açık':' · isim gizli')+'</span></div>'
+      +'<div class="hint">'+esc(p.email)+' · '+esc(p.phone)+' · ref '+esc(p.ref_code)+(p.referred_by?(' · davet: '+esc(p.referred_by)):'')+'</div>'
+      +'<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'
+      +'<button class="mini" onclick="plStatus(\''+p.id+'\',\''+(locked?'pledged':'locked')+'\')">'+(locked?'Kilidi aç':'Kilitle')+'</button>'
+      +'<button class="mini" onclick="plShow(\''+p.id+'\','+(!p.show_name)+')">'+(p.show_name?'İsmi gizle':'İsmi göster')+'</button>'
+      +'<button class="mini" style="color:#e0705a" onclick="plDel(\''+p.id+'\')">Sil</button>'
+      +'</div></div>';
+  }).join(''):'<div class="hint">Henüz katılımcı yok.</div>';
+}
+async function plStatus(id,status){
+  await fetch(API+'/admin/pledge-update',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({id,status})});
+  loadPledges();
+}
+async function plShow(id,show){
+  await fetch(API+'/admin/pledge-update',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({id,show_name:show})});
+  loadPledges();
+}
+async function plDel(id){
+  if(!confirm('Bu katılımcı kaydı kalıcı olarak silinsin mi?')) return;
+  await fetch(API+'/admin/pledge-delete',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({id})});
+  loadPledges();
+}
 const SHIP_TPL=n=>n?('kavurma gününden sonra '+n+' iş günü içinde kargoda'):'';
 const DEP_TPL=n=>n?(n+' ₺ kapora ile yerini kilitle. Parti hedefi bulamazsa iade edilir, bulursa siparişinden düşülür.'):'';
 const numFrom=t=>{ const m=String(t||'').match(/\d[\d.]*/); return m?m[0].replace(/\.$/,''):''; };
@@ -117,7 +157,7 @@ function renderList(){
 }
 function blank(){
   ['f_slug','f_title','f_lot','f_target','f_cap','f_unit','f_shipdays','f_dep','f_depamt','f_pay','l1a','l1p','l2a','l2p','l3a','l3p'].forEach(i=>$(i).value=''); updatePrev();
-  $('f_status').value='open'; $('f_end').value=''; $('f_roast').value=''; $('msg').textContent='Yeni kampanya formu.'; $('linkOut').textContent='';
+  $('f_status').value='open'; $('f_end').value=''; $('f_roast').value=''; $('msg').textContent='Yeni kampanya formu.'; $('linkOut').textContent=''; CURSLUG=''; $('plCard').style.display='none';
 }
 function pick(i){
   const c=CAMPS[i];
@@ -129,7 +169,7 @@ function pick(i){
   $('f_roast').value=(c.roast_date||'').slice(0,10);
   const L=c.ladder||[];
   [['l1a','l1p',0],['l2a','l2p',1],['l3a','l3p',2]].forEach(([a,p,ix])=>{ $(a).value=L[ix]?L[ix].at:''; $(p).value=L[ix]?L[ix].price:''; });
-  $('msg').textContent='Yüklendi: '+c.slug; showLink(c.slug);
+  $('msg').textContent='Yüklendi: '+c.slug; showLink(c.slug); CURSLUG=c.slug; loadPledges();
 }
 function showLink(slug){
   const u='https://guide.coffeenutz.net/grupal.html?k='+slug;
