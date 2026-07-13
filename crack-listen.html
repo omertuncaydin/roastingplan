@@ -147,13 +147,14 @@ body.st-setup #btn{display:none}
     <div style="text-align:center">
       <h1 style="font-size:25px;margin:2px 0 0">Crack Listener</h1>
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
-      <div style="font-size:14px;color:var(--ink);opacity:.92">the probe reads the drum, the beans speak</div>
+      <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-12d</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-12e</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
         <a class="hpill" id="cockpitChip" href="roast-guide.html" style="border-color:var(--accent);color:var(--accent);font-weight:700;text-decoration:none">Guide App &#8599;</a>
+        <a class="hpill" href="roasttale.html" style="border-color:var(--gold);color:var(--gold);font-weight:700;text-decoration:none">ARCADE &#8599;</a>
       </div>
     </div>
     <div id="codeRow" style="display:none;gap:8px;margin:0 0 12px">
@@ -1416,8 +1417,8 @@ function makeBatchCard(){
   c.toBlob(blob=>{ dl(blob,'batch-'+(cName.value||'coffee').replace(/\s+/g,'_')+'-'+new Date().toISOString().slice(0,10)+'.png'); },'image/png');
 }
 
-// ===== GROWTH v2026-07-12d: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-12d';
+// ===== GROWTH v2026-07-12e: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
+const APPVER='v2026-07-12e';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -1708,7 +1709,7 @@ const EN2TR={
 'Measure, fill, tap the button':'Ölç, doldur, düğmeye dokun',
 'After cooling, enter the measured color and tap the Map button - on early-cut roasts it says "Record lesson" and keeps your reference safe. Every measured roast makes the next prediction better; that is the app learning your coffee. Save the session (.zip) as your archive.':'Soğuduktan sonra ölçtüğün rengi gir ve Eşle düğmesine dokun - erken kesilen kavurmalarda "Dersi kaydet" yazar ve referansını korur. Ölçülen her kavurma bir sonraki tahmini iyileştirir; uygulamanın kahveni öğrenmesi budur. Seansı (.zip) arşivin olarak kaydet.',
 'The whole instrument is free, forever. Roaster and Cupper add cloud memory across your devices.':'Enstrümanın tamamı ücretsiz, süresiz. Roaster ve Cupper, cihazların arasında bulut hafızası ekler.',
-'the probe reads the drum, the beans speak':'prob kazanı okur, çekirdekler konuşur','CoffeeNutz cockpit:':'CoffeeNutz kokpiti:','tap to listen':'dinlemek için dokun','the crack analyzer · the probe reads the drum, the beans speak':'çatlak analizörü · prob kazanı okur, çekirdekler konuşur',
+'the probe learns to read while the beans they speak':'çekirdekler konuşurken prob okumayı öğrenir','CoffeeNutz cockpit:':'CoffeeNutz kokpiti:','tap to listen':'dinlemek için dokun','the crack analyzer · the probe learns to read while the beans they speak':'çatlak analizörü · çekirdekler konuşurken prob okumayı öğrenir',
 'Tap start, hold the phone near the drum, disable the case if it covers the mic.':'Başlata dokun, telefonu kazana yaklaştır, kılıf mikrofonu kapatıyorsa çıkar.',
 'Everything is kept for the whole session; save after Stop. Keep the screen on.':'Her şey seans boyunca bellekte tutulur; Durdur sonrası kaydet. Ekranı açık tut.',
 'Saved per coffee on this phone; the batch card pulls from here.':'Bu telefonda kahve başına saklanır; parti kartı buradan beslenir.',
