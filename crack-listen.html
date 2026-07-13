@@ -149,12 +149,11 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-12e</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-12f</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
         <a class="hpill" id="cockpitChip" href="roast-guide.html" style="border-color:var(--accent);color:var(--accent);font-weight:700;text-decoration:none">Guide App &#8599;</a>
-        <a class="hpill" href="roasttale.html" style="border-color:var(--gold);color:var(--gold);font-weight:700;text-decoration:none">ARCADE &#8599;</a>
       </div>
     </div>
     <div id="codeRow" style="display:none;gap:8px;margin:0 0 12px">
@@ -1417,8 +1416,8 @@ function makeBatchCard(){
   c.toBlob(blob=>{ dl(blob,'batch-'+(cName.value||'coffee').replace(/\s+/g,'_')+'-'+new Date().toISOString().slice(0,10)+'.png'); },'image/png');
 }
 
-// ===== GROWTH v2026-07-12e: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-12e';
+// ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
+const APPVER='v2026-07-12f';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
