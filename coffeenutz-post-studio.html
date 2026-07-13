@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CoffeeNutz Post Studio</title>
+<title>CoffeeNutz Feed Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Spectral:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -108,7 +108,7 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Post Studio <span style="opacity:.55">v2026-07-12c</span></div>
+    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13a</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
     <button class="btn" onclick="document.getElementById('jsonFile').click()">Load</button>
@@ -211,7 +211,7 @@ function announceCard(kind){
   const meta = esc(trUp(a.dateline))+"\n"+esc(trUp(a.city))+"\n"+esc(trUp(a.seats))+"\n"+esc(trUp(a.lang));
   const priceBlock =
     '<div class="pricegrid" style="padding:'+(26*s)+'px 0;margin:'+(40*s)+'px 0 0">'
-    + '<div class="pg-row"><span class="pg-l" style="font-size:'+(22*s)+'px">'+trUp('Yatırım')+'</span><span class="pg-r" style="font-size:'+(52*s)+'px">'+esc(a.price)+'</span></div>'
+    + '<div class="pg-row"><span class="pg-l" style="font-size:'+(22*s)+'px">'+trUp('Eğitim Bedeli')+'</span><span class="pg-r" style="font-size:'+(52*s)+'px">'+esc(a.price)+'</span></div>'
     + '<div style="font-family:var(--mono);font-size:'+(21*s)+'px;letter-spacing:.06em;margin-top:'+(12*s)+'px;opacity:.85">'+esc(a.installment)+'</div>'
     + '</div>';
   const cta='<div class="cta" style="font-size:'+(24*s)+'px;padding:'+(16*s)+'px '+(28*s)+'px;margin-top:'+(44*s)+'px">'+esc(trUp(a.cta))+' &#8594; '+esc(trUp(state.brand.site))+'</div>';
@@ -419,7 +419,7 @@ document.getElementById('jsonFile').addEventListener('change', ev=>{
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
   r.onload=()=>{ try{ state=Object.assign(clone(SAMPLE), JSON.parse(r.result)); renderPanel(); renderStage(); }
-    catch(e){ alert('That file could not be read as Post Studio JSON.'); } };
+    catch(e){ alert('That file could not be read as Feed Studio JSON.'); } };
   r.readAsText(f); ev.target.value='';
 });
 function doSave(){
