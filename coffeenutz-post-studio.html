@@ -100,6 +100,7 @@ body.collapsed #reopen{display:block}
 .card .pricegrid .pg-l{letter-spacing:.14em;text-transform:uppercase;opacity:.75}
 .card .pricegrid .pg-r{font-family:var(--serif-display);font-weight:500}
 .card .metaline{font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;white-space:pre-line;line-height:1.9}
+.card .metaline .mhl{color:var(--amber)}
 .card .cta{font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;background:var(--amber);color:#1a1400;align-self:flex-start;font-weight:500}
 </style>
 </head>
@@ -108,7 +109,7 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13a</span></div>
+    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13b</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
     <button class="btn" onclick="document.getElementById('jsonFile').click()">Load</button>
@@ -146,6 +147,7 @@ const SAMPLE = {
     title:"Q Grader Sertifikasyon",
     dateline:"24-29 Ağustos 2026", city:"İzmir, CoffeeNutz HQ",
     seats:"Kontenjan: 6 kişi", lang:"Eğitim dili: Türkçe",
+    highlight:"Cupper lisansı: 36 ay dahil",
     price:"110.000 ₺", installment:"6 ay taksit imkânı: 6 x 18.333,33 ₺ (kredi kartı, ek ücret yok)",
     cta:"Kayıtlar başladı", extra:"Sertifika, öğünler ve KDV dahil.",
     img:"",
@@ -208,7 +210,8 @@ function announceCard(kind){
   const dims={igfeed:[1080,1350], igstory:[1080,1920], linkedin:[1200,627], banner:[1920,820]}[kind];
   const W=dims[0],H=dims[1];
   const s=W/1080; /* type scale relative to 1080 width */
-  const meta = esc(trUp(a.dateline))+"\n"+esc(trUp(a.city))+"\n"+esc(trUp(a.seats))+"\n"+esc(trUp(a.lang));
+  const meta = esc(trUp(a.dateline))+"\n"+esc(trUp(a.city))+"\n"+esc(trUp(a.seats))+"\n"+esc(trUp(a.lang))
+    + (a.highlight?'\n<span class="mhl">'+esc(trUp(a.highlight))+'</span>':"");
   const priceBlock =
     '<div class="pricegrid" style="padding:'+(26*s)+'px 0;margin:'+(40*s)+'px 0 0">'
     + '<div class="pg-row"><span class="pg-l" style="font-size:'+(22*s)+'px">'+trUp('Eğitim Bedeli')+'</span><span class="pg-r" style="font-size:'+(52*s)+'px">'+esc(a.price)+'</span></div>'
@@ -234,7 +237,7 @@ function announceCard(kind){
       + '<div style="flex:1.35">'
       +   '<div class="k-top" style="font-size:'+(22*s)+'px"><span class="kk">'+esc(trUp(a.kicker))+'</span></div>'
       +   '<h1 style="font-size:'+(kind==="banner"?84:64*s)+'px;margin-top:'+(22*s)+'px">'+esc(a.title)+'</h1>'
-      +   '<div class="metaline" style="font-size:'+(24*s)+'px;margin-top:'+(28*s)+'px">'+esc(trUp(a.dateline))+'  &#183;  '+esc(trUp(a.city))+'\n'+esc(trUp(a.seats))+'  &#183;  '+esc(trUp(a.lang))+'</div>'
+      +   '<div class="metaline" style="font-size:'+(24*s)+'px;margin-top:'+(28*s)+'px">'+esc(trUp(a.dateline))+'  &#183;  '+esc(trUp(a.city))+'\n'+esc(trUp(a.seats))+'  &#183;  '+esc(trUp(a.lang))+(a.highlight?'\n<span class="mhl">'+esc(trUp(a.highlight))+'</span>':"")+'</div>'
       +   cta
       + '</div>'
       + '<div style="flex:1;align-self:stretch;display:flex;flex-direction:column;justify-content:center">'
@@ -385,6 +388,7 @@ function renderPanel(){
       + field("Kicker","announce.kicker") + field("Class title","announce.title")
       + field("Dates","announce.dateline") + field("City / venue","announce.city")
       + field("Seats line","announce.seats") + field("Language line","announce.lang")
+      + field("Included line (gold, optional)","announce.highlight")
       + field("Price","announce.price") + field("Installment line","announce.installment","textarea")
       + field("CTA","announce.cta") + field("Footer note","announce.extra")
       + field("Theme","announce.theme","select:dark|light")
@@ -418,7 +422,7 @@ document.getElementById('imgFile').addEventListener('change', ev=>{
 document.getElementById('jsonFile').addEventListener('change', ev=>{
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{ try{ state=Object.assign(clone(SAMPLE), JSON.parse(r.result)); renderPanel(); renderStage(); }
+  r.onload=()=>{ try{ state=Object.assign(clone(SAMPLE), JSON.parse(r.result)); if(state.announce&&state.announce.highlight===undefined)state.announce.highlight=""; renderPanel(); renderStage(); }
     catch(e){ alert('That file could not be read as Feed Studio JSON.'); } };
   r.readAsText(f); ev.target.value='';
 });
