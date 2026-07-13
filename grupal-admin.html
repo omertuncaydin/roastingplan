@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · kampanya kokpiti</title>
 <meta name="robots" content="noindex">
-<!-- grupal-admin.html · v2026-07-12a -->
+<!-- grupal-admin.html · v2026-07-13a -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -57,8 +57,9 @@ a{color:var(--gold)}
       </div>
       <span class="lbl">birim</span>
       <input id="f_unit" placeholder="2 x 500g çekirdek">
-      <span class="lbl">teslimat taahhüdü</span>
-      <input id="f_ships" placeholder="hedefe ulaşıldıktan sonra 10 iş günü içinde kavrulur ve kargolanır">
+      <span class="lbl">teslimat taahhüdü (iş günü sayısı)</span>
+      <input id="f_shipdays" inputmode="numeric" placeholder="3">
+      <div class="hint" id="shipPrev"></div>
       <span class="lbl">bitiş tarihi (son gün)</span>
       <input id="f_end" type="date">
       <span class="lbl">kavurma günü (ops.)</span>
@@ -69,8 +70,9 @@ a{color:var(--gold)}
       <div class="row" style="margin-top:6px"><input id="l3a" inputmode="numeric" placeholder=""><input id="l3p" placeholder=""></div>
       <span class="lbl">kapora linki (Shopify cart permalink)</span>
       <input id="f_dep" placeholder="https://www.coffeenutz.net/cart/67299383692848:1">
-      <span class="lbl">kapora metni</span>
-      <input id="f_deptxt" placeholder="100 TL kapora · fiyattan düşülür · hedef dolmazsa iade">
+      <span class="lbl">kapora tutarı (₺)</span>
+      <input id="f_depamt" inputmode="numeric" placeholder="300">
+      <div class="hint" id="depPrev"></div>
       <span class="lbl">ödeme linki (hedef dolunca gösterilir)</span>
       <input id="f_pay" placeholder="Shopify ürün/checkout linki">
       <span class="lbl">durum</span>
@@ -90,10 +92,16 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-07-12a';
+const VERSION='v2026-07-13a';
 const $=id=>document.getElementById(id);
+const SHIP_TPL=n=>n?('kavurma gününden sonra '+n+' iş günü içinde kargoda'):'';
+const DEP_TPL=n=>n?(n+' ₺ kapora ile yerini kilitle. Parti hedefi bulamazsa iade edilir, bulursa siparişinden düşülür.'):'';
+const numFrom=t=>{ const m=String(t||'').match(/\d[\d.]*/); return m?m[0].replace(/\.$/,''):''; };
+function updatePrev(){ $('shipPrev').textContent=SHIP_TPL($('f_shipdays').value.trim())||'sayı gir, cümle burada belirir';
+  $('depPrev').textContent=DEP_TPL($('f_depamt').value.trim())||'sayı gir, cümle burada belirir'; }
 let KEY=localStorage.getItem('grupalKey')||'';
 let CAMPS=[];
+$('f_shipdays').addEventListener('input',updatePrev); $('f_depamt').addEventListener('input',updatePrev); updatePrev();
 if(KEY){ $('ccKey').value=KEY; unlock(); }
 async function unlock(){
   KEY=$('ccKey').value.trim(); if(!KEY) return;
@@ -108,14 +116,14 @@ function renderList(){
   $('campList').innerHTML=CAMPS.map((c,i)=>'<span class="pill" onclick="pick('+i+')">'+c.slug+' · '+c.status+'</span>').join('')||'<div class="hint">Henüz kampanya yok.</div>';
 }
 function blank(){
-  ['f_slug','f_title','f_lot','f_target','f_cap','f_unit','f_ships','f_dep','f_deptxt','f_pay','l1a','l1p','l2a','l2p','l3a','l3p'].forEach(i=>$(i).value='');
+  ['f_slug','f_title','f_lot','f_target','f_cap','f_unit','f_shipdays','f_dep','f_depamt','f_pay','l1a','l1p','l2a','l2p','l3a','l3p'].forEach(i=>$(i).value=''); updatePrev();
   $('f_status').value='open'; $('f_end').value=''; $('f_roast').value=''; $('msg').textContent='Yeni kampanya formu.'; $('linkOut').textContent='';
 }
 function pick(i){
   const c=CAMPS[i];
   $('f_slug').value=c.slug; $('f_title').value=c.title||''; $('f_lot').value=c.lot||'';
   $('f_target').value=c.target||''; $('f_cap').value=c.cap||''; $('f_unit').value=c.unit||'';
-  $('f_ships').value=c.ships_by||''; $('f_dep').value=c.deposit_url||''; $('f_deptxt').value=c.deposit_txt||'';
+  $('f_shipdays').value=numFrom(c.ships_by); $('f_dep').value=c.deposit_url||''; $('f_depamt').value=numFrom(c.deposit_txt); updatePrev();
   $('f_pay').value=c.pay_url||''; $('f_status').value=c.status||'open';
   $('f_end').value=(c.end_at||'').slice(0,10);
   $('f_roast').value=(c.roast_date||'').slice(0,10);
@@ -132,10 +140,10 @@ async function save(){
   [['l1a','l1p'],['l2a','l2p'],['l3a','l3p']].forEach(([a,p])=>{ const at=parseInt($(a).value); if(at&&$(p).value.trim()) ladder.push({at, price:$(p).value.trim()}); });
   const body={ slug:$('f_slug').value, title:$('f_title').value, lot:$('f_lot').value,
     target:parseInt($('f_target').value)||0, cap:parseInt($('f_cap').value)||null,
-    unit:$('f_unit').value, ships_by:$('f_ships').value,
+    unit:$('f_unit').value, ships_by:SHIP_TPL($('f_shipdays').value.trim()),
     end_at:$('f_end').value?($('f_end').value+'T23:59:59+03:00'):null,
     roast_date:$('f_roast').value?($('f_roast').value+'T09:00:00+03:00'):null,
-    ladder, deposit_url:$('f_dep').value, deposit_txt:$('f_deptxt').value,
+    ladder, deposit_url:$('f_dep').value, deposit_txt:DEP_TPL($('f_depamt').value.trim()),
     pay_url:$('f_pay').value, status:$('f_status').value };
   if(!body.slug||!body.title||!body.target||!body.end_at){ $('msg').textContent='Slug, başlık, hedef ve bitiş tarihi zorunlu.'; return; }
   const r=await fetch(API+'/admin/upsert',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify(body)});

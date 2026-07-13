@@ -468,6 +468,9 @@
     </div>
     <div id="cupNudge"></div>
     <button class="btn" onclick="saveCup()">Save cupping</button>
+    <div class="card" style="margin-top:12px"><div class="cgrplbl" style="margin-bottom:8px" data-i18n="Resmi CVA Formu · Official CVA print">Resmi CVA Formu &middot; Official CVA print</div>
+      <div class="cuprow" style="gap:10px;flex-wrap:wrap"><button class="iconbtn" style="width:auto" onclick="cvaOfficialPrint('descriptive')" data-i18n="Descriptive">Descriptive</button><button class="iconbtn" style="width:auto" onclick="cvaOfficialPrint('affective')" data-i18n="Affective">Affective</button></div>
+      <div class="small" style="margin-top:6px;color:var(--muted)" data-i18n="Prints your marks onto the official SCA form. Needs internet.">Prints your marks onto the official SCA form. Needs internet.</div></div>
     <button class="nullbtn" title="Coming in the next version">Class Mode &nbsp;·&nbsp; aggregate a class on one coffee &nbsp;·&nbsp; coming soon</button>
     <div class="small" id="cupMsg" style="margin-top:10px;color:var(--accent2)"></div>
     <div class="card" style="margin-top:12px"><div class="cgrplbl">Saved cuppings</div><div id="cupList"></div></div>
@@ -550,6 +553,9 @@
       <label class="fld" for="grExNote" style="margin-top:12px">Other relevant information</label><input type="text" id="grExNote" oninput="grade.exnote=this.value">
     </div>
     <button class="btn" onclick="saveGrade()">Save grading</button>
+    <div class="card" style="margin-top:12px"><div class="cgrplbl" style="margin-bottom:8px" data-i18n="Resmi CVA Formu · Official CVA print">Resmi CVA Formu &middot; Official CVA print</div>
+      <div class="cuprow" style="gap:10px;flex-wrap:wrap"><button class="iconbtn" style="width:auto" onclick="cvaOfficialPrint('physical')" data-i18n="Physical">Physical</button></div>
+      <div class="small" style="margin-top:6px;color:var(--muted)" data-i18n="Prints your marks onto the official SCA form. Needs internet.">Prints your marks onto the official SCA form. Needs internet.</div></div>
     <div class="small" id="grMsg" style="margin-top:10px;color:var(--accent2)"></div>
     <div class="small" style="margin-top:8px">Reference photos: SCA Washed Arabica Green Coffee Defect Guide (Ed. 3). Visual set is washed-arabica specific.</div>
     <div class="card" style="margin-top:12px"><div class="cgrplbl">Saved gradings</div><div id="grList"></div></div>
@@ -567,7 +573,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-12a</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-13a</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1363,6 +1369,145 @@ async function saveGrade(){ if(!canSave('grade')){ grMsg.style.color='var(--acce
 function renderGrList(){ if(!GRADES.length){ grList.innerHTML='<div class="small">None yet.</div>'; return; } grList.innerHTML=GRADES.map(g=>{ const v=gradeVerdictFor(g); return `<div class="hxrow"><span>${esc(g.sample)} <span class="small">${g.date}</span></span><span class="tgtval" style="color:${v.ok?'var(--accent2)':'var(--dark)'}">${v.ok?'Specialty':'Below'} <button class="delx" data-delgr="${g.id}">×</button></span></div>`; }).join(''); grList.querySelectorAll('[data-delgr]').forEach(b=>b.onclick=()=>delGrade(b.dataset.delgr)); }
 function gradeVerdictFor(g){ const c1=CAT1.reduce((a,d)=>a+(g.counts[d[0]]||0)/d[2],0), c2=CAT2.reduce((a,d)=>a+(g.counts[d[0]]||0)/d[2],0); const m=parseFloat(g.moisture); return {c1,c2,ok:(c1<1&&c2<=5&&(isNaN(m)||(m>=10&&m<=12)))}; }
 async function delGrade(id){ GRADES=GRADES.filter(g=>String(g.id)!==String(id)); cacheCG(); renderGrList(); if(sb&&!String(id).startsWith('local-')){ try{ await sb.from('green_grades').delete().eq('id',id); }catch(e){} } }
+
+// ---- Official CVA form print (SCA PDFs; marks drawn ON TOP, background never altered) ----
+// Coordinates are reference pixels on the 150dpi renders (refW 1241 x refH 1754, A4). They are
+// scaled to whatever the pdf.js render size is, so they survive any render scale.
+const CVA_INK='#1a3a8f';
+const CVA_FONT="'Bradley Hand','Segoe Print','Comic Sans MS','Trebuchet MS',sans-serif";
+const CVA_PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+const CVA_PDFWORKER='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const CVA_PDF={descriptive:'cva-descriptive.pdf',affective:'cva-affective.pdf',physical:'cva-physical.pdf'};
+// shared descriptor -> checkbox center (Fragrance/Aroma CATA block on Descriptive form)
+const CVA_OLF={'Floral':[84,379],'Fruity':[84,396],'Berry':[140,396],'Dried Fruit':[192,396],'Citrus Fruit':[273,396],
+ 'Roasted':[379,396],'Cereal':[447,396],'Burnt':[502,396],'Tobacco':[552,396],'Sour/Fermented':[84,413],
+ 'Sour':[198,413],'Fermented':[246,413],'Nutty/Cocoa':[379,413],'Nutty':[469,413],'Cocoa':[526,413],
+ 'Green/Vegetative':[84,430],'Spice':[379,430],'Other':[84,447],'Chemical':[139,447],'Musty/Earthy':[211,447],
+ 'Woody':[309,447],'Sweet':[379,447],'Vanilla/Vanillin':[438,447],'Brown Sugar':[543,447]};
+const CVA_MAP={ refW:1241, refH:1754,
+ header:{ name:[760,68], date:[760,110], purpose:[760,158] },   // shared header on all three forms
+ descriptive:{ sample:[210,250], roast:{xL:838,xR:1176,y:257},
+   scaleX0:191, scaleUnit:41.0, scaleY:{fragrance:298,aroma:336,flavor:491,aftertaste:530,acidity:685,sweetness:781,mouthfeel:878},
+   olf:CVA_OLF, flavAfterDY:194,
+   main:{'Salty':[650,590],'Bitter':[712,590],'Sour':[650,607],'Umami':[712,607],'Sweet':[650,624]},
+   mouth:{'Rough':[84,916],'Smooth':[282,916],'Metallic':[490,916],'Oily':[84,933],'Mouth-Drying':[282,933]},
+   notes:{fragAroma:304,flavAfter:500,acidity:690,sweetness:785,mouthfeel:880}, notesX:842, notesW:330 },
+ affective:{ sample:[425,250], cx0:243, cdx:33.6,
+   rowY:{fragrance:300,aroma:340,flavor:606,aftertaste:644,acidity:948,sweetness:1114,mouthfeel:1282,overall:1448},
+   nuX:[236,252,268,284,300], nuY:1608, dfY:1628,
+   defect:{'Moldy':[353,1630],'Phenolic':[353,1648],'Potato':[353,1666]},
+   notes:{fragAroma:378,flavAfter:690,acidity:985,sweetness:1152,mouthfeel:1320}, notesX:110, notesW:470,
+   scoreAt:[110,1500] },
+ physical:{ sample:[245,320],
+   colorY:377, color:{'Blue-Green':250,'Bluish-Green':371,'Green':503,'Greenish':601,'Yellow-Green':722,'Pale Yellow':855,'Yellowish':964,'Brownish':1085},
+   c1dc:455, c1fd:515, c2dc:905, c2fd:1065,
+   cat1:[['fullblack',1,472],['fullsour',1,496],['driedcherry',1,521],['fungus',1,543],['foreign',1,568],['severeinsect',5,593]],
+   cat2:[['partialblack',3,471],['partialsour',3,496],['parchment',5,521],['floater',5,547],['immature',5,570],['withered',5,595],['shell',5,620],['broken',5,646],['hullhusk',5,673],['slightinsect',10,699]],
+   cat1TotY:624, cat2TotY:716, greenTot:[1060,480], moisture:[72,752], size:[185,802] } };
+
+let CVA_PDFJS_P=null;
+function cvaLoadPdfjs(){ if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if(CVA_PDFJS_P) return CVA_PDFJS_P;
+  CVA_PDFJS_P=new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=CVA_PDFJS; s.async=true;
+    s.onload=()=>{ try{ if(window.pdfjsLib){ window.pdfjsLib.GlobalWorkerOptions.workerSrc=CVA_PDFWORKER; res(window.pdfjsLib); } else rej(new Error('pdfjs missing')); }catch(e){ rej(e); } };
+    s.onerror=()=>{ CVA_PDFJS_P=null; rej(new Error('cdn unreachable')); };
+    document.head.appendChild(s); });
+  return CVA_PDFJS_P; }
+
+function cvaNum(v){ v=Math.round(v*100)/100; return (Math.abs(v-Math.round(v))<1e-9)? String(Math.round(v)) : String(v); }
+
+// pure overlay painter (spy target in tests): draws marks onto a 2D ctx sized cw x ch
+function cvaDrawOverlay(form, data, ctx, cw, ch){
+  const M=CVA_MAP, sx=cw/M.refW, sy=ch/M.refH;
+  const PX=x=>x*sx, PY=y=>y*sy;
+  ctx.strokeStyle=CVA_INK; ctx.fillStyle=CVA_INK; ctx.lineCap='round'; ctx.lineJoin='round';
+  function tick(x,y,h){ ctx.lineWidth=Math.max(1.5,2.4*sx); ctx.beginPath(); ctx.moveTo(PX(x),PY(y-h)); ctx.lineTo(PX(x),PY(y+h)); ctx.stroke(); }
+  function xm(x,y,s2){ s2=s2||6; ctx.lineWidth=Math.max(1.4,2*sx); ctx.beginPath(); ctx.moveTo(PX(x-s2),PY(y-s2)); ctx.lineTo(PX(x+s2),PY(y+s2)); ctx.moveTo(PX(x-s2),PY(y+s2)); ctx.lineTo(PX(x+s2),PY(y-s2)); ctx.stroke(); }
+  function rng(x,y,r){ ctx.lineWidth=Math.max(2,3*sx); ctx.beginPath(); ctx.ellipse(PX(x),PY(y),r*sx,r*sy,0,0,2*Math.PI); ctx.stroke(); }
+  function txt(x,y,str,size,bold){ ctx.font=(bold?'700 ':'')+(size*sx)+"px "+CVA_FONT; ctx.textBaseline='top'; ctx.fillText(String(str),PX(x),PY(y)); }
+  function clip(x,y,str,boxW,size,lines,lh){ if(!str) return; ctx.font=(size*sx)+"px "+CVA_FONT; ctx.textBaseline='top';
+    const words=String(str).split(/\s+/), out=[]; let cur='';
+    for(const w of words){ const t=(cur?cur+' ':'')+w; if(ctx.measureText(t).width<=boxW*sx){ cur=t; } else { if(cur) out.push(cur); cur=w; } if(out.length>=lines) break; }
+    if(cur&&out.length<lines) out.push(cur);
+    out.slice(0,lines).forEach((ln,i)=>ctx.fillText(ln,PX(x),PY(y+i*lh))); }
+  function hdr(m){ txt(M.header.name[0],M.header.name[1], data.sample||'', 18); txt(M.header.date[0],M.header.date[1], data.date||'', 18); clip(M.header.purpose[0],M.header.purpose[1], data.purpose||'', 380,17,1,20); }
+
+  if(form==='descriptive'){ const m=M.descriptive; hdr(m);
+    txt(m.sample[0],m.sample[1], data.sample||'', 18, true);
+    const ag=(data.agtron!==''&&data.agtron!=null)?Number(data.agtron):null;
+    if(ag!=null){ const a=Math.max(25,Math.min(125,ag)), t=(125-a)/100; tick(m.roast.xL+t*(m.roast.xR-m.roast.xL), m.roast.y, 7); }
+    const intens=data.intens||{};
+    Object.keys(m.scaleY).forEach(k=>{ const v=intens[k]; if(v!=null) tick(m.scaleX0+v*m.scaleUnit, m.scaleY[k], 9); });
+    const cata=data.cata||{fragAroma:[],flavAfter:[],main:[],mouth:[]};
+    (cata.fragAroma||[]).forEach(t=>{ if(m.olf[t]) xm(m.olf[t][0], m.olf[t][1]); });
+    (cata.flavAfter||[]).forEach(t=>{ if(m.olf[t]) xm(m.olf[t][0], m.olf[t][1]+m.flavAfterDY); });
+    (cata.main||[]).forEach(t=>{ if(m.main[t]) xm(m.main[t][0], m.main[t][1]); });
+    (cata.mouth||[]).forEach(t=>{ if(m.mouth[t]) xm(m.mouth[t][0], m.mouth[t][1]); });
+    const notes=data.notes||{};
+    Object.keys(m.notes).forEach(nk=>{ if(notes[nk]) clip(m.notesX, m.notes[nk], notes[nk], m.notesW, 15, 3, 19); });
+  } else if(form==='affective'){ const m=M.affective; hdr(m);
+    txt(m.sample[0],m.sample[1], data.sample||'', 18, true);
+    const score=data.score||{};
+    Object.keys(m.rowY).forEach(k=>{ const v=score[k]; if(v!=null) rng(m.cx0+(v-1)*m.cdx, m.rowY[k], 15); });
+    const nu=data.nonuniform||0, df=data.defective||0;
+    for(let i=0;i<nu&&i<m.nuX.length;i++) xm(m.nuX[i], m.nuY, 5);
+    for(let i=0;i<df&&i<m.nuX.length;i++) xm(m.nuX[i], m.dfY, 5);
+    if(data.defect&&m.defect[data.defect]) xm(m.defect[data.defect][0], m.defect[data.defect][1], 6);
+    const notes=data.notes||{};
+    Object.keys(m.notes).forEach(nk=>{ if(notes[nk]) clip(m.notesX, m.notes[nk], notes[nk], m.notesW, 16, 2, 20); });
+    txt(m.scoreAt[0], m.scoreAt[1], 'CVA Cupping Score: '+cupTotal(data).toFixed(2), 20, true);
+  } else if(form==='physical'){ const m=M.physical; hdr(m);
+    txt(m.sample[0],m.sample[1], data.sample||'', 18, true);
+    if(data.color&&m.color[data.color]!=null) xm(m.color[data.color], m.colorY, 6);
+    const counts=data.counts||{}; let t1=0,t2=0;
+    m.cat1.forEach(r=>{ const n=counts[r[0]]||0; if(n){ const full=n/r[1]; t1+=full; txt(m.c1dc, r[2]-16, n, 15); txt(m.c1fd, r[2]-16, cvaNum(full), 15); } });
+    if(t1) txt(m.c1fd, m.cat1TotY, cvaNum(t1), 15, true);
+    m.cat2.forEach(r=>{ const n=counts[r[0]]||0; if(n){ const full=n/r[1]; t2+=full; txt(m.c2dc, r[2]-16, n, 15); txt(m.c2fd, r[2]-16, cvaNum(full), 15); } });
+    if(t2) txt(m.c2fd, m.cat2TotY, cvaNum(t2), 15, true);
+    if(t1+t2) txt(m.greenTot[0], m.greenTot[1], cvaNum(t1+t2), 15, true);
+    if(data.moisture) txt(m.moisture[0], m.moisture[1], data.moisture, 16);
+    if(data.screen) clip(m.size[0], m.size[1], data.screen, 400, 15, 1, 18);
+  }
+}
+
+function cvaEnsureStyle(){ if(document.getElementById('cvaPrintStyle')) return;
+  const st=document.createElement('style'); st.id='cvaPrintStyle';
+  st.textContent='#cvaPrintRoot{position:fixed;inset:0;z-index:400;background:#3a332c;display:flex;flex-direction:column;align-items:center;overflow:auto}'
+   +'#cvaPrintRoot .cvaBar{position:sticky;top:0;width:100%;display:flex;gap:10px;justify-content:center;padding:12px;background:rgba(20,16,12,.85);z-index:2}'
+   +'#cvaPrintRoot .cvaSheet{position:relative;margin:16px auto;box-shadow:0 8px 30px rgba(0,0,0,.5);background:#fff}'
+   +'#cvaPrintRoot .cvaSheet canvas{display:block;width:100%;height:auto}'
+   +'#cvaPrintRoot .cvaSheet .cvaOv{position:absolute;left:0;top:0}'
+   +'@media print{@page{size:A4;margin:0}'
+   +'body.cvaPrinting>*{display:none!important}'
+   +'body.cvaPrinting>#cvaPrintRoot{display:block!important;position:static;background:#fff;overflow:visible}'
+   +'body.cvaPrinting>#cvaPrintRoot .cvaBar{display:none!important}'
+   +'body.cvaPrinting>#cvaPrintRoot .cvaSheet{margin:0;box-shadow:none;width:210mm;height:297mm}'
+   +'body.cvaPrinting>#cvaPrintRoot .cvaSheet canvas{width:210mm;height:297mm}}';
+  document.head.appendChild(st); }
+
+function cvaClosePrint(){ document.body.classList.remove('cvaPrinting'); const r=document.getElementById('cvaPrintRoot'); if(r) r.remove(); }
+
+async function cvaOfficialPrint(form){
+  const data = (form==='physical') ? (typeof grade!=='undefined'?grade:null) : (typeof cup!=='undefined'?cup:null);
+  if(!data||!data.sample){ toast(T('Name the sample first.')); return; }
+  cvaEnsureStyle();
+  let pdfjs; try{ pdfjs=await cvaLoadPdfjs(); }catch(e){ toast(T('Official CVA print needs an internet connection to load the SCA PDF renderer.')); return; }
+  let page, viewport;
+  try{ const doc=await pdfjs.getDocument(CVA_PDF[form]).promise; page=await doc.getPage(1); viewport=page.getViewport({scale:2}); }
+  catch(e){ toast(T('Could not load the official CVA PDF.')); return; }
+  const bg=document.createElement('canvas'); bg.width=Math.round(viewport.width); bg.height=Math.round(viewport.height);
+  try{ await page.render({canvasContext:bg.getContext('2d'), viewport}).promise; }catch(e){ toast(T('Could not render the official CVA PDF.')); return; }
+  const ov=document.createElement('canvas'); ov.width=bg.width; ov.height=bg.height; ov.className='cvaOv';
+  cvaDrawOverlay(form, data, ov.getContext('2d'), ov.width, ov.height);   // marks ON TOP; PDF background untouched
+  const root=document.createElement('div'); root.id='cvaPrintRoot';
+  const bar=document.createElement('div'); bar.className='cvaBar';
+  const bp=document.createElement('button'); bp.className='btn'; bp.style.cssText='width:auto;margin:0'; bp.textContent=T('Print'); bp.onclick=()=>{ document.body.classList.add('cvaPrinting'); window.print(); };
+  const bc=document.createElement('button'); bc.className='btn ghost'; bc.style.cssText='width:auto;margin:0'; bc.textContent=T('Close'); bc.onclick=cvaClosePrint;
+  bar.appendChild(bp); bar.appendChild(bc);
+  const sheet=document.createElement('div'); sheet.className='cvaSheet'; sheet.style.width=Math.min(820,bg.width)+'px'; sheet.appendChild(bg); sheet.appendChild(ov);
+  root.appendChild(bar); root.appendChild(sheet); document.body.appendChild(root);
+  window.addEventListener('afterprint', function ap(){ document.body.classList.remove('cvaPrinting'); window.removeEventListener('afterprint',ap); });
+}
 
 // ---- Value Assessment (holistic identity card) ----
 function valSamples(){ const s=[]; const add=n=>{ if(n&&!s.includes(n)) s.push(n); }; BEANS.forEach(b=>add(b.name)); CUPS.forEach(c=>add(c.sample)); GRADES.forEach(g=>add(g.sample)); LOG.forEach(l=>add(l.bean)); return s; }
