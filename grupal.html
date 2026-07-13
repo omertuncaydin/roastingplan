@@ -11,7 +11,7 @@
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
 <meta name="description" content="Grup-Al: yeterli katılımcı toplanırsa kampanya başlar. Hedefe ulaşılmazsa kimseden ücret alınmaz.">
-<!-- grupal.html · v2026-07-13b -->
+<!-- grupal.html · v2026-07-13c -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -115,7 +115,7 @@ button:active{transform:scale(.99)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 const SLUG=new URLSearchParams(location.search).get('k')||'ornek-kampanya';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-07-13b';
+const VERSION='v2026-07-13c';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -145,7 +145,7 @@ async function load(){
     if(s.end_at){
       const end=new Date(s.end_at), days=Math.max(0,Math.ceil((end-Date.now())/864e5));
       $('endTxt').textContent='Kampanya bitişine '+days+' gün';
-      $('deadline').textContent='Son gün · Last day: '+fmtDate(s.end_at)+' ('+days+' gün kaldı)';
+      $('deadline').textContent='Son gün: '+fmtDate(s.end_at)+' ('+days+' gün kaldı)';
       $('deadline').style.display='block';
     } else { $('endTxt').textContent=''; $('deadline').style.display='none'; }
     renderRanks(s.ref_ranks||s.referral_ranks);
@@ -175,6 +175,9 @@ async function checkMine(ref){
   try{
     const r=await fetch(API+'/mine?slug='+encodeURIComponent(SLUG)+'&ref='+encodeURIComponent(ref));
     const j=await r.json();
+    if(j&&j.error){ localStorage.removeItem('grupal_'+SLUG); MINE=null;
+      $('lockedBadge').style.display='none'; $('cardBtn').style.display='none';
+      $('shareBox').style.display='none'; return; }
     MINE=j;
     const lockedish=j.status==='locked'||j.status==='paid';
     $('lockedBadge').style.display=lockedish?'block':'none';
@@ -226,7 +229,7 @@ function downloadCard(){
   let y=1380;
   const rd=s.roast_date||s.roast_day;
   if(rd){ g.fillStyle='#c98a3c'; g.font='700 40px -apple-system,Segoe UI,Roboto,sans-serif'; g.fillText('Kavurma günü · Roast day: '+fmtDate(rd), cx, y); y+=80; }
-  if(s.end_at){ g.fillStyle='#c98a3c'; g.font='700 40px -apple-system,Segoe UI,Roboto,sans-serif'; g.fillText('Son gün · Last day: '+fmtDate(s.end_at), cx, y); y+=80; }
+  if(s.end_at){ g.fillStyle='#c98a3c'; g.font='700 40px -apple-system,Segoe UI,Roboto,sans-serif'; g.fillText('Son gün: '+fmtDate(s.end_at), cx, y); y+=80; }
   // referral link
   const link=($('shareLink').textContent||'').trim();
   if(link){ g.fillStyle='#a8998a'; g.font='500 30px -apple-system,Segoe UI,Roboto,sans-serif'; g.fillText('Davet bağlantın · Your invite link', cx, 1620);
