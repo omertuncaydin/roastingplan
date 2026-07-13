@@ -11,7 +11,7 @@
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
 <meta name="description" content="Grup-Al: yeterli katılımcı toplanırsa kampanya başlar. Hedefe ulaşılmazsa kimseden ücret alınmaz.">
-<!-- grupal.html · v2026-07-13d -->
+<!-- grupal.html · v2026-07-13e -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -124,7 +124,7 @@ button:active{transform:scale(.99)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 const SLUG=new URLSearchParams(location.search).get('k')||'ornek-kampanya';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-07-13d';
+const VERSION='v2026-07-13e';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -208,7 +208,7 @@ function renderRanks(ranks){
   $('ranksList').innerHTML=top.map((x,i)=>'<div class="rankrow"><span><span class="pos">'+(i+1)+'.</span>'+first(x.name||x.first_name)+'</span><span class="cnt">'+(x.count!=null?x.count:(x.referrals||0))+' davet</span></div>').join('');
   $('ranksCard').style.display='block';
 }
-function downloadCard(){
+function buildCardCanvas(){
   const s=STATE||{}; const W=1080,H=1920;
   const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
   const g=cv.getContext('2d');
@@ -251,7 +251,10 @@ function downloadCard(){
     g.fillStyle='#e6c14b'; g.font='600 26px -apple-system,Segoe UI,Roboto,sans-serif'; wrap(g, link, cx, 1670, W-200, 36); }
   g.fillStyle='#a8998a'; g.font='600 30px -apple-system,Segoe UI,Roboto,sans-serif';
   g.fillText('CoffeeNutz · Grup-Al · birlikte kavur', cx, 1820);
-  cv.toBlob(function(b){ const u=URL.createObjectURL(b); const a=document.createElement('a');
+  return cv;
+}
+function downloadCard(){
+  buildCardCanvas().toBlob(function(b){ const u=URL.createObjectURL(b); const a=document.createElement('a');
     a.href=u; a.download='grupal-'+(SLUG||'kart')+'.png'; document.body.appendChild(a); a.click();
     a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000); }, 'image/png');
 }
@@ -261,9 +264,20 @@ function wrap(g,text,x,y,maxW,lh){
     if(g.measureText(test).width>maxW&&line){ g.fillText(line,x,yy); line=w; yy+=lh; } else line=test; }
   if(line) g.fillText(line,x,yy);
 }
-function doShare(){
-  const link=$('shareLink').textContent;
-  if(navigator.share) navigator.share({title:'Grup-Al',text:'Birlikte kavuralım: hedef dolarsa herkes kazanır.',url:link});
+async function doShare(){
+  const link=($('shareLink').textContent||'').trim();
+  const locked=MINE&&(MINE.status==='locked'||MINE.status==='paid');
+  if(locked && navigator.canShare){
+    try{
+      const blob=await new Promise(res=>buildCardCanvas().toBlob(res,'image/png'));
+      const file=new File([blob],'grupal-kart.png',{type:'image/png'});
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],text:'Kavurma günü partisinde yerini ayır: '+link});
+        return;
+      }
+    }catch(e){ if(e && e.name==='AbortError') return; }
+  }
+  if(navigator.share){ try{ await navigator.share({title:'Grup-Al',text:'Birlikte kavuralım: hedef dolarsa herkes kazanır.',url:link}); }catch(e){} }
   else { navigator.clipboard&&navigator.clipboard.writeText(link); alert('Bağlantı kopyalandı.'); }
 }
 if(localStorage.getItem('grupal_'+SLUG)){
