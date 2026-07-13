@@ -95,7 +95,6 @@
     <div class="chip"><div class="l">Time</div><div class="v" id="hTime">0:00</div></div>
     <div class="chip"><div class="l">Speed · Bean</div><div class="v" id="hTemp">200<small>°C</small></div></div>
     <div class="chip" id="rorChip"><div class="l">RoR</div><div class="v" id="hRor">0.0<small>°C/m</small></div></div>
-    <div class="chip"><div class="l">Color</div><div class="v" id="hAgtron">GREEN</div></div>
     <div class="chip"><div class="l">Phase</div><div class="v" id="hPhase" style="font-size:14px;padding-top:3px">CHARGE</div></div>
   </div>
 
@@ -114,7 +113,7 @@
   <!-- PLAN SCREEN -->
   <div class="overlay" id="planScreen">
     <div class="card">
-      <h1><span class="tag"><a href="/roast-guide.html" style="color:inherit;text-decoration:none">CoffeeNutz Guide</a> · v2026-07-13a</span>SCurve Jumper</h1>
+      <h1><span class="tag"><a href="/roast-guide.html" style="color:inherit;text-decoration:none">CoffeeNutz Guide</a> · v2026-07-13c</span>SCurve Jumper</h1>
       <div class="sub">The hill is the roast chart: time runs right, temperature is height. The skier never
         slows - temperature is his speed factor: hotter reaches the goal color sooner. Fly off at yellowing,
         crack at #125, then drop to land on the X - on time, at the goal Agtron.</div>
@@ -414,6 +413,40 @@ function draw(){
   const P=skierScreen(R);
   camT = (R.postDrop? R.dropped : R.t) - VIEW.span*0.30;
 
+  // === the snow mountain under the in-run: the carved trail so far + the plan ahead, to the lip ===
+  {
+    const gh0=(plan._ghost&&plan._ghost.trail)||[];
+    const dockEndT=R.yellow===null?R.t:R.yellow;
+    const pts=[[0,plan.charge]];
+    for(const [t,c] of R.trail){ if(t>dockEndT) break; pts.push([t,c]); }
+    if(R.yellow===null){
+      for(const [t,c] of gh0){
+        if(t<=R.t) continue;
+        if(c>=PHY.YELLOW){ pts.push([t,PHY.YELLOW]); break; }
+        pts.push([t,c]);
+      }
+    } else pts.push([R.yellow,PHY.YELLOW]);
+    // clip to view, keep one anchor beyond each edge
+    const scr=[]; let prev=null;
+    for(const [t,c] of pts){
+      const x=sx(t);
+      if(x<-80){ prev=[x,sy(c)]; continue; }
+      if(prev){ scr.push(prev); prev=null; }
+      scr.push([x,sy(c)]);
+      if(x>W+80) break;
+    }
+    if(scr.length>1){
+      ctx.beginPath();
+      ctx.moveTo(scr[0][0],scr[0][1]);
+      for(let i=1;i<scr.length;i++) ctx.lineTo(scr[i][0],scr[i][1]);
+      const endX=scr[scr.length-1][0];
+      ctx.lineTo(endX,Hh); ctx.lineTo(scr[0][0],Hh); ctx.closePath();
+      const mg=ctx.createLinearGradient(0,sy(plan.charge),0,Hh);
+      mg.addColorStop(0,'#EDF3F7'); mg.addColorStop(1,'#8FA9BE');
+      ctx.fillStyle=mg; ctx.fill();
+    }
+  }
+
   // temp guide lines: yellowing 150 and FC 198 (the chart is the teacher)
   ctx.font='10px '+mono;
   for(const [c,label] of [[PHY.YELLOW,'150 yellowing'],[198,'198 first crack · #125']]){
@@ -423,9 +456,11 @@ function draw(){
     ctx.fillStyle='#41546A'; ctx.fillText(label,8,y-4);
   }
 
-  // === snow band with minute ticks ===
-  ctx.fillStyle='#EDF3F7'; ctx.fillRect(0,Hh-GROUND,W,GROUND);
-  ctx.fillStyle='#C9D8E4'; ctx.fillRect(0,Hh-GROUND,W,3);
+  // === snow field with minute ticks (the landing valley) ===
+  const sg=ctx.createLinearGradient(0,Hh-GROUND,0,Hh);
+  sg.addColorStop(0,'#EDF3F7'); sg.addColorStop(1,'#AFC4D4');
+  ctx.fillStyle=sg; ctx.fillRect(0,Hh-GROUND,W,GROUND);
+  ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,Hh-GROUND,W,3);
   ctx.font='10px '+mono;
   for(let m=0;m<=13;m++){
     const x=sx(m*60); if(x<-20||x>W+20) continue;
@@ -564,7 +599,7 @@ function updateHUD(){
   hTemp.innerHTML=R.Tp.toFixed(1)+'<small>°C</small>';
   hRor.innerHTML=(R.tp?R.ror.toFixed(1):'—')+'<small>°C/m</small>';
   hRor.className='v '+(R.tp&&R.ror>R.rorMin+3?'up':'ok');
-  hAgtron.textContent=R.yellow===null?'GREEN':'#'+agtronNow(R).toFixed(1);
+  // NO live Agtron readout: the mission is catching the color without seeing it (Ömer, 2026-07-13)
   hPhase.textContent = R.fc?'DEV TIME': R.yellow?'CINNAMON': R.tp?'IN-RUN':'CHARGE';
   gasFill.style.width=(R.gas*100)+'%';
   gasLabel.textContent='GAS '+Math.round(R.gas*100)+'%'+(R.yellow?' · '+R.adjLeft+' adj left':'');
@@ -684,7 +719,7 @@ function drawDebrief(r){
 /* ================= UI WIRING ================= */
 const $=id=>document.getElementById(id);
 const hud=$('hud'),controls=$('controls'),dropBtn=$('dropBtn'),
-  hTime=$('hTime'),hTemp=$('hTemp'),hRor=$('hRor'),hPhase=$('hPhase'),hAgtron=$('hAgtron'),
+  hTime=$('hTime'),hTemp=$('hTemp'),hRor=$('hRor'),hPhase=$('hPhase'),
   gasFill=$('gasFill'),gasLabel=$('gasLabel'),
   planScreen=$('planScreen'),debriefScreen=$('debriefScreen'),
   dOutcome=$('dOutcome'),dScore=$('dScore'),dRank=$('dRank'),dBest=$('dBest'),
