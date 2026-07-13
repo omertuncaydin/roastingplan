@@ -11,7 +11,7 @@
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
 <meta name="description" content="Grup-Al: yeterli katılımcı toplanırsa kampanya başlar. Hedefe ulaşılmazsa kimseden ücret alınmaz.">
-<!-- grupal.html · v2026-07-13h -->
+<!-- grupal.html · v2026-07-13i -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -112,6 +112,7 @@ button:active{transform:scale(.99)}
     <div class="lbl">hedef doldu · ödeme penceresi</div>
     <div style="font-size:15px;margin:10px 0">Kampanya hedefe ulaştı. Yerini tamamlamak için:</div>
     <button onclick="openPay()">Ödemeye geç</button>
+    <div class="hint" style="margin-top:8px">Bakiye fiyatında ödediğin kapora düşülmüştür. Sepet, paket adedinle açılır.</div>
   </div>
 
   <div class="share" id="shareBox">
@@ -134,7 +135,7 @@ button:active{transform:scale(.99)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 const SLUG=new URLSearchParams(location.search).get('k')||'ornek-kampanya';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-07-13h';
+const VERSION='v2026-07-13i';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -208,6 +209,11 @@ async function checkMine(ref){
       $('lockedBadge').style.display='none'; $('cardBtn').style.display='none';
       $('shareBox').style.display='none'; return; }
     MINE=j;
+    if(j.qty) localStorage.setItem('grupal_qty_'+SLUG, String(j.qty));
+    if(j.qty&&STATE&&STATE.deposit_url){
+      const du=STATE.deposit_url.replace(/:(\d+)(\?|$)/, ':'+j.qty+'$2');
+      DEPLINK=du+(du.includes('?')?'&':'?')+'attributes[ref]='+encodeURIComponent(ref)+'&attributes[k]='+encodeURIComponent(SLUG);
+    }
     const lockedish=j.status==='locked'||j.status==='paid';
     $('lockedBadge').style.display=lockedish?'block':'none';
     $('lockRow').style.display=(!lockedish&&DEPLINK)?'block':'none';
@@ -302,7 +308,7 @@ function wrap(g,text,x,y,maxW,lh){
 }
 function openPay(){
   let u=PAYURL||''; if(!u) return;
-  const q=Math.max(1,parseInt(localStorage.getItem('grupal_qty_'+SLUG))||1);
+  const q=Math.max(1,(MINE&&parseInt(MINE.qty))||parseInt(localStorage.getItem('grupal_qty_'+SLUG))||1);
   u=u.replace(/:(\d+)(\?|$)/, ':'+q+'$2');
   const myRef=localStorage.getItem('grupal_'+SLUG);
   if(myRef) u+=(u.includes('?')?'&':'?')+'attributes[ref]='+encodeURIComponent(myRef)+'&attributes[k]='+encodeURIComponent(SLUG);
