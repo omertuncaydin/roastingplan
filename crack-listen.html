@@ -6,6 +6,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <title>Crack Listener · Crack Analyzer App · free first crack detection</title>
+  <meta property="og:title" content="Crack Listener · Telefonun kavurmayı dinler">
+  <meta property="og:description" content="Kavurma enstrümanı: telefonun first crack'i duyar, çatırtı eğrisini canlı çizer, renk projeksiyonu yapar. The free roasting instrument by CoffeeNutz.">
+  <meta property="og:image" content="https://guide.coffeenutz.net/og-cover.png">
+  <meta property="og:url" content="https://guide.coffeenutz.net/crack-listen.html">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
 <meta name="description" content="Crack Listener is the free crack analyzer app: your phone hears first crack, draws the crack curve live, maps the gain stages A0-C1 and projects roast color. Coffee Acoustics by CoffeeNutz.">
 <style>
 :root{--bg:#1a1410;--panel:#241c16;--panel2:#201a15;--accent:#c98a3c;--accent2:#3c7a5a;--gold:#e6c14b;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
@@ -149,7 +155,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-12f</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-13b</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -1413,11 +1419,121 @@ function makeBatchCard(){
   x.stroke();
   x.font='700 26px -apple-system,Helvetica,sans-serif'; x.fillStyle='#000';
   x.fillText('BU PARTİNİN ÇATLAMA EĞRİSİ · guide.coffeenutz.net', L, H-64);
+  // QR to the apps front door, print-safe black-on-white, top-right
+  try{ var _qs=96; drawQR(x,'https://guide.coffeenutz.net/apps', W-44-_qs, 44, _qs, {caption:'coffeenutz',capColor:'#666666',capFont:'600 18px -apple-system,Helvetica,sans-serif',capDy:22}); }catch(e){}
   c.toBlob(blob=>{ dl(blob,'batch-'+(cName.value||'coffee').replace(/\s+/g,'_')+'-'+new Date().toISOString().slice(0,10)+'.png'); },'image/png');
 }
 
+// ===== QR encoder (byte mode, ECC level M, versions 1-6). Self-contained, offline, no libs. =====
+// Algorithm per ISO/IEC 18004, implemented from scratch. Cross-validated bit-identical to the
+// python-qrcode reference across all 8 masks (v1-6); the rendered matrix decodes via OpenCV.
+const QRC=(function(){
+  var EXP=new Array(512), LOG=new Array(256);
+  (function(){ var x=1; for(var i=0;i<255;i++){ EXP[i]=x; LOG[x]=i; x<<=1; if(x&0x100) x^=0x11d; } for(var i=255;i<512;i++) EXP[i]=EXP[i-255]; })();
+  function gmul(a,b){ return (a===0||b===0)?0:EXP[LOG[a]+LOG[b]]; }
+  function rsGen(n){ var p=[1]; for(var i=0;i<n;i++){ var q=new Array(p.length+1); for(var k=0;k<q.length;k++)q[k]=0; for(var j=0;j<p.length;j++){ q[j]^=p[j]; q[j+1]^=gmul(p[j],EXP[i]); } p=q; } return p; }
+  function rsEnc(data,ec){ var g=rsGen(ec), res=data.concat(new Array(ec).fill(0)); for(var i=0;i<data.length;i++){ var f=res[i]; if(f){ for(var j=0;j<g.length;j++) res[i+j]^=gmul(g[j],f); } } return res.slice(data.length); }
+  var VER={1:[16,10,1],2:[28,16,1],3:[44,26,1],4:[64,18,2],5:[86,24,2],6:[108,16,4]};
+  var ALIGN={1:[],2:[6,18],3:[6,22],4:[6,26],5:[6,30],6:[6,34]};
+  function pickVersion(len){ var need=Math.ceil((4+8+8*len)/8); for(var v=1;v<=6;v++){ if(VER[v][0]>=need) return v; } throw new Error('too long for v1-6'); }
+  function toBytes(str){ var out=[]; for(var i=0;i<str.length;i++){ var c=str.charCodeAt(i); if(c<128) out.push(c); else if(c<2048){ out.push(192|(c>>6),128|(c&63)); } else { out.push(224|(c>>12),128|((c>>6)&63),128|(c&63)); } } return out; }
+  function makeData(bytes,version){
+    var cap=VER[version][0], bits=[];
+    function push(val,n){ for(var i=n-1;i>=0;i--) bits.push((val>>i)&1); }
+    push(4,4); push(bytes.length,8);
+    for(var i=0;i<bytes.length;i++) push(bytes[i],8);
+    var rem=cap*8-bits.length; push(0, Math.min(4,rem));
+    while(bits.length%8) bits.push(0);
+    var cw=[]; for(var i=0;i<bits.length;i+=8){ var b=0; for(var j=0;j<8;j++) b=(b<<1)|bits[i+j]; cw.push(b); }
+    var pads=[0xEC,0x11], pi=0; while(cw.length<cap) cw.push(pads[pi++%2]);
+    return cw;
+  }
+  function interleave(cw,version){
+    var dcw=VER[version][0], ec=VER[version][1], nb=VER[version][2], per=dcw/nb, blocks=[], ecs=[];
+    for(var b=0;b<nb;b++){ var blk=cw.slice(b*per,(b+1)*per); blocks.push(blk); ecs.push(rsEnc(blk,ec)); }
+    var out=[];
+    for(var i=0;i<per;i++) for(var b=0;b<nb;b++) out.push(blocks[b][i]);
+    for(var i=0;i<ec;i++) for(var b=0;b<nb;b++) out.push(ecs[b][i]);
+    return out;
+  }
+  function buildMatrix(version){
+    var n=17+4*version, m=[], res=[];
+    for(var r=0;r<n;r++){ m.push(new Array(n).fill(null)); res.push(new Array(n).fill(false)); }
+    function finder(r,c){ for(var i=-1;i<=7;i++) for(var j=-1;j<=7;j++){ var rr=r+i, cc=c+j; if(rr<0||rr>=n||cc<0||cc>=n) continue; var v=(i>=0&&i<=6&&(j===0||j===6))||(j>=0&&j<=6&&(i===0||i===6))||(i>=2&&i<=4&&j>=2&&j<=4); m[rr][cc]=v?1:0; res[rr][cc]=true; } }
+    finder(0,0); finder(0,n-7); finder(n-7,0);
+    for(var i=8;i<n-8;i++){ var v=(i%2===0)?1:0; if(m[6][i]===null){ m[6][i]=v; res[6][i]=true; } if(m[i][6]===null){ m[i][6]=v; res[i][6]=true; } }
+    var ap=ALIGN[version];
+    for(var a=0;a<ap.length;a++) for(var b2=0;b2<ap.length;b2++){ var ar=ap[a], ac=ap[b2]; if(res[ar][ac]) continue; for(var i=-2;i<=2;i++) for(var j=-2;j<=2;j++){ var v=(Math.max(Math.abs(i),Math.abs(j))!==1)?1:0; m[ar+i][ac+j]=v; res[ar+i][ac+j]=true; } }
+    m[4*version+9][8]=1; res[4*version+9][8]=true;
+    for(var i=0;i<9;i++){ if(!res[i][8]){res[i][8]=true;m[i][8]=0;} if(!res[8][i]){res[8][i]=true;m[8][i]=0;} }
+    for(var i=0;i<8;i++){ if(!res[8][n-1-i]){res[8][n-1-i]=true;m[8][n-1-i]=0;} if(!res[n-1-i][8]){res[n-1-i][8]=true;m[n-1-i][8]=0;} }
+    return {m:m,res:res,n:n};
+  }
+  function placeData(mat,bits){
+    var m=mat.m,res=mat.res,n=mat.n,idx=0,up=true;
+    for(var col=n-1;col>0;col-=2){ if(col===6) col--; for(var r=0;r<n;r++){ var row=up?(n-1-r):r; for(var c=0;c<2;c++){ var cc=col-c; if(res[row][cc]) continue; var b=idx<bits.length?bits[idx]:0; idx++; m[row][cc]=b; } } up=!up; }
+  }
+  function maskFn(k){ return [
+    function(i,j){return (i+j)%2===0;},
+    function(i,j){return i%2===0;},
+    function(i,j){return j%3===0;},
+    function(i,j){return (i+j)%3===0;},
+    function(i,j){return (Math.floor(i/2)+Math.floor(j/3))%2===0;},
+    function(i,j){return (i*j)%2+(i*j)%3===0;},
+    function(i,j){return ((i*j)%2+(i*j)%3)%2===0;},
+    function(i,j){return ((i+j)%2+(i*j)%3)%2===0;}
+  ][k]; }
+  function applyMask(mat,k){ var m=mat.m,res=mat.res,n=mat.n,f=maskFn(k),out=[]; for(var r=0;r<n;r++){ out.push([]); for(var c=0;c<n;c++){ var v=m[r][c]; if(!res[r][c]&&f(r,c)) v^=1; out[r].push(v); } } return out; }
+  function bitlen(x){ var n=0; while(x){ n++; x>>=1; } return n; }
+  function fmtBits(mask){ var data=(0<<3)|mask, d=data<<10, g=0x537, dd=d; while(bitlen(dd)>=11) dd^=g<<(bitlen(dd)-11); var fmt=((data<<10)|dd)^0x5412, arr=[]; for(var i=14;i>=0;i--) arr.push((fmt>>i)&1); return arr; }
+  function setFormat(grid,mask,n){
+    var f=fmtBits(mask);
+    for(var i=0;i<=5;i++) grid[8][i]=f[i];
+    grid[8][7]=f[6]; grid[8][8]=f[7]; grid[7][8]=f[8];
+    for(var i=9;i<15;i++) grid[14-i][8]=f[i];
+    for(var i=0;i<7;i++) grid[n-1-i][8]=f[i];
+    grid[8][n-8]=f[7];
+    for(var i=8;i<15;i++) grid[8][n-15+i]=f[i];
+  }
+  function allZero(arr,s,len){ if(s<0||s+len>arr.length) return false; for(var i=0;i<len;i++) if(arr[s+i]!==0) return false; return true; }
+  function penalty(grid,n){
+    var p=0,i,j,k;
+    for(i=0;i<n;i++){ var rc=1,rv=grid[i][0],cc=1,cv=grid[0][i]; for(j=1;j<n;j++){ if(grid[i][j]===rv){rc++;} else {if(rc>=5)p+=rc-2;rc=1;rv=grid[i][j];} if(grid[j][i]===cv){cc++;} else {if(cc>=5)p+=cc-2;cc=1;cv=grid[j][i];} } if(rc>=5)p+=rc-2; if(cc>=5)p+=cc-2; }
+    for(i=0;i<n-1;i++) for(j=0;j<n-1;j++){ var v=grid[i][j]; if(v===grid[i][j+1]&&v===grid[i+1][j]&&v===grid[i+1][j+1]) p+=3; }
+    var pat=[1,0,1,1,1,0,1];
+    function has(arr,s){ for(k=0;k<7;k++) if(arr[s+k]!==pat[k]) return false; return true; }
+    for(i=0;i<n;i++){ var rowarr=grid[i]; for(j=0;j<n-6;j++){ if(has(rowarr,j)){ if((j+10<=n&&allZero(rowarr,j+7,4))||(j-4>=0&&allZero(rowarr,j-4,4))) p+=40; } } }
+    for(j=0;j<n;j++){ var ca=[]; for(i=0;i<n;i++) ca.push(grid[i][j]); for(i=0;i<n-6;i++){ if(has(ca,i)){ if((i+10<=n&&allZero(ca,i+7,4))||(i-4>=0&&allZero(ca,i-4,4))) p+=40; } } }
+    var dark=0; for(i=0;i<n;i++) for(j=0;j<n;j++) if(grid[i][j]) dark++;
+    var pct=dark*100/(n*n), prev=Math.floor(pct/5)*5, nxt=prev+5; p+=Math.min(Math.abs(prev-50),Math.abs(nxt-50))/5*10;
+    return p;
+  }
+  function encode(text,forceVer,forceMask){
+    var bytes=toBytes(text), version=forceVer||pickVersion(bytes.length);
+    var cw=makeData(bytes,version), bits=interleave(cw,version), bitstream=[];
+    for(var i=0;i<bits.length;i++) for(var b=7;b>=0;b--) bitstream.push((bits[i]>>b)&1);
+    var base=buildMatrix(version); placeData(base,bitstream);
+    var best=null,bestP=Infinity,bestMask=0, masks=(forceMask!=null)?[forceMask]:[0,1,2,3,4,5,6,7];
+    for(var mi=0;mi<masks.length;mi++){ var kk=masks[mi]; var grid=applyMask(base,kk); setFormat(grid,kk,base.n); var pen=penalty(grid,base.n); if(pen<bestP){ bestP=pen; best=grid; bestMask=kk; } }
+    return {matrix:best,version:version,mask:bestMask,size:base.n};
+  }
+  return {encode:encode};
+})();
+// Draw a QR into a 2D canvas context: white panel + black modules + quiet zone, optional caption.
+function drawQR(x, text, ox, oy, qs, opts){
+  opts=opts||{};
+  var r=QRC.encode(text), m=r.matrix, n=r.size;
+  var quiet=(opts.quiet!=null)?opts.quiet:4, total=n+2*quiet, cell=qs/total;
+  x.save();
+  x.fillStyle=opts.bg||'#ffffff'; x.fillRect(ox, oy, qs, qs);
+  x.fillStyle=opts.fg||'#000000';
+  for(var rr=0;rr<n;rr++) for(var cc=0;cc<n;cc++){ if(m[rr][cc]) x.fillRect(ox+(cc+quiet)*cell, oy+(rr+quiet)*cell, cell+0.6, cell+0.6); }
+  if(opts.caption){ x.fillStyle=opts.capColor||'#8a7a68'; x.font=opts.capFont||'600 20px -apple-system,Helvetica,sans-serif'; x.textAlign='center'; x.fillText(opts.caption, ox+qs/2, oy+qs+(opts.capDy||24)); x.textAlign='left'; }
+  x.restore();
+}
+
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-12f';
+const APPVER='v2026-07-13b';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -1468,6 +1584,8 @@ function makeStoryCard(){
   }
   x.fillStyle='#8a7a68'; x.font='600 30px -apple-system,Helvetica,sans-serif'; x.fillText('guide.coffeenutz.net/crack-listen', L, H-150);
   x.fillStyle='#5a4a38'; x.font='500 26px -apple-system,Helvetica,sans-serif'; x.fillText(APPVER, L, H-104);
+  // QR to the apps front door, quiet bottom-right
+  try{ var _qs=130; drawQR(x,'https://guide.coffeenutz.net/apps', W-48-30-_qs, H-48-50-_qs, _qs, {caption:'coffeenutz',capColor:'#8a7a68',capFont:'600 24px -apple-system,Helvetica,sans-serif',capDy:30}); }catch(e){}
   c.toBlob(blob=>{ dl(blob,'story-'+nm.replace(/\s+/g,'_')+'-'+new Date().toISOString().slice(0,10)+'.png'); },'image/png');
 }
 // ---- Crack Game consent submission (the crack DB write side) ----
@@ -1496,6 +1614,7 @@ function openGameConsent(){
    +'<input type="text" id="gcCredit" placeholder="'+(LANG==='tr'?'İsim / rumuz (isteğe bağlı)':'Name / handle (optional)')+'" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink);margin-bottom:6px">'
    +'<input type="text" id="gcCompany" placeholder="'+(LANG==='tr'?'Kavurmacı / firma (isteğe bağlı)':'Roastery / company (optional)')+'" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink);margin-bottom:10px">'
    +'<label style="display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.45"><input type="checkbox" id="gcConsent" style="width:20px;height:20px;flex:none;accent-color:var(--accent);margin-top:1px"><span>Bu verilerin CoffeeNutz Agtron Challenge Oyunu ve halka açık tekrar oynatmada kullanılmasına izin veriyorum. · I consent to this data being used in the CoffeeNutz Agtron Challenge Game and public replays.</span></label>'
+   +'<label style="display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.45;margin-top:11px;color:var(--muted)"><input type="checkbox" id="gcResearch" style="width:20px;height:20px;flex:none;accent-color:var(--accent2);margin-top:1px"><span>Verilerim anonim olarak kavurma bilimi araştırmasında da kullanılabilir. · My data may also be used, anonymized, in coffee roasting research.</span></label>'
    +'<button style="margin-top:14px;background:var(--accent2)" onclick="gameSubmit()">'+(LANG==='tr'?'Gönder':'Send')+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(LANG==='tr'?'Vazgeç':'Cancel')+'</button>';
   $('modal').style.display='flex';
@@ -1507,8 +1626,9 @@ async function gameSubmit(){
   if(v.length<5||!isFinite(ag)){ toast(tt('Mapping needs: coffee name + Agtron ground + at least 5 cracks.')); return; }
   const t0=v[0].t, cracks=v.map(c=>[+(c.t-t0).toFixed(2), c.g]);   // rebased so the first crack is t=0
   const credit=(document.getElementById('gcCredit').value||'').trim(), company=(document.getElementById('gcCompany').value||'').trim();
+  const _res=document.getElementById('gcResearch'); const research_ok=!!(_res&&_res.checked);
   const row={ coffee:(cName.value||($('mCoffee')&&$('mCoffee').value)||'').trim(), cracks, terminal_ag:ag,
-    credit:credit||null, company:company||null, approved:false, replay_ok:true };
+    credit:credit||null, company:company||null, approved:false, replay_ok:true, research_ok:research_ok };
   $('modal').style.display='none';
   let rec=null;
   try{ rec=await supaPost(row); }catch(e){ toast(LANG==='tr'?'Gönderilemedi (çevrimdışı?). İnternet gelince tekrar dene.':'Send failed (offline?). Try again when back online.'); return; }

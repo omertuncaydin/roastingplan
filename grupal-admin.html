@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · kampanya kokpiti</title>
 <meta name="robots" content="noindex">
-<!-- grupal-admin.html · v2026-07-13a -->
+<!-- grupal-admin.html · v2026-07-13b -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -92,7 +92,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-07-13a';
+const VERSION='v2026-07-13b';
 const $=id=>document.getElementById(id);
 const SHIP_TPL=n=>n?('kavurma gününden sonra '+n+' iş günü içinde kargoda'):'';
 const DEP_TPL=n=>n?(n+' ₺ kapora ile yerini kilitle. Parti hedefi bulamazsa iade edilir, bulursa siparişinden düşülür.'):'';
@@ -132,8 +132,9 @@ function pick(i){
   $('msg').textContent='Yüklendi: '+c.slug; showLink(c.slug);
 }
 function showLink(slug){
-  const u=location.origin+'/grupal?k='+slug;
-  $('linkOut').innerHTML='Kampanya sayfası: <a href="'+u+'" target="_blank">'+u+'</a>';
+  const u='https://guide.coffeenutz.net/grupal.html?k='+slug;
+  $('linkOut').innerHTML='Kampanya sayfası: <a href="'+u+'" target="_blank">'+u+'</a> '
+    +'<button style="margin-left:8px;padding:4px 10px;font-size:12px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;cursor:pointer" onclick="navigator.clipboard.writeText(\''+u+'\');this.textContent=\'kopyalandı ✓\'">kopyala</button>';
 }
 async function save(){
   const ladder=[];

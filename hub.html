@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>CoffeeNutz · App Hub</title>
+  <meta property="og:title" content="CoffeeNutz · App Hub">
+  <meta property="og:description" content="CoffeeNutz uygulamaları tek kokpitte: crack listener, guide, oyunlar. The CoffeeNutz apps cockpit.">
+  <meta property="og:image" content="https://guide.coffeenutz.net/og-cover.png">
+  <meta property="og:url" content="https://guide.coffeenutz.net/hub.html">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
 <style>
 :root{--bg:#1a1410;--panel:#241c16;--panel2:#201a15;--accent:#c98a3c;--accent2:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--red:#D8453B;--warn:#d9663f;--ok:#3c7a5a}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
@@ -85,7 +91,7 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
     </div>
   </div>
   <h1>Your apps <button class="ordbtn" style="width:auto;padding:4px 12px;font-size:13px;vertical-align:middle" onclick="newCard()">+ New card</button> <button class="ordbtn" style="width:auto;padding:4px 12px;font-size:13px;vertical-align:middle;border-color:var(--accent);color:var(--accent)" onclick="location.href=location.pathname+'?v='+Date.now()">Refresh</button></h1>
-  <div class="sub">Tap a card to open. Arrows reorder within a group. Version is read live. <span style="opacity:.5">hub v2026-07-12c</span></div>
+  <div class="sub">Tap a card to open. Arrows reorder within a group. Version is read live. <span style="opacity:.5">hub v2026-07-13b</span></div>
   <div id="sections"></div>
   <div id="restore" class="restore"></div>
 
@@ -110,6 +116,7 @@ const APPS=[
   {nm:'Zine Studio', path:'/coffeenutz-zine-studio', desc:'CoffeeNutz zine builder',             b:'Z', c:'#9a5b8f', cat:'mon'},
   {nm:'Post Studio', path:'/coffeenutz-post-studio', desc:'IG carousel + announcement cards',    b:'P', c:'#9a5b8f', cat:'mon'},
   {nm:'Agtron Challenge', path:'/crack-game', desc:'How many Agtron is your ear? · the game', b:'A', c:'#e6a33c', cat:'mon'},
+  {nm:'RoastTale', path:'/roasttale', desc:'Bir kavurma masalı · a coffee adventure', b:'RT', c:'#e6a33c', cat:'mon'},
   {nm:'Claude Management', path:'/claude-management', desc:'Claude / ops management',           b:'CM', c:'#8a6d3b', cat:'admin'},
   {nm:'Council',  path:'/council',        desc:'Strategy council cockpit',                      b:'K', c:'#D8453B', cat:'mgmt'},
   {nm:'Image Vault', path:'/vault',       desc:'Ideas in, photos in, verdicts out',            b:'V', c:'#8a6d3b', cat:'mgmt'},
@@ -199,7 +206,7 @@ async function checkVer(a){
     const r=await fetch(a.path,{cache:'no-store'});
     if(!r.ok){ ver.textContent="couldn't load"; return; }
     const t=await r.text(); const m=t.match(/v20\d\d-\d\d-\d\d[a-z]?/) || t.match(/v\d+\.\d+(?:\.\d+)?/);
-    ver.textContent=m?m[0]:'—';
+    ver.textContent=m?m[0]:'-';
   }catch(e){ ver.textContent="couldn't load"; }
 }
 function loadAll(){ allApps().forEach(a=>{ if(/^https?:/i.test(a.path)){ const v=$('v_'+a.path); if(v) v.textContent='external'; return; } const v=$('v_'+a.path); if(v) v.textContent='…'; checkVer(a); }); }
