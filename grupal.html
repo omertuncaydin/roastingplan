@@ -11,7 +11,7 @@
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
 <meta name="description" content="Grup-Al: yeterli katılımcı toplanırsa kampanya başlar. Hedefe ulaşılmazsa kimseden ücret alınmaz.">
-<!-- grupal.html · v2026-07-13c -->
+<!-- grupal.html · v2026-07-13d -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -68,6 +68,11 @@ button:active{transform:scale(.99)}
     <div class="count" id="endTxt"></div>
   </div>
 
+  <div class="card" id="attCard" style="display:none">
+    <div class="lbl">kilitli katılımcılar</div>
+    <div id="attList" style="font-size:14.5px;line-height:1.9;color:var(--ink)"></div>
+  </div>
+
   <div class="refund">Grup dolmazsa kapora iade edilir. Açık ve net.</div>
   <div class="shipline">Türkiye'nin her yerine kargoyla.</div>
 
@@ -84,6 +89,10 @@ button:active{transform:scale(.99)}
     <input type="text" id="fName" placeholder="Ad Soyad">
     <input type="email" id="fEmail" placeholder="E-posta">
     <input type="tel" id="fPhone" placeholder="Telefon (ödeme penceresi SMS'i için)">
+    <label class="hint" style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;cursor:pointer;text-align:left">
+      <input type="checkbox" id="fShow" checked style="width:auto;margin-top:2px">
+      <span>Adım katılımcı listesinde kısaltılmış olarak görünsün ("Ayşe K." gibi)</span>
+    </label>
     <button onclick="pledge()" id="joinBtn">Söz veriyorum</button>
     <div class="hint" style="margin-top:10px" id="unitTxt"></div>
     <div class="hint" id="shipTxt"></div>
@@ -115,7 +124,7 @@ button:active{transform:scale(.99)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 const SLUG=new URLSearchParams(location.search).get('k')||'ornek-kampanya';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-07-13c';
+const VERSION='v2026-07-13d';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -149,6 +158,7 @@ async function load(){
       $('deadline').style.display='block';
     } else { $('endTxt').textContent=''; $('deadline').style.display='none'; }
     renderRanks(s.ref_ranks||s.referral_ranks);
+    renderAttendees(s.attendees);
     $('ladder').innerHTML=(s.ladder||[]).map(r=>'<div class="rung'+((s.locked||0)>=r.at?' hit':'')+'"><span>'+r.at+' kilitli katılımcıda</span><b>'+r.price+'</b></div>').join('');
     if((s.status==='funded'||s.status==='paying')&&PAYURL){ $('payBlock').style.display='block'; }
   }catch(e){ $('title').textContent='Bağlantı hatası, tekrar deneyin'; }
@@ -159,7 +169,7 @@ async function pledge(){
   $('joinBtn').disabled=true; $('joinBtn').textContent='Kaydediliyor...';
   try{
     const r=await fetch(API+'/pledge',{method:'POST',headers:{'content-type':'application/json'},
-      body:JSON.stringify({slug:SLUG,name,email,phone,qty:1,referred_by:REF})});
+      body:JSON.stringify({slug:SLUG,name,email,phone,qty:1,referred_by:REF,show_name:$('fShow').checked})});
     const j=await r.json();
     if(j.ok){
       const link=location.origin+location.pathname+'?k='+SLUG+'&ref='+j.ref_code;
@@ -184,6 +194,11 @@ async function checkMine(ref){
     $('lockRow').style.display=(!lockedish&&DEPLINK)?'block':'none';
     $('cardBtn').style.display=lockedish?'block':'none';
   }catch(e){}
+}
+function renderAttendees(list){
+  if(!Array.isArray(list)||!list.length){ $('attCard').style.display='none'; return; }
+  $('attCard').style.display='block';
+  $('attList').textContent=list.join(' · ');
 }
 function renderRanks(ranks){
   if(!Array.isArray(ranks)||!ranks.length){ $('ranksCard').style.display='none'; return; }
@@ -210,7 +225,7 @@ function downloadCard(){
     for(const ch of t){ g.textAlign='left'; g.fillText(ch,x,240); x+=g.measureText(ch).width+sp; } g.textAlign='center'; })();
   g.restore();
   g.fillStyle='#a8998a'; g.font='500 30px -apple-system,Segoe UI,Roboto,sans-serif';
-  g.fillText('Yerin kilitli · Your spot is locked', cx, 320);
+  g.fillText('Yerin kilitli', cx, 320);
   // campaign name
   g.fillStyle='#f3ede4'; g.font='800 56px -apple-system,Segoe UI,Roboto,sans-serif';
   wrap(g, s.title||'Kavurma günü lotu', cx, 470, W-200, 64);
@@ -220,19 +235,19 @@ function downloadCard(){
   g.fillStyle='#e6c14b'; g.font='800 200px -apple-system,Segoe UI,Roboto,sans-serif';
   g.fillText('#'+spot, cx, 900);
   g.fillStyle='#a8998a'; g.font='500 34px -apple-system,Segoe UI,Roboto,sans-serif';
-  g.fillText('senin yerin · your spot', cx, 960);
+  g.fillText('senin yerin', cx, 960);
   // counter N/M
   g.fillStyle='#3c7a5a'; g.font='800 120px -apple-system,Segoe UI,Roboto,sans-serif';
   g.fillText((s.locked||0)+' / '+(s.target||0), cx, 1180);
   g.fillStyle='#a8998a'; g.font='500 34px -apple-system,Segoe UI,Roboto,sans-serif';
-  g.fillText('kilitli · locked', cx, 1240);
+  g.fillText('kilitli katılımcı', cx, 1240);
   let y=1380;
   const rd=s.roast_date||s.roast_day;
-  if(rd){ g.fillStyle='#c98a3c'; g.font='700 40px -apple-system,Segoe UI,Roboto,sans-serif'; g.fillText('Kavurma günü · Roast day: '+fmtDate(rd), cx, y); y+=80; }
+  if(rd){ g.fillStyle='#c98a3c'; g.font='700 40px -apple-system,Segoe UI,Roboto,sans-serif'; g.fillText('Kavurma günü: '+fmtDate(rd), cx, y); y+=80; }
   if(s.end_at){ g.fillStyle='#c98a3c'; g.font='700 40px -apple-system,Segoe UI,Roboto,sans-serif'; g.fillText('Son gün: '+fmtDate(s.end_at), cx, y); y+=80; }
   // referral link
   const link=($('shareLink').textContent||'').trim();
-  if(link){ g.fillStyle='#a8998a'; g.font='500 30px -apple-system,Segoe UI,Roboto,sans-serif'; g.fillText('Davet bağlantın · Your invite link', cx, 1620);
+  if(link){ g.fillStyle='#a8998a'; g.font='500 30px -apple-system,Segoe UI,Roboto,sans-serif'; g.fillText('Davet bağlantın', cx, 1620);
     g.fillStyle='#e6c14b'; g.font='600 26px -apple-system,Segoe UI,Roboto,sans-serif'; wrap(g, link, cx, 1670, W-200, 36); }
   g.fillStyle='#a8998a'; g.font='600 30px -apple-system,Segoe UI,Roboto,sans-serif';
   g.fillText('CoffeeNutz · Grup-Al · birlikte kavur', cx, 1820);
