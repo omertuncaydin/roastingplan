@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>SCurve Jumper - CoffeeNutz Guide (prototype)</title>
+<style>
+  :root{
+    --sky0:#0E1B2C; --sky1:#1C3050; --snow:#EDF3F7; --snow2:#C9D8E4;
+    --ink:#F2F6FA; --dim:#93A7BA; --bean:#B06A3B; --beanhi:#D08A55;
+    --amber:#E9B44C; --mint:#6FC7B4; --bad:#D96A4F; --card:#132437EE;
+    --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:var(--sky0);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;touch-action:manipulation}
+  #wrap{position:fixed;inset:0;display:flex;flex-direction:column}
+  canvas#game{flex:1;width:100%;display:block}
+
+  /* HUD */
+  #hud{position:absolute;top:10px;left:10px;right:10px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+  .chip{background:#0C1826CC;border:1px solid #2C4763;border-radius:10px;padding:6px 10px;min-width:72px}
+  .chip .l{font-size:10px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
+  .chip .v{font-family:var(--mono);font-size:19px;font-weight:700;line-height:1.15}
+  .chip .v small{font-size:11px;color:var(--dim);font-weight:400}
+  #rorChip .v.up{color:var(--bad)} #rorChip .v.ok{color:var(--mint)}
+  #hAgtron{color:var(--beanhi)}
+
+  /* controls */
+  #controls{position:absolute;left:0;right:0;bottom:0;padding:10px 12px calc(12px + env(safe-area-inset-bottom));
+    display:flex;gap:10px;align-items:stretch;background:linear-gradient(#0000,#0B1624E6 40%)}
+  .gasBtn{flex:0 0 64px;font-size:30px;font-weight:800;border-radius:14px;border:1px solid #3A5875;
+    background:#16293E;color:var(--ink);height:64px}
+  .gasBtn:active{background:#23405E}
+  .gasBtn.spent{opacity:.35;pointer-events:none}
+  #gasBox{flex:1;display:flex;flex-direction:column;justify-content:center;gap:6px}
+  #gasBar{height:18px;border-radius:9px;background:#16293E;border:1px solid #3A5875;overflow:hidden}
+  #gasFill{height:100%;width:70%;background:linear-gradient(90deg,#7A4A22,var(--beanhi));transition:width .15s}
+  #gasLabel{font-family:var(--mono);font-size:13px;color:var(--dim);text-align:center}
+  #dropBtn{flex:0 0 96px;height:64px;border-radius:14px;border:1px solid #6b4a1f;background:#3A2A12;
+    color:#7d6a4a;font-size:17px;font-weight:800;letter-spacing:.05em}
+  #dropBtn.armed{background:var(--amber);border-color:#f3cd80;color:#25190a;animation:pulse 1s infinite}
+  @keyframes pulse{50%{transform:scale(1.05)}}
+
+  /* overlays */
+  .overlay{position:absolute;inset:0;background:#0A1420E8;display:flex;align-items:center;justify-content:center;
+    padding:14px;overflow:auto;z-index:5}
+  .card{background:var(--card);border:1px solid #2C4763;border-radius:18px;padding:20px 18px;max-width:520px;width:100%;
+    max-height:96%;overflow:auto}
+  h1{font-size:24px;letter-spacing:.02em;margin-bottom:2px}
+  h1 .tag{font-size:11px;color:var(--amber);letter-spacing:.18em;text-transform:uppercase;display:block;margin-bottom:6px}
+  .sub{color:var(--dim);font-size:13px;line-height:1.5;margin:8px 0 14px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid #22374E}
+  .row .name{font-size:13.5px}
+  .row .name small{display:block;color:var(--dim);font-size:11px;margin-top:2px}
+  .step{display:flex;align-items:center;gap:6px}
+  .step button{width:40px;height:40px;border-radius:10px;border:1px solid #3A5875;background:#16293E;color:var(--ink);
+    font-size:20px;font-weight:700}
+  .step button:active{background:#23405E}
+  .step .val{font-family:var(--mono);font-size:17px;font-weight:700;min-width:74px;text-align:center}
+  #devLine{font-family:var(--mono);font-size:13px;padding:10px 0;color:var(--mint)}
+  #devLine.warn{color:var(--bad)}
+  .bigBtn{width:100%;margin-top:14px;padding:16px;border-radius:14px;border:none;background:var(--amber);
+    color:#25190a;font-size:19px;font-weight:800;letter-spacing:.04em}
+  .bigBtn:active{filter:brightness(1.1)}
+  .ghostBtn{width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid #3A5875;background:none;
+    color:var(--dim);font-size:14px}
+  .speedRow{display:flex;gap:8px;margin-top:8px}
+  .speedRow button{flex:1;padding:9px;border-radius:10px;border:1px solid #3A5875;background:#16293E;color:var(--dim);
+    font-family:var(--mono);font-size:13px}
+  .speedRow button.on{background:#2A4C6E;color:var(--ink);border-color:#5E86AC}
+
+  /* debrief */
+  #debriefChart{width:100%;height:180px;border-radius:10px;background:#0C1826;border:1px solid #22374E;margin:10px 0}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+  td,th{padding:6px 4px;text-align:right;border-bottom:1px solid #22374E;font-family:var(--mono)}
+  td:first-child,th:first-child{text-align:left;font-family:inherit;color:var(--dim)}
+  .score{font-family:var(--mono);font-size:38px;font-weight:800;color:var(--amber)}
+  .rank{font-size:14px;color:var(--mint);letter-spacing:.1em;text-transform:uppercase}
+  .defect{color:var(--bad);font-size:13px;font-family:var(--mono);padding:2px 0}
+  .clean{color:var(--mint);font-size:13px;font-family:var(--mono);padding:2px 0}
+  #dLand{font-family:var(--mono);font-size:14px;color:var(--beanhi);margin-top:8px}
+  .hidden{display:none !important}
+  #toast{position:absolute;top:86px;left:50%;transform:translateX(-50%);background:#0C1826DD;border:1px solid var(--amber);
+    color:var(--amber);font-family:var(--mono);font-weight:700;padding:8px 16px;border-radius:12px;z-index:4;
+    transition:opacity .4s;opacity:0;pointer-events:none;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game"></canvas>
+
+  <div id="hud" class="hidden">
+    <div class="chip"><div class="l">Time</div><div class="v" id="hTime">0:00</div></div>
+    <div class="chip"><div class="l">Speed · Bean</div><div class="v" id="hTemp">200<small>°C</small></div></div>
+    <div class="chip" id="rorChip"><div class="l">RoR</div><div class="v" id="hRor">0.0<small>°C/m</small></div></div>
+    <div class="chip"><div class="l">Color</div><div class="v" id="hAgtron">GREEN</div></div>
+    <div class="chip"><div class="l">Phase</div><div class="v" id="hPhase" style="font-size:14px;padding-top:3px">CHARGE</div></div>
+  </div>
+
+  <div id="toast"></div>
+
+  <div id="controls" class="hidden">
+    <button class="gasBtn" id="gasDown">−</button>
+    <div id="gasBox">
+      <div id="gasBar"><div id="gasFill"></div></div>
+      <div id="gasLabel">GAS 70%</div>
+    </div>
+    <button class="gasBtn" id="gasUp">+</button>
+    <button id="dropBtn">DROP</button>
+  </div>
+
+  <!-- PLAN SCREEN -->
+  <div class="overlay" id="planScreen">
+    <div class="card">
+      <h1><span class="tag"><a href="/roast-guide.html" style="color:inherit;text-decoration:none">CoffeeNutz Guide</a> · v2026-07-13a</span>SCurve Jumper</h1>
+      <div class="sub">The hill is the roast chart: time runs right, temperature is height. The skier never
+        slows - temperature is his speed factor: hotter reaches the goal color sooner. Fly off at yellowing,
+        crack at #125, then drop to land on the X - on time, at the goal Agtron.</div>
+
+      <div class="row"><div class="name">Charge temp<small>drum at drop-in</small></div>
+        <div class="step"><button data-k="charge" data-d="-5">−</button><div class="val" id="vCharge">200°C</div><button data-k="charge" data-d="5">+</button></div></div>
+
+      <div class="row"><div class="name">Initial gas / power</div>
+        <div class="step"><button data-k="gas0" data-d="-5">−</button><div class="val" id="vGas0">70%</div><button data-k="gas0" data-d="5">+</button></div></div>
+
+      <div class="row"><div class="name">Mission<small>the game paints the X - you roast to it</small></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="val" id="vGoal" style="font-family:var(--mono);font-size:19px;font-weight:800;color:var(--amber)">#82</div>
+          <button id="rerollGoal" style="padding:8px 10px;border-radius:10px;border:1px solid #3A5875;background:#16293E;color:var(--dim);font-size:12px">new goal</button>
+        </div></div>
+
+      <div id="planSummary" style="font-family:var(--mono);font-size:12.5px;color:var(--dim);padding:10px 0 0;line-height:1.7"></div>
+      <div id="devLine">Planned Dev Time: 2:15</div>
+
+      <div style="font-size:11px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;margin-top:6px">Difficulty · gas adjustments in flight</div>
+      <div class="speedRow" id="diffRow">
+        <button data-diff="easy" class="on">EASY · 5</button><button data-diff="medium">MED · 3</button><button data-diff="hard">HARD · 1</button>
+      </div>
+
+      <div style="font-size:11px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;margin-top:10px">Game speed</div>
+      <div class="speedRow" id="speedRow">
+        <button data-s="5">5×</button><button data-s="10" class="on">10×</button><button data-s="20">20×</button>
+      </div>
+
+      <button class="bigBtn" id="jumpBtn">CHARGE THE DRUM</button>
+    </div>
+  </div>
+
+  <!-- DEBRIEF -->
+  <div class="overlay hidden" id="debriefScreen">
+    <div class="card">
+      <h1><span class="tag">Jump debrief</span><span id="dOutcome">Clean roast</span></h1>
+      <div style="display:flex;align-items:baseline;gap:12px;margin-top:6px">
+        <div class="score" id="dScore">0</div>
+        <div>
+          <div class="rank" id="dRank">Training Hill</div>
+          <div style="font-size:11px;color:var(--dim)" id="dBest"></div>
+        </div>
+      </div>
+      <div id="dLand"></div>
+      <canvas id="debriefChart"></canvas>
+      <table>
+        <tr><th></th><th>Plan</th><th>Actual</th><th>Pts</th></tr>
+        <tr><td>FC time</td><td id="pFcT"></td><td id="aFcT"></td><td id="sFcT"></td></tr>
+        <tr><td>FC temp</td><td id="pFcC"></td><td id="aFcC"></td><td id="sFcC"></td></tr>
+        <tr><td>Drop time</td><td id="pDropT"></td><td id="aDropT"></td><td id="sDropT"></td></tr>
+        <tr><td>Drop temp</td><td id="pDropC"></td><td id="aDropC"></td><td id="sDropC"></td></tr>
+        <tr><td>Color · Agtron</td><td id="pAg"></td><td id="aAg"></td><td id="sAg"></td></tr>
+        <tr><td>Dev Time</td><td id="pDev"></td><td id="aDev"></td><td></td></tr>
+        <tr><td>Style (judges)</td><td></td><td></td><td id="sStyle"></td></tr>
+      </table>
+      <div id="dDefects" style="margin-top:10px"></div>
+      <button class="bigBtn" id="againBtn">JUMP AGAIN</button>
+      <button class="ghostBtn" id="replanBtn">Change the plan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ================= PHYSICS (headless-verified 2026-07-13) ================= */
+const PHY = {
+  DT:0.1, TAUA:40, H:0.045, KB:0.007, MIX:0.25, TAUP:34,
+  TSET_MIN:160, TSET_SPAN:190, LAGX:1.5,
+  EXO0:186, EXO1:200, EXOMAX:0.06, AMBIENT:25,
+  YELLOW:150, SC:218, TMAX:780
+};
+/* ================= COLOR MODEL (Ömer's calibration, 2026-07-13) =================
+   HARD RULE: first crack = Agtron 125, whatever the path.
+   - Yellowing (takeoff) = Agtron 160.
+   - Cinnamon (yellowing → FC): color is TEMP-MAPPED 160 → 125, so the crack always
+     fires at exactly #125.
+   - Dev Time (after FC): A = 125 - devUnits/CU; rate(T)=exp((T-150)/24); CU=27
+     → ~2:00 dev at 198→208°C ≈ 40 Agtron. "Speed" = how soon you reach the goal. */
+const COL = { AY:160, AFC:125, CU:27, rate:T=>Math.exp((T-150)/24) };
+
+/* ================= WORLD: the roast chart itself =================
+   x = time (the skier NEVER slows - steady always), y = temperature.
+   Temp is the speed factor: it decides how soon the goal color arrives and how far
+   the skier carries when he drops (falling momentum ∝ temp). No other motion math. */
+const VIEW = { span:210, tempLo:15, tempHi:245 }; // seconds visible, temp range
+const CARRY = 0.055;                              // carry seconds per °C at the drop
+
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const mmss=s=>{ if(s==null) return '-'; const r=Math.round(s); return Math.floor(r/60)+':'+String(r%60).padStart(2,'0'); };
+
+/* ================= PLAN ================= */
+const plan={charge:200,gas0:70,goalA:82,speed:10,diff:'easy',
+            fcT:570,fcC:198,dropT:705,dropC:208,_ghost:null}; // fcT.. are DERIVED
+const ADJ={easy:5,medium:3,hard:1};
+const LIM={charge:[180,300],gas0:[20,100]};
+function assignGoal(){ plan.goalA=68+Math.floor(Math.random()*33); } // 68-100: game gives the goal
+
+function ghostSchedule(g0,Tp){ // house taper, fractions of initial gas
+  if(Tp<148) return g0;
+  if(Tp<178) return Math.max(0.22,g0*0.76);
+  if(Tp<192) return Math.max(0.18,g0*0.60);
+  return Math.max(0.15,g0*0.50);
+}
+function ghostRun(){
+  const g0=plan.gas0/100;
+  let Ta=plan.charge, Tb=PHY.AMBIENT, Tp=plan.charge, t=0;
+  let minTp=Tp, tp=null, yellow=null, fcT=null, fcC=null, colU=0;
+  const trail=[]; let dropT=null, dropC=null, reason=null;
+  while(t<PHY.TMAX){
+    const g=ghostSchedule(g0,Tp);
+    const Tset=PHY.TSET_MIN+g*PHY.TSET_SPAN;
+    const taua=PHY.TAUA*(yellow===null?1:PHY.LAGX);
+    const sink=PHY.H*Math.max(0,Ta-Tb);
+    let exo=0;
+    if(Tb>PHY.EXO0) exo=PHY.EXOMAX*Math.min(1,(Tb-PHY.EXO0)/(PHY.EXO1-PHY.EXO0));
+    Ta+=((Tset-Ta)/taua-sink)*PHY.DT;
+    Tb+=(PHY.KB*(Ta-Tb)+exo)*PHY.DT;
+    Tp+=((PHY.MIX*Ta+(1-PHY.MIX)*Tb-Tp)/PHY.TAUP)*PHY.DT;
+    t+=PHY.DT;
+    if(Tp<minTp) minTp=Tp;
+    if(tp===null&&t>20&&Tp>minTp+0.5) tp=t;
+    if(yellow===null&&tp!==null&&Tp>=PHY.YELLOW) yellow=t;
+    if(yellow!==null){
+      if(fcT===null&&Tp>=198){ fcT=t; fcC=Tp; }
+      if(fcT!==null){
+        colU+=COL.rate(Tp)*PHY.DT;                 // dev units only, FC = #125 hard point
+        const A=COL.AFC-colU/COL.CU;
+        if(dropT===null&&A<=plan.goalA){ dropT=t; dropC=Tp; break; }
+      }
+      if(tp!==null&&Tp>=PHY.SC){ reason='burns to second crack before the goal'; break; }
+    }
+    if(yellow===null&&t>420){ reason='gas too low - never reaches yellowing'; break; }
+    if(Math.round(t*10)%50===0) trail.push([t,Tp]);
+  }
+  if(!reason&&fcT===null) reason='never reaches first crack';
+  if(!reason&&dropT===null) reason='goal not reachable in this roast';
+  if(!reason&&dropT-fcT<45) reason='goal too light - lands almost at first crack';
+  return {ok:!reason, reason, yellow, fcT, fcC, dropT, dropC, trail};
+}
+function planAgtron(){ return plan.goalA; }
+function xTargetT(){ return plan.dropT + CARRY*plan.dropC; } // the X: plan drop + plan carry
+
+/* ================= RUN STATE ================= */
+let R=null;
+function newRun(){
+  const fcJitter=(Math.random()*3-1.5);
+  return {
+    t:0, Ta:plan.charge, Tb:PHY.AMBIENT, Tp:plan.charge,
+    minTp:plan.charge, tp:null, tpTemp:null, yellow:null,
+    fcThresh:198+fcJitter, fc:null, fcTemp:null,
+    gas:plan.gas0/100, gasMoves:0, scorch:false, adjLeft:ADJ[plan.diff], heat:0,
+    devU:0,
+    trail:[], rorBuf:[], ror:0, rorMin:99, flicks:[], lastFlickT:-99,
+    stallT:0, stalled:false,
+    dropped:null, dropTemp:null, landA:null, landT:null, crash:null,
+    postDrop:false, landAnim:0,
+    wobble:0, particles:[], events:[]
+  };
+}
+function agtronNow(r){
+  if(r.yellow===null) return COL.AY;
+  if(r.fc===null){ // Cinnamon: temp-mapped so the crack fires at exactly #125
+    return COL.AY-(COL.AY-COL.AFC)*clamp((r.Tp-PHY.YELLOW)/(r.fcThresh-PHY.YELLOW),0,1);
+  }
+  return COL.AFC - r.devU/COL.CU;   // Dev Time: path-dependent accumulation
+}
+
+/* ================= PHYSICS STEP ================= */
+function stepPhysics(r){
+  const auth = r.yellow===null ? 1 : PHY.LAGX;
+  const Tset = PHY.TSET_MIN + r.gas*PHY.TSET_SPAN;
+  const sink = PHY.H*Math.max(0,r.Ta-r.Tb);
+  let exo=0;
+  if(r.Tb>PHY.EXO0) exo=PHY.EXOMAX*Math.min(1,(r.Tb-PHY.EXO0)/(PHY.EXO1-PHY.EXO0));
+  r.Ta += ((Tset-r.Ta)/(PHY.TAUA*auth) - sink)*PHY.DT;
+  r.Tb += (PHY.KB*(r.Ta-r.Tb) + exo)*PHY.DT;
+  const mix = PHY.MIX*r.Ta + (1-PHY.MIX)*r.Tb;
+  r.Tp += ((mix-r.Tp)/PHY.TAUP)*PHY.DT;
+  r.t  += PHY.DT;
+
+  if(r.Tp<r.minTp) r.minTp=r.Tp;
+  if(r.tp===null && r.t>20 && r.Tp>r.minTp+0.5){ r.tp=r.t; r.tpTemp=r.minTp; ev('Turning point '+mmss(r.t)+' @ '+r.minTp.toFixed(0)+'°C'); }
+
+  // RoR: 15s sliding window
+  r.rorBuf.push([r.t,r.Tp]);
+  while(r.rorBuf.length && r.rorBuf[0][0] < r.t-15) r.rorBuf.shift();
+  if(r.rorBuf.length>2){
+    const a=r.rorBuf[0], b=r.rorBuf[r.rorBuf.length-1];
+    r.ror=(b[1]-a[1])/(b[0]-a[0])*60;
+  }
+
+  // flick: post-TP+45s, RoR rises >3 above running min
+  if(r.tp!==null && r.t>r.tp+45 && r.dropped===null){
+    if(r.ror<r.rorMin) r.rorMin=r.ror;
+    else if(r.ror>r.rorMin+3 && r.t-r.lastFlickT>30){
+      r.flicks.push(r.t); r.lastFlickT=r.t; r.rorMin=r.ror; r.wobble=1;
+      ev('RoR flick at '+mmss(r.t));
+    }
+  }
+  if(!r.scorch && r.t<60 && r.gas>=0.9 && plan.charge>=210){ r.scorch=true; ev('Scorch risk: full gas on a hot charge'); }
+
+  // takeoff: the dock ends at yellowing
+  if(r.yellow===null && r.tp!==null && r.Tp>=PHY.YELLOW){
+    r.yellow=r.t;
+    ev('Takeoff (yellowing) '+mmss(r.t)); burst(10,'#EDF3F7'); toast('TAKEOFF');
+    dropBtn.classList.add('armed');
+  }
+
+  // === flight: color develops; the skier stays steady - only roast events can end the run ===
+  if(r.yellow!==null && r.dropped===null){
+    if(r.fc!==null) r.devU += COL.rate(r.Tp)*PHY.DT;
+    // roast stalls = crash (the curve flattens; too slow to the goal)
+    if(r.ror<0.8) r.stallT+=PHY.DT; else r.stallT=0;
+    if(r.stallT>12 && !r.stalled){ r.stalled=true; r.crash='baked'; ev('RoR stalled - crashed (baked)'); }
+    // too fast = flames then burnt (healthy early flight RoR ~10-16)
+    if(r.ror>17) r.heat=Math.min(1.2,r.heat+(r.ror-17)*PHY.DT/35);
+    else r.heat=Math.max(0,r.heat-PHY.DT/10);
+    if(r.heat>=1 && !r.crash){ r.crash='burnt'; ev('Too much speed - skier burnt'); burst(30,'#E9622E'); }
+  }
+
+  // first crack
+  if(r.fc===null && r.tp!==null && r.Tp>=r.fcThresh){
+    r.fc=r.t; r.fcTemp=r.Tp; crackPop(); burst(22,'#E9B44C');
+    ev('FIRST CRACK '+mmss(r.t)+' @ '+r.Tp.toFixed(1)+'°C · Agtron #125'); toast('FIRST CRACK · #125 · time slows');
+  }
+
+  // overshoot into second crack (armed only after TP)
+  if(r.tp!==null && r.dropped===null && r.Tp>=PHY.SC){ r.crash='roasty'; ev('Second crack - flew past everything'); }
+  // never yellowed in time
+  if(r.yellow===null && r.t>420){ r.crash='grassy-stall'; ev('Never reached yellowing - stalled on the dock'); }
+  if(r.t>=PHY.TMAX && r.dropped===null){ r.crash=r.crash||'timeout'; }
+
+  if(Math.round(r.t*10)%5===0) r.trail.push([r.t,r.Tp]);
+}
+function ev(s){ if(R) R.events.push([R.t,s]); }
+
+/* ================= AUDIO ================= */
+let AC=null;
+function crackPop(){
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    for(let i=0;i<7;i++){
+      const t0=AC.currentTime+Math.random()*0.5;
+      const buf=AC.createBuffer(1,1200,AC.sampleRate);
+      const d=buf.getChannelData(0);
+      for(let j=0;j<1200;j++) d[j]=(Math.random()*2-1)*Math.exp(-j/90);
+      const src=AC.createBufferSource(); src.buffer=buf;
+      const g=AC.createGain(); g.gain.value=0.25;
+      const f=AC.createBiquadFilter(); f.type='bandpass'; f.frequency.value=2500+Math.random()*2500;
+      src.connect(f); f.connect(g); g.connect(AC.destination); src.start(t0);
+    }
+  }catch(e){}
+}
+
+/* ================= RENDER: the chart, dressed as a ski hill ================= */
+const cv=document.getElementById('game'), ctx=cv.getContext('2d');
+const dch=document.getElementById('debriefChart');
+let W=0,Hh=0,DPR=1;
+function resize(){
+  DPR=window.devicePixelRatio||1;
+  W=cv.clientWidth; Hh=cv.clientHeight;
+  cv.width=W*DPR; cv.height=Hh*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize',resize);
+let camT=0;
+const GROUND=150; // snow line height from canvas bottom (clears the gas controls overlay)
+function sx(t){ return (t-camT)/VIEW.span*W + W*0.30; }
+function sy(c){ return Hh-GROUND-14-(c-VIEW.tempLo)/(VIEW.tempHi-VIEW.tempLo)*(Hh-GROUND-84); }
+
+function skierScreen(r){
+  if(r.postDrop){
+    const k=1-r.landAnim; // 0 -> 1
+    const t0=r.dropped, t1=r.landT;
+    const x=sx(t0+(t1-t0)*k);
+    const y0=sy(r.dropTemp), y1=Hh-GROUND-4;
+    return {x, y:y0+(y1-y0)*(k*k)}; // fall accelerates - momentum carries forward
+  }
+  return {x:sx(r.t), y:sy(r.Tp)};
+}
+function burst(n,color){
+  if(!R) return;
+  const p=skierScreen(R);
+  for(let i=0;i<n;i++) R.particles.push({x:p.x,y:p.y,vx:(Math.random()-0.3)*70,vy:(Math.random()-0.5)*70,life:1,color});
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,Hh);
+  const g=ctx.createLinearGradient(0,0,0,Hh);
+  g.addColorStop(0,'#0E1B2C'); g.addColorStop(1,'#1C3050');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,Hh);
+  ctx.fillStyle='#FFFFFF22';
+  for(let i=0;i<40;i++){ const x=(i*97)%W, y=(i*61)%(Hh*0.4); ctx.fillRect(x,y,2,2); }
+  if(!R) return;
+
+  const mono=getComputedStyle(document.body).getPropertyValue('--mono');
+  const P=skierScreen(R);
+  camT = (R.postDrop? R.dropped : R.t) - VIEW.span*0.30;
+
+  // temp guide lines: yellowing 150 and FC 198 (the chart is the teacher)
+  ctx.font='10px '+mono;
+  for(const [c,label] of [[PHY.YELLOW,'150 yellowing'],[198,'198 first crack · #125']]){
+    const y=sy(c);
+    ctx.strokeStyle='#2C476366'; ctx.setLineDash([3,9]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#41546A'; ctx.fillText(label,8,y-4);
+  }
+
+  // === snow band with minute ticks ===
+  ctx.fillStyle='#EDF3F7'; ctx.fillRect(0,Hh-GROUND,W,GROUND);
+  ctx.fillStyle='#C9D8E4'; ctx.fillRect(0,Hh-GROUND,W,3);
+  ctx.font='10px '+mono;
+  for(let m=0;m<=13;m++){
+    const x=sx(m*60); if(x<-20||x>W+20) continue;
+    ctx.fillStyle='#8FA9BE'; ctx.fillRect(x,Hh-GROUND,2,8);
+    ctx.fillStyle='#41546A'; ctx.fillText(m+"'",x-4,Hh-GROUND+22);
+  }
+
+  // === plan ghost curve (dashed, the path the app set for you) ===
+  const gh=(plan._ghost&&plan._ghost.trail)||[];
+  ctx.strokeStyle='#6FC7B466'; ctx.setLineDash([6,6]); ctx.lineWidth=2; ctx.beginPath();
+  let st=false;
+  for(const [t,c] of gh){
+    const x=sx(t); if(x<-40){st=false;continue;} if(x>W+40) break;
+    if(!st){ctx.moveTo(x,sy(c));st=true;} else ctx.lineTo(x,sy(c));
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // === the dock: planks + posts under the traveled curve, charge → yellowing ===
+  const dockEnd=R.yellow===null?R.t:R.yellow;
+  ctx.strokeStyle='#B06A3B'; ctx.lineWidth=7; ctx.lineCap='round'; ctx.beginPath();
+  st=false;
+  for(const [t,c] of R.trail){
+    if(t>dockEnd) break;
+    const x=sx(t); if(x<-40){st=false;continue;} if(x>W+40) break;
+    if(!st){ctx.moveTo(x,sy(c)+6);st=true;} else ctx.lineTo(x,sy(c)+6);
+  }
+  ctx.stroke();
+  // posts down from the deck
+  ctx.strokeStyle='#7A4A22'; ctx.lineWidth=3;
+  for(const [t,c] of R.trail){
+    if(t>dockEnd) break;
+    if(Math.round(t)%15!==0) continue;
+    const x=sx(t); if(x<-20||x>W+20) continue;
+    const y=sy(c)+8;
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,Math.min(y+30,Hh-GROUND)); ctx.stroke();
+  }
+  // lip stripe at takeoff
+  if(R.yellow!==null){
+    const x=sx(R.yellow);
+    if(x>-20&&x<W+20){ ctx.fillStyle='#E9B44C'; ctx.fillRect(x-2,sy(PHY.YELLOW)+2,7,10); }
+  }
+
+  // === flight trail (past yellowing) ===
+  ctx.strokeStyle='#D08A55'; ctx.lineWidth=3; ctx.beginPath();
+  st=false;
+  for(const [t,c] of R.trail){
+    if(R.yellow===null||t<R.yellow) continue;
+    const x=sx(t); if(x<-40){st=false;continue;} if(x>W+40) break;
+    if(!st){ctx.moveTo(x,sy(c));st=true;} else ctx.lineTo(x,sy(c));
+  }
+  ctx.stroke();
+
+  // === FC marker + the X on the snow ===
+  const fx=sx(plan.fcT);
+  if(fx>-30&&fx<W+30){
+    ctx.strokeStyle='#E9B44C77'; ctx.setLineDash([4,6]); ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(fx,Hh-GROUND); ctx.lineTo(fx,sy(198)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#E9B44C'; ctx.font='11px '+mono; ctx.fillText('FC',fx-6,sy(198)-6);
+  }
+  const xx=sx(xTargetT());
+  if(xx>-40&&xx<W+40){
+    const y=Hh-GROUND+16, r2=13;
+    ctx.strokeStyle='#D93A2B'; ctx.lineWidth=5;
+    ctx.beginPath(); ctx.moveTo(xx-r2,y-8); ctx.lineTo(xx+r2,y+8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(xx-r2,y+8); ctx.lineTo(xx+r2,y-8); ctx.stroke();
+    ctx.fillStyle='#D93A2B'; ctx.font='bold 11px '+mono;
+    ctx.fillText('#'+plan.goalA,xx-10,y+24);
+  }
+
+  // === drop preview: where you would touch down if you dropped NOW (carry ∝ temp) ===
+  if(R.yellow!==null && !R.postDrop && !R.crash && R.dropped===null){
+    const lx=sx(R.t+CARRY*R.Tp);
+    ctx.strokeStyle='#EDF3F766'; ctx.setLineDash([3,7]); ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(P.x,P.y+6); ctx.lineTo(lx,Hh-GROUND); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#EDF3F7';
+    ctx.beginPath(); ctx.moveTo(lx,Hh-GROUND); ctx.lineTo(lx-5,Hh-GROUND-9); ctx.lineTo(lx+5,Hh-GROUND-9); ctx.closePath(); ctx.fill();
+  }
+
+  // particles
+  R.particles=R.particles.filter(p=>p.life>0);
+  for(const p of R.particles){
+    p.life-=0.03; p.x+=p.vx*0.016; p.y-=p.vy*0.016;
+    ctx.globalAlpha=Math.max(0,p.life);
+    ctx.fillStyle=p.color; ctx.fillRect(p.x,p.y,3,3);
+  }
+  ctx.globalAlpha=1;
+
+  drawSkier(P);
+}
+function drawSkier(P){
+  const x=P.x, y=P.y;
+  let lean=clamp(-R.ror/45,-0.55,0.75); // slope of the curve, nothing more
+  const wob=R.wobble>0?(Math.sin(R.t*40)*R.wobble*0.35):0;
+  R.wobble=Math.max(0,R.wobble-0.008);
+  if(R.heat>0.12 && !R.crash){
+    for(let i=0;i<Math.ceil(R.heat*7);i++){
+      const fx=x-8-Math.random()*22*R.heat, fy=y-8+(Math.random()-0.5)*14;
+      ctx.fillStyle=Math.random()<0.5?'#E9622E':(Math.random()<0.5?'#E9B44C':'#C93A1E');
+      ctx.beginPath(); ctx.arc(fx,fy,2+Math.random()*4*R.heat,0,7); ctx.fill();
+    }
+  }
+  ctx.save(); ctx.translate(x,y-8); ctx.rotate(lean+wob);
+  if(R.crash) ctx.rotate(2.6);
+  if(R.crash==='burnt') ctx.filter='brightness(0.35)';
+  ctx.strokeStyle='#E9B44C'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(-14,10); ctx.lineTo(16,6); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-14,13); ctx.lineTo(16,9); ctx.stroke();
+  ctx.strokeStyle='#F2F6FA'; ctx.lineWidth=3.5;
+  ctx.beginPath(); ctx.moveTo(-2,8); ctx.lineTo(4,-8); ctx.stroke();
+  ctx.fillStyle='#F2F6FA'; ctx.beginPath(); ctx.arc(6,-12,4.5,0,7); ctx.fill();
+  ctx.restore();
+}
+
+/* ================= GAME LOOP ================= */
+let running=false,lastFrame=0;
+function loop(ts){
+  if(!running) return;
+  const dtReal=Math.min((ts-lastFrame)/1000,0.1); lastFrame=ts;
+  if(R.postDrop){
+    R.landAnim=Math.max(0,R.landAnim-dtReal/0.8);
+    if(R.landAnim<=0){ finishLanding(); return; }
+  } else {
+    let budget=dtReal*plan.speed*(R.fc!==null?0.5:1); // DEV TIME at half speed - the drop deserves reflexes, not luck
+    while(budget>0 && running && !R.postDrop){
+      stepPhysics(R);
+      budget-=PHY.DT;
+      if(R.crash){ endRun(); break; }
+    }
+  }
+  if(!running) return;
+  updateHUD(); draw();
+  requestAnimationFrame(loop);
+}
+function updateHUD(){
+  hTime.textContent=mmss(R.t);
+  hTemp.innerHTML=R.Tp.toFixed(1)+'<small>°C</small>';
+  hRor.innerHTML=(R.tp?R.ror.toFixed(1):'—')+'<small>°C/m</small>';
+  hRor.className='v '+(R.tp&&R.ror>R.rorMin+3?'up':'ok');
+  hAgtron.textContent=R.yellow===null?'GREEN':'#'+agtronNow(R).toFixed(1);
+  hPhase.textContent = R.fc?'DEV TIME': R.yellow?'CINNAMON': R.tp?'IN-RUN':'CHARGE';
+  gasFill.style.width=(R.gas*100)+'%';
+  gasLabel.textContent='GAS '+Math.round(R.gas*100)+'%'+(R.yellow?' · '+R.adjLeft+' adj left':'');
+  const spent=R.yellow!==null&&R.adjLeft<=0;
+  document.getElementById('gasUp').classList.toggle('spent',spent);
+  document.getElementById('gasDown').classList.toggle('spent',spent);
+}
+function toast(s){
+  const el=document.getElementById('toast');
+  el.textContent=s; el.style.opacity=1;
+  setTimeout(()=>el.style.opacity=0,1600);
+}
+
+/* ================= DROP & LANDING ================= */
+function doDrop(){
+  const r=R;
+  r.dropped=r.t; r.dropTemp=r.Tp; r.landA=agtronNow(r);
+  r.landT=r.t+CARRY*r.Tp;   // falling momentum ∝ temperature
+  ev('DROP at '+mmss(r.t)+' @ '+r.Tp.toFixed(1)+'°C · Agtron '+r.landA.toFixed(1));
+  r.postDrop=true; r.landAnim=1;
+  dropBtn.classList.remove('armed');
+}
+function finishLanding(){ burst(14,'#EDF3F7'); endRun(); }
+
+/* ================= SCORING & DEBRIEF ================= */
+let best=0;
+function endRun(){
+  running=false;
+  dropBtn.classList.remove('armed');
+  const r=R;
+  const pt=(v,max,band)=>Math.round(max*clamp(1-Math.abs(v)/band,0,1));
+  let sFc_t=0,sFc_c=0,sDr_t=0,sDr_c=0,sCol=0;
+  if(r.fc!==null){ sFc_t=pt(r.fc-plan.fcT,30,60); sFc_c=pt(r.fcTemp-plan.fcC,15,3); }
+  if(r.dropped!==null){
+    sDr_t=pt(r.dropped-plan.dropT,25,45); sDr_c=pt(r.dropTemp-plan.dropC,10,4);
+    sCol=pt(r.landA-plan.goalA,40,6);
+  }
+  let style=60;
+  const defects=[];
+  for(const f of r.flicks){ style-=8; defects.push('RoR flick at '+mmss(f)+' (−8 style)'); }
+  if(r.scorch){ style-=12; defects.push('Scorch: full gas on a hot charge (−12 style)'); }
+  if(r.stalled){ style-=10; defects.push('RoR stalled - crashed (−10 style)'); }
+  if(r.crash==='burnt'){ style-=15; defects.push('Too much speed - burnt (−15 style)'); }
+  if(r.gasMoves>14){ const p=r.gasMoves-14; style-=p; defects.push('Gas thrashing: '+r.gasMoves+' moves (−'+p+' style)'); }
+  if(r.crash==='roasty') defects.push('Overshot into second crack');
+  if(r.crash==='grassy-stall') defects.push('Never reached yellowing');
+  if(r.dropped!==null && Math.abs(r.landA-plan.goalA)<=1 && Math.abs(r.landT-xTargetT())<=12){
+    style=Math.min(60,style+8); defects.push('TELEMARK landing on the X (+8 style)');
+  }
+  if(r.dropped!==null && r.fc!==null && Math.abs(r.landA-plan.goalA)<=1.5 && Math.abs(r.fc-plan.fcT)>30){
+    defects.push('Different curve, same colour - the X does not care how you got there');
+  }
+  style=Math.max(0,style);
+  const total=sFc_t+sFc_c+sDr_t+sDr_c+sCol+style;
+
+  let outcome='Clean roast';
+  const dev=(r.fc&&r.dropped)?(r.dropped-r.fc):null;
+  const planDev=plan.dropT-plan.fcT;
+  if(r.crash==='grassy-stall') outcome='Stalled on the dock - never took off';
+  else if(r.crash==='baked') outcome='Crashed - too slow (baked)';
+  else if(r.crash==='burnt') outcome='Burnt - too much speed';
+  else if(r.crash==='roasty') outcome='Roasty - flew past the X';
+  else if(r.crash==='timeout') outcome='Roast ran out of road';
+  else if(!r.fc) outcome='Grassy - landed in Cinnamon, before first crack';
+  else if(dev!==null&&dev<planDev*0.6) outcome='Dev Time cut short';
+  else if(dev!==null&&dev>planDev*1.5) outcome='Dev Time overrun';
+
+  dOutcome.textContent=outcome;
+  dScore.textContent=total;
+  dRank.textContent= total>=160?'Ski Flying': total>=130?'Large Hill': total>=95?'Normal Hill':'Training Hill';
+  if(total>best){ best=total; dBest.textContent='New session best'; } else dBest.textContent='Session best: '+best;
+
+  const dL=document.getElementById('dLand');
+  if(r.dropped!==null){
+    const dA=r.landA-plan.goalA, dT=r.landT-xTargetT();
+    const colTxt=Math.abs(dA)<=0.8?'Agtron ON the goal ('+r.landA.toFixed(1)+')'
+      :'Agtron '+r.landA.toFixed(1)+' · '+Math.abs(dA).toFixed(1)+(dA>0?' light':' dark');
+    const posTxt=Math.abs(dT)<=6?'landed ON the X':Math.abs(dT).toFixed(0)+'s '+(dT>0?'past':'short of')+' the X';
+    dL.textContent=colTxt+' · '+posTxt;
+  } else dL.textContent='No landing.';
+
+  pFcT.textContent=mmss(plan.fcT); aFcT.textContent=r.fc?mmss(r.fc):'—'; sFcT.textContent=sFc_t+'/30';
+  pFcC.textContent=plan.fcC.toFixed(0)+'°'; aFcC.textContent=r.fcTemp?r.fcTemp.toFixed(1)+'°':'—'; sFcC.textContent=sFc_c+'/15';
+  pDropT.textContent=mmss(plan.dropT); aDropT.textContent=r.dropped?mmss(r.dropped):'—'; sDropT.textContent=sDr_t+'/25';
+  pDropC.textContent=plan.dropC.toFixed(0)+'°'; aDropC.textContent=r.dropTemp?r.dropTemp.toFixed(1)+'°':'—'; sDropC.textContent=sDr_c+'/10';
+  pAg.textContent='#'+plan.goalA.toFixed(1); aAg.textContent=r.landA!==null?'#'+r.landA.toFixed(1):'—'; sAg.textContent=sCol+'/40';
+  pDev.textContent=mmss(planDev); aDev.textContent=dev!==null?mmss(dev):'—';
+  sStyle.textContent=style+'/60';
+  dDefects.innerHTML = defects.length
+    ? defects.map(d=>'<div class="'+((d.startsWith('TELEMARK')||d.startsWith('Different'))?'clean':'defect')+'">'+d+'</div>').join('')
+    : '<div class="clean">No defects - smooth declining RoR</div>';
+  debriefScreen.classList.remove('hidden');
+  hud.classList.add('hidden'); controls.classList.add('hidden');
+  requestAnimationFrame(()=>drawDebrief(r));
+}
+function drawDebrief(r){
+  const c=dch, x2=c.getContext('2d');
+  c.width=c.clientWidth*DPR; c.height=c.clientHeight*DPR; x2.setTransform(DPR,0,0,DPR,0,0);
+  const w=c.clientWidth,h=c.clientHeight;
+  const tMax=Math.max(r.t,plan.dropT)+30;
+  const X=t=>t/tMax*(w-20)+10, Y=v=>h-14-(v-15)/(235-15)*(h-28);
+  x2.clearRect(0,0,w,h);
+  x2.strokeStyle='#6FC7B4'; x2.setLineDash([5,5]); x2.lineWidth=1.5; x2.beginPath();
+  const gh=(plan._ghost&&plan._ghost.trail)||[];
+  gh.forEach(([t,v],i)=>{ const p=[X(t),Y(v)]; i===0?x2.moveTo(...p):x2.lineTo(...p); });
+  x2.stroke(); x2.setLineDash([]);
+  x2.strokeStyle='#D08A55'; x2.lineWidth=2.5; x2.beginPath();
+  r.trail.forEach(([t,v],i)=>{ const p=[X(t),Y(v)]; i===0?x2.moveTo(...p):x2.lineTo(...p); });
+  x2.stroke();
+  if(r.fc){ x2.fillStyle='#E9B44C'; x2.beginPath(); x2.arc(X(r.fc),Y(r.fcTemp),4,0,7); x2.fill(); }
+  if(r.dropped){ x2.fillStyle='#D96A4F'; x2.beginPath(); x2.arc(X(r.dropped),Y(r.dropTemp),4,0,7); x2.fill(); }
+  x2.fillStyle='#93A7BA'; x2.font='10px monospace';
+  x2.fillText('plan',w-64,14); x2.fillText('actual',w-64,26);
+  x2.fillStyle='#6FC7B4'; x2.fillRect(w-78,10,10,2); x2.fillStyle='#D08A55'; x2.fillRect(w-78,22,10,3);
+}
+
+/* ================= UI WIRING ================= */
+const $=id=>document.getElementById(id);
+const hud=$('hud'),controls=$('controls'),dropBtn=$('dropBtn'),
+  hTime=$('hTime'),hTemp=$('hTemp'),hRor=$('hRor'),hPhase=$('hPhase'),hAgtron=$('hAgtron'),
+  gasFill=$('gasFill'),gasLabel=$('gasLabel'),
+  planScreen=$('planScreen'),debriefScreen=$('debriefScreen'),
+  dOutcome=$('dOutcome'),dScore=$('dScore'),dRank=$('dRank'),dBest=$('dBest'),
+  pFcT=$('pFcT'),aFcT=$('aFcT'),sFcT=$('sFcT'),pFcC=$('pFcC'),aFcC=$('aFcC'),sFcC=$('sFcC'),
+  pDropT=$('pDropT'),aDropT=$('aDropT'),sDropT=$('sDropT'),pDropC=$('pDropC'),aDropC=$('aDropC'),sDropC=$('sDropC'),
+  pAg=$('pAg'),aAg=$('aAg'),sAg=$('sAg'),
+  pDev=$('pDev'),aDev=$('aDev'),sStyle=$('sStyle'),dDefects=$('dDefects');
+
+function refreshPlan(){
+  $('vCharge').textContent=plan.charge+'°C';
+  $('vGas0').textContent=plan.gas0+'%';
+  $('vGoal').textContent='#'+plan.goalA+' Agtron';
+  const g=ghostRun(); plan._ghost=g;
+  const sum=$('planSummary'), el=$('devLine'), jb=$('jumpBtn');
+  if(g.ok){
+    plan.fcT=g.fcT; plan.fcC=Math.round(g.fcC*10)/10;
+    plan.dropT=g.dropT; plan.dropC=Math.round(g.dropC*10)/10;
+    sum.innerHTML='Your plan (set for you):<br>'
+      +'Yellowing '+mmss(g.yellow)+' · First crack '+mmss(g.fcT)+' @ '+g.fcC.toFixed(0)+'°C<br>'
+      +'Drop '+mmss(g.dropT)+' @ '+g.dropC.toFixed(0)+'°C · X at Agtron #'+plan.goalA;
+    const dev=plan.dropT-plan.fcT;
+    el.textContent='Planned Dev Time: '+mmss(dev);
+    el.className=(dev<60||dev>210)?'warn':'';
+    jb.disabled=false; jb.style.opacity=1; jb.textContent='CHARGE THE DRUM';
+  } else {
+    sum.textContent='';
+    el.textContent='No roastable plan: '+g.reason;
+    el.className='warn';
+    jb.disabled=true; jb.style.opacity=0.45; jb.textContent='FIX THE PLAN';
+  }
+}
+document.querySelectorAll('#planScreen .step button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const k=b.dataset.k, d=+b.dataset.d;
+    plan[k]=clamp(plan[k]+d,LIM[k][0],LIM[k][1]);
+    refreshPlan();
+  });
+});
+document.querySelectorAll('#speedRow button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    plan.speed=+b.dataset.s;
+    document.querySelectorAll('#speedRow button').forEach(x=>x.classList.toggle('on',x===b));
+  });
+});
+document.querySelectorAll('#diffRow button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    plan.diff=b.dataset.diff;
+    document.querySelectorAll('#diffRow button').forEach(x=>x.classList.toggle('on',x===b));
+  });
+});
+function setGas(dir){
+  if(!R||!running||R.postDrop) return;
+  const inFlight=R.yellow!==null;
+  if(inFlight&&R.adjLeft<=0){ toast('No adjustments left'); return; }
+  const step=inFlight?0.10:0.05;
+  const ng=clamp(R.gas+dir*step,0,1);
+  if(Math.abs(ng-R.gas)>0.001){
+    R.gas=ng; R.gasMoves++;
+    if(inFlight) R.adjLeft--;
+  }
+}
+$('gasUp').addEventListener('click',()=>setGas(+1));
+$('gasDown').addEventListener('click',()=>setGas(-1));
+dropBtn.addEventListener('click',()=>{
+  if(!R||!running||R.yellow===null||R.postDrop) return;
+  doDrop();
+});
+$('jumpBtn').addEventListener('click',()=>{
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();}catch(e){}
+  planScreen.classList.add('hidden'); debriefScreen.classList.add('hidden');
+  hud.classList.remove('hidden'); controls.classList.remove('hidden');
+  R=newRun(); running=true; lastFrame=performance.now();
+  requestAnimationFrame(loop);
+});
+$('againBtn').addEventListener('click',()=>$('jumpBtn').click());
+$('replanBtn').addEventListener('click',()=>{
+  debriefScreen.classList.add('hidden'); planScreen.classList.remove('hidden');
+});
+$('rerollGoal').addEventListener('click',()=>{ assignGoal(); refreshPlan(); });
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) lastFrame=performance.now(); });
+
+resize(); assignGoal(); refreshPlan(); draw();
+// debug/testing handle (keep - integration tests use it)
+window.__cj={get plan(){return plan},get R(){return R},get running(){return running},
+  agtronNow, planAgtron, xTargetT};
+</script>
+</body>
+</html>
