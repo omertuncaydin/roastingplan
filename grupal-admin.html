@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · kampanya kokpiti</title>
 <meta name="robots" content="noindex">
-<!-- grupal-admin.html · v2026-07-13e -->
+<!-- grupal-admin.html · v2026-07-13f -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -79,6 +79,8 @@ a{color:var(--gold)}
       <div class="hint">Ürün linkini yapıştırman yeterli: kaydederken sepete (express checkout) çevrilir. Sayfa adet ve ref bilgisini kendisi ekler. Bakiye ürünün fiyatı = ulaşılan basamak fiyatı eksi kapora.</div>
       <span class="lbl">paket üst sınırı (kişi başına)</span>
       <input id="f_maxq" inputmode="numeric" placeholder="5">
+      <span class="lbl">görsel (ürün linki yapıştır, kaydette resme çevrilir)</span>
+      <input id="f_img" placeholder="https://www.coffeenutz.net/products/... ya da resim linki">
       <span class="lbl">durum</span>
       <select id="f_status">
         <option value="open">open · kayıt alıyor</option>
@@ -101,7 +103,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-07-13e';
+const VERSION='v2026-07-13f';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
@@ -168,15 +170,15 @@ function renderList(){
   $('campList').innerHTML=CAMPS.map((c,i)=>'<span class="pill" onclick="pick('+i+')">'+c.slug+' · '+c.status+'</span>').join('')||'<div class="hint">Henüz kampanya yok.</div>';
 }
 function blank(){
-  ['f_slug','f_title','f_lot','f_target','f_cap','f_unit','f_shipdays','f_dep','f_depamt','f_pay','f_maxq','l1a','l1p','l2a','l2p','l3a','l3p'].forEach(i=>$(i).value=''); updatePrev();
-  $('f_status').value='open'; $('f_end').value=''; $('f_roast').value=''; $('msg').textContent='Yeni kampanya formu.'; $('linkOut').textContent=''; CURSLUG=''; $('plCard').style.display='none';
+  ['f_slug','f_title','f_lot','f_target','f_cap','f_unit','f_shipdays','f_dep','f_depamt','f_pay','f_img','f_maxq','l1a','l1p','l2a','l2p','l3a','l3p'].forEach(i=>$(i).value=''); updatePrev();
+  $('f_status').value='open'; $('f_end').value=''; $('f_roast').value=''; $('f_dep').value='https://www.coffeenutz.net/products/grup-al-kapora'; $('msg').textContent='Yeni kampanya formu.'; $('linkOut').textContent=''; CURSLUG=''; $('plCard').style.display='none';
 }
 function pick(i){
   const c=CAMPS[i];
   $('f_slug').value=c.slug; $('f_title').value=c.title||''; $('f_lot').value=c.lot||'';
   $('f_target').value=c.target||''; $('f_cap').value=c.cap||''; $('f_unit').value=c.unit||'';
   $('f_shipdays').value=numFrom(c.ships_by); $('f_dep').value=c.deposit_url||''; $('f_depamt').value=numFrom(c.deposit_txt); updatePrev();
-  $('f_pay').value=c.pay_url||''; $('f_maxq').value=c.max_qty||5; $('f_status').value=c.status||'open';
+  $('f_pay').value=c.pay_url||''; $('f_img').value=c.img_url||''; $('f_maxq').value=c.max_qty||5; $('f_status').value=c.status||'open';
   $('f_end').value=(c.end_at||'').slice(0,10);
   $('f_roast').value=(c.roast_date||'').slice(0,10);
   const L=c.ladder||[];
@@ -188,9 +190,18 @@ function showLink(slug){
   $('linkOut').innerHTML='Kampanya sayfası: <a href="'+u+'" target="_blank">'+u+'</a> '
     +'<button style="margin-left:8px;padding:4px 10px;font-size:12px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;cursor:pointer" onclick="navigator.clipboard.writeText(\''+u+'\');this.textContent=\'kopyalandı ✓\'">kopyala</button>';
 }
+async function resolveImage(field){
+  const v=$(field).value.trim();
+  if(!v||!/\/products\//.test(v)) return true;
+  const r=await fetch(API+'/admin/resolve-variant?url='+encodeURIComponent(v),{headers:{'x-cc-key':KEY}});
+  const j=await r.json().catch(()=>({}));
+  if(j&&j.image){ $(field).value=j.image; return true; }
+  alert('Görsel bulunamadı: '+((j&&j.error)||'üründe resim yok')); return false;
+}
 async function save(){
   if(!(await resolveIfProduct('f_dep'))) return;
   if(!(await resolveIfProduct('f_pay'))) return;
+  if(!(await resolveImage('f_img'))) return;
   const ladder=[];
   [['l1a','l1p'],['l2a','l2p'],['l3a','l3p']].forEach(([a,p])=>{ const at=parseInt($(a).value); if(at&&$(p).value.trim()) ladder.push({at, price:$(p).value.trim()}); });
   const body={ slug:$('f_slug').value, title:$('f_title').value, lot:$('f_lot').value,
@@ -199,7 +210,7 @@ async function save(){
     end_at:$('f_end').value?($('f_end').value+'T23:59:59+03:00'):null,
     roast_date:$('f_roast').value?($('f_roast').value+'T09:00:00+03:00'):null,
     ladder, deposit_url:$('f_dep').value, deposit_txt:DEP_TPL($('f_depamt').value.trim()),
-    pay_url:$('f_pay').value, max_qty:parseInt($('f_maxq').value)||5, status:$('f_status').value };
+    pay_url:$('f_pay').value, img_url:$('f_img').value.trim()||null, max_qty:parseInt($('f_maxq').value)||5, status:$('f_status').value };
   if(!body.slug||!body.title||!body.target||!body.end_at){ $('msg').textContent='Slug, başlık, hedef ve bitiş tarihi zorunlu.'; return; }
   const r=await fetch(API+'/admin/upsert',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify(body)});
   const j=await r.json().catch(()=>({}));
