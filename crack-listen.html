@@ -155,7 +155,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-13c</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-15a</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -241,6 +241,7 @@ body.st-setup #btn{display:none}
     <div id="metaBox" style="display:none;margin-top:10px">
       <div class="lbl" style="margin-bottom:6px">roast record (travels inside the CSV)</div>
       <div class="hint" id="finalCall" style="margin-bottom:8px;color:var(--gold)"></div>
+      <div id="twoPull" style="display:none;border:2px solid var(--accent2);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.55"></div>
       <input type="text" id="mCoffee" placeholder="Coffee" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink);margin-bottom:6px">
       <div style="display:flex;gap:6px;margin-bottom:6px">
         <select id="mEquip" onchange="localStorage.setItem('bsEquip',this.value);renderBatchSel()" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)"></select>
@@ -372,7 +373,7 @@ let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
 const $=id=>document.getElementById(id);
 // tunable engine RULES: defaults here, overridable from the Guide's "Listener engine rules" card (localStorage bsEngine)
-let EP={FC_AG:125,FOLLOW:30,WSNAP:5,VSIG:3.5,MADF:400,BFLOOR:2,BCAP:6,PMIN:0.5,PMAX:2,A1:0.30,B0:0.70,QUIET_B1:6,QUIET_C:12,VMIN:8,MAXDK:0.8,ISO:9,VG:1,VGR:2.5,VGHF:0.7};
+let EP={FC_AG:125,FOLLOW:30,WSNAP:5,VSIG:3.5,MADF:400,BFLOOR:2,BCAP:6,PMIN:0.5,PMAX:2,A1:0.30,B0:0.70,QUIET_B1:6,QUIET_C:12,VMIN:8,MAXDK:0.8,ISO:9,VG:1,VGR:2.5,VGHF:0.7,VGLB:0.25};
 try{ EP=Object.assign(EP,JSON.parse(localStorage.getItem('bsEngine')||'{}')); }catch(e){}
 let ISOFLAGGED=new Set(), ISO_CONFIRMED=false;   // ISOLATED FIRST CRACK engine state (flagged-once ids + dormant latch)
 
@@ -502,6 +503,13 @@ function stop(){
     if(!$('mAw').value&&lm.aw) $('mAw').value=lm.aw;
     if(!$('mTarget').value&&lm.target) $('mTarget').value=lm.target; }
   queueSamples();   // sample pulls ride to the Guide's Cup section (deduped)
+  // TWO-PULL CALIBRATION: an unmapped bean must not leave this screen without seeing why mapping matters
+  try{ const tpk=(cName.value||'').trim().toLowerCase(), tp=$('twoPull');
+    if(tp){ if(tpk && !calMap()[tpk] && valid().length){
+      tp.innerHTML=LANG==='tr'
+        ?'<b style="color:var(--accent2)">Bu çekirdek haritasız.</b> İki numune haritayı kurar: <b>A0 numunesi</b> (ilk çıtırtıda çekilen) ve <b>Drop numunesi</b>. İkisini de öğütüp rengini ölç, aşağıya <b>A0 Agtron</b> ve ölçülen rengi yaz, <b>Haritala</b>ya dokun. Bir sonraki kavurma canlı renk öngörüsüyle başlar.'
+        :'<b style="color:var(--accent2)">This bean is unmapped.</b> Two pulls build the map: the <b>A0 pull</b> (taken at the first pop) and the <b>drop pull</b>. Grind and measure both, enter <b>A0 Agtron</b> and the measured color below, tap <b>Map</b>. The next roast starts with a live color projection.';
+      tp.style.display='block'; } else tp.style.display='none'; } }catch(e){}
   try{ renderSamples(); updateSD(); drawTimeline(); updateGauge(); updateMapBtn(); }catch(e){ console.error(e); }   // retrospective pass in a cage: a bad map must never strand the live screen before it reaches st-done
   const mb=(wav.len*2/1048576).toFixed(1);
   $('recInfo').textContent=LANG==='tr'
@@ -509,7 +517,7 @@ function stop(){
     :('Session kept in memory: '+(wav.len?mb+' MB audio, ':'')+rows.length+' trace samples, '+cracks.length+' cracks. Save the session before closing or reloading the page.');
   setState('st-done');
   $('btn').textContent=tt('New session'); $('btn').className='go';
-  $('status').textContent=LANG==='tr'?('Durduruldu. '+cracks.length+' çatlak kaydedildi.'):('Stopped. '+cracks.length+' cracks logged.');
+  $('status').textContent=(LANG==='tr'?('Durduruldu. '+valid().length+' geçerli çatlak.'):('Stopped. '+valid().length+' valid cracks.'))+(VGN?(LANG==='tr'?(' İnsan sesi engellendi: '+VGN+' (kayıtta).'):(' Human voice guarded: '+VGN+' (in the log).')):'');
 }
 
 function rms(a){ let s=0; for(let i=0;i<a.length;i++) s+=a[i]*a[i]; return Math.sqrt(s/a.length); }
@@ -531,7 +539,13 @@ function beanVoice(){
 // scan each 1024-sample buffer for the strongest 1ms (48-sample) energy vs the slow background floor.
 function voiceTick(d){ let s=0; for(let i=0;i<d.length;i++) s+=d[i]*d[i]; const r=Math.sqrt(s/d.length);
   VGS = VGS ? VGS*0.995 + r*0.005 : r;   // slow floor ~4s: drum rumble lives here
-  VGF = VGF ? VGF*0.5 + r*0.5 : r; }     // fast ~40ms: speech spikes this against the floor
+  VGF = VGF ? VGF*0.5 + r*0.5 : r;       // fast ~40ms: speech spikes this against the floor
+  // LOOKBACK: word-start consonant bursts land 20-100ms BEFORE the voicing that heats this ear.
+  // When the band turns hot, re-examine the last EP.VGLB seconds and reclassify voice-profile events.
+  if(EP.VG>0 && VGS>0 && VGF/(VGS+1e-9)>EP.VGR && cracks.length){
+    const nowS=(performance.now()-startT)/1000;
+    for(let i=cracks.length-1;i>=0;i--){ const c=cracks[i]; if(nowS-c.t>(EP.VGLB||0.25)) break;
+      if(!c.fp && c.hf!=null && c.hf<EP.VGHF){ c.fp=true; c.auto=true; c.why='voiceband'; VGN++; pendingUI=true; } } } }
 function audioDead(){ if(!running) return; if(AUDDOWN==null) AUDDOWN=(performance.now()-startT)/1000;
   const el=$('err'); if(el){ el.textContent=(LANG==='tr'?'SES KESILDI ':'AUDIO INTERRUPTED ')+fmtT(AUDDOWN)+(LANG==='tr'?' - dokun, surdur':' - tap to resume'); el.style.cursor='pointer'; el.onclick=()=>audioRevive(); }
   audioRevive(); }
@@ -597,7 +611,7 @@ function loop(){
     if(rows.length) rows[rows.length-1][7]=pendingCrackG;
     renderLog(); updateSD(); drawTimeline();
     pendingCrackG=null;
-  } else if(pendingUI){ renderLog(); updateSD(); drawTimeline(); pendingUI=false; }
+  } else if(pendingUI){ $('cnt').textContent=valid().length; renderLog(); updateSD(); drawTimeline(); pendingUI=false; }
 
   // readouts
   $('gain').textContent=Math.round(gain);
@@ -696,7 +710,7 @@ function renderStageStrip(){ const el=$('stageStrip'); if(!el) return;
 function fmtT(t){ return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'); }
 function valid(){ return cracks.filter(c=>!c.fp); }
 function renderLog(){
-  $('log').innerHTML=cracks.map((c,i)=>'<div class="lr'+(c.fp?' fpr':'')+'" data-id="'+c.id+'"><span><input type="checkbox" '+(c.fp?'checked':'')+' onchange="fpCrack('+c.id+',this.checked)" style="width:16px;height:16px;accent-color:var(--warn);vertical-align:-3px"> #'+(i+1)+' &nbsp; '+fmtT(c.t)+(c.auto?' <b style="color:var(--warn);font-size:10px">'+(c.why==='voice'?'VOICE':c.why==='voiceband'?'SPEECH':c.why==='iso'?'ISO':'AUTO')+'</b>':'')+'</span><span>'+(c.f?((c.f/1000).toFixed(1)+'k · '):'')+'gain <b>'+c.g+'</b></span></div>').reverse().join('');
+  $('log').innerHTML=cracks.map((c,i)=>'<div class="lr'+(c.fp?' fpr':'')+'" data-id="'+c.id+'"><span><input type="checkbox" '+(c.fp?'checked':'')+' onchange="fpCrack('+c.id+',this.checked)" style="width:16px;height:16px;accent-color:var(--warn);vertical-align:-3px"> #'+(i+1)+' &nbsp; '+fmtT(c.t)+(c.auto?' <b style="color:var(--warn);font-size:10px">'+(c.why==='voice'?'VOICE':c.why==='voiceband'?'HUMAN VOICE':c.why==='iso'?'ISO':'AUTO')+'</b>':'')+'</span><span>'+(c.f?((c.f/1000).toFixed(1)+'k · '):'')+'gain <b>'+c.g+'</b></span></div>').reverse().join('');
 }
 function fpCrack(id,ck){ const c=cracks.find(c=>c.id===id); if(c){ c.fp=ck; refreshStats(); } }
 function delCrack(id){ const i=cracks.findIndex(c=>c.id===id); if(i>=0){ cracks.splice(i,1); refreshStats(); } }
@@ -1293,7 +1307,7 @@ function drawGauge(state,projLo,projHi){
   if(state==='live') h=gaugeSVG(agU((projLo+projHi)/2),agU(projHi),agU(projLo),Math.round(projLo)+'-'+Math.round(projHi),tt('Agtron · projection'),false);
   else if(state==='wait') h=gaugeSVG(null,0,0,setup?'':'· · ·',setup?'':tt('waiting for first crack'),true);
   else if(state==='nocoffee') h=gaugeSVG(null,0,0,setup?'':'&middot;',setup?'':tt('name the coffee above'),true);
-  else h=gaugeSVG(null,0,0,setup?'':'&#128274;',setup?'':tt('unmapped bean'),true);
+  else h=gaugeSVG(null,0,0,setup?'':'&#128274;',setup?'':(tt('unmapped bean')+' · '+tt('roast 1 teaches · roast 2 predicts')),true);
   $('ag').innerHTML=h;
 }
 let TGT_U=null, LASTSTAGES=null, MAPWARN=0, PROJBORROWED=false;
@@ -1563,7 +1577,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-13c';
+const APPVER='v2026-07-15a';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -1874,7 +1888,7 @@ const EN2TR={
 'quiet, as it should be':'sessiz, olması gerektiği gibi','waiting for cracks':'çatlak bekleniyor','needs a mapped ref':'eşlenmiş referans gerek',
 'before the 25% point':'%25 noktasından önce','no reference':'referans yok','map ref to unlock':'açmak için referans eşle',
 'tighter':'daha sıkı','looser':'daha gevşek','like ref':'referans gibi','on pace':'temposunda','faster than ref':'referanstan hızlı','slower than ref':'referanstan yavaş','ref':'ref',
-'Agtron · projection':'Agtron · öngörü','waiting for first crack':'ilk çatlak bekleniyor','name the coffee above':'yukarıda kahveyi adlandır','unmapped bean':'eşlenmemiş çekirdek',
+'Agtron · projection':'Agtron · öngörü','waiting for first crack':'ilk çatlak bekleniyor','name the coffee above':'yukarıda kahveyi adlandır','unmapped bean':'eşlenmemiş çekirdek','roast 1 teaches · roast 2 predicts':'1. kavurma öğretir · 2. kavurma öngörür',
 'Name the coffee; each bean carries its own color map.':'Kahveyi adlandır; her çekirdek kendi renk haritasını taşır.',
 'Unmapped on THIS device/app copy.':'BU cihaz/uygulama kopyasında eşlenmemiş.','Mapped here:':'Burada eşli:',
 'No maps yet: load a session or roast, fill Agtron ground, tap Map. Note: Safari tab and Home-Screen app keep SEPARATE maps.':"Henüz harita yok: bir seans yükle ya da kavur, öğütülmüş Agtron'u doldur, Eşle'ye dokun. Not: Safari sekmesi ve ana ekran uygulaması AYRI harita tutar.",
