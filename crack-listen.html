@@ -31,6 +31,8 @@ body.st-live #cCapture{display:none}
 body.st-live #btn{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:216px;height:108px;border-radius:216px 216px 0 0;background:rgba(217,102,63,0.78);font-size:25px;font-weight:800;padding:0 0 16px;z-index:9;box-shadow:0 -4px 22px rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;letter-spacing:.6px;border:none}
 body.st-live .wrap{padding-bottom:120px}
 body.st-live #cGauge details{display:none}
+#enrollBtn{display:none;background:none;border:1px dashed var(--line);color:var(--muted);border-radius:12px;font-size:13px;font-weight:600;padding:11px;width:100%;order:5}
+body.st-setup #enrollBtn{display:block}
 #sampleBtn{display:none;background:var(--panel);color:var(--ink);border:2px solid var(--accent);border-radius:14px;font-size:16px;font-weight:700;padding:13px;width:100%;align-items:center;justify-content:center;gap:10px}
 body.st-live #sampleBtn{display:flex;position:sticky;bottom:118px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45);order:5}
 #sampN{background:var(--accent);color:#fff;border-radius:10px;padding:2px 9px;font-size:13px;display:none}
@@ -155,7 +157,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-15a</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-15b</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -227,6 +229,7 @@ body.st-setup #btn{display:none}
     </div>
   </div>
 
+  <button id="enrollBtn" onclick="enrollToggle()">Teach it your voice</button>
   <button id="sampleBtn" onclick="markSample()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><ellipse cx="7.4" cy="7.4" rx="4" ry="5.2" transform="rotate(-45 7.4 7.4)" fill="#e6c14b"/><line x1="10.6" y1="10.6" x2="20" y2="20" stroke="#e6c14b" stroke-width="2.6" stroke-linecap="round"/></svg>Sample pulled<b id="sampN"></b></button>
   <button class="go" id="btn" onclick="toggle()">Start listening</button>
   <div class="err" id="err"></div>
@@ -367,13 +370,14 @@ let AC=null, stream=null, src=null, hpF=null, lpF=null, analyser=null, buf=null,
 let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
 let procV=null, lpV=null, VGF=0, VGS=0, VGN=0, AUDGAPS=[], AUDDOWN=null;   // voice-guard ear + audio-death ledger
+let NLC=nlLoad(), ENROLL=false, ENCOUNT=0, enAC=null, enStream=null, enNodes=null;   // noise library (device-local) + voice enrollment
 let BCLIVE=null, cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={}, STOPT=null, PHASE=0, STOPBORROWED=false, PHPEAK=0, PHPEAKT=0, PHREV=0;
 let LANG=localStorage.getItem('bsLang')||'en';   // declared at the very top: eval-order safe (v07e lesson)
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
 const $=id=>document.getElementById(id);
 // tunable engine RULES: defaults here, overridable from the Guide's "Listener engine rules" card (localStorage bsEngine)
-let EP={FC_AG:125,FOLLOW:30,WSNAP:5,VSIG:3.5,MADF:400,BFLOOR:2,BCAP:6,PMIN:0.5,PMAX:2,A1:0.30,B0:0.70,QUIET_B1:6,QUIET_C:12,VMIN:8,MAXDK:0.8,ISO:9,VG:1,VGR:2.5,VGHF:0.7,VGLB:0.25};
+let EP={FC_AG:125,FOLLOW:30,WSNAP:5,VSIG:3.5,MADF:400,BFLOOR:2,BCAP:6,PMIN:0.5,PMAX:2,A1:0.30,B0:0.70,QUIET_B1:6,QUIET_C:12,VMIN:8,MAXDK:0.8,ISO:9,VG:1,VGR:2.5,VGHF:0.7,VGLB:0.25,NL:1};
 try{ EP=Object.assign(EP,JSON.parse(localStorage.getItem('bsEngine')||'{}')); }catch(e){}
 let ISOFLAGGED=new Set(), ISO_CONFIRMED=false;   // ISOLATED FIRST CRACK engine state (flagged-once ids + dormant latch)
 
@@ -387,6 +391,7 @@ function toggle(){ running?stop():start(); }
 function hardRefresh(){ if(running||wav.len||rows.length||cracks.length){ if(!confirm('Refresh clears the unsaved session (audio + logs). Continue?')) return; } try{ const base=location.href.split('?')[0]; location.href=base+'?v='+Date.now(); }catch(e){ location.reload(); } }
 
 async function start(){
+  if(ENROLL) enrollStop();
   $('err').textContent='';
   try{
     stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
@@ -557,6 +562,30 @@ async function audioRevive(){ try{ if(AC&&AC.state!=='running') await AC.resume(
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&running){
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   if(AC&&AC.state!=='running') audioDead(); else audioRevive(); }});
+function nlLoad(){ try{ return JSON.parse(localStorage.getItem('bsNoiseLib')||'[]'); }catch(e){ return []; } }
+function nlPersist(){ try{ localStorage.setItem('bsNoiseLib',JSON.stringify(NLC.filter(e=>e.src!=='global').slice(-80))); }catch(e){} }
+function nlAdd(fp){ NLC.push(fp); nlPersist(); }
+function nlRemove(c){ let bi=-1,bd=1e9; NLC.forEach((e,i)=>{ if(e.src==='global') return; const d=Math.abs(e.f-c.f)+Math.abs((e.hf||0)-(c.hf||0))*3000+Math.abs((e.w||1)-(c.w||1))*300; if(d<bd){bd=d;bi=i;} }); if(bi>=0&&bd<2500){ NLC.splice(bi,1); nlPersist(); } }
+function nlMatch(f,hf,w){ if(!(EP.NL>0)) return false; for(const e of NLC){ if(Math.abs(e.f-f)<=800 && Math.abs((e.hf||0)-hf)<=0.12 && Math.abs((e.w||1)-w)<=1) return true; } return false; }
+async function enrollToggle(){ if(running) return; if(ENROLL){ enrollStop(); return; }
+  let st; try{ st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}}); }catch(e){ toast(LANG==='tr'?'Mikrofon izni gerekli.':'Mic permission needed.'); return; }
+  enStream=st; enAC=new (window.AudioContext||window.webkitAudioContext)(); if(enAC.state==='suspended') await enAC.resume();
+  const s2=enAC.createMediaStreamSource(st);
+  const h=enAC.createBiquadFilter(); h.type='highpass'; h.frequency.value=+hp.value; h.Q.value=0.7;
+  const l=enAC.createBiquadFilter(); l.type='lowpass'; l.frequency.value=16000; l.Q.value=0.7;
+  const pd=enAC.createScriptProcessor(1024,1,1);
+  AC=enAC; startT=performance.now(); bgEMA=0; refractoryUntil=0; ENCOUNT=0; ENROLL=true;
+  pd.onaudioprocess=e=>detectBuf(e.inputBuffer.getChannelData(0));
+  s2.connect(h); h.connect(l); l.connect(pd); pd.connect(enAC.destination);
+  enNodes={s2,h,l,pd};
+  const eb=$('enrollBtn'); if(eb) eb.textContent=LANG==='tr'?'Konuş: sert kelimeler söyle: tık, kat, kap...':'Speak sharp words at the phone: tick, cut, cap...';
+  setTimeout(()=>{ if(ENROLL) enrollStop(); },14000); }
+function enrollStop(){ ENROLL=false;
+  try{ enNodes.pd.onaudioprocess=null; ['s2','h','l','pd'].forEach(k=>{ try{ enNodes[k].disconnect(); }catch(e){} }); }catch(e){}
+  try{ enStream.getTracks().forEach(t=>t.stop()); }catch(e){} try{ if(enAC) enAC.close(); }catch(e){}
+  enAC=null; enStream=null; enNodes=null;
+  const eb=$('enrollBtn'); if(eb) eb.textContent=tt('Teach it your voice');
+  toast((LANG==='tr'?'Ses profili: ':'Voice profile: ')+ENCOUNT+(LANG==='tr'?' parmak izi öğrenildi.':' fingerprints learned.')); }
 function detectBuf(d){
   let s=0; for(let i=0;i<d.length;i++) s+=d[i]*d[i];
   const bufRms=Math.sqrt(s/d.length);
@@ -584,6 +613,7 @@ function detectBuf(d){
     const f=Math.round(BINS.reduce((s,k,i)=>s+k*en[i],0)/esum*1000);   // spectral centroid, Hz
     const hf=+(en.slice(8).reduce((a,b)=>a+b,0)/esum).toFixed(2);      // share >=13 kHz
     const isSnap=wSlots>=EP.WSNAP;                        // too wide to be a bean
+    if(ENROLL){ if(!isSnap){ nlAdd({f,hf,w:wSlots,src:'enroll'}); ENCOUNT++; const eb=$('enrollBtn'); if(eb) eb.textContent=(LANG==='tr'?'Dinliyor... ':'Listening... ')+ENCOUNT; } return; }
     const bv=isSnap?null:beanVoice();
     const offVoice=!!bv && Math.abs(f-bv.med)>EP.VSIG*bv.mad; // robust sigmas off the bean's voice
     // VOICE-GUARD: while the low band is hot (someone is speaking), only extreme-HF transients may pass.
@@ -591,8 +621,12 @@ function detectBuf(d){
     const vHot=EP.VG>0 && VGS>0 && VGF/(VGS+1e-9)>EP.VGR;
     const isVoiceBand=!isSnap && !offVoice && vHot && hf<EP.VGHF;
     if(isVoiceBand) VGN++;
-    const rej=isSnap||offVoice||isVoiceBand;
-    cracks.push({t:(now-startT)/1000, g, id:++crackSeq, f, w:wSlots, hf, fp:rej, auto:rej, why:isSnap?'width':(offVoice?'voice':(isVoiceBand?'voiceband':undefined))});
+    // NOISE LIBRARY: fingerprints marked not-a-crack (log ticks + enrollment). Bean voice outranks it:
+    // anything inside this roast's own learned crack cluster is never eaten by the library.
+    const inBean=!!bv && Math.abs(f-bv.med)<=EP.VSIG*bv.mad;
+    const isLearned=!isSnap && !offVoice && !isVoiceBand && !inBean && nlMatch(f,hf,wSlots);
+    const rej=isSnap||offVoice||isVoiceBand||isLearned;
+    cracks.push({t:(now-startT)/1000, g, id:++crackSeq, f, w:wSlots, hf, fp:rej, auto:rej, why:isSnap?'width':(offVoice?'voice':(isVoiceBand?'voiceband':(isLearned?'learned':undefined)))});
     if(rej){ pendingUI=true; }
     else { peakGain=Math.max(peakGain,g); crackFlash=true; pendingCrackG=g; }
   }
@@ -710,9 +744,12 @@ function renderStageStrip(){ const el=$('stageStrip'); if(!el) return;
 function fmtT(t){ return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'); }
 function valid(){ return cracks.filter(c=>!c.fp); }
 function renderLog(){
-  $('log').innerHTML=cracks.map((c,i)=>'<div class="lr'+(c.fp?' fpr':'')+'" data-id="'+c.id+'"><span><input type="checkbox" '+(c.fp?'checked':'')+' onchange="fpCrack('+c.id+',this.checked)" style="width:16px;height:16px;accent-color:var(--warn);vertical-align:-3px"> #'+(i+1)+' &nbsp; '+fmtT(c.t)+(c.auto?' <b style="color:var(--warn);font-size:10px">'+(c.why==='voice'?'VOICE':c.why==='voiceband'?'HUMAN VOICE':c.why==='iso'?'ISO':'AUTO')+'</b>':'')+'</span><span>'+(c.f?((c.f/1000).toFixed(1)+'k · '):'')+'gain <b>'+c.g+'</b></span></div>').reverse().join('');
+  $('log').innerHTML=cracks.map((c,i)=>'<div class="lr'+(c.fp?' fpr':'')+'" data-id="'+c.id+'"><span><input type="checkbox" '+(c.fp?'checked':'')+' onchange="fpCrack('+c.id+',this.checked)" style="width:16px;height:16px;accent-color:var(--warn);vertical-align:-3px"> #'+(i+1)+' &nbsp; '+fmtT(c.t)+(c.auto?' <b style="color:var(--warn);font-size:10px">'+(c.why==='voice'?'VOICE':c.why==='voiceband'?'HUMAN VOICE':c.why==='learned'?'LEARNED':c.why==='iso'?'ISO':'AUTO')+'</b>':'')+'</span><span>'+(c.f?((c.f/1000).toFixed(1)+'k · '):'')+'gain <b>'+c.g+'</b></span></div>').reverse().join('');
 }
-function fpCrack(id,ck){ const c=cracks.find(c=>c.id===id); if(c){ c.fp=ck; refreshStats(); } }
+function fpCrack(id,ck){ const c=cracks.find(c=>c.id===id); if(!c) return;
+  if(ck && !c.auto && c.f!=null){ nlAdd({f:c.f,hf:(c.hf!=null?c.hf:0),w:(c.w||1),src:'tick'}); toast(LANG==='tr'?'Öğrenildi: bu ses çatlak değil.':'Learned: this sound is not a crack.'); }
+  else if(!ck && c.f!=null){ nlRemove(c); }
+  c.fp=ck; refreshStats(); }
 function delCrack(id){ const i=cracks.findIndex(c=>c.id===id); if(i>=0){ cracks.splice(i,1); refreshStats(); } }
 // ISOLATED-CRACK rule (deterministic, owner's escalating-window form): every leader gets an
 // isolation deadline. The FIRST leader's window is EP.ISO seconds; each SUBSEQUENT leader's
@@ -928,6 +965,7 @@ function renderAdmin(){
   +admRow('admEvents','events total / valid',cracks.length+' / '+v.length,cracks.length?v.length/cracks.length:null)
   +admRow('admRej','rejected width / voice / speech',cracks.filter(c=>c.why==='width').length+' / '+cracks.filter(c=>c.why==='voice').length+' / '+VGN,null)
   +admRow('admVG','voice-guard low-band ratio',VGS>0?(VGF/(VGS+1e-9)).toFixed(2)+(VGF/(VGS+1e-9)>EP.VGR?' HOT':''):'\u00b7',null)
+  +admRow('admNL','noise library fingerprints',NLC.length+' ('+cracks.filter(c=>c.why==='learned').length+' used)',null)
   +admRow('admBG','background floor (gain)',bgEMA?toGain(bgEMA).toFixed(0):'·',bgEMA?toGain(bgEMA)/100:null)
   +admRow('admPaceRaw','pace raw (unclamped)',(E.tq&&cal&&cal.q25)?(E.tq/cal.q25).toFixed(2)+'×':'·',null)
   +admRow('admPhase','envelope phase φ',PHASE?Math.round(PHASE*100)+'%':'·',PHASE||null)
@@ -1028,6 +1066,8 @@ refreshPlanUI();
 const SUPA_URL='https://efjvfggwnhqkunjvoyjb.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA';
 let SB=null; try{ if(typeof supabase!=='undefined') SB=supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
+try{ fetch(SUPA_URL+'/rest/v1/noise_lib?select=f,hf,w',{headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY}}).then(r=>r.ok?r.json():[]).then(rows=>{ (rows||[]).forEach(e=>NLC.push({f:e.f,hf:e.hf,w:e.w,src:'global'})); }).catch(()=>{}); }catch(e){}
+try{ const eb=$('enrollBtn'); if(eb) eb.textContent=tt('Teach it your voice'); }catch(e){}
 async function cloudUser(){ if(!SB) return null; try{ const {data}=await SB.auth.getUser(); return (data&&data.user)||null; }catch(e){ return null; } }
 async function cloudStatus(){ const u=await cloudUser(); const el=$('cloudStat');
   if(el) el.textContent=u?((LANG==='tr'?'Bağlı: ':'Signed in: ')+u.email):(LANG==='tr'?"Eşitlemek için Guide'da giriş yap (aynı tarayıcı).":'Sign in via the Guide (same browser) to sync.');
@@ -1577,7 +1617,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-15a';
+const APPVER='v2026-07-15b';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -1856,7 +1896,7 @@ const EN2TR={
 'tuning & trace':'ayar & iz','crack log':'çatlak kaydı','gain trace (cracks marked)':'gain izi (çatlaklar işaretli)',
 'signal purity':'sinyal saflığı','cracks / 30s':'çatlak / 30 sn','vs reference':'referansa göre',
 'Record raw audio (WAV, pre-filter)':'Ham sesi kaydet (WAV, filtre öncesi)',
-'Start listening':'Dinlemeye başla','Stop':'Durdur','Drop':'Drop','New session':'Yeni seans','Sample pulled':'Numune çekildi',
+'Start listening':'Dinlemeye başla','Teach it your voice':'Sesini öğret','Stop':'Durdur','Drop':'Drop','New session':'Yeni seans','Sample pulled':'Numune çekildi',
 'Save session (.zip)':'Seansı kaydet (.zip)','Batch card (PNG)':'Parti kartı (PNG)',
 'Load session (.zip / .csv)':'Seans yükle (.zip / .csv)','Export maps':'Haritaları dışa aktar','Import maps':'Haritaları içe aktar',
 'Map this coffee (save color)':'Bu kahveyi eşle (rengi kaydet)','Bin':'Aralık','Trigger ×':'Tetik ×','High-pass':'Yüksek geçiren','Refresh':'Yenile',
