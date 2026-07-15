@@ -85,13 +85,13 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <div class="hdrrow">
     <div class="brand" onclick="location.reload()" title="refresh" style="cursor:pointer"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0">v2026-07-05t</span>
+      <span class="sub" style="margin:0" id="hubVer">v2026-07-13e</span>
       <button class="iconbtn" onclick="loadAll()">Recheck Versions</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
   </div>
   <h1>Your apps <button class="ordbtn" style="width:auto;padding:4px 12px;font-size:13px;vertical-align:middle" onclick="newCard()">+ New card</button> <button class="ordbtn" style="width:auto;padding:4px 12px;font-size:13px;vertical-align:middle;border-color:var(--accent);color:var(--accent)" onclick="location.href=location.pathname+'?v='+Date.now()">Refresh</button></h1>
-  <div class="sub">Tap a card to open. Arrows reorder within a group. Version is read live. <span style="opacity:.5">hub v2026-07-13d</span></div>
+  <div class="sub">Tap a card to open. Arrows reorder within a group. Version is read live. <span style="opacity:.5">hub v2026-07-13e</span></div>
   <div id="sections"></div>
   <div id="restore" class="restore"></div>
 
@@ -109,8 +109,6 @@ const APPS=[
   {nm:'Grup-Al Admin', path:'/grupal-admin', desc:'Group-buy campaign admin',                   b:'GA', c:'#b9742f', cat:'mon'},
   {nm:'Grup-Al Page', path:'/grupal', desc:'Public roast-day lot page',                         b:'GP', c:'#b9742f', cat:'mon'},
   {nm:'Roast Jury', path:'/bell-gallery', desc:'Çan Galerisi · crack bells',                    b:'RJ', c:'#3c7a5a', cat:'mon'},
-  {nm:'Roast Planner', path:'/roast-planner', desc:'Roast planning',                            b:'R', c:'#c98a3c', cat:'mon'},
-  {nm:'Gain Controller', path:'/gain-controller', desc:'Gain controller',                       b:'Γ', c:'#8a4f26', cat:'mon'},
   {nm:'Q Exam',   path:'/exam-tri',       desc:'Cupping exam · classroom QR',                   b:'Q', c:'#b9742f', cat:'mon'},
   {nm:'Q Ready',  path:'/q-ready',        desc:'Q readiness',                                   b:'✓', c:'#3c7a5a', cat:'mon'},
   {nm:'Zine Studio', path:'/coffeenutz-zine-studio', desc:'CoffeeNutz zine builder',             b:'Z', c:'#9a5b8f', cat:'mon'},
@@ -118,7 +116,6 @@ const APPS=[
   {nm:'Agtron Challenge', path:'/crack-game', desc:'How many Agtron is your ear? · the game', b:'A', c:'#e6a33c', cat:'mon'},
   {nm:'RoastTale', path:'/roasttale', desc:'Bir kavurma masalı · a coffee adventure', b:'RT', c:'#e6a33c', cat:'mon'},
   {nm:'S-Curve Jumper', path:'/scurve-jumper', desc:'nutzacademy · the development curve game', b:'SJ', c:'#b9742f', cat:'mon'},
-  {nm:'Claude Management', path:'/claude-management', desc:'Claude / ops management',           b:'CM', c:'#8a6d3b', cat:'admin'},
   {nm:'Council',  path:'/council',        desc:'Strategy council cockpit',                      b:'K', c:'#D8453B', cat:'mgmt'},
   {nm:'Image Vault', path:'/vault',       desc:'Ideas in, photos in, verdicts out',            b:'V', c:'#8a6d3b', cat:'mgmt'},
   {nm:'SEO Komuta', path:'/seo-komuta',   desc:'SEO command board',                            b:'S', c:'#5a7d3a', cat:'mgmt'},

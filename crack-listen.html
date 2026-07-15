@@ -155,7 +155,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-13b</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-13c</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -365,13 +365,14 @@ body.st-setup #btn{display:none}
 let AC=null, stream=null, src=null, hpF=null, lpF=null, analyser=null, buf=null, running=false, raf=null;
 let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
+let procV=null, lpV=null, VGF=0, VGS=0, VGN=0, AUDGAPS=[], AUDDOWN=null;   // voice-guard ear + audio-death ledger
 let BCLIVE=null, cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={}, STOPT=null, PHASE=0, STOPBORROWED=false, PHPEAK=0, PHPEAKT=0, PHREV=0;
 let LANG=localStorage.getItem('bsLang')||'en';   // declared at the very top: eval-order safe (v07e lesson)
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
 const trace=[]; const TRACE_MAX=900;
 const $=id=>document.getElementById(id);
 // tunable engine RULES: defaults here, overridable from the Guide's "Listener engine rules" card (localStorage bsEngine)
-let EP={FC_AG:125,FOLLOW:30,WSNAP:5,VSIG:3.5,MADF:400,BFLOOR:2,BCAP:6,PMIN:0.5,PMAX:2,A1:0.30,B0:0.70,QUIET_B1:6,QUIET_C:12,VMIN:8,MAXDK:0.8,ISO:9};
+let EP={FC_AG:125,FOLLOW:30,WSNAP:5,VSIG:3.5,MADF:400,BFLOOR:2,BCAP:6,PMIN:0.5,PMAX:2,A1:0.30,B0:0.70,QUIET_B1:6,QUIET_C:12,VMIN:8,MAXDK:0.8,ISO:9,VG:1,VGR:2.5,VGHF:0.7};
 try{ EP=Object.assign(EP,JSON.parse(localStorage.getItem('bsEngine')||'{}')); }catch(e){}
 let ISOFLAGGED=new Set(), ISO_CONFIRMED=false;   // ISOLATED FIRST CRACK engine state (flagged-once ids + dormant latch)
 
@@ -388,7 +389,7 @@ async function start(){
   $('err').textContent='';
   try{
     stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
-  }catch(e){ $('err').textContent='Mic blocked: '+e.message+'. On iPhone use Safari over https and allow the microphone.'; return; }
+  }catch(e){ $('err').textContent=(LANG==='tr'?'Mikrofon engellendi. iPhone: Ayarlar > Safari > Mikrofon iznini ac (veya adres cubugundaki aA > Site Ayarlari), sayfayi yenile, Basla\'ya tekrar dokun.':'Microphone blocked. iPhone: Settings > Safari > Microphone, allow it (or tap aA in the address bar > Website Settings), reload, tap Start again.')+' ['+(e.name||e.message)+']'; return; }
   AC=new (window.AudioContext||window.webkitAudioContext)();
   if(AC.state==='suspended') await AC.resume();
   src=AC.createMediaStreamSource(stream);
@@ -402,6 +403,13 @@ async function start(){
   procDet=AC.createScriptProcessor(1024,1,1);
   procDet.onaudioprocess=e=>detectBuf(e.inputBuffer.getChannelData(0));
   lpF.connect(procDet); procDet.connect(AC.destination);
+  // VOICE-GUARD ear: raw low band (speech lives under ~2.8k; the detection branch is high-passed and cannot hear it)
+  lpV=AC.createBiquadFilter(); lpV.type='lowpass'; lpV.frequency.value=2800; lpV.Q.value=0.7;
+  procV=AC.createScriptProcessor(1024,1,1);
+  procV.onaudioprocess=e=>voiceTick(e.inputBuffer.getChannelData(0));
+  src.connect(lpV); lpV.connect(procV); procV.connect(AC.destination);
+  stream.getAudioTracks().forEach(t=>t.onended=()=>audioDead());
+  AC.onstatechange=()=>{ if(running&&AC&&AC.state!=='running') audioDead(); };
   wav={chunks:[],len:0,sr:AC.sampleRate}; rows=[];
   if($('recAudio').checked){
     proc=AC.createScriptProcessor(4096,1,1);
@@ -414,7 +422,7 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('dlStory').style.display='none'; $('gameAdd').style.display='none'; $('mapBtn').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw','mA0Ag'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -468,6 +476,7 @@ function queueSamples(){ try{ if(!SAMPLES.length) return;
 function stop(){
   running=false; if(raf) cancelAnimationFrame(raf);
   if(procDet){ try{ lpF.disconnect(procDet); procDet.disconnect(); }catch(e){} procDet.onaudioprocess=null; procDet=null; }
+  if(procV){ try{ lpV.disconnect(procV); procV.disconnect(); }catch(e){} procV.onaudioprocess=null; procV=null; }
   if(proc){ try{ src.disconnect(proc); proc.disconnect(); }catch(e){} proc.onaudioprocess=null; proc=null; }
   if(stream) stream.getTracks().forEach(t=>t.stop());
   if(AC) AC.close();
@@ -520,6 +529,20 @@ function beanVoice(){
 }
 // audio-thread detection: a crack is a millisecond-scale burst (high crest), not a loud average.
 // scan each 1024-sample buffer for the strongest 1ms (48-sample) energy vs the slow background floor.
+function voiceTick(d){ let s=0; for(let i=0;i<d.length;i++) s+=d[i]*d[i]; const r=Math.sqrt(s/d.length);
+  VGS = VGS ? VGS*0.995 + r*0.005 : r;   // slow floor ~4s: drum rumble lives here
+  VGF = VGF ? VGF*0.5 + r*0.5 : r; }     // fast ~40ms: speech spikes this against the floor
+function audioDead(){ if(!running) return; if(AUDDOWN==null) AUDDOWN=(performance.now()-startT)/1000;
+  const el=$('err'); if(el){ el.textContent=(LANG==='tr'?'SES KESILDI ':'AUDIO INTERRUPTED ')+fmtT(AUDDOWN)+(LANG==='tr'?' - dokun, surdur':' - tap to resume'); el.style.cursor='pointer'; el.onclick=()=>audioRevive(); }
+  audioRevive(); }
+async function audioRevive(){ try{ if(AC&&AC.state!=='running') await AC.resume(); }catch(e){}
+  if(AC&&AC.state==='running'&&stream&&stream.getAudioTracks().some(t=>t.readyState==='live')){
+    if(AUDDOWN!=null){ AUDGAPS.push({from:AUDDOWN,to:(performance.now()-startT)/1000}); AUDDOWN=null; }
+    const el=$('err'); if(el&&el.onclick){ el.textContent=''; el.onclick=null; el.style.cursor=''; }
+    if(navigator.wakeLock&&!wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{}); } }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&running){
+  if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
+  if(AC&&AC.state!=='running') audioDead(); else audioRevive(); }});
 function detectBuf(d){
   let s=0; for(let i=0;i<d.length;i++) s+=d[i]*d[i];
   const bufRms=Math.sqrt(s/d.length);
@@ -549,8 +572,13 @@ function detectBuf(d){
     const isSnap=wSlots>=EP.WSNAP;                        // too wide to be a bean
     const bv=isSnap?null:beanVoice();
     const offVoice=!!bv && Math.abs(f-bv.med)>EP.VSIG*bv.mad; // robust sigmas off the bean's voice
-    const rej=isSnap||offVoice;
-    cracks.push({t:(now-startT)/1000, g, id:++crackSeq, f, w:wSlots, hf, fp:rej, auto:rej, why:isSnap?'width':(offVoice?'voice':undefined)});
+    // VOICE-GUARD: while the low band is hot (someone is speaking), only extreme-HF transients may pass.
+    // Protects the pre-learning window where beanVoice() is still null. Kill switch: EP.VG=0 in engine rules.
+    const vHot=EP.VG>0 && VGS>0 && VGF/(VGS+1e-9)>EP.VGR;
+    const isVoiceBand=!isSnap && !offVoice && vHot && hf<EP.VGHF;
+    if(isVoiceBand) VGN++;
+    const rej=isSnap||offVoice||isVoiceBand;
+    cracks.push({t:(now-startT)/1000, g, id:++crackSeq, f, w:wSlots, hf, fp:rej, auto:rej, why:isSnap?'width':(offVoice?'voice':(isVoiceBand?'voiceband':undefined))});
     if(rej){ pendingUI=true; }
     else { peakGain=Math.max(peakGain,g); crackFlash=true; pendingCrackG=g; }
   }
@@ -609,6 +637,7 @@ function csvText(){
   if(vv.length>1) s+='\n# stats,total_gain,'+vv.reduce((a,c)=>a+c.g,0)+',time_sd,'+sd(vv.map(c=>c.t)).toFixed(2)+',gain_sd,'+sd(vv.map(c=>c.g)).toFixed(2)+(fss.length>1?',f_mean,'+Math.round(fss.reduce((a,b)=>a+b,0)/fss.length)+',f_sd,'+Math.round(sd(fss)):'')+(LASTPROJ?',proj_final,'+LASTPROJ:'')+(STOPPROJ?',proj_stop,'+STOPPROJ:'')+(PHASE?',phase_final,'+PHASE.toFixed(3):'');
   if(LASTSTAGES&&LASTSTAGES.length) s+='\n# stages,'+LASTSTAGES.map(sg=>sg[0]+','+sg[1].toFixed(1)).join(',');
   s+='\n# cracks: n,t_s,gain,fp,f_hz,w_ms,hf\n'+cracks.map((c,i)=>'# '+(i+1)+','+c.t.toFixed(2)+','+c.g+','+(c.fp?1:0)+','+(c.f||'')+','+(c.w||'')+','+(c.hf!=null?c.hf:'')).join('\n');
+  if(AUDGAPS.length||AUDDOWN!=null) s+='\n# audio_gaps,'+AUDGAPS.map(g=>g.from.toFixed(1)+'-'+g.to.toFixed(1)).join(',')+(AUDDOWN!=null?(','+AUDDOWN.toFixed(1)+'-open'):'');
   return s;
 }
 // minimal store-only ZIP writer: one tap saves WAV + CSV as a single file
@@ -667,7 +696,7 @@ function renderStageStrip(){ const el=$('stageStrip'); if(!el) return;
 function fmtT(t){ return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'); }
 function valid(){ return cracks.filter(c=>!c.fp); }
 function renderLog(){
-  $('log').innerHTML=cracks.map((c,i)=>'<div class="lr'+(c.fp?' fpr':'')+'" data-id="'+c.id+'"><span><input type="checkbox" '+(c.fp?'checked':'')+' onchange="fpCrack('+c.id+',this.checked)" style="width:16px;height:16px;accent-color:var(--warn);vertical-align:-3px"> #'+(i+1)+' &nbsp; '+fmtT(c.t)+(c.auto?' <b style="color:var(--warn);font-size:10px">'+(c.why==='voice'?'VOICE':c.why==='iso'?'ISO':'AUTO')+'</b>':'')+'</span><span>'+(c.f?((c.f/1000).toFixed(1)+'k · '):'')+'gain <b>'+c.g+'</b></span></div>').reverse().join('');
+  $('log').innerHTML=cracks.map((c,i)=>'<div class="lr'+(c.fp?' fpr':'')+'" data-id="'+c.id+'"><span><input type="checkbox" '+(c.fp?'checked':'')+' onchange="fpCrack('+c.id+',this.checked)" style="width:16px;height:16px;accent-color:var(--warn);vertical-align:-3px"> #'+(i+1)+' &nbsp; '+fmtT(c.t)+(c.auto?' <b style="color:var(--warn);font-size:10px">'+(c.why==='voice'?'VOICE':c.why==='voiceband'?'SPEECH':c.why==='iso'?'ISO':'AUTO')+'</b>':'')+'</span><span>'+(c.f?((c.f/1000).toFixed(1)+'k · '):'')+'gain <b>'+c.g+'</b></span></div>').reverse().join('');
 }
 function fpCrack(id,ck){ const c=cracks.find(c=>c.id===id); if(c){ c.fp=ck; refreshStats(); } }
 function delCrack(id){ const i=cracks.findIndex(c=>c.id===id); if(i>=0){ cracks.splice(i,1); refreshStats(); } }
@@ -883,7 +912,8 @@ function renderAdmin(){
   +admRow('admDevEff','effective dev',E.devEff!=null?Math.round(E.devEff)+'s':'·',(cal&&cal.devSpan&&E.devEff!=null)?E.devEff/cal.devSpan:null)
   +admRow('admGrade','stop / final / measured',(STOPPROJ||'·')+' / '+(LASTPROJ||'·')+' / '+(($('mAgG')&&$('mAgG').value)||'·'),null)
   +admRow('admEvents','events total / valid',cracks.length+' / '+v.length,cracks.length?v.length/cracks.length:null)
-  +admRow('admRej','rejected width / voice',cracks.filter(c=>c.why==='width').length+' / '+cracks.filter(c=>c.why==='voice').length,null)
+  +admRow('admRej','rejected width / voice / speech',cracks.filter(c=>c.why==='width').length+' / '+cracks.filter(c=>c.why==='voice').length+' / '+VGN,null)
+  +admRow('admVG','voice-guard low-band ratio',VGS>0?(VGF/(VGS+1e-9)).toFixed(2)+(VGF/(VGS+1e-9)>EP.VGR?' HOT':''):'\u00b7',null)
   +admRow('admBG','background floor (gain)',bgEMA?toGain(bgEMA).toFixed(0):'·',bgEMA?toGain(bgEMA)/100:null)
   +admRow('admPaceRaw','pace raw (unclamped)',(E.tq&&cal&&cal.q25)?(E.tq/cal.q25).toFixed(2)+'×':'·',null)
   +admRow('admPhase','envelope phase φ',PHASE?Math.round(PHASE*100)+'%':'·',PHASE||null)
@@ -1533,7 +1563,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-13b';
+const APPVER='v2026-07-13c';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
