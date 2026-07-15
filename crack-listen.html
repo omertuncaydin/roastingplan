@@ -159,7 +159,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-15c</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-15d</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -343,6 +343,7 @@ body.st-setup #btn{display:none}
     <canvas id="cv" width="900" height="300"></canvas>
     <div class="ctl"><label>Trigger &times; <span class="info" onclick="showInfo('sens')">&#9432;</span></label><button class="pm" onclick="nudge('sens',-1)">&minus;</button><input type="range" id="sens" min="2" max="30" step="0.5" value="5"><button class="pm" onclick="nudge('sens',1)">+</button><span class="v" id="sensV">5.0x</span></div>
     <div class="ctl"><label>High-pass <span class="info" onclick="showInfo('hp')">&#9432;</span></label><button class="pm" onclick="nudge('hp',-1)">&minus;</button><input type="range" id="hp" min="300" max="14000" step="100" value="10000"><button class="pm" onclick="nudge('hp',1)">+</button><span class="v" id="hpV">10k Hz</span></div>
+    <div class="ctl"><label>Voice guard <span class="info" onclick="showInfo('vg')">&#9432;</span></label><label style="display:flex;align-items:center;gap:8px;margin-left:auto;cursor:pointer"><input type="checkbox" id="vgTog" onchange="vgToggle(this.checked)" style="width:19px;height:19px;accent-color:var(--accent2)"><span class="v" id="vgV">on</span></label></div>
     <div class="hint">Detection listens for millisecond bursts (clicks), not loud averages, so test it with a pen click or finger snap, not your voice. Trigger is a threshold: LOWER catches more.</div>
     <div class="lbl" style="margin-top:10px">signal purity <span class="info" onclick="showInfo('pur')">&#9432;</span> · <span id="pur" style="color:var(--ink);font-size:15px">-</span></div>
   </div>
@@ -382,6 +383,11 @@ const $=id=>document.getElementById(id);
 // tunable engine RULES: defaults here, overridable from the Guide's "Listener engine rules" card (localStorage bsEngine)
 let EP={FC_AG:125,FOLLOW:30,WSNAP:5,VSIG:3.5,MADF:400,BFLOOR:2,BCAP:6,PMIN:0.5,PMAX:2,A1:0.30,B0:0.70,QUIET_B1:6,QUIET_C:12,VMIN:8,MAXDK:0.8,ISO:9,VG:1,VGR:2.5,VGHF:0.7,VGLB:0.25,NL:1};
 try{ EP=Object.assign(EP,JSON.parse(localStorage.getItem('bsEngine')||'{}')); }catch(e){}
+try{ const sv=localStorage.getItem('bsVG'); if(sv!==null) EP.VG=+sv; }catch(e){}   // the user's own device switch outranks the engine default
+function vgToggle(on){ EP.VG=on?1:0; try{ localStorage.setItem('bsVG',on?'1':'0'); }catch(e){}
+  const vv=$('vgV'); if(vv) vv.textContent=on?(LANG==='tr'?'açık':'on'):(LANG==='tr'?'kapalı':'off');
+  toast(on?(LANG==='tr'?'Ses koruması açık.':'Voice guard on.'):(LANG==='tr'?'Ses koruması kapalı.':'Voice guard off.')); }
+try{ const tg=$('vgTog'); if(tg){ tg.checked=EP.VG>0; const vv=$('vgV'); if(vv) vv.textContent=EP.VG>0?(LANG==='tr'?'açık':'on'):(LANG==='tr'?'kapalı':'off'); } }catch(e){}
 let ISOFLAGGED=new Set(), ISO_CONFIRMED=false;   // ISOLATED FIRST CRACK engine state (flagged-once ids + dormant latch)
 
 const sens=$('sens'), hp=$('hp');
@@ -792,6 +798,7 @@ $('log').addEventListener('touchstart',e=>{ swRow=e.target.closest('.lr'); if(e.
 $('log').addEventListener('touchmove',e=>{ if(!swRow) return; const dx=e.touches[0].clientX-swX; if(dx<0) swRow.style.transform='translateX('+Math.max(dx,-100)+'px)'; },{passive:true});
 $('log').addEventListener('touchend',e=>{ if(!swRow) return; const dx=e.changedTouches[0].clientX-swX; if(dx<-60) delCrack(+swRow.dataset.id); else swRow.style.transform=''; swRow=null; });
 const INFO={
+ vg:['Voice guard','Rejects transients that ride on human speech: a second low-band ear watches for voices and flags matching events as HUMAN VOICE in the log, recoverable with one tap. Turn it off if you roast in silence and want the raw detector; flips instantly, even mid-roast. This switch is yours per device; the engine-rules card in the Guide sets the defaults.'],
  phase:['Gain phase (phi)','Your position inside the bell of first crack: cumulative crack gain heard so far, divided by the total gain of the whole bell, 0 at the first pop and 1 at silence. The thesis this app is built on: equal phase gives equal ground color, whatever the roast speed. While the bell is still rising the true total is unknown, so the dial shows a LOWER BOUND with a \u2265 sign; once the peak is witnessed the value firms up and the dial says so. It never pretends to know the whole bell before hearing it.'],
  tg:['Total gain vs reference','Sum of all valid crack gains this session, on a dial scaled to 110% of the reference roast\'s total. Green zone = 95-105%: the batch spoke about as much as your mapped reference. The gold tick is exactly 100%.'],
  pace:['Pace vs reference','How fast this roast reached 25% of the reference total gain, against the reference\'s own time to the same point. Center tick = same speed; left of it = faster, right = slower. It locks once the 25% point is passed, and the color projection uses it to correct the clock.'],
@@ -832,6 +839,7 @@ const INFO={
  a0ag:['A0 Agtron, color at first crack','This is where the gauge STARTS at first crack: the ground color of THIS coffee at the very first pop, before any development. Leave it blank and the app uses its global default of 125. Every coffee is a little different, and an error here shifts a light-drop projection almost one-to-one at the start, then fades to nothing by the color you mapped at drop: the darker you take the roast, the less A0 matters. To measure it, run one sacrifice roast: at the first crack pull a small sample, cool it, grind it and read its Agtron, then enter that number here once. It rides with the map from then on.']
 };
 const INFO_TR={
+ vg:['Ses koruması','İnsan sesiyle gelen vurguları eler: ikinci bir alçak-bant kulak konuşmayı izler, eşleşen olayları kayıtta HUMAN VOICE olarak işaretler; tek dokunuşla geri alınır. Sessiz kavuruyorsan ve ham dedektörü istiyorsan kapat; kavurma sırasında bile anında geçerli. Bu anahtar cihazına özel; varsayılanları Guide içindeki motor kuralları kartı belirler.'],
  phase:['Gain evresi (phi)','İlk çatlak çanındaki konumun: şu ana dek duyulan birikimli çatlak gain\u0027i bölü çanın tüm toplamı; ilk patlamada 0, sessizlikte 1. Tez: eşit evre, kavurma hızı ne olursa olsun eşit öğütülmüş renk verir. Çan hâlâ yükselirken gerçek toplam bilinemez, bu yüzden kadran \u2265 işaretiyle bir ALT SINIR gösterir; tepe duyulunca değer kesinleşir ve kadran bunu söyler. Çanı duymadan bildiğini iddia etmez.'],
  tg:['Referansa göre toplam gain','Bu seanstaki tüm geçerli çatlakların gain toplamı; kadran referans kavurmanın toplamının %110\'una ölçekli. Yeşil bölge = %95-105: parti, eşlenmiş referansın kadar konuştu. Altın çizgi tam %100.'],
  pace:['Referansa göre tempo','Bu kavurmanın referans toplam kazancın %25\'ine ulaşma hızı, referansın aynı noktaya kendi süresine oranla. Orta çizgi = aynı hız; solu daha hızlı, sağı daha yavaş. %25 noktası geçilince kilitlenir; renk öngörüsü saati bununla düzeltir.'],
@@ -1624,7 +1632,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-15c';
+const APPVER='v2026-07-15d';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
