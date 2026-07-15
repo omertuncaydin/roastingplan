@@ -47,6 +47,7 @@ body.admin #adminStatsRow{display:flex}
 @keyframes sPop{0%{transform:scale(1)}45%{transform:scale(1.07) rotate(-1.2deg)}100%{transform:scale(1)}}
 @keyframes a0urge{0%,100%{box-shadow:0 0 0 0 rgba(230,193,75,.55)}50%{box-shadow:0 0 0 9px rgba(230,193,75,0)}}
 #sampleBtn.a0urgent{border-color:var(--gold);color:var(--gold);animation:a0urge 1.2s ease-out infinite}
+#a0Banner{display:none;position:fixed;top:0;left:0;right:0;z-index:60;background:var(--gold);color:#1a1410;font-weight:800;text-align:center;padding:12px 10px;font-size:15px;letter-spacing:.4px;cursor:pointer;animation:a0urge 1.2s ease-out infinite}
 .sPop{animation:sPop .4s ease}
 @media (min-width:900px){
   .wrap{max-width:1240px}
@@ -159,7 +160,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-15d</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-15e</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -235,6 +236,7 @@ body.st-setup #btn{display:none}
   <button id="sampleBtn" onclick="markSample()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><ellipse cx="7.4" cy="7.4" rx="4" ry="5.2" transform="rotate(-45 7.4 7.4)" fill="#e6c14b"/><line x1="10.6" y1="10.6" x2="20" y2="20" stroke="#e6c14b" stroke-width="2.6" stroke-linecap="round"/></svg><span id="sampLbl">Sample pulled</span><b id="sampN"></b></button>
   <button class="go" id="btn" onclick="toggle()">Start listening</button>
   <div class="err" id="err"></div>
+  <div id="a0Banner" onclick="markSample()"></div>
 
   <div class="card" id="cCapture" style="margin-top:12px">
     <div class="lbl">session capture <span class="info" onclick="showInfo('cap')">&#9432;</span></div>
@@ -344,6 +346,7 @@ body.st-setup #btn{display:none}
     <div class="ctl"><label>Trigger &times; <span class="info" onclick="showInfo('sens')">&#9432;</span></label><button class="pm" onclick="nudge('sens',-1)">&minus;</button><input type="range" id="sens" min="2" max="30" step="0.5" value="5"><button class="pm" onclick="nudge('sens',1)">+</button><span class="v" id="sensV">5.0x</span></div>
     <div class="ctl"><label>High-pass <span class="info" onclick="showInfo('hp')">&#9432;</span></label><button class="pm" onclick="nudge('hp',-1)">&minus;</button><input type="range" id="hp" min="300" max="14000" step="100" value="10000"><button class="pm" onclick="nudge('hp',1)">+</button><span class="v" id="hpV">10k Hz</span></div>
     <div class="ctl"><label>Voice guard <span class="info" onclick="showInfo('vg')">&#9432;</span></label><label style="display:flex;align-items:center;gap:8px;margin-left:auto;cursor:pointer"><input type="checkbox" id="vgTog" onchange="vgToggle(this.checked)" style="width:19px;height:19px;accent-color:var(--accent2)"><span class="v" id="vgV">on</span></label></div>
+    <div class="ctl"><label>Voice guard ratio <span class="info" onclick="showInfo('vgr')">&#9432;</span></label><button class="pm" onclick="nudge('vgr',-1)">&minus;</button><input type="range" id="vgr" min="1.5" max="6" step="0.25" value="2.5"><button class="pm" onclick="nudge('vgr',1)">+</button><span class="v" id="vgrV">2.5x</span></div>
     <div class="hint">Detection listens for millisecond bursts (clicks), not loud averages, so test it with a pen click or finger snap, not your voice. Trigger is a threshold: LOWER catches more.</div>
     <div class="lbl" style="margin-top:10px">signal purity <span class="info" onclick="showInfo('pur')">&#9432;</span> · <span id="pur" style="color:var(--ink);font-size:15px">-</span></div>
   </div>
@@ -374,7 +377,7 @@ let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
 let procV=null, lpV=null, VGF=0, VGS=0, VGN=0, AUDGAPS=[], AUDDOWN=null;   // voice-guard ear + audio-death ledger
 let NLC=nlLoad(), ENROLL=false, ENCOUNT=0, enAC=null, enStream=null, enNodes=null;   // noise library (device-local) + voice enrollment
-let A0NUDGE=0, A0PULLED=false;   // the A0-pull moment: 0 waiting, >0 window open (its time), -1 closed
+let A0PHASE='', A0T=0, A0PULLED=false;   // A0-pull machine: ''=idle, pre=first cracks heard, alarm=A0 confirmed, done=resolved
 let BCLIVE=null, cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={}, STOPT=null, PHASE=0, STOPBORROWED=false, PHPEAK=0, PHPEAKT=0, PHREV=0;
 let LANG=localStorage.getItem('bsLang')||'en';   // declared at the very top: eval-order safe (v07e lesson)
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
@@ -388,12 +391,14 @@ function vgToggle(on){ EP.VG=on?1:0; try{ localStorage.setItem('bsVG',on?'1':'0'
   const vv=$('vgV'); if(vv) vv.textContent=on?(LANG==='tr'?'açık':'on'):(LANG==='tr'?'kapalı':'off');
   toast(on?(LANG==='tr'?'Ses koruması açık.':'Voice guard on.'):(LANG==='tr'?'Ses koruması kapalı.':'Voice guard off.')); }
 try{ const tg=$('vgTog'); if(tg){ tg.checked=EP.VG>0; const vv=$('vgV'); if(vv) vv.textContent=EP.VG>0?(LANG==='tr'?'açık':'on'):(LANG==='tr'?'kapalı':'off'); } }catch(e){}
+try{ const rv=localStorage.getItem('bsVGR'); if(rv!==null&&isFinite(+rv)) EP.VGR=+rv; const re=$('vgr'); if(re){ re.value=EP.VGR; const rl=$('vgrV'); if(rl) rl.textContent=(+EP.VGR).toFixed(2).replace(/0$/,'')+'x'; } }catch(e){}
 let ISOFLAGGED=new Set(), ISO_CONFIRMED=false;   // ISOLATED FIRST CRACK engine state (flagged-once ids + dormant latch)
 
 const sens=$('sens'), hp=$('hp');
 function fmtHz(v){ return v>=1000 ? (v/1000).toFixed(1).replace(/\.0$/,'')+'k Hz' : v+' Hz'; }
 function nudge(id,dir){ const el=$(id); const jump=Math.max(+el.step||1, (+el.max - +el.min)/10); el.value=+el.value+dir*jump; el.dispatchEvent(new Event('input')); }   // each tap = 10% of the slider's range
 sens.oninput=()=>$('sensV').textContent=(+sens.value).toFixed(1)+'x';
+vgr.oninput=()=>{ EP.VGR=+vgr.value; $('vgrV').textContent=(+vgr.value).toFixed(2).replace(/0$/,'')+'x'; try{ localStorage.setItem('bsVGR',vgr.value); }catch(e){} };
 hp.oninput=()=>{ $('hpV').textContent=fmtHz(+hp.value); if(hpF) hpF.frequency.value=+hp.value; };
 
 function toggle(){ running?stop():start(); }
@@ -437,7 +442,7 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('dlStory').style.display='none'; $('gameAdd').style.display='none'; $('mapBtn').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0NUDGE=0; A0PULLED=false; a0NudgeUI(false); renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw','mA0Ag'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -673,7 +678,7 @@ function loop(){
 
   // session log (one row per frame; crack_gain filled on the frame a crack finalizes)
   rows.push([((now-startT)/1000).toFixed(2), lastBufRms.toFixed(6), Math.round(gain), Math.round(bgGain), (lastShort/(bgEMA+1e-9)).toFixed(2), sens.value, hp.value, '']);
-  if(rows.length%30===0){ updateGauge(); updateVoice(); }   // voice decays with TIME, not only on crack events
+  if(rows.length%30===0){ updateGauge(); updateVoice(); a0Nudge(); }   // voice decays with TIME, not only on crack events; A0 pre-arm rides the same beat
   if(rows.length%30===15) drawTimeline();
   if(wav.len && rows.length%60===0) $('recInfo').textContent='Recording: '+Math.floor((now-startT)/60000)+':'+String(Math.floor((now-startT)/1000%60)).padStart(2,'0')+' • '+(wav.len*2/1048576).toFixed(1)+' MB';
   draw();
@@ -798,6 +803,7 @@ $('log').addEventListener('touchstart',e=>{ swRow=e.target.closest('.lr'); if(e.
 $('log').addEventListener('touchmove',e=>{ if(!swRow) return; const dx=e.touches[0].clientX-swX; if(dx<0) swRow.style.transform='translateX('+Math.max(dx,-100)+'px)'; },{passive:true});
 $('log').addEventListener('touchend',e=>{ if(!swRow) return; const dx=e.changedTouches[0].clientX-swX; if(dx<-60) delCrack(+swRow.dataset.id); else swRow.style.transform=''; swRow=null; });
 const INFO={
+ vgr:['Voice guard ratio','How many times louder the voice band must be than its own rolling floor before the guard declares speech. LOWER = stricter guard (triggers on quieter voices, protects more, may flag more). HIGHER = more relaxed. Default 2.5. Per device; flips live.'],
  vg:['Voice guard','Rejects transients that ride on human speech: a second low-band ear watches for voices and flags matching events as HUMAN VOICE in the log, recoverable with one tap. Turn it off if you roast in silence and want the raw detector; flips instantly, even mid-roast. This switch is yours per device; the engine-rules card in the Guide sets the defaults.'],
  phase:['Gain phase (phi)','Your position inside the bell of first crack: cumulative crack gain heard so far, divided by the total gain of the whole bell, 0 at the first pop and 1 at silence. The thesis this app is built on: equal phase gives equal ground color, whatever the roast speed. While the bell is still rising the true total is unknown, so the dial shows a LOWER BOUND with a \u2265 sign; once the peak is witnessed the value firms up and the dial says so. It never pretends to know the whole bell before hearing it.'],
  tg:['Total gain vs reference','Sum of all valid crack gains this session, on a dial scaled to 110% of the reference roast\'s total. Green zone = 95-105%: the batch spoke about as much as your mapped reference. The gold tick is exactly 100%.'],
@@ -839,6 +845,7 @@ const INFO={
  a0ag:['A0 Agtron, color at first crack','This is where the gauge STARTS at first crack: the ground color of THIS coffee at the very first pop, before any development. Leave it blank and the app uses its global default of 125. Every coffee is a little different, and an error here shifts a light-drop projection almost one-to-one at the start, then fades to nothing by the color you mapped at drop: the darker you take the roast, the less A0 matters. To measure it, run one sacrifice roast: at the first crack pull a small sample, cool it, grind it and read its Agtron, then enter that number here once. It rides with the map from then on.']
 };
 const INFO_TR={
+ vgr:['Ses koruması oranı','Konuşma sayılması için ses bandının kendi tabanından kaç kat yüksek olması gerektiği. DÜŞÜK = daha sıkı koruma (kısık sesde de tetiklenir, daha çok işaretleyebilir). YÜKSEK = daha rahat. Varsayılan 2.5. Cihaza özel; anında geçerli.'],
  vg:['Ses koruması','İnsan sesiyle gelen vurguları eler: ikinci bir alçak-bant kulak konuşmayı izler, eşleşen olayları kayıtta HUMAN VOICE olarak işaretler; tek dokunuşla geri alınır. Sessiz kavuruyorsan ve ham dedektörü istiyorsan kapat; kavurma sırasında bile anında geçerli. Bu anahtar cihazına özel; varsayılanları Guide içindeki motor kuralları kartı belirler.'],
  phase:['Gain evresi (phi)','İlk çatlak çanındaki konumun: şu ana dek duyulan birikimli çatlak gain\u0027i bölü çanın tüm toplamı; ilk patlamada 0, sessizlikte 1. Tez: eşit evre, kavurma hızı ne olursa olsun eşit öğütülmüş renk verir. Çan hâlâ yükselirken gerçek toplam bilinemez, bu yüzden kadran \u2265 işaretiyle bir ALT SINIR gösterir; tepe duyulunca değer kesinleşir ve kadran bunu söyler. Çanı duymadan bildiğini iddia etmez.'],
  tg:['Referansa göre toplam gain','Bu seanstaki tüm geçerli çatlakların gain toplamı; kadran referans kavurmanın toplamının %110\'una ölçekli. Yeşil bölge = %95-105: parti, eşlenmiş referansın kadar konuştu. Altın çizgi tam %100.'],
@@ -1632,7 +1639,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-15d';
+const APPVER='v2026-07-15e';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -1838,26 +1845,39 @@ function updateMapBtn(){ const b=$('mapBtn'); if(!b) return;
 }
 // ---- SampleInRoast: tryer pulls become color anchors ----
 const SAMP_LINES=['The bean cannot hide now.','Spoon out, truth in.','Color caught mid-flight.','One more anchor for the gauge.'];
-function a0NudgeUI(on){ const b=$('sampleBtn'), l=$('sampLbl'); if(!b||!l) return;
-  if(on){ b.classList.add('a0urgent'); l.textContent=LANG==='tr'?'A0! Şimdi numune çek':'A0! Pull the A0 sample now'; }
-  else { b.classList.remove('a0urgent'); l.textContent=tt('Sample pulled'); } }
+function stageAtT(t){ if(!LASTSTAGES) return ''; let st=''; for(const sg of LASTSTAGES){ if(sg[1]<=t) st=sg[0]; } return st; }
+function a0NudgeUI(level){ const b=$('sampleBtn'), l=$('sampLbl'), bn=$('a0Banner'); if(!b||!l) return;
+  b.classList.remove('a0urgent'); b.style.borderColor=''; if(bn) bn.style.display='none';
+  if(level===1){ b.style.borderColor='var(--gold)'; l.textContent=LANG==='tr'?'A0 yakın · numuneye hazırlan':'A0 near · get ready to pull'; }
+  else if(level===2){ b.classList.add('a0urgent'); l.textContent=LANG==='tr'?'A0! Şimdi numune çek':'A0! Pull the A0 sample now';
+    if(bn){ bn.textContent=LANG==='tr'?'A0 BAŞLADI · NUMUNEYİ ŞİMDİ ÇEK (dokun)':'A0 STARTED · PULL THE SAMPLE NOW (tap)'; bn.style.display='block'; }
+    try{ if(navigator.vibrate) navigator.vibrate([200,120,200]); }catch(e){} }
+  else { l.textContent=tt('Sample pulled'); } }
 function a0Nudge(){
-  if(!running||A0PULLED||A0NUDGE===-1) return;
+  if(!running||A0PHASE==='done') return;
   const k=(cName.value||'').trim().toLowerCase();
-  if(!k||calMap()[k]){ if(A0NUDGE>0){ A0NUDGE=-1; a0NudgeUI(false); } return; }   // mapped or unnamed bean: the moment is not needed
+  if(!k||calMap()[k]){ if(A0PHASE){ A0PHASE='done'; a0NudgeUI(0); } return; }   // mapped or unnamed bean: the moment is not needed
   const nowS=(performance.now()-startT)/1000;
-  if(A0NUDGE===0){ if(LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==='A0')){ A0NUDGE=nowS; a0NudgeUI(true); } }
-  else if(nowS-A0NUDGE>60){ A0NUDGE=-1; a0NudgeUI(false); } }   // window closed: never nag mid-roast
+  const hasA0=LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==='A0');
+  if(A0PHASE===''){ if(hasA0){ A0PHASE='alarm'; A0T=nowS; a0NudgeUI(2); } else if(valid().length>=1){ A0PHASE='pre'; a0NudgeUI(1); } }
+  else if(A0PHASE==='pre'){ if(hasA0){ A0PHASE='alarm'; A0T=nowS; a0NudgeUI(2); } }
+  else if(A0PHASE==='alarm'&&nowS-A0T>60){ A0PHASE='done'; a0NudgeUI(0); } }   // window closed: never nag mid-roast
 function markSample(){
   if(!running){ toast(tt('Only during a live session.')); return; }
   const t=(performance.now()-startT)/1000;
   SAMPLES.push({t, ag:null});
-  let a0Tag=false;
-  if(A0NUDGE>0&&!A0PULLED){ SAMPLES[SAMPLES.length-1].a0=true; A0PULLED=true; A0NUDGE=-1; a0NudgeUI(false); a0Tag=true; }
+  const sm=SAMPLES[SAMPLES.length-1]; sm.st=stageAtT(t)||undefined;   // every pull carries its stage: the cracks decide, not the button
+  let a0Tag=false, lateSt='';
+  if(A0PHASE==='alarm'&&!A0PULLED){
+    const stg=sm.st||'A0';
+    if(stg==='A0'){ sm.a0=true; a0Tag=true; }
+    else lateSt=stg;   // the pattern moved on: honest label, no A0 faith
+    A0PULLED=true; A0PHASE='done'; a0NudgeUI(0); }
   const b=$('sampleBtn'); b.classList.remove('sPop'); void b.offsetWidth; b.classList.add('sPop');
-  const n=$('sampN'); n.style.display='inline-block'; n.textContent='S'+SAMPLES.length+(a0Tag?' · A0':'');
+  const n=$('sampN'); n.style.display='inline-block'; n.textContent='S'+SAMPLES.length+(a0Tag?' · A0':(sm.st?(' · '+sm.st):''));
   renderSampChips(); drawTimeline();
   if(a0Tag){ toast(LANG==='tr'?('A0 numunesi alındı · '+fmtT(t)+' · öğüt, ölç, Haritala ekranında A0 Agtron alanına yaz.'):('A0 sample secured · '+fmtT(t)+' · grind, measure, enter it as A0 Agtron when you Map.')); return; }
+  if(lateSt){ toast(LANG==='tr'?('Bu numune '+lateSt+' bölgesinden, A0 anı geçti. Yine de değerli: ölç, Haritala ekranında ara nokta olarak gir; A0 rengini bir sonraki kavurmada yakala.'):('This pull is from the '+lateSt+' zone, the A0 moment passed. Still valuable: measure it, enter it as a mid anchor when you Map; catch the A0 color next roast.')); return; }
   const lines=LANG==='tr'?SAMP_TR:SAMP_LINES;
   toast('S'+SAMPLES.length+' · '+fmtT(t)+' · '+lines[(SAMPLES.length-1)%lines.length]);
 }
@@ -1869,7 +1889,7 @@ function renderSampChips(){
   const el=$('sampChips'); if(!el) return;
   if(!SAMPLES.length){ el.style.display='none'; el.innerHTML=''; return; }
   el.style.display='flex';
-  el.innerHTML=SAMPLES.map((s,i)=>'<span style="display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--accent);border-radius:20px;padding:5px 10px;font-size:13px">S'+(i+1)+' · '+fmtT(s.t)+' <b style="color:var(--warn);cursor:pointer;padding:0 3px" onclick="delSample('+i+')">&times;</b></span>').join('');
+  el.innerHTML=SAMPLES.map((s,i)=>'<span style="display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid '+(s.a0?'var(--gold)':'var(--accent)')+';border-radius:20px;padding:5px 10px;font-size:13px">S'+(i+1)+(s.a0?' · A0':(s.st?(' · '+s.st):''))+' · '+fmtT(s.t)+' <b style="color:var(--warn);cursor:pointer;padding:0 3px" onclick="delSample('+i+')">&times;</b></span>').join('');
 }
 function renderSamples(){
   const el=$('sampList'); if(!el) return;
