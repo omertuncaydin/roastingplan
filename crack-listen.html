@@ -45,6 +45,8 @@ body.admin #adminStatsRow{display:flex}
 #dialGrid>.card{margin-bottom:0;text-align:center;min-width:0}
 @media (min-width:900px){ #dialGrid{grid-template-columns:repeat(4,1fr)} }
 @keyframes sPop{0%{transform:scale(1)}45%{transform:scale(1.07) rotate(-1.2deg)}100%{transform:scale(1)}}
+@keyframes a0urge{0%,100%{box-shadow:0 0 0 0 rgba(230,193,75,.55)}50%{box-shadow:0 0 0 9px rgba(230,193,75,0)}}
+#sampleBtn.a0urgent{border-color:var(--gold);color:var(--gold);animation:a0urge 1.2s ease-out infinite}
 .sPop{animation:sPop .4s ease}
 @media (min-width:900px){
   .wrap{max-width:1240px}
@@ -157,7 +159,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-15b</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-15c</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -230,7 +232,7 @@ body.st-setup #btn{display:none}
   </div>
 
   <button id="enrollBtn" onclick="enrollToggle()">Teach it your voice</button>
-  <button id="sampleBtn" onclick="markSample()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><ellipse cx="7.4" cy="7.4" rx="4" ry="5.2" transform="rotate(-45 7.4 7.4)" fill="#e6c14b"/><line x1="10.6" y1="10.6" x2="20" y2="20" stroke="#e6c14b" stroke-width="2.6" stroke-linecap="round"/></svg>Sample pulled<b id="sampN"></b></button>
+  <button id="sampleBtn" onclick="markSample()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><ellipse cx="7.4" cy="7.4" rx="4" ry="5.2" transform="rotate(-45 7.4 7.4)" fill="#e6c14b"/><line x1="10.6" y1="10.6" x2="20" y2="20" stroke="#e6c14b" stroke-width="2.6" stroke-linecap="round"/></svg><span id="sampLbl">Sample pulled</span><b id="sampN"></b></button>
   <button class="go" id="btn" onclick="toggle()">Start listening</button>
   <div class="err" id="err"></div>
 
@@ -371,6 +373,7 @@ let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
 let procV=null, lpV=null, VGF=0, VGS=0, VGN=0, AUDGAPS=[], AUDDOWN=null;   // voice-guard ear + audio-death ledger
 let NLC=nlLoad(), ENROLL=false, ENCOUNT=0, enAC=null, enStream=null, enNodes=null;   // noise library (device-local) + voice enrollment
+let A0NUDGE=0, A0PULLED=false;   // the A0-pull moment: 0 waiting, >0 window open (its time), -1 closed
 let BCLIVE=null, cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={}, STOPT=null, PHASE=0, STOPBORROWED=false, PHPEAK=0, PHPEAKT=0, PHREV=0;
 let LANG=localStorage.getItem('bsLang')||'en';   // declared at the very top: eval-order safe (v07e lesson)
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
@@ -428,7 +431,7 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('dlStory').style.display='none'; $('gameAdd').style.display='none'; $('mapBtn').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0NUDGE=0; A0PULLED=false; a0NudgeUI(false); renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw','mA0Ag'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -511,9 +514,13 @@ function stop(){
   // TWO-PULL CALIBRATION: an unmapped bean must not leave this screen without seeing why mapping matters
   try{ const tpk=(cName.value||'').trim().toLowerCase(), tp=$('twoPull');
     if(tp){ if(tpk && !calMap()[tpk] && valid().length){
-      tp.innerHTML=LANG==='tr'
+      const hasA0S=SAMPLES.some(sm=>sm.a0);
+      tp.innerHTML=hasA0S?(LANG==='tr'
+        ?'<b style="color:var(--gold)">A0 numunen hazır.</b> Öğüt, rengini ölç, aşağıya <b>A0 Agtron</b> olarak yaz; drop numunesinin rengiyle birlikte <b>Haritala</b>ya dokun. Bir sonraki kavurma canlı renk öngörüsüyle başlar.'
+        :'<b style="color:var(--gold)">Your A0 pull is waiting.</b> Grind it, measure its color, enter it as <b>A0 Agtron</b> below; tap <b>Map</b> together with the drop color. The next roast starts with a live projection.')
+      :(LANG==='tr'
         ?'<b style="color:var(--accent2)">Bu çekirdek haritasız.</b> İki numune haritayı kurar: <b>A0 numunesi</b> (ilk çıtırtıda çekilen) ve <b>Drop numunesi</b>. İkisini de öğütüp rengini ölç, aşağıya <b>A0 Agtron</b> ve ölçülen rengi yaz, <b>Haritala</b>ya dokun. Bir sonraki kavurma canlı renk öngörüsüyle başlar.'
-        :'<b style="color:var(--accent2)">This bean is unmapped.</b> Two pulls build the map: the <b>A0 pull</b> (taken at the first pop) and the <b>drop pull</b>. Grind and measure both, enter <b>A0 Agtron</b> and the measured color below, tap <b>Map</b>. The next roast starts with a live color projection.';
+        :'<b style="color:var(--accent2)">This bean is unmapped.</b> Two pulls build the map: the <b>A0 pull</b> (taken at the first pop) and the <b>drop pull</b>. Grind and measure both, enter <b>A0 Agtron</b> and the measured color below, tap <b>Map</b>. The next roast starts with a live color projection.');
       tp.style.display='block'; } else tp.style.display='none'; } }catch(e){}
   try{ renderSamples(); updateSD(); drawTimeline(); updateGauge(); updateMapBtn(); }catch(e){ console.error(e); }   // retrospective pass in a cage: a bad map must never strand the live screen before it reaches st-done
   const mb=(wav.len*2/1048576).toFixed(1);
@@ -1617,7 +1624,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-15b';
+const APPVER='v2026-07-15c';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -1823,13 +1830,26 @@ function updateMapBtn(){ const b=$('mapBtn'); if(!b) return;
 }
 // ---- SampleInRoast: tryer pulls become color anchors ----
 const SAMP_LINES=['The bean cannot hide now.','Spoon out, truth in.','Color caught mid-flight.','One more anchor for the gauge.'];
+function a0NudgeUI(on){ const b=$('sampleBtn'), l=$('sampLbl'); if(!b||!l) return;
+  if(on){ b.classList.add('a0urgent'); l.textContent=LANG==='tr'?'A0! Şimdi numune çek':'A0! Pull the A0 sample now'; }
+  else { b.classList.remove('a0urgent'); l.textContent=tt('Sample pulled'); } }
+function a0Nudge(){
+  if(!running||A0PULLED||A0NUDGE===-1) return;
+  const k=(cName.value||'').trim().toLowerCase();
+  if(!k||calMap()[k]){ if(A0NUDGE>0){ A0NUDGE=-1; a0NudgeUI(false); } return; }   // mapped or unnamed bean: the moment is not needed
+  const nowS=(performance.now()-startT)/1000;
+  if(A0NUDGE===0){ if(LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==='A0')){ A0NUDGE=nowS; a0NudgeUI(true); } }
+  else if(nowS-A0NUDGE>60){ A0NUDGE=-1; a0NudgeUI(false); } }   // window closed: never nag mid-roast
 function markSample(){
   if(!running){ toast(tt('Only during a live session.')); return; }
   const t=(performance.now()-startT)/1000;
   SAMPLES.push({t, ag:null});
+  let a0Tag=false;
+  if(A0NUDGE>0&&!A0PULLED){ SAMPLES[SAMPLES.length-1].a0=true; A0PULLED=true; A0NUDGE=-1; a0NudgeUI(false); a0Tag=true; }
   const b=$('sampleBtn'); b.classList.remove('sPop'); void b.offsetWidth; b.classList.add('sPop');
-  const n=$('sampN'); n.style.display='inline-block'; n.textContent='S'+SAMPLES.length;
+  const n=$('sampN'); n.style.display='inline-block'; n.textContent='S'+SAMPLES.length+(a0Tag?' · A0':'');
   renderSampChips(); drawTimeline();
+  if(a0Tag){ toast(LANG==='tr'?('A0 numunesi alındı · '+fmtT(t)+' · öğüt, ölç, Haritala ekranında A0 Agtron alanına yaz.'):('A0 sample secured · '+fmtT(t)+' · grind, measure, enter it as A0 Agtron when you Map.')); return; }
   const lines=LANG==='tr'?SAMP_TR:SAMP_LINES;
   toast('S'+SAMPLES.length+' · '+fmtT(t)+' · '+lines[(SAMPLES.length-1)%lines.length]);
 }
@@ -2135,7 +2155,7 @@ function drawTimeline(){
       if(!running&&STOPT!=null) stages.push(['DROP',Math.min(STOPT,t0+span-0.5)]); }   // the cut, marked honestly
     // hard monotonic clamp: the sequence A0<=A1<=B0<=B1<=C0<=C1 is a law, not a suggestion
     for(let i=1;i<stages.length;i++) if(stages[i][1]<stages[i-1][1]) stages[i][1]=stages[i-1][1];
-    LASTSTAGES=stages.map(sg=>[sg[0],sg[1]]); renderStageStrip();
+    LASTSTAGES=stages.map(sg=>[sg[0],sg[1]]); renderStageStrip(); a0Nudge();
     // stage pins: simultaneous stages MERGE into one chip (a late-opened session collapses A0·A1·B0
     // onto the same instant; painting them separately buried A0 under the others). Staggered when crowded.
     const merged=[];
