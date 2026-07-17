@@ -160,7 +160,7 @@ body.st-setup #btn{display:none}
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-17a</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-17b</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
@@ -1045,12 +1045,12 @@ function foundingBanner(tr){ let msg=tr?'KURUCU ROASTER · ilk 100 hesap: ömür
 function classStrip(tr){ if(!CLASSES) return ''; let h='';
   const q=CLASSES.next_q_class;
   if(q&&(q.date_en||q.date_tr)){ const d=tr?(q.date_tr||q.date_en):(q.date_en||q.date_tr);
-    h+='<span style="display:inline-block;border:1px solid var(--gold);color:var(--gold);border-radius:14px;padding:4px 10px;font-weight:700;margin:2px 6px 0 0">'+(tr?('Sıradaki Q Grader sınıfı: '+escC(d)+' · '+(q.seats_left||0)+' koltuk'):('Next Q Grader class: '+escC(d)+' · '+(q.seats_left||0)+' seats left'))+'</span>'; }
+    h+='<a href="https://www.coffeenutz.net/products/q-grader" target="_blank" rel="noopener" style="display:inline-block;border:1px solid var(--gold);color:var(--gold);border-radius:14px;padding:4px 10px;font-weight:700;margin:2px 4px 0 4px;text-decoration:none">'+(tr?('Sıradaki Q Grader sınıfı: '+escC(d)+' · '+(q.seats_left||0)+' koltuk'):('Next Q Grader class: '+escC(d)+' · '+(q.seats_left||0)+' seats left'))+'</a>'; }
   const rc=CLASSES.next_roasting_class;
   if(rc&&(rc.date_en||rc.date_tr)){ const d=tr?(rc.date_tr||rc.date_en):(rc.date_en||rc.date_tr);
-    h+='<span style="display:inline-block;border:1px solid var(--gold);color:var(--gold);border-radius:14px;padding:4px 10px;font-weight:700;margin:2px 6px 0 0">'+(tr?('Sıradaki Kavurma sınıfı: '+escC(d)+' · '+(rc.seats_left||0)+' koltuk'):('Next Roasting class: '+escC(d)+' · '+(rc.seats_left||0)+' seats left'))+'</span>'; }
+    h+='<a href="https://www.coffeenutz.net/products/roasting-foundation-intermediate" target="_blank" rel="noopener" style="display:inline-block;border:1px solid var(--gold);color:var(--gold);border-radius:14px;padding:4px 10px;font-weight:700;margin:2px 4px 0 4px;text-decoration:none">'+(tr?('Sıradaki Kavurma sınıfı: '+escC(d)+' · '+(rc.seats_left||0)+' koltuk'):('Next Roasting class: '+escC(d)+' · '+(rc.seats_left||0)+' seats left'))+'</a>'; }
   if(!h) return '';
-  return '<div class="hint" style="font-size:11.5px;margin-top:10px;border-top:1px solid var(--line);padding-top:8px;color:var(--ink)">'+h+'</div>'; }
+  return '<div class="hint" style="font-size:11.5px;margin-top:10px;border-top:1px solid var(--line);padding-top:8px;color:var(--ink);text-align:center">'+h+'</div>'; }
 function showPaywall(feature){
   const p=planActive();
   const tr=LANG==='tr';
@@ -1072,7 +1072,7 @@ function showPaywall(feature){
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast kayıtların kaydedilir ve saklanır.':'Roast records saved and kept.')+'</td></tr>'
    +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Cupper</b>'+pmark('special')+'<br><span class="hint" style="font-size:10.5px">'+(tr?'Yalnız Q sınıfında kazanılır. Ömür boyu numaralı.':'Earned in Q class only. Numbered for life.')+'</span></td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roaster + numune çekimlerin tadım seansına dönüşür.':'Roaster + sample pulls become cupping sessions.')+'</td>'
-   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roaster\'daki her şey + Cupping, Grade ve Value kalıcı olur. Sınıf tadımları doğrudan Listener\'dan beslenir.':'Everything in Roaster + Cupping, Grade and Value all persist. Class cuppings fed straight from the Listener.')+'</td></tr>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast · Cup · Grade: her şey kayıt altında.':'Roast · Cup · Grade: everything is recorded.')+'</td></tr>'
    +'</table>'
    +classStrip(tr)
    +'<span style="display:inline-block;border:1px solid var(--accent2);color:var(--accent2);border-radius:14px;padding:4px 10px;font-weight:700;margin:8px 6px 0 0;font-size:11px">'+(tr?'Cupper, Q yenilemenle yenilenir.':'Cupper renews with your Q recalibration.')+'</span>'
@@ -1640,7 +1640,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-17a';
+const APPVER='v2026-07-17b';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();

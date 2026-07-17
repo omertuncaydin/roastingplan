@@ -583,7 +583,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-17d</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-17e</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1892,38 +1892,40 @@ function printClassCard(){
 function infoModal(title,body){ hxBox.innerHTML=`<h1 style="margin:0 0 8px;font-size:18px">${title}</h1><div class="small" style="line-height:1.6">${body}</div><button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`; hxModal.style.display='flex'; }
 let CLASSES=null;
 try{ fetch('classes.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{ if(j&&typeof j==='object') CLASSES=j; }).catch(()=>{}); }catch(e){}
-function gFoundingBanner(){ let msg='FOUNDING ROASTER · first 100 accounts: $149/yr locked for life, numbered.';
-  if(CLASSES&&typeof CLASSES.founding_taken==='number') msg+=' · '+CLASSES.founding_taken+'/100 taken';
+function gFoundingBanner(tr){ let msg=tr?'KURUCU ROASTER · ilk 100 hesap: ömür boyu sabit $149/yıl, numaralı.':'FOUNDING ROASTER · first 100 accounts: $149/yr locked for life, numbered.';
+  if(CLASSES&&typeof CLASSES.founding_taken==='number') msg+=(tr?(' · '+CLASSES.founding_taken+'/100 dolu'):(' · '+CLASSES.founding_taken+'/100 taken'));
   return '<div style="border:1px solid var(--gold);border-radius:10px;padding:8px 10px;margin-top:10px;font-size:11.5px;font-weight:700;color:var(--gold)">'+msg+'</div>'; }
-function gClassStrip(){ if(!CLASSES) return ''; let h='';
+function gClassStrip(tr){ if(!CLASSES) return ''; let h='';
   const q=CLASSES.next_q_class;
-  if(q&&(q.date_en||q.date_tr)) h+='<span style="display:inline-block;border:1px solid var(--gold);color:var(--gold);border-radius:14px;padding:4px 10px;font-weight:700;margin:2px 6px 0 0">Next Q Grader class: '+esc(q.date_en||q.date_tr)+' · '+(q.seats_left||0)+' seats left</span>';
+  if(q&&(q.date_en||q.date_tr)){ const d=tr?(q.date_tr||q.date_en):(q.date_en||q.date_tr);
+    h+='<a href="https://www.coffeenutz.net/products/q-grader" target="_blank" rel="noopener" style="display:inline-block;border:1px solid var(--gold);color:var(--gold);border-radius:14px;padding:4px 10px;font-weight:700;margin:2px 4px 0 4px;text-decoration:none">'+(tr?('Sıradaki Q Grader sınıfı: '+esc(d)+' · '+(q.seats_left||0)+' koltuk'):('Next Q Grader class: '+esc(d)+' · '+(q.seats_left||0)+' seats left'))+'</a>'; }
   const rc=CLASSES.next_roasting_class;
-  if(rc&&(rc.date_en||rc.date_tr)) h+='<span style="display:inline-block;border:1px solid var(--gold);color:var(--gold);border-radius:14px;padding:4px 10px;font-weight:700;margin:2px 6px 0 0">Next Roasting class: '+esc(rc.date_en||rc.date_tr)+' · '+(rc.seats_left||0)+' seats left</span>';
+  if(rc&&(rc.date_en||rc.date_tr)){ const d=tr?(rc.date_tr||rc.date_en):(rc.date_en||rc.date_tr);
+    h+='<a href="https://www.coffeenutz.net/products/roasting-foundation-intermediate" target="_blank" rel="noopener" style="display:inline-block;border:1px solid var(--gold);color:var(--gold);border-radius:14px;padding:4px 10px;font-weight:700;margin:2px 4px 0 4px;text-decoration:none">'+(tr?('Sıradaki Kavurma sınıfı: '+esc(d)+' · '+(rc.seats_left||0)+' koltuk'):('Next Roasting class: '+esc(d)+' · '+(rc.seats_left||0)+' seats left'))+'</a>'; }
   if(!h) return '';
-  return '<div style="font-size:11.5px;opacity:.85;margin-top:10px;border-top:1px solid var(--line);padding-top:8px">'+h+'</div>'; }
-function showPlanInfo(){ const cur=planLabelG(MYPLAN); const mk=t=>cur===t?' <span style="color:var(--gold);font-weight:800">· Current</span>':'';
-  infoModal('Plans', 'You are on: <b>'+esc(cur)+'</b>.'
-   +'<div style="font-size:12.5px;margin:8px 0 0">The instrument is free. The memory is the service. The craft is taught in person.</div>'
-   +gFoundingBanner()
+  return '<div style="font-size:11.5px;margin-top:10px;border-top:1px solid var(--line);padding-top:8px;text-align:center">'+h+'</div>'; }
+function showPlanInfo(){ const tr=(LANG==='tr'); const cur=planLabelG(MYPLAN); const mk=t=>cur===t?' <span style="color:var(--gold);font-weight:800">· '+(tr?'Mevcut':'Current')+'</span>':'';
+  infoModal(tr?'Planlar':'Plans', (tr?'Planın: ':'You are on: ')+'<b>'+esc(cur)+'</b>.'
+   +'<div style="font-size:12.5px;margin:8px 0 0">'+(tr?'Enstrüman ücretsiz. Hafıza hizmettir. Zanaat yüz yüze öğretilir.':'The instrument is free. The memory is the service. The craft is taught in person.')+'</div>'
+   +gFoundingBanner(tr)
    +'<table style="width:100%;border-collapse:collapse;font-size:11.5px;margin-top:10px;text-align:left;table-layout:fixed">'
    +'<tr style="vertical-align:top"><th style="width:31%;padding:5px 4px;vertical-align:top;text-align:left"></th>'
    +'<th style="padding:5px 4px;vertical-align:top;text-align:left;font-weight:600;opacity:.75">Crack Listener</th>'
    +'<th style="padding:5px 4px;vertical-align:top;text-align:left;font-weight:600;opacity:.75">CoffeeNutz Guide</th></tr>'
-   +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Local</b>'+mk('Local')+'<br><span style="font-size:10.5px;opacity:.75">Free. Data lives on your phone.</span></td>'
-   +'<td style="padding:8px 4px;vertical-align:top">Everything, unlimited.</td>'
-   +'<td style="padding:8px 4px;vertical-align:top">Explore all; nothing kept.</td></tr>'
-   +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Roaster</b>'+mk('Roaster')+'<br><span style="font-size:10.5px;opacity:.75">$20/mo · $200/yr · 12 months included with a Roasting class.</span></td>'
-   +'<td style="padding:8px 4px;vertical-align:top">Maps synced everywhere.</td>'
-   +'<td style="padding:8px 4px;vertical-align:top">Roast records saved and kept.</td></tr>'
-   +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Cupper</b>'+mk('Cupper')+'<br><span style="font-size:10.5px;opacity:.75">Earned in Q class only. Numbered for life.</span></td>'
-   +'<td style="padding:8px 4px;vertical-align:top">Roaster + sample pulls become cupping sessions.</td>'
-   +'<td style="padding:8px 4px;vertical-align:top">Roaster + Cupping, Grade, Value all persist.</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Local</b>'+mk('Local')+'<br><span style="font-size:10.5px;opacity:.75">'+(tr?'Ücretsiz. Verilerin telefonunda yaşar.':'Free. Data lives on your phone.')+'</span></td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Her şey, sınırsız.':'Everything, unlimited.')+'</td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Hepsini keşfet; hiçbir şey saklanmaz.':'Explore all; nothing kept.')+'</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Roaster</b>'+mk('Roaster')+'<br><span style="font-size:10.5px;opacity:.75">$20/'+(tr?'ay':'mo')+' · $200/'+(tr?'yıl':'yr')+' · '+(tr?'Kavurma sınıfıyla 12 ay dahil.':'12 months included with a Roasting class.')+'</span></td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Haritalar her cihazda senkron.':'Maps synced everywhere.')+'</td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast kayıtların kaydedilir ve saklanır.':'Roast records saved and kept.')+'</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Cupper</b>'+mk('Cupper')+'<br><span style="font-size:10.5px;opacity:.75">'+(tr?'Yalnız Q sınıfında kazanılır. Ömür boyu numaralı.':'Earned in Q class only. Numbered for life.')+'</span></td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roaster + numune çekimlerin tadım seansına dönüşür.':'Roaster + sample pulls become cupping sessions.')+'</td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast · Cup · Grade: her şey kayıt altında.':'Roast · Cup · Grade: everything is recorded.')+'</td></tr>'
    +'</table>'
-   +gClassStrip()
-   +'<span style="display:inline-block;border:1px solid var(--accent2);color:var(--accent2);border-radius:14px;padding:4px 10px;font-weight:700;margin:8px 6px 0 0;font-size:11px">Cupper renews with your Q recalibration.</span>'
-   +'<div style="font-size:11px;opacity:.75;margin-top:6px">Your records are never deleted. If a plan ends, saving pauses and everything you made stays readable.</div>'
-   +'<div style="font-size:11px;margin-top:10px;color:var(--accent2)">The science is freely shared, so you can always measure, calibrate, learn your coffee better.</div>'
+   +gClassStrip(tr)
+   +'<div style="text-align:center"><span style="display:inline-block;border:1px solid var(--accent2);color:var(--accent2);border-radius:14px;padding:4px 10px;font-weight:700;margin:8px 4px 0 4px;font-size:11px">'+(tr?'Cupper, Q yenilemenle yenilenir.':'Cupper renews with your Q recalibration.')+'</span></div>'
+   +'<div style="font-size:11px;opacity:.75;margin-top:6px">'+(tr?'Kayıtların asla silinmez. Plan sona ererse kaydetme durur, yaptığın her şey okunabilir kalır.':'Your records are never deleted. If a plan ends, saving pauses and everything you made stays readable.')+'</div>'
+   +'<div style="font-size:11px;margin-top:10px;color:var(--accent2)">'+(tr?'Bilim açıkça paylaşılır; ölç, kalibre et, kahveni hep daha iyi öğren.':'The science is freely shared, so you can always measure, calibrate, learn your coffee better.')+'</div>'
   ); }
 // SCA / CVA definitions for each cupping attribute
 const SEC_DEFS={
