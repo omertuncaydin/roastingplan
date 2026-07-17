@@ -153,6 +153,8 @@
   .chip.sub{font-size:11px;padding:5px 10px;opacity:.92}
   .cgrp{margin-top:8px}
   .cgrplbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);font-weight:700;margin-bottom:2px}
+  summary.cgrplbl{list-style:none}
+  summary.cgrplbl::-webkit-details-marker{display:none}
   .nudge{margin-top:10px;font-size:12.5px;color:var(--warn);background:#221a10;border:1px solid var(--line);border-radius:9px;padding:9px 11px}
   .cuprow{display:flex;gap:8px;align-items:center;margin-top:4px}
   .cupbox{display:flex;gap:6px}
@@ -580,7 +582,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-15b</span></div><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh app">Refresh app</button><span class="small" style="color:var(--muted)">v2026-07-17a</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -622,10 +624,12 @@
       </div>
     </div>
     <div class="card">
-      <div class="secname" style="margin-bottom:10px">Your membership</div>
+      <div class="cgrplbl" onclick="toggleFold('mbBody','gFoldMemb',this)" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Your membership</span><span class="foldChev" style="font-size:13px">&#9662;</span></div>
+      <div id="mbBody">
       <div class="hxrow"><span>Email</span><span class="tgtval" id="acEmail">-</span></div>
       <div class="hxrow"><span>Member since</span><span class="tgtval" id="acSince">-</span></div>
       <div class="hxrow" style="border-bottom:none"><span>Plan</span><span class="chip sub" id="acPlan" onclick="showPlanInfo()" style="cursor:pointer" title="about the plans">-</span></div>
+      </div>
     </div>
     <div class="card">
       <div class="cgrplbl" onclick="toggleFold('passBody','gFoldPass',this)" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Change password</span><span class="foldChev" style="font-size:13px">&#9662;</span></div>
@@ -637,10 +641,9 @@
       <div class="small" id="acPassMsg" style="margin-top:8px"></div>
       </div>
     </div>
-    <div class="card"><button class="btn ghost" style="border:none;background:transparent;padding:4px" onclick="doLogout()">Log out</button></div>
     <div class="card hide" id="memberCard">
       <details class="adminfold">
-      <summary class="secname">Member access</summary>
+      <summary class="cgrplbl" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;list-style:none"><span>Member access</span><span class="foldChev" style="font-size:13px">&#9662;</span></summary>
       <div class="small" style="margin:6px 0 10px">Assign a plan to a learner by email. Works even before they sign up. No plan = Lite (use and see, cannot keep).</div>
       <label class="fld" for="entName">Name</label><input type="text" id="entName" autocomplete="off">
       <label class="fld" for="entEmail" style="margin-top:10px">Learner email</label><input type="email" id="entEmail" autocomplete="off" oninput="lookupEntitlement()">
@@ -656,7 +659,7 @@
     </div>
     <div class="card hide" id="trCard">
       <details class="adminfold">
-      <summary class="secname">Translations (EN &rarr; TR)</summary>
+      <summary class="cgrplbl" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;list-style:none"><span>Translations (EN &rarr; TR)</span><span class="foldChev" style="font-size:13px">&#9662;</span></summary>
       <div class="small" style="margin-bottom:10px">Edit the Turkish shown when the app is in TR. Saved for everyone; English stays the source. Full reference: <a href="https://github.com/omertuncaydin/roastingplan/blob/main/tr-strings.md" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">tr-strings.md</a></div>
       <div id="trList"></div>
       <button class="btn" style="margin-top:10px" onclick="saveTranslations()">Save translations</button>
@@ -665,7 +668,7 @@
     </div>
     <div class="card hide" id="submitCard">
       <details class="adminfold">
-      <summary class="secname">Agtron Challenge &middot; G&ouml;nderiler &middot; Submissions</summary>
+      <summary class="cgrplbl" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;list-style:none"><span>Agtron Challenge &middot; G&ouml;nderiler &middot; Submissions</span><span class="foldChev" style="font-size:13px">&#9662;</span></summary>
       <div class="small" style="margin:6px 0 8px;color:var(--muted)">Community crack submissions. Listen before you approve.</div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><button class="iconbtn" onclick="loadSubmissions()">Refresh &middot; Yenile</button><span class="small" id="gsCount" style="color:var(--accent2);font-weight:700"></span></div>
       <div id="gsList"></div>
@@ -1701,9 +1704,9 @@ function renderEntList(){ if(typeof entList==='undefined'||!entList) return;
     +'<button class="btn ghost" id="entBulkRemove" style="width:auto;padding:8px 14px;margin:0;color:var(--dark);border-color:var(--dark)">Remove</button>'
     +'<span class="small" id="entStageInd" style="flex:1 0 100%;color:var(--warn);display:none;font-weight:600"></span>'
     +'</div>';
-  h+='<div class="hxrow" style="align-items:center"><input type="checkbox" id="entSelAll" style="margin-right:8px"'+(allSel?' checked':'')+'><span class="small" style="flex:0 0 auto;min-width:64px;max-width:96px;color:var(--muted);margin-right:6px">Name</span><span class="small" style="flex:1;color:var(--muted)">Select all</span></div>';
+  h+='<div class="hxrow" style="align-items:center"><input type="checkbox" id="entSelAll" title="Select all" style="margin-right:8px"'+(allSel?' checked':'')+'><span class="small" style="flex:1;min-width:0;color:var(--muted);margin-right:6px">Name</span><span class="small" style="flex:0 0 64px;max-width:64px;color:var(--muted)">eMail</span><span class="small" style="flex:0 0 auto;padding:0 8px;color:var(--muted)">Why</span><span class="small" style="flex:0 0 auto;color:var(--muted)">Plan</span></div>';
   h+=ENT_ROWS.map(e=>{ const a=e.access||{}; const plan=a.plan?planLabelG(a.plan):'(custom)'; const ck=ENT_SEL.has(e.email)?' checked':''; const nm=((a.name||'').trim());
-    return '<div class="hxrow" style="align-items:center"><input type="checkbox" class="entRowCk" data-entck="'+esc(e.email)+'" style="margin-right:8px"'+ck+'><span class="entNameCell" style="flex:0 0 auto;min-width:64px;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;margin-right:6px">'+(nm?esc(nm):'-')+'</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">'+esc(e.email)+'</span><span style="font-size:11px;flex:0 0 auto;padding:0 8px;text-align:center">'+entReasonCell(a)+'</span><span class="tgtval" style="font-size:11px;flex:0 0 auto">'+esc(plan)+' <button class="delx" data-delent="'+esc(e.email)+'">×</button></span></div>'; }).join('');
+    return '<div class="hxrow" style="align-items:center"><input type="checkbox" class="entRowCk" data-entck="'+esc(e.email)+'" style="margin-right:8px"'+ck+'><span class="entNameCell" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;margin-right:6px">'+(nm?esc(nm):'-')+'</span><span style="flex:0 0 64px;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--muted)" title="'+esc(e.email)+'">'+esc(e.email)+'</span><span style="font-size:11px;flex:0 0 auto;padding:0 8px;text-align:center">'+entReasonCell(a)+'</span><span class="tgtval" style="font-size:11px;flex:0 0 auto">'+esc(plan)+' <button class="delx" data-delent="'+esc(e.email)+'">×</button></span></div>'; }).join('');
   entList.innerHTML=h;
   const sa=document.getElementById('entSelAll'); if(sa) sa.onclick=()=>{ if(sa.checked) ENT_ROWS.forEach(e=>ENT_SEL.add(e.email)); else ENT_SEL.clear(); renderEntList(); };
   entList.querySelectorAll('[data-entck]').forEach(ck=>ck.onclick=()=>{ if(ck.checked) ENT_SEL.add(ck.dataset.entck); else ENT_SEL.delete(ck.dataset.entck); renderEntList(); });
