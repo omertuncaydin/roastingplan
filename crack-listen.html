@@ -145,26 +145,25 @@ body.st-setup #btn{display:none}
 <body>
 <div class="wrap">
   <div id="hdr">
-    <div class="brandFull">
+    <a href="roast-guide.html" style="text-decoration:none;color:inherit" title="CoffeeNutz Guide"><div class="brandFull">
       <img class="tlogo" src="coffeenutz-turtle.png" alt="CoffeeNutz">
       <div class="logoName" style="font-size:24px;color:#D8453B"><span style="display:inline-block">CoffeeNutz<sup class="rmark">&reg;</sup></span></div>
       <div class="logoName" style="font-size:24px;color:var(--ink);margin-top:2px"><span style="display:inline-block">Guide</span></div>
       <div class="logoSub">ROAST · CUP · GRADE</div>
-    </div>
-    <div class="brandCompact">
+    </div></a>
+    <a href="roast-guide.html" style="text-decoration:none;color:inherit" title="CoffeeNutz Guide"><div class="brandCompact">
       <span class="logoName" style="font-size:22px;display:inline-block"><span class="lr">CoffeeNutz<sup class="rmark">&reg;</sup></span> <span class="lg">Guide</span></span>
-    </div>
+    </div></a>
     <div class="hdrDivider"></div>
     <div style="text-align:center">
       <h1 style="font-size:25px;margin:2px 0 0">Crack Listener</h1>
       <div style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-17c</span>
-        <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-17d</span>
+        <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
-        <a class="hpill" id="cockpitChip" href="roast-guide.html" style="border-color:var(--accent);color:var(--accent);font-weight:700;text-decoration:none">Guide App &#8599;</a>
       </div>
     </div>
     <div id="codeRow" style="display:none;gap:8px;margin:0 0 12px">
@@ -1640,7 +1639,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-17c';
+const APPVER='v2026-07-17d';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
