@@ -46,7 +46,7 @@ body.stale .fade{opacity:.35}
 <div class="card">
   <div class="fade" id="coffee">·</div>
   <div id="note"></div>
-  <div id="a0strip" onclick="if(document.body.classList.contains('a0now')||document.body.classList.contains('a0pre'))sendSample()">·</div>
+  <div id="a0strip" onclick="stripTap()">·</div>
   <div class="fade" id="gwrap">
     <svg viewBox="0 0 170 100" width="170" aria-hidden="true">
       <path d="M17 88 A68 68 0 0 1 153 88" fill="none" stroke="#3a3128" stroke-width="10" stroke-linecap="round"/>
@@ -119,6 +119,9 @@ function tapDrop(){ if(!fresh()) return;
   try{ cmd('drop').catch(()=>{}); flash('drop gönderildi ✓'); }catch(e){} }
 function flash(msg){ $('state').textContent=msg; document.body.style.outline='3px solid var(--gold)';
   setTimeout(()=>{ document.body.style.outline='none'; },600); }
+function stripTap(){ const b=document.body.classList;
+  if(b.contains('a0now')||b.contains('a0pre')) sendSample();
+  else if(b.contains('tnow')||b.contains('tpre')) tapDrop(); }
 function sendAgain(){ if(!FIN) return; try{ cmd('again').catch(()=>{}); flash('başlat gönderildi ✓'); }catch(e){} }
 function sendFresh(){ if(!FIN) return; try{ cmd('fresh').catch(()=>{}); flash('yeni kahve · telefonda isim seç'); }catch(e){} }
 setInterval(()=>{ if(!LASTMSG) return;
