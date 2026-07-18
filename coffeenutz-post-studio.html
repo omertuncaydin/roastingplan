@@ -109,7 +109,7 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13f</span></div>
+    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13g</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
     <button class="btn" onclick="document.getElementById('jsonFile').click()">Load</button>
@@ -232,14 +232,14 @@ function announceCard(kind){
       + '<div class="foot" style="font-size:24px"><span class="fl">'+esc(state.brand.handle)+'</span><span class="fr">'+trUp('Detay profildeki linkte')+'</span></div>', 100);
   }
   if(kind==="banner"||kind==="linkedin"||kind==="siteban"){
-    const pad = kind==="banner"?90:(kind==="siteban"?56:64);
-    const ctaX = kind==="siteban" ? '<div class="cta" style="font-size:20px;padding:14px 24px;margin-top:30px">'+esc(trUp(a.cta))+' &#8594; '+esc(trUp(state.brand.site))+'</div>' : cta;
+    const pad = kind==="banner"?70:(kind==="siteban"?56:64);
+    const ctaX = (kind==="siteban"||kind==="banner") ? '<div class="cta" style="font-size:'+(kind==="banner"?26:20)+'px;padding:'+(kind==="banner"?'16px 28px':'14px 24px')+';margin-top:'+(kind==="banner"?34:30)+'px">'+esc(trUp(a.cta))+' &#8594; '+esc(trUp(state.brand.site))+'</div>' : cta;
     return card(W,H,dark,
       '<div style="display:flex;gap:'+(60*s)+'px;height:100%;align-items:center">'
       + '<div style="flex:1.35">'
-      +   '<div class="k-top" style="font-size:'+(kind==="siteban"?19:22*s)+'px"><span class="kk">'+esc(trUp(a.kicker))+'</span></div>'
-      +   '<h1 style="font-size:'+(kind==="banner"?84:(kind==="siteban"?58:64*s))+'px;margin-top:'+(22*s)+'px">'+esc(a.title)+'</h1>'
-      +   '<div class="metaline" style="font-size:'+(kind==="siteban"?20:24*s)+'px;margin-top:'+(28*s)+'px">'+esc(trUp(a.dateline))+'  &#183;  '+esc(trUp(a.city))+'\n'+esc(trUp(a.seats))+'  &#183;  '+esc(trUp(a.lang))+(a.highlight?'\n<span class="mhl">'+esc(trUp(a.highlight))+'</span>':"")+'</div>'
+      +   '<div class="k-top" style="font-size:'+(kind==="siteban"?19:(kind==="banner"?26:22*s))+'px"><span class="kk">'+esc(trUp(a.kicker))+'</span></div>'
+      +   '<h1 style="font-size:'+(kind==="banner"?76:(kind==="siteban"?58:64*s))+'px;margin-top:'+(kind==="banner"?18:22*s)+'px">'+esc(a.title)+'</h1>'
+      +   '<div class="metaline" style="font-size:'+(kind==="siteban"?20:(kind==="banner"?28:24*s))+'px;margin-top:'+(kind==="banner"?24:28*s)+'px">'+esc(trUp(a.dateline))+'  &#183;  '+esc(trUp(a.city))+'\n'+esc(trUp(a.seats))+'  &#183;  '+esc(trUp(a.lang))+(a.highlight?'\n<span class="mhl">'+esc(trUp(a.highlight))+'</span>':"")+'</div>'
       +   ctaX
       + '</div>'
       + '<div style="flex:1;align-self:stretch;display:flex;flex-direction:column;justify-content:center">'
