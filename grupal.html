@@ -11,7 +11,7 @@
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
 <meta name="description" content="Grup-Al: yeterli katılımcı toplanırsa kampanya başlar. Hedefe ulaşılmazsa kimseden ücret alınmaz.">
-<!-- grupal.html · v2026-07-17c -->
+<!-- grupal.html · v2026-07-17d -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -148,7 +148,7 @@ button:active{transform:scale(.99)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-07-17c';
+const VERSION='v2026-07-17d';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -383,6 +383,6 @@ async function boot(){
 boot();
 </script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "cc241b05cd704f42a333be3d552415e9"}'></script><!-- End Cloudflare Web Analytics -->
-<!-- cn-refresh --><button onclick="var u=new URL(location.href);u.searchParams.set('v',Date.now());location.href=u.href" title="Refresh" aria-label="Refresh" style="position:fixed;top:10px;right:10px;left:auto;bottom:auto;width:auto;min-width:0;margin:0;display:inline-block;box-sizing:border-box;line-height:1.3;z-index:2147483000;border:1px solid rgba(201,138,60,.65);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;letter-spacing:.02em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:rgba(26,20,16,.78);color:#c98a3c;cursor:pointer;-webkit-tap-highlight-color:transparent">Refresh</button>
+<!-- cn-refresh --><button onclick="var u=new window.URL(location.href);u.searchParams.set('v',Date.now());location.href=u.href" title="Refresh" aria-label="Refresh" style="position:fixed;top:10px;right:10px;left:auto;bottom:auto;width:auto;min-width:0;margin:0;display:inline-block;box-sizing:border-box;line-height:1.3;z-index:2147483000;border:1px solid rgba(201,138,60,.65);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;letter-spacing:.02em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:rgba(26,20,16,.78);color:#c98a3c;cursor:pointer;-webkit-tap-highlight-color:transparent">Refresh</button>
 </body>
 </html>
