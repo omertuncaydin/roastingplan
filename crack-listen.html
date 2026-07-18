@@ -163,7 +163,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18o</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18p</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -289,9 +289,8 @@ body.st-setup #btn{display:none}
       <div id="sampList"></div>
       
       <button class="go" id="mapBtn" onclick="saveCalIfMapped(true);updateGauge()" style="display:none;background:var(--accent2);margin-top:8px">Map this coffee (save color)</button>
-      <div id="nextRow" style="display:none;gap:8px;margin-top:8px">
-        <button class="go" style="flex:1;background:var(--accent2);font-size:13px;margin-top:0" onclick="start()">Roast this coffee again</button>
-        <button class="go" style="flex:1;background:#3a2f26;font-size:13px;margin-top:0" onclick="wcFresh()">New coffee</button>
+      <div id="nextRow" style="display:none;margin-top:8px">
+        <button class="go" style="width:100%;background:#3a2f26;font-size:13px;margin-top:0" onclick="wcFresh()">New coffee</button>
       </div>
       <button class="go" id="dlZip" onclick="saveSession()" style="display:none;margin-top:8px">Save session (.zip)</button>
       <div style="display:flex;gap:6px;margin-top:8px">
@@ -555,7 +554,7 @@ function stop(){
       body:JSON.stringify({messages:[{topic:'cnw-'+WCKEY(), event:'live', payload:{c:(cName.value||'').trim()||'?', st:lst, n:valid().length, proj:STOPPROJ||null, band:(ENGINE&&isFinite(ENGINE.band))?Math.round(ENGINE.band*2)/2:null, t:Math.round(STOPT), w:0, fin:1}, private:false}]})}).catch(()=>{}); } }catch(e){}
   try{ if(!planActive() && valid().length>=10){ localStorage.setItem('bsRoastN',String(roastCount()+1)); refreshPlanUI(); } }catch(e){}   // a "roast" = 10+ real cracks; test taps stay free
   $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):'';
-  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('dlStory').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block'; $('nextRow').style.display='flex'; if(!$('mCoffee').value) $('mCoffee').value=cName.value;
+  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('dlStory').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block'; $('nextRow').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value;
     // a mapped coffee fills its own paperwork: bean-constant fields prefill from the map, measurements stay yours
     const calP=calFor();
     if(calP){ if(!$('mProc').value&&calP.proc) $('mProc').value=calP.proc;
@@ -587,7 +586,7 @@ function stop(){
     ?('Seans bellekte: '+(wav.len?mb+' MB ses, ':'')+rows.length+' iz örneği, '+cracks.length+' çatlak. Sayfayı kapatmadan önce seansı kaydet.')
     :('Session kept in memory: '+(wav.len?mb+' MB audio, ':'')+rows.length+' trace samples, '+cracks.length+' cracks. Save the session before closing or reloading the page.');
   setState('st-done');
-  $('btn').textContent=tt('New session'); $('btn').className='go';
+  $('btn').textContent=tt('Roast this coffee again'); $('btn').className='go';
   $('status').textContent=(LANG==='tr'?('Durduruldu. '+valid().length+' geçerli çatlak.'):('Stopped. '+valid().length+' valid cracks.'))+(VGN?(LANG==='tr'?(' İnsan sesi engellendi: '+VGN+' (kayıtta).'):(' Human voice guarded: '+VGN+' (in the log).')):'');
 }
 
@@ -1693,7 +1692,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-18o';
+const APPVER='v2026-07-18p';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -1879,7 +1878,7 @@ async function loadSession(file){
   $('mAgWSd').value=meta.agtron_whole_sd||''; $('mAgSd').value=meta.agtron_ground_sd||''; $('mProc').value=meta.process||''; $('mChgFc').value=meta.charge_to_fc||''; if(meta.machine) $('mEquip').value=meta.machine; $('mChgT').value=meta.charge_c||''; $('mDrop').value=meta.drop_after_last_s||''; $('mTarget').value=meta.target||''; $('mMoist').value=meta.moisture||''; $('mAw').value=meta.water_activity||'';
   $('mA0Ag').value=meta.a0_agtron||'';   // A0 color from the CSV meta if the session carried one
   if(!$('mA0Ag').value){ const cf=calFor(); if(cf&&isFinite(cf.fc_ag)) $('mA0Ag').value=cf.fc_ag; }   // else prefill from this coffee's map, like proc/moist
-  $('metaBox').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block'; $('nextRow').style.display='flex';
+  $('metaBox').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block'; $('nextRow').style.display='block';
   $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('dlStory').style.display='block';   // re-save allowed: corrected FP labels are the training corpus
   setState('st-done');
   try{ isoSweep(STOPT); }catch(e){}   // ISOLATED FIRST CRACK: one retrospective pass for loaded sessions
@@ -2084,7 +2083,7 @@ function applyLang(){
   document.querySelectorAll('input[placeholder]').forEach(i=>{ if(!i.dataset.ph) i.dataset.ph=i.placeholder;
     i.placeholder=LANG==='tr'?(EN2TR[i.dataset.ph]||i.dataset.ph):i.dataset.ph; });
   renderNameplate(); updateGauge(); updateSD(); drawTimeline();
-  if(!running){ $('btn').textContent=(document.body.classList.contains('st-done'))?tt('New session'):tt('Start listening'); }
+  if(!running){ $('btn').textContent=(document.body.classList.contains('st-done'))?tt('Roast this coffee again'):tt('Start listening'); }
   else $('btn').textContent=tt('Drop');
 }
 function toggleLang(){ LANG=LANG==='tr'?'en':'tr'; localStorage.setItem('bsLang',LANG); applyLang(); }
