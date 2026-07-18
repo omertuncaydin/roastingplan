@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- CoffeeNutz Emailing Vault. (c) 2026 Omer Aydin / CoffeeNutz. Email drafts with sent / unsent status. -->
+<!-- CoffeeNutz Emailing Vault. (c) 2026 Omer Aydin / CoffeeNutz. Subscriber emails (Shopify Email) with sent / unsent status. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -17,7 +17,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 .brand .lr{color:var(--red)}.brand .lg{color:var(--ink)}
 .hdrrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .pill{border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--muted)}
-.iconbtn{padding:6px 11px;font-size:12px;font-weight:600;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:9px;cursor:pointer}
+.iconbtn{padding:6px 11px;font-size:12px;font-weight:600;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:9px;cursor:pointer;width:auto}
 .sub{color:var(--muted);font-size:12px;margin:8px 0 16px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
 .card.sent{border-color:var(--ok);opacity:.85}
@@ -27,23 +27,32 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 .chip{font-size:10.5px;font-weight:700;border-radius:12px;padding:3px 10px;letter-spacing:.03em}
 .chip.sent{background:var(--ok);color:#fff}
 .chip.unsent{background:var(--warn);color:#fff}
+.chip.edited{background:transparent;border:1px solid var(--accent);color:var(--accent)}
 .meta{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6}
 .meta b{color:var(--ink);font-weight:600}
 .note{font-size:12px;color:var(--muted);margin-top:6px;font-style:italic}
 .btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-.mini{padding:6px 12px;font-size:12px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);cursor:pointer}
+.mini{padding:6px 12px;font-size:12px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);cursor:pointer;width:auto}
 .mini.acc{border-color:var(--accent);color:var(--accent)}
 .mini.okb{border-color:var(--ok);color:#7fbf9f}
-.body{display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:12px;font-size:13px;white-space:pre-wrap;color:var(--ink);line-height:1.65;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-.card.open .body{display:block}
+.mini.redb{border-color:var(--red);color:var(--red)}
+.bodybox{display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.card.open .bodybox{display:block}
+.bodytext{font-size:13px;white-space:pre-wrap;color:var(--ink);line-height:1.65;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.editarea{width:100%;min-height:260px;background:var(--panel2);border:1px solid var(--accent);color:var(--ink);border-radius:10px;padding:12px;font-size:13px;line-height:1.6;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .gate{max-width:340px;margin:60px auto;text-align:center}
 input,textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:12px;font-size:15px;margin:8px 0;font-family:inherit}
 button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;font-weight:700;background:var(--ok);color:#fff;cursor:pointer}
-.linkish{background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:6px}
-.addbox{background:var(--panel2);border:1px dashed var(--line);border-radius:14px;padding:14px 16px;margin-top:18px;display:none}
-.addbox.show{display:block}
-.addbox label{font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;font-weight:700}
-.stamp{font-size:11px;color:var(--muted)}
+.linkish{background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:6px;width:auto}
+.overlay{display:none;position:fixed;inset:0;background:rgba(10,8,6,.7);z-index:1000;align-items:center;justify-content:center;padding:18px}
+.overlay.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;max-width:560px;width:100%;max-height:86vh;overflow:auto}
+.modal h3{margin:0 0 4px;font-size:16px}
+.modal .sub{margin:2px 0 10px}
+.modal label{font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;font-weight:700}
+.mrow{display:flex;gap:10px;margin-top:12px}
+.mrow .go{margin:0}
+.mrow .ghost{width:100%;border:1px solid var(--line);border-radius:11px;padding:13px;font-size:15px;font-weight:700;background:transparent;color:var(--muted);cursor:pointer}
 </style>
 </head>
 <body>
@@ -59,91 +68,158 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <div class="hdrrow">
     <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Emailing Vault</span></div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span class="pill">v2026-07-18a</span>
+      <span class="pill">v2026-07-18b</span>
       <button class="iconbtn" onclick="var u=new URL(location.href);u.searchParams.set('v',Date.now());location.href=u.href">Refresh</button><!-- cn-refresh -->
-      <button class="iconbtn" onclick="toggleAdd()">+ New email</button>
+      <button class="iconbtn" onclick="openAdd()">+ New email</button>
       <button class="iconbtn" onclick="exportJSON()">Save JSON</button>
       <button class="iconbtn" onclick="document.getElementById('impFile').click()">Load</button>
       <button class="linkish" onclick="lock()">lock</button>
       <input type="file" id="impFile" accept="application/json" style="display:none">
     </div>
   </div>
-  <div class="sub">Every email the estate has drafted, one place, sent or unsent. Status and custom entries live in this browser; Save JSON to carry them.</div>
+  <div class="sub">Subscriber emails, one place, sent or unsent. Sends go via Shopify Email to the list. Status, edits and custom entries live in this browser; Save JSON to carry them.</div>
   <div id="list"></div>
+</div>
 
-  <div class="addbox" id="addbox">
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <h3>New email</h3>
+    <div class="sub">Lands as a card with its own body, status and edit history.</div>
     <label>Title</label><input id="nTitle" placeholder="Email title">
-    <label>Audience</label><input id="nAud" placeholder="Who receives it">
-    <label>Source / channel</label><input id="nSrc" placeholder="File or channel (Shopify Email, reply mail...)">
-    <label>Body (optional, paste-ready)</label><textarea id="nBody" rows="6"></textarea>
-    <button class="go" style="background:var(--accent);color:#1a1410" onclick="addEntry()">Add to vault</button>
+    <label>Audience</label><input id="nAud" placeholder="Full list, segment...">
+    <label>Source / channel</label><input id="nSrc" placeholder="Shopify Email, campaign name...">
+    <label>Body (paste-ready)</label><textarea id="nBody" rows="7"></textarea>
+    <div class="mrow">
+      <button class="go" style="background:var(--accent);color:#1a1410" onclick="addEntry()">Add to vault</button>
+      <button class="ghost" onclick="closeAdd()">Cancel</button>
+    </div>
   </div>
 </div>
 
+<div class="overlay" id="confirmOverlay">
+  <div class="modal" style="max-width:420px">
+    <h3>Return to original?</h3>
+    <div class="sub" id="confirmTxt">Your edited version of this email will be discarded and the original body comes back. This cannot be undone.</div>
+    <div class="mrow">
+      <button class="go" style="background:var(--red)" onclick="confirmYes()">Yes, discard my edit</button>
+      <button class="ghost" onclick="closeConfirm()">Keep my edit</button>
+    </div>
+  </div>
+</div>
+
+<script id="seedData" type="application/json">
+[
+ {"id":"launch-apps","title":"Launch email · Apps announcement","aud":"Full subscriber list (~3k)","src":"Shopify Email · launch-email-2026-07-13.md",
+  "note":"Send together with the public announcement, after SQLs run and repo push. Subject B reserved: Çekirdekler konuşuyor. Artık dinleyen bir aletimiz var.",
+  "body":"Subject: Kavurmayı dinlemeye başladık. Aletler hazır, hepsi ücretsiz.\nPreview: Crack Listener, CoffeeNutz Guide, Agtron Challenge ve Zine. Bugün açıldı.\n\nMerhaba,\n\nBir yıldır kavurmahanede bir şey inşa ediyoruz ve bugün kapılarını açıyoruz.\n\nCrack Listener, telefonunu kavurma aletine çevirir: çatlak seslerini dinler, kavurmanın evrelerini adlandırır ve rengi canlı öngörür. Prob kazanı okur; çekirdekler konuşurken dinleyen artık bir alet var. Enstrümanın tamamı ücretsiz: ölçmek, kalibre etmek, kahveni öğrenmek herkese açık, her zaman.\n\nCoffeeNutz Guide kavurma, tadım, yeşil analiz ve değerlendirmenin kokpiti. Her modül ücretsiz kullanılır; kayıtlarını bulutta saklamak istersen Roaster planı var.\n\nAgtron Challenge ise işin oyunu: gerçek kavurmaların gerçek çatlak sesleriyle kulağını test et, sıralamaya adını yaz. Kulağın kaç Agtron?\n\nHepsi tek adreste: guide.coffeenutz.net/apps\n\nEski öğrencilerimize: lisansınız sizi bekliyor. Kayıt olduğunuz e-posta ile guide.coffeenutz.net adresinde hesap açın; Roaster (kavurma sınıfları) veya Cupper (Q Grader) planınız ve kurucu numaranız otomatik bağlanır. İlk 100 kurucu hesabın numarası ömür boyu kalır.\n\nKayıtlarınız asla silinmez. Plan biterse kaydetme durur, yaptığınız her şey okunabilir kalır.\n\nCoffeeNutz Zine'in ilk sayısı da yayında: kahve, ses ve zanaat üzerine, iki dilli, verilir satılmaz.\n\nKavurmaya,\nÖmer · CoffeeNutz\n\nThe instrument is free. The memory is the service. The craft is taught in person. English pages at guide.coffeenutz.net/apps."},
+ {"id":"alumni-roasting-aug","title":"Alumni first notice · Aug 4-7 Roasting Bundle","aud":"Alumni segment (36)","src":"Shopify Email · one day before the IG class post",
+  "note":"Status privilege: alumni hear it first. Real seat count only; update the number before send.",
+  "body":"Subject: 4-7 Ağustos kavurma sınıfı: önce siz duyun, 3 yer kaldı\n\nMerhaba,\n\nSCA Roasting Bundle sınıfını yarın herkese duyuruyoruz; eski öğrencilerimiz bir gün önce duysun istedik.\n\n4-7 Ağustos 2026, İzmir, CoffeeNutz HQ. Kontenjan 4 kişi; ilk yer alındı, 3 yer kaldı.\n\nEğitim bedeli 60.000 TL (sertifika, öğünler ve KDV dahil). 6 ay taksit imkânı: 6 x 10.000 TL, kredi kartı, ek ücret yok.\n\nSınıfla birlikte CoffeeNutz Guide Roasting App lisansı 12 ay dahil: kavurma kayıtların bulutta.\n\nYerini ayırmak için bu e-postaya yanıt ver ya da coffeenutz.net üzerinden yaz.\n\nKavurmaya,\nÖmer · CoffeeNutz"},
+ {"id":"q-tr-announce","title":"Q Grader TR announce · Aug 24-29","aud":"Full subscriber list (~3k)","src":"Shopify Email · pairs with the public Q announcement",
+  "note":"GATE: Yusuf Bey hears the Aug date before it goes public. Installment line pairs with Q announcements only (doctrine). Verify the Shopify registration page is live first.",
+  "body":"Subject: Q Grader Sertifikasyon: 24-29 Ağustos, İzmir\n\nMerhaba,\n\nQ Grader sınıfımız 24-29 Ağustos 2026 tarihlerinde İzmir CoffeeNutz HQ'da.\n\n6 kişilik sınıf, eğitim dili Türkçe. Eğitim bedeli 110.000 TL; sertifika, öğünler ve KDV dahil.\n\n6 ay taksit imkânı: 6 x 18.333 TL, kredi kartı, ek ücret yok.\n\nSınıfla birlikte CoffeeNutz Guide Cupper lisansı 36 ay dahil: tadım kayıtların bulutta.\n\nYerini ayırmak için coffeenutz.net üzerinden yazabilir ya da bu e-postaya yanıt verebilirsin.\n\nKavurmaya,\nÖmer · CoffeeNutz"},
+ {"id":"q-en-sep","title":"Q Grader EN push · Sep 21-26","aud":"EN-capable segment","src":"Shopify Email · class-fill-campaign Wave 1",
+  "note":"EN Q tripwire from the class-fill plan; USD anchor and the Sep Roasting runway. No first/only claims in body.",
+  "body":"Subject: Q Grader in İzmir: September 21-26, taught in English\n\nHello,\n\nOur Q Grader certification runs September 21-26, 2026 at CoffeeNutz HQ in İzmir.\n\nClass of 6, taught in English by a Türkçe-native Q Instructor working across the EMEA region.\n\nCourse fee about $2,400 (110.000 TL); certificate, meals and VAT included.\n\nThe September Roasting weeks (Sep 1-4 and Sep 5-7) are the natural runway into the Q week.\n\nReply to this email to hold your seat, or write via coffeenutz.net.\n\nRoast on,\nÖmer · CoffeeNutz"},
+ {"id":"sca-derleme","title":"SCA eğitimleri derleme (ready v4)","aud":"Full subscriber list (~3k)","src":"email-sca-egitimleri-derleme-draft.md · May 2026",
+  "note":"Ready-to-send v4 from May. Footer class dates are STALE (May-June); refresh dates and swap the Klaviyo merge tags for a plain greeting before Shopify Email send.",
+  "body":"Subject: Başka Bir Yol Var mı?\nPreview: Bu mailımda bana iyi gelen yola sizi davet edeceğim ve kahve eğer odağınızda ve bu sektörde çalışmıyorsanız giriş yollarını gösteren kısa bir özet size iyi gelecek...\n\nMerhaba Kahvesever,\n\nİyi kahvenin daha fazla anlatılması ve paylaşılması için başlattığım SCA Eğitimleri yolculuğunun 2015'ten beri devam ettiğini biliyorsundur.\n\nGeçtiğimiz dönemde de farklı eğitimler listeye eklendi ve bunların kısaca bir derlenmesinde fayda var diye düşündüm.\n\nHem kim bilir belki bir kariyer değişikliği veya sıçramasına neden olabilir, bana öyle olmuştu...\n\nÜlkemizin ilk SCA Roasting sertifikasını aldığım 2013'ten beri SCA; yani Specialty Coffee Association oluşumunun eğitimlerini merkeze almamın sebebi çok basit; aynı dili konuşabileceğimiz ortak bir platform sağlaması ve bilimsel gelişmelere yatırım yapan bir yapısı olması.\n\nBu tuval istediğim tecrübe aktarımının yapılabilmesi için de iyi bir zemin oluşturuyor.\n\nÖrneğin\n\nSCA Barista eğitimlerinde iyi espresso yapmanın ötesine geçip bunun için gereken koşulların sorgulanmasını sağlayabiliyor ve yanlış bilinen doğruları çürütecek bakışa beraber geliyoruz.\n\nVeya tecrübemin en yoğun olduğu SCA Roasting söz konusu olduğunda evet iyi kahve kavurmayı öğreniyoruz ama size patinaj yaptıracak bilimsel olmayan zorlama yöntemlere karşı da sizi uyarabiliyorum. Ve efsaneleri beraber avlıyoruz.\n\nBu ikisinin üstüne bildiğiniz gibi şimdi; SCA Sensory Skills ve Q Grader eğitimleri de eklendi.\n\nBu da aslında pastanın kreması oldu çünkü bütün amaç iyi bir kahve tecrübesi ise bunun tek yolu onu tadabilme sanatını öğrenmekti.\n\nVe SCA'nın özellikle bu alanda yeni geliştirdiği bazı stratejik değişikliklere de gecikmeden, zamanında adapte olunmasının iyi bir yatırım olacağını düşünüyorum...\n\nBütün bu aktarımların bir bütünü oluşturup ortaya müthiş donanımlı kahveciler çıkmasından da büyük bir mutluluk duyuyorum.\n\nBize her zaman danışabilirsiniz, kahvesever hattımız bunun için var ama eğer kaybolmuş hissederseniz de...\n\nKahveniz her zaman size yolu gösterecektir;)\n\nSevgiler,\nÖmer\n\nFooter (dates need refresh before send):\nSıradaki SCA Roasting Eğitimi: [tarih]\nSıradaki SCA Barista: [tarih]\nSıradaki Q Grader: [tarih]\nPeşin fiyatına 6 taksit özelliği geldi\nKayıtlar için bize ulaşabilir (wa.me/905330757542) veya bağlantıları kullanabilirsiniz."},
+ {"id":"bean-transition","title":"Bean transition · new bean email (template + variants)","aud":"Full subscriber list (~3k)","src":"templates-klaviyo-bean-transition.md",
+  "note":"Fill the brackets per bean; specificity ladder: region, elevation, variety, process, station, producer count, harvest year. Variants at the end. No superlative claims in body.",
+  "body":"Konu: [Yeni bean adı]'i keşfedin\n\nSevgili Kahve Tutkunu,\n\n[Önceki bean] bittiği için üzülmeyin çünkü yerine [Yeni bean] geldi!\n\nKahve dünyasında bazı çekirdekler vardır ki, yalnızca içilmez; anlatılır, hatırlanır ve deneyimlenir. [Yeni bean] tam olarak böyle bir kahve.\n\n[3 yiyecek referanslı tat notu], [1 uzun dokusal gövde cümlesi].\n\n[Yıl] hasadı olan [bean], [demleme yöntemi] demlemelerinde karakterini en net şekilde gösterir. [Yöntem gerekçesi, tek cümle].\n\n[Bölge] bölgesinin [alçak - yüksek] metre rakımlarında yetişen bu kahve, [konumlandırma cümlesi]. [Yıkama istasyonu] istasyonunda, [üretici sayısı] üreticiyle birlikte titizlikle işlenen bu çekirdek; [işleme yöntemi] + [varyete detayı].\n\n[Opsiyonel: lotu özel kılan tek cümle].\n\nMutlaka deneyin!\n\n[Sipariş ver -> bağlantı]\n\nKavrum: Ömer Aydın, ilk SCA-sertifikalı Türk kavurucu\n\n---\nVaryant A (yeni geliş, geçiş değil): üzülmeyin cümlesini at, şu satırla aç: Yeni gelen [bean]. Keşfetmeni öneriyorum.\nVaryant B (dönen çekirdek, yeni hasat): Geçen yılın favorilerinden [bean], yeni hasatla geri döndü.\nVaryant C (birlikte geliş): Bu hafta iki yeni Etiyopya birlikte geldi: [bean A] ve [bean B]. Her ikisi de aynı bölgeden, farklı işleme yöntemleriyle."}
+]
+</script>
+
 <script>
 const $=id=>document.getElementById(id);
-const SEED=[
- {id:'launch-apps', title:'Launch email · Apps announcement', aud:'Full newsletter list', src:'Shopify Email · launch-email-2026-07-13.md', note:'Send together with the public announcement, after SQLs run and repo push. Subject B reserved for reuse.',
-  body:'Subject: Kavurmayı dinlemeye başladık. Aletler hazır, hepsi ücretsiz.\nPreview: Crack Listener, CoffeeNutz Guide, Agtron Challenge ve Zine. Bugün açıldı.\n\nMerhaba,\n\nBir yıldır kavurmahanede bir şey inşa ediyoruz ve bugün kapılarını açıyoruz.\n\nCrack Listener, telefonunu kavurma aletine çevirir: çatlak seslerini dinler, kavurmanın evrelerini adlandırır ve rengi canlı öngörür. Prob kazanı okur; çekirdekler konuşurken dinleyen artık bir alet var. Enstrümanın tamamı ücretsiz: ölçmek, kalibre etmek, kahveni öğrenmek herkese açık, her zaman.\n\nCoffeeNutz Guide kavurma, tadım, yeşil analiz ve değerlendirmenin kokpiti. Her modül ücretsiz kullanılır; kayıtlarını bulutta saklamak istersen Roaster planı var.\n\nAgtron Challenge ise işin oyunu: gerçek kavurmaların gerçek çatlak sesleriyle kulağını test et, sıralamaya adını yaz. Kulağın kaç Agtron?\n\nHepsi tek adreste: guide.coffeenutz.net/apps\n\nEski öğrencilerimize: lisansınız sizi bekliyor. Kayıt olduğunuz e-posta ile guide.coffeenutz.net adresinde hesap açın; Roaster (kavurma sınıfları) veya Cupper (Q Grader) planınız ve kurucu numaranız otomatik bağlanır. İlk 100 kurucu hesabın numarası ömür boyu kalır.\n\nKayıtlarınız asla silinmez. Plan biterse kaydetme durur, yaptığınız her şey okunabilir kalır.\n\nCoffeeNutz Zine\'in ilk sayısı da yayında: kahve, ses ve zanaat üzerine, iki dilli, verilir satılmaz.\n\nKavurmaya,\nÖmer · CoffeeNutz\n\nThe instrument is free. The memory is the service. The craft is taught in person. English pages at guide.coffeenutz.net/apps.'},
- {id:'alumni-roasting-aug', title:'Alumni first notice · Aug 4-7 Roasting Bundle', aud:'36 alumni', src:'Shopify Email · one day before the IG class post', note:'Status privilege: alumni hear it first. Real seat count only; update the number before send.',
-  body:'Subject: 4-7 Ağustos kavurma sınıfı: önce siz duyun, 3 yer kaldı\n\nMerhaba,\n\nSCA Roasting Bundle sınıfını yarın herkese duyuruyoruz; eski öğrencilerimiz bir gün önce duysun istedik.\n\n4-7 Ağustos 2026, İzmir, CoffeeNutz HQ. Kontenjan 4 kişi; ilk yer alındı, 3 yer kaldı.\n\nEğitim bedeli 60.000 TL (sertifika, öğünler ve KDV dahil). 6 ay taksit imkânı: 6 x 10.000 TL, kredi kartı, ek ücret yok.\n\nSınıfla birlikte CoffeeNutz Guide Roasting App lisansı 12 ay dahil: kavurma kayıtların bulutta.\n\nYerini ayırmak için bu e-postaya yanıt ver ya da coffeenutz.net üzerinden yaz.\n\nKavurmaya,\nÖmer · CoffeeNutz'},
- {id:'samo-research', title:'Samo Smrke · Research access mail', aud:'Dr. Samo Smrke (ZHAW)', src:'Listener window', note:'Body and send gates live with the Listener window (master log): test-user delete, repo push, auth URLs. This entry tracks status only.', body:''},
- {id:'sca-derleme', title:'SCA eğitimleri derleme (legacy)', aud:'Newsletter list', src:'email-sca-egitimleri-derleme-draft.md', note:'May 2026 draft from the pre-launch era. Review against current claims before any use.', body:''},
- {id:'bean-transition', title:'Bean transition templates (legacy)', aud:'Customer segments', src:'templates-klaviyo-bean-transition.md', note:'Klaviyo-era template set. Port to Shopify Email if revived.', body:''}
-];
+const SEED=JSON.parse($('seedData').textContent);
 function getSt(){ try{ return JSON.parse(localStorage.getItem('evStatus')||'{}'); }catch(e){ return {}; } }
 function setSt(m){ localStorage.setItem('evStatus', JSON.stringify(m)); }
+function getBodies(){ try{ return JSON.parse(localStorage.getItem('evBodies')||'{}'); }catch(e){ return {}; } }
+function setBodies(m){ localStorage.setItem('evBodies', JSON.stringify(m)); }
 function getCustom(){ try{ return JSON.parse(localStorage.getItem('evCustom')||'[]'); }catch(e){ return []; } }
 function saveCustom(a){ localStorage.setItem('evCustom', JSON.stringify(a)); }
 function allMails(){ return SEED.concat(getCustom()); }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function stOf(id){ const m=getSt()[id]; return m&&m.sent?m:{sent:false}; }
+function bodyOf(m){ const o=getBodies()[m.id]; return (o!=null)?o:(m.body||''); }
+function isEdited(m){ return getBodies()[m.id]!=null; }
 function toggle(id){ const m=getSt(); const cur=m[id]&&m[id].sent; m[id]=cur?{sent:false}:{sent:true, at:new Date().toISOString().slice(0,10)}; setSt(m); render(); }
 function openCard(id){ const el=document.querySelector('.card[data-id="'+id+'"]'); if(el) el.classList.toggle('open'); }
-async function copyBody(id,ev){ ev.stopPropagation(); const m=allMails().find(x=>x.id===id); if(!m||!m.body) return;
-  try{ await navigator.clipboard.writeText(m.body); ev.target.textContent='Copied'; setTimeout(()=>ev.target.textContent='Copy body',1200); }
+async function copyBody(id,ev){ ev.stopPropagation(); const m=allMails().find(x=>x.id===id); if(!m) return;
+  try{ await navigator.clipboard.writeText(bodyOf(m)); ev.target.textContent='Copied'; setTimeout(()=>ev.target.textContent='Copy body',1200); }
   catch(e){ alert('Copy blocked by the browser; open the body and select it.'); } }
+let editingId=null;
+function startEdit(id,ev){ ev.stopPropagation(); editingId=id; render();
+  const el=document.querySelector('.card[data-id="'+id+'"]'); if(el){ el.classList.add('open'); const ta=el.querySelector('.editarea'); if(ta) ta.focus(); } }
+function cancelEdit(ev){ if(ev) ev.stopPropagation(); editingId=null; render(); }
+function saveEdit(id,ev){ ev.stopPropagation();
+  const el=document.querySelector('.card[data-id="'+id+'"] .editarea'); if(!el) return;
+  const m=allMails().find(x=>x.id===id); if(!m) return;
+  const txt=el.value;
+  if(txt===(m.body||'')){ const b=getBodies(); delete b[id]; setBodies(b); }
+  else { const b=getBodies(); b[id]=txt; setBodies(b); }
+  editingId=null; render();
+  const c=document.querySelector('.card[data-id="'+id+'"]'); if(c) c.classList.add('open'); }
+let confirmId=null;
+function askOriginal(id,ev){ ev.stopPropagation(); confirmId=id; $('confirmOverlay').classList.add('show'); }
+function closeConfirm(){ confirmId=null; $('confirmOverlay').classList.remove('show'); }
+function confirmYes(){ if(confirmId){ const b=getBodies(); delete b[confirmId]; setBodies(b); const id=confirmId; closeConfirm(); editingId=null; render();
+    const c=document.querySelector('.card[data-id="'+id+'"]'); if(c) c.classList.add('open'); } else closeConfirm(); }
 function delEntry(id,ev){ ev.stopPropagation(); const cust=getCustom(); const i=cust.findIndex(x=>x.id===id); if(i<0) return;
-  if(confirm('Remove this custom entry for good?')){ cust.splice(i,1); saveCustom(cust); render(); } }
+  if(confirm('Remove this custom entry for good?')){ cust.splice(i,1); saveCustom(cust); const b=getBodies(); delete b[id]; setBodies(b); render(); } }
 function render(){
   const L=$('list'); L.innerHTML='';
   allMails().forEach(m=>{
-    const st=stOf(m.id), sent=!!st.sent;
+    const st=stOf(m.id), sent=!!st.sent, edited=isEdited(m), isEd=(editingId===m.id);
     const el=document.createElement('div');
     el.className='card '+(sent?'sent':'unsent'); el.dataset.id=m.id;
+    let bodyHtml;
+    if(isEd){
+      bodyHtml='<textarea class="editarea">'+esc(bodyOf(m))+'</textarea>'
+        +'<div class="btns"><button class="mini okb" onclick="saveEdit(\''+m.id+'\',event)">Save edit</button>'
+        +'<button class="mini" onclick="cancelEdit(event)">Cancel</button></div>';
+    } else {
+      bodyHtml='<div class="bodytext">'+esc(bodyOf(m))+'</div>';
+    }
     el.innerHTML='<div class="trow"><div class="tt">'+esc(m.title)+'</div>'
+      +(edited?'<span class="chip edited">EDITED</span>':'')
       +'<span class="chip '+(sent?'sent':'unsent')+'">'+(sent?'SENT':'UNSENT')+'</span>'
-      +(sent&&st.at?'<span class="stamp">'+st.at+'</span>':'')+'</div>'
+      +(sent&&st.at?'<span class="pill" style="padding:2px 9px">'+st.at+'</span>':'')+'</div>'
       +'<div class="meta"><b>To:</b> '+esc(m.aud)+' &nbsp;·&nbsp; <b>Source:</b> '+esc(m.src)+'</div>'
       +(m.note?'<div class="note">'+esc(m.note)+'</div>':'')
       +'<div class="btns">'
       +'<button class="mini '+(sent?'':'okb')+'" onclick="event.stopPropagation();toggle(\''+m.id+'\')">'+(sent?'Mark unsent':'Mark sent')+'</button>'
-      +(m.body?'<button class="mini acc" onclick="openCard(\''+m.id+'\')">Body</button><button class="mini" onclick="copyBody(\''+m.id+'\',event)">Copy body</button>':'')
-      +(m.custom?'<button class="mini" style="border-color:var(--red);color:var(--red)" onclick="delEntry(\''+m.id+'\',event)">Delete</button>':'')
+      +'<button class="mini acc" onclick="openCard(\''+m.id+'\')">Body</button>'
+      +'<button class="mini" onclick="copyBody(\''+m.id+'\',event)">Copy body</button>'
+      +'<button class="mini" onclick="startEdit(\''+m.id+'\',event)">Edit</button>'
+      +(edited?'<button class="mini redb" onclick="askOriginal(\''+m.id+'\',event)">Return to original</button>':'')
+      +(m.custom?'<button class="mini redb" onclick="delEntry(\''+m.id+'\',event)">Delete</button>':'')
       +'</div>'
-      +(m.body?'<div class="body">'+esc(m.body)+'</div>':'');
+      +'<div class="bodybox">'+bodyHtml+'</div>';
     L.appendChild(el);
   });
 }
-function toggleAdd(){ $('addbox').classList.toggle('show'); }
+function openAdd(){ $('addOverlay').classList.add('show'); $('nTitle').focus(); }
+function closeAdd(){ $('addOverlay').classList.remove('show'); }
 function addEntry(){
   const t=$('nTitle').value.trim(); if(!t){ alert('Title is required.'); return; }
-  const id='c'+btoa(unescape(encodeURIComponent(t))).replace(/[^a-zA-Z0-9]/g,'').slice(0,12)+getCustom().length;
-  getCustom(); const cust=getCustom();
-  cust.push({id:id, title:t, aud:$('nAud').value.trim()||'-', src:$('nSrc').value.trim()||'-', note:'', body:$('nBody').value, custom:1});
+  const cust=getCustom();
+  const id='c'+Date.now().toString(36)+cust.length;
+  cust.push({id:id, title:t, aud:$('nAud').value.trim()||'-', src:$('nSrc').value.trim()||'Shopify Email', note:'', body:$('nBody').value, custom:1});
   saveCustom(cust);
   $('nTitle').value='';$('nAud').value='';$('nSrc').value='';$('nBody').value='';
-  $('addbox').classList.remove('show'); render();
+  closeAdd(); render();
 }
 function exportJSON(){
-  const blob=new Blob([JSON.stringify({status:getSt(), custom:getCustom()},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({status:getSt(), bodies:getBodies(), custom:getCustom()},null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='coffeenutz-emailing-vault.json'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 $('impFile').addEventListener('change', ev=>{
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{ try{ const o=JSON.parse(r.result); if(o.status) setSt(o.status); if(Array.isArray(o.custom)) saveCustom(o.custom); render(); }
+  r.onload=()=>{ try{ const o=JSON.parse(r.result); if(o.status) setSt(o.status); if(o.bodies) setBodies(o.bodies); if(Array.isArray(o.custom)) saveCustom(o.custom); render(); }
     catch(e){ alert('That file could not be read as Emailing Vault JSON.'); } };
   r.readAsText(f); ev.target.value='';
 });
