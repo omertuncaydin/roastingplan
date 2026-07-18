@@ -39,27 +39,37 @@ body.stale .card>div:not(#state){opacity:.35}
 <script>
 const $=id=>document.getElementById(id);
 const KEY=new URLSearchParams(location.search).get('k');
-let LASTMSG=0;
+let LASTMSG=0, FIN=false, CH=null, LIVE=false;
 function render(p){
   LASTMSG=Date.now(); document.body.classList.remove('stale');
+  FIN=!!p.fin; LIVE=!FIN;
   $('coffee').textContent=p.c||'?';
   $('proj').textContent='~'+(p.proj??'·');
   $('band').textContent=p.band?('±'+p.band+' Agtron'):'';
   $('stage').textContent=p.st||'·';
   $('n').textContent=(p.n||0)+' çatlak';
   const t=p.t||0; $('clock').textContent=Math.floor(t/60)+':'+('0'+Math.floor(t%60)).slice(-2);
-  $('fill').style.width=Math.min(100,Math.round((p.p||0)*100))+'%';
+  $('fill').style.width=FIN?'100%':(Math.min(100,Math.round((p.p||0)*100))+'%');
   document.body.classList.toggle('a0',p.w===1);
-  $('state').textContent=p.hb?'kayıt sürüyor · projeksiyon bekliyor':'canlı';
+  $('state').textContent=FIN?'drop · kayıt bitti':(p.hb?'kayıt sürüyor · projeksiyon bekliyor':'canlı · dokun = numune');
 }
 window.render=render;
-setInterval(()=>{ if(LASTMSG&&Date.now()-LASTMSG>10000){ document.body.classList.add('stale'); $('state').textContent='sinyal bekleniyor…'; } },2000);
+function sendSample(){
+  if(!CH||!LIVE||Date.now()-LASTMSG>5000) return;
+  try{ CH.send({type:'broadcast',event:'cmd',payload:{a:'sample'}});
+    const st=$('state'); st.textContent='numune gönderildi ✓'; document.body.style.outline='3px solid var(--gold)';
+    setTimeout(()=>{ document.body.style.outline='none'; },600);
+  }catch(e){}
+}
+document.body.addEventListener('click',sendSample);
+setInterval(()=>{ if(!FIN&&LASTMSG&&Date.now()-LASTMSG>10000){ document.body.classList.add('stale'); LIVE=false; $('state').textContent='sinyal bekleniyor…'; } },2000);
 if(!KEY){ $('state').textContent='link eksik: Listener > ayar & iz > Watch yayını linkini kullan'; }
 else if(typeof supabase==='undefined'){ $('state').textContent='bağlantı kitaplığı yüklenemedi'; }
 else{
   try{
     const sb=supabase.createClient('https://efjvfggwnhqkunjvoyjb.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA');
-    sb.channel('cnw-'+KEY).on('broadcast',{event:'live'},m=>render(m.payload||{})).subscribe(st=>{
+    CH=sb.channel('cnw-'+KEY);
+    CH.on('broadcast',{event:'live'},m=>render(m.payload||{})).subscribe(st=>{
       if(st==='SUBSCRIBED') $('state').textContent='bağlı · kavurma bekleniyor';
       else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT') $('state').textContent='bağlantı sorunu · sayfayı yenile';
     });
