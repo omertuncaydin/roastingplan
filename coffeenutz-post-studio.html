@@ -109,11 +109,12 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13d</span></div>
+    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13e</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
     <button class="btn" onclick="document.getElementById('jsonFile').click()">Load</button>
     <button class="btn" onclick="document.body.classList.add('collapsed')">Hide</button>
+    <button class="btn" onclick="var u=new URL(location.href);u.searchParams.set('v',Date.now());location.href=u.href" title="Reload the app fresh">Refresh</button><!-- cn-refresh -->
     <input type="file" id="jsonFile" accept="application/json">
     <input type="file" id="imgFile" accept="image/*">
   </div>
@@ -486,6 +487,5 @@ function doSave(){
 /* boot */
 renderPanel(); renderStage();
 </script>
-<!-- cn-refresh --><button onclick="var u=new URL(location.href);u.searchParams.set('v',Date.now());location.href=u.href" title="Refresh" aria-label="Refresh" style="position:fixed;top:10px;right:10px;z-index:2147483000;border:1px solid rgba(201,138,60,.65);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;letter-spacing:.02em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:rgba(26,20,16,.78);color:#c98a3c;cursor:pointer;-webkit-tap-highlight-color:transparent">Refresh</button>
 </body>
 </html>

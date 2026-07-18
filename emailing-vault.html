@@ -1,0 +1,156 @@
+<!doctype html>
+<!-- CoffeeNutz Emailing Vault. (c) 2026 Omer Aydin / CoffeeNutz. Email drafts with sent / unsent status. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>CoffeeNutz · Emailing Vault</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{--bg:#1a1410;--panel:#241c16;--panel2:#201a15;--accent:#c98a3c;--ok:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--red:#D8453B;--warn:#d9663f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;padding:18px;padding-bottom:60px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto}
+.brand{font-family:'Arial Black',Helvetica,sans-serif;font-size:22px;white-space:nowrap}
+.brand .lr{color:var(--red)}.brand .lg{color:var(--ink)}
+.hdrrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.pill{border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--muted)}
+.iconbtn{padding:6px 11px;font-size:12px;font-weight:600;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:9px;cursor:pointer}
+.sub{color:var(--muted);font-size:12px;margin:8px 0 16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.card.sent{border-color:var(--ok);opacity:.85}
+.card.unsent{border-color:var(--warn)}
+.trow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tt{font-size:15px;font-weight:700;flex:1;min-width:200px}
+.chip{font-size:10.5px;font-weight:700;border-radius:12px;padding:3px 10px;letter-spacing:.03em}
+.chip.sent{background:var(--ok);color:#fff}
+.chip.unsent{background:var(--warn);color:#fff}
+.meta{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6}
+.meta b{color:var(--ink);font-weight:600}
+.note{font-size:12px;color:var(--muted);margin-top:6px;font-style:italic}
+.btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.mini{padding:6px 12px;font-size:12px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);cursor:pointer}
+.mini.acc{border-color:var(--accent);color:var(--accent)}
+.mini.okb{border-color:var(--ok);color:#7fbf9f}
+.body{display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:12px;font-size:13px;white-space:pre-wrap;color:var(--ink);line-height:1.65;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.card.open .body{display:block}
+.gate{max-width:340px;margin:60px auto;text-align:center}
+input,textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:12px;font-size:15px;margin:8px 0;font-family:inherit}
+button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;font-weight:700;background:var(--ok);color:#fff;cursor:pointer}
+.linkish{background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:6px}
+.addbox{background:var(--panel2);border:1px dashed var(--line);border-radius:14px;padding:14px 16px;margin-top:18px;display:none}
+.addbox.show{display:block}
+.addbox label{font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;font-weight:700}
+.stamp{font-size:11px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div id="gate" class="gate" style="display:none">
+  <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Emailing Vault</span></div>
+  <div class="sub" style="margin-top:8px">Admin only. Enter your cockpit key.</div>
+  <input type="password" id="keyIn" placeholder="Cockpit key" autocomplete="off">
+  <button class="go" onclick="unlock()">Open the vault</button>
+</div>
+
+<div id="app" class="wrap" style="display:none">
+  <div class="hdrrow">
+    <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Emailing Vault</span></div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="pill">v2026-07-18a</span>
+      <button class="iconbtn" onclick="var u=new URL(location.href);u.searchParams.set('v',Date.now());location.href=u.href">Refresh</button><!-- cn-refresh -->
+      <button class="iconbtn" onclick="toggleAdd()">+ New email</button>
+      <button class="iconbtn" onclick="exportJSON()">Save JSON</button>
+      <button class="iconbtn" onclick="document.getElementById('impFile').click()">Load</button>
+      <button class="linkish" onclick="lock()">lock</button>
+      <input type="file" id="impFile" accept="application/json" style="display:none">
+    </div>
+  </div>
+  <div class="sub">Every email the estate has drafted, one place, sent or unsent. Status and custom entries live in this browser; Save JSON to carry them.</div>
+  <div id="list"></div>
+
+  <div class="addbox" id="addbox">
+    <label>Title</label><input id="nTitle" placeholder="Email title">
+    <label>Audience</label><input id="nAud" placeholder="Who receives it">
+    <label>Source / channel</label><input id="nSrc" placeholder="File or channel (Shopify Email, reply mail...)">
+    <label>Body (optional, paste-ready)</label><textarea id="nBody" rows="6"></textarea>
+    <button class="go" style="background:var(--accent);color:#1a1410" onclick="addEntry()">Add to vault</button>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const SEED=[
+ {id:'launch-apps', title:'Launch email · Apps announcement', aud:'Full newsletter list', src:'Shopify Email · launch-email-2026-07-13.md', note:'Send together with the public announcement, after SQLs run and repo push. Subject B reserved for reuse.',
+  body:'Subject: Kavurmayı dinlemeye başladık. Aletler hazır, hepsi ücretsiz.\nPreview: Crack Listener, CoffeeNutz Guide, Agtron Challenge ve Zine. Bugün açıldı.\n\nMerhaba,\n\nBir yıldır kavurmahanede bir şey inşa ediyoruz ve bugün kapılarını açıyoruz.\n\nCrack Listener, telefonunu kavurma aletine çevirir: çatlak seslerini dinler, kavurmanın evrelerini adlandırır ve rengi canlı öngörür. Prob kazanı okur; çekirdekler konuşurken dinleyen artık bir alet var. Enstrümanın tamamı ücretsiz: ölçmek, kalibre etmek, kahveni öğrenmek herkese açık, her zaman.\n\nCoffeeNutz Guide kavurma, tadım, yeşil analiz ve değerlendirmenin kokpiti. Her modül ücretsiz kullanılır; kayıtlarını bulutta saklamak istersen Roaster planı var.\n\nAgtron Challenge ise işin oyunu: gerçek kavurmaların gerçek çatlak sesleriyle kulağını test et, sıralamaya adını yaz. Kulağın kaç Agtron?\n\nHepsi tek adreste: guide.coffeenutz.net/apps\n\nEski öğrencilerimize: lisansınız sizi bekliyor. Kayıt olduğunuz e-posta ile guide.coffeenutz.net adresinde hesap açın; Roaster (kavurma sınıfları) veya Cupper (Q Grader) planınız ve kurucu numaranız otomatik bağlanır. İlk 100 kurucu hesabın numarası ömür boyu kalır.\n\nKayıtlarınız asla silinmez. Plan biterse kaydetme durur, yaptığınız her şey okunabilir kalır.\n\nCoffeeNutz Zine\'in ilk sayısı da yayında: kahve, ses ve zanaat üzerine, iki dilli, verilir satılmaz.\n\nKavurmaya,\nÖmer · CoffeeNutz\n\nThe instrument is free. The memory is the service. The craft is taught in person. English pages at guide.coffeenutz.net/apps.'},
+ {id:'alumni-roasting-aug', title:'Alumni first notice · Aug 4-7 Roasting Bundle', aud:'36 alumni', src:'Shopify Email · one day before the IG class post', note:'Status privilege: alumni hear it first. Real seat count only; update the number before send.',
+  body:'Subject: 4-7 Ağustos kavurma sınıfı: önce siz duyun, 3 yer kaldı\n\nMerhaba,\n\nSCA Roasting Bundle sınıfını yarın herkese duyuruyoruz; eski öğrencilerimiz bir gün önce duysun istedik.\n\n4-7 Ağustos 2026, İzmir, CoffeeNutz HQ. Kontenjan 4 kişi; ilk yer alındı, 3 yer kaldı.\n\nEğitim bedeli 60.000 TL (sertifika, öğünler ve KDV dahil). 6 ay taksit imkânı: 6 x 10.000 TL, kredi kartı, ek ücret yok.\n\nSınıfla birlikte CoffeeNutz Guide Roasting App lisansı 12 ay dahil: kavurma kayıtların bulutta.\n\nYerini ayırmak için bu e-postaya yanıt ver ya da coffeenutz.net üzerinden yaz.\n\nKavurmaya,\nÖmer · CoffeeNutz'},
+ {id:'samo-research', title:'Samo Smrke · Research access mail', aud:'Dr. Samo Smrke (ZHAW)', src:'Listener window', note:'Body and send gates live with the Listener window (master log): test-user delete, repo push, auth URLs. This entry tracks status only.', body:''},
+ {id:'sca-derleme', title:'SCA eğitimleri derleme (legacy)', aud:'Newsletter list', src:'email-sca-egitimleri-derleme-draft.md', note:'May 2026 draft from the pre-launch era. Review against current claims before any use.', body:''},
+ {id:'bean-transition', title:'Bean transition templates (legacy)', aud:'Customer segments', src:'templates-klaviyo-bean-transition.md', note:'Klaviyo-era template set. Port to Shopify Email if revived.', body:''}
+];
+function getSt(){ try{ return JSON.parse(localStorage.getItem('evStatus')||'{}'); }catch(e){ return {}; } }
+function setSt(m){ localStorage.setItem('evStatus', JSON.stringify(m)); }
+function getCustom(){ try{ return JSON.parse(localStorage.getItem('evCustom')||'[]'); }catch(e){ return []; } }
+function saveCustom(a){ localStorage.setItem('evCustom', JSON.stringify(a)); }
+function allMails(){ return SEED.concat(getCustom()); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function stOf(id){ const m=getSt()[id]; return m&&m.sent?m:{sent:false}; }
+function toggle(id){ const m=getSt(); const cur=m[id]&&m[id].sent; m[id]=cur?{sent:false}:{sent:true, at:new Date().toISOString().slice(0,10)}; setSt(m); render(); }
+function openCard(id){ const el=document.querySelector('.card[data-id="'+id+'"]'); if(el) el.classList.toggle('open'); }
+async function copyBody(id,ev){ ev.stopPropagation(); const m=allMails().find(x=>x.id===id); if(!m||!m.body) return;
+  try{ await navigator.clipboard.writeText(m.body); ev.target.textContent='Copied'; setTimeout(()=>ev.target.textContent='Copy body',1200); }
+  catch(e){ alert('Copy blocked by the browser; open the body and select it.'); } }
+function delEntry(id,ev){ ev.stopPropagation(); const cust=getCustom(); const i=cust.findIndex(x=>x.id===id); if(i<0) return;
+  if(confirm('Remove this custom entry for good?')){ cust.splice(i,1); saveCustom(cust); render(); } }
+function render(){
+  const L=$('list'); L.innerHTML='';
+  allMails().forEach(m=>{
+    const st=stOf(m.id), sent=!!st.sent;
+    const el=document.createElement('div');
+    el.className='card '+(sent?'sent':'unsent'); el.dataset.id=m.id;
+    el.innerHTML='<div class="trow"><div class="tt">'+esc(m.title)+'</div>'
+      +'<span class="chip '+(sent?'sent':'unsent')+'">'+(sent?'SENT':'UNSENT')+'</span>'
+      +(sent&&st.at?'<span class="stamp">'+st.at+'</span>':'')+'</div>'
+      +'<div class="meta"><b>To:</b> '+esc(m.aud)+' &nbsp;·&nbsp; <b>Source:</b> '+esc(m.src)+'</div>'
+      +(m.note?'<div class="note">'+esc(m.note)+'</div>':'')
+      +'<div class="btns">'
+      +'<button class="mini '+(sent?'':'okb')+'" onclick="event.stopPropagation();toggle(\''+m.id+'\')">'+(sent?'Mark unsent':'Mark sent')+'</button>'
+      +(m.body?'<button class="mini acc" onclick="openCard(\''+m.id+'\')">Body</button><button class="mini" onclick="copyBody(\''+m.id+'\',event)">Copy body</button>':'')
+      +(m.custom?'<button class="mini" style="border-color:var(--red);color:var(--red)" onclick="delEntry(\''+m.id+'\',event)">Delete</button>':'')
+      +'</div>'
+      +(m.body?'<div class="body">'+esc(m.body)+'</div>':'');
+    L.appendChild(el);
+  });
+}
+function toggleAdd(){ $('addbox').classList.toggle('show'); }
+function addEntry(){
+  const t=$('nTitle').value.trim(); if(!t){ alert('Title is required.'); return; }
+  const id='c'+btoa(unescape(encodeURIComponent(t))).replace(/[^a-zA-Z0-9]/g,'').slice(0,12)+getCustom().length;
+  getCustom(); const cust=getCustom();
+  cust.push({id:id, title:t, aud:$('nAud').value.trim()||'-', src:$('nSrc').value.trim()||'-', note:'', body:$('nBody').value, custom:1});
+  saveCustom(cust);
+  $('nTitle').value='';$('nAud').value='';$('nSrc').value='';$('nBody').value='';
+  $('addbox').classList.remove('show'); render();
+}
+function exportJSON(){
+  const blob=new Blob([JSON.stringify({status:getSt(), custom:getCustom()},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='coffeenutz-emailing-vault.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+$('impFile').addEventListener('change', ev=>{
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ const o=JSON.parse(r.result); if(o.status) setSt(o.status); if(Array.isArray(o.custom)) saveCustom(o.custom); render(); }
+    catch(e){ alert('That file could not be read as Emailing Vault JSON.'); } };
+  r.readAsText(f); ev.target.value='';
+});
+function unlock(){ const k=$('keyIn').value.trim(); if(!k) return; localStorage.setItem('ccKey',k); show(); }
+function lock(){ localStorage.removeItem('ccKey'); location.reload(); }
+function show(){ $('gate').style.display='none'; $('app').style.display='block'; render(); }
+if(localStorage.getItem('ccKey')) show(); else $('gate').style.display='block';
+</script>
+</body>
+</html>

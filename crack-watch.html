@@ -50,7 +50,7 @@ function render(p){
   const t=p.t||0; $('clock').textContent=Math.floor(t/60)+':'+('0'+Math.floor(t%60)).slice(-2);
   $('fill').style.width=Math.min(100,Math.round((p.p||0)*100))+'%';
   document.body.classList.toggle('a0',p.w===1);
-  $('state').textContent='canlı';
+  $('state').textContent=p.hb?'kayıt sürüyor · projeksiyon bekliyor':'canlı';
 }
 window.render=render;
 setInterval(()=>{ if(LASTMSG&&Date.now()-LASTMSG>10000){ document.body.classList.add('stale'); $('state').textContent='sinyal bekleniyor…'; } },2000);
