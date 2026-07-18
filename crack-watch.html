@@ -34,6 +34,9 @@ body.a0now #btnS{animation:pulse 1.1s ease-out infinite}
 #btnD{flex:1;background:#2a1512;color:var(--drop);border:1px solid #5a2b22;border-radius:14px;padding:8px 0 6px;font-size:13px;font-weight:700;cursor:pointer}
 #btnD small{display:block;font-size:9px;font-weight:500;color:#a06055}
 #btnD.armed{background:var(--warn);color:#fff}
+#btns2{display:none;gap:8px;margin-top:12px}
+#btnAgain{flex:1.3;background:var(--gold);color:#1a1410;border:none;border-radius:14px;padding:11px 0;font-size:12px;font-weight:800;cursor:pointer}
+#btnFresh{flex:1;background:#2a241c;color:var(--gold);border:1px solid var(--line);border-radius:14px;padding:11px 0;font-size:12px;font-weight:700;cursor:pointer}
 button:disabled{opacity:.35}
 #state{font-size:12px;color:var(--dim);margin-top:10px}
 body.stale .fade{opacity:.35}
@@ -43,7 +46,7 @@ body.stale .fade{opacity:.35}
 <div class="card">
   <div class="fade" id="coffee">·</div>
   <div id="note"></div>
-  <div id="a0strip">·</div>
+  <div id="a0strip" onclick="if(document.body.classList.contains('a0now')||document.body.classList.contains('a0pre'))sendSample()">·</div>
   <div class="fade" id="gwrap">
     <svg viewBox="0 0 170 100" width="170" aria-hidden="true">
       <path d="M17 88 A68 68 0 0 1 153 88" fill="none" stroke="#3a3128" stroke-width="10" stroke-linecap="round"/>
@@ -58,6 +61,10 @@ body.stale .fade{opacity:.35}
     <button id="btnS" onclick="sendSample()">NUMUNE</button>
     <button id="btnD" onclick="tapDrop()">DROP<small id="dHint">2x dokun</small></button>
   </div>
+  <div id="btns2">
+    <button id="btnAgain" onclick="sendAgain()">BU KAHVEYİ KAVUR</button>
+    <button id="btnFresh" onclick="sendFresh()">YENİ KAHVE KAVUR</button>
+  </div>
   <div id="state">bağlanıyor…</div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -67,12 +74,20 @@ const SU='https://efjvfggwnhqkunjvoyjb.supabase.co';
 const AK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA';
 const KEY=new URLSearchParams(location.search).get('k');
 const ARC=213.6;
-let LASTMSG=0, FIN=false, LIVE=false, DROPARM=0;
+let LASTMSG=0, FIN=false, LIVE=false, DROPARM=0, LASTT=-1;
 function cmd(a){ return fetch(SU+'/realtime/v1/api/broadcast',{method:'POST',headers:{apikey:AK,authorization:'Bearer '+AK,'content-type':'application/json'},
   body:JSON.stringify({messages:[{topic:'cnw-'+KEY, event:'cmd', payload:{a}, private:false}]})}); }
 function render(p){
   LASTMSG=Date.now(); document.body.classList.remove('stale');
+  if((FIN&&!p.fin)||(typeof p.t==='number'&&p.t+5<LASTT)){   // new roast began: forget the old one
+    $('proj').textContent='·'; $('garc').style.strokeDashoffset=ARC;
+    document.body.classList.remove('a0pre','a0now','tpre','tnow'); DROPARM=0;
+    $('btnD').classList.remove('armed'); $('dHint').textContent='2x dokun'; }
+  if(typeof p.t==='number') LASTT=p.t;
   FIN=!!p.fin; LIVE=!FIN;
+  if(FIN) document.body.classList.remove('a0pre','a0now','tpre','tnow');   // no alarm may outlive the roast, on the wrist either
+  $('btns').style.display=FIN?'none':'flex';
+  $('btns2').style.display=FIN?'flex':'none';
   $('coffee').textContent=p.c||'?';
   if(p.proj!=null) $('proj').textContent=(p.band!=null)?(Math.round(p.proj-p.band)+'-'+Math.round(p.proj+p.band)):('~'+Math.round(p.proj));
   else if($('proj').textContent==='') $('proj').textContent='·';
@@ -104,6 +119,8 @@ function tapDrop(){ if(!fresh()) return;
   try{ cmd('drop').catch(()=>{}); flash('drop gönderildi ✓'); }catch(e){} }
 function flash(msg){ $('state').textContent=msg; document.body.style.outline='3px solid var(--gold)';
   setTimeout(()=>{ document.body.style.outline='none'; },600); }
+function sendAgain(){ if(!FIN) return; try{ cmd('again').catch(()=>{}); flash('başlat gönderildi ✓'); }catch(e){} }
+function sendFresh(){ if(!FIN) return; try{ cmd('fresh').catch(()=>{}); flash('yeni kahve · telefonda isim seç'); }catch(e){} }
 setInterval(()=>{ if(!LASTMSG) return;
   const gap=Date.now()-LASTMSG;
   if(!FIN&&gap>10000){ document.body.classList.add('stale'); LIVE=false;
