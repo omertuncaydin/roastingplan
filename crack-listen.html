@@ -161,7 +161,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18g</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18h</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1120,6 +1120,7 @@ refreshPlanUI();
 const SUPA_URL='https://efjvfggwnhqkunjvoyjb.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA';
 let SB=null; try{ if(typeof supabase!=='undefined') SB=supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
+try{ if(WCON) wcCmdSub(true); }catch(e){}   // boot-time cast restore runs before SB exists (TDZ); re-arm the command ear here, after the client is born
 try{ fetch(SUPA_URL+'/rest/v1/noise_lib?select=f,hf,w',{headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY}}).then(r=>r.ok?r.json():[]).then(rows=>{ (rows||[]).forEach(e=>NLC.push({f:e.f,hf:e.hf,w:e.w,src:'global'})); }).catch(()=>{}); }catch(e){}
 try{ const eb=$('enrollBtn'); if(eb) eb.textContent=tt('Teach it your voice'); }catch(e){}
 async function cloudUser(){ if(!SB) return null; try{ const {data}=await SB.auth.getUser(); return (data&&data.user)||null; }catch(e){ return null; } }
@@ -1673,7 +1674,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-18g';
+const APPVER='v2026-07-18h';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
