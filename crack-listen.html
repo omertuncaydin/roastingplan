@@ -161,7 +161,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18a</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18b</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1460,7 +1460,8 @@ function updateGauge(){
   ENGINE={pT,pE,p,tq,band,seT,curveT,dTerm,devEff,projPhi,bias};
   try{ if(running){ BCLIVE=BCLIVE||new BroadcastChannel('cnLive');
     const lastSt=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
-    BCLIVE.postMessage({coffee:k, stage:lastSt, n:v.length, proj:Math.round(proj), band:bandR, t:(performance.now()-startT)/1000}); } }catch(e){}
+    const smpL=SAMPLES.length?(SAMPLES.length+(SAMPLES[SAMPLES.length-1].a0?'\u00b7A0':(SAMPLES[SAMPLES.length-1].st?('\u00b7'+SAMPLES[SAMPLES.length-1].st):''))):null;
+    BCLIVE.postMessage({coffee:k, stage:lastSt, n:v.length, proj:Math.round(proj), band:bandR, t:(performance.now()-startT)/1000, p:+(p.toFixed(3)), smp:smpL}); } }catch(e){}
   LASTPROJ=Math.round(proj);
   TGT_U=(cal.target)?agU(cal.target):null;   // recipe target ring: free
   drawGauge('live',proj-band,proj+band);
@@ -1639,7 +1640,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-18a';
+const APPVER='v2026-07-18b';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
