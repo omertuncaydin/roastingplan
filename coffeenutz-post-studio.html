@@ -109,7 +109,7 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-15a</span></div>
+    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13c</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
     <button class="btn" onclick="document.getElementById('jsonFile').click()">Load</button>
@@ -151,7 +151,7 @@ const SAMPLE = {
     price:"110.000 ₺", installment:"6 ay taksit imkânı: 6 x 18.333,33 ₺ (kredi kartı, ek ücret yok)",
     cta:"Kayıtlar başladı", extra:"Sertifika, öğünler ve KDV dahil.",
     img:"",
-    outputs:{ igfeed:true, igstory:true, linkedin:true, banner:true }
+    outputs:{ igfeed:true, igstory:true, linkedin:true, banner:true, siteban:true, ytthumb:false, ytcover:false, og:false, email:false }
   }
 };
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -207,7 +207,7 @@ function slideCard(sl, idx, total, th){
 
 function announceCard(kind){
   const a=state.announce, dark=a.theme==="dark";
-  const dims={igfeed:[1080,1350], igstory:[1080,1920], linkedin:[1200,627], banner:[1920,820]}[kind];
+  const dims={igfeed:[1080,1350], igstory:[1080,1920], linkedin:[1200,627], banner:[1920,820], siteban:[1200,600], ytthumb:[1280,720], ytcover:[2560,1440], og:[1200,630], email:[1200,400]}[kind];
   const W=dims[0],H=dims[1];
   const s=W/1080; /* type scale relative to 1080 width */
   const meta = esc(trUp(a.dateline))+"\n"+esc(trUp(a.city))+"\n"+esc(trUp(a.seats))+"\n"+esc(trUp(a.lang))
@@ -230,20 +230,64 @@ function announceCard(kind){
       + '</div>'
       + '<div class="foot" style="font-size:24px"><span class="fl">'+esc(state.brand.handle)+'</span><span class="fr">'+trUp('Detay profildeki linkte')+'</span></div>', 100);
   }
-  if(kind==="banner"||kind==="linkedin"){
-    const pad = kind==="banner"?90:64;
+  if(kind==="banner"||kind==="linkedin"||kind==="siteban"){
+    const pad = kind==="banner"?90:(kind==="siteban"?56:64);
+    const ctaX = kind==="siteban" ? '<div class="cta" style="font-size:20px;padding:14px 24px;margin-top:30px">'+esc(trUp(a.cta))+' &#8594; '+esc(trUp(state.brand.site))+'</div>' : cta;
     return card(W,H,dark,
       '<div style="display:flex;gap:'+(60*s)+'px;height:100%;align-items:center">'
       + '<div style="flex:1.35">'
-      +   '<div class="k-top" style="font-size:'+(22*s)+'px"><span class="kk">'+esc(trUp(a.kicker))+'</span></div>'
-      +   '<h1 style="font-size:'+(kind==="banner"?84:64*s)+'px;margin-top:'+(22*s)+'px">'+esc(a.title)+'</h1>'
-      +   '<div class="metaline" style="font-size:'+(24*s)+'px;margin-top:'+(28*s)+'px">'+esc(trUp(a.dateline))+'  &#183;  '+esc(trUp(a.city))+'\n'+esc(trUp(a.seats))+'  &#183;  '+esc(trUp(a.lang))+(a.highlight?'\n<span class="mhl">'+esc(trUp(a.highlight))+'</span>':"")+'</div>'
-      +   cta
+      +   '<div class="k-top" style="font-size:'+(kind==="siteban"?19:22*s)+'px"><span class="kk">'+esc(trUp(a.kicker))+'</span></div>'
+      +   '<h1 style="font-size:'+(kind==="banner"?84:(kind==="siteban"?58:64*s))+'px;margin-top:'+(22*s)+'px">'+esc(a.title)+'</h1>'
+      +   '<div class="metaline" style="font-size:'+(kind==="siteban"?20:24*s)+'px;margin-top:'+(28*s)+'px">'+esc(trUp(a.dateline))+'  &#183;  '+esc(trUp(a.city))+'\n'+esc(trUp(a.seats))+'  &#183;  '+esc(trUp(a.lang))+(a.highlight?'\n<span class="mhl">'+esc(trUp(a.highlight))+'</span>':"")+'</div>'
+      +   ctaX
       + '</div>'
       + '<div style="flex:1;align-self:stretch;display:flex;flex-direction:column;justify-content:center">'
       +   (a.img?'<div class="imgbox" style="height:'+(H-2*pad-20)+'px"><img src="'+a.img+'"></div>'
               :'<div class="wavebox" style="height:'+(H*0.42)+'px">'+wave(60,4)+'</div>')
       + '</div></div>', pad);
+  }
+  if(kind==="ytthumb"){
+    return card(W,H,dark,
+      '<div class="k-top" style="font-size:26px"><span class="kk">'+esc(trUp(a.kicker))+'</span><span class="kr">'+esc(trUp(state.brand.wordmark))+'</span></div>'
+      + '<h1 style="font-size:132px;margin-top:56px;max-width:1020px">'+esc(a.title)+'</h1>'
+      + '<div class="wavebox" style="height:46px;margin:44px 0 0;width:30%">'+wave(15,4)+'</div>'
+      + (a.highlight?'<div class="metaline" style="font-size:40px;margin-top:46px"><span class="mhl">'+esc(trUp(a.highlight))+'</span></div>':"")
+      , 70);
+  }
+  if(kind==="ytcover"){
+    const sfL=(2560-1546)/2, sfT=(1440-423)/2;
+    return card(W,H,dark,
+      '<div style="position:relative;width:100%;height:100%">'
+      + '<div class="noexport" style="position:absolute;left:'+sfL+'px;top:'+sfT+'px;width:1546px;height:423px;outline:3px dashed rgba(228,220,202,.45);pointer-events:none"></div>'
+      + '<div class="noexport" style="position:absolute;left:'+sfL+'px;top:'+(sfT-44)+'px;font-family:var(--mono);font-size:22px;letter-spacing:.14em;opacity:.5">'+trUp('G\u00fcvenli alan 1546x423, \u00f6nizleme k\u0131lavuzu')+'</div>'
+      + '<div class="wavebox" style="position:absolute;left:120px;top:520px;width:560px;height:400px">'+wave(60,4)+'</div>'
+      + '<div class="wavebox" style="position:absolute;right:120px;top:520px;width:560px;height:400px">'+wave(60,4)+'</div>'
+      + '<div style="position:absolute;left:'+sfL+'px;top:'+sfT+'px;width:1546px;height:423px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center">'
+      +   '<div class="metaline" style="font-size:26px">'+esc(trUp(a.kicker))+'</div>'
+      +   '<h1 style="font-size:84px;margin:18px 0 22px">'+esc(a.title)+'</h1>'
+      +   '<div class="metaline" style="font-size:30px;color:var(--amber)">'+esc(trUp(state.brand.site))+'</div>'
+      + '</div></div>', 0);
+  }
+  if(kind==="og"){
+    return card(W,H,dark,
+      '<div style="height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center">'
+      + '<div class="metaline" style="font-size:20px">'+esc(trUp(a.kicker))+'  &#183;  '+esc(trUp(state.brand.wordmark))+'</div>'
+      + '<h1 style="font-size:88px;margin:30px 0 8px">'+esc(a.title)+'</h1>'
+      + '<div class="wavebox" style="height:30px;margin:18px 0;width:28%">'+wave(15,3)+'</div>'
+      + '<div class="metaline" style="font-size:23px;margin-top:12px">'+esc(trUp(a.dateline))+'  &#183;  '+esc(trUp(a.city))+'</div>'
+      + (a.highlight?'<div class="metaline" style="font-size:24px;margin-top:14px"><span class="mhl">'+esc(trUp(a.highlight))+'</span></div>':"")
+      + '</div>', 60);
+  }
+  if(kind==="email"){
+    return card(W,H,dark,
+      '<div style="height:100%;display:flex;align-items:center;justify-content:space-between;gap:48px">'
+      + '<div>'
+      +   '<div class="k-top" style="font-size:19px"><span class="kk">'+esc(trUp(a.kicker))+'</span></div>'
+      +   '<h1 style="font-size:76px;margin-top:16px">'+esc(a.title)+'</h1>'
+      +   '<div class="metaline" style="font-size:22px;margin-top:22px;color:var(--amber)">'+esc(trUp(state.brand.site))+'</div>'
+      + '</div>'
+      + '<div class="wavebox" style="width:360px;height:220px;flex:none">'+wave(60,4)+'</div>'
+      + '</div>', 48);
   }
   /* igfeed */
   return card(W,H,dark,
@@ -286,7 +330,12 @@ function renderStage(){
     if(o.igfeed)  h+=boardWrap(announceCard('igfeed'),  'IG Feed', 1080,1350,'igfeed');
     if(o.igstory) h+=boardWrap(announceCard('igstory'), 'IG Story',1080,1920,'igstory');
     if(o.linkedin)h+=boardWrap(announceCard('linkedin'),'LinkedIn',1200,627,'linkedin');
-    if(o.banner)  h+=boardWrap(announceCard('banner'),  'Site Banner',1920,820,'banner');
+    if(o.banner)  h+=boardWrap(announceCard('banner'),  'Wide Banner',1920,820,'banner');
+    if(o.siteban) h+=boardWrap(announceCard('siteban'), 'Site Banner',1200,600,'siteban');
+    if(o.ytthumb) h+=boardWrap(announceCard('ytthumb'), 'YT Thumbnail',1280,720,'ytthumb');
+    if(o.ytcover) h+=boardWrap(announceCard('ytcover'), 'YT Channel Cover',2560,1440,'ytcover');
+    if(o.og)      h+=boardWrap(announceCard('og'),      'OG Card',1200,630,'og');
+    if(o.email)   h+=boardWrap(announceCard('email'),   'Email Header',1200,400,'email');
     st.innerHTML=h;
   }
 }
@@ -316,6 +365,7 @@ async function exportBoard(name, silent){
   const holder=document.createElement('div');
   holder.style.cssText='position:fixed;left:-100000px;top:0;width:'+W+'px;height:'+H+'px;overflow:hidden';
   holder.innerHTML=cardEl.outerHTML;
+  holder.querySelectorAll('.noexport').forEach(el=>el.remove());
   document.body.appendChild(holder);
   try{
     const cv=await html2canvas(holder.firstElementChild,{scale:1,width:W,height:H,backgroundColor:null,logging:false});
@@ -336,7 +386,7 @@ async function downloadAll(){
 /* =============== panel =============== */
 const HINTS={
   carousel:"One layout, repeated. The swipe rhythm does the persuading. Cover hooks, teach slides give value, one quote breathes, close points home. Max 10 slides.",
-  announce:"One content set, four surfaces. Date and city lead, cap is a room fact, installment lives in the copy, no scarcity words, no counts."
+  announce:"One content set, nine surfaces. Date and city lead, cap is a room fact, installment lives in the copy, no scarcity words, no counts. YT cover is evergreen: type the motto as title, campaign text stays off it."
 };
 function setMode(m){ state.mode=m; renderPanel(); renderStage(); }
 function field(label, path, type){
@@ -396,10 +446,10 @@ function renderPanel(){
       + (state.announce.img?'<button class="btn" onclick="setPath(\'announce.img\',\'\');renderPanel()">Clear</button>':'')
       + '</div></div></details>';
     h+='<details class="sec" open><summary>Outputs</summary><div class="fieldwrap">'
-      + ["igfeed","igstory","linkedin","banner"].map(k=>
+      + ["igfeed","igstory","linkedin","banner","siteban","ytthumb","ytcover","og","email"].map(k=>
         '<label class="f-label" style="display:flex;gap:8px;align-items:center;text-transform:none">'
         + '<input type="checkbox" '+(state.announce.outputs[k]?'checked':'')+' onchange="state.announce.outputs.'+k+'=this.checked;renderStage()"> '
-        + {igfeed:"IG Feed 1080x1350",igstory:"IG Story 1080x1920",linkedin:"LinkedIn 1200x627",banner:"Site Banner 1920x820"}[k]+'</label>').join("")
+        + {igfeed:"IG Feed 1080x1350",igstory:"IG Story 1080x1920",linkedin:"LinkedIn 1200x627",banner:"Wide Banner 1920x820",siteban:"Site Banner 1200x600",ytthumb:"YT Thumbnail 1280x720",ytcover:"YT Channel Cover 2560x1440",og:"OG Card 1200x630",email:"Email Header 1200x400"}[k]+'</label>').join("")
       + '</div></details>';
   }
   document.getElementById('sections').innerHTML=h;
