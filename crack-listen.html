@@ -161,7 +161,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18i</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18j</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -418,13 +418,14 @@ let WCCH=null;
 function wcCmdSub(on){ try{ if(!SB) return;
   if(on&&!WCCH){ WCCH=SB.channel('cnw-'+WCKEY()).on('broadcast',{event:'cmd'},m=>{ try{
       if(running&&m&&m.payload&&m.payload.a==='sample'){ markSample(); toast(LANG==='tr'?'Watch: numune işaretlendi.':'Watch: sample marked.'); }
+      if(running&&m&&m.payload&&m.payload.a==='drop'){ toast(LANG==='tr'?'Watch: DROP komutu.':'Watch: DROP command.'); stop(); }
     }catch(e){} }).subscribe(); }
   if(!on&&WCCH){ try{ SB.removeChannel(WCCH); }catch(e){} WCCH=null; } }catch(e){} }
 try{ WCON=localStorage.getItem('bsWatchCast')==='1'; const wt=$('wcTog'); if(wt){ wt.checked=WCON; if(WCON) wcToggle(true); } }catch(e){}
 setInterval(()=>{ try{ if(!running) return;
   if(document.hidden) updateGauge();
   if(WCON&&performance.now()-LIVEPUB_T>1500){ const vv2=valid(); const lst=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
-    wcPub({c:(cName.value||'').trim()||'?', st:lst, n:vv2.length, t:Math.round((performance.now()-startT)/1000), w:(A0PHASE==='pre'||A0PHASE==='alarm')?1:0, hb:1}); }
+    wcPub({c:(cName.value||'').trim()||'?', st:lst, n:vv2.length, t:Math.round((performance.now()-startT)/1000), w:(A0PHASE==='alarm'?2:(A0PHASE==='pre'?1:0)), hb:1}); }
 }catch(e){} },1000);   // hidden-tab repaint + heartbeat for the states that never reach the projection publisher (unmapped, no cracks yet)
 hp.oninput=()=>{ $('hpV').textContent=fmtHz(+hp.value); if(hpF) hpF.frequency.value=+hp.value; };
 
@@ -1496,7 +1497,7 @@ function updateGauge(){
     const lastSt=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
     const smpL=SAMPLES.length?(SAMPLES.length+(SAMPLES[SAMPLES.length-1].a0?'\u00b7A0':(SAMPLES[SAMPLES.length-1].st?('\u00b7'+SAMPLES[SAMPLES.length-1].st):''))):null;
     BCLIVE.postMessage({coffee:k, stage:lastSt, n:v.length, proj:Math.round(proj), band:bandR, t:(performance.now()-startT)/1000, p:+(p.toFixed(3)), smp:smpL});
-    wcPub({c:k, st:lastSt, n:v.length, proj:Math.round(proj), band:bandR, t:Math.round((performance.now()-startT)/1000), p:+(p.toFixed(3)), w:(A0PHASE==='pre'||A0PHASE==='alarm')?1:0}); } }catch(e){}
+    wcPub({c:k, st:lastSt, n:v.length, proj:Math.round(proj), band:bandR, t:Math.round((performance.now()-startT)/1000), p:+(p.toFixed(3)), w:(A0PHASE==='alarm'?2:(A0PHASE==='pre'?1:0))}); } }catch(e){}
   LASTPROJ=Math.round(proj);
   TGT_U=(cal.target)?agU(cal.target):null;   // recipe target ring: free
   drawGauge('live',proj-band,proj+band);
@@ -1675,7 +1676,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-18i';
+const APPVER='v2026-07-18j';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
