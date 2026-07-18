@@ -109,7 +109,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 .brandFull{text-align:center;margin:2px 0 0}
 .tlogo{width:44px;height:44px;display:block;margin:0 auto 8px}
 .logoName{font-family:'Aardvark','Arial Black',Helvetica,sans-serif;line-height:1;white-space:nowrap;-webkit-text-size-adjust:none;text-size-adjust:none}
-.logoName .lr{color:#D8453B}.logoName .lg{color:var(--ink)}
+.logoName .lr{color:#D8453B;display:inline;background:none;border:0;padding:0;font-size:inherit}.logoName .lg{color:var(--ink)}
 .rmark{font-family:Helvetica,Arial,sans-serif;font-size:.36em;font-weight:700;vertical-align:super}
 .logoSub{color:var(--muted);font-weight:600;letter-spacing:5px;font-size:11px;margin-top:6px}
 .brandCompact{display:none;text-align:center}
@@ -161,7 +161,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18b</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18d</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -346,6 +346,8 @@ body.st-setup #btn{display:none}
     <div class="ctl"><label>High-pass <span class="info" onclick="showInfo('hp')">&#9432;</span></label><button class="pm" onclick="nudge('hp',-1)">&minus;</button><input type="range" id="hp" min="300" max="14000" step="100" value="10000"><button class="pm" onclick="nudge('hp',1)">+</button><span class="v" id="hpV">10k Hz</span></div>
     <div class="ctl"><label>Voice guard <span class="info" onclick="showInfo('vg')">&#9432;</span></label><label style="display:flex;align-items:center;gap:8px;margin-left:auto;cursor:pointer"><input type="checkbox" id="vgTog" onchange="vgToggle(this.checked)" style="width:19px;height:19px;accent-color:var(--accent2)"><span class="v" id="vgV">on</span></label></div>
     <div class="ctl"><label>Voice guard ratio <span class="info" onclick="showInfo('vgr')">&#9432;</span></label><button class="pm" onclick="nudge('vgr',-1)">&minus;</button><input type="range" id="vgr" min="1.5" max="6" step="0.25" value="2.5"><button class="pm" onclick="nudge('vgr',1)">+</button><span class="v" id="vgrV">2.5x</span></div>
+    <div class="ctl"><label>Watch cast <span class="info" onclick="showInfo('wcast')">&#9432;</span></label><label style="display:flex;align-items:center;gap:8px;margin-left:auto;cursor:pointer"><input type="checkbox" id="wcTog" onchange="wcToggle(this.checked)" style="width:19px;height:19px;accent-color:var(--accent2)"><span class="v" id="wcV">off</span></label></div>
+    <div class="ctl" id="wcRow" style="display:none;gap:8px"><label id="wcLink" style="font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8"></label><button class="pm" style="width:auto;padding:0 12px;font-size:13px" onclick="wcCopy()">copy</button></div>
     <div class="hint">Detection listens for millisecond bursts (clicks), not loud averages, so test it with a pen click or finger snap, not your voice. Trigger is a threshold: LOWER catches more.</div>
     <div class="lbl" style="margin-top:10px">signal purity <span class="info" onclick="showInfo('pur')">&#9432;</span> · <span id="pur" style="color:var(--ink);font-size:15px">-</span></div>
   </div>
@@ -398,6 +400,15 @@ function fmtHz(v){ return v>=1000 ? (v/1000).toFixed(1).replace(/\.0$/,'')+'k Hz
 function nudge(id,dir){ const el=$(id); const jump=Math.max(+el.step||1, (+el.max - +el.min)/10); el.value=+el.value+dir*jump; el.dispatchEvent(new Event('input')); }   // each tap = 10% of the slider's range
 sens.oninput=()=>$('sensV').textContent=(+sens.value).toFixed(1)+'x';
 vgr.oninput=()=>{ EP.VGR=+vgr.value; $('vgrV').textContent=(+vgr.value).toFixed(2).replace(/0$/,'')+'x'; try{ localStorage.setItem('bsVGR',vgr.value); }catch(e){} };
+// ---- WATCH CAST: second-screen live broadcast (off by default; the roast leaves this phone only when you say so) ----
+let WCON=false, LIVEPUB_T=0;
+function WCKEY(){ let k2=localStorage.getItem('bsWatchKey'); if(!k2){ const b=new Uint8Array(8); crypto.getRandomValues(b); k2=Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join(''); localStorage.setItem('bsWatchKey',k2); } return k2; }
+function wcUrl(){ return location.origin+location.pathname.replace(/[^/]*$/,'')+'crack-watch.html?k='+WCKEY(); }
+function wcToggle(on){ WCON=!!on; try{ localStorage.setItem('bsWatchCast',on?'1':'0'); }catch(e){}
+  const vv=$('wcV'); if(vv) vv.textContent=on?(LANG==='tr'?'açık':'on'):(LANG==='tr'?'kapalı':'off');
+  const r2=$('wcRow'); if(r2){ r2.style.display=on?'flex':'none'; const l2=$('wcLink'); if(l2) l2.textContent=wcUrl(); } }
+function wcCopy(){ try{ navigator.clipboard.writeText(wcUrl()); toast(LANG==='tr'?'Watch linki kopyalandı.':'Watch link copied.'); }catch(e){ toast(wcUrl()); } }
+try{ WCON=localStorage.getItem('bsWatchCast')==='1'; const wt=$('wcTog'); if(wt){ wt.checked=WCON; if(WCON) wcToggle(true); } }catch(e){}
 hp.oninput=()=>{ $('hpV').textContent=fmtHz(+hp.value); if(hpF) hpF.frequency.value=+hp.value; };
 
 function toggle(){ running?stop():start(); }
@@ -816,6 +827,7 @@ const INFO={
  rateI:['Rate per minute','Valid cracks in the last 10 seconds, times six. The live speed of the bean\'s voice.'],
  lastg:['Last gain','Loudness (0-100 dB scale) of the newest valid crack.'],
  peakg:['Peak gain','The loudest valid crack so far this session.'],
+ wcast:['Watch cast','Broadcasts the live gauge (coffee, stage, projection, cracks, clock) once per second to your private watch link, so a second screen, a laptop across the room, or a wrist browser can watch the roast. The link carries a random device key; share it only with screens you trust. Off by default; nothing leaves this phone while off.'],
  pur:['Signal purity','Share of detected events accepted as bean cracks. Low purity means noisy placement or tuning: move the phone, or raise the trigger. Judge it during setup and early first crack; a clean session runs high.'],
  admPT:['Clock estimator pT','Progress through the reference DEV by pace-corrected time: devCur divided by pace, over the reference devSpan. One of the two legs the projection stands on.'],
  admPE:['Energy estimator pE','Progress by accumulated crack gain as a fraction of the reference total gain. The second leg. When pT and pE disagree, the band widens honestly.'],
@@ -845,6 +857,7 @@ const INFO={
  a0ag:['A0 Agtron, color at first crack','This is where the gauge STARTS at first crack: the ground color of THIS coffee at the very first pop, before any development. Leave it blank and the app uses its global default of 125. Every coffee is a little different, and an error here shifts a light-drop projection almost one-to-one at the start, then fades to nothing by the color you mapped at drop: the darker you take the roast, the less A0 matters. To measure it, run one sacrifice roast: at the first crack pull a small sample, cool it, grind it and read its Agtron, then enter that number here once. It rides with the map from then on.']
 };
 const INFO_TR={
+ wcast:['Watch yayını','Canlı göstergeyi (kahve, evre, öngörü, çatlak, saat) saniyede bir kez özel watch linkine yayınlar; ikinci bir ekran, odanın öbür ucundaki bilgisayar veya bir bilek tarayıcısı kavurmayı izleyebilir. Link rastgele bir cihaz anahtarı taşır; yalnızca güvendiğin ekranlarla paylaş. Varsayılan kapalı; kapalıyken hiçbir veri telefondan çıkmaz.'],
  vgr:['Ses koruması oranı','Konuşma sayılması için ses bandının kendi tabanından kaç kat yüksek olması gerektiği. DÜŞÜK = daha sıkı koruma (kısık sesde de tetiklenir, daha çok işaretleyebilir). YÜKSEK = daha rahat. Varsayılan 2.5. Cihaza özel; anında geçerli.'],
  vg:['Ses koruması','İnsan sesiyle gelen vurguları eler: ikinci bir alçak-bant kulak konuşmayı izler, eşleşen olayları kayıtta HUMAN VOICE olarak işaretler; tek dokunuşla geri alınır. Sessiz kavuruyorsan ve ham dedektörü istiyorsan kapat; kavurma sırasında bile anında geçerli. Bu anahtar cihazına özel; varsayılanları Guide içindeki motor kuralları kartı belirler.'],
  phase:['Gain evresi (phi)','İlk çatlak çanındaki konumun: şu ana dek duyulan birikimli çatlak gain\u0027i bölü çanın tüm toplamı; ilk patlamada 0, sessizlikte 1. Tez: eşit evre, kavurma hızı ne olursa olsun eşit öğütülmüş renk verir. Çan hâlâ yükselirken gerçek toplam bilinemez, bu yüzden kadran \u2265 işaretiyle bir ALT SINIR gösterir; tepe duyulunca değer kesinleşir ve kadran bunu söyler. Çanı duymadan bildiğini iddia etmez.'],
@@ -1461,7 +1474,10 @@ function updateGauge(){
   try{ if(running){ BCLIVE=BCLIVE||new BroadcastChannel('cnLive');
     const lastSt=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
     const smpL=SAMPLES.length?(SAMPLES.length+(SAMPLES[SAMPLES.length-1].a0?'\u00b7A0':(SAMPLES[SAMPLES.length-1].st?('\u00b7'+SAMPLES[SAMPLES.length-1].st):''))):null;
-    BCLIVE.postMessage({coffee:k, stage:lastSt, n:v.length, proj:Math.round(proj), band:bandR, t:(performance.now()-startT)/1000, p:+(p.toFixed(3)), smp:smpL}); } }catch(e){}
+    BCLIVE.postMessage({coffee:k, stage:lastSt, n:v.length, proj:Math.round(proj), band:bandR, t:(performance.now()-startT)/1000, p:+(p.toFixed(3)), smp:smpL});
+    if(WCON&&performance.now()-LIVEPUB_T>1000){ LIVEPUB_T=performance.now();
+      try{ fetch(SUPA_URL+'/realtime/v1/api/broadcast',{method:'POST',headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY,'content-type':'application/json'},
+        body:JSON.stringify({messages:[{topic:'cnw-'+WCKEY(), event:'live', payload:{c:k, st:lastSt, n:v.length, proj:Math.round(proj), band:bandR, t:Math.round((performance.now()-startT)/1000), p:+(p.toFixed(3)), w:(A0PHASE==='pre'||A0PHASE==='alarm')?1:0}, private:false}]})}).catch(()=>{}); }catch(e){} } } }catch(e){}
   LASTPROJ=Math.round(proj);
   TGT_U=(cal.target)?agU(cal.target):null;   // recipe target ring: free
   drawGauge('live',proj-band,proj+band);
@@ -1640,7 +1656,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-18b';
+const APPVER='v2026-07-18d';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -1951,7 +1967,7 @@ const EN2TR={
 'bean voice':'çekirdeğin sesi','evenness':'homojenlik','brightness':'parlaklık','time SD s':'zaman SS sn',
 'counted cracks':'sayılan çatlaklar','rate /min':'çatlak /dk','last gain':'son gain','peak gain':'tepe gain',
 'session capture':'seans kaydı','roast record (travels inside the CSV)':'kavurma kaydı (CSV içinde taşınır)',
-'tuning & trace':'ayar & iz','crack log':'çatlak kaydı','gain trace (cracks marked)':'gain izi (çatlaklar işaretli)',
+'tuning & trace':'ayar & iz','Watch cast':'Watch yayını','crack log':'çatlak kaydı','gain trace (cracks marked)':'gain izi (çatlaklar işaretli)',
 'signal purity':'sinyal saflığı','cracks / 30s':'çatlak / 30 sn','vs reference':'referansa göre',
 'Record raw audio (WAV, pre-filter)':'Ham sesi kaydet (WAV, filtre öncesi)',
 'Start listening':'Dinlemeye başla','Teach it your voice':'Sesini öğret','Stop':'Durdur','Drop':'Drop','New session':'Yeni seans','Sample pulled':'Numune çekildi',

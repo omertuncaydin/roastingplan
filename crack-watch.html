@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Crack Watch · CoffeeNutz</title>
+<style>
+:root{--bg:#191512;--panel:#221c15;--line:#3a3128;--ink:#f3ede4;--muted:#a8998a;--dim:#8a7a68;--gold:#e6c14b;--warn:#e24b4a}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,'Helvetica Neue',Helvetica,Arial,sans-serif;display:flex;align-items:center;justify-content:center;transition:background .3s}
+body.a0{background:#3d2b10}
+.card{text-align:center;padding:14px;max-width:320px;width:100%}
+#coffee{font-size:14px;color:var(--muted);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#proj{font-size:64px;font-weight:800;line-height:1.05}
+#band{font-size:16px;color:var(--muted);margin-bottom:6px}
+#stage{display:inline-block;background:var(--panel);border:1px solid var(--line);color:var(--gold);border-radius:16px;padding:2px 16px;font-size:17px;font-weight:700;margin-bottom:8px}
+#meta{font-size:13px;color:var(--dim);display:flex;gap:14px;justify-content:center}
+#bar{height:3px;background:var(--line);border-radius:2px;margin-top:12px;overflow:hidden}
+#fill{height:3px;background:var(--gold);border-radius:2px;width:0%}
+#a0msg{display:none;font-size:17px;font-weight:700;color:var(--gold);margin-top:10px}
+body.a0 #a0msg{display:block}
+#state{font-size:13px;color:var(--dim);margin-top:14px}
+body.stale .card>div:not(#state){opacity:.35}
+</style>
+</head>
+<body>
+<div class="card">
+  <div id="coffee">·</div>
+  <div id="proj">·</div>
+  <div id="band"></div>
+  <div id="stage">·</div>
+  <div id="meta"><span id="n"></span><span id="clock"></span></div>
+  <div id="bar"><div id="fill"></div></div>
+  <div id="a0msg">NUMUNE ZAMANI · trier çek</div>
+  <div id="state">bağlanıyor…</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const KEY=new URLSearchParams(location.search).get('k');
+let LASTMSG=0;
+function render(p){
+  LASTMSG=Date.now(); document.body.classList.remove('stale');
+  $('coffee').textContent=p.c||'?';
+  $('proj').textContent='~'+(p.proj??'·');
+  $('band').textContent=p.band?('±'+p.band+' Agtron'):'';
+  $('stage').textContent=p.st||'·';
+  $('n').textContent=(p.n||0)+' çatlak';
+  const t=p.t||0; $('clock').textContent=Math.floor(t/60)+':'+('0'+Math.floor(t%60)).slice(-2);
+  $('fill').style.width=Math.min(100,Math.round((p.p||0)*100))+'%';
+  document.body.classList.toggle('a0',p.w===1);
+  $('state').textContent='canlı';
+}
+window.render=render;
+setInterval(()=>{ if(LASTMSG&&Date.now()-LASTMSG>10000){ document.body.classList.add('stale'); $('state').textContent='sinyal bekleniyor…'; } },2000);
+if(!KEY){ $('state').textContent='link eksik: Listener > ayar & iz > Watch yayını linkini kullan'; }
+else if(typeof supabase==='undefined'){ $('state').textContent='bağlantı kitaplığı yüklenemedi'; }
+else{
+  try{
+    const sb=supabase.createClient('https://efjvfggwnhqkunjvoyjb.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA');
+    sb.channel('cnw-'+KEY).on('broadcast',{event:'live'},m=>render(m.payload||{})).subscribe(st=>{
+      if(st==='SUBSCRIBED') $('state').textContent='bağlı · kavurma bekleniyor';
+      else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT') $('state').textContent='bağlantı sorunu · sayfayı yenile';
+    });
+  }catch(e){ $('state').textContent='bağlantı hatası'; }
+}
+</script>
+</body>
+</html>
