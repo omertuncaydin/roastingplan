@@ -47,6 +47,8 @@ body.admin #adminStatsRow{display:flex}
 @keyframes sPop{0%{transform:scale(1)}45%{transform:scale(1.07) rotate(-1.2deg)}100%{transform:scale(1)}}
 @keyframes a0urge{0%,100%{box-shadow:0 0 0 0 rgba(230,193,75,.55)}50%{box-shadow:0 0 0 9px rgba(230,193,75,0)}}
 #sampleBtn.a0urgent{border-color:var(--gold);color:var(--gold);animation:a0urge 1.2s ease-out infinite}
+#tgtBanner{display:none;position:fixed;top:0;left:0;right:0;z-index:59;background:var(--panel);border-bottom:2px solid var(--warn);color:var(--ink);font-weight:700;text-align:center;padding:11px 10px;font-size:14px;letter-spacing:.3px;cursor:pointer}
+#tgtBanner.tgnow{background:var(--warn);color:#fff;animation:a0urge 1.2s ease-out infinite}
 #a0Banner{display:none;position:fixed;top:0;left:0;right:0;z-index:60;background:var(--gold);color:#1a1410;font-weight:800;text-align:center;padding:12px 10px;font-size:15px;letter-spacing:.4px;cursor:pointer;animation:a0urge 1.2s ease-out infinite}
 .sPop{animation:sPop .4s ease}
 @media (min-width:900px){
@@ -161,7 +163,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18k</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18l</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -236,6 +238,7 @@ body.st-setup #btn{display:none}
   <button class="go" id="btn" onclick="toggle()">Start listening</button>
   <div class="err" id="err"></div>
   <div id="a0Banner" onclick="markSample()"></div>
+  <div id="tgtBanner" onclick="this.style.display='none'"></div>
 
   <div class="card" id="cCapture" style="margin-top:12px">
     <div class="lbl">session capture <span class="info" onclick="showInfo('cap')">&#9432;</span></div>
@@ -378,7 +381,8 @@ let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
 let procV=null, lpV=null, VGF=0, VGS=0, VGN=0, AUDGAPS=[], AUDDOWN=null;   // voice-guard ear + audio-death ledger
 let NLC=nlLoad(), ENROLL=false, ENCOUNT=0, enAC=null, enStream=null, enNodes=null;   // noise library (device-local) + voice enrollment
-let A0PHASE='', A0T=0, A0PULLED=false, BEEPUNTIL=0;   // A0-pull machine: ''=idle, pre=first cracks heard, alarm=A0 confirmed, done=resolved; BEEPUNTIL mutes the guard while we beep
+let A0PHASE='', A0T=0, A0PULLED=false, BEEPUNTIL=0;
+let TGTPHASE='', TGTT=0;   // target-drop machine for ROUTINE (mapped) roasts: ''=idle, pre=within 4 Agtron of target, alarm=target reached, done=resolved   // A0-pull machine: ''=idle, pre=first cracks heard, alarm=A0 confirmed, done=resolved; BEEPUNTIL mutes the guard while we beep
 let BCLIVE=null, cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={}, STOPT=null, PHASE=0, STOPBORROWED=false, PHPEAK=0, PHPEAKT=0, PHREV=0;
 let LANG=localStorage.getItem('bsLang')||'en';   // declared at the very top: eval-order safe (v07e lesson)
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
@@ -470,7 +474,7 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('dlStory').style.display='none'; $('gameAdd').style.display='none'; $('mapBtn').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw','mA0Ag'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -523,7 +527,7 @@ function queueSamples(){ try{ if(!SAMPLES.length) return;
 }catch(e){} }
 function stop(){
   running=false; if(raf) cancelAnimationFrame(raf);
-  A0PHASE='done'; a0NudgeUI(0);   // Drop answers the A0 question: no alarm may outlive the roast
+  A0PHASE='done'; a0NudgeUI(0); TGTPHASE='done'; tgtUI(0);   // Drop answers both questions: no alarm may outlive the roast
   if(procDet){ try{ lpF.disconnect(procDet); procDet.disconnect(); }catch(e){} procDet.onaudioprocess=null; procDet=null; }
   if(procV){ try{ lpV.disconnect(procV); procV.disconnect(); }catch(e){} procV.onaudioprocess=null; procV=null; }
   if(proc){ try{ src.disconnect(proc); proc.disconnect(); }catch(e){} proc.onaudioprocess=null; proc=null; }
@@ -1497,7 +1501,8 @@ function updateGauge(){
     const lastSt=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
     const smpL=SAMPLES.length?(SAMPLES.length+(SAMPLES[SAMPLES.length-1].a0?'\u00b7A0':(SAMPLES[SAMPLES.length-1].st?('\u00b7'+SAMPLES[SAMPLES.length-1].st):''))):null;
     BCLIVE.postMessage({coffee:k, stage:lastSt, n:v.length, proj:Math.round(proj), band:bandR, t:(performance.now()-startT)/1000, p:+(p.toFixed(3)), smp:smpL});
-    wcPub({c:k, st:lastSt, n:v.length, proj:Math.round(proj), band:bandR, t:Math.round((performance.now()-startT)/1000), p:+(p.toFixed(3)), w:(A0PHASE==='alarm'?2:(A0PHASE==='pre'?1:0))}); } }catch(e){}
+    wcPub({c:k, st:lastSt, n:v.length, proj:Math.round(proj), band:bandR, t:Math.round((performance.now()-startT)/1000), p:+(p.toFixed(3)), w:(A0PHASE==='alarm'?2:(A0PHASE==='pre'?1:0)), g:(TGTPHASE==='alarm'?2:(TGTPHASE==='pre'?1:0))}); } }catch(e){}
+  try{ tgtNudge(proj); }catch(e){}
   LASTPROJ=Math.round(proj);
   TGT_U=(cal.target)?agU(cal.target):null;   // recipe target ring: free
   drawGauge('live',proj-band,proj+band);
@@ -1676,7 +1681,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-18k';
+const APPVER='v2026-07-18l';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -1891,6 +1896,27 @@ function a0Beep(){ try{ if(!AC||!AC.createOscillator||AC.state!=='running') retu
   for(let i=0;i<3;i++){ const a=t0+i*0.21; g.gain.setValueAtTime(0,a); g.gain.linearRampToValueAtTime(0.28,a+0.015); g.gain.setValueAtTime(0.28,a+0.11); g.gain.linearRampToValueAtTime(0,a+0.13); }
   o.start(t0); o.stop(t0+0.7); o.onended=()=>{ try{ o.disconnect(); g.disconnect(); }catch(e){} };
 }catch(e){} }
+function tgtBeep(){ try{ if(!AC||!AC.createOscillator||AC.state!=='running') return;
+  BEEPUNTIL=performance.now()+1000;   // the guard must not hear our own alarm
+  const g=AC.createGain(); g.gain.value=0; g.connect(AC.destination);
+  const o=AC.createOscillator(); o.type='sine'; o.frequency.value=660; o.connect(g);
+  const t0=AC.currentTime;
+  for(let i=0;i<2;i++){ const a=t0+i*0.28; g.gain.setValueAtTime(0,a); g.gain.linearRampToValueAtTime(0.28,a+0.015); g.gain.setValueAtTime(0.28,a+0.16); g.gain.linearRampToValueAtTime(0,a+0.19); }
+  o.start(t0); o.stop(t0+0.8); o.onended=()=>{ try{ o.disconnect(); g.disconnect(); }catch(e){} };
+}catch(e){} }
+function tgtUI(level){ const bn=$('tgtBanner'); if(!bn) return;
+  if(!level){ bn.style.display='none'; bn.classList.remove('tgnow'); return; }
+  bn.style.display='block';
+  if(level===1){ bn.classList.remove('tgnow'); bn.textContent=LANG==='tr'?"Hedef renk yaklaşıyor · drop'a hazırlan":'Target color approaching · get ready to drop'; }
+  else { bn.classList.add('tgnow'); bn.textContent=LANG==='tr'?'HEDEF RENK · DROP ZAMANI':'TARGET COLOR · DROP NOW'; } }
+function tgtNudge(proj){
+  if(!running||TGTPHASE==='done') return;
+  const c2=calFor(); const tg=c2?parseFloat(c2.target):NaN;
+  if(!isFinite(tg)||!isFinite(proj)){ if(TGTPHASE){ TGTPHASE='done'; tgtUI(0); } return; }
+  const nowS=(performance.now()-startT)/1000;
+  if(TGTPHASE===''){ if(proj<=tg){ TGTPHASE='alarm'; TGTT=nowS; tgtUI(2); tgtBeep(); } else if(proj<=tg+4){ TGTPHASE='pre'; tgtUI(1); } }
+  else if(TGTPHASE==='pre'){ if(proj<=tg){ TGTPHASE='alarm'; TGTT=nowS; tgtUI(2); tgtBeep(); } }
+  else if(TGTPHASE==='alarm'&&nowS-TGTT>30){ TGTPHASE='done'; tgtUI(0); } }   // window closed: never nag mid-roast
 function a0NudgeUI(level){ const b=$('sampleBtn'), l=$('sampLbl'), bn=$('a0Banner'); if(!b||!l) return;
   b.classList.remove('a0urgent'); b.style.borderColor=''; if(bn) bn.style.display='none';
   if(level===1){ b.style.borderColor='var(--gold)'; l.textContent=LANG==='tr'?'A0 yakın · numuneye hazırlan':'A0 near · get ready to pull'; }
@@ -1902,7 +1928,7 @@ function a0NudgeUI(level){ const b=$('sampleBtn'), l=$('sampLbl'), bn=$('a0Banne
 function a0Nudge(){
   if(!running||A0PHASE==='done') return;
   const k=(cName.value||'').trim().toLowerCase();
-  if(!k){ if(A0PHASE){ A0PHASE='done'; a0NudgeUI(0); } return; }   // unnamed bean only skips; mapped beans keep the A0 alert (multiple-pull era: every roast can gift an anchor + a cupping sample; his order 2026-07-18)
+  if(!k||calMap()[k]){ if(A0PHASE){ A0PHASE='done'; a0NudgeUI(0); } return; }   // mapped or unnamed bean: the moment is not needed
   const nowS=(performance.now()-startT)/1000;
   const hasA0=LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==='A0');
   if(A0PHASE===''){ if(hasA0){ A0PHASE='alarm'; A0T=nowS; a0NudgeUI(2); } else if(valid().length>=1){ A0PHASE='pre'; a0NudgeUI(1); } }
