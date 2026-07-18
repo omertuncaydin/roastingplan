@@ -584,7 +584,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-17h</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-18a</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1639,8 +1639,8 @@ try{ const qs=new URLSearchParams(location.search), qc=qs.get('cup'), qf=qs.get(
   if(qf){ setTimeout(()=>{ try{ const q=JSON.parse(localStorage.getItem('cnCupQueue')||'[]');
     const qe=[...q].reverse().find(e2=>e2.coffee===qf.trim());   // newest pull set for this coffee
     if(qe){ FLIGHT={ date:qe.date, purpose:('Listener '+qe.coffee).trim(),
-      coffees: qe.samples.map(sm=>({sample:(qe.coffee+' S@'+Math.round(sm.t-(qe.a0||0))+'s'+(sm.ag?(' '+sm.ag+'A'):'')), cup:blankCup()}))
-        .concat([{sample:qe.coffee, cup:blankCup()}]) };   // the drop cup joins its own pulls
+      coffees: qe.samples.map(sm=>({sample:(qe.coffee+(sm.st?(' '+sm.st):'')+' S@'+Math.round(sm.t-(qe.a0||0))+'s'+(sm.ag?(' '+sm.ag+'A'):'')), cup:blankCup()}))
+        .concat([{sample:qe.coffee, cup:blankCup()}]) };   // the drop cup joins its own pulls; stage rides with each pull (the cracks named it)
       show('flight'); }
     else { cup=blankCup(); cup.sample=qf.trim(); ensureBean(qf.trim()); show('cup'); } }catch(e){} },600); } }catch(e){}
 
@@ -2085,13 +2085,13 @@ function renderRegList(){
   }).join('');
   try{ const q=JSON.parse(localStorage.getItem('cnCupQueue')||'[]');   // same gesture as Deep Calibration's "Cup starred samples"
     if(q.length) h+='<div class="small" style="margin:12px 0 6px;font-weight:700">'+T('Listener sample pulls')+'</div>'
-      +q.map((qe,i)=>'<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px"><span><b>'+esc(qe.coffee)+'</b> <span class="small">'+esc(qe.date)+' \u00b7 '+qe.samples.length+' '+T('samples')+'</span></span><button class="btn" style="width:auto;padding:8px 12px;margin:0" onclick="cupQueued('+i+')">'+T('Cup these')+'</button></div>').join('');
+      +q.map((qe,i)=>'<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px"><span><b>'+esc(qe.coffee)+'</b> <span class="small">'+esc(qe.date)+' \u00b7 '+qe.samples.length+' '+T('samples')+(qe.samples.some(x=>x.st)?(' \u00b7 '+qe.samples.map(x=>x.st).filter(Boolean).join('/')):'')+'</span></span><button class="btn" style="width:auto;padding:8px 12px;margin:0" onclick="cupQueued('+i+')">'+T('Cup these')+'</button></div>').join('');
   }catch(e){}
   el.innerHTML=h;
 }
 function cupQueued(i){ try{ const q=JSON.parse(localStorage.getItem('cnCupQueue')||'[]'); const qe=q[i]; if(!qe) return;
   FLIGHT={ date:qe.date, purpose:('Listener '+qe.coffee).trim(),
-    coffees: qe.samples.map(sm=>({sample:(qe.coffee+' S@'+Math.round(sm.t-(qe.a0||0))+'s'+(sm.ag?(' '+sm.ag+'A'):'')), cup:blankCup()})) };
+    coffees: qe.samples.map(sm=>({sample:(qe.coffee+(sm.st?(' '+sm.st):'')+' S@'+Math.round(sm.t-(qe.a0||0))+'s'+(sm.ag?(' '+sm.ag+'A'):'')), cup:blankCup()})) };
   show('flight'); }catch(e){} }
 try{ new BroadcastChannel('cnLive').onmessage=e=>{   // the Listener broadcasts; the Guide only watches
   const d=e.data||{}, el=document.getElementById('liveTick'); if(!el) return;
