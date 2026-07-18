@@ -161,7 +161,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18j</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18k</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1676,7 +1676,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-18j';
+const APPVER='v2026-07-18k';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -1902,7 +1902,7 @@ function a0NudgeUI(level){ const b=$('sampleBtn'), l=$('sampLbl'), bn=$('a0Banne
 function a0Nudge(){
   if(!running||A0PHASE==='done') return;
   const k=(cName.value||'').trim().toLowerCase();
-  if(!k||calMap()[k]){ if(A0PHASE){ A0PHASE='done'; a0NudgeUI(0); } return; }   // mapped or unnamed bean: the moment is not needed
+  if(!k){ if(A0PHASE){ A0PHASE='done'; a0NudgeUI(0); } return; }   // unnamed bean only skips; mapped beans keep the A0 alert (multiple-pull era: every roast can gift an anchor + a cupping sample; his order 2026-07-18)
   const nowS=(performance.now()-startT)/1000;
   const hasA0=LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==='A0');
   if(A0PHASE===''){ if(hasA0){ A0PHASE='alarm'; A0T=nowS; a0NudgeUI(2); } else if(valid().length>=1){ A0PHASE='pre'; a0NudgeUI(1); } }
