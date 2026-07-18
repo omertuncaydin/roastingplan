@@ -161,7 +161,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18h</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18i</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -347,7 +347,7 @@ body.st-setup #btn{display:none}
     <div class="ctl"><label>Voice guard <span class="info" onclick="showInfo('vg')">&#9432;</span></label><label style="display:flex;align-items:center;gap:8px;margin-left:auto;cursor:pointer"><input type="checkbox" id="vgTog" onchange="vgToggle(this.checked)" style="width:19px;height:19px;accent-color:var(--accent2)"><span class="v" id="vgV">on</span></label></div>
     <div class="ctl"><label>Voice guard ratio <span class="info" onclick="showInfo('vgr')">&#9432;</span></label><button class="pm" onclick="nudge('vgr',-1)">&minus;</button><input type="range" id="vgr" min="1.5" max="6" step="0.25" value="2.5"><button class="pm" onclick="nudge('vgr',1)">+</button><span class="v" id="vgrV">2.5x</span></div>
     <div class="ctl"><label>Watch cast <span class="info" onclick="showInfo('wcast')">&#9432;</span></label><label style="display:flex;align-items:center;gap:8px;margin-left:auto;cursor:pointer"><input type="checkbox" id="wcTog" onchange="wcToggle(this.checked)" style="width:19px;height:19px;accent-color:var(--accent2)"><span class="v" id="wcV">off</span></label></div>
-    <div class="ctl" id="wcRow" style="display:none;gap:8px"><label id="wcLink" style="font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8"></label><button class="pm" style="width:auto;padding:0 12px;font-size:13px" onclick="wcCopy()">copy</button></div>
+    <div class="ctl" id="wcRow" style="display:none;gap:8px"><label id="wcLink" style="font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8"></label><button class="pm" style="width:auto;padding:0 12px;font-size:13px" onclick="wcCopy()">copy</button><button class="pm" style="width:auto;padding:0 12px;font-size:13px" onclick="wcShare()">share</button></div>
     <div class="hint">Detection listens for millisecond bursts (clicks), not loud averages, so test it with a pen click or finger snap, not your voice. Trigger is a threshold: LOWER catches more.</div>
     <div class="lbl" style="margin-top:10px">signal purity <span class="info" onclick="showInfo('pur')">&#9432;</span> · <span id="pur" style="color:var(--ink);font-size:15px">-</span></div>
   </div>
@@ -413,6 +413,7 @@ function wcToggle(on){ WCON=!!on; try{ localStorage.setItem('bsWatchCast',on?'1'
   const vv=$('wcV'); if(vv) vv.textContent=on?(LANG==='tr'?'açık · kayıt başlayınca yayın':'on · casts while recording'):(LANG==='tr'?'kapalı':'off');
   const r2=$('wcRow'); if(r2){ r2.style.display=on?'flex':'none'; const l2=$('wcLink'); if(l2) l2.textContent=wcUrl(); } }
 function wcCopy(){ try{ navigator.clipboard.writeText(wcUrl()); toast(LANG==='tr'?'Watch linki kopyalandı.':'Watch link copied.'); }catch(e){ toast(wcUrl()); } }
+function wcShare(){ try{ if(navigator.share){ navigator.share({title:'Crack Watch', url:wcUrl()}); } else { wcCopy(); } }catch(e){ wcCopy(); } }
 let WCCH=null;
 function wcCmdSub(on){ try{ if(!SB) return;
   if(on&&!WCCH){ WCCH=SB.channel('cnw-'+WCKEY()).on('broadcast',{event:'cmd'},m=>{ try{
@@ -1674,7 +1675,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-18h';
+const APPVER='v2026-07-18i';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();

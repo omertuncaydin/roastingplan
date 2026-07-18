@@ -38,6 +38,8 @@ body.stale .card>div:not(#state){opacity:.35}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);
+const SU='https://efjvfggwnhqkunjvoyjb.supabase.co';
+const AK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA';
 const KEY=new URLSearchParams(location.search).get('k');
 let LASTMSG=0, FIN=false, CH=null, LIVE=false;
 function render(p){
@@ -55,8 +57,9 @@ function render(p){
 }
 window.render=render;
 function sendSample(){
-  if(!CH||!LIVE||Date.now()-LASTMSG>5000) return;
-  try{ CH.send({type:'broadcast',event:'cmd',payload:{a:'sample'}});
+  if(!LIVE||Date.now()-LASTMSG>5000) return;
+  try{ fetch(SU+'/realtime/v1/api/broadcast',{method:'POST',headers:{apikey:AK,authorization:'Bearer '+AK,'content-type':'application/json'},
+      body:JSON.stringify({messages:[{topic:'cnw-'+KEY, event:'cmd', payload:{a:'sample'}, private:false}]})}).catch(()=>{});
     const st=$('state'); st.textContent='numune gönderildi ✓'; document.body.style.outline='3px solid var(--gold)';
     setTimeout(()=>{ document.body.style.outline='none'; },600);
   }catch(e){}
