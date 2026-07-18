@@ -161,7 +161,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18e</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18f</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -410,11 +410,15 @@ function wcPub(payload){ if(!WCON||performance.now()-LIVEPUB_T<=1000) return; LI
 function WCKEY(){ let k2=localStorage.getItem('bsWatchKey'); if(!k2){ const b=new Uint8Array(8); crypto.getRandomValues(b); k2=Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join(''); localStorage.setItem('bsWatchKey',k2); } return k2; }
 function wcUrl(){ return location.origin+location.pathname.replace(/[^/]*$/,'')+'crack-watch.html?k='+WCKEY(); }
 function wcToggle(on){ WCON=!!on; try{ localStorage.setItem('bsWatchCast',on?'1':'0'); }catch(e){}
-  const vv=$('wcV'); if(vv) vv.textContent=on?(LANG==='tr'?'açık':'on'):(LANG==='tr'?'kapalı':'off');
+  const vv=$('wcV'); if(vv) vv.textContent=on?(LANG==='tr'?'açık · kayıt başlayınca yayın':'on · casts while recording'):(LANG==='tr'?'kapalı':'off');
   const r2=$('wcRow'); if(r2){ r2.style.display=on?'flex':'none'; const l2=$('wcLink'); if(l2) l2.textContent=wcUrl(); } }
 function wcCopy(){ try{ navigator.clipboard.writeText(wcUrl()); toast(LANG==='tr'?'Watch linki kopyalandı.':'Watch link copied.'); }catch(e){ toast(wcUrl()); } }
 try{ WCON=localStorage.getItem('bsWatchCast')==='1'; const wt=$('wcTog'); if(wt){ wt.checked=WCON; if(WCON) wcToggle(true); } }catch(e){}
-setInterval(()=>{ try{ if(running&&document.hidden) updateGauge(); }catch(e){} },1000);   // background tabs freeze the paint loop; the cast must not die with it
+setInterval(()=>{ try{ if(!running) return;
+  if(document.hidden) updateGauge();
+  if(WCON&&performance.now()-LIVEPUB_T>1500){ const vv2=valid(); const lst=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
+    wcPub({c:(cName.value||'').trim()||'?', st:lst, n:vv2.length, t:Math.round((performance.now()-startT)/1000), w:(A0PHASE==='pre'||A0PHASE==='alarm')?1:0, hb:1}); }
+}catch(e){} },1000);   // hidden-tab repaint + heartbeat for the states that never reach the projection publisher (unmapped, no cracks yet)
 hp.oninput=()=>{ $('hpV').textContent=fmtHz(+hp.value); if(hpF) hpF.frequency.value=+hp.value; };
 
 function toggle(){ running?stop():start(); }
@@ -1412,8 +1416,8 @@ function updateGauge(){
   const fcAg=fcActive?cal.fc_ag:FC_AG;
   const a0Tag=fcActive?(' · A0 '+cal.fc_ag):'';
   const v=valid();
-  if(!v.length){ if(running) wcPub({c:k, st:'', n:0, t:Math.round((performance.now()-startT)/1000), w:0, hb:1}); drawGauge('wait'); $('agHint').textContent=tt('Mapped on')+' '+cal.date+' (Agtron '+cal.agtron+')'+bTag+a0Tag+'. '+tt('Projection starts at first crack.'); return; }
-  if(v.length<5){ if(running) wcPub({c:k, st:'', n:v.length, t:Math.round((performance.now()-startT)/1000), w:0, hb:1}); drawGauge('wait'); $('agHint').textContent=(LANG==='tr'?('Çatlaklar toplanıyor ('+v.length+'/5); birkaç pat henüz ilk çatlak değildir.'):('Gathering cracks ('+v.length+'/5) before projecting; a couple of pops is not a first crack yet.')); return; }
+  if(!v.length){ drawGauge('wait'); $('agHint').textContent=tt('Mapped on')+' '+cal.date+' (Agtron '+cal.agtron+')'+bTag+a0Tag+'. '+tt('Projection starts at first crack.'); return; }
+  if(v.length<5){ drawGauge('wait'); $('agHint').textContent=(LANG==='tr'?('Çatlaklar toplanıyor ('+v.length+'/5); birkaç pat henüz ilk çatlak değildir.'):('Gathering cracks ('+v.length+'/5) before projecting; a couple of pops is not a first crack yet.')); return; }
   // live: clock runs. done/loaded: retrospective final call at last crack + coast (Drop after last, if filled)
   const nowDev=running?((performance.now()-startT)/1000):(v[v.length-1].t+(parseFloat($('mDrop').value)||0));
   const a0=effA0(v), devCur=nowDev-a0;
@@ -1660,7 +1664,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-18e';
+const APPVER='v2026-07-18f';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
