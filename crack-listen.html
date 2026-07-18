@@ -163,7 +163,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18l</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18m</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -406,7 +406,11 @@ sens.oninput=()=>$('sensV').textContent=(+sens.value).toFixed(1)+'x';
 vgr.oninput=()=>{ EP.VGR=+vgr.value; $('vgrV').textContent=(+vgr.value).toFixed(2).replace(/0$/,'')+'x'; try{ localStorage.setItem('bsVGR',vgr.value); }catch(e){} };
 // ---- WATCH CAST: second-screen live broadcast (off by default; the roast leaves this phone only when you say so) ----
 let WCON=false, LIVEPUB_T=0;
+function wcNote(){ try{ const nv=($('mNote')&&$('mNote').value||'').trim(); if(nv) return nv.slice(0,80);
+  let lm={}; try{ lm=JSON.parse(localStorage.getItem('bsLastMeta'))||{}; }catch(e){}
+  const e2=lm[(cName.value||'').trim().toLowerCase()]; return (e2&&e2.note)?String(e2.note).slice(0,80):''; }catch(e){ return ''; } }
 function wcPub(payload){ if(!WCON||performance.now()-LIVEPUB_T<=1000) return; LIVEPUB_T=performance.now();
+  try{ const nt=wcNote(); if(nt) payload.nt=nt; }catch(e){}
   try{ fetch(SUPA_URL+'/realtime/v1/api/broadcast',{method:'POST',headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY,'content-type':'application/json'},
     body:JSON.stringify({messages:[{topic:'cnw-'+WCKEY(), event:'live', payload, private:false}]})})
     .then(r=>{ const vv=$('wcV'); if(vv&&WCON) vv.textContent=(LANG==='tr'?'açık':'on')+' · '+r.status; })
@@ -540,7 +544,7 @@ function stop(){
   STOPPROJ=LASTPROJ; STOPBORROWED=PROJBORROWED;   // freeze projection AND its provenance at the drop; a rename later cannot launder a borrowed guess
   try{ if(WCON){ const lst=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
     fetch(SUPA_URL+'/realtime/v1/api/broadcast',{method:'POST',headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY,'content-type':'application/json'},
-      body:JSON.stringify({messages:[{topic:'cnw-'+WCKEY(), event:'live', payload:{c:(cName.value||'').trim()||'?', st:lst, n:valid().length, proj:STOPPROJ||null, t:Math.round(STOPT), w:0, fin:1}, private:false}]})}).catch(()=>{}); } }catch(e){}
+      body:JSON.stringify({messages:[{topic:'cnw-'+WCKEY(), event:'live', payload:{c:(cName.value||'').trim()||'?', st:lst, n:valid().length, proj:STOPPROJ||null, band:(ENGINE&&isFinite(ENGINE.band))?Math.round(ENGINE.band*2)/2:null, t:Math.round(STOPT), w:0, fin:1}, private:false}]})}).catch(()=>{}); } }catch(e){}
   try{ if(!planActive() && valid().length>=10){ localStorage.setItem('bsRoastN',String(roastCount()+1)); refreshPlanUI(); } }catch(e){}   // a "roast" = 10+ real cracks; test taps stay free
   $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):'';
   if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('dlStory').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value;
@@ -776,7 +780,7 @@ function saveSession(){
   saveCalIfMapped();
   try{ const lk=(cName.value||$('mCoffee').value||'').trim().toLowerCase();
     if(lk){ const lmAll=JSON.parse(localStorage.getItem('bsLastMeta')||'{}');
-      lmAll[lk]={proc:$('mProc').value||'',moist:$('mMoist').value||'',aw:$('mAw').value||'',target:$('mTarget').value||''};
+      lmAll[lk]={proc:$('mProc').value||'',moist:$('mMoist').value||'',aw:$('mAw').value||'',target:$('mTarget').value||'',note:$('mNote').value||''};
       localStorage.setItem('bsLastMeta',JSON.stringify(lmAll)); } }catch(e){}
   const base=fname('x').slice(0,-2), files=[];
   const cb=new TextEncoder().encode(csvText());
@@ -1681,7 +1685,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-18l';
+const APPVER='v2026-07-18m';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
