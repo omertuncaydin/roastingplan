@@ -49,6 +49,7 @@ body.admin #adminStatsRow{display:flex}
 #sampleBtn.a0urgent{border-color:var(--gold);color:var(--gold);animation:a0urge 1.2s ease-out infinite}
 #tgtBanner{display:none;position:fixed;top:0;left:0;right:0;z-index:59;background:var(--panel);border-bottom:2px solid var(--warn);color:var(--ink);font-weight:700;text-align:center;padding:11px 10px;font-size:14px;letter-spacing:.3px;cursor:pointer}
 #tgtBanner.tgnow{background:var(--warn);color:#fff;animation:a0urge 1.2s ease-out infinite}
+body.st-done #btn{display:none}
 #a0Banner{display:none;position:fixed;top:0;left:0;right:0;z-index:60;background:var(--gold);color:#1a1410;font-weight:800;text-align:center;padding:12px 10px;font-size:15px;letter-spacing:.4px;cursor:pointer;animation:a0urge 1.2s ease-out infinite}
 .sPop{animation:sPop .4s ease}
 @media (min-width:900px){
@@ -163,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18q</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18r</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -240,6 +241,31 @@ body.st-setup #btn{display:none}
   <div id="a0Banner" onclick="markSample()"></div>
   <div id="tgtBanner" onclick="this.style.display='none'"></div>
 
+  <div class="card" id="agTop" style="display:none;margin-top:12px">
+      <div class="hint" id="finalCall" style="margin-bottom:8px;color:var(--gold)"></div>
+      <div id="twoPull" style="display:none;border:2px solid var(--accent2);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.55"></div>
+      <div class="lbl" style="color:var(--gold);margin:10px 0 5px">ground agtron · the number that teaches the app</div>
+      <div style="display:flex;gap:6px;margin-bottom:6px">
+        <input type="text" id="mAgG" placeholder="Agtron ground" inputmode="decimal" style="flex:1.6;min-width:0;border:2px solid var(--gold);border-radius:9px;padding:10px;font-size:22px;font-weight:800;text-align:center;background:#26200f;color:var(--ink);box-shadow:0 0 14px rgba(230,193,75,.25)">
+        <input type="text" id="mAgSd" placeholder="Ground SD" inputmode="decimal" style="flex:0.8;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
+        <input type="text" id="mAgW" placeholder="Agtron whole" inputmode="decimal" style="flex:0.8;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
+      </div>
+      <div id="sampList"></div>
+      <button class="go" id="mapBtn" onclick="saveCalIfMapped(true);updateGauge()" style="display:none;background:var(--accent2);margin-top:8px">Map this coffee (save color)</button>
+      <div id="nextRow" style="display:none;gap:8px;margin-top:8px">
+        <button class="go" style="flex:1;background:var(--accent2);font-size:13px;margin-top:0" onclick="start()">Roast this coffee again</button>
+        <button class="go" style="flex:1;background:#3a2f26;font-size:13px;margin-top:0" onclick="wcFresh()">Roast new coffee</button>
+      </div>
+      <button class="go" id="dlZip" onclick="saveSession()" style="display:none;margin-top:8px">Save session (.zip)</button>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="go" id="noMeterBtn" onclick="showLevels()" style="display:block;flex:1;background:#5a4a38;font-size:12px;padding:10px 4px;margin-top:0">No color meter? Estimate it</button>
+        <button class="go" id="cupGo" onclick="cupHandoff()" style="display:none;flex:1;background:#3a2f26;font-size:12px;padding:10px 4px;margin-top:0">Cup this coffee &#8599;</button>
+        <button class="go" id="dlCard" onclick="makeBatchCard()" style="display:none;flex:1;background:#3a2f26;font-size:12px;padding:10px 4px;margin-top:0">Batch card (PNG)</button>
+        <button class="go" id="dlStory" onclick="makeStoryCard()" style="display:none;flex:1;background:#3a2f26;font-size:12px;padding:10px 4px;margin-top:0">Story card</button>
+      </div>
+      <button class="go" id="gameAdd" onclick="openGameConsent()" style="display:none;background:var(--accent);margin-top:8px">Oyuna ekle · Add to the Agtron Challenge</button>
+  </div>
+
   <div class="card" id="cCapture" style="margin-top:12px">
     <details id="capFold">
       <summary style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;cursor:pointer;padding:2px 0">session capture <span class="info" onclick="event.stopPropagation();showInfo('cap')">&#9432;</span></summary>
@@ -250,9 +276,8 @@ body.st-setup #btn{display:none}
       <div class="hint" id="recInfo">Everything is kept for the whole session; save after Stop. Keep the screen on.</div>
     </details>
     <div id="metaBox" style="display:none;margin-top:10px">
-      <div class="lbl" style="margin-bottom:6px">roast record (travels inside the CSV)</div>
-      <div class="hint" id="finalCall" style="margin-bottom:8px;color:var(--gold)"></div>
-      <div id="twoPull" style="display:none;border:2px solid var(--accent2);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.55"></div>
+      <details id="recFold">
+      <summary style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;cursor:pointer;padding:2px 0">roast record (travels inside the CSV)</summary>
       <input type="text" id="mCoffee" placeholder="Coffee" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink);margin-bottom:6px">
       <div style="display:flex;gap:6px;margin-bottom:6px">
         <select id="mEquip" onchange="localStorage.setItem('bsEquip',this.value);renderBatchSel()" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)"></select>
@@ -269,12 +294,6 @@ body.st-setup #btn{display:none}
         <input type="text" id="mAw" placeholder="Aw" inputmode="decimal" style="flex:0.6;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
         <input type="text" id="mTarget" placeholder="Target Agtron (recipe)" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
       </div>
-      <div class="lbl" style="color:var(--gold);margin:10px 0 5px">ground agtron · the number that teaches the app</div>
-      <div style="display:flex;gap:6px;margin-bottom:6px">
-        <input type="text" id="mAgG" placeholder="Agtron ground" inputmode="decimal" style="flex:1.6;min-width:0;border:2px solid var(--gold);border-radius:9px;padding:10px;font-size:22px;font-weight:800;text-align:center;background:#26200f;color:var(--ink);box-shadow:0 0 14px rgba(230,193,75,.25)">
-        <input type="text" id="mAgSd" placeholder="Ground SD" inputmode="decimal" style="flex:0.8;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
-        <input type="text" id="mAgW" placeholder="Agtron whole" inputmode="decimal" style="flex:0.8;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
-      </div>
       <details id="xtraFold" style="margin:2px 0 6px">
         <summary style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;cursor:pointer;padding:7px 0">Extras</summary>
         <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:2px 0 8px">
@@ -288,20 +307,8 @@ body.st-setup #btn{display:none}
       <input type="text" id="mNote" placeholder="Note (machine, phone position, cup notes)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
       <div class="hint">Fill what you know before saving; measure Agtron later? Load the saved zip back in, add it, tap Map.</div>
       <div class="hint">Map with a roast taken to the DARKEST level you serve: projections interpolate inside the mapped range, never guess beyond it.</div>
-      <div id="sampList"></div>
+      </details>
       
-      <button class="go" id="mapBtn" onclick="saveCalIfMapped(true);updateGauge()" style="display:none;background:var(--accent2);margin-top:8px">Map this coffee (save color)</button>
-      <div id="nextRow" style="display:none;margin-top:8px">
-        <button class="go" style="width:100%;background:#3a2f26;font-size:13px;margin-top:0" onclick="wcFresh()">New coffee</button>
-      </div>
-      <button class="go" id="dlZip" onclick="saveSession()" style="display:none;margin-top:8px">Save session (.zip)</button>
-      <div style="display:flex;gap:6px;margin-top:8px">
-        <button class="go" id="noMeterBtn" onclick="showLevels()" style="display:block;flex:1;background:#5a4a38;font-size:12px;padding:10px 4px;margin-top:0">No color meter? Estimate it</button>
-        <button class="go" id="cupGo" onclick="cupHandoff()" style="display:none;flex:1;background:#3a2f26;font-size:12px;padding:10px 4px;margin-top:0">Cup this coffee &#8599;</button>
-        <button class="go" id="dlCard" onclick="makeBatchCard()" style="display:none;flex:1;background:#3a2f26;font-size:12px;padding:10px 4px;margin-top:0">Batch card (PNG)</button>
-        <button class="go" id="dlStory" onclick="makeStoryCard()" style="display:none;flex:1;background:#3a2f26;font-size:12px;padding:10px 4px;margin-top:0">Story card</button>
-      </div>
-      <button class="go" id="gameAdd" onclick="openGameConsent()" style="display:none;background:var(--accent);margin-top:8px">Oyuna ekle · Add to the Agtron Challenge</button>
     </div>
 
     <div class="lbl" style="margin-top:14px">coffee cloud · Guide account <span class="info" onclick="showInfo('cloud')">&#9432;</span></div>
@@ -363,6 +370,7 @@ body.st-setup #btn{display:none}
     <div class="ctl"><label>High-pass <span class="info" onclick="showInfo('hp')">&#9432;</span></label><button class="pm" onclick="nudge('hp',-1)">&minus;</button><input type="range" id="hp" min="300" max="14000" step="100" value="10000"><button class="pm" onclick="nudge('hp',1)">+</button><span class="v" id="hpV">10k Hz</span></div>
     <div class="ctl"><label>Voice guard <span class="info" onclick="showInfo('vg')">&#9432;</span></label><label style="display:flex;align-items:center;gap:8px;margin-left:auto;cursor:pointer"><input type="checkbox" id="vgTog" onchange="vgToggle(this.checked)" style="width:19px;height:19px;accent-color:var(--accent2)"><span class="v" id="vgV">on</span></label></div>
     <div class="ctl"><label>Voice guard ratio <span class="info" onclick="showInfo('vgr')">&#9432;</span></label><button class="pm" onclick="nudge('vgr',-1)">&minus;</button><input type="range" id="vgr" min="1.5" max="6" step="0.25" value="2.5"><button class="pm" onclick="nudge('vgr',1)">+</button><span class="v" id="vgrV">2.5x</span></div>
+    <div class="ctl" style="justify-content:flex-end"><button class="pm" style="width:auto;padding:0 14px;font-size:12px" onclick="resetTuning()">reset all values</button></div>
     <div class="hint">Detection listens for millisecond bursts (clicks), not loud averages, so test it with a pen click or finger snap, not your voice. Trigger is a threshold: LOWER catches more.</div>
     <div class="lbl" style="margin-top:10px">signal purity <span class="info" onclick="showInfo('pur')">&#9432;</span> · <span id="pur" style="color:var(--ink);font-size:15px">-</span></div>
   </div>
@@ -416,6 +424,11 @@ function fmtHz(v){ return v>=1000 ? (v/1000).toFixed(1).replace(/\.0$/,'')+'k Hz
 function nudge(id,dir){ const el=$(id); const jump=Math.max(+el.step||1, (+el.max - +el.min)/10); el.value=+el.value+dir*jump; el.dispatchEvent(new Event('input')); }   // each tap = 10% of the slider's range
 sens.oninput=()=>$('sensV').textContent=(+sens.value).toFixed(1)+'x';
 vgr.oninput=()=>{ EP.VGR=+vgr.value; $('vgrV').textContent=(+vgr.value).toFixed(2).replace(/0$/,'')+'x'; try{ localStorage.setItem('bsVGR',vgr.value); }catch(e){} };
+function resetTuning(){ try{ ['bsVG','bsVGR','bsSens'].forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  const se=$('sens'); if(se){ se.value=5; se.dispatchEvent(new Event('input')); }
+  const vr=$('vgr'); if(vr){ vr.value=2.5; vr.dispatchEvent(new Event('input')); }
+  const vt=$('vgTog'); if(vt) vt.checked=true; vgToggle(true);
+  toast(LANG==='tr'?'Ayarlar fabrika değerlerine döndü.':'Tuning back to factory values.'); }
 // ---- WATCH CAST: second-screen live broadcast (off by default; the roast leaves this phone only when you say so) ----
 let WCON=false, LIVEPUB_T=0;
 function wcNote(){ try{ const bc=((badgeMap()[badgeKey()]||{}).cue||'').trim(); if(bc) return bc.slice(0,80);
@@ -436,7 +449,7 @@ function wcToggle(on){ WCON=!!on; try{ localStorage.setItem('bsWatchCast',on?'1'
 function wcCopy(){ try{ navigator.clipboard.writeText(wcUrl()); toast(LANG==='tr'?'Watch linki kopyalandı.':'Watch link copied.'); }catch(e){ toast(wcUrl()); } }
 function wcShare(){ try{ if(navigator.share){ navigator.share({title:'Crack Watch', url:wcUrl()}); } else { wcCopy(); } }catch(e){ wcCopy(); } }
 function wcFresh(){ try{ cName.value=''; $('mCoffee').value=''; $('finalCall').textContent='';
-  ['dlZip','dlCard','dlStory','metaBox','mapBtn','cupGo','nextRow','gameAdd'].forEach(i=>{ if($(i)) $(i).style.display='none'; });
+  ['dlZip','dlCard','dlStory','metaBox','mapBtn','cupGo','nextRow','gameAdd','agTop'].forEach(i=>{ if($(i)) $(i).style.display='none'; });
   try{ renderNameplate(); }catch(e){} try{ updateGauge(); }catch(e){}
   setState('st-setup'); window.scrollTo({top:0,behavior:'smooth'}); cName.focus(); }catch(e){}
   toast(LANG==='tr'?'Yeni kahve: ismini seç.':'New coffee: name it.'); }
@@ -497,7 +510,7 @@ async function start(){
     src.connect(proc); proc.connect(AC.destination); // raw tap, before the high-pass; output stays silent
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
-  $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('dlStory').style.display='none'; $('gameAdd').style.display='none'; $('mapBtn').style.display='none'; $('nextRow').style.display='none';
+  $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('dlStory').style.display='none'; $('gameAdd').style.display='none'; $('mapBtn').style.display='none'; $('nextRow').style.display='none'; $('agTop').style.display='none';
   bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
@@ -563,7 +576,7 @@ function stop(){
       body:JSON.stringify({messages:[{topic:'cnw-'+WCKEY(), event:'live', payload:{c:(cName.value||'').trim()||'?', st:lst, n:valid().length, proj:STOPPROJ||null, band:(ENGINE&&isFinite(ENGINE.band))?Math.round(ENGINE.band*2)/2:null, t:Math.round(STOPT), w:0, fin:1}, private:false}]})}).catch(()=>{}); } }catch(e){}
   try{ if(!planActive() && valid().length>=10){ localStorage.setItem('bsRoastN',String(roastCount()+1)); refreshPlanUI(); } }catch(e){}   // a "roast" = 10+ real cracks; test taps stay free
   $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):'';
-  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('dlStory').style.display='block'; $('metaBox').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block'; $('nextRow').style.display='block'; if(!$('mCoffee').value) $('mCoffee').value=cName.value;
+  if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('dlStory').style.display='block'; $('metaBox').style.display='block'; $('agTop').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block'; $('nextRow').style.display='flex'; if(!$('mCoffee').value) $('mCoffee').value=cName.value;
     // a mapped coffee fills its own paperwork: bean-constant fields prefill from the map, measurements stay yours
     const calP=calFor();
     if(calP){ if(!$('mProc').value&&calP.proc) $('mProc').value=calP.proc;
@@ -899,7 +912,7 @@ const INFO={
  bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.'],
  tl:['Session timeline, the whole story','Gold ticks on the floor: every valid crack. Thick green with the soft fill: the smoothed crack rate, the bell. Grey dashed: the GHOST of your mapped reference roast, raced live, with the lap chip telling you how far ahead or behind you are. The gold floor edge is DEV progress from A0. The window centers the crack activity and snaps to standard sizes (top-right badge).<br><br>The gain stages ride the bell:<br>&bull; <b>A0</b> · the literal first crack (confirmed by followers, a lone pop cannot claim it)<br>&bull; <b>A1</b> · the acceleration point: steepest sustained rise of the envelope<br>&bull; <b>B0</b> · the deceleration knee: rise still climbing but bending toward the crown<br>&bull; <b>B1</b> · the crown (appears once the fall is real)<br>&bull; <b>C0</b> · the confirmed decline: live once the bell has fallen for 20% of the FC span (the reference span when mapped, estimated from this roast\'s own rise when not), settling at the B1-C1 midpoint when C1 is known<br>&bull; <b>C1</b> · the definite last crack, earned only by OBSERVED silence: 10s minimum, longer for slow roasts (3x the recent crack gap). A roast stopped before that ends with a <b>DROP</b> chip at the stop moment instead: nothing is invented beyond the evidence<br><br>Right-side markers settle as the data does; thresholds are provisional until labeled sessions calibrate them.'],
  cap:['Session capture, the whole story','While listening, the app keeps three things: the raw microphone audio as WAV (tapped BEFORE the high-pass, ~5.5 MB per minute), a per-frame CSV (time, loudness, floor, ratio, your slider settings, every crack), and your crack log edits: ticked rows travel as labeled false positives, swiped rows are removed. Fill the roast record (coffee, batch, Agtron) after Stop and it rides inside the CSV header; the Agtron ground value is also what unlocks the color gauge for that coffee. Save session packs WAV + CSV into one zip. Everything lives only in this page’s memory: close or reload without saving and the session is gone.'],
- a0ag:['A0 Agtron, color at first crack','This is where the gauge STARTS at first crack: the ground color of THIS coffee at the very first pop, before any development. Leave it blank and the app uses its global default of 125. Every coffee is a little different, and an error here shifts a light-drop projection almost one-to-one at the start, then fades to nothing by the color you mapped at drop: the darker you take the roast, the less A0 matters. To measure it, run one sacrifice roast: at the first crack pull a small sample, cool it, grind it and read its Agtron, then enter that number here once. It rides with the map from then on.']
+ a0ag:['A0 Agtron, color at first crack','This is where the gauge STARTS at first crack: the ground color of THIS coffee at the very first pop, before any development. Leave it blank and the app falls back to your most recent measured A0 from any of your coffees (125 only until your first measurement). An error here shifts a light-drop projection almost one-to-one at the start, then fades to nothing by the color you mapped at drop: the darker you take the roast, the less A0 matters. No sacrifice roast needed: two-pull calibration measures it inside a normal roast. When the A0 alarm fires, pull a small sample with the trier and keep roasting to your drop; grind and read BOTH the A0 pull and the drop, enter them, tap Map. It rides with the map from then on.']
 };
 const INFO_TR={
  wcast:['Watch yayını','Canlı göstergeyi (kahve, evre, öngörü, çatlak, saat) saniyede bir kez özel watch linkine yayınlar; ikinci bir ekran, odanın öbür ucundaki bilgisayar veya bir bilek tarayıcısı kavurmayı izleyebilir. Link rastgele bir cihaz anahtarı taşır; yalnızca güvendiğin ekranlarla paylaş. Varsayılan kapalı; kapalıyken hiçbir veri telefondan çıkmaz.'],
@@ -922,7 +935,7 @@ const INFO_TR={
  bin:['Aralık genişliği','Zaman çizgisi histogramının çubuk genişliği. Küçük aralık dokuyu, büyük aralık biçimi gösterir. Yalnızca görünüm; algılama matematiğini değiştirmez.'],
  tl:['Seans zaman çizgisi, bütün hikâye','Tabandaki altın çizgiler: her geçerli çatlak. Dolgulu kalın yeşil: yumuşatılmış çatlak hızı, yani çan. Gri kesikli: eşlenmiş referans kavurmanın HAYALETİ, canlı yarışta; tur çipi önde mi geride mi olduğunu söyler. Altın taban kenarı A0\'dan itibaren DEV ilerlemesi.<br><br>Gain evreleri çanın üstünde:<br>&bull; <b>A0</b> · gerçek ilk çatlak (takipçilerle doğrulanır)<br>&bull; <b>A1</b> · ivmelenme noktası: zarfın en dik kalıcı yükselişi<br>&bull; <b>B0</b> · yavaşlama dirseği: yükseliş sürerken taca doğru bükülme<br>&bull; <b>B1</b> · taç (düşüş gerçekleşince görünür)<br>&bull; <b>C0</b> · doğrulanmış düşüş: canlıda çan FC süresinin %20\'si kadar düştüğünde (eşliyken referans süre, değilken bu kavurmanın kendi yükselişinden tahmin), C1 bilinince B1-C1 orta noktasına oturur<br>&bull; <b>C1</b> · kesin son çatlak, yalnızca GÖZLENEN sessizlikle kazanılır: en az 10 sn, yavaş kavurmalarda daha uzun (son çatlak aralığının 3 katı). Daha önce durdurulan kavurma <b>DROP</b> çipiyle biter: kanıtın ötesinde hiçbir şey uydurulmaz<br><br>Sağ taraf işaretleri veri oturdukça oturur.'],
  cap:['Seans kaydı, bütün hikâye','Dinlerken uygulama üç şey tutar: ham mikrofon sesi WAV olarak (yüksek geçirenden ÖNCE, ~5,5 MB/dk), kare başına CSV (zaman, gürlük, taban, oran, ayarların, her çatlak) ve çatlak kaydı düzenlemelerin. Kavurma kaydını Durdur\'dan sonra doldur; öğütülmüş Agtron değeri o kahvenin renk göstergesini de açar. Seansı kaydet WAV + CSV\'yi tek zip yapar. Her şey yalnızca bu sayfanın belleğinde yaşar: kaydetmeden kapatırsan seans gider.'],
- a0ag:['A0 Agtron, ilk çatlaktaki renk','Göstergenin ilk çatlakta BAŞLADIĞI yer: bu kahvenin ilk patlama anındaki, henüz hiç gelişme olmadan öğütülmüş rengi. Boş bırakırsan uygulama 125 varsayılanını kullanır. Her kahve biraz farklıdır ve buradaki bir hata, açık bir Drop öngörüsünü başlangıçta neredeyse birebir kaydırır, sonra Drop\'ta eşlediğin renge doğru sıfıra iner: kavurmayı ne kadar koyu alırsan A0 o kadar az önemlidir. Ölçmek için bir fedakârlık kavurması yap: ilk çatlakta küçük bir örnek çek, soğut, öğüt ve Agtron\'unu oku, sonra o sayıyı buraya bir kez gir. O andan sonra haritayla birlikte taşınır.']
+ a0ag:['A0 Agtron, ilk çatlaktaki renk','Göstergenin ilk çatlakta BAŞLADIĞI yer: bu kahvenin ilk patlama anındaki, henüz hiç gelişme olmadan öğütülmüş rengi. Boş bırakırsan uygulama, herhangi bir kahvende EN SON ölçtüğün A0 değerine döner (ilk ölçümüne kadar 125). Buradaki bir hata, açık bir Drop öngörüsünü başlangıçta neredeyse birebir kaydırır, sonra Drop\'ta eşlediğin renge doğru sıfıra iner: kavurmayı ne kadar koyu alırsan A0 o kadar az önemlidir. Fedakârlık kavurması gerekmez: iki numune kalibrasyonu bunu normal bir kavurmanın içinde ölçer. A0 alarmı çaldığında trier ile küçük bir numune çek, kavurmayı drop\'una kadar sürdür; A0 numunesini ve drop\'u öğütüp İKİSİNİ de oku, gir, Haritala. O andan sonra haritayla birlikte taşınır.']
 };
 function showInfo(k){ const d=(LANG==='tr'&&INFO_TR[k])?INFO_TR[k]:INFO[k]; $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">'+d[0]+'</h1><div class="hint" style="font-size:13px;margin:0">'+d[1]+'</div><button style="margin-top:14px;background:var(--accent2)" onclick="document.getElementById(\'modal\').style.display=\'none\'">Close</button>'; $('modal').style.display='flex'; }
 
@@ -1432,6 +1445,9 @@ function drawGauge(state,projLo,projHi){
   $('ag').innerHTML=h;
 }
 let TGT_U=null, LASTSTAGES=null, MAPWARN=0, PROJBORROWED=false;
+function FCDEF(){ try{ const m=calMap(); let best=null;
+  for(const k in m){ const e=m[k]; if(e&&!e.communal&&isFinite(e.fc_ag)&&e.fc_ag>=80&&e.fc_ag<=140){ if(!best||String(e.date||'')>String(best.date||'')) best=e; } }
+  if(best) return best.fc_ag; }catch(e){} return EP.FC_AG; }
 function updateGauge(){
   TGT_U=null;
   const k=(cName.value||'').trim();
@@ -1449,7 +1465,7 @@ function updateGauge(){
   // per-coffee A0 color: the projection's starting color at first crack. Global EP.FC_AG (125) unless this map
   // carries a sane fc_ag (80..140). The intercept error hits light drops hardest (weight 1 at A0, 0 at the mapped terminal).
   const fcActive=isFinite(cal.fc_ag)&&cal.fc_ag>=80&&cal.fc_ag<=140;
-  const fcAg=fcActive?cal.fc_ag:FC_AG;
+  const fcAg=fcActive?cal.fc_ag:FCDEF();   // fallback: your most recent measured A0 across coffees, 125 only before any measurement
   const a0Tag=fcActive?(' · A0 '+cal.fc_ag):'';
   const v=valid();
   if(!v.length){ drawGauge('wait'); $('agHint').textContent=tt('Mapped on')+' '+cal.date+' (Agtron '+cal.agtron+')'+bTag+a0Tag+'. '+tt('Projection starts at first crack.'); return; }
@@ -1701,7 +1717,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-18q';
+const APPVER='v2026-07-18r';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -1887,7 +1903,7 @@ async function loadSession(file){
   $('mAgWSd').value=meta.agtron_whole_sd||''; $('mAgSd').value=meta.agtron_ground_sd||''; $('mProc').value=meta.process||''; $('mChgFc').value=meta.charge_to_fc||''; if(meta.machine) $('mEquip').value=meta.machine; $('mChgT').value=meta.charge_c||''; $('mDrop').value=meta.drop_after_last_s||''; $('mTarget').value=meta.target||''; $('mMoist').value=meta.moisture||''; $('mAw').value=meta.water_activity||'';
   $('mA0Ag').value=meta.a0_agtron||'';   // A0 color from the CSV meta if the session carried one
   if(!$('mA0Ag').value){ const cf=calFor(); if(cf&&isFinite(cf.fc_ag)) $('mA0Ag').value=cf.fc_ag; }   // else prefill from this coffee's map, like proc/moist
-  $('metaBox').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block'; $('nextRow').style.display='block';
+  $('metaBox').style.display='block'; $('agTop').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block'; $('nextRow').style.display='flex';
   $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('dlStory').style.display='block';   // re-save allowed: corrected FP labels are the training corpus
   setState('st-done');
   try{ isoSweep(STOPT); }catch(e){}   // ISOLATED FIRST CRACK: one retrospective pass for loaded sessions
@@ -2033,7 +2049,7 @@ const EN2TR={
 'bean voice':'çekirdeğin sesi','evenness':'homojenlik','brightness':'parlaklık','time SD s':'zaman SS sn',
 'counted cracks':'sayılan çatlaklar','rate /min':'çatlak /dk','last gain':'son gain','peak gain':'tepe gain',
 'session capture':'seans kaydı','roast record (travels inside the CSV)':'kavurma kaydı (CSV içinde taşınır)',
-'tuning & trace':'ayar & iz','watch cast':'watch yayını','Watch cast':'Watch yayını','Roast this coffee again':'Bu kahveyi tekrar kavur','New coffee':'Yeni kahve','crack log':'çatlak kaydı','gain trace (cracks marked)':'gain izi (çatlaklar işaretli)',
+'tuning & trace':'ayar & iz','watch cast':'watch yayını','Watch cast':'Watch yayını','Roast this coffee again':'Bu kahveyi tekrar kavur','Roast new coffee':'Yeni kahve kavur','reset all values':'tüm değerleri sıfırla','crack log':'çatlak kaydı','gain trace (cracks marked)':'gain izi (çatlaklar işaretli)',
 'signal purity':'sinyal saflığı','cracks / 30s':'çatlak / 30 sn','vs reference':'referansa göre',
 'Record raw audio (WAV, pre-filter)':'Ham sesi kaydet (WAV, filtre öncesi)',
 'Start listening':'Dinlemeye başla','Teach it your voice':'Sesini öğret','Stop':'Durdur','Drop':'Drop','New session':'Yeni seans','Sample pulled':'Numune çekildi',
