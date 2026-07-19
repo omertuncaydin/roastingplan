@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19k</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19l</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -899,7 +899,7 @@ const INFO={
  rateI:['Rate per minute','Valid cracks in the last 10 seconds, times six. The live speed of the bean\'s voice.'],
  lastg:['Last gain','Loudness (0-100 dB scale) of the newest valid crack.'],
  peakg:['Peak gain','The loudest valid crack so far this session.'],
- wcast:['Watch cast','Broadcasts the live gauge (coffee, stage, projection, cracks, clock) once per second to your private watch link, so a second screen, a laptop across the room, or a wrist browser can watch the roast. The link carries a random device key; share it only with screens you trust. Off by default; nothing leaves this phone while off.'],
+ wcast:['Watch cast','Broadcasts the live gauge (coffee, stage, projection, cracks, clock) once per second to your private link. Open that link on any second screen: a laptop, a tablet, or an Apple Watch (share it to yourself in Messages, then tap it on the watch). On the Roaster plan the screen also commands: sample and drop from the wrist. Off by default; nothing leaves this phone while off.'],
  pur:['Signal purity','Share of detected events accepted as bean cracks. Low purity means noisy placement or tuning: move the phone, or raise the trigger. Judge it during setup and early first crack; a clean session runs high.'],
  admPT:['Clock estimator pT','Progress through the reference DEV by pace-corrected time: devCur divided by pace, over the reference devSpan. One of the two legs the projection stands on.'],
  admPE:['Energy estimator pE','Progress by accumulated crack gain as a fraction of the reference total gain. The second leg. When pT and pE disagree, the band widens honestly.'],
@@ -929,7 +929,7 @@ const INFO={
  a0ag:['A0 Agtron, color at first crack','This is where the gauge STARTS at first crack: the ground color of THIS coffee at the very first pop, before any development. Leave it blank and the app falls back to your most recent measured A0 from any of your coffees (125 only until your first measurement). An error here shifts a light-drop projection almost one-to-one at the start, then fades to nothing by the color you mapped at drop: the darker you take the roast, the less A0 matters. No sacrifice roast needed: two-pull calibration measures it inside a normal roast. When the A0 alarm fires, pull a small sample with the trier and keep roasting to your drop; grind and read BOTH the A0 pull and the drop, enter them, tap Map. It rides with the map from then on.']
 };
 const INFO_TR={
- wcast:['Watch yayını','Canlı göstergeyi (kahve, evre, öngörü, çatlak, saat) saniyede bir kez özel watch linkine yayınlar; ikinci bir ekran, odanın öbür ucundaki bilgisayar veya bir bilek tarayıcısı kavurmayı izleyebilir. Link rastgele bir cihaz anahtarı taşır; yalnızca güvendiğin ekranlarla paylaş. Varsayılan kapalı; kapalıyken hiçbir veri telefondan çıkmaz.'],
+ wcast:['Watch yayını','Canlı göstergeyi (kahve, evre, öngörü, çatlak, saat) saniyede bir kez özel linkine yayınlar. Linki ikinci bir ekranda aç: bilgisayar, tablet veya Apple Watch (linki Mesajlar ile kendine gönder, saatte dokun). Roaster planında ekran komut da verir: bilekten numune ve drop. Varsayılan kapalı; kapalıyken telefondan hiçbir veri çıkmaz.'],
  vgr:['Ses koruması oranı','Konuşma sayılması için ses bandının kendi tabanından kaç kat yüksek olması gerektiği. DÜŞÜK = daha sıkı koruma (kısık sesde de tetiklenir, daha çok işaretleyebilir). YÜKSEK = daha rahat. Varsayılan 2.5. Cihaza özel; anında geçerli.'],
  vg:['Ses koruması','İnsan sesiyle gelen vurguları eler: ikinci bir alçak-bant kulak konuşmayı izler, eşleşen olayları kayıtta HUMAN VOICE olarak işaretler; tek dokunuşla geri alınır. Sessiz kavuruyorsan ve ham dedektörü istiyorsan kapat; kavurma sırasında bile anında geçerli. Bu anahtar cihazına özel; varsayılanları Guide içindeki motor kuralları kartı belirler.'],
  phase:['Gain evresi (phi)','İlk çatlak çanındaki konumun: şu ana dek duyulan birikimli çatlak gain\u0027i bölü çanın tüm toplamı; ilk patlamada 0, sessizlikte 1. Tez: eşit evre, kavurma hızı ne olursa olsun eşit öğütülmüş renk verir. Çan hâlâ yükselirken gerçek toplam bilinemez, bu yüzden kadran \u2265 işaretiyle bir ALT SINIR gösterir; tepe duyulunca değer kesinleşir ve kadran bunu söyler. Çanı duymadan bildiğini iddia etmez.'],
@@ -1766,7 +1766,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-19k';
+const APPVER='v2026-07-19l';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();

@@ -585,7 +585,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-19h</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-19i</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -2002,7 +2002,7 @@ const DICT={ tr:{
  "Cup":"Tadım","sensory · CVA descriptive + affective":"duyusal · CVA tanımlayıcı + duyuşsal",
  "Grade":"Sınıflandırma","green physical · CVA defect grading":"fiziksel (yeşil) · CVA kusur sınıflandırması",
  "Value Assessment":"Değerlendirme","Fit + Distinctiveness · the identity card":"Uyum + Ayırt Edicilik · kimlik kartı",
- "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz","Refresh app":"Uygulamayı yenile","Refresh":"Yenile","Roast history (cloud)":"Kavurma geçmişi (bulut)","Coffee":"Kahve","Date":"Tarih","Time":"Süre","Cracks":"Çatlak","Target":"Hedef","Forecast":"Öngörü","Measured":"Ölçüm",
+ "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz","Refresh app":"Uygulamayı yenile","Refresh":"Yenile","Roast history (cloud)":"Kavurma geçmişi (bulut)","Coffee":"Kahve","Date":"Tarih","Time":"Süre","Cracks":"Çatlak","Target":"Hedef","Forecast":"Öngörü","Measured":"Ölçüm","cracks":"çatlak","stages":"evreler","unmap":"haritayı kaldır","Remove this map? The gauge locks for this coffee until you map again.":"Harita kaldırılsın mı? Yeniden haritalayana kadar bu kahvede gösterge kilitli kalır.",
  // roast
  "Coffee (active)":"Kahve (aktif)","Machine":"Makine","FC time":"FC zamanı","Drop at":"Boşaltma","Agtron":"Agtron","Open the guide":"Rehberi aç","Start roasting":"Kavurmaya başla","Pick your coffee":"Kahveni seç","Add new coffee":"Yeni kahve ekle",
  "START":"BAŞLA","CINNAMON":"TARÇIN","FIRST CRACK (A0)":"İLK ÇITIRTI (A0)","DROP / FINISH":"BOŞALT / BİTİR","New roast":"Yeni kavurma",
@@ -2082,7 +2082,8 @@ function renderRegList(){
     const rg=REGISTRY.find(c=>c.name===n), lc=localCal[n];
     const src=(rg?'\u2601 ':'')+(lc?(T('mapped')+' '+(lc.date||'')+' \u00b7 '+(lc.agtron||'?')+'A'):T('cloud only'));
     const green=rg&&rg.green?[rg.green.process,rg.green.moisture?rg.green.moisture+'%':null].filter(Boolean).join(' \u00b7 '):'';
-    return '<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px"><b>'+esc(n)+'</b><div class="small">'+esc(src)+(green?' \u00b7 '+esc(green):'')+'</div></div>';
+    const um=lc?(' \u00b7 <span onclick="unmapCoffee(\''+esc(n).replace(/'/g,"\\'")+'\')" style="color:var(--warn,#e24b4a);cursor:pointer">'+T('unmap')+'</span>'):'';
+    return '<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px"><b>'+esc(n)+'</b><div class="small">'+esc(src)+(green?' \u00b7 '+esc(green):'')+um+'</div></div>';
   }).join('');
   try{ const q=JSON.parse(localStorage.getItem('cnCupQueue')||'[]');   // same gesture as Deep Calibration's "Cup starred samples"
     if(q.length) h+='<div class="small" style="margin:12px 0 6px;font-weight:700">'+T('Listener sample pulls')+'</div>'
@@ -2091,24 +2092,48 @@ function renderRegList(){
   el.innerHTML=h;
   loadRoastHist();
 }
+let HISTROWS=[];
 async function loadRoastHist(){ try{
   const el=document.getElementById('rsList'); if(!el||!sb) return;
   const {data:{session}}=await sb.auth.getSession(); if(!session){ el.innerHTML=''; return; }
-  const {data}=await sb.from('roast_sessions').select('coffee,roasted_at,t_total_s,n_cracks,proj_stop,agtron,target').order('roasted_at',{ascending:false}).limit(20);
+  const {data}=await sb.from('roast_sessions').select('coffee,roasted_at,t_total_s,n_cracks,a0_s,proj_stop,agtron,target,batch_g,machine,note,stages').order('roasted_at',{ascending:false}).limit(20);
   if(!data||!data.length){ el.innerHTML=''; return; }
-  const th='<tr style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px"><th style="text-align:left;padding:4px 6px;font-weight:600">'+T('Coffee')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Date')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Time')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Cracks')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Target')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Forecast')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Measured')+'</th></tr>';
+  HISTROWS=data;
+  const th='<tr style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px"><th style="text-align:left;padding:4px 6px;font-weight:600">'+T('Coffee')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Date')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Target')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Forecast')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Measured')+'</th></tr>';
   el.innerHTML='<div class="small" style="margin:14px 0 6px;font-weight:700">'+T('Roast history (cloud)')+'</div>'
-    +'<div style="border:1px solid var(--line);border-radius:10px;overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:430px">'+th
-    +data.map((r,i)=>{ const d=(r.roasted_at||'').slice(5,10), mm=r.t_total_s?Math.floor(r.t_total_s/60)+':'+('0'+Math.round(r.t_total_s%60)).slice(-2):'\u00b7';
-      return '<tr style="border-top:1px solid var(--line)">'
-        +'<td style="padding:6px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>'+esc(r.coffee||'?')+'</b></td>'
-        +'<td style="padding:6px;text-align:right" class="small">'+d+'</td>'
-        +'<td style="padding:6px;text-align:right" class="small">'+mm+'</td>'
-        +'<td style="padding:6px;text-align:right" class="small">'+(r.n_cracks||0)+'</td>'
-        +'<td style="padding:6px;text-align:right" class="small">'+(r.target?Math.round(r.target):'\u00b7')+'</td>'
-        +'<td style="padding:6px;text-align:right">'+(r.proj_stop?('~'+Math.round(r.proj_stop)):'\u00b7')+'</td>'
-        +'<td style="padding:6px;text-align:right;font-weight:700;color:var(--gold,#e6c14b)">'+(r.agtron?Math.round(r.agtron):'\u00b7')+'</td>'
-        +'</tr>'; }).join('')+'</table></div>';
+    +'<div style="border:1px solid var(--line);border-radius:10px;overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:380px">'+th
+    +data.map((r,i)=>{ const dt=(r.roasted_at||'').slice(5,16).replace('T',' ');
+      return '<tr onclick="histTog('+i+')" style="border-top:1px solid var(--line);cursor:pointer">'
+        +'<td style="padding:7px 6px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>'+esc(r.coffee||'?')+'</b></td>'
+        +'<td style="padding:7px 6px;text-align:right" class="small">'+dt+'</td>'
+        +'<td style="padding:7px 6px;text-align:right" class="small">'+(r.target?Math.round(r.target):'\u00b7')+'</td>'
+        +'<td style="padding:7px 6px;text-align:right">'+(r.proj_stop?('~'+Math.round(r.proj_stop)):'\u00b7')+'</td>'
+        +'<td style="padding:7px 6px;text-align:right;font-weight:700;color:var(--gold,#e6c14b)">'+(r.agtron?Math.round(r.agtron):'\u00b7')+'</td>'
+        +'</tr><tr id="histD'+i+'" style="display:none"><td colspan="5" style="padding:0"></td></tr>'; }).join('')+'</table></div>';
+}catch(e){} }
+function histTog(i){ try{
+  const tr=document.getElementById('histD'+i); if(!tr) return;
+  if(tr.style.display!=='none'){ tr.style.display='none'; return; }
+  const r=HISTROWS[i]; if(!r) return;
+  const mm=r.t_total_s?Math.floor(r.t_total_s/60)+':'+('0'+Math.round(r.t_total_s%60)).slice(-2):'\u00b7';
+  const a0=r.a0_s?Math.floor(r.a0_s/60)+':'+('0'+Math.round(r.a0_s%60)).slice(-2):'\u00b7';
+  const stg=(r.stages&&r.stages.length)?r.stages.map(sg=>sg.s+' '+Math.floor(sg.t/60)+':'+('0'+Math.round(sg.t%60)).slice(-2)).join(' \u00b7 '):'\u00b7';
+  const dp=(r.agtron&&r.proj_stop)?(Math.round(r.agtron)-Math.round(r.proj_stop)):null;
+  const dg=(r.agtron&&r.target)?(Math.round(r.agtron)-Math.round(r.target)):null;
+  const chip=(v,l)=>v==null?'':('<span style="border:1px solid var(--line);border-radius:12px;padding:2px 10px;margin-right:6px;font-size:12px">'+l+' '+(v>0?'+':'')+v+'</span>');
+  tr.children[0].innerHTML='<div style="background:var(--panel2);border-top:1px solid var(--line);padding:10px 12px;font-size:12.5px;line-height:1.8">'
+    +'<div>'+esc((r.roasted_at||'').slice(0,16).replace('T',' '))+' \u00b7 '+T('Time')+' '+mm+' \u00b7 '+(r.n_cracks||0)+' '+T('cracks')+' \u00b7 A0 '+a0+'</div>'
+    +'<div class="small">'+T('stages')+': '+stg+'</div>'
+    +'<div style="margin-top:4px">'+chip(dp,'\u0394 '+T('Forecast'))+chip(dg,'\u0394 '+T('Target'))+'</div>'
+    +((r.machine||r.batch_g)?('<div class="small">'+esc(r.machine||'')+(r.batch_g?(' \u00b7 '+r.batch_g+' g'):'')+'</div>'):'')
+    +(r.note?('<div class="small" style="color:var(--gold,#e6c14b)">'+esc(r.note)+'</div>'):'')
+    +'</div>';
+  tr.style.display='table-row';
+}catch(e){} }
+function unmapCoffee(k){ try{
+  if(!confirm(T('Remove this map? The gauge locks for this coffee until you map again.'))) return;
+  const m=JSON.parse(localStorage.getItem('bsCal')||'{}'); delete m[k];
+  localStorage.setItem('bsCal',JSON.stringify(m)); renderRegList();
 }catch(e){} }
 function cupQueued(i){ try{ const q=JSON.parse(localStorage.getItem('cnCupQueue')||'[]'); const qe=q[i]; if(!qe) return;
   FLIGHT={ date:qe.date, purpose:('Listener '+qe.coffee).trim(),
