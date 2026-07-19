@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-20b</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-20d</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1125,7 +1125,8 @@ let CLASSES=null;
 try{ fetch('classes.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{ if(j&&typeof j==='object') CLASSES=j; }).catch(()=>{}); }catch(e){}
 function foundingBanner(tr){ let msg=tr?'KURUCU ROASTER · ilk 100 hesap: ömür boyu sabit $149/yıl, numaralı.':'FOUNDING ROASTER · first 100 accounts: $149/yr locked for life, numbered.';
   if(CLASSES&&typeof CLASSES.founding_taken==='number') msg+=(tr?(' · '+CLASSES.founding_taken+'/100 dolu'):(' · '+CLASSES.founding_taken+'/100 taken'));
-  return '<div style="border:1px solid var(--gold);border-radius:10px;padding:8px 10px;margin-top:10px;font-size:11.5px;font-weight:700;color:var(--gold)">'+msg+'</div>'; }
+  return '<div style="border:1px solid var(--gold);border-radius:10px;padding:8px 10px;margin-top:10px;font-size:11.5px;font-weight:700;color:var(--gold)">'+msg+'</div>'
+    +'<div style="text-align:center;margin-top:8px"><a href="plans.html" target="_blank" rel="noopener" style="color:var(--gold);font-size:12px;font-weight:700">'+(tr?'Planlar ve Lisans \u2192':'Plans & License \u2192')+'</a></div>'; }
 function classStrip(tr){ if(!CLASSES) return ''; let h='';
   const rc=CLASSES.next_roasting_class;
   if(rc&&(rc.date_en||rc.date_tr)){ const d=tr?(rc.date_tr||rc.date_en):(rc.date_en||rc.date_tr);
@@ -1181,7 +1182,8 @@ async function cloudUser(){ if(!SB) return null; try{ const {data}=await SB.auth
 let UMSTAMP={}; try{ UMSTAMP=JSON.parse(localStorage.getItem('bsCalPushed')||'{}'); }catch(e){}
 function umHash(e){ try{ const c=Object.assign({},e); delete c.up; return JSON.stringify(c); }catch(e2){ return ''; } }
 async function umSync(pull){ try{
-  if(!SB) return; const u=await cloudUser(); if(!u||!u.email) return;
+  if(!SB) return; if(!proPowers()) return;   // cloud maps are the Roaster promise: paid tiers and the owner only
+  const u=await cloudUser(); if(!u||!u.email) return;
   const m=calMap(); let dirty=false;
   for(const k in UMSTAMP){ if(!m[k]){ try{ await SB.from('user_maps').delete().eq('email',u.email).eq('coffee',k); }catch(e3){} delete UMSTAMP[k]; dirty=true; } }   // local unmap wins: tombstone before pull
   if(pull){ const {data:rws}=await SB.from('user_maps').select('coffee,cal');
@@ -1531,9 +1533,8 @@ function drawGauge(state,projLo,projHi){
   $('ag').innerHTML=h;
 }
 let TGT_U=null, LASTSTAGES=null, MAPWARN=0, PROJBORROWED=false;
-function FCDEF(){ try{ const m=calMap(); let best=null;
-  for(const k in m){ const e=m[k]; if(e&&!e.communal&&isFinite(e.fc_ag)&&e.fc_ag>=80&&e.fc_ag<=140){ if(!best||String(e.date||'')>String(best.date||'')) best=e; } }
-  if(best) return best.fc_ag; }catch(e){} return EP.FC_AG; }
+function FCDEF(){ try{ const h=calMap()['__house'];
+  if(h&&isFinite(h.fc_ag)&&h.fc_ag>=80&&h.fc_ag<=140) return h.fc_ag; }catch(e){} return EP.FC_AG; }   // OPTION B (2026-07-20): own map upstream, then HOUSE only, then 125; cross-coffee borrowing retired, one junk map can no longer poison another coffee's call
 function updateGauge(){
   TGT_U=null;
   const k=(cName.value||'').trim();
@@ -1551,7 +1552,7 @@ function updateGauge(){
   // per-coffee A0 color: the projection's starting color at first crack. Global EP.FC_AG (125) unless this map
   // carries a sane fc_ag (80..140). The intercept error hits light drops hardest (weight 1 at A0, 0 at the mapped terminal).
   const fcActive=isFinite(cal.fc_ag)&&cal.fc_ag>=80&&cal.fc_ag<=140;
-  const fcAg=fcActive?cal.fc_ag:FCDEF();   // fallback: your most recent measured A0 across coffees, 125 only before any measurement
+  const fcAg=fcActive?cal.fc_ag:FCDEF();   // fallback chain: this coffee's map, else house map, else 125
   const a0Tag=fcActive?(' · A0 '+cal.fc_ag):'';
   const v=valid();
   if(!v.length){ drawGauge('wait'); $('agHint').textContent=tt('Mapped on')+' '+cal.date+' (Agtron '+cal.agtron+')'+bTag+a0Tag+'. '+tt('Projection starts at first crack.'); return; }
@@ -1804,7 +1805,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-20b';
+const APPVER='v2026-07-20d';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
