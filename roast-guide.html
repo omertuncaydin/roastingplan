@@ -584,7 +584,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-19d</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-19e</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1921,7 +1921,7 @@ function showPlanInfo(){ const tr=(LANG==='tr'); const cur=planLabelG(MYPLAN); c
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast kayıtların bulutta kaydedilir ve saklanır.':'Roast records saved and kept in the cloud.')+'</td></tr>'
    +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Cupper</b> <span style="font-size:10.5px;opacity:.75">'+(tr?'Yalnız Q sınıfında kazanılır.':'Earned in Q class only.')+'</span></td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?"Roaster'daki her şey + numune çekimlerin tadım seansına dönüşür.":'Everything in Roaster + sample pulls become cupping sessions.')+'</td>'
-   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?"Roaster'daki her şey + Roast · Cup · Grade: her şey kayıt altında.":'Everything in Roaster + Roast · Cup · Grade: everything is recorded.')+'</td></tr>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?"Roaster'daki her şey + Roast · Cup · Grade: her şey bulutta kayıt altında.":'Everything in Roaster + Roast · Cup · Grade: everything is recorded.')+'</td></tr>'
    +'</table>'
    +gClassStrip(tr)
    +'<div style="text-align:center"><span style="display:inline-block;border:1px solid var(--accent2);color:var(--accent2);border-radius:14px;padding:4px 10px;font-weight:700;margin:8px 4px 0 4px;font-size:11px">'+(tr?'Cupper, Q yenilemenle yenilenir.':'Cupper renews with your Q recalibration.')+'</span></div>'
@@ -2093,20 +2093,41 @@ function cupQueued(i){ try{ const q=JSON.parse(localStorage.getItem('cnCupQueue'
   FLIGHT={ date:qe.date, purpose:('Listener '+qe.coffee).trim(),
     coffees: qe.samples.map(sm=>({sample:(qe.coffee+(sm.st?(' '+sm.st):'')+' S@'+Math.round(sm.t-(qe.a0||0))+'s'+(sm.ag?(' '+sm.ag+'A'):'')), cup:blankCup()})) };
   show('flight'); }catch(e){} }
-try{ new BroadcastChannel('cnLive').onmessage=e=>{   // the Listener broadcasts; the Guide only watches (one-way by doctrine)
-  const d=e.data||{}, el=document.getElementById('liveTick'); if(!el) return;
-  el.style.display='block';
+let LWLAST=null, LWEXP=false;
+function lwRender(){ const el=document.getElementById('liveTick'), d=LWLAST; if(!el||!d) return;
+  el.style.display='block'; el.style.cursor='pointer';
   const mm=Math.floor((d.t||0)/60), ss=('0'+Math.floor((d.t||0)%60)).slice(-2);
-  el.innerHTML='<div style="display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden">'
-    +'<span style="color:var(--warn)">\u25cf</span><b>'+esc(d.coffee||'?')+'</b>'
-    +'<span style="background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:0 8px;font-size:12px">'+esc(d.stage||'\u00b7')+'</span>'
-    +'<b>~'+(d.proj||'\u00b7')+'</b><span class="small">'+(d.band?('\u00b1'+d.band):'')+'</span>'
-    +'<span class="small">'+(d.n||0)+' '+T('cracks')+'</span>'
-    +(d.smp?('<span class="small" style="color:var(--gold,#e6c14b)">S'+esc(String(d.smp))+'</span>'):'')
-    +'<span class="small" style="margin-left:auto">'+mm+':'+ss+'</span></div>'
-    +'<div style="height:2px;background:var(--line);border-radius:1px;margin-top:6px"><div style="height:2px;background:var(--accent);border-radius:1px;width:'+Math.min(100,Math.round((d.p||0)*100))+'%"></div></div>';
+  const pw=Math.min(100,Math.round((d.p||0)*100));
+  if(!LWEXP){
+    el.style.padding='7px 12px 9px';
+    el.innerHTML='<div style="display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden">'
+      +'<span style="color:var(--warn)">\u25cf</span><b>'+esc(d.coffee||'?')+'</b>'
+      +'<span style="background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:0 8px;font-size:12px">'+esc(d.stage||'\u00b7')+'</span>'
+      +'<b>~'+(d.proj||'\u00b7')+'</b><span class="small">'+(d.band?('\u00b1'+d.band):'')+'</span>'
+      +'<span class="small">'+(d.n||0)+' '+T('cracks')+'</span>'
+      +(d.smp?('<span class="small" style="color:var(--gold,#e6c14b)">S'+esc(String(d.smp))+'</span>'):'')
+      +'<span class="small" style="margin-left:auto">'+mm+':'+ss+'</span></div>'
+      +'<div style="height:2px;background:var(--line);border-radius:1px;margin-top:6px"><div style="height:2px;background:var(--accent);border-radius:1px;width:'+pw+'%"></div></div>';
+  } else {
+    el.style.padding='14px 16px';
+    el.innerHTML='<div style="display:flex;align-items:center;gap:8px"><span style="color:var(--warn)">\u25cf</span>'
+      +'<b style="color:var(--gold,#e6c14b);letter-spacing:.5px">CANLI</b><b>\u00b7 '+esc(d.coffee||'?')+'</b>'
+      +'<span class="small" style="margin-left:auto">'+mm+':'+ss+'</span></div>'
+      +'<div style="display:flex;align-items:baseline;gap:10px;margin-top:8px">'
+      +'<span style="font-size:34px;font-weight:800;line-height:1">~'+(d.proj||'\u00b7')+'</span>'
+      +'<span class="small" style="font-size:15px">'+(d.band?('\u00b1'+d.band+' Agtron'):'')+'</span>'
+      +'<span style="margin-left:auto;background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:3px 14px;font-size:14px;font-weight:700;color:var(--gold,#e6c14b)">'+esc(d.stage||'\u00b7')+'</span></div>'
+      +'<div style="display:flex;gap:14px;font-size:12.5px;margin-top:8px" class="small">'
+      +'<span>'+(d.n||0)+' '+T('cracks')+'</span>'
+      +(d.tgt?('<span>'+(LANG==='tr'?'hedef ':'target ')+d.tgt+'</span>'):'')
+      +(d.smp?('<span style="color:var(--gold,#e6c14b)">S'+esc(String(d.smp))+' '+(LANG==='tr'?'\u00e7ekildi':'pulled')+'</span>'):'')+'</div>'
+      +'<div style="height:5px;background:var(--line);border-radius:3px;margin-top:10px"><div style="height:5px;background:var(--gold,#e6c14b);border-radius:3px;width:'+pw+'%"></div></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;margin-top:4px" class="small"><span>A0</span><span>'+(LANG==='tr'?'DEV ilerleme':'DEV progress')+'</span><span>drop</span></div>';
+  }
   clearTimeout(el._h); el._h=setTimeout(()=>{ el.style.display='none'; },15000);
-}; }catch(e){}
+}
+try{ const lt=document.getElementById('liveTick'); if(lt) lt.onclick=()=>{ LWEXP=!LWEXP; lwRender(); }; }catch(e){}
+try{ new BroadcastChannel('cnLive').onmessage=e=>{ LWLAST=e.data||{}; lwRender(); }; }catch(e){}   // the Listener broadcasts; the Guide only watches (one-way by doctrine)
 const SEC_INFO={ listen:['Crack Listener','the roasting instrument · the beans speak'], roast:['Class Learning Workshop','graph, RoR and stage wheels · teaching instruments'], cup:['Cup','sensory · CVA descriptive + affective'], grade:['Grade','green physical · CVA defect grading'], value:['Value Assessment','Fit + Distinctiveness · the identity card'], account:['Account','your membership & privacy'] };
 function groupOf(v){ return ROAST_GROUP.includes(v)?'roast':v; }
 const GROUP_COLORS={listen:'#e6c14b',roast:'#c98a3c',cup:'#3c8a9a',grade:'#7d9b57',value:'#e6c14b',account:'#8a6d3b'};   // section-signature tints: lit only on the active tab
