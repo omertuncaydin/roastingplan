@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19d</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19e</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1089,7 +1089,7 @@ if(localStorage.getItem('bsAdmin')==='1') document.body.classList.add('admin');
 // v1 gate is HONOR-BASED (localStorage): real enforcement lands with the accounts layer + server codes.
 const FREE_ROASTS=20;
 function normTier(t){ return t==='roaster'?'pro':(t==='cupper'?'special':t); }   // old stored 'pro'/'special' and future 'roaster'/'cupper' both resolve
-const PLAN_LABEL={free:'Local',pro:'Roaster',special:'Cupper',admin:'Admin'};
+const PLAN_LABEL={free:'Local',pro:'Roaster',special:'Cupper',admin:'Admin',research:'Research'};
 function planLabel(t){ return PLAN_LABEL[normTier(t)]||t; }
 function planActive(){ try{ const p=JSON.parse(localStorage.getItem('bsPlan')||'null'); return (p&&new Date(p.until)>=new Date())?p:null; }catch(e){ return null; } }
 function roastCount(){ return +(localStorage.getItem('bsRoastN')||0); }
@@ -1105,21 +1105,9 @@ function revealCode(){ $('modal').style.display='none'; const r=$('codeRow'); r.
 function hideCode(){ const r=$('codeRow'); if(r) r.style.display='none'; const i=$('licInput'); if(i) i.value=''; }
 async function applyCode(){ const el=$('licInput'), c=((el&&el.value)||'').replace(/\s+/g,'').toUpperCase(); if(!c){ if(el) el.focus(); return; }   // strip ALL whitespace: iOS autocorrect injects spaces
   if(c==='PATRON-D61TZ'){ localStorage.setItem('bsAdmin','1'); document.body.classList.add('admin'); hideCode(); renderAdmin(); updateSD(); refreshPlanUI(); toast('Admin unlocked: engine internals visible.'); return; }
-  // owner test codes stay local; everything else is validated by the server (listener-license edge function)
-  if(c==='NUTZ-M-7Q2VK'){ grantPlan('pro',1,c); return; }
-  if(c==='NUTZ-Y-4XR9T'){ grantPlan('pro',12,c); return; }
-  if(c==='NUTZ-S-8KM3W'){ grantPlan('special',12,c); return; }
-  toast(LANG==='tr'?'Kod doğrulanıyor...':'Checking code...');
-  try{
-    let dev=localStorage.getItem('bsDevice'); if(!dev){ dev=Math.random().toString(36).slice(2,12); localStorage.setItem('bsDevice',dev); }
-    const r=await fetch('https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/listener-license',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:c,device:dev})});
-    const j=await r.json().catch(()=>({}));
-    if(r.ok&&j.until){
-      localStorage.setItem('bsPlan',JSON.stringify({tier:j.tier,until:j.until,code:c}));
-      toast(planLabel(j.tier)+' · '+(LANG==='tr'?'şu tarihe kadar aktif: ':'active until ')+j.until);
-      refreshPlanUI(); hideCode(); $('modal').style.display='none';
-    } else toast((LANG==='tr'?'Kod reddedildi: ':'Code rejected: ')+(j.error||r.status));
-  }catch(e){ toast(LANG==='tr'?'Sunucuya ulaşılamadı; sonra tekrar dene.':'Could not reach the server; try again later.'); }
+  // CODES RETIRED (2026-07-19, his order): plans ride the ACCOUNT (entitlements by email). This box remains only the admin door.
+  toast(LANG==='tr'?'Kodlar emekli: planın hesabınla gelir. Coffee cloud bölümünden giriş yap.':'Codes are retired: your plan comes with your account. Sign in under Coffee cloud.');
+  hideCode();
 }
 let CLASSES=null;
 try{ fetch('classes.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{ if(j&&typeof j==='object') CLASSES=j; }).catch(()=>{}); }catch(e){}
@@ -1162,7 +1150,7 @@ function showPaywall(feature){
    +'<div style="text-align:center"><span style="display:inline-block;border:1px solid var(--accent2);color:var(--accent2);border-radius:14px;padding:4px 10px;font-weight:700;margin:8px 4px 0 4px;font-size:11px">'+(tr?'Cupper, Q yenilemenle yenilenir.':'Cupper renews with your Q recalibration.')+'</span></div>'
    +'<div class="hint" style="font-size:11px;margin-top:10px">'+(tr?'Kayıtların asla silinmez. Plan sona ererse kaydetme durur, yaptığın her şey okunabilir kalır.':'Your records are never deleted. If a plan ends, saving pauses and everything you made stays readable.')+'</div>'
    +'<div class="hint" style="font-size:11px;margin-top:10px;color:var(--accent2)">'+(tr?'Bilim açıkça paylaşılır; ölç, kalibre et, kahveni hep daha iyi öğren.':'The science is freely shared, so you can always measure, calibrate, learn your coffee better.')+'</div>'
-   +'<button style="margin-top:14px;background:var(--accent2)" onclick="revealCode()">'+(tr?'Kod gir':'Enter code')+'</button>'
+   +'<button style="margin-top:14px;background:none;border:1px solid var(--line);color:var(--muted);font-size:12px;padding:8px 14px" onclick="revealCode()">'+(tr?'Yönetici girişi':'Admin entry')+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="window.open(\'https://www.coffeenutz.net/products/crack-listener\')">'+(tr?'coffeenutz.net üzerinden edin':'Get it at coffeenutz.net')+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Kapat':'Close')+'</button>';
   $('modal').style.display='flex';
@@ -1174,9 +1162,21 @@ const SUPA_URL='https://efjvfggwnhqkunjvoyjb.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA';
 let SB=null; try{ if(typeof supabase!=='undefined') SB=supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
 try{ if(WCON) wcCmdSub(true); }catch(e){}   // boot-time cast restore runs before SB exists (TDZ); re-arm the command ear here, after the client is born
+try{ if(SB){ SB.auth.onAuthStateChange(()=>{ syncPlanFromAccount(); }); setTimeout(syncPlanFromAccount, 1200); } }catch(e){}   // codes retired: the account IS the license
 try{ fetch(SUPA_URL+'/rest/v1/noise_lib?select=f,hf,w',{headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY}}).then(r=>r.ok?r.json():[]).then(rows=>{ (rows||[]).forEach(e=>NLC.push({f:e.f,hf:e.hf,w:e.w,src:'global'})); }).catch(()=>{}); }catch(e){}
 try{ const eb=$('enrollBtn'); if(eb) eb.textContent=tt('Teach it your voice'); }catch(e){}
 async function cloudUser(){ if(!SB) return null; try{ const {data}=await SB.auth.getUser(); return (data&&data.user)||null; }catch(e){ return null; } }
+async function syncPlanFromAccount(){ try{
+  const u=await cloudUser(); if(!u||!u.email) return;
+  const {data}=await SB.from('entitlements').select('access,plan_until').eq('email',u.email).maybeSingle();
+  const plan=(data&&data.access&&data.access.plan)||null;
+  let cur=null; try{ cur=JSON.parse(localStorage.getItem('bsPlan')||'null'); }catch(e){}
+  if(plan&&plan!=='Local'&&plan!=='Guest'){
+    const tier=String(plan).toLowerCase(), until=(data.plan_until||'2099-12-31').slice(0,10);
+    if(!cur||cur.tier!==tier||cur.until!==until){ localStorage.setItem('bsPlan',JSON.stringify({tier,until,src:'account'})); refreshPlanUI();
+      toast(planLabel(tier)+' · '+(LANG==='tr'?'hesabından tanındı':'recognized from your account')); }
+  } else if(cur&&cur.src==='account'){ localStorage.removeItem('bsPlan'); refreshPlanUI(); }
+}catch(e){} }
 async function cloudStatus(){ const u=await cloudUser(); const el=$('cloudStat');
   if(el) el.textContent=u?((LANG==='tr'?'Bağlı: ':'Signed in: ')+u.email):(LANG==='tr'?"Eşitlemek için Guide'da giriş yap (aynı tarayıcı).":'Sign in via the Guide (same browser) to sync.');
   return u; }
@@ -1731,7 +1731,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-19d';
+const APPVER='v2026-07-19e';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
