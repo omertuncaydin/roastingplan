@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18u</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19a</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1148,7 +1148,7 @@ function showPaywall(feature){
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Her şey, sınırsız.':'Everything, unlimited.')+'</td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Hepsini keşfet; hiçbir şey saklanmaz.':'Explore all; nothing kept.')+'</td></tr>'
    +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Roaster</b> <span class="hint" style="font-size:10.5px">$20/'+(tr?'ay':'mo')+' · $200/'+(tr?'yıl':'yr')+' · '+(tr?'Kavurma sınıfıyla 12 ay dahil.':'12 months included with a Roasting class.')+'</span></td>'
-   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Haritalar her cihazda senkron.':'Maps synced everywhere.')+'</td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Haritalar her cihazda senkron. Apple Watch uzaktan kumanda (bilekten numune ve drop).':'Maps synced everywhere. Apple Watch remote control (sample and drop from the wrist).')+'</td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast kayıtların kaydedilir ve saklanır.':'Roast records saved and kept.')+'</td></tr>'
    +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Cupper</b> <span class="hint" style="font-size:10.5px">'+(tr?'Yalnız Q sınıfında kazanılır. Ömür boyu numaralı.':'Earned in Q class only. Numbered for life.')+'</span></td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roaster + numune çekimlerin tadım seansına dönüşür.':'Roaster + sample pulls become cupping sessions.')+'</td>'
@@ -1727,7 +1727,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-18u';
+const APPVER='v2026-07-19a';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();

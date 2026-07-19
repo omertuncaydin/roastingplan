@@ -30,21 +30,23 @@ input[type=file]{width:100%;color:var(--muted);font-size:13px}
 </head>
 <body>
 <h1>Stage Ear</h1>
-<div class="sub">kulağın kalibre eder, matematik formülleşir · v2026-07-19a</div>
+<div class="sub">kulağın kalibre eder, matematik formülleşir · v2026-07-19c</div>
 
 <div class="card">
   <div class="lbl">1 · seans zip'lerini yükle</div>
   <input type="file" id="zips" multiple accept=".zip">
   <div id="files"></div>
-  <div class="hint">Her zip'ten WAV çıkarılır; 8 sn'lik kesitler 15 sn adımlarla kesilir ve KARIŞIK sırada çalınır. Bağlam gösterilmez: sadece kulağın.</div>
+  <div class="hint">Her zip'ten WAV çıkarılır; 15 sn'lik kesitler 15 sn adımlarla kesilir ve KARIŞIK sırada çalınır. Bağlam gösterilmez: sadece kulağın.</div>
 </div>
 
 <div class="card" id="playCard" style="display:none">
   <div class="lbl">2 · dinle ve evreyi söyle</div>
   <div id="prog">0 / 0</div>
   <div id="meta">·</div>
-  <button id="playBtn" onclick="playCur()">&#9654; ÇAL (8 sn)</button>
+  <button id="playBtn" onclick="playCur()">&#9654; ÇAL (15 sn)</button>
+  <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-top:8px;cursor:pointer"><input type="checkbox" id="flt" style="width:17px;height:17px;accent-color:var(--gold)"> filtreli dinle · davul sesi azaltılmış (8 kHz üstü)</label>
   <div id="stageGrid">
+    <button onclick="tag('off')">kavurma yok</button>
     <button onclick="tag('pre')">FC öncesi</button>
     <button onclick="tag('A0')">A0</button>
     <button onclick="tag('A1')">A1</button>
@@ -52,7 +54,6 @@ input[type=file]{width:100%;color:var(--muted);font-size:13px}
     <button onclick="tag('B1')">B1</button>
     <button onclick="tag('C0')">C0</button>
     <button onclick="tag('C1')">C1</button>
-    <button onclick="tag('C2')">C2</button>
   </div>
   <div id="row2">
     <button onclick="tag('skip')">emin değilim · atla</button>
@@ -70,7 +71,7 @@ input[type=file]{width:100%;color:var(--muted);font-size:13px}
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);
-const EX_DUR=8, EX_STEP=15;
+const EX_DUR=15, EX_STEP=15;
 let AC=null, FILES=[], QUEUE=[], CUR=-1, CURBUF=null, CURFILE=null, SRC=null;
 let LABELS=[]; try{ LABELS=JSON.parse(localStorage.getItem('seLabels')||'[]'); }catch(e){}
 function statUp(){ $('stat').textContent='kayıtlı etiket: '+LABELS.length; }
@@ -125,13 +126,15 @@ async function playCur(){
   const buf=await ensureDecoded(q.fi);
   if(SRC){ try{ SRC.stop(); }catch(e){} }
   if(AC.state==='suspended') await AC.resume();
-  SRC=AC.createBufferSource(); SRC.buffer=buf; SRC.connect(AC.destination);
+  SRC=AC.createBufferSource(); SRC.buffer=buf;
+  if($('flt').checked){ const hp=AC.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=8000; hp.Q.value=0.7; SRC.connect(hp); hp.connect(AC.destination); }
+  else SRC.connect(AC.destination);
   SRC.start(0, q.t, EX_DUR);
 }
 function tag(st){
   if(CUR<0) return;
   const q=QUEUE[CUR];
-  if(st!=='skip') LABELS.push({file:FILES[q.fi].name, t:q.t, dur:EX_DUR, label:st, at:new Date().toISOString()});
+  if(st!=='skip') LABELS.push({file:FILES[q.fi].name, t:q.t, dur:EX_DUR, label:st, fl:($('flt').checked?1:0), at:new Date().toISOString()});
   localStorage.setItem('seLabels', JSON.stringify(LABELS)); statUp();
   QUEUE.splice(CUR,1);
   if(!QUEUE.length){ CUR=-1; } else if(CUR>=QUEUE.length) CUR=0;
