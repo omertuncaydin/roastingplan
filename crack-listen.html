@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19a</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19b</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -434,7 +434,8 @@ function resetTuning(){ try{ ['bsVG','bsVGR','bsSens'].forEach(k=>localStorage.r
   toast(LANG==='tr'?'Ayarlar fabrika değerlerine döndü.':'Tuning back to factory values.'); }
 // ---- WATCH CAST: second-screen live broadcast (off by default; the roast leaves this phone only when you say so) ----
 let WCON=false, LIVEPUB_T=0;
-function wcNote(){ try{ const bc=((badgeMap()[badgeKey()]||{}).cue||'').trim(); if(bc) return bc.slice(0,80);
+function fcCueWrap(raw,tr2){ if(!raw) return ''; return raw.indexOf(' ')>=0?raw:(tr2?("FC'ye "+raw+" ile gir"):('Enter FC with '+raw)); }
+function wcNote(){ try{ const bc=((badgeMap()[badgeKey()]||{}).cue||'').trim(); if(bc) return fcCueWrap(bc,true).slice(0,80);
   const nv=($('mNote')&&$('mNote').value||'').trim(); if(nv) return nv.slice(0,80);
   let lm={}; try{ lm=JSON.parse(localStorage.getItem('bsLastMeta'))||{}; }catch(e){}
   const e2=lm[(cName.value||'').trim().toLowerCase()]; return (e2&&e2.note)?String(e2.note).slice(0,80):''; }catch(e){ return ''; } }
@@ -526,7 +527,7 @@ async function start(){
   updateSD(); drawTimeline(); updateGauge();
   setState('st-live');
   const bcue=((badgeMap()[badgeKey()]||{}).cue||'').trim();   // recipe cue: no modal (his order 2026-07-18); it rides the status line here and the watch note line remotely
-  running=true; $('btn').textContent=tt('Drop'); $('btn').className='stop'; $('status').textContent=tt('Listening. Calibrating background for ~2s, keep it running steady.')+(bcue?(' · '+bcue.replace(/</g,'&lt;')):'');
+  running=true; $('btn').textContent=tt('Drop'); $('btn').className='stop'; $('status').textContent=tt('Listening. Calibrating background for ~2s, keep it running steady.')+(bcue?(' · '+fcCueWrap(bcue,LANG==='tr').replace(/</g,'&lt;')):'');
   loop();
 }
 function chgMap(){ try{ const v=JSON.parse(localStorage.getItem('gCharge')||'null'); if(v&&typeof v==='object') return v; }catch(e){}
@@ -1727,7 +1728,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-19a';
+const APPVER='v2026-07-19b';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
