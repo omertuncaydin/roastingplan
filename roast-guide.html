@@ -273,8 +273,8 @@
   <div class="hide" id="view-listen">
     <button class="btn" style="width:100%;margin-bottom:12px" onclick="window.open('crack-listen.html','_blank')">Open Crack Listener &#8599;</button>
     <div class="small" style="margin-bottom:10px" data-i18n="The Guide never hosts the roast; it watches it. Roast in the Listener; your coffees and results appear here.">The Guide never hosts the roast; it watches it. Roast in the Listener; your coffees and results appear here.</div>
-    <div id="regList"></div>
     <div id="rsList"></div>
+    <div id="regList"></div>
   </div>
   <div class="subnav hide" id="subnav">
     <button id="nav-roast" class="on" onclick="show('roast')" data-i18n="Guide">Guide</button>
@@ -585,7 +585,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-19g</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-19h</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -2002,7 +2002,7 @@ const DICT={ tr:{
  "Cup":"Tadım","sensory · CVA descriptive + affective":"duyusal · CVA tanımlayıcı + duyuşsal",
  "Grade":"Sınıflandırma","green physical · CVA defect grading":"fiziksel (yeşil) · CVA kusur sınıflandırması",
  "Value Assessment":"Değerlendirme","Fit + Distinctiveness · the identity card":"Uyum + Ayırt Edicilik · kimlik kartı",
- "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz","Refresh app":"Uygulamayı yenile","Refresh":"Yenile","Roast history (cloud)":"Kavurma geçmişi (bulut)",
+ "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz","Refresh app":"Uygulamayı yenile","Refresh":"Yenile","Roast history (cloud)":"Kavurma geçmişi (bulut)","Coffee":"Kahve","Date":"Tarih","Time":"Süre","Cracks":"Çatlak","Target":"Hedef","Forecast":"Öngörü","Measured":"Ölçüm",
  // roast
  "Coffee (active)":"Kahve (aktif)","Machine":"Makine","FC time":"FC zamanı","Drop at":"Boşaltma","Agtron":"Agtron","Open the guide":"Rehberi aç","Start roasting":"Kavurmaya başla","Pick your coffee":"Kahveni seç","Add new coffee":"Yeni kahve ekle",
  "START":"BAŞLA","CINNAMON":"TARÇIN","FIRST CRACK (A0)":"İLK ÇITIRTI (A0)","DROP / FINISH":"BOŞALT / BİTİR","New roast":"Yeni kavurma",
@@ -2096,14 +2096,19 @@ async function loadRoastHist(){ try{
   const {data:{session}}=await sb.auth.getSession(); if(!session){ el.innerHTML=''; return; }
   const {data}=await sb.from('roast_sessions').select('coffee,roasted_at,t_total_s,n_cracks,proj_stop,agtron,target').order('roasted_at',{ascending:false}).limit(20);
   if(!data||!data.length){ el.innerHTML=''; return; }
+  const th='<tr style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px"><th style="text-align:left;padding:4px 6px;font-weight:600">'+T('Coffee')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Date')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Time')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Cracks')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Target')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Forecast')+'</th><th style="text-align:right;padding:4px 6px;font-weight:600">'+T('Measured')+'</th></tr>';
   el.innerHTML='<div class="small" style="margin:14px 0 6px;font-weight:700">'+T('Roast history (cloud)')+'</div>'
-    +data.map(r=>{ const d=(r.roasted_at||'').slice(0,10), mm=r.t_total_s?Math.floor(r.t_total_s/60)+':'+('0'+Math.round(r.t_total_s%60)).slice(-2):'\u00b7';
-      return '<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px;display:flex;gap:10px;align-items:baseline;font-size:13px">'
-        +'<b style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.coffee||'?')+'</b>'
-        +'<span class="small">'+d+'</span><span class="small">'+mm+'</span>'
-        +'<span class="small">'+(r.n_cracks||0)+'c</span>'
-        +'<span>'+(r.proj_stop?('~'+Math.round(r.proj_stop)):'\u00b7')+(r.agtron?(' \u2192 <b style="color:var(--gold,#e6c14b)">'+Math.round(r.agtron)+'</b>'):'')+'</span>'
-        +'</div>'; }).join('');
+    +'<div style="border:1px solid var(--line);border-radius:10px;overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:430px">'+th
+    +data.map((r,i)=>{ const d=(r.roasted_at||'').slice(5,10), mm=r.t_total_s?Math.floor(r.t_total_s/60)+':'+('0'+Math.round(r.t_total_s%60)).slice(-2):'\u00b7';
+      return '<tr style="border-top:1px solid var(--line)">'
+        +'<td style="padding:6px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>'+esc(r.coffee||'?')+'</b></td>'
+        +'<td style="padding:6px;text-align:right" class="small">'+d+'</td>'
+        +'<td style="padding:6px;text-align:right" class="small">'+mm+'</td>'
+        +'<td style="padding:6px;text-align:right" class="small">'+(r.n_cracks||0)+'</td>'
+        +'<td style="padding:6px;text-align:right" class="small">'+(r.target?Math.round(r.target):'\u00b7')+'</td>'
+        +'<td style="padding:6px;text-align:right">'+(r.proj_stop?('~'+Math.round(r.proj_stop)):'\u00b7')+'</td>'
+        +'<td style="padding:6px;text-align:right;font-weight:700;color:var(--gold,#e6c14b)">'+(r.agtron?Math.round(r.agtron):'\u00b7')+'</td>'
+        +'</tr>'; }).join('')+'</table></div>';
 }catch(e){} }
 function cupQueued(i){ try{ const q=JSON.parse(localStorage.getItem('cnCupQueue')||'[]'); const qe=q[i]; if(!qe) return;
   FLIGHT={ date:qe.date, purpose:('Listener '+qe.coffee).trim(),
