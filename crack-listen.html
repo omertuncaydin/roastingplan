@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19l</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19m</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -433,7 +433,7 @@ function resetTuning(){ try{ ['bsVG','bsVGR','bsSens'].forEach(k=>localStorage.r
   const vt=$('vgTog'); if(vt) vt.checked=true; vgToggle(true);
   toast(LANG==='tr'?'Ayarlar fabrika değerlerine döndü.':'Tuning back to factory values.'); }
 // ---- WATCH CAST: second-screen live broadcast (off by default; the roast leaves this phone only when you say so) ----
-let WCON=false, LIVEPUB_T=0;
+let WCON=false, LIVEPUB_T=0, LASTBC=0;
 function fcCueWrap(raw,tr2){ if(!raw) return ''; return raw.indexOf(' ')>=0?raw:(tr2?("A0'a "+raw+" ile gir"):('Enter A0 with '+raw)); }
 function wcNote(){ try{ const bc=((badgeMap()[badgeKey()]||{}).cue||'').trim(); if(bc) return bc.slice(0,80);
   const nv=($('mNote')&&$('mNote').value||'').trim(); if(nv) return nv.slice(0,80);
@@ -475,6 +475,10 @@ function wcCmdSub(on){ try{ if(!SB) return;
 try{ WCON=localStorage.getItem('bsWatchCast')==='1'; const wt=$('wcTog'); if(wt){ wt.checked=WCON; if(WCON) wcToggle(true); } }catch(e){}
 setInterval(()=>{ try{ if(!running) return;
   if(CUEON&&LASTSTAGES&&LASTSTAGES.length){ CUEON=false; $('status').textContent=STATUSBASE; }
+  if(performance.now()-LASTBC>1500){ LASTBC=performance.now();
+    try{ BCLIVE=BCLIVE||new BroadcastChannel('cnLive');
+      const lst=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
+      BCLIVE.postMessage({coffee:(cName.value||'').trim()||'?', stage:lst, n:valid().length, t:(performance.now()-startT)/1000, hb:1}); }catch(e){} }
   if(document.hidden) updateGauge();
   if(WCON&&performance.now()-LIVEPUB_T>1500){ const vv2=valid(); const lst=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
     wcPub({c:(cName.value||'').trim()||'?', st:lst, n:vv2.length, t:Math.round((performance.now()-startT)/1000), w:(A0PHASE==='alarm'?2:(A0PHASE==='pre'?1:0)), hb:1}); }
@@ -1182,13 +1186,19 @@ async function pushRoastRecord(){ try{
   const u=await cloudUser(); if(!u||!u.email) return;
   if(!proPowers()) return;
   const v=valid(); if(!v.length) return;
+  const a0v=effA0(v)||0, tgv=v.reduce((sm,c)=>sm+c.g,0);
+  let cum=0,q25v=null; for(const c of v){ cum+=c.g; if(cum>=tgv*0.25){ q25v=+((c.t-a0v).toFixed(1)); break; } }
   const row={ coffee:(cName.value||'').trim()||null,
     t_total_s:STOPT!=null?Math.round(STOPT):null, n_cracks:v.length,
-    a0_s:+((effA0(v)||0).toFixed(1))||null, proj_stop:STOPPROJ||null,
+    a0_s:+((a0v).toFixed(1))||null, proj_stop:STOPPROJ||null,
     agtron:parseFloat($('mAgG').value)||null, target:parseFloat($('mTarget').value)||null,
     batch_g:parseFloat($('mBatch').value)||null, machine:($('mEquip')&&$('mEquip').value)||null,
     note:($('mNote')&&$('mNote').value.trim().slice(0,200))||null,
-    stages:(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES.map(sg=>({s:sg[0],t:+sg[1].toFixed(1)})):null };
+    stages:(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES.map(sg=>({s:sg[0],t:+sg[1].toFixed(1)})):null,
+    dev_span:STOPT!=null?+((STOPT-a0v).toFixed(1)):null, tg:+tgv.toFixed(1)||null, q25:q25v,
+    ph_drop:(typeof PHASE==='number'&&PHASE>0.05)?+PHASE.toFixed(3):null,
+    fc_ag:parseFloat($('mA0Ag').value)||null,
+    anchors:(SAMPLES&&SAMPLES.filter(s2=>s2.ag&&s2.t>a0v).length)?SAMPLES.filter(s2=>s2.ag&&s2.t>a0v).map(s2=>({dt:+((s2.t-a0v).toFixed(1)),ag:s2.ag})):null };
   if(LASTROASTROW){ await SB.from('roast_sessions').update(row).eq('id',LASTROASTROW);
     toast(LANG==='tr'?'Kavurma buluta kaydedildi.':'Roast saved to the cloud.'); return; }
   row.email=u.email; row.device=localStorage.getItem('bsDevice')||null;
@@ -1585,6 +1595,7 @@ function updateGauge(){
   try{ if(running){ BCLIVE=BCLIVE||new BroadcastChannel('cnLive');
     const lastSt=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
     const smpL=SAMPLES.length?(SAMPLES.length+(SAMPLES[SAMPLES.length-1].a0?'\u00b7A0':(SAMPLES[SAMPLES.length-1].st?('\u00b7'+SAMPLES[SAMPLES.length-1].st):''))):null;
+    LASTBC=performance.now();
     BCLIVE.postMessage({coffee:k, stage:lastSt, n:v.length, proj:Math.round(proj), band:bandR, t:(performance.now()-startT)/1000, p:+(p.toFixed(3)), smp:smpL, tgt:(cal&&parseFloat(cal.target))||null});
     wcPub({c:k, st:lastSt, n:v.length, proj:Math.round(proj), band:bandR, t:Math.round((performance.now()-startT)/1000), p:+(p.toFixed(3)), w:(A0PHASE==='alarm'?2:(A0PHASE==='pre'?1:0)), g:(TGTPHASE==='alarm'?2:(TGTPHASE==='pre'?1:0))}); } }catch(e){}
   try{ tgtNudge(proj); }catch(e){}
@@ -1766,7 +1777,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-19l';
+const APPVER='v2026-07-19m';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
