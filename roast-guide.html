@@ -589,7 +589,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-19m</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-19n</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -2006,7 +2006,7 @@ const DICT={ tr:{
  "Cup":"Tadım","sensory · CVA descriptive + affective":"duyusal · CVA tanımlayıcı + duyuşsal",
  "Grade":"Sınıflandırma","green physical · CVA defect grading":"fiziksel (yeşil) · CVA kusur sınıflandırması",
  "Value Assessment":"Değerlendirme","Fit + Distinctiveness · the identity card":"Uyum + Ayırt Edicilik · kimlik kartı",
- "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz","Refresh app":"Uygulamayı yenile","Refresh":"Yenile","Roast history (cloud)":"Kavurma geçmişi (bulut)","Coffee":"Kahve","Date":"Tarih","Time":"Süre","Cracks":"Çatlak","Target":"Hedef","Forecast":"Öngörü","Goal":"Hedef","Est.":"Tahmin","Act.":"Sonuç","Cup this":"Bunu kupala","Refresh from cloud":"Buluttan yenile","Edit & map":"Düzenle ve haritala","Save & map":"Kaydet ve haritala","Cancel":"Vazgeç","A0 color":"A0 rengi","Sample colors":"Numune renkleri","Note":"Not","Enter the measured color first.":"Önce ölçülen rengi gir.","The roast happens in the Listener; the record lives in the cloud. Start one and it appears here in seconds, live first, then as a row in your history.":"Kavurma Listener'da olur; kayıt bulutta yaşar. Başlat, saniyeler içinde burada belirir: önce canlı kart, sonra geçmişinde bir satır.","Map":"Harita","MAP":"HARİTALA","MAPPED":"HARİTALI","anchors":"çapalar","Goal: your decided target color. Est.: the engine forecast at drop. Act.: the measured ground color.":"Hedef: karar verdiğin renk. Tahmin: drop anındaki motor öngörüsü. Sonuç: ölçülen öğütülmüş renk.","Make this the map":"Bunu harita yap","Mapped from this roast. The Listener uses it on its next gauge tick.":"Bu kavurmadan haritalandı. Listener bir sonraki gösterge adımında kullanır.","cracks":"çatlak","stages":"evreler","unmap":"haritayı kaldır","Remove this map? The gauge locks for this coffee until you map again.":"Harita kaldırılsın mı? Yeniden haritalayana kadar bu kahvede gösterge kilitli kalır.",
+ "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz","Refresh app":"Uygulamayı yenile","Refresh":"Yenile","Roast history (cloud)":"Kavurma geçmişi (bulut)","Coffee":"Kahve","Date":"Tarih","Time":"Süre","Cracks":"Çatlak","Target":"Hedef","Forecast":"Öngörü","Goal":"Hedef","Est.":"Tahmin","Act.":"Sonuç","Cup this":"Bunu kupala","Refresh from cloud":"Buluttan yenile","Edit & map":"Düzenle ve haritala","Save & map":"Kaydet ve haritala","Cancel":"Vazgeç","A0 color":"A0 rengi","Sample colors":"Numune renkleri","Note":"Not","Enter the measured color first.":"Önce ölçülen rengi gir.","Delete row":"Satırı sil","Delete this record from the cloud?":"Bu kayıt buluttan silinsin mi?","sample time in the roast":"kavurmadaki numune zamanı","The roast happens in the Listener; the record lives in the cloud. Start one and it appears here in seconds, live first, then as a row in your history.":"Kavurma Listener'da olur; kayıt bulutta yaşar. Başlat, saniyeler içinde burada belirir: önce canlı kart, sonra geçmişinde bir satır.","Map":"Harita","MAP":"HARİTALA","MAPPED":"HARİTALI","anchors":"çapalar","Goal: your decided target color. Est.: the engine forecast at drop. Act.: the measured ground color.":"Hedef: karar verdiğin renk. Tahmin: drop anındaki motor öngörüsü. Sonuç: ölçülen öğütülmüş renk.","Make this the map":"Bunu harita yap","Mapped from this roast. The Listener uses it on its next gauge tick.":"Bu kavurmadan haritalandı. Listener bir sonraki gösterge adımında kullanır.","cracks":"çatlak","stages":"evreler","unmap":"haritayı kaldır","Remove this map? The gauge locks for this coffee until you map again.":"Harita kaldırılsın mı? Yeniden haritalayana kadar bu kahvede gösterge kilitli kalır.",
  // roast
  "Coffee (active)":"Kahve (aktif)","Machine":"Makine","FC time":"FC zamanı","Drop at":"Boşaltma","Agtron":"Agtron","Open the guide":"Rehberi aç","Start roasting":"Kavurmaya başla","Pick your coffee":"Kahveni seç","Add new coffee":"Yeni kahve ekle",
  "START":"BAŞLA","CINNAMON":"TARÇIN","FIRST CRACK (A0)":"İLK ÇITIRTI (A0)","DROP / FINISH":"BOŞALT / BİTİR","New roast":"Yeni kavurma",
@@ -2097,6 +2097,9 @@ function renderRegList(){
   loadRoastHist();
 }
 let HISTROWS=[];
+function fmtMS(x){ x=Math.max(0,Math.round(x||0)); return Math.floor(x/60)+':'+('0'+(x%60)).slice(-2); }
+function anchLbl(r,a,j){ return 'S'+(j+1)+' \u00b7 '+((r.a0_s!=null&&a.dt!=null)?fmtMS(r.a0_s+a.dt):((a.dt>=0?'+':'')+Math.round(a.dt||0)+'s')); }
+
 async function loadRoastHist(){ try{
   const el=document.getElementById('rsList'); if(!el||!sb) return;
   const {data:{session}}=await sb.auth.getSession(); if(!session){ el.innerHTML=''; return; }
@@ -2110,7 +2113,7 @@ async function loadRoastHist(){ try{
     +data.map((r,i)=>{ const dt=(r.roasted_at||'').slice(5,10);
       const k2=String(r.coffee||'').trim().toLowerCase(), mapped=!!CALM[k2];
       return '<tr onclick="histTog('+i+')" style="border-top:1px solid var(--line);cursor:pointer">'
-        +'<td style="padding:7px 6px;max-width:105px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>'+esc(r.coffee||'?')+'</b>'+(mapped?' <span style="color:var(--gold,#e6c14b);font-size:9px" title="'+T('mapped')+'">\u25cf</span>':'')+'</td>'
+        +'<td style="padding:7px 6px;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>'+esc(r.coffee||'?')+'</b>'+(mapped?' <span style="color:var(--gold,#e6c14b);font-size:9px" title="'+T('mapped')+'">\u25cf</span>':'')+'</td>'
         +'<td style="padding:7px 6px;text-align:center" class="small">'+dt+'</td>'
         +'<td style="padding:7px 6px;text-align:center" class="small">'+(r.target?Math.round(r.target):'\u00b7')+'</td>'
         +'<td style="padding:7px 6px;text-align:center">'+(r.proj_stop?Math.round(r.proj_stop):'\u00b7')+'</td>'
@@ -2133,12 +2136,13 @@ function histTog(i){ try{
     +'<div class="small">'+T('stages')+': '+stg+'</div>'
     +'<div style="margin-top:4px">'+chip(dp,'\u0394 '+T('Est.'))+chip(dg,'\u0394 '+T('Goal'))+'</div>'
     +'<div class="small">DEV '+(r.dev_span?(Math.floor(r.dev_span/60)+':'+('0'+Math.round(r.dev_span%60)).slice(-2)):'\u00b7')+' \u00b7 tg '+(r.tg!=null?Math.round(r.tg):'\u00b7')+' \u00b7 q25 '+(r.q25!=null?r.q25+'s':'\u00b7')+' \u00b7 phi '+(r.ph_drop!=null?Math.round(r.ph_drop*100)+'%':'\u00b7')+(r.fc_ag?(' \u00b7 A0 '+Math.round(r.fc_ag)):'')+'</div>'
-    +((r.anchors&&r.anchors.length)?('<div class="small">'+T('anchors')+': '+r.anchors.map(a=>'+'+Math.round(a.dt)+'s\u2192'+Math.round(a.ag)).join(' \u00b7 ')+'</div>'):'')
+    +((r.anchors&&r.anchors.length)?('<div class="small">'+T('anchors')+': '+r.anchors.map((a,j)=>anchLbl(r,a,j)+'\u2192'+(a.ag!=null?Math.round(a.ag):'\u00b7')).join(' \u00b7\u00b7 ')+'</div>'):'')
     +'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">'
     +(mapped2?('<button class="btn" style="width:auto;padding:7px 14px;margin:0;font-size:12px;background:none;border:1px solid var(--warn,#e24b4a);color:var(--warn,#e24b4a)" onclick="event.stopPropagation();rowMap('+i+')">'+T('unmap')+'</button>')
       :(r.agtron?('<button class="btn" style="width:auto;padding:7px 14px;margin:0;font-size:12px;background:var(--accent2,#3c7a5a)" onclick="event.stopPropagation();rowMap('+i+')">'+T('Make this the map')+'</button>'):''))
     +'<button class="btn" style="width:auto;padding:7px 14px;margin:0;font-size:12px;background:var(--accent,#c98a3c);color:#1a1410" onclick="event.stopPropagation();cupFromRow('+i+')">'+((r.anchors&&r.anchors.length)?T('Cup these'):T('Cup this'))+'</button>'
     +'<button class="btn" style="width:auto;padding:7px 14px;margin:0;font-size:12px;background:none;border:1px solid var(--line);color:var(--ink,#f3ede4)" onclick="event.stopPropagation();rsEditOpen('+i+')">'+T('Edit & map')+'</button>'
+    +'<button class="btn" style="width:auto;padding:7px 14px;margin:0;font-size:12px;background:none;border:1px solid var(--warn,#e24b4a);color:var(--warn,#e24b4a);opacity:.8" onclick="event.stopPropagation();rsDelRow('+i+')">'+T('Delete row')+'</button>'
     +'</div>'
     +((r.machine||r.batch_g)?('<div class="small">'+esc(r.machine||'')+(r.batch_g?(' \u00b7 '+r.batch_g+' g'):'')+'</div>'):'')
     +(r.note?('<div class="small" style="color:var(--gold,#e6c14b)">'+esc(r.note)+'</div>'):'')
@@ -2154,12 +2158,18 @@ function mapFromRow(i){ try{
     devSpan:(r.dev_span!=null?r.dev_span:prev.devSpan), tg:(r.tg!=null?r.tg:prev.tg), q25:(r.q25!=null?r.q25:prev.q25), phDrop:(r.ph_drop!=null?r.ph_drop:prev.phDrop),
     target:(r.target!=null?r.target:prev.target), src:'cloud-row' };
   if(r.fc_ag!=null) e.fc_ag=r.fc_ag;
-  if(r.anchors&&r.anchors.length) e.anchors=r.anchors;
+  if(r.anchors&&r.anchors.length){ const fa=r.anchors.filter(a=>a.ag!=null&&a.dt>=-2); if(fa.length) e.anchors=fa; }   // empty colors and pre-A0 strays stay out of the engine
   m[k]=e; localStorage.setItem('bsCal',JSON.stringify(m)); renderRegList();
   alert(T('Mapped from this roast. The Listener uses it on its next gauge tick.'));
 }catch(e2){} }
 async function cloudRefresh(){ try{ if(sb){ const cr=await sb.from('coffees').select('name,badge,green').order('name');
   if(cr&&!cr.error&&Array.isArray(cr.data)){ REGISTRY=cr.data; buildBeans(); } } }catch(e){} renderRegList(); }
+async function rsDelRow(i){ try{
+  const r=HISTROWS[i]; if(!r||!r.id) return;
+  if(!confirm(T('Delete this record from the cloud?'))) return;
+  if(sb){ try{ await sb.from('roast_sessions').delete().eq('id',r.id); }catch(e3){} }
+  loadRoastHist();
+}catch(e2){} }
 function rsEditClose(){ const m=document.getElementById('rsEdit'); if(m) m.style.display='none'; }
 function rsEditOpen(i){ try{
   const r=HISTROWS[i]; if(!r) return;
@@ -2168,8 +2178,9 @@ function rsEditOpen(i){ try{
     +fld('rsEag',T('Act.')+' Agtron',r.agtron!=null?Math.round(r.agtron):null)
     +fld('rsEtg',T('Goal')+' Agtron',r.target!=null?Math.round(r.target):null)
     +fld('rsEfc',T('A0 color'),r.fc_ag!=null?Math.round(r.fc_ag):null);
-  if(r.anchors&&r.anchors.length){ h+='<div class="small" style="font-weight:700;margin:10px 0 6px">'+T('Sample colors')+'</div>'
-    +r.anchors.map((a,j)=>fld('rsEa'+j,'+'+Math.round(a.dt)+'s',a.ag!=null?Math.round(a.ag):null)).join(''); }
+  h+='<div class="small" style="font-weight:700;margin:10px 0 6px">'+T('Sample colors')+'</div>'
+    +((r.anchors&&r.anchors.length)?r.anchors.map((a,j)=>fld('rsEa'+j,anchLbl(r,a,j),a.ag!=null?Math.round(a.ag):null)).join(''):'')
+    +'<div style="display:flex;gap:8px;margin-bottom:8px"><input type="text" id="rsEaddT" placeholder="1:39" style="flex:1" title="'+T('sample time in the roast')+'"><input type="text" inputmode="decimal" id="rsEaddA" placeholder="Agtron" style="flex:1"></div>';
   h+='<div style="margin-bottom:8px"><label class="fld">'+T('Note')+'</label><input type="text" id="rsEnote" value="'+esc(r.note||'')+'" style="width:100%"></div>'
     +'<div style="display:flex;gap:8px;margin-top:12px">'
     +'<button class="btn" style="flex:1.4;margin:0;background:var(--accent2,#3c7a5a)" onclick="rsEditSave('+i+')">'+T('Save & map')+'</button>'
@@ -2184,7 +2195,13 @@ async function rsEditSave(i){ try{
   if(ag==null){ alert(T('Enter the measured color first.')); return; }
   const patch={ agtron:ag, target:gv('rsEtg'), fc_ag:gv('rsEfc'),
     note:(document.getElementById('rsEnote')?String(document.getElementById('rsEnote').value).trim().slice(0,200):null)||null };
-  if(r.anchors&&r.anchors.length) patch.anchors=r.anchors.map((a,j)=>({dt:a.dt, ag:gv('rsEa'+j)}));
+  const na=(r.anchors||[]).map((a,j)=>({dt:a.dt, ag:gv('rsEa'+j)}));
+  const tEl=document.getElementById('rsEaddT'), aAdd=gv('rsEaddA');
+  if(tEl&&String(tEl.value).trim()&&aAdd!=null){ const ts=String(tEl.value).trim(); let secs=null;
+    if(/^\d+:\d{1,2}$/.test(ts)){ const pp=ts.split(':'); secs=(+pp[0])*60+(+pp[1]); }
+    else if(!isNaN(parseFloat(ts))) secs=parseFloat(ts);
+    if(secs!=null) na.push({dt:+((secs-(r.a0_s||0)).toFixed(1)), ag:aAdd}); }   // clock time in, dt-from-A0 stored
+  if(na.length) patch.anchors=na;
   if(sb&&r.id){ try{ await sb.from('roast_sessions').update(patch).eq('id',r.id); }catch(e3){} }   // your own row by RLS
   Object.assign(r,patch);   // local truth follows immediately
   rsEditClose(); mapFromRow(i); loadRoastHist();
@@ -2193,7 +2210,7 @@ function cupFromRow(i){ try{
   const r=HISTROWS[i]; if(!r) return; const nm=String(r.coffee||'').trim()||'?';
   if(r.anchors&&r.anchors.length){
     FLIGHT={ date:(r.roasted_at||'').slice(0,10), purpose:('Roast '+nm).trim(),
-      coffees: r.anchors.map(a=>({sample:(nm+' S@'+Math.round(a.dt)+'s'+(a.ag?(' '+Math.round(a.ag)+'A'):'')), cup:blankCup()}))
+      coffees: r.anchors.map((a,j)=>({sample:(nm+' '+anchLbl(r,a,j).replace(' \u00b7 ',' ')+(a.ag!=null?(' '+Math.round(a.ag)+'A'):'')), cup:blankCup()}))
         .concat([{sample:nm, cup:blankCup()}]) };
     show('flight');
   } else { cup=blankCup(); cup.sample=nm; ensureBean(nm); show('cup'); }
