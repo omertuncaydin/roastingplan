@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19e</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19f</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1093,8 +1093,9 @@ const PLAN_LABEL={free:'Local',pro:'Roaster',special:'Cupper',admin:'Admin',rese
 function planLabel(t){ return PLAN_LABEL[normTier(t)]||t; }
 function planActive(){ try{ const p=JSON.parse(localStorage.getItem('bsPlan')||'null'); return (p&&new Date(p.until)>=new Date())?p:null; }catch(e){ return null; } }
 function roastCount(){ return +(localStorage.getItem('bsRoastN')||0); }
+let CLOUDEMAIL=null;
 function refreshPlanUI(){ const p=planActive(), el=$('planTag'); if(!el) return;
-  const adm=document.body.classList.contains('admin')?' · +ADMIN':'';
+  const adm=(document.body.classList.contains('admin')&&(!CLOUDEMAIL||CLOUDEMAIL==='omer_aydin@coffeenutz.net'))?' · +ADMIN':'';
   el.textContent=(p?(planLabel(p.tier)+' · '+p.until)
     :planLabel('free'))+adm; }
 function grantPlan(tier,months,code){ const u=new Date(); u.setMonth(u.getMonth()+months);
@@ -1138,19 +1139,19 @@ function showPaywall(feature){
    +'<th style="padding:5px 4px;vertical-align:top;text-align:left;color:var(--muted);font-weight:600">CoffeeNutz Guide</th></tr>'
    +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Local</b> <span class="hint" style="font-size:10.5px">'+(tr?'Ücretsiz. Verilerin telefonunda yaşar.':'Free. Data lives on your phone.')+'</span></td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Her şey, sınırsız.':'Everything, unlimited.')+'</td>'
-   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Hepsini keşfet; hiçbir şey saklanmaz.':'Explore all; nothing kept.')+'</td></tr>'
-   +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Roaster</b> <span class="hint" style="font-size:10.5px">$20/'+(tr?'ay':'mo')+' · $200/'+(tr?'yıl':'yr')+' · '+(tr?'Kavurma sınıfıyla 12 ay dahil.':'12 months included with a Roasting class.')+'</span></td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Hepsini keşfet; hiçbir şey kaydedilmez.':'Explore all; nothing kept.')+'</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Roaster</b> <span class="hint" style="font-size:10.5px">$20/'+(tr?'ay':'mo')+' · $200/'+(tr?'yıl':'yr')+(tr?' veya Kavurma sınıfıyla 12 ay dahil.':' or 12 months included with a Roasting class.')+'</span></td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Haritalar her cihazda senkron. Apple Watch uzaktan kumanda (bilekten numune ve drop).':'Maps synced everywhere. Apple Watch remote control (sample and drop from the wrist).')+'</td>'
-   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast kayıtların kaydedilir ve saklanır.':'Roast records saved and kept.')+'</td></tr>'
-   +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Cupper</b> <span class="hint" style="font-size:10.5px">'+(tr?'Yalnız Q sınıfında kazanılır. Ömür boyu numaralı.':'Earned in Q class only. Numbered for life.')+'</span></td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast kayıtların bulutta kaydedilir ve saklanır.':'Roast records saved and kept in the cloud.')+'</td></tr>'
+   +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Cupper</b> <span class="hint" style="font-size:10.5px">'+(tr?'Yalnız Q sınıfında kazanılır.':'Earned in Q class only.')+'</span></td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?"Roaster'daki her şey + numune çekimlerin tadım seansına dönüşür.":'Everything in Roaster + sample pulls become cupping sessions.')+'</td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?"Roaster'daki her şey + Roast · Cup · Grade: her şey kayıt altında.":'Everything in Roaster + Roast · Cup · Grade: everything is recorded.')+'</td></tr>'
    +'</table>'
    +classStrip(tr)
    +'<div style="text-align:center"><span style="display:inline-block;border:1px solid var(--accent2);color:var(--accent2);border-radius:14px;padding:4px 10px;font-weight:700;margin:8px 4px 0 4px;font-size:11px">'+(tr?'Cupper, Q yenilemenle yenilenir.':'Cupper renews with your Q recalibration.')+'</span></div>'
-   +'<div class="hint" style="font-size:11px;margin-top:10px">'+(tr?'Kayıtların asla silinmez. Plan sona ererse kaydetme durur, yaptığın her şey okunabilir kalır.':'Your records are never deleted. If a plan ends, saving pauses and everything you made stays readable.')+'</div>'
+   +'<div class="hint" style="font-size:11px;margin-top:10px">'+(tr?'Roaster ve Cupper planlarında: kayıtların asla silinmez. Plan sona ererse kaydetme durur, yaptığın her şey okunabilir kalır.':'On Roaster and Cupper plans: your records are never deleted. If a plan ends, saving pauses and everything you made stays readable.')+'</div>'
    +'<div class="hint" style="font-size:11px;margin-top:10px;color:var(--accent2)">'+(tr?'Bilim açıkça paylaşılır; ölç, kalibre et, kahveni hep daha iyi öğren.':'The science is freely shared, so you can always measure, calibrate, learn your coffee better.')+'</div>'
-   +'<button style="margin-top:14px;background:none;border:1px solid var(--line);color:var(--muted);font-size:12px;padding:8px 14px" onclick="revealCode()">'+(tr?'Yönetici girişi':'Admin entry')+'</button>'
+   +'<button style="margin-top:14px;background:var(--accent2)" onclick="document.getElementById(\'modal\').style.display=\'none\';window.open(\'roast-guide.html\',\'_blank\')">'+(tr?'Giriş yap · Guide':'Sign in · Guide')+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="window.open(\'https://www.coffeenutz.net/products/crack-listener\')">'+(tr?'coffeenutz.net üzerinden edin':'Get it at coffeenutz.net')+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Kapat':'Close')+'</button>';
   $('modal').style.display='flex';
@@ -1167,7 +1168,7 @@ try{ fetch(SUPA_URL+'/rest/v1/noise_lib?select=f,hf,w',{headers:{apikey:SUPA_KEY
 try{ const eb=$('enrollBtn'); if(eb) eb.textContent=tt('Teach it your voice'); }catch(e){}
 async function cloudUser(){ if(!SB) return null; try{ const {data}=await SB.auth.getUser(); return (data&&data.user)||null; }catch(e){ return null; } }
 async function syncPlanFromAccount(){ try{
-  const u=await cloudUser(); if(!u||!u.email) return;
+  const u=await cloudUser(); CLOUDEMAIL=(u&&u.email)||null; refreshPlanUI(); if(!u||!u.email) return;
   const {data}=await SB.from('entitlements').select('access,plan_until').eq('email',u.email).maybeSingle();
   const plan=(data&&data.access&&data.access.plan)||null;
   let cur=null; try{ cur=JSON.parse(localStorage.getItem('bsPlan')||'null'); }catch(e){}
@@ -1731,7 +1732,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-19e';
+const APPVER='v2026-07-19f';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
