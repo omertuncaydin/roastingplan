@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19m</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19n</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1208,8 +1208,11 @@ async function pushRoastRecord(){ try{
 async function pushRoastUpdate(){ try{
   if(!SB||!LASTROASTROW) return;
   const u=await cloudUser(); if(!u||!u.email) return;
+  const v=valid(), a0v=effA0(v)||0;
   await SB.from('roast_sessions').update({ agtron:parseFloat($('mAgG').value)||null,
-    target:parseFloat($('mTarget').value)||null, note:($('mNote')&&$('mNote').value.trim().slice(0,200))||null }).eq('id',LASTROASTROW);
+    target:parseFloat($('mTarget').value)||null, note:($('mNote')&&$('mNote').value.trim().slice(0,200))||null,
+    fc_ag:parseFloat($('mA0Ag').value)||null,
+    anchors:(SAMPLES&&SAMPLES.length)?SAMPLES.map(s2=>({dt:+((s2.t-a0v).toFixed(1)),ag:s2.ag})):null }).eq('id',LASTROASTROW);   // late-entered sample colors reach the cloud row too
 }catch(e){} }
 async function syncPlanFromAccount(){ try{
   const u=await cloudUser(); CLOUDEMAIL=(u&&u.email)||null; refreshPlanUI(); if(!u||!u.email) return;
@@ -1777,7 +1780,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-19m';
+const APPVER='v2026-07-19n';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -1857,7 +1860,7 @@ function openGameConsent(){
       :'Shared data: crack times and gains, coffee name, measured color (Agtron). NO audio, NO location.')+'</div>'
    +'<input type="text" id="gcCredit" placeholder="'+(LANG==='tr'?'İsim / rumuz (isteğe bağlı)':'Name / handle (optional)')+'" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink);margin-bottom:6px">'
    +'<input type="text" id="gcCompany" placeholder="'+(LANG==='tr'?'Kavurmacı / firma (isteğe bağlı)':'Roastery / company (optional)')+'" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink);margin-bottom:10px">'
-   +'<label style="display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.45"><input type="checkbox" id="gcConsent" style="width:20px;height:20px;flex:none;accent-color:var(--accent);margin-top:1px"><span>Bu verilerin CoffeeNutz Agtron Challenge Oyunu ve halka açık tekrar oynatmada kullanılmasına izin veriyorum. · I consent to this data being used in the CoffeeNutz Agtron Challenge Game and public replays.</span></label>'
+   +'<label style="display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.45"><input type="checkbox" id="gcConsent" style="width:20px;height:20px;flex:none;accent-color:var(--accent);margin-top:1px"><span>Bu verilerin CoffeeNutz Agtron Challenge Oyunu ile halka açık tekrar oynatmada kullanılmasına izin veriyorum. · I consent to this data being used in the CoffeeNutz Agtron Challenge Game / public replays.</span></label>'
    +'<label style="display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.45;margin-top:11px;color:var(--muted)"><input type="checkbox" id="gcResearch" style="width:20px;height:20px;flex:none;accent-color:var(--accent2);margin-top:1px"><span>Verilerim anonim olarak kavurma bilimi araştırmasında da kullanılabilir. · My data may also be used, anonymized, in coffee roasting research.</span></label>'
    +'<button style="margin-top:14px;background:var(--accent2)" onclick="gameSubmit()">'+(LANG==='tr'?'Gönder':'Send')+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(LANG==='tr'?'Vazgeç':'Cancel')+'</button>';
