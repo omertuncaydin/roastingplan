@@ -85,14 +85,14 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <div class="hdrrow">
     <div class="brand" onclick="location.reload()" title="refresh" style="cursor:pointer"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0" id="hubVer">v2026-07-18a</span>
+      <span class="sub" style="margin:0" id="hubVer">v2026-07-19a</span>
       <select class="stsel" id="colSel" title="cards per row" onchange="setCols(this.value)"><option value="auto">Auto</option><option value="1">1/row</option><option value="2">2/row</option><option value="3">3/row</option><option value="4">4/row</option><option value="5">5/row</option><option value="6">6/row</option></select>
       <button class="iconbtn" onclick="loadAll()">Recheck Versions</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
   </div>
   <h1>Your apps <button class="ordbtn" style="width:auto;padding:4px 12px;font-size:13px;vertical-align:middle" onclick="newCard()">+ New card</button> <button class="ordbtn" style="width:auto;padding:4px 12px;font-size:13px;vertical-align:middle;border-color:var(--accent);color:var(--accent)" onclick="location.href=location.pathname+'?v='+Date.now()">Refresh</button></h1>
-  <div class="sub">Tap a card to open. Arrows reorder within a group. Version is read live. <span style="opacity:.5">hub v2026-07-18a</span></div>
+  <div class="sub">Tap a card to open. Arrows reorder within a group. Version is read live. <span style="opacity:.5">hub v2026-07-19a</span></div>
   <div id="sections"></div>
   <div id="restore" class="restore"></div>
 
@@ -107,6 +107,7 @@ const $=id=>document.getElementById(id);
 const APPS=[
   {nm:'CoffeeNutz Guide', path:'/roast-guide', desc:'Roast · Cup · Grade guided cockpit',      b:'G', c:'#c98a3c', cat:'mon'},
   {nm:'Crack Listener', path:'/crack-listen', desc:'The crack analyzer · BeanSpeak',           b:'C', c:'#3c7a5a', cat:'mon'},
+  {nm:'Stage Ear', path:'/stage-ear', desc:'Stage calibration by ear · label the storm',        b:'SE', c:'#3c7a5a', cat:'mon'},
   {nm:'Grup-Al Admin', path:'/grupal-admin', desc:'Group-buy campaign admin',                   b:'GA', c:'#b9742f', cat:'mon'},
   {nm:'Grup-Al Page', path:'/grupal', desc:'Public roast-day lot page',                         b:'GP', c:'#b9742f', cat:'mon'},
   {nm:'Roast Jury', path:'/bell-gallery', desc:'Çan Galerisi · crack bells',                    b:'RJ', c:'#3c7a5a', cat:'mon'},
