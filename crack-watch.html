@@ -95,6 +95,8 @@ function langTog(){ LANG=LANG==='en'?'tr':'en'; localStorage.setItem('cwLang',LA
 let LASTMSG=0, FIN=false, LIVE=false, DROPARM=0, LASTT=-1, CTL=1, LASTP=null;
 function cmd(a){ return fetch(SU+'/realtime/v1/api/broadcast',{method:'POST',headers:{apikey:AK,authorization:'Bearer '+AK,'content-type':'application/json'},
   body:JSON.stringify({messages:[{topic:'cnw-'+KEY, event:'cmd', payload:{a}, private:false}]})}); }
+function sT(id,v){ const el=$(id); if(el&&el.textContent!==v) el.textContent=v; }
+function sH(id,v){ const el=$(id); if(el&&el.innerHTML!==v) el.innerHTML=v; }
 function render(p){
   LASTP=p;
   LASTMSG=Date.now(); document.body.classList.remove('stale');
@@ -109,24 +111,23 @@ function render(p){
   if(FIN) document.body.classList.remove('a0pre','a0now','tpre','tnow');
   $('btns').style.display=FIN?'none':'flex';
   $('btns2').style.display=FIN?'flex':'none';
-  $('coffee').textContent=p.c||'?';
-  if(p.proj!=null) $('proj').textContent=(p.band!=null)?(Math.round(p.proj-p.band)+'-'+Math.round(p.proj+p.band)):('~'+Math.round(p.proj));
-  else if($('proj').textContent==='') $('proj').textContent='·';
+  sT('coffee',p.c||'?');
+  if(p.proj!=null) sT('proj',(p.band!=null)?(Math.round(p.proj-p.band)+'-'+Math.round(p.proj+p.band)):('~'+Math.round(p.proj)));
+  else if($('proj').textContent==='') sT('proj','·');
   const showNote=p.nt&&!FIN&&!p.st;   // the cue retires the moment the storm names its first stage
-  if(showNote){ $('note').textContent=(p.nt.indexOf(' ')>=0?p.nt:T[LANG].cue(p.nt)); $('note').style.display='block'; }
-  else $('note').style.display='none';
-  $('meta').innerHTML='<b>'+(p.st||'·')+'</b> · '+fmtT(p.t||0);
-  $('meta2').textContent=(p.n||0)+' '+L('cracks');
+  if(showNote){ sT('note',(p.nt.indexOf(' ')>=0?p.nt:T[LANG].cue(p.nt))); if($('note').style.display!=='block') $('note').style.display='block'; }
+  else if($('note').style.display!=='none') $('note').style.display='none';
+  sH('meta','<b>'+(p.st||'·')+'</b> · '+fmtT(p.t||0));
+  sT('meta2',(p.n||0)+' '+L('cracks'));
   if(FIN) $('garc').style.strokeDashoffset=0;
   else if(typeof p.p==='number') $('garc').style.strokeDashoffset=ARC*(1-Math.min(1,p.p));
   document.body.classList.toggle('a0pre',p.w===1);
   document.body.classList.toggle('a0now',p.w===2);
   if('g' in p){ document.body.classList.toggle('tpre',p.g===1); document.body.classList.toggle('tnow',p.g===2); }
-  if(p.w===2) $('a0strip').textContent=L('a0n');
-  else if(p.w===1) $('a0strip').textContent=L('a0p');
-  else if(p.g===2) $('a0strip').textContent=L('tn');
-  else if(p.g===1) $('a0strip').textContent=L('tp');
-  $('state').textContent=FIN?L('fin'):(p.hb?L('hbst'):L('live'));
+  let sv=null;
+  if(p.w===2) sv=L('a0n'); else if(p.w===1) sv=L('a0p'); else if(p.g===2) sv=L('tn'); else if(p.g===1) sv=L('tp');
+  if(sv!=null) sT('a0strip',sv);
+  sT('state',FIN?L('fin'):(p.hb?L('hbst'):L('live')));
 }
 window.render=render;
 function fmtT(t){ return Math.floor(t/60)+':'+('0'+Math.floor(t%60)).slice(-2); }

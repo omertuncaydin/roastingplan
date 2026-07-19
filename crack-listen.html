@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19j</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19k</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -522,7 +522,7 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('dlStory').style.display='none'; $('gameAdd').style.display='none'; $('mapBtn').style.display='none'; $('nextRow').style.display='none'; $('agTop').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); LASTROASTROW=null; renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); LASTROASTROW=null; try{ pushRoastStart(); }catch(e){} renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw','mA0Ag'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -1170,19 +1170,28 @@ try{ fetch(SUPA_URL+'/rest/v1/noise_lib?select=f,hf,w',{headers:{apikey:SUPA_KEY
 try{ const eb=$('enrollBtn'); if(eb) eb.textContent=tt('Teach it your voice'); }catch(e){}
 async function cloudUser(){ if(!SB) return null; try{ const {data}=await SB.auth.getUser(); return (data&&data.user)||null; }catch(e){ return null; } }
 let LASTROASTROW=null;
+async function pushRoastStart(){ try{
+  if(!SB||!proPowers()) return;
+  const u=await cloudUser(); if(!u||!u.email) return;
+  const row={ email:u.email, coffee:(cName.value||'').trim()||null, device:localStorage.getItem('bsDevice')||null };
+  const {data}=await SB.from('roast_sessions').insert(row).select().maybeSingle();
+  if(data&&data.id) LASTROASTROW=data.id;   // the record breathes from second one; a crashed roast still exists
+}catch(e){} }
 async function pushRoastRecord(){ try{
   if(!SB) return;
   const u=await cloudUser(); if(!u||!u.email) return;
   if(!proPowers()) return;
   const v=valid(); if(!v.length) return;
-  const row={ email:u.email, coffee:(cName.value||'').trim()||null,
+  const row={ coffee:(cName.value||'').trim()||null,
     t_total_s:STOPT!=null?Math.round(STOPT):null, n_cracks:v.length,
     a0_s:+((effA0(v)||0).toFixed(1))||null, proj_stop:STOPPROJ||null,
     agtron:parseFloat($('mAgG').value)||null, target:parseFloat($('mTarget').value)||null,
     batch_g:parseFloat($('mBatch').value)||null, machine:($('mEquip')&&$('mEquip').value)||null,
     note:($('mNote')&&$('mNote').value.trim().slice(0,200))||null,
-    stages:(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES.map(sg=>({s:sg[0],t:+sg[1].toFixed(1)})):null,
-    device:localStorage.getItem('bsDevice')||null };
+    stages:(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES.map(sg=>({s:sg[0],t:+sg[1].toFixed(1)})):null };
+  if(LASTROASTROW){ await SB.from('roast_sessions').update(row).eq('id',LASTROASTROW);
+    toast(LANG==='tr'?'Kavurma buluta kaydedildi.':'Roast saved to the cloud.'); return; }
+  row.email=u.email; row.device=localStorage.getItem('bsDevice')||null;
   const {data}=await SB.from('roast_sessions').insert(row).select().maybeSingle();
   if(data&&data.id){ LASTROASTROW=data.id; toast(LANG==='tr'?'Kavurma buluta kaydedildi.':'Roast saved to the cloud.'); }
 }catch(e){} }
@@ -1757,7 +1766,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-19j';
+const APPVER='v2026-07-19k';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
