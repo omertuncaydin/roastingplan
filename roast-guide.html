@@ -589,7 +589,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-19p</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-20a</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -2239,7 +2239,11 @@ function rowMap(i){ try{
 }catch(e2){} }
 function unmapCoffee(k){ try{
   if(!confirm(T('Remove this map? The gauge locks for this coffee until you map again.'))) return;
-  const m=JSON.parse(localStorage.getItem('bsCal')||'{}'); delete m[k];
+  const m=JSON.parse(localStorage.getItem('bsCal')||'{}');
+  try{ if(m[k]){ const tr2=JSON.parse(localStorage.getItem('bsCalTrash')||'{}'); tr2[k]={e:m[k],at:Date.now()};
+    const ks=Object.keys(tr2); if(ks.length>10){ ks.sort((a,b)=>(tr2[a].at||0)-(tr2[b].at||0)); delete tr2[ks[0]]; }
+    localStorage.setItem('bsCalTrash',JSON.stringify(tr2)); } }catch(e4){}   // lessons ride into the archive; unmap is no longer a shredder
+  delete m[k];
   localStorage.setItem('bsCal',JSON.stringify(m)); renderRegList();
 }catch(e){} }
 function cupQueued(i){ try{ const q=JSON.parse(localStorage.getItem('cnCupQueue')||'[]'); const qe=q[i]; if(!qe) return;
@@ -2251,6 +2255,13 @@ function lwRender(){ const el=document.getElementById('liveTick'), d=LWLAST; if(
   el.style.display='block'; el.style.cursor='pointer';
   const mm=Math.floor((d.t||0)/60), ss=('0'+Math.floor((d.t||0)%60)).slice(-2);
   const pw=Math.min(100,Math.round((d.p||0)*100));
+  if(d.fin){ el.style.padding='7px 12px 9px';
+    el.innerHTML='<div style="display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden">'
+      +'<span style="color:var(--muted)">\u25cf</span><b>'+esc(d.coffee||'?')+'</b>'
+      +'<span style="background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:0 8px;font-size:12px">'+(LANG==='tr'?'drop \u00b7 bitti':'drop \u00b7 ended')+'</span>'
+      +(d.proj?('<b>~'+d.proj+'</b>'):'')
+      +'<span class="small" style="margin-left:auto">'+mm+':'+ss+'</span></div>';
+    clearTimeout(el._h); el._h=setTimeout(()=>{ el.style.display='none'; },6000); return; }
   if(!LWEXP){
     el.style.padding='7px 12px 9px';
     el.innerHTML='<div style="display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden">'
