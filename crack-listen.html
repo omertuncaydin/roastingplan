@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19i</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19j</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -459,7 +459,8 @@ function wcFresh(){ try{ cName.value=''; $('mCoffee').value=''; $('finalCall').t
   setState('st-setup'); window.scrollTo({top:0,behavior:'smooth'}); cName.focus(); }catch(e){}
   toast(LANG==='tr'?'Yeni kahve: ismini seç.':'New coffee: name it.'); }
 let WCCH=null, WCDENY_T=0;
-function wcCtl(){ return !!planActive(); }
+function proPowers(){ return !!planActive() || document.body.classList.contains('admin') || CLOUDEMAIL==='omer_aydin@coffeenutz.net'; }
+function wcCtl(){ return proPowers(); }
 function wcDeny(){ if(performance.now()-WCDENY_T<5000) return; WCDENY_T=performance.now();
   toast(LANG==='tr'?'Watch uzaktan kontrolü Roaster planına dahil.':'Watch remote control is part of the Roaster plan.'); }
 function wcCmdSub(on){ try{ if(!SB) return;
@@ -1143,7 +1144,7 @@ function showPaywall(feature){
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Hepsini keşfet; hiçbir şey kaydedilmez.':'Explore all; nothing kept.')+'</td></tr>'
    +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Roaster</b> <span class="hint" style="font-size:10.5px">$20/'+(tr?'ay':'mo')+' · $200/'+(tr?'yıl':'yr')+(tr?' veya Kavurma sınıfıyla 12 ay dahil.':' or 12 months included with a Roasting class.')+'</span></td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Haritalar her cihazda senkron. Apple Watch uzaktan kumanda (bilekten numune ve drop).':'Maps synced everywhere. Apple Watch remote control (sample and drop from the wrist).')+'</td>'
-   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast kayıtların bulutta kaydedilir ve saklanır.':'Roast records saved and kept in the cloud.')+'</td></tr>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast kayıtların drop anında buluta otomatik kaydedilir.':'Roast records save to the cloud automatically at drop.')+'</td></tr>'
    +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Cupper</b> <span class="hint" style="font-size:10.5px">'+(tr?'Yalnız Q sınıfında kazanılır.':'Earned in Q class only.')+'</span></td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?"Roaster'daki her şey + numune çekimlerin tadım seansına dönüşür.":'Everything in Roaster + sample pulls become cupping sessions.')+'</td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?"Roaster'daki her şey + Roast · Cup · Grade: her şey bulutta kayıt altında.":'Everything in Roaster + Roast · Cup · Grade: everything recorded in the cloud.')+'</td></tr>'
@@ -1170,8 +1171,9 @@ try{ const eb=$('enrollBtn'); if(eb) eb.textContent=tt('Teach it your voice'); }
 async function cloudUser(){ if(!SB) return null; try{ const {data}=await SB.auth.getUser(); return (data&&data.user)||null; }catch(e){ return null; } }
 let LASTROASTROW=null;
 async function pushRoastRecord(){ try{
-  if(!SB||!planActive()) return;
+  if(!SB) return;
   const u=await cloudUser(); if(!u||!u.email) return;
+  if(!proPowers()) return;
   const v=valid(); if(!v.length) return;
   const row={ email:u.email, coffee:(cName.value||'').trim()||null,
     t_total_s:STOPT!=null?Math.round(STOPT):null, n_cracks:v.length,
@@ -1755,7 +1757,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-19i';
+const APPVER='v2026-07-19j';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();

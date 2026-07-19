@@ -585,7 +585,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-19f</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-19g</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1919,7 +1919,7 @@ function showPlanInfo(){ const tr=(LANG==='tr'); const cur=planLabelG(MYPLAN); c
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Hepsini keşfet; hiçbir şey kaydedilmez.':'Explore all; nothing kept.')+'</td></tr>'
    +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Roaster</b> <span style="font-size:10.5px;opacity:.75">$20/'+(tr?'ay':'mo')+' · $200/'+(tr?'yıl':'yr')+(tr?' veya Kavurma sınıfıyla 12 ay dahil.':' or 12 months included with a Roasting class.')+'</span></td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Haritalar her cihazda senkron. Apple Watch uzaktan kumanda (bilekten numune ve drop).':'Maps synced everywhere. Apple Watch remote control (sample and drop from the wrist).')+'</td>'
-   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast kayıtların bulutta kaydedilir ve saklanır.':'Roast records saved and kept in the cloud.')+'</td></tr>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast kayıtların drop anında buluta otomatik kaydedilir.':'Roast records save to the cloud automatically at drop.')+'</td></tr>'
    +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Cupper</b> <span style="font-size:10.5px;opacity:.75">'+(tr?'Yalnız Q sınıfında kazanılır.':'Earned in Q class only.')+'</span></td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?"Roaster'daki her şey + numune çekimlerin tadım seansına dönüşür.":'Everything in Roaster + sample pulls become cupping sessions.')+'</td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?"Roaster'daki her şey + Roast · Cup · Grade: her şey bulutta kayıt altında.":'Everything in Roaster + Roast · Cup · Grade: everything recorded in the cloud.')+'</td></tr>'
