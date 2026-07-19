@@ -148,6 +148,9 @@ function sendAgain(){ if(!FIN||!ctlOk()) return; try{ cmd('again').catch(()=>{})
 function sendFresh(){ if(!FIN||!ctlOk()) return; try{ cmd('fresh').catch(()=>{}); flash(L('fsent')); }catch(e){} }
 function flash(msg){ $('state').textContent=msg; document.body.style.outline='3px solid var(--gold)';
   setTimeout(()=>{ document.body.style.outline='none'; },600); }
+setInterval(()=>{ if(!LASTP||FIN||!LIVE||typeof LASTP.t!=='number') return;
+  const gap=Date.now()-LASTMSG; if(gap<600||gap>6000) return;
+  sH('meta','<b>'+(LASTP.st||'\u00b7')+'</b> \u00b7 '+fmtT(LASTP.t+gap/1000)); },1000);   // local tick between casts
 setInterval(()=>{ if(!LASTMSG) return;
   const gap=Date.now()-LASTMSG;
   if(!FIN&&gap>10000){ document.body.classList.add('stale'); LIVE=false;

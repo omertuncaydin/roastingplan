@@ -272,7 +272,7 @@
   <div id="liveTick" style="display:none;position:sticky;top:6px;z-index:60;background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:7px 12px 9px;margin-bottom:10px;font-size:13px;font-weight:500"></div>
   <div class="hide" id="view-listen">
     <button class="btn" style="width:100%;margin-bottom:12px" onclick="window.open('crack-listen.html','_blank')">Open Crack Listener &#8599;</button>
-    <div class="small" style="margin-bottom:10px" data-i18n="The Guide never hosts the roast; it watches it. Roast in the Listener; your coffees and results appear here.">The Guide never hosts the roast; it watches it. Roast in the Listener; your coffees and results appear here.</div>
+    <div class="small" style="margin-bottom:10px" data-i18n="The roast happens in the Listener; the record lives in the cloud. Start one and it appears here in seconds, live first, then as a row in your history.">The roast happens in the Listener; the record lives in the cloud. Start one and it appears here in seconds, live first, then as a row in your history.</div>
     <div id="rsList"></div>
     <div id="regList"></div>
   </div>
@@ -585,7 +585,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-19k</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-19l</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -2002,7 +2002,7 @@ const DICT={ tr:{
  "Cup":"Tadım","sensory · CVA descriptive + affective":"duyusal · CVA tanımlayıcı + duyuşsal",
  "Grade":"Sınıflandırma","green physical · CVA defect grading":"fiziksel (yeşil) · CVA kusur sınıflandırması",
  "Value Assessment":"Değerlendirme","Fit + Distinctiveness · the identity card":"Uyum + Ayırt Edicilik · kimlik kartı",
- "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz","Refresh app":"Uygulamayı yenile","Refresh":"Yenile","Roast history (cloud)":"Kavurma geçmişi (bulut)","Coffee":"Kahve","Date":"Tarih","Time":"Süre","Cracks":"Çatlak","Target":"Hedef","Forecast":"Öngörü","Goal":"Hedef","Est.":"Tahmin","Act.":"Sonuç","Map":"Harita","MAP":"HARİTALA","MAPPED":"HARİTALI","anchors":"çapalar","Goal: your decided target color. Est.: the engine forecast at drop. Act.: the measured ground color.":"Hedef: karar verdiğin renk. Tahmin: drop anındaki motor öngörüsü. Sonuç: ölçülen öğütülmüş renk.","Make this the map":"Bunu harita yap","Mapped from this roast. The Listener uses it on its next gauge tick.":"Bu kavurmadan haritalandı. Listener bir sonraki gösterge adımında kullanır.","cracks":"çatlak","stages":"evreler","unmap":"haritayı kaldır","Remove this map? The gauge locks for this coffee until you map again.":"Harita kaldırılsın mı? Yeniden haritalayana kadar bu kahvede gösterge kilitli kalır.",
+ "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz","Refresh app":"Uygulamayı yenile","Refresh":"Yenile","Roast history (cloud)":"Kavurma geçmişi (bulut)","Coffee":"Kahve","Date":"Tarih","Time":"Süre","Cracks":"Çatlak","Target":"Hedef","Forecast":"Öngörü","Goal":"Hedef","Est.":"Tahmin","Act.":"Sonuç","Cup this":"Bunu kupala","The roast happens in the Listener; the record lives in the cloud. Start one and it appears here in seconds, live first, then as a row in your history.":"Kavurma Listener'da olur; kayıt bulutta yaşar. Başlat, saniyeler içinde burada belirir: önce canlı kart, sonra geçmişinde bir satır.","Map":"Harita","MAP":"HARİTALA","MAPPED":"HARİTALI","anchors":"çapalar","Goal: your decided target color. Est.: the engine forecast at drop. Act.: the measured ground color.":"Hedef: karar verdiğin renk. Tahmin: drop anındaki motor öngörüsü. Sonuç: ölçülen öğütülmüş renk.","Make this the map":"Bunu harita yap","Mapped from this roast. The Listener uses it on its next gauge tick.":"Bu kavurmadan haritalandı. Listener bir sonraki gösterge adımında kullanır.","cracks":"çatlak","stages":"evreler","unmap":"haritayı kaldır","Remove this map? The gauge locks for this coffee until you map again.":"Harita kaldırılsın mı? Yeniden haritalayana kadar bu kahvede gösterge kilitli kalır.",
  // roast
  "Coffee (active)":"Kahve (aktif)","Machine":"Makine","FC time":"FC zamanı","Drop at":"Boşaltma","Agtron":"Agtron","Open the guide":"Rehberi aç","Start roasting":"Kavurmaya başla","Pick your coffee":"Kahveni seç","Add new coffee":"Yeni kahve ekle",
  "START":"BAŞLA","CINNAMON":"TARÇIN","FIRST CRACK (A0)":"İLK ÇITIRTI (A0)","DROP / FINISH":"BOŞALT / BİTİR","New roast":"Yeni kavurma",
@@ -2100,26 +2100,24 @@ async function loadRoastHist(){ try{
   if(!data||!data.length){ el.innerHTML=''; return; }
   HISTROWS=data;
   const CALM=(function(){ try{ return JSON.parse(localStorage.getItem('bsCal')||'{}'); }catch(e){ return {}; } })();
-  const th='<tr style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px"><th style="text-align:left;padding:4px 6px;font-weight:600">'+T('Coffee')+'</th><th style="text-align:center;padding:4px 6px;font-weight:600">'+T('Date')+'</th><th style="text-align:center;padding:4px 6px;font-weight:600">'+T('Goal')+'</th><th style="text-align:center;padding:4px 6px;font-weight:600">'+T('Est.')+'</th><th style="text-align:center;padding:4px 6px;font-weight:600">'+T('Act.')+'</th><th style="text-align:center;padding:4px 6px;font-weight:600">'+T('Map')+'</th></tr>';
+  const th='<tr style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px"><th style="text-align:left;padding:4px 6px;font-weight:600">'+T('Coffee')+'</th><th style="text-align:center;padding:4px 6px;font-weight:600">'+T('Date')+'</th><th style="text-align:center;padding:4px 6px;font-weight:600">'+T('Goal')+'</th><th style="text-align:center;padding:4px 6px;font-weight:600">'+T('Est.')+'</th><th style="text-align:center;padding:4px 6px;font-weight:600">'+T('Act.')+'</th></tr>';
   el.innerHTML='<div class="small" style="margin:14px 0 6px;font-weight:700">'+T('Roast history (cloud)')+' <span onclick="alert(T(\'Goal: your decided target color. Est.: the engine forecast at drop. Act.: the measured ground color.\'))" style="cursor:pointer">&#9432;</span></div>'
     +'<div style="border:1px solid var(--line);border-radius:10px;overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:380px">'+th
     +data.map((r,i)=>{ const dt=(r.roasted_at||'').slice(5,10);
-      const k2=String(r.coffee||'').trim().toLowerCase(), mapped=!!CALM[k2], canMap=!!(r.agtron&&r.dev_span&&r.tg);
-      const mb=mapped?('<button onclick="event.stopPropagation();rowMap('+i+')" style="background:var(--gold,#e6c14b);color:#1a1410;border:none;border-radius:999px;padding:3px 10px;font-size:10.5px;font-weight:700;cursor:pointer">'+T('MAPPED')+'</button>')
-        :(canMap?('<button onclick="event.stopPropagation();rowMap('+i+')" style="background:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:10.5px;font-weight:700;cursor:pointer">'+T('MAP')+'</button>'):'\u00b7');
+      const k2=String(r.coffee||'').trim().toLowerCase(), mapped=!!CALM[k2];
       return '<tr onclick="histTog('+i+')" style="border-top:1px solid var(--line);cursor:pointer">'
-        +'<td style="padding:7px 6px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>'+esc(r.coffee||'?')+'</b></td>'
+        +'<td style="padding:7px 6px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>'+esc(r.coffee||'?')+'</b>'+(mapped?' <span style="color:var(--gold,#e6c14b);font-size:9px" title="'+T('mapped')+'">\u25cf</span>':'')+'</td>'
         +'<td style="padding:7px 6px;text-align:center" class="small">'+dt+'</td>'
         +'<td style="padding:7px 6px;text-align:center" class="small">'+(r.target?Math.round(r.target):'\u00b7')+'</td>'
         +'<td style="padding:7px 6px;text-align:center">'+(r.proj_stop?Math.round(r.proj_stop):'\u00b7')+'</td>'
         +'<td style="padding:7px 6px;text-align:center;font-weight:700;color:var(--gold,#e6c14b)">'+(r.agtron?Math.round(r.agtron):'\u00b7')+'</td>'
-        +'<td style="padding:7px 6px;text-align:center">'+mb+'</td>'
-        +'</tr><tr id="histD'+i+'" style="display:none"><td colspan="6" style="padding:0"></td></tr>'; }).join('')+'</table></div>';
+        +'</tr><tr id="histD'+i+'" style="display:none"><td colspan="5" style="padding:0"></td></tr>'; }).join('')+'</table></div>';
 }catch(e){} }
 function histTog(i){ try{
   const tr=document.getElementById('histD'+i); if(!tr) return;
   if(tr.style.display!=='none'){ tr.style.display='none'; return; }
   const r=HISTROWS[i]; if(!r) return;
+  const mapped2=(function(){ try{ return !!JSON.parse(localStorage.getItem('bsCal')||'{}')[String(r.coffee||'').trim().toLowerCase()]; }catch(e){ return false; } })();
   const mm=r.t_total_s?Math.floor(r.t_total_s/60)+':'+('0'+Math.round(r.t_total_s%60)).slice(-2):'\u00b7';
   const a0=r.a0_s?Math.floor(r.a0_s/60)+':'+('0'+Math.round(r.a0_s%60)).slice(-2):'\u00b7';
   const stg=(r.stages&&r.stages.length)?r.stages.map(sg=>sg.s+' '+Math.floor(sg.t/60)+':'+('0'+Math.round(sg.t%60)).slice(-2)).join(' \u00b7 '):'\u00b7';
@@ -2132,23 +2130,37 @@ function histTog(i){ try{
     +'<div style="margin-top:4px">'+chip(dp,'\u0394 '+T('Est.'))+chip(dg,'\u0394 '+T('Goal'))+'</div>'
     +'<div class="small">DEV '+(r.dev_span?(Math.floor(r.dev_span/60)+':'+('0'+Math.round(r.dev_span%60)).slice(-2)):'\u00b7')+' \u00b7 tg '+(r.tg!=null?Math.round(r.tg):'\u00b7')+' \u00b7 q25 '+(r.q25!=null?r.q25+'s':'\u00b7')+' \u00b7 phi '+(r.ph_drop!=null?Math.round(r.ph_drop*100)+'%':'\u00b7')+(r.fc_ag?(' \u00b7 A0 '+Math.round(r.fc_ag)):'')+'</div>'
     +((r.anchors&&r.anchors.length)?('<div class="small">'+T('anchors')+': '+r.anchors.map(a=>'+'+Math.round(a.dt)+'s\u2192'+Math.round(a.ag)).join(' \u00b7 ')+'</div>'):'')
+    +'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">'
+    +(mapped2?('<button class="btn" style="width:auto;padding:7px 14px;margin:0;font-size:12px;background:none;border:1px solid var(--warn,#e24b4a);color:var(--warn,#e24b4a)" onclick="event.stopPropagation();rowMap('+i+')">'+T('unmap')+'</button>')
+      :(r.agtron?('<button class="btn" style="width:auto;padding:7px 14px;margin:0;font-size:12px;background:var(--accent2,#3c7a5a)" onclick="event.stopPropagation();rowMap('+i+')">'+T('Make this the map')+'</button>'):''))
+    +'<button class="btn" style="width:auto;padding:7px 14px;margin:0;font-size:12px;background:var(--accent,#c98a3c);color:#1a1410" onclick="event.stopPropagation();cupFromRow('+i+')">'+((r.anchors&&r.anchors.length)?T('Cup these'):T('Cup this'))+'</button>'
+    +'</div>'
     +((r.machine||r.batch_g)?('<div class="small">'+esc(r.machine||'')+(r.batch_g?(' \u00b7 '+r.batch_g+' g'):'')+'</div>'):'')
     +(r.note?('<div class="small" style="color:var(--gold,#e6c14b)">'+esc(r.note)+'</div>'):'')
     +'</div>';
   tr.style.display='table-row';
 }catch(e){} }
 function mapFromRow(i){ try{
-  const r=HISTROWS[i]; if(!r||!r.coffee||!r.agtron||!r.dev_span||!r.tg) return;
+  const r=HISTROWS[i]; if(!r||!r.coffee||!r.agtron) return;   // color is the only hard requirement; pace refs ride along when the row has them
   const k=String(r.coffee).trim().toLowerCase(); if(!k) return;
   const m=JSON.parse(localStorage.getItem('bsCal')||'{}');
   const prev=m[k]||{};
   const e={ ...prev, agtron:Math.round(r.agtron), date:(r.roasted_at||'').slice(0,10),
-    devSpan:r.dev_span, tg:r.tg, q25:(r.q25!=null?r.q25:prev.q25), phDrop:(r.ph_drop!=null?r.ph_drop:prev.phDrop),
+    devSpan:(r.dev_span!=null?r.dev_span:prev.devSpan), tg:(r.tg!=null?r.tg:prev.tg), q25:(r.q25!=null?r.q25:prev.q25), phDrop:(r.ph_drop!=null?r.ph_drop:prev.phDrop),
     target:(r.target!=null?r.target:prev.target), src:'cloud-row' };
   if(r.fc_ag!=null) e.fc_ag=r.fc_ag;
   if(r.anchors&&r.anchors.length) e.anchors=r.anchors;
   m[k]=e; localStorage.setItem('bsCal',JSON.stringify(m)); renderRegList();
   alert(T('Mapped from this roast. The Listener uses it on its next gauge tick.'));
+}catch(e2){} }
+function cupFromRow(i){ try{
+  const r=HISTROWS[i]; if(!r) return; const nm=String(r.coffee||'').trim()||'?';
+  if(r.anchors&&r.anchors.length){
+    FLIGHT={ date:(r.roasted_at||'').slice(0,10), purpose:('Roast '+nm).trim(),
+      coffees: r.anchors.map(a=>({sample:(nm+' S@'+Math.round(a.dt)+'s'+(a.ag?(' '+Math.round(a.ag)+'A'):'')), cup:blankCup()}))
+        .concat([{sample:nm, cup:blankCup()}]) };
+    show('flight');
+  } else { cup=blankCup(); cup.sample=nm; ensureBean(nm); show('cup'); }
 }catch(e2){} }
 function rowMap(i){ try{
   const r=HISTROWS[i]; if(!r) return;
@@ -2200,7 +2212,17 @@ function lwRender(){ const el=document.getElementById('liveTick'), d=LWLAST; if(
   clearTimeout(el._h); el._h=setTimeout(()=>{ el.style.display='none'; },15000);
 }
 try{ const lt=document.getElementById('liveTick'); if(lt) lt.onclick=()=>{ LWEXP=!LWEXP; lwRender(); }; }catch(e){}
-try{ new BroadcastChannel('cnLive').onmessage=e=>{ LWLAST=e.data||{}; lwRender(); }; }catch(e){}   // the Listener broadcasts; the Guide only watches (one-way by doctrine)
+let LWT0=null, LWAT=0, LWSEEN=0;
+try{ new BroadcastChannel('cnLive').onmessage=e=>{ const d=e.data||{};
+  if(LWLAST&&typeof d.t==='number'&&typeof LWLAST.t==='number'&&d.t+5<LWLAST.t) LWSEEN=0;   // clock rewound = a new roast began
+  LWLAST=d; if(typeof d.t==='number') LWT0=d.t; LWAT=Date.now(); lwRender();
+  if(!LWSEEN&&!d.fin){ LWSEEN=1; setTimeout(()=>{ try{ loadRoastHist(); }catch(e2){} },2500); }   // skeleton row lands at start; fetch it
+  if(d.fin&&LWSEEN!==2){ LWSEEN=2; setTimeout(()=>{ try{ loadRoastHist(); }catch(e2){} },1500); }   // drop update lands at fin; fetch it
+}; }catch(e){}   // the Listener broadcasts; the Guide only watches (one-way by doctrine)
+setInterval(()=>{ try{ if(!LWLAST||LWLAST.fin||LWT0==null) return;
+  const gap=(Date.now()-LWAT)/1000; if(gap<0.6||gap>6) return;
+  LWLAST.t=LWT0+gap; lwRender();   // the clock ticks locally between casts; payloads re-anchor it
+}catch(e){} },1000);
 const SEC_INFO={ listen:['Crack Listener','the roasting instrument · the beans speak'], roast:['Class Learning Workshop','graph, RoR and stage wheels · teaching instruments'], cup:['Cup','sensory · CVA descriptive + affective'], grade:['Grade','green physical · CVA defect grading'], value:['Value Assessment','Fit + Distinctiveness · the identity card'], account:['Account','your membership & privacy'] };
 function groupOf(v){ return ROAST_GROUP.includes(v)?'roast':v; }
 const GROUP_COLORS={listen:'#e6c14b',roast:'#c98a3c',cup:'#3c8a9a',grade:'#7d9b57',value:'#e6c14b',account:'#8a6d3b'};   // section-signature tints: lit only on the active tab
