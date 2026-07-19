@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19h</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19i</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1097,7 +1097,7 @@ function roastCount(){ return +(localStorage.getItem('bsRoastN')||0); }
 let CLOUDEMAIL=null;
 function refreshPlanUI(){ const p=planActive(), el=$('planTag'); if(!el) return;
   const adm=(document.body.classList.contains('admin')&&(!CLOUDEMAIL||CLOUDEMAIL==='omer_aydin@coffeenutz.net'))?' · +ADMIN':'';
-  el.textContent=(p?(planLabel(p.tier)+' · '+p.until)
+  el.textContent=(p?(planLabel(p.tier)+((p.until&&p.until<'2099-01-01')?(' · '+p.until):''))
     :planLabel('free'))+adm; }
 function grantPlan(tier,months,code){ const u=new Date(); u.setMonth(u.getMonth()+months);
   localStorage.setItem('bsPlan',JSON.stringify({tier,until:u.toISOString().slice(0,10),code}));
@@ -1131,7 +1131,7 @@ function showPaywall(feature){
   const curT=p?normTier(p.tier):'free';
   const pmark=t=>curT===t?' <span style="color:var(--gold);font-weight:800">· '+(tr?'Mevcut Plan':'Current Plan')+'</span>':'';
   $('modalBox').innerHTML='<h1 style="margin:0 0 8px;font-size:17px">'+(tr?'Planlar':'Plans')+'</h1>'
-   +(p?('<div class="hint" style="font-size:13px;margin:0 0 6px">'+(tr?'Planın: ':'Your plan: ')+planLabel(p.tier)+' · '+p.until+'</div>'):'')
+   +(p?('<div class="hint" style="font-size:13px;margin:0 0 6px">'+(tr?'Planın: ':'Your plan: ')+planLabel(p.tier)+((p.until&&p.until<'2099-01-01')?(' · '+p.until):'')+'</div>'):'')
    +'<div class="hint" style="font-size:12.5px;margin:0;color:var(--ink)">'+(tr?'Enstrüman ücretsiz. Hafıza hizmettir. Zanaat yüz yüze öğretilir.':'The instrument is free. The memory is the service. The craft is taught in person.')+'</div>'
    +foundingBanner(tr)
    +'<table style="width:100%;border-collapse:collapse;font-size:11.5px;margin-top:10px;text-align:left;table-layout:fixed">'
@@ -1755,7 +1755,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-19h';
+const APPVER='v2026-07-19i';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
