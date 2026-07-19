@@ -74,7 +74,7 @@ const SU='https://efjvfggwnhqkunjvoyjb.supabase.co';
 const AK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA';
 const KEY=new URLSearchParams(location.search).get('k');
 const ARC=213.6;
-let LASTMSG=0, FIN=false, LIVE=false, DROPARM=0, LASTT=-1;
+let LASTMSG=0, FIN=false, LIVE=false, DROPARM=0, LASTT=-1, CTL=1;
 function cmd(a){ return fetch(SU+'/realtime/v1/api/broadcast',{method:'POST',headers:{apikey:AK,authorization:'Bearer '+AK,'content-type':'application/json'},
   body:JSON.stringify({messages:[{topic:'cnw-'+KEY, event:'cmd', payload:{a}, private:false}]})}); }
 function render(p){
@@ -84,6 +84,8 @@ function render(p){
     document.body.classList.remove('a0pre','a0now','tpre','tnow'); DROPARM=0;
     $('btnD').classList.remove('armed'); $('dHint').textContent='2x dokun'; }
   if(typeof p.t==='number') LASTT=p.t;
+  if('ctl' in p) CTL=p.ctl?1:0;
+  ['btnS','btnD','btnAgain','btnFresh'].forEach(id=>{ const b=$(id); if(b) b.style.opacity=CTL?'':'0.45'; });
   FIN=!!p.fin; LIVE=!FIN;
   if(FIN) document.body.classList.remove('a0pre','a0now','tpre','tnow');   // no alarm may outlive the roast, on the wrist either
   $('btns').style.display=FIN?'none':'flex';
@@ -109,9 +111,10 @@ function render(p){
 window.render=render;
 function fmtT(t){ return Math.floor(t/60)+':'+('0'+Math.floor(t%60)).slice(-2); }
 function fresh(){ return LIVE&&Date.now()-LASTMSG<=5000; }
-function sendSample(){ if(!fresh()) return;
+function ctlOk(){ if(CTL===0){ flash('uzaktan kontrol · Roaster planı'); return false; } return true; }
+function sendSample(){ if(!fresh()||!ctlOk()) return;
   try{ cmd('sample').catch(()=>{}); flash('numune gönderildi ✓'); }catch(e){} }
-function tapDrop(){ if(!fresh()) return;
+function tapDrop(){ if(!fresh()||!ctlOk()) return;
   const now=Date.now();
   if(now-DROPARM>2500){ DROPARM=now; $('btnD').classList.add('armed'); $('dHint').textContent='emin misin? tekrar';
     setTimeout(()=>{ if(Date.now()-DROPARM>=2400){ $('btnD').classList.remove('armed'); $('dHint').textContent='2x dokun'; } },2600); return; }
@@ -122,8 +125,8 @@ function flash(msg){ $('state').textContent=msg; document.body.style.outline='3p
 function stripTap(){ const b=document.body.classList;
   if(b.contains('a0now')||b.contains('a0pre')) sendSample();
   else if(b.contains('tnow')||b.contains('tpre')) tapDrop(); }
-function sendAgain(){ if(!FIN) return; try{ cmd('again').catch(()=>{}); flash('başlat gönderildi ✓'); }catch(e){} }
-function sendFresh(){ if(!FIN) return; try{ cmd('fresh').catch(()=>{}); flash('yeni kahve · telefonda isim seç'); }catch(e){} }
+function sendAgain(){ if(!FIN||!ctlOk()) return; try{ cmd('again').catch(()=>{}); flash('başlat gönderildi ✓'); }catch(e){} }
+function sendFresh(){ if(!FIN||!ctlOk()) return; try{ cmd('fresh').catch(()=>{}); flash('yeni kahve · telefonda isim seç'); }catch(e){} }
 setInterval(()=>{ if(!LASTMSG) return;
   const gap=Date.now()-LASTMSG;
   if(!FIN&&gap>10000){ document.body.classList.add('stale'); LIVE=false;

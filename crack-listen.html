@@ -70,7 +70,7 @@ body.st-done #btn{display:none}
   body.st-live #tl{height:320px}
 }
 /* DONE: results first, then record/save, log for fp ticking. */
-body.st-done #cGauge{order:1} body.st-done #cCapture{order:2} body.st-done #cTimeline{order:3} body.st-done #cStats{order:4} body.st-done #cLog{order:5} body.st-done #cTune{order:6} body.st-done #btn{order:7} body.st-done #err{order:7}
+body.st-done #cGauge{order:1} body.st-done #agTop{order:2} body.st-done #cCapture{order:3} body.st-done #cTimeline{order:4} body.st-done #cStats{order:5} body.st-done #cLog{order:6} body.st-done #cTune{order:7} body.st-done #btn{order:8} body.st-done #err{order:8}
 body.st-done #cGain{display:none}
 body.st-done #cCapture{border:1.5px solid var(--accent)}
 details.fold{background:var(--panel);border-radius:12px;padding:10px 14px;margin-bottom:12px}
@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18t</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-18u</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -440,6 +440,7 @@ function wcNote(){ try{ const bc=((badgeMap()[badgeKey()]||{}).cue||'').trim(); 
   const e2=lm[(cName.value||'').trim().toLowerCase()]; return (e2&&e2.note)?String(e2.note).slice(0,80):''; }catch(e){ return ''; } }
 function wcPub(payload){ if(!WCON||performance.now()-LIVEPUB_T<=1000) return; LIVEPUB_T=performance.now();
   try{ const nt=wcNote(); if(nt) payload.nt=nt; }catch(e){}
+  try{ payload.ctl=wcCtl()?1:0; }catch(e){}
   try{ fetch(SUPA_URL+'/realtime/v1/api/broadcast',{method:'POST',headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY,'content-type':'application/json'},
     body:JSON.stringify({messages:[{topic:'cnw-'+WCKEY(), event:'live', payload, private:false}]})})
     .then(r=>{ const vv=$('wcV'); if(vv&&WCON) vv.textContent=(LANG==='tr'?'açık':'on')+' · '+r.status; })
@@ -456,9 +457,13 @@ function wcFresh(){ try{ cName.value=''; $('mCoffee').value=''; $('finalCall').t
   try{ renderNameplate(); }catch(e){} try{ updateGauge(); }catch(e){}
   setState('st-setup'); window.scrollTo({top:0,behavior:'smooth'}); cName.focus(); }catch(e){}
   toast(LANG==='tr'?'Yeni kahve: ismini seç.':'New coffee: name it.'); }
-let WCCH=null;
+let WCCH=null, WCDENY_T=0;
+function wcCtl(){ return !!planActive(); }
+function wcDeny(){ if(performance.now()-WCDENY_T<5000) return; WCDENY_T=performance.now();
+  toast(LANG==='tr'?'Watch uzaktan kontrolü Roaster planına dahil.':'Watch remote control is part of the Roaster plan.'); }
 function wcCmdSub(on){ try{ if(!SB) return;
   if(on&&!WCCH){ WCCH=SB.channel('cnw-'+WCKEY()).on('broadcast',{event:'cmd'},m=>{ try{
+      if(m&&m.payload&&!wcCtl()){ wcDeny(); return; }
       if(running&&m&&m.payload&&m.payload.a==='sample'){ markSample(); toast(LANG==='tr'?'Watch: numune işaretlendi.':'Watch: sample marked.'); }
       if(running&&m&&m.payload&&m.payload.a==='drop'){ toast(LANG==='tr'?'Watch: DROP komutu.':'Watch: DROP command.'); stop(); }
       if(!running&&m&&m.payload&&m.payload.a==='again'){ toast(LANG==='tr'?'Watch: aynı kahve, başlıyor…':'Watch: same coffee, starting…'); try{ start().catch(()=>{}); }catch(e){} }
@@ -576,7 +581,7 @@ function stop(){
   STOPPROJ=LASTPROJ; STOPBORROWED=PROJBORROWED;   // freeze projection AND its provenance at the drop; a rename later cannot launder a borrowed guess
   try{ if(WCON){ const lst=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
     fetch(SUPA_URL+'/realtime/v1/api/broadcast',{method:'POST',headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY,'content-type':'application/json'},
-      body:JSON.stringify({messages:[{topic:'cnw-'+WCKEY(), event:'live', payload:{c:(cName.value||'').trim()||'?', st:lst, n:valid().length, proj:STOPPROJ||null, band:(ENGINE&&isFinite(ENGINE.band))?Math.round(ENGINE.band*2)/2:null, t:Math.round(STOPT), w:0, fin:1}, private:false}]})}).catch(()=>{}); } }catch(e){}
+      body:JSON.stringify({messages:[{topic:'cnw-'+WCKEY(), event:'live', payload:{c:(cName.value||'').trim()||'?', st:lst, n:valid().length, proj:STOPPROJ||null, band:(ENGINE&&isFinite(ENGINE.band))?Math.round(ENGINE.band*2)/2:null, t:Math.round(STOPT), w:0, fin:1, ctl:(wcCtl()?1:0)}, private:false}]})}).catch(()=>{}); } }catch(e){}
   try{ if(!planActive() && valid().length>=10){ localStorage.setItem('bsRoastN',String(roastCount()+1)); refreshPlanUI(); } }catch(e){}   // a "roast" = 10+ real cracks; test taps stay free
   $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):'';
   if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('dlStory').style.display='block'; $('metaBox').style.display='block'; $('agTop').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block'; $('nextRow').style.display='flex'; if(!$('mCoffee').value) $('mCoffee').value=cName.value;
@@ -1722,7 +1727,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-18t';
+const APPVER='v2026-07-18u';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
