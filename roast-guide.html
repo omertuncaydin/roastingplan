@@ -274,6 +274,7 @@
     <button class="btn" style="width:100%;margin-bottom:12px" onclick="window.open('crack-listen.html','_blank')">Open Crack Listener &#8599;</button>
     <div class="small" style="margin-bottom:10px" data-i18n="The Guide never hosts the roast; it watches it. Roast in the Listener; your coffees and results appear here.">The Guide never hosts the roast; it watches it. Roast in the Listener; your coffees and results appear here.</div>
     <div id="regList"></div>
+    <div id="rsList"></div>
   </div>
   <div class="subnav hide" id="subnav">
     <button id="nav-roast" class="on" onclick="show('roast')" data-i18n="Guide">Guide</button>
@@ -584,7 +585,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-19e</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-19f</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1921,7 +1922,7 @@ function showPlanInfo(){ const tr=(LANG==='tr'); const cur=planLabelG(MYPLAN); c
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast kayıtların bulutta kaydedilir ve saklanır.':'Roast records saved and kept in the cloud.')+'</td></tr>'
    +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Cupper</b> <span style="font-size:10.5px;opacity:.75">'+(tr?'Yalnız Q sınıfında kazanılır.':'Earned in Q class only.')+'</span></td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?"Roaster'daki her şey + numune çekimlerin tadım seansına dönüşür.":'Everything in Roaster + sample pulls become cupping sessions.')+'</td>'
-   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?"Roaster'daki her şey + Roast · Cup · Grade: her şey bulutta kayıt altında.":'Everything in Roaster + Roast · Cup · Grade: everything is recorded.')+'</td></tr>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?"Roaster'daki her şey + Roast · Cup · Grade: her şey bulutta kayıt altında.":'Everything in Roaster + Roast · Cup · Grade: everything recorded in the cloud.')+'</td></tr>'
    +'</table>'
    +gClassStrip(tr)
    +'<div style="text-align:center"><span style="display:inline-block;border:1px solid var(--accent2);color:var(--accent2);border-radius:14px;padding:4px 10px;font-weight:700;margin:8px 4px 0 4px;font-size:11px">'+(tr?'Cupper, Q yenilemenle yenilenir.':'Cupper renews with your Q recalibration.')+'</span></div>'
@@ -2001,7 +2002,7 @@ const DICT={ tr:{
  "Cup":"Tadım","sensory · CVA descriptive + affective":"duyusal · CVA tanımlayıcı + duyuşsal",
  "Grade":"Sınıflandırma","green physical · CVA defect grading":"fiziksel (yeşil) · CVA kusur sınıflandırması",
  "Value Assessment":"Değerlendirme","Fit + Distinctiveness · the identity card":"Uyum + Ayırt Edicilik · kimlik kartı",
- "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz","Refresh app":"Uygulamayı yenile","Refresh":"Yenile",
+ "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz","Refresh app":"Uygulamayı yenile","Refresh":"Yenile","Roast history (cloud)":"Kavurma geçmişi (bulut)",
  // roast
  "Coffee (active)":"Kahve (aktif)","Machine":"Makine","FC time":"FC zamanı","Drop at":"Boşaltma","Agtron":"Agtron","Open the guide":"Rehberi aç","Start roasting":"Kavurmaya başla","Pick your coffee":"Kahveni seç","Add new coffee":"Yeni kahve ekle",
  "START":"BAŞLA","CINNAMON":"TARÇIN","FIRST CRACK (A0)":"İLK ÇITIRTI (A0)","DROP / FINISH":"BOŞALT / BİTİR","New roast":"Yeni kavurma",
@@ -2088,7 +2089,22 @@ function renderRegList(){
       +q.map((qe,i)=>'<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px"><span><b>'+esc(qe.coffee)+'</b> <span class="small">'+esc(qe.date)+' \u00b7 '+qe.samples.length+' '+T('samples')+(qe.samples.some(x=>x.st)?(' \u00b7 '+qe.samples.map(x=>x.st).filter(Boolean).join('/')):'')+'</span></span><button class="btn" style="width:auto;padding:8px 12px;margin:0" onclick="cupQueued('+i+')">'+T('Cup these')+'</button></div>').join('');
   }catch(e){}
   el.innerHTML=h;
+  loadRoastHist();
 }
+async function loadRoastHist(){ try{
+  const el=document.getElementById('rsList'); if(!el||!sb) return;
+  const {data:{session}}=await sb.auth.getSession(); if(!session){ el.innerHTML=''; return; }
+  const {data}=await sb.from('roast_sessions').select('coffee,roasted_at,t_total_s,n_cracks,proj_stop,agtron,target').order('roasted_at',{ascending:false}).limit(20);
+  if(!data||!data.length){ el.innerHTML=''; return; }
+  el.innerHTML='<div class="small" style="margin:14px 0 6px;font-weight:700">'+T('Roast history (cloud)')+'</div>'
+    +data.map(r=>{ const d=(r.roasted_at||'').slice(0,10), mm=r.t_total_s?Math.floor(r.t_total_s/60)+':'+('0'+Math.round(r.t_total_s%60)).slice(-2):'\u00b7';
+      return '<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px;display:flex;gap:10px;align-items:baseline;font-size:13px">'
+        +'<b style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.coffee||'?')+'</b>'
+        +'<span class="small">'+d+'</span><span class="small">'+mm+'</span>'
+        +'<span class="small">'+(r.n_cracks||0)+'c</span>'
+        +'<span>'+(r.proj_stop?('~'+Math.round(r.proj_stop)):'\u00b7')+(r.agtron?(' \u2192 <b style="color:var(--gold,#e6c14b)">'+Math.round(r.agtron)+'</b>'):'')+'</span>'
+        +'</div>'; }).join('');
+}catch(e){} }
 function cupQueued(i){ try{ const q=JSON.parse(localStorage.getItem('cnCupQueue')||'[]'); const qe=q[i]; if(!qe) return;
   FLIGHT={ date:qe.date, purpose:('Listener '+qe.coffee).trim(),
     coffees: qe.samples.map(sm=>({sample:(qe.coffee+(sm.st?(' '+sm.st):'')+' S@'+Math.round(sm.t-(qe.a0||0))+'s'+(sm.ag?(' '+sm.ag+'A'):'')), cup:blankCup()})) };
