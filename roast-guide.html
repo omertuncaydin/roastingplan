@@ -258,13 +258,12 @@
   </div>
 
   <div class="top">
-    <a href="#" onclick="show('roast');return false;" style="text-decoration:none;color:inherit;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent" title="Home"><div class="logoName" style="font-size:22px"><span class="lr">CoffeeNutz<sup class="rmark">®</sup></span> <span class="lg">Guide</span></div></a>
+    <a href="#" onclick="show('listen');return false;" style="text-decoration:none;color:inherit;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent" title="Home"><div class="logoName" style="font-size:22px"><span class="lr">CoffeeNutz<sup class="rmark">®</sup></span> <span class="lg">Guide</span></div></a>
     <div class="nav">
-      <button id="m-roast" class="on" onclick="show('roast')" title="Roast">R</button>
+      <button id="m-roast" class="on" onclick="show('listen')" title="Roast">R</button>
       <button id="m-cup" onclick="show('cup')" title="Cup">C</button>
       <button id="m-grade" onclick="show('grade')" title="Grade">G</button>
       <button id="m-value" onclick="show('value')" title="Value Assessment">V</button>
-      <button id="m-listen" onclick="show('listen')" title="Crack Listener">L</button>
       <button id="m-account" onclick="show('account')" title="Account">A</button>
     </div>
   </div>
@@ -273,6 +272,7 @@
   <div class="hide" id="view-listen">
     <button class="btn" style="width:100%;margin-bottom:12px" onclick="window.open('crack-listen.html','_blank')">Open Crack Listener &#8599;</button>
     <div class="small" style="margin-bottom:10px" data-i18n="The roast happens in the Listener; the record lives in the cloud. Start one and it appears here in seconds, live first, then as a row in your history.">The roast happens in the Listener; the record lives in the cloud. Start one and it appears here in seconds, live first, then as a row in your history.</div>
+    <button class="chip sub" style="margin-bottom:10px" onclick="show('roast')"><span data-i18n="Roast Class Lab">Roast Class Lab</span> &#8594;</button>
     <div style="display:flex;justify-content:flex-end;margin-bottom:4px"><button class="chip sub" onclick="cloudRefresh()" data-i18n="Refresh from cloud">Refresh from cloud</button></div>
     <div id="rsList"></div>
     <div id="regList"></div>
@@ -589,7 +589,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-20b</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-20c</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -685,7 +685,7 @@
     <div class="small" style="margin-top:10px">Your recipes, roast history, cuppings and gradings are private to this account. Nobody else can see them.</div>
   </div>
 
-  <div class="pagelogo" id="pageLogo"><a href="#" onclick="show('roast');return false" title="Home"><img src="coffeenutz-turtle.png" alt="CoffeeNutz" width="46" height="46"></a></div>
+  <div class="pagelogo" id="pageLogo"><a href="#" onclick="show('listen');return false" title="Home"><img src="coffeenutz-turtle.png" alt="CoffeeNutz" width="46" height="46"></a></div>
 
 <script>
 // ===================== recipe store (v2: + active, FC in string, stage code) =====================
@@ -2027,7 +2027,7 @@ const DICT={ tr:{
  "Cup":"Tadım","sensory · CVA descriptive + affective":"duyusal · CVA tanımlayıcı + duyuşsal",
  "Grade":"Sınıflandırma","green physical · CVA defect grading":"fiziksel (yeşil) · CVA kusur sınıflandırması",
  "Value Assessment":"Değerlendirme","Fit + Distinctiveness · the identity card":"Uyum + Ayırt Edicilik · kimlik kartı",
- "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz","Refresh app":"Uygulamayı yenile","Refresh":"Yenile","Roast history (cloud)":"Kavurma geçmişi (bulut)","Coffee":"Kahve","Date":"Tarih","Time":"Süre","Cracks":"Çatlak","Target":"Hedef","Forecast":"Öngörü","Goal":"Hedef","Est.":"Tahmin","Act.":"Sonuç","Cup this":"Bunu kupala","Refresh from cloud":"Buluttan yenile","Edit & map":"Düzenle ve haritala","Save & map":"Kaydet ve haritala","Cancel":"Vazgeç","A0 color":"A0 rengi","Sample colors":"Numune renkleri","Note":"Not","Enter the measured color first.":"Önce ölçülen rengi gir.","Delete row":"Satırı sil","Delete this record from the cloud?":"Bu kayıt buluttan silinsin mi?","sure? tap again":"emin misin? tekrar dokun","Delete failed":"Silinemedi","Ground color must be darker (lower) than the A0 color.":"Sonuç rengi A0 renginden koyu (daha düşük sayı) olmalı.","sample time in the roast":"kavurmadaki numune zamanı","The roast happens in the Listener; the record lives in the cloud. Start one and it appears here in seconds, live first, then as a row in your history.":"Kavurma Listener'da olur; kayıt bulutta yaşar. Başlat, saniyeler içinde burada belirir: önce canlı kart, sonra geçmişinde bir satır.","Map":"Harita","MAP":"HARİTALA","MAPPED":"HARİTALI","anchors":"çapalar","Goal: your decided target color. Est.: the engine forecast at drop. Act.: the measured ground color.":"Hedef: karar verdiğin renk. Tahmin: drop anındaki motor öngörüsü. Sonuç: ölçülen öğütülmüş renk.","Make this the map":"Bunu harita yap","Mapped from this roast. The Listener uses it on its next gauge tick.":"Bu kavurmadan haritalandı. Listener bir sonraki gösterge adımında kullanır.","cracks":"çatlak","stages":"evreler","unmap":"haritayı kaldır","Remove this map? The gauge locks for this coffee until you map again.":"Harita kaldırılsın mı? Yeniden haritalayana kadar bu kahvede gösterge kilitli kalır.",
+ "Account":"Hesap","your membership & privacy":"üyeliğiniz ve gizliliğiniz","Refresh app":"Uygulamayı yenile","Refresh":"Yenile","Roast history (cloud)":"Kavurma geçmişi (bulut)","Coffee":"Kahve","Date":"Tarih","Time":"Süre","Cracks":"Çatlak","Target":"Hedef","Forecast":"Öngörü","Goal":"Hedef","Est.":"Tahmin","Act.":"Sonuç","Cup this":"Bunu kupala","Roast Class Lab":"Kavurma Sınıfı Lab","Refresh from cloud":"Buluttan yenile","Edit & map":"Düzenle ve haritala","Save & map":"Kaydet ve haritala","Cancel":"Vazgeç","A0 color":"A0 rengi","Sample colors":"Numune renkleri","Note":"Not","Enter the measured color first.":"Önce ölçülen rengi gir.","Delete row":"Satırı sil","Delete this record from the cloud?":"Bu kayıt buluttan silinsin mi?","sure? tap again":"emin misin? tekrar dokun","Delete failed":"Silinemedi","Ground color must be darker (lower) than the A0 color.":"Sonuç rengi A0 renginden koyu (daha düşük sayı) olmalı.","sample time in the roast":"kavurmadaki numune zamanı","The roast happens in the Listener; the record lives in the cloud. Start one and it appears here in seconds, live first, then as a row in your history.":"Kavurma Listener'da olur; kayıt bulutta yaşar. Başlat, saniyeler içinde burada belirir: önce canlı kart, sonra geçmişinde bir satır.","Map":"Harita","MAP":"HARİTALA","MAPPED":"HARİTALI","anchors":"çapalar","Goal: your decided target color. Est.: the engine forecast at drop. Act.: the measured ground color.":"Hedef: karar verdiğin renk. Tahmin: drop anındaki motor öngörüsü. Sonuç: ölçülen öğütülmüş renk.","Make this the map":"Bunu harita yap","Mapped from this roast. The Listener uses it on its next gauge tick.":"Bu kavurmadan haritalandı. Listener bir sonraki gösterge adımında kullanır.","cracks":"çatlak","stages":"evreler","unmap":"haritayı kaldır","Remove this map? The gauge locks for this coffee until you map again.":"Harita kaldırılsın mı? Yeniden haritalayana kadar bu kahvede gösterge kilitli kalır.",
  // roast
  "Coffee (active)":"Kahve (aktif)","Machine":"Makine","FC time":"FC zamanı","Drop at":"Boşaltma","Agtron":"Agtron","Open the guide":"Rehberi aç","Start roasting":"Kavurmaya başla","Pick your coffee":"Kahveni seç","Add new coffee":"Yeni kahve ekle",
  "START":"BAŞLA","CINNAMON":"TARÇIN","FIRST CRACK (A0)":"İLK ÇITIRTI (A0)","DROP / FINISH":"BOŞALT / BİTİR","New roast":"Yeni kavurma",
@@ -2323,7 +2323,7 @@ setInterval(()=>{ try{ if(!LWLAST||LWLAST.fin||LWT0==null) return;
   const gap=(Date.now()-LWAT)/1000; if(gap<0.6||gap>6) return;
   LWLAST.t=LWT0+gap; lwRender();   // the clock ticks locally between casts; payloads re-anchor it
 }catch(e){} },1000);
-const SEC_INFO={ listen:['Crack Listener','the roasting instrument · the beans speak'], roast:['Roast Class Learning Workshop','graph, RoR and stage wheels · teaching instruments'], cup:['Cup','sensory · CVA descriptive + affective'], grade:['Grade','green physical · CVA defect grading'], value:['Value Assessment','Fit + Distinctiveness · the identity card'], account:['Account','your membership & privacy'] };
+const SEC_INFO={ listen:['Roast','the Listener is the instrument · records and maps live in the cloud'], roast:['Roast Class Learning Workshop','graph, RoR and stage wheels · teaching instruments'], cup:['Cup','sensory · CVA descriptive + affective'], grade:['Grade','green physical · CVA defect grading'], value:['Value Assessment','Fit + Distinctiveness · the identity card'], account:['Account','your membership & privacy'] };
 function groupOf(v){ return ROAST_GROUP.includes(v)?'roast':v; }
 const GROUP_COLORS={listen:'#e6c14b',roast:'#c98a3c',cup:'#3c8a9a',grade:'#7d9b57',value:'#e6c14b',account:'#8a6d3b'};   // section-signature tints: lit only on the active tab
 function show(v){
@@ -2331,7 +2331,7 @@ function show(v){
   ['roast','cup','grade','value','recipes','hist','rules','account','flight','listen'].forEach(x=>{ const el=document.getElementById('view-'+x); if(el) el.classList.toggle('hide',x!==v); });
   if(v==='listen') renderRegList();
   const g=(v==='flight')?'cup':groupOf(v);
-  [['m-roast','roast'],['m-cup','cup'],['m-grade','grade'],['m-value','value'],['m-listen','listen'],['m-account','account']].forEach(([id,grp])=>{ const b=document.getElementById(id); if(!b) return; const on=(grp===g); b.classList.toggle('on',on); const c=GROUP_COLORS[grp]; if(on){ b.style.background=c; b.style.borderColor=c; b.style.color='#1a1410'; } else { b.style.background=''; b.style.borderColor=''; b.style.color=''; } });
+  [['m-roast','roast'],['m-cup','cup'],['m-grade','grade'],['m-value','value'],['m-account','account']].forEach(([id,grp])=>{ const b=document.getElementById(id); if(!b) return; const on=(grp===g)||(id==='m-roast'&&g==='listen'); b.classList.toggle('on',on); const c=GROUP_COLORS[on?g:grp]; if(on){ b.style.background=c; b.style.borderColor=c; b.style.color='#1a1410'; } else { b.style.background=''; b.style.borderColor=''; b.style.color=''; } });
   const st=document.getElementById('secTitle'), info=SEC_INFO[g]; if(st&&info){ const tc=GROUP_COLORS[g]||'var(--ink)'; st.innerHTML=`<span class="st" style="color:${tc}">${T(info[0])}</span><span class="ss">${T(info[1])}</span>`; }   // section name echoes the active tab's tint
   const sub=document.getElementById('subnav'); if(sub) sub.classList.toggle('hide',g!=='roast');   // sub-tabs only emerge under Roast
   ROAST_GROUP.forEach(x=>{ const b=document.getElementById('nav-'+x); if(b) b.classList.toggle('on',x===v); });
@@ -2525,7 +2525,7 @@ function initApp(){
   try{ if(typeof supabase!=='undefined') sb=supabase.createClient(SUPA_URL, SUPA_KEY); }catch(e){ console.warn('sb init',e); }
   try{ if(sb&&sb.auth&&sb.auth.onAuthStateChange) sb.auth.onAuthStateChange((evt)=>{ if(evt==='PASSWORD_RECOVERY'){ showLogin(); const rb=document.getElementById('recoveryBox'); if(rb) rb.classList.remove('hide'); const lm=document.getElementById('loginMsg'); if(lm){ lm.style.color='var(--accent2)'; lm.textContent='Enter a new password below to finish resetting.'; } } }); }catch(e){}
   bean.addEventListener('change',()=>{ if(bean.value==='__newrecipe__'){ bean.value=''; show('recipes'); newRecipe(); return; } refresh(); }); equip.addEventListener('change',refresh);
-  show('roast');   // set main/sub nav state (subnav emerges under Roast)
+  show('listen');   // home = the Roast hub: Listener, live bar, history, maps
   try{ const l=localStorage.getItem('cnLang'); if(l==='tr'||l==='en') LANG=l; }catch(e){}
   applyLang();
   try{ if(typeof renderCupTimerStages==='function') renderCupTimerStages(-1); }catch(e){}
