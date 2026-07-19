@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19b</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-19c</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -223,7 +223,8 @@ body.st-setup #btn{display:none}
       <div id="twoPull" style="display:none;border:2px solid var(--accent2);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.55"></div>
       <div class="lbl" style="color:var(--gold);margin:10px 0 5px">ground agtron · the number that teaches the app</div>
       <div style="display:flex;gap:6px;margin-bottom:6px">
-        <input type="text" id="mAgG" placeholder="Agtron ground" inputmode="decimal" style="flex:1;min-width:0;border:2px solid var(--gold);border-radius:9px;padding:10px;font-size:22px;font-weight:800;text-align:center;background:#26200f;color:var(--ink);box-shadow:0 0 14px rgba(230,193,75,.25)">
+        <input type="text" id="mAgG" placeholder="Agtron ground" inputmode="decimal" style="flex:1.4;min-width:0;border:2px solid var(--gold);border-radius:9px;padding:10px;font-size:22px;font-weight:800;text-align:center;background:#26200f;color:var(--ink);box-shadow:0 0 14px rgba(230,193,75,.25)">
+        <input type="text" id="mTarget" placeholder="Hedef Agtron" inputmode="decimal" title="Kupalar sonrası kararın: bu kahvenin hedef rengi" style="flex:1;min-width:0;border:2px solid rgba(230,193,75,.55);border-radius:9px;padding:10px;font-size:18px;font-weight:700;text-align:center;background:var(--panel2);color:var(--gold)">
       </div>
       <div id="sampList"></div>
       <button class="go" id="mapBtn" onclick="saveCalIfMapped(true);updateGauge()" style="display:none;background:var(--accent2);margin-top:8px">Map this coffee (save color)</button>
@@ -291,7 +292,6 @@ body.st-setup #btn{display:none}
         <input type="text" id="mProc" placeholder="Process (washed/natural)" style="flex:1.2;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
         <input type="text" id="mMoist" placeholder="Moisture %" inputmode="decimal" style="flex:0.8;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
         <input type="text" id="mAw" placeholder="Aw" inputmode="decimal" style="flex:0.6;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
-        <input type="text" id="mTarget" placeholder="Target Agtron (recipe)" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
       </div>
       <details id="xtraFold" style="margin:2px 0 6px">
         <summary style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;cursor:pointer;padding:7px 0">Extras</summary>
@@ -426,7 +426,7 @@ function nudge(id,dir){ const el=$(id); const jump=Math.max(+el.step||1, (+el.ma
 sens.oninput=()=>$('sensV').textContent=(+sens.value).toFixed(1)+'x';
 vgr.oninput=()=>{ EP.VGR=+vgr.value; $('vgrV').textContent=(+vgr.value).toFixed(2).replace(/0$/,'')+'x'; try{ localStorage.setItem('bsVGR',vgr.value); }catch(e){} };
 function purTap(){ const pe=$('pur'); if(pe&&pe.title) toast((LANG==='tr'?'Saflık: ':'Purity: ')+pe.title); }
-['mAgG','mAgW','mAgSd','mAgWSd','mA0Ag'].forEach(id=>{ const el=$(id); if(el) el.addEventListener('change',()=>{ const v=parseFloat(el.value); if(isFinite(v)) el.value=Math.round(v); }); });
+['mAgG','mAgW','mAgSd','mAgWSd','mA0Ag','mTarget'].forEach(id=>{ const el=$(id); if(el) el.addEventListener('change',()=>{ const v=parseFloat(el.value); if(isFinite(v)) el.value=Math.round(v); }); });
 function resetTuning(){ try{ ['bsVG','bsVGR','bsSens'].forEach(k=>localStorage.removeItem(k)); }catch(e){}
   const se=$('sens'); if(se){ se.value=5; se.dispatchEvent(new Event('input')); }
   const vr=$('vgr'); if(vr){ vr.value=2.5; vr.dispatchEvent(new Event('input')); }
@@ -1152,8 +1152,8 @@ function showPaywall(feature){
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Haritalar her cihazda senkron. Apple Watch uzaktan kumanda (bilekten numune ve drop).':'Maps synced everywhere. Apple Watch remote control (sample and drop from the wrist).')+'</td>'
    +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast kayıtların kaydedilir ve saklanır.':'Roast records saved and kept.')+'</td></tr>'
    +'<tr style="border-top:1px solid var(--line)"><td style="padding:8px 4px;vertical-align:top"><b style="color:var(--gold)">Cupper</b> <span class="hint" style="font-size:10.5px">'+(tr?'Yalnız Q sınıfında kazanılır. Ömür boyu numaralı.':'Earned in Q class only. Numbered for life.')+'</span></td>'
-   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roaster + numune çekimlerin tadım seansına dönüşür.':'Roaster + sample pulls become cupping sessions.')+'</td>'
-   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?'Roast · Cup · Grade: her şey kayıt altında.':'Roast · Cup · Grade: everything is recorded.')+'</td></tr>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?"Roaster'daki her şey + numune çekimlerin tadım seansına dönüşür.":'Everything in Roaster + sample pulls become cupping sessions.')+'</td>'
+   +'<td style="padding:8px 4px;vertical-align:top">'+(tr?"Roaster'daki her şey + Roast · Cup · Grade: her şey kayıt altında.":'Everything in Roaster + Roast · Cup · Grade: everything is recorded.')+'</td></tr>'
    +'</table>'
    +classStrip(tr)
    +'<div style="text-align:center"><span style="display:inline-block;border:1px solid var(--accent2);color:var(--accent2);border-radius:14px;padding:4px 10px;font-weight:700;margin:8px 4px 0 4px;font-size:11px">'+(tr?'Cupper, Q yenilemenle yenilenir.':'Cupper renews with your Q recalibration.')+'</span></div>'
@@ -1728,7 +1728,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-19b';
+const APPVER='v2026-07-19c';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
