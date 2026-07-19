@@ -589,7 +589,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-20a</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-20b</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -763,6 +763,26 @@ function renderGauge(u, nextU, dropU, top, bot, showStages){
 }
 
 // ===================== history + learning: server-backed (Supabase) + offline cache =====================
+let UMSTAMP={}; try{ UMSTAMP=JSON.parse(localStorage.getItem('bsCalPushed')||'{}'); }catch(e){}
+function umHash(e){ try{ const c=Object.assign({},e); delete c.up; return JSON.stringify(c); }catch(e2){ return ''; } }
+async function umSync(pull){ try{
+  if(!sb) return; const {data:{session}}=await sb.auth.getSession(); const em=session&&session.user&&session.user.email; if(!em) return;
+  let m={}; try{ m=JSON.parse(localStorage.getItem('bsCal')||'{}'); }catch(e2){}
+  let dirty=false;
+  for(const k in UMSTAMP){ if(!m[k]){ try{ await sb.from('user_maps').delete().eq('email',em).eq('coffee',k); }catch(e3){} delete UMSTAMP[k]; dirty=true; } }   // local unmap wins: tombstone before pull
+  if(pull){ const {data:rws}=await sb.from('user_maps').select('coffee,cal');
+    if(Array.isArray(rws)){ let ch=false;
+      for(const r2 of rws){ const k=r2.coffee, ce=r2.cal||{}, le=m[k];
+        if(!le||((ce.up||0)>(le.up||0))){ m[k]=ce; UMSTAMP[k]=umHash(ce); ch=true; dirty=true; } }
+      if(ch){ localStorage.setItem('bsCal',JSON.stringify(m)); try{ renderRegList(); }catch(e3){} } } }
+  for(const k in m){ const h=umHash(m[k]);
+    if(UMSTAMP[k]!==h){ m[k].up=Date.now();
+      const {error}=await sb.from('user_maps').upsert({email:em,coffee:k,cal:m[k]});
+      if(!error){ UMSTAMP[k]=h; dirty=true; localStorage.setItem('bsCal',JSON.stringify(m)); } } }
+  if(dirty) localStorage.setItem('bsCalPushed',JSON.stringify(UMSTAMP));
+}catch(e){} }
+setInterval(()=>{ umSync(false); },20000);
+try{ document.addEventListener('visibilitychange',()=>{ if(document.hidden) umSync(false); }); }catch(e){}
 let MYUID=null, LOG=[], LEARN={}, REGISTRY=[];   // REGISTRY = shared coffees table, same rows the Listener syncs
 const LOG_CACHE='gLog_cache', LEARN_CACHE='gLearn_cache', LOG_PENDING='gLog_pending';
 function lkey(name,eq){ return name+'|'+eq; }
@@ -800,6 +820,7 @@ async function loadServerData(){
       else if(lts>r2.updated_at) chargeCloudPush(); } }catch(e){}
   try{ const cr=await sb.from('coffees').select('name,badge,green').order('name');
     if(cr&&!cr.error&&Array.isArray(cr.data)){ REGISTRY=cr.data; buildBeans(); } }catch(e){}   // single coffee DB: same table the Listener reads
+  try{ await umSync(true); }catch(e){}   // account maps land before the registry renders
   recomputeLearning();   // learning is derived from the logs, not stored separately
 }
 
@@ -2163,11 +2184,11 @@ function mapFromRow(i){ try{
     target:(r.target!=null?r.target:prev.target), src:'cloud-row' };
   if(r.fc_ag!=null) e.fc_ag=r.fc_ag;
   if(r.anchors&&r.anchors.length){ const fa=r.anchors.filter(a=>a.ag!=null&&a.dt>=-2); if(fa.length) e.anchors=fa; }   // empty colors and pre-A0 strays stay out of the engine
-  m[k]=e; localStorage.setItem('bsCal',JSON.stringify(m)); renderRegList();
+  m[k]=e; localStorage.setItem('bsCal',JSON.stringify(m)); renderRegList(); umSync(false);
   alert(T('Mapped from this roast. The Listener uses it on its next gauge tick.'));
 }catch(e2){} }
 async function cloudRefresh(){ try{ if(sb){ const cr=await sb.from('coffees').select('name,badge,green').order('name');
-  if(cr&&!cr.error&&Array.isArray(cr.data)){ REGISTRY=cr.data; buildBeans(); } } }catch(e){} renderRegList(); }
+  if(cr&&!cr.error&&Array.isArray(cr.data)){ REGISTRY=cr.data; buildBeans(); } } }catch(e){} try{ await umSync(true); }catch(e2){} renderRegList(); }
 let RSDELARM={i:-1,t:0};
 async function rsDelRow(i,btn){ try{
   const r=HISTROWS[i]; if(!r) return;
@@ -2244,7 +2265,7 @@ function unmapCoffee(k){ try{
     const ks=Object.keys(tr2); if(ks.length>10){ ks.sort((a,b)=>(tr2[a].at||0)-(tr2[b].at||0)); delete tr2[ks[0]]; }
     localStorage.setItem('bsCalTrash',JSON.stringify(tr2)); } }catch(e4){}   // lessons ride into the archive; unmap is no longer a shredder
   delete m[k];
-  localStorage.setItem('bsCal',JSON.stringify(m)); renderRegList();
+  localStorage.setItem('bsCal',JSON.stringify(m)); renderRegList(); umSync(false);
 }catch(e){} }
 function cupQueued(i){ try{ const q=JSON.parse(localStorage.getItem('cnCupQueue')||'[]'); const qe=q[i]; if(!qe) return;
   FLIGHT={ date:qe.date, purpose:('Listener '+qe.coffee).trim(),

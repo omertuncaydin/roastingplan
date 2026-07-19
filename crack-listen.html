@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-20a</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-20b</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -575,6 +575,7 @@ function queueSamples(){ try{ if(!SAMPLES.length) return;
   q.push(entry); localStorage.setItem('cnCupQueue',JSON.stringify(q.slice(-10)));
   toast((LANG==='tr'?'Örnekler Guide Cup bölümüne gönderildi: ':'Samples sent to Guide Cup: ')+entry.samples.length);
 }catch(e){} }
+function renderStopLine(){ try{ $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):''; }catch(e){} }   // one renderer, every path: stale text has nowhere to hide
 function stop(){
   running=false; if(raf) cancelAnimationFrame(raf);
   A0PHASE='done'; a0NudgeUI(0); TGTPHASE='done'; tgtUI(0);   // Drop answers both questions: no alarm may outlive the roast
@@ -596,7 +597,8 @@ function stop(){
       body:JSON.stringify({messages:[{topic:'cnw-'+WCKEY(), event:'live', payload:{c:(cName.value||'').trim()||'?', st:lst, n:valid().length, proj:STOPPROJ||null, band:(ENGINE&&isFinite(ENGINE.band))?Math.round(ENGINE.band*2)/2:null, t:Math.round(STOPT), w:0, fin:1, ctl:(wcCtl()?1:0)}, private:false}]})}).catch(()=>{}); } }catch(e){}
   try{ if(!planActive() && valid().length>=10){ localStorage.setItem('bsRoastN',String(roastCount()+1)); refreshPlanUI(); } }catch(e){}   // a "roast" = 10+ real cracks; test taps stay free
   try{ pushRoastRecord(); }catch(e){}   // INTEGRATION: a signed Roaster's session lands in the cloud by itself; the paid memory promise, literal
-  $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):'';
+  try{ umSync(false); }catch(e){}   // fresh lessons ride to the account without waiting for the interval
+  renderStopLine();
   if(wav.len||rows.length){ $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('dlStory').style.display='block'; $('metaBox').style.display='block'; $('agTop').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block'; $('nextRow').style.display='flex'; if(!$('mCoffee').value) $('mCoffee').value=cName.value;
     // a mapped coffee fills its own paperwork: bean-constant fields prefill from the map, measurements stay yours
     const calP=calFor();
@@ -1172,10 +1174,29 @@ const SUPA_URL='https://efjvfggwnhqkunjvoyjb.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA';
 let SB=null; try{ if(typeof supabase!=='undefined') SB=supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
 try{ if(WCON) wcCmdSub(true); }catch(e){}   // boot-time cast restore runs before SB exists (TDZ); re-arm the command ear here, after the client is born
-try{ if(SB){ SB.auth.onAuthStateChange(()=>{ syncPlanFromAccount(); }); setTimeout(syncPlanFromAccount, 1200); } }catch(e){}   // codes retired: the account IS the license
+try{ if(SB){ SB.auth.onAuthStateChange(()=>{ syncPlanFromAccount(); umSync(true); }); setTimeout(syncPlanFromAccount, 1200); setTimeout(()=>umSync(true), 1800); } }catch(e){}   // codes retired: the account IS the license
 try{ fetch(SUPA_URL+'/rest/v1/noise_lib?select=f,hf,w',{headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY}}).then(r=>r.ok?r.json():[]).then(rows=>{ (rows||[]).forEach(e=>NLC.push({f:e.f,hf:e.hf,w:e.w,src:'global'})); }).catch(()=>{}); }catch(e){}
 try{ const eb=$('enrollBtn'); if(eb) eb.textContent=tt('Teach it your voice'); }catch(e){}
 async function cloudUser(){ if(!SB) return null; try{ const {data}=await SB.auth.getUser(); return (data&&data.user)||null; }catch(e){ return null; } }
+let UMSTAMP={}; try{ UMSTAMP=JSON.parse(localStorage.getItem('bsCalPushed')||'{}'); }catch(e){}
+function umHash(e){ try{ const c=Object.assign({},e); delete c.up; return JSON.stringify(c); }catch(e2){ return ''; } }
+async function umSync(pull){ try{
+  if(!SB) return; const u=await cloudUser(); if(!u||!u.email) return;
+  const m=calMap(); let dirty=false;
+  for(const k in UMSTAMP){ if(!m[k]){ try{ await SB.from('user_maps').delete().eq('email',u.email).eq('coffee',k); }catch(e3){} delete UMSTAMP[k]; dirty=true; } }   // local unmap wins: tombstone before pull
+  if(pull){ const {data:rws}=await SB.from('user_maps').select('coffee,cal');
+    if(Array.isArray(rws)){ let ch=false;
+      for(const r2 of rws){ const k=r2.coffee, ce=r2.cal||{}, le=m[k];
+        if(!le||((ce.up||0)>(le.up||0))){ m[k]=ce; UMSTAMP[k]=umHash(ce); ch=true; dirty=true; } }
+      if(ch){ localStorage.setItem('bsCal',JSON.stringify(m)); try{ updateGauge(); updateMapBtn(); }catch(e3){} } } }
+  for(const k in m){ const h=umHash(m[k]);
+    if(UMSTAMP[k]!==h){ m[k].up=Date.now();
+      const {error}=await SB.from('user_maps').upsert({email:u.email,coffee:k,cal:m[k]});
+      if(!error){ UMSTAMP[k]=h; dirty=true; localStorage.setItem('bsCal',JSON.stringify(m)); } } }
+  if(dirty) localStorage.setItem('bsCalPushed',JSON.stringify(UMSTAMP));
+}catch(e){} }
+setInterval(()=>{ umSync(false); },20000);
+try{ document.addEventListener('visibilitychange',()=>{ if(document.hidden) umSync(false); }); }catch(e){}
 let LASTROASTROW=null;
 async function pushRoastStart(){ try{
   if(!SB||!proPowers()) return;
@@ -1783,7 +1804,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-20a';
+const APPVER='v2026-07-20b';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -1975,6 +1996,7 @@ async function loadSession(file){
   try{ isoSweep(STOPT); }catch(e){}   // ISOLATED FIRST CRACK: one retrospective pass for loaded sessions
   refreshStats();
   updateMapBtn();
+  renderStopLine();   // a loaded session shows ITS truth, never the previous roast's
   if(parseFloat(meta.agtron_ground)){ saveCalIfMapped(true); updateGauge(); }
   else toast('Loaded: '+cracks.length+' cracks'+(meta.coffee?' ('+meta.coffee+')':'')+'. Fill Agtron ground, tap Map.');
 }
