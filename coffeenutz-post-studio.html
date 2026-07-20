@@ -114,7 +114,7 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13s</span></div>
+    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13t</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
     <button class="btn primary" id="saveStateBtn" onclick="saveState()">Save</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
@@ -352,6 +352,8 @@ function boardWrap(html, label, W, H, dlName){
 function stopFold(ev){ if(ev){ ev.stopPropagation(); ev.preventDefault(); } }
 function renameRec(inputId,labelId){ const inp=document.getElementById(inputId); const lab=labelId&&document.getElementById(labelId); if(lab)lab.style.display='none'; if(inp){ inp.style.display='block'; inp.focus(); inp.select(); } }
 function renameSet(path,headerId,val){ const ks=path.split('.'), last=ks.pop(); ks.reduce((o,k)=>o[k],state)[last]=val; const hd=document.getElementById(headerId); if(hd) hd.textContent=(val&&val.trim())?val:(hd.dataset.fallback||''); renderStage(); }
+function fk(key){ return ((state.ui&&state.ui.open&&state.ui.open[key]===false)?'':' open')+' data-fk="'+key+'"'; }
+function renameFold(ev,inputId){ stopFold(ev); if(ev){ const d=ev.target.closest('details'); if(d)d.open=true; } const inp=document.getElementById(inputId); if(inp){ inp.style.display='block'; inp.focus(); inp.select(); } }
 function renameAnn(ev,i){ stopFold(ev); if(ev){ const d=ev.target.closest('details'); if(d)d.open=true; } const inp=document.getElementById('aren'+i); if(inp){ inp.style.display='block'; inp.focus(); inp.select(); } }
 function addAnnounce(){ state.announces.push(clone(SAMPLE.announce)); renderPanel(); renderStage(); }
 function dupAnnounce(ev,i){ stopFold(ev); state.announces.splice(i+1,0,clone(state.announces[i])); renderPanel(); renderStage(); }
@@ -479,7 +481,7 @@ function renderPanel(){
     state.carousels.forEach((car,ci)=>{
       const cdef='Carousel '+(ci+1);
       const cnm=(car.label&&car.label.trim())?car.label:cdef;
-      h+='<details class="sec annfolder" open><summary><span class="foldttl" id="clab'+ci+'" data-fallback="'+cdef+'">'+esc(cnm)+'</span><span class="foldbtns">'
+      h+='<details class="sec annfolder"'+fk('car:'+ci)+'><summary><span class="foldttl" id="clab'+ci+'" data-fallback="'+cdef+'">'+esc(cnm)+'</span><span class="foldbtns">'
         + '<button class="li-mini" title="duplicate" onclick="dupCarousel(event,'+ci+')">Dup</button>'
         + '<button class="li-mini" title="rename" onclick="renameCar(event,'+ci+')">Ren</button>'
         + (ci>0?'<button class="li-mini" title="up" onclick="moveCarousel(event,'+ci+',-1)">&#8593;</button>':'')
@@ -487,12 +489,12 @@ function renderPanel(){
         + (CN>1?'<button class="li-mini li-del" title="delete" onclick="delCarousel(event,'+ci+')">&#215;</button>':'')
         + '</span></summary><div class="fieldwrap">'
         + '<input class="f" id="cren'+ci+'" style="display:none;margin:0 0 8px;font-size:11px" value="'+esc(car.label||'').replace(/"/g,"&quot;")+'" placeholder="Folder name (optional)" oninput="renameSet(\'carousels.'+ci+'.label\',\'clab'+ci+'\',this.value)">'
-        + '<details class="sec" open><summary>Series</summary><div class="fieldwrap">'
+        + '<details class="sec"'+fk('car:'+ci+':s')+'><summary>Series</summary><div class="fieldwrap">'
         +   field("Kicker (top left)","carousels."+ci+".kicker") + field("Series tag (top right)","carousels."+ci+".series")
         +   field("Theme","carousels."+ci+".theme","select:light|dark")
         +   field("Handle","brand.handle")
         +   '</div></details>'
-        + '<details class="sec" open><summary>Slides ('+car.slides.length+'/10)</summary><div class="fieldwrap">'
+        + '<details class="sec"'+fk('car:'+ci+':sl')+'><summary>Slides ('+car.slides.length+'/10)</summary><div class="fieldwrap">'
         +   car.slides.map((sl,i)=>slideEditor(sl,i,ci)).join("")
         +   (car.slides.length<10?'<button class="addbtn" onclick="addSlide('+ci+')">+ Add slide</button>':'')
         +   '</div></details>'
@@ -500,11 +502,9 @@ function renderPanel(){
     });
     h+='<button class="addbtn" onclick="addCarousel()">+ New carousel</button>';
   } else if(state.mode==="shopbanner"){
-    h+='<details class="sec" open><summary>Banner pile ('+state.shopbanner.banners.length+')</summary><div class="fieldwrap">'
-      + state.shopbanner.banners.map(bannerEditor).join("")
+    h+=state.shopbanner.banners.map(bannerEditor).join("")
       + '<button class="addbtn" onclick="addBanner(true)">+ New from Announcement</button>'
-      + '<button class="addbtn" onclick="addBanner(false)">+ New banner</button>'
-      + '</div></details>';
+      + '<button class="addbtn" onclick="addBanner(false)">+ New banner</button>';
   } else {
     const N=state.announces.length;
     const OUT={igfeed:"IG Feed 1080x1350",igstory:"IG Story 1080x1920",linkedin:"LinkedIn 1200x627",banner:"Wide Banner 1920x820",siteban:"Site Banner 1200x600",ytthumb:"YT Thumbnail 1280x720",ytcover:"YT Channel Cover 2560x1440",og:"OG Card 1200x630",email:"Email Header 1200x400"};
@@ -512,7 +512,7 @@ function renderPanel(){
       const P="announces."+i+".";
       const adef='Announcement '+(i+1)+(ann.title?' \u00b7 '+ann.title:'');
       const anm=(ann.label&&ann.label.trim())?ann.label:adef;
-      h+='<details class="sec annfolder" open><summary><span class="foldttl" id="alab'+i+'" data-fallback="'+esc(adef).replace(/"/g,"&quot;")+'">'+esc(anm)+'</span><span class="foldbtns">'
+      h+='<details class="sec annfolder"'+fk('ann:'+i)+'><summary><span class="foldttl" id="alab'+i+'" data-fallback="'+esc(adef).replace(/"/g,"&quot;")+'">'+esc(anm)+'</span><span class="foldbtns">'
         + '<button class="li-mini" title="duplicate" onclick="dupAnnounce(event,'+i+')">Dup</button>'
         + '<button class="li-mini" title="rename" onclick="renameAnn(event,'+i+')">Ren</button>'
         + (i>0?'<button class="li-mini" title="up" onclick="moveAnnounce(event,'+i+',-1)">&#8593;</button>':'')
@@ -520,7 +520,7 @@ function renderPanel(){
         + (N>1?'<button class="li-mini li-del" title="delete" onclick="delAnnounce(event,'+i+')">&#215;</button>':'')
         + '</span></summary><div class="fieldwrap">'
         + '<input class="f" id="aren'+i+'" style="display:none;margin:0 0 8px;font-size:11px" value="'+esc(ann.label||'').replace(/"/g,"&quot;")+'" placeholder="Folder name (optional)" oninput="renameSet(\'announces.'+i+'.label\',\'alab'+i+'\',this.value)">'
-        + '<details class="sec" open><summary>Content</summary><div class="fieldwrap">'
+        + '<details class="sec"'+fk('ann:'+i+':c')+'><summary>Content</summary><div class="fieldwrap">'
         +   field("Kicker",P+"kicker") + field("Class title",P+"title")
         +   field("Dates",P+"dateline") + field("City / venue",P+"city")
         +   field("Seats line",P+"seats") + field("Language line",P+"lang")
@@ -531,7 +531,7 @@ function renderPanel(){
         +   '<div class="img-row"><button class="btn" onclick="pickImg(\''+P+'img\')">Photo</button>'
         +   (ann.img?'<button class="btn" onclick="setPath(\''+P+'img\',\'\');renderPanel()">Clear</button>':'')
         +   '</div></div></details>'
-        + '<details class="sec" open><summary>Outputs</summary><div class="fieldwrap">'
+        + '<details class="sec"'+fk('ann:'+i+':o')+'><summary>Outputs</summary><div class="fieldwrap">'
         +   Object.keys(OUT).map(k=>
               '<label class="f-label" style="display:flex;gap:8px;align-items:center;text-transform:none">'
               + '<input type="checkbox" '+(ann.outputs[k]?'checked':'')+' onchange="state.announces['+i+'].outputs.'+k+'=this.checked;renderStage()"> '
@@ -594,22 +594,24 @@ function addBanner(fromAnnounce){
   }
   renderPanel(); renderStage();
 }
-function dupBanner(i){ state.shopbanner.banners.splice(i+1,0,clone(state.shopbanner.banners[i])); renderPanel(); renderStage(); }
-function delBanner(i){ state.shopbanner.banners.splice(i,1); renderPanel(); renderStage(); }
-function moveBanner(i,d){
+function dupBanner(ev,i){ stopFold(ev); state.shopbanner.banners.splice(i+1,0,clone(state.shopbanner.banners[i])); renderPanel(); renderStage(); }
+function delBanner(ev,i){ stopFold(ev); state.shopbanner.banners.splice(i,1); renderPanel(); renderStage(); }
+function moveBanner(ev,i,d){ stopFold(ev);
   const s=state.shopbanner.banners, j=i+d;
   if(j<0||j>=s.length) return;
   [s[i],s[j]]=[s[j],s[i]]; renderPanel(); renderStage();
 }
 function bannerEditor(b,i){
-  return '<div class="li">'
-    + '<div class="li-head"><span class="reclabel" id="blab'+i+'" data-fallback="Banner '+(i+1)+'">'+esc(b.label&&b.label.trim()?b.label:'Banner '+(i+1))+'</span>'
-    + '<input class="f" id="bren'+i+'" style="display:none;width:150px;padding:6px 8px;font-size:11px;letter-spacing:.08em;margin:0" value="'+esc(b.label||'').replace(/"/g,"&quot;")+'" placeholder="Banner '+(i+1)+'" oninput="renameSet(\'shopbanner.banners.'+i+'.label\',\'blab'+i+'\',this.value)">'
-    + '<button class="li-mini" title="duplicate" onclick="dupBanner('+i+')">Dup</button>'
-    + '<button class="li-mini" title="rename" onclick="renameRec(\'bren'+i+'\',\'blab'+i+'\')">Ren</button>'
-    + '<button class="li-mini" title="up" onclick="moveBanner('+i+',-1)">&#8593;</button>'
-    + '<button class="li-mini" title="down" onclick="moveBanner('+i+',1)">&#8595;</button>'
-    + '<button class="li-mini li-del" title="delete" onclick="delBanner('+i+')">&#215;</button></div>'
+  const N=state.shopbanner.banners.length, bdef='Banner '+(i+1);
+  const bnm=(b.label&&b.label.trim())?b.label:bdef;
+  return '<details class="sec annfolder"'+fk('ban:'+i)+'><summary><span class="foldttl" id="blab'+i+'" data-fallback="'+bdef+'">'+esc(bnm)+'</span><span class="foldbtns">'
+    + '<button class="li-mini" title="duplicate" onclick="dupBanner(event,'+i+')">Dup</button>'
+    + '<button class="li-mini" title="rename" onclick="renameFold(event,\'bren'+i+'\')">Ren</button>'
+    + (i>0?'<button class="li-mini" title="up" onclick="moveBanner(event,'+i+',-1)">&#8593;</button>':'')
+    + (i<N-1?'<button class="li-mini" title="down" onclick="moveBanner(event,'+i+',1)">&#8595;</button>':'')
+    + (N>1?'<button class="li-mini li-del" title="delete" onclick="delBanner(event,'+i+')">&#215;</button>':'')
+    + '</span></summary><div class="fieldwrap">'
+    + '<input class="f" id="bren'+i+'" style="display:none;margin:0 0 8px;font-size:11px" value="'+esc(b.label||'').replace(/"/g,"&quot;")+'" placeholder="Folder name (optional)" oninput="renameSet(\'shopbanner.banners.'+i+'.label\',\'blab'+i+'\',this.value)">'
     + '<div class="img-row"><button class="btn" onclick="pickImg(\'shopbanner.banners.'+i+'.img\')">Image</button>'
     + (b.img?'<button class="btn" onclick="setPath(\'shopbanner.banners.'+i+'.img\',\'\');renderPanel()">Clear</button>':'')
     + '</div>'
@@ -618,7 +620,7 @@ function bannerEditor(b,i){
     + eyeField("Heading","shopbanner.banners."+i+".heading","hHeading",i,b.hHeading)
     + eyeField("Subheading","shopbanner.banners."+i+".subheading","hSub",i,b.hSub)
     + eyeField("Button Label","shopbanner.banners."+i+".button","hButton",i,b.hButton)
-    + '</div>';
+    + '</div></details>';
 }
 function toggleEye(i,flag){
   const b=state.shopbanner.banners[i];
@@ -640,6 +642,7 @@ document.getElementById('imgFile').addEventListener('change', ev=>{
   r.readAsDataURL(f); ev.target.value='';
 });
 function migrateState(){
+  if(!state.ui)state.ui={open:{}}; if(!state.ui.open)state.ui.open={};
   if(!state.carousels){ state.carousels=[ state.carousel || clone(SAMPLE.carousel) ]; }
   state.carousels.forEach(c=>{ if(!c.slides)c.slides=[]; });
   state.carousel=state.carousels[0];
@@ -682,6 +685,7 @@ function doSave(){
 /* boot */
 loadSavedState();
 migrateState();
+document.getElementById('sections').addEventListener('toggle', function(ev){ const d=ev.target; if(d.tagName==='DETAILS' && d.dataset && d.dataset.fk){ if(!state.ui)state.ui={open:{}}; if(!state.ui.open)state.ui.open={}; state.ui.open[d.dataset.fk]=d.open; } }, true);
 renderPanel(); renderStage();
 </script>
 </body>
