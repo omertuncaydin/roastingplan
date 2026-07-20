@@ -109,7 +109,7 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13i</span></div>
+    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13j</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
     <button class="btn" onclick="document.getElementById('jsonFile').click()">Load</button>
@@ -156,11 +156,11 @@ const SAMPLE = {
     outputs:{ igfeed:true, igstory:true, linkedin:true, banner:true, siteban:true, ytthumb:false, ytcover:false, og:false, email:false }
   },
   shopbanner:{ banners:[
-    { img:"", alt:"SCA Roasting Bundle sınıf afişi",
+    { img:"", bgimg:false, alt:"SCA Roasting Bundle sınıf afişi",
       heading:"SCA Roasting Bundle",
       subheading:"04-07 Ağustos 2026 · İzmir, CoffeeNutz HQ · Roasting App lisansı 12 ay dahil",
       button:"Kayıtlar başladı" },
-    { img:"", alt:"Q Grader Sertifikasyon sınıf afişi",
+    { img:"", bgimg:false, alt:"Q Grader Sertifikasyon sınıf afişi",
       heading:"Q Grader Sertifikasyon",
       subheading:"24-29 Ağustos 2026 · İzmir, CoffeeNutz HQ · Cupper lisansı 36 ay dahil",
       button:"Kayıtlar başladı" }
@@ -485,6 +485,17 @@ function moveSlide(i,d){
 }
 /* =============== shopify banner pile =============== */
 function bannerRecCard(rec){
+  if(rec.bgimg && rec.img){
+    return card(1200,600,true,
+      '<div style="position:absolute;inset:0"><img src="'+rec.img+'" alt="'+esc(rec.alt)+'" style="width:100%;height:100%;object-fit:cover;display:block"></div>'
+      + '<div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(20,17,13,.85) 0%,rgba(20,17,13,.55) 46%,rgba(20,17,13,.05) 78%)"></div>'
+      + '<div style="position:relative;display:flex;height:100%;align-items:center">'
+      + '<div style="max-width:640px">'
+      +   '<h1 style="font-size:60px;line-height:1.05">'+esc(rec.heading)+'</h1>'
+      +   (rec.subheading?'<div class="metaline" style="font-size:20px;margin-top:22px">'+esc(trUp(rec.subheading))+'</div>':'')
+      +   (rec.button?'<div class="cta" style="font-size:20px;padding:14px 26px;margin-top:32px">'+esc(trUp(rec.button))+'</div>':'')
+      + '</div></div>', 56);
+  }
   return card(1200,600,true,
     '<div style="display:flex;gap:48px;height:100%;align-items:center">'
     + '<div style="flex:1.2">'
@@ -500,12 +511,12 @@ function bannerRecCard(rec){
 function addBanner(fromAnnounce){
   if(fromAnnounce){
     const a=state.announce;
-    state.shopbanner.banners.push({ img:a.img||'', alt:'',
+    state.shopbanner.banners.push({ img:a.img||'', bgimg:false, alt:'',
       heading:a.title||'',
       subheading:[a.dateline,a.city,a.highlight].filter(Boolean).join(' · '),
       button:a.cta||'' });
   } else {
-    state.shopbanner.banners.push({ img:'', alt:'', heading:'', subheading:'', button:'' });
+    state.shopbanner.banners.push({ img:'', bgimg:false, alt:'', heading:'', subheading:'', button:'' });
   }
   renderPanel(); renderStage();
 }
@@ -526,6 +537,7 @@ function bannerEditor(b,i){
     + '<div class="img-row"><button class="btn" onclick="pickImg(\'shopbanner.banners.'+i+'.img\')">Image</button>'
     + (b.img?'<button class="btn" onclick="setPath(\'shopbanner.banners.'+i+'.img\',\'\');renderPanel()">Clear</button>':'')
     + '</div>'
+    + '<label class="f-label" style="display:flex;gap:8px;align-items:center;text-transform:none"><input type="checkbox" '+(b.bgimg?'checked':'')+' onchange="setPath(\'shopbanner.banners.'+i+'.bgimg\',this.checked)"> Use image as background</label>'
     + field("Photo Alt Text","shopbanner.banners."+i+".alt")
     + field("Heading","shopbanner.banners."+i+".heading")
     + field("Subheading","shopbanner.banners."+i+".subheading")
