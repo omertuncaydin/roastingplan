@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-20f</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-20g</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1187,8 +1187,9 @@ async function umSync(pull){ try{
   if(!SB) return; if(!proPowers()) return;   // cloud maps are the Roaster promise: paid tiers and the owner only
   const u=await cloudUser(); if(!u||!u.email) return;
   const m=calMap(); let dirty=false;
-  for(const k in UMSTAMP){ if(!m[k]){ try{ await SB.from('user_maps').delete().eq('email',u.email).eq('coffee',k); }catch(e3){} delete UMSTAMP[k]; dirty=true; } }   // local unmap wins: tombstone before pull
-  if(pull){ const {data:rws}=await SB.from('user_maps').select('coffee,cal');
+  const uidNow=(UNI()&&UNI().uid)||'u0';
+  for(const k in UMSTAMP){ if(!m[k]){ try{ await SB.from('user_maps').delete().eq('email',u.email).eq('universe_id',uidNow).eq('coffee',k); }catch(e3){} delete UMSTAMP[k]; dirty=true; } }   // local unmap wins: tombstone before pull
+  if(pull){ const {data:rws}=await SB.from('user_maps').select('coffee,cal').eq('universe_id',uidNow);
     if(Array.isArray(rws)){ let ch=false;
       for(const r2 of rws){ const k=r2.coffee, ce=r2.cal||{}, le=m[k];
         if(!le||((ce.up||0)>(le.up||0))){ m[k]=ce; UMSTAMP[k]=umHash(ce); ch=true; dirty=true; } }
@@ -1196,7 +1197,7 @@ async function umSync(pull){ try{
   for(const k in m){ if(!m[k].universe){ const un=UNI(); if(un) m[k].universe=un; }   // both clouds carry the marker
     const h=umHash(m[k]);
     if(UMSTAMP[k]!==h){ m[k].up=Date.now();
-      const {error}=await SB.from('user_maps').upsert({email:u.email,coffee:k,cal:m[k]});
+      const {error}=await SB.from('user_maps').upsert({email:u.email,universe_id:uidNow,coffee:k,cal:m[k]});
       if(!error){ UMSTAMP[k]=h; dirty=true; localStorage.setItem('bsCal',JSON.stringify(m)); } } }
   if(dirty) localStorage.setItem('bsCalPushed',JSON.stringify(UMSTAMP));
 }catch(e){} }
@@ -1538,8 +1539,12 @@ function drawGauge(state,projLo,projHi){
 let TGT_U=null, LASTSTAGES=null, MAPWARN=0, PROJBORROWED=false;
 function FCDEF(){ try{ const h=calMap()['__house'];
   if(h&&isFinite(h.fc_ag)&&h.fc_ag>=80&&h.fc_ag<=140) return h.fc_ag;
-  const un=UNI(); if(un&&isFinite(un.a0)&&un.a0>=80&&un.a0<=140) return un.a0; }catch(e){} return EP.FC_AG; }   // OPTION B+U (2026-07-20): own map, house, YOUR UNIVERSE's A0, then 125; never another coffee's number
-function UNI(){ try{ const u=JSON.parse(localStorage.getItem('bsUniverse')||'null'); return (u&&u.meter&&isFinite(u.a0))?u:null; }catch(e){ return null; } }
+  const un=UNI(); if(un&&isFinite(un.a0)&&un.a0>0) return un.a0; }catch(e){} return EP.FC_AG; }   // OPTION B+U (2026-07-20): own map, house, YOUR UNIVERSE's A0, then 125; never another coffee's number
+function uniUid(meter,grinder,gset,op){ const key=[meter||'',grinder||'',gset||'',op||''].join('|').toLowerCase().trim();
+  let h=5381; for(let i=0;i<key.length;i++) h=(((h<<5)+h)+key.charCodeAt(i))>>>0; return 'u'+h.toString(36); }   // same environment = same id on every device
+function UNI(){ try{ const u=JSON.parse(localStorage.getItem('bsUniverse')||'null'); if(!(u&&u.meter&&isFinite(u.a0))) return null;
+  if(!u.uid){ u.uid=uniUid(u.meter,u.grinder,u.gset,u.operator); localStorage.setItem('bsUniverse',JSON.stringify(u)); }
+  return u; }catch(e){ return null; } }
 let UNIPEND=false;
 function uniOpen(force){ try{
   const tr=(LANG==='tr'), u=(function(){ try{ return JSON.parse(localStorage.getItem('bsUniverse')||'null')||{}; }catch(e){ return {}; } })();
@@ -1568,10 +1573,27 @@ function uniSave(){ try{
   if(!raw){ UNIHINTED=true;
     alert(tr?'Buraya bir değer girmelisin. Henüz ölçümün yoksa tahminini gir; sonra doğru sayıyla düzelt.':'You should enter a value here. If you do not have a measurement yet, enter your guess, then fix it with an accurate number.');
     return; }
-  if(!isFinite(a0)||a0<80||a0>140){ toast(tr?'A0 rengi 80-140 arası olmalı.':'A0 color must be 80-140.'); return; }
+  if(!isFinite(a0)||a0<=0){ toast(tr?'A0 rengi sayı olmalı.':'A0 color must be a number.'); return; }   // scale-agnostic: every meter speaks its own numbers
   const guessed=UNIHINTED?1:0;
   const u={ meter, grinder:$('uniGrinder').value.trim()||null, gset:$('uniGset').value.trim()||null,
     operator:$('uniOp').value.trim()||null, a0, guessed, at:new Date().toISOString() };
+  u.uid=uniUid(u.meter,u.grinder,u.gset,u.operator);
+  const prevU=(function(){ try{ return JSON.parse(localStorage.getItem('bsUniverse')||'null'); }catch(e2){ return null; } })();
+  const prevUid=prevU&&prevU.uid?prevU.uid:(prevU&&prevU.meter?uniUid(prevU.meter,prevU.grinder,prevU.gset,prevU.operator):null);
+  if(prevUid&&prevUid!==u.uid){   // OPTION 2: parallel realities. Park this registry, wake the other.
+    try{
+      const verse=JSON.parse(localStorage.getItem('bsCalVerse')||'{}');
+      const pverse=JSON.parse(localStorage.getItem('bsCalPushedVerse')||'{}');
+      verse[prevUid]=calMap(); pverse[prevUid]=UMSTAMP;
+      const nm2=verse[u.uid]||{}, np=pverse[u.uid]||{};
+      delete verse[u.uid]; delete pverse[u.uid];
+      localStorage.setItem('bsCalVerse',JSON.stringify(verse));
+      localStorage.setItem('bsCalPushedVerse',JSON.stringify(pverse));
+      localStorage.setItem('bsCal',JSON.stringify(nm2));
+      UMSTAMP=np; localStorage.setItem('bsCalPushed',JSON.stringify(UMSTAMP));
+      toast(tr?'Yeni evren: harita listen değişti. Eski liste saklandı.':'New universe: your map list switched. The old list is parked.');
+    }catch(e2){}
+  }
   localStorage.setItem('bsUniverse',JSON.stringify(u));
   $('uniModal').style.display='none';
   toast(tr?('Evren kaydedildi · A0 '+a0+(guessed?' (tahmin)':'')):('Universe saved · A0 '+a0+(guessed?' (guess)':'')));
@@ -1848,7 +1870,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-20f';
+const APPVER='v2026-07-20g';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
