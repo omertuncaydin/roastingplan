@@ -589,7 +589,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-20f</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-20g</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -779,7 +779,8 @@ async function umSync(pull){ try{
       for(const r2 of rws){ const k=r2.coffee, ce=r2.cal||{}, le=m[k];
         if(!le||((ce.up||0)>(le.up||0))){ m[k]=ce; UMSTAMP[k]=umHash(ce); ch=true; dirty=true; } }
       if(ch){ localStorage.setItem('bsCal',JSON.stringify(m)); try{ renderRegList(); }catch(e3){} } } }
-  for(const k in m){ const h=umHash(m[k]);
+  for(const k in m){ if(!m[k].universe){ try{ const un=JSON.parse(localStorage.getItem('bsUniverse')||'null'); if(un&&un.meter&&isFinite(un.a0)) m[k].universe=un; }catch(e4){} }   // both clouds carry the marker
+    const h=umHash(m[k]);
     if(UMSTAMP[k]!==h){ m[k].up=Date.now();
       const {error}=await sb.from('user_maps').upsert({email:em,coffee:k,cal:m[k]});
       if(!error){ UMSTAMP[k]=h; dirty=true; localStorage.setItem('bsCal',JSON.stringify(m)); } } }
@@ -2189,6 +2190,7 @@ function mapFromRow(i){ try{
     devSpan:(r.dev_span!=null?r.dev_span:prev.devSpan), tg:(r.tg!=null?r.tg:prev.tg), q25:(r.q25!=null?r.q25:prev.q25), phDrop:(r.ph_drop!=null?r.ph_drop:prev.phDrop),
     target:(r.target!=null?r.target:prev.target), src:'cloud-row' };
   if(r.fc_ag!=null) e.fc_ag=r.fc_ag;
+  if(r.universe) e.universe=r.universe;   // the map inherits the roast's own universe marker
   if(r.anchors&&r.anchors.length){ const fa=r.anchors.filter(a=>a.ag!=null&&a.dt>=-2); if(fa.length) e.anchors=fa; }   // empty colors and pre-A0 strays stay out of the engine
   m[k]=e; localStorage.setItem('bsCal',JSON.stringify(m)); renderRegList(); umSync(false);
   alert(T('Mapped from this roast. The Listener uses it on its next gauge tick.'));

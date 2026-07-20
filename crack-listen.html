@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-20e</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-20f</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1193,7 +1193,8 @@ async function umSync(pull){ try{
       for(const r2 of rws){ const k=r2.coffee, ce=r2.cal||{}, le=m[k];
         if(!le||((ce.up||0)>(le.up||0))){ m[k]=ce; UMSTAMP[k]=umHash(ce); ch=true; dirty=true; } }
       if(ch){ localStorage.setItem('bsCal',JSON.stringify(m)); try{ updateGauge(); updateMapBtn(); }catch(e3){} } } }
-  for(const k in m){ const h=umHash(m[k]);
+  for(const k in m){ if(!m[k].universe){ const un=UNI(); if(un) m[k].universe=un; }   // both clouds carry the marker
+    const h=umHash(m[k]);
     if(UMSTAMP[k]!==h){ m[k].up=Date.now();
       const {error}=await SB.from('user_maps').upsert({email:u.email,coffee:k,cal:m[k]});
       if(!error){ UMSTAMP[k]=h; dirty=true; localStorage.setItem('bsCal',JSON.stringify(m)); } } }
@@ -1545,25 +1546,32 @@ function uniOpen(force){ try{
   $('uniTitle').textContent=tr?'Renk ölçüm evrenin':'Your color measurement universe';
   $('uniSub').textContent=tr?'Agtron sayıları cihaza, öğütücüye ve ölçen kişiye göre değişir. Bu uygulamadaki her sayı BU evrende yaşar; evren değişirse eski tahminler karşılaştırılamaz olur.':'Agtron numbers depend on the meter, the grinder and the operator. Every number in this app lives in THIS universe; change the universe and old predictions stop being comparable.';
   $('uniL1').textContent=tr?'1 · Evrenin':'1 · Your universe';
-  $('uniL2').textContent=tr?'2 · Bu evrende ilk A0 rengin':'2 · Your first A0 color in this universe';
+  $('uniL2').innerHTML=(tr?'2 · Bu evrendeki A0 rengi':'2 · A0 color in this universe')+' <span onclick="uniInfo()" style="cursor:pointer;color:var(--muted)">&#9432;</span>';
+  UNIHINTED=false;
   $('uniMeter').placeholder=tr?'Renk ölçer (Colormeter)':'Colormeter';
   $('uniOp').placeholder=tr?'Ölçümü yapan kişi':'Measurement operator';
   $('uniA0').placeholder=tr?'A0 Agtron':'A0 Agtron';
-  $('uniBtnM').textContent=tr?'ÖLÇTÜM · KAYDET':'MEASURED · SAVE';
-  $('uniBtnG').textContent=tr?'TAHMİNİM':'MY GUESS';
+  $('uniBtnM').textContent=tr?'KAYDET':'SAVE';
   $('uniWarn').textContent=UNI()?(tr?'Dikkat: evreni değiştirmek eski haritalarını ve kayıtlarını yeni sayılarla KIYASLANAMAZ yapar.':'Careful: changing the universe makes your old maps and records INCOMPARABLE with new numbers.'):(tr?'Tahminle başlayabilirsin; ilk gerçek ölçümünde burayı güncelle.':'You can start with a guess; update this after your first real measurement.');
   $('uniMeter').value=u.meter||''; $('uniGrinder').value=u.grinder||''; $('uniGset').value=u.gset||''; $('uniOp').value=u.operator||''; $('uniA0').value=(u.a0!=null?u.a0:'');
   $('uniModal').style.display='flex';
   UNIPEND=!!force;
 }catch(e){} }
 function uniClose(){ try{ $('uniModal').style.display='none'; UNIPEND=false; }catch(e){} }
-function uniSave(guessed){ try{
+let UNIHINTED=false;
+function uniInfo(){ const tr=(LANG==='tr');
+  alert(tr?'Bu sayı bir YEDEK. Bir kahvenin kendi A0 ölçümü varsa (seansta girilen ya da haritasındaki) her zaman o kullanılır; evren A0 yalnızca hiçbir şey yokken devreye girer.':'This number is a FALLBACK. When a coffee has an A0 of its own (entered in the session or stored in its map), that measurement is used; the universe A0 only steps in when nothing else exists.'); }
+function uniSave(){ try{
   const tr=(LANG==='tr');
-  const meter=$('uniMeter').value.trim(), a0=parseFloat(String($('uniA0').value).replace(',','.'));
+  const meter=$('uniMeter').value.trim(), raw=String($('uniA0').value).trim(), a0=parseFloat(raw.replace(',','.'));
   if(!meter){ toast(tr?'Renk ölçeri yaz.':'Name the colormeter.'); return; }
+  if(!raw){ UNIHINTED=true;
+    alert(tr?'Buraya bir değer girmelisin. Henüz ölçümün yoksa tahminini gir; sonra doğru sayıyla düzelt.':'You should enter a value here. If you do not have a measurement yet, enter your guess, then fix it with an accurate number.');
+    return; }
   if(!isFinite(a0)||a0<80||a0>140){ toast(tr?'A0 rengi 80-140 arası olmalı.':'A0 color must be 80-140.'); return; }
+  const guessed=UNIHINTED?1:0;
   const u={ meter, grinder:$('uniGrinder').value.trim()||null, gset:$('uniGset').value.trim()||null,
-    operator:$('uniOp').value.trim()||null, a0, guessed:guessed?1:0, at:new Date().toISOString() };
+    operator:$('uniOp').value.trim()||null, a0, guessed, at:new Date().toISOString() };
   localStorage.setItem('bsUniverse',JSON.stringify(u));
   $('uniModal').style.display='none';
   toast(tr?('Evren kaydedildi · A0 '+a0+(guessed?' (tahmin)':'')):('Universe saved · A0 '+a0+(guessed?' (guess)':'')));
@@ -1840,7 +1848,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-20e';
+const APPVER='v2026-07-20f';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2467,7 +2475,7 @@ function draw(){
     <div id="uniSub" class="small" style="color:var(--muted);font-size:12px;line-height:1.5;margin-bottom:12px"></div>
     <div class="small" style="font-weight:700;margin-bottom:4px" id="uniL1"></div>
     <input type="text" id="uniMeter" list="uniMeterList" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin-bottom:8px">
-    <datalist id="uniMeterList"><option value="DiFluid Omniflux"></option><option value="DiFluid Omix"></option><option value="Tonino"></option><option value="Agtron Gourmet"></option><option value="RoastVision"></option><option value="Lighttells CM-100"></option></datalist>
+    <datalist id="uniMeterList"><option value="DiFluid Omni"></option><option value="DiFluid Omix+"></option><option value="Tonino"></option><option value="Lighttells CM-100+"></option><option value="Lighttells CM-200"></option><option value="RoastVision"></option><option value="Javalytics"></option><option value="ColorTrack"></option><option value="Agtron (lab)"></option></datalist>
     <div style="display:flex;gap:8px;margin-bottom:8px">
       <input type="text" id="uniGrinder" placeholder="Grinder" style="flex:1.4;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
       <input type="text" id="uniGset" placeholder="Set" style="flex:.6;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
@@ -2475,10 +2483,7 @@ function draw(){
     <input type="text" id="uniOp" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin-bottom:12px">
     <div class="small" style="font-weight:700;margin-bottom:4px" id="uniL2"></div>
     <input type="text" id="uniA0" inputmode="decimal" style="width:100%;border:2px solid rgba(230,193,75,.55);border-radius:9px;padding:10px;font-size:18px;font-weight:700;text-align:center;background:var(--panel2);color:var(--gold);margin-bottom:8px">
-    <div style="display:flex;gap:8px">
-      <button class="go" style="flex:1.2;background:var(--accent2)" onclick="uniSave(0)" id="uniBtnM"></button>
-      <button class="go" style="flex:1;background:#3a2f26" onclick="uniSave(1)" id="uniBtnG"></button>
-    </div>
+    <button class="go" style="width:100%;background:var(--accent2)" onclick="uniSave()" id="uniBtnM"></button>
     <div id="uniWarn" class="small" style="color:var(--muted);font-size:11.5px;line-height:1.5;margin-top:10px"></div>
   </div>
 </div>
