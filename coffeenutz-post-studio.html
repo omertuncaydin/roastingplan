@@ -109,8 +109,9 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13m</span></div>
+    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13n</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
+    <button class="btn primary" id="saveStateBtn" onclick="saveState()">Save</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
     <button class="btn" onclick="document.getElementById('jsonFile').click()">Load</button>
     <button class="btn" onclick="document.body.classList.add('collapsed')">Hide</button>
@@ -574,10 +575,31 @@ document.getElementById('imgFile').addEventListener('change', ev=>{
   r.onload=()=>{ setPath(imgTarget, r.result); renderPanel(); };
   r.readAsDataURL(f); ev.target.value='';
 });
+function migrateState(){
+  if(state.announce&&state.announce.highlight===undefined)state.announce.highlight="";
+  if(!state.shopbanner)state.shopbanner=clone(SAMPLE.shopbanner);
+  (state.shopbanner.banners||[]).forEach(b=>{ if(b.heading===undefined){ b.heading=b.title||''; b.subheading=[b.dateline,b.city,b.highlight].filter(Boolean).join(' · '); b.button=b.cta||''; b.alt=b.alt||''; } });
+}
+const STATE_KEY='feedStudioState';
+function saveState(){
+  try{
+    localStorage.setItem(STATE_KEY, JSON.stringify(state));
+    const b=document.getElementById('saveStateBtn');
+    if(b){ b.textContent='Saved &#10003;'.replace('&#10003;','\u2713'); setTimeout(()=>{ b.textContent='Save'; },1200); }
+  }catch(e){ alert('Save did not fit in browser storage (heavy images). Use Save JSON for this one; it always works.'); }
+}
+function loadSavedState(){
+  try{
+    const raw=localStorage.getItem(STATE_KEY);
+    if(!raw) return;
+    state=Object.assign(clone(SAMPLE), JSON.parse(raw));
+    migrateState();
+  }catch(e){}
+}
 document.getElementById('jsonFile').addEventListener('change', ev=>{
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{ try{ state=Object.assign(clone(SAMPLE), JSON.parse(r.result)); if(state.announce&&state.announce.highlight===undefined)state.announce.highlight=""; if(!state.shopbanner)state.shopbanner=clone(SAMPLE.shopbanner); (state.shopbanner.banners||[]).forEach(b=>{ if(b.heading===undefined){ b.heading=b.title||''; b.subheading=[b.dateline,b.city,b.highlight].filter(Boolean).join(' · '); b.button=b.cta||''; b.alt=b.alt||''; } }); renderPanel(); renderStage(); }
+  r.onload=()=>{ try{ state=Object.assign(clone(SAMPLE), JSON.parse(r.result)); migrateState(); renderPanel(); renderStage(); }
     catch(e){ alert('That file could not be read as Feed Studio JSON.'); } };
   r.readAsText(f); ev.target.value='';
 });
@@ -589,6 +611,7 @@ function doSave(){
 }
 
 /* boot */
+loadSavedState();
 renderPanel(); renderStage();
 </script>
 </body>
