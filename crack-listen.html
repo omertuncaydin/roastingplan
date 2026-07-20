@@ -164,7 +164,7 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-20d</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-20e</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -303,6 +303,7 @@ body.st-setup #btn{display:none}
           <input type="text" id="mAgWSd" placeholder="Whole SD" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
           <input type="text" id="mA0Ag" placeholder="A0 Agtron" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
           <span class="info" onclick="showInfo('a0ag')" style="flex:0 0 auto;align-self:center">&#9432;</span>
+          <button onclick="uniOpen(false)" style="flex:0 0 auto;align-self:center;background:none;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer" title="Renk ölçüm evrenin · your measurement universe">EVREN</button>
         </div>
       </details>
       <input type="text" id="mNote" placeholder="Note (machine, phone position, cup notes)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
@@ -490,6 +491,7 @@ function hardRefresh(){ if(running||wav.len||rows.length||cracks.length){ if(!co
 
 async function start(){
   if(ENROLL) enrollStop();
+  if(!UNI()){ uniOpen(true); return; }   // no roast without a universe: numbers need to know where they live
   $('err').textContent='';
   try{
     stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
@@ -789,7 +791,7 @@ function wavHeader(){
 }
 function csvText(){
   const mv=id=>($(id)&&$(id).value||'').replace(/,/g,';').trim();
-  let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,machine,'+mv('mEquip')+'\n# meta,charge_c,'+mv('mChgT')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,moisture,'+mv('mMoist')+'\n# meta,water_activity,'+mv('mAw')+'\n# meta,a0_agtron,'+mv('mA0Ag')+'\n# meta,target,'+mv('mTarget')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+'\n'+SAMPLES.map((s,i)=>'# sample,'+(i+1)+','+s.t.toFixed(1)+','+(s.ag||'')+'\n').join('');
+  let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,machine,'+mv('mEquip')+'\n# meta,charge_c,'+mv('mChgT')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,moisture,'+mv('mMoist')+'\n# meta,water_activity,'+mv('mAw')+'\n# meta,a0_agtron,'+mv('mA0Ag')+'\n# meta,target,'+mv('mTarget')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+(function(){ const un=UNI(); return un?('\n# meta,universe_meter,'+(un.meter||'')+'\n# meta,universe_grinder,'+(un.grinder||'')+'\n# meta,universe_gset,'+(un.gset||'')+'\n# meta,universe_operator,'+(un.operator||'')+'\n# meta,universe_a0,'+(un.a0!=null?un.a0:'')+(un.guessed?' (guess)':'')):''; })()+'\n'+SAMPLES.map((s,i)=>'# sample,'+(i+1)+','+s.t.toFixed(1)+','+(s.ag||'')+'\n').join('');
   s+='t_s,rms,gain,bg_gain,ratio,trigger_x,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
   const vv=valid(), fss=vv.filter(c=>c.f).map(c=>c.f);
   if(vv.length>1) s+='\n# stats,total_gain,'+vv.reduce((a,c)=>a+c.g,0)+',time_sd,'+sd(vv.map(c=>c.t)).toFixed(2)+',gain_sd,'+sd(vv.map(c=>c.g)).toFixed(2)+(fss.length>1?',f_mean,'+Math.round(fss.reduce((a,b)=>a+b,0)/fss.length)+',f_sd,'+Math.round(sd(fss)):'')+(LASTPROJ?',proj_final,'+LASTPROJ:'')+(STOPPROJ?',proj_stop,'+STOPPROJ:'')+(PHASE?',phase_final,'+PHASE.toFixed(3):'');
@@ -1203,7 +1205,7 @@ let LASTROASTROW=null;
 async function pushRoastStart(){ try{
   if(!SB||!proPowers()) return;
   const u=await cloudUser(); if(!u||!u.email) return;
-  const row={ email:u.email, coffee:(cName.value||'').trim()||null, device:localStorage.getItem('bsDevice')||null };
+  const row={ email:u.email, coffee:(cName.value||'').trim()||null, device:localStorage.getItem('bsDevice')||null, universe:UNI()||null };
   const {data}=await SB.from('roast_sessions').insert(row).select().maybeSingle();
   if(data&&data.id) LASTROASTROW=data.id;   // the record breathes from second one; a crashed roast still exists
 }catch(e){} }
@@ -1223,7 +1225,7 @@ async function pushRoastRecord(){ try{
     stages:(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES.map(sg=>({s:sg[0],t:+sg[1].toFixed(1)})):null,
     dev_span:STOPT!=null?+((STOPT-a0v).toFixed(1)):null, tg:+tgv.toFixed(1)||null, q25:q25v,
     ph_drop:(typeof PHASE==='number'&&PHASE>0.05)?+PHASE.toFixed(3):null,
-    fc_ag:parseFloat($('mA0Ag').value)||null,
+    fc_ag:parseFloat($('mA0Ag').value)||null, universe:UNI()||null,
     anchors:(SAMPLES&&SAMPLES.filter(s2=>s2.ag&&s2.t>a0v).length)?SAMPLES.filter(s2=>s2.ag&&s2.t>a0v).map(s2=>({dt:+((s2.t-a0v).toFixed(1)),ag:s2.ag})):null };
   if(LASTROASTROW){ await SB.from('roast_sessions').update(row).eq('id',LASTROASTROW);
     toast(LANG==='tr'?'Kavurma buluta kaydedildi.':'Roast saved to the cloud.'); return; }
@@ -1237,7 +1239,7 @@ async function pushRoastUpdate(){ try{
   const v=valid(), a0v=effA0(v)||0;
   await SB.from('roast_sessions').update({ agtron:parseFloat($('mAgG').value)||null,
     target:parseFloat($('mTarget').value)||null, note:($('mNote')&&$('mNote').value.trim().slice(0,200))||null,
-    fc_ag:parseFloat($('mA0Ag').value)||null,
+    fc_ag:parseFloat($('mA0Ag').value)||null, universe:UNI()||null,
     anchors:(SAMPLES&&SAMPLES.length)?SAMPLES.map(s2=>({dt:+((s2.t-a0v).toFixed(1)),ag:s2.ag})):null }).eq('id',LASTROASTROW);   // late-entered sample colors reach the cloud row too
 }catch(e){} }
 async function syncPlanFromAccount(){ try{
@@ -1534,7 +1536,40 @@ function drawGauge(state,projLo,projHi){
 }
 let TGT_U=null, LASTSTAGES=null, MAPWARN=0, PROJBORROWED=false;
 function FCDEF(){ try{ const h=calMap()['__house'];
-  if(h&&isFinite(h.fc_ag)&&h.fc_ag>=80&&h.fc_ag<=140) return h.fc_ag; }catch(e){} return EP.FC_AG; }   // OPTION B (2026-07-20): own map upstream, then HOUSE only, then 125; cross-coffee borrowing retired, one junk map can no longer poison another coffee's call
+  if(h&&isFinite(h.fc_ag)&&h.fc_ag>=80&&h.fc_ag<=140) return h.fc_ag;
+  const un=UNI(); if(un&&isFinite(un.a0)&&un.a0>=80&&un.a0<=140) return un.a0; }catch(e){} return EP.FC_AG; }   // OPTION B+U (2026-07-20): own map, house, YOUR UNIVERSE's A0, then 125; never another coffee's number
+function UNI(){ try{ const u=JSON.parse(localStorage.getItem('bsUniverse')||'null'); return (u&&u.meter&&isFinite(u.a0))?u:null; }catch(e){ return null; } }
+let UNIPEND=false;
+function uniOpen(force){ try{
+  const tr=(LANG==='tr'), u=(function(){ try{ return JSON.parse(localStorage.getItem('bsUniverse')||'null')||{}; }catch(e){ return {}; } })();
+  $('uniTitle').textContent=tr?'Renk ölçüm evrenin':'Your color measurement universe';
+  $('uniSub').textContent=tr?'Agtron sayıları cihaza, öğütücüye ve ölçen kişiye göre değişir. Bu uygulamadaki her sayı BU evrende yaşar; evren değişirse eski tahminler karşılaştırılamaz olur.':'Agtron numbers depend on the meter, the grinder and the operator. Every number in this app lives in THIS universe; change the universe and old predictions stop being comparable.';
+  $('uniL1').textContent=tr?'1 · Evrenin':'1 · Your universe';
+  $('uniL2').textContent=tr?'2 · Bu evrende ilk A0 rengin':'2 · Your first A0 color in this universe';
+  $('uniMeter').placeholder=tr?'Renk ölçer (Colormeter)':'Colormeter';
+  $('uniOp').placeholder=tr?'Ölçümü yapan kişi':'Measurement operator';
+  $('uniA0').placeholder=tr?'A0 Agtron':'A0 Agtron';
+  $('uniBtnM').textContent=tr?'ÖLÇTÜM · KAYDET':'MEASURED · SAVE';
+  $('uniBtnG').textContent=tr?'TAHMİNİM':'MY GUESS';
+  $('uniWarn').textContent=UNI()?(tr?'Dikkat: evreni değiştirmek eski haritalarını ve kayıtlarını yeni sayılarla KIYASLANAMAZ yapar.':'Careful: changing the universe makes your old maps and records INCOMPARABLE with new numbers.'):(tr?'Tahminle başlayabilirsin; ilk gerçek ölçümünde burayı güncelle.':'You can start with a guess; update this after your first real measurement.');
+  $('uniMeter').value=u.meter||''; $('uniGrinder').value=u.grinder||''; $('uniGset').value=u.gset||''; $('uniOp').value=u.operator||''; $('uniA0').value=(u.a0!=null?u.a0:'');
+  $('uniModal').style.display='flex';
+  UNIPEND=!!force;
+}catch(e){} }
+function uniClose(){ try{ $('uniModal').style.display='none'; UNIPEND=false; }catch(e){} }
+function uniSave(guessed){ try{
+  const tr=(LANG==='tr');
+  const meter=$('uniMeter').value.trim(), a0=parseFloat(String($('uniA0').value).replace(',','.'));
+  if(!meter){ toast(tr?'Renk ölçeri yaz.':'Name the colormeter.'); return; }
+  if(!isFinite(a0)||a0<80||a0>140){ toast(tr?'A0 rengi 80-140 arası olmalı.':'A0 color must be 80-140.'); return; }
+  const u={ meter, grinder:$('uniGrinder').value.trim()||null, gset:$('uniGset').value.trim()||null,
+    operator:$('uniOp').value.trim()||null, a0, guessed:guessed?1:0, at:new Date().toISOString() };
+  localStorage.setItem('bsUniverse',JSON.stringify(u));
+  $('uniModal').style.display='none';
+  toast(tr?('Evren kaydedildi · A0 '+a0+(guessed?' (tahmin)':'')):('Universe saved · A0 '+a0+(guessed?' (guess)':'')));
+  try{ updateGauge(); }catch(e2){}
+  if(UNIPEND){ UNIPEND=false; try{ start(); }catch(e2){} }
+}catch(e){} }
 function updateGauge(){
   TGT_U=null;
   const k=(cName.value||'').trim();
@@ -1805,7 +1840,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-20d';
+const APPVER='v2026-07-20e';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2426,5 +2461,26 @@ function draw(){
 }
 </script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "cc241b05cd704f42a333be3d552415e9"}'></script><!-- End Cloudflare Web Analytics -->
+<div id="uniModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:70;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this&&UNI())uniClose()">
+  <div style="background:var(--panel);border:1px solid var(--gold);border-radius:14px;padding:16px;max-width:360px;width:100%;max-height:88vh;overflow:auto">
+    <div id="uniTitle" style="font-weight:800;color:var(--gold);font-size:15px;margin-bottom:4px"></div>
+    <div id="uniSub" class="small" style="color:var(--muted);font-size:12px;line-height:1.5;margin-bottom:12px"></div>
+    <div class="small" style="font-weight:700;margin-bottom:4px" id="uniL1"></div>
+    <input type="text" id="uniMeter" list="uniMeterList" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin-bottom:8px">
+    <datalist id="uniMeterList"><option value="DiFluid Omniflux"></option><option value="DiFluid Omix"></option><option value="Tonino"></option><option value="Agtron Gourmet"></option><option value="RoastVision"></option><option value="Lighttells CM-100"></option></datalist>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input type="text" id="uniGrinder" placeholder="Grinder" style="flex:1.4;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
+      <input type="text" id="uniGset" placeholder="Set" style="flex:.6;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink)">
+    </div>
+    <input type="text" id="uniOp" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin-bottom:12px">
+    <div class="small" style="font-weight:700;margin-bottom:4px" id="uniL2"></div>
+    <input type="text" id="uniA0" inputmode="decimal" style="width:100%;border:2px solid rgba(230,193,75,.55);border-radius:9px;padding:10px;font-size:18px;font-weight:700;text-align:center;background:var(--panel2);color:var(--gold);margin-bottom:8px">
+    <div style="display:flex;gap:8px">
+      <button class="go" style="flex:1.2;background:var(--accent2)" onclick="uniSave(0)" id="uniBtnM"></button>
+      <button class="go" style="flex:1;background:#3a2f26" onclick="uniSave(1)" id="uniBtnG"></button>
+    </div>
+    <div id="uniWarn" class="small" style="color:var(--muted);font-size:11.5px;line-height:1.5;margin-top:10px"></div>
+  </div>
+</div>
 </body>
 </html>

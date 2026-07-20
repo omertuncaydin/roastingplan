@@ -589,7 +589,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-20e</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-20f</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -2132,7 +2132,7 @@ function anchLbl(r,a,j){ return 'S'+(j+1)+' \u00b7 '+((r.a0_s!=null&&a.dt!=null)
 async function loadRoastHist(){ try{
   const el=document.getElementById('rsList'); if(!el||!sb) return;
   const {data:{session}}=await sb.auth.getSession(); if(!session){ el.innerHTML=''; return; }
-  const {data}=await sb.from('roast_sessions').select('id,coffee,roasted_at,t_total_s,n_cracks,a0_s,proj_stop,agtron,target,batch_g,machine,note,stages,dev_span,tg,q25,ph_drop,fc_ag,anchors').order('roasted_at',{ascending:false}).limit(20);
+  const {data}=await sb.from('roast_sessions').select('id,universe,coffee,roasted_at,t_total_s,n_cracks,a0_s,proj_stop,agtron,target,batch_g,machine,note,stages,dev_span,tg,q25,ph_drop,fc_ag,anchors').order('roasted_at',{ascending:false}).limit(20);
   if(!data||!data.length){ el.innerHTML=''; return; }
   HISTROWS=data;
   const CALM=(function(){ try{ return JSON.parse(localStorage.getItem('bsCal')||'{}'); }catch(e){ return {}; } })();
@@ -2164,6 +2164,7 @@ function histTog(i){ try{
     +'<div>'+esc(fmtLocal(r.roasted_at))+' \u00b7 '+T('Time')+' '+mm+' \u00b7 '+(r.n_cracks||0)+' '+T('cracks')+' \u00b7 A0 '+a0+'</div>'
     +'<div class="small">'+T('stages')+': '+stg+'</div>'
     +'<div style="margin-top:4px">'+chip(dp,'\u0394 '+T('Est.'))+chip(dg,'\u0394 '+T('Goal'))+'</div>'
+    +(r.universe&&r.universe.meter?('<div class="small" style="color:var(--dim,#8a7a68)">'+esc(r.universe.meter)+(r.universe.grinder?(' \u00b7 '+esc(r.universe.grinder)+(r.universe.gset?('@'+esc(r.universe.gset)):'')):'')+(r.universe.operator?(' \u00b7 '+esc(r.universe.operator)):'')+' \u00b7 A0 '+(r.universe.a0!=null?Math.round(r.universe.a0):'\u00b7')+(r.universe.guessed?'~':'')+'</div>'):'')
     +'<div class="small">DEV '+(r.dev_span?(Math.floor(r.dev_span/60)+':'+('0'+Math.round(r.dev_span%60)).slice(-2)):'\u00b7')+' \u00b7 tg '+(r.tg!=null?Math.round(r.tg):'\u00b7')+' \u00b7 q25 '+(r.q25!=null?r.q25+'s':'\u00b7')+' \u00b7 phi '+(r.ph_drop!=null?Math.round(r.ph_drop*100)+'%':'\u00b7')+(r.fc_ag?(' \u00b7 A0 '+Math.round(r.fc_ag)):'')+'</div>'
     +((r.anchors&&r.anchors.length)?('<div class="small">'+T('anchors')+': '+r.anchors.map((a,j)=>anchLbl(r,a,j)+'\u2192'+(a.ag!=null?Math.round(a.ag):'\u00b7')).join(' \u00b7\u00b7 ')+'</div>'):'')
     +'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">'
