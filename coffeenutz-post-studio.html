@@ -109,7 +109,7 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13j</span></div>
+    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13k</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
     <button class="btn" onclick="document.getElementById('jsonFile').click()">Load</button>
@@ -156,11 +156,11 @@ const SAMPLE = {
     outputs:{ igfeed:true, igstory:true, linkedin:true, banner:true, siteban:true, ytthumb:false, ytcover:false, og:false, email:false }
   },
   shopbanner:{ banners:[
-    { img:"", bgimg:false, alt:"SCA Roasting Bundle sınıf afişi",
+    { img:"", bgimg:false, label:"", alt:"SCA Roasting Bundle sınıf afişi",
       heading:"SCA Roasting Bundle",
       subheading:"04-07 Ağustos 2026 · İzmir, CoffeeNutz HQ · Roasting App lisansı 12 ay dahil",
       button:"Kayıtlar başladı" },
-    { img:"", bgimg:false, alt:"Q Grader Sertifikasyon sınıf afişi",
+    { img:"", bgimg:false, label:"", alt:"Q Grader Sertifikasyon sınıf afişi",
       heading:"Q Grader Sertifikasyon",
       subheading:"24-29 Ağustos 2026 · İzmir, CoffeeNutz HQ · Cupper lisansı 36 ay dahil",
       button:"Kayıtlar başladı" }
@@ -339,7 +339,7 @@ function renderStage(){
       boardWrap(slideCard(sl,i,n,th), 'Slide '+(i+1)+' ('+sl.type+')', 1080,1350, 'slide-'+(i+1))).join("");
   } else if(state.mode==="shopbanner"){
     st.innerHTML = state.shopbanner.banners.map((b,i)=>
-      boardWrap(bannerRecCard(b), 'Banner '+(i+1), 1200,600, 'shopbanner-'+(i+1))).join("");
+      boardWrap(bannerRecCard(b), (b.label&&b.label.trim()?esc(b.label):'Banner '+(i+1)), 1200,600, 'shopbanner-'+(i+1))).join("");
   } else {
     const o=state.announce.outputs; let h="";
     if(o.igfeed)  h+=boardWrap(announceCard('igfeed'),  'IG Feed', 1080,1350,'igfeed');
@@ -511,12 +511,12 @@ function bannerRecCard(rec){
 function addBanner(fromAnnounce){
   if(fromAnnounce){
     const a=state.announce;
-    state.shopbanner.banners.push({ img:a.img||'', bgimg:false, alt:'',
+    state.shopbanner.banners.push({ img:a.img||'', bgimg:false, label:'', alt:'',
       heading:a.title||'',
       subheading:[a.dateline,a.city,a.highlight].filter(Boolean).join(' · '),
       button:a.cta||'' });
   } else {
-    state.shopbanner.banners.push({ img:'', bgimg:false, alt:'', heading:'', subheading:'', button:'' });
+    state.shopbanner.banners.push({ img:'', bgimg:false, label:'', alt:'', heading:'', subheading:'', button:'' });
   }
   renderPanel(); renderStage();
 }
@@ -529,7 +529,7 @@ function moveBanner(i,d){
 }
 function bannerEditor(b,i){
   return '<div class="li">'
-    + '<div class="li-head"><span class="li-idx">Banner '+(i+1)+'</span>'
+    + '<div class="li-head"><input class="f" style="width:150px;padding:6px 8px;font-size:11px;letter-spacing:.08em;margin:0" value="'+esc(b.label||'').replace(/"/g,"&quot;")+'" placeholder="Banner '+(i+1)+'" oninput="setPath(\'shopbanner.banners.'+i+'.label\',this.value)">'
     + '<button class="li-mini" title="duplicate" onclick="dupBanner('+i+')">&#10697;</button>'
     + '<button class="li-mini" onclick="moveBanner('+i+',-1)">&#8593;</button>'
     + '<button class="li-mini" onclick="moveBanner('+i+',1)">&#8595;</button>'
