@@ -114,7 +114,7 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13r</span></div>
+    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13s</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
     <button class="btn primary" id="saveStateBtn" onclick="saveState()">Save</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
@@ -360,9 +360,15 @@ function moveAnnounce(ev,i,d){ stopFold(ev); const s=state.announces, j=i+d; if(
 function renderStage(){
   const st=document.getElementById('stage');
   if(state.mode==="carousel"){
-    const th=state.carousel.theme, n=state.carousel.slides.length;
-    st.innerHTML = state.carousel.slides.map((sl,i)=>
-      boardWrap(slideCard(sl,i,n,th), 'Slide '+(i+1)+' ('+sl.type+')', 1080,1350, 'slide-'+(i+1))).join("");
+    const prev=state.carousel; let h=""; const multi=state.carousels.length>1;
+    state.carousels.forEach((car,ci)=>{
+      state.carousel=car; const th=car.theme, n=car.slides.length;
+      const nm=(car.label&&car.label.trim())?car.label:('Carousel '+(ci+1));
+      if(multi) h+='<div class="ann-group-head">'+esc(nm)+'</div>';
+      h+=car.slides.map((sl,i)=> boardWrap(slideCard(sl,i,n,th), 'Slide '+(i+1)+' ('+sl.type+')', 1080,1350, 'c'+ci+'-slide-'+(i+1))).join("");
+    });
+    state.carousel=prev;
+    st.innerHTML=h;
   } else if(state.mode==="shopbanner"){
     st.innerHTML = state.shopbanner.banners.map((b,i)=>
       boardWrap(bannerRecCard(b), (b.label&&b.label.trim()?esc(b.label):'Banner '+(i+1)), 1200,600, 'shopbanner-'+(i+1))).join("");
@@ -448,19 +454,20 @@ function setPath(p,val){
   ks.reduce((o,k)=>o[k],state)[last]=val;
   renderStage();
 }
-function slideEditor(sl,i){
+function slideEditor(sl,i,ci){
+  const B="carousels."+ci+".slides."+i+".";
   return '<div class="li">'
     + '<div class="li-head"><span class="li-idx">Slide '+(i+1)+'</span>'
-    + '<button class="li-mini" onclick="moveSlide('+i+',-1)">&#8593;</button>'
-    + '<button class="li-mini" onclick="moveSlide('+i+',1)">&#8595;</button>'
-    + '<button class="li-mini li-del" onclick="delSlide('+i+')">&#215;</button></div>'
-    + field("Type","carousel.slides."+i+".type","select:cover|teach|quote|close")
-    + field("Title","carousel.slides."+i+".title")
-    + field("Subline","carousel.slides."+i+".sub")
-    + field("Body","carousel.slides."+i+".body","textarea")
-    + field("Corner tag","carousel.slides."+i+".tag")
-    + '<div class="img-row"><button class="btn" onclick="pickImg(\'carousel.slides.'+i+'.img\')">Image</button>'
-    + (sl.img?'<button class="btn" onclick="setPath(\'carousel.slides.'+i+'.img\',\'\');renderPanel()">Clear</button>':'')
+    + '<button class="li-mini" onclick="moveSlide('+ci+','+i+',-1)">&#8593;</button>'
+    + '<button class="li-mini" onclick="moveSlide('+ci+','+i+',1)">&#8595;</button>'
+    + '<button class="li-mini li-del" onclick="delSlide('+ci+','+i+')">&#215;</button></div>'
+    + field("Type",B+"type","select:cover|teach|quote|close")
+    + field("Title",B+"title")
+    + field("Subline",B+"sub")
+    + field("Body",B+"body","textarea")
+    + field("Corner tag",B+"tag")
+    + '<div class="img-row"><button class="btn" onclick="pickImg(\''+B+'img\')">Image</button>'
+    + (sl.img?'<button class="btn" onclick="setPath(\''+B+'img\',\'\');renderPanel()">Clear</button>':'')
     + '</div></div>';
 }
 function renderPanel(){
@@ -468,15 +475,30 @@ function renderPanel(){
   document.getElementById('hint').textContent=HINTS[state.mode];
   let h="";
   if(state.mode==="carousel"){
-    h+='<details class="sec" open><summary>Series</summary><div class="fieldwrap">'
-      + field("Kicker (top left)","carousel.kicker") + field("Series tag (top right)","carousel.series")
-      + field("Theme","carousel.theme","select:light|dark")
-      + field("Handle","brand.handle")
-      + '</div></details>';
-    h+='<details class="sec" open><summary>Slides ('+state.carousel.slides.length+'/10)</summary><div class="fieldwrap">'
-      + state.carousel.slides.map(slideEditor).join("")
-      + (state.carousel.slides.length<10?'<button class="addbtn" onclick="addSlide()">+ Add slide</button>':'')
-      + '</div></details>';
+    const CN=state.carousels.length;
+    state.carousels.forEach((car,ci)=>{
+      const cdef='Carousel '+(ci+1);
+      const cnm=(car.label&&car.label.trim())?car.label:cdef;
+      h+='<details class="sec annfolder" open><summary><span class="foldttl" id="clab'+ci+'" data-fallback="'+cdef+'">'+esc(cnm)+'</span><span class="foldbtns">'
+        + '<button class="li-mini" title="duplicate" onclick="dupCarousel(event,'+ci+')">Dup</button>'
+        + '<button class="li-mini" title="rename" onclick="renameCar(event,'+ci+')">Ren</button>'
+        + (ci>0?'<button class="li-mini" title="up" onclick="moveCarousel(event,'+ci+',-1)">&#8593;</button>':'')
+        + (ci<CN-1?'<button class="li-mini" title="down" onclick="moveCarousel(event,'+ci+',1)">&#8595;</button>':'')
+        + (CN>1?'<button class="li-mini li-del" title="delete" onclick="delCarousel(event,'+ci+')">&#215;</button>':'')
+        + '</span></summary><div class="fieldwrap">'
+        + '<input class="f" id="cren'+ci+'" style="display:none;margin:0 0 8px;font-size:11px" value="'+esc(car.label||'').replace(/"/g,"&quot;")+'" placeholder="Folder name (optional)" oninput="renameSet(\'carousels.'+ci+'.label\',\'clab'+ci+'\',this.value)">'
+        + '<details class="sec" open><summary>Series</summary><div class="fieldwrap">'
+        +   field("Kicker (top left)","carousels."+ci+".kicker") + field("Series tag (top right)","carousels."+ci+".series")
+        +   field("Theme","carousels."+ci+".theme","select:light|dark")
+        +   field("Handle","brand.handle")
+        +   '</div></details>'
+        + '<details class="sec" open><summary>Slides ('+car.slides.length+'/10)</summary><div class="fieldwrap">'
+        +   car.slides.map((sl,i)=>slideEditor(sl,i,ci)).join("")
+        +   (car.slides.length<10?'<button class="addbtn" onclick="addSlide('+ci+')">+ Add slide</button>':'')
+        +   '</div></details>'
+        + '</div></details>';
+    });
+    h+='<button class="addbtn" onclick="addCarousel()">+ New carousel</button>';
   } else if(state.mode==="shopbanner"){
     h+='<details class="sec" open><summary>Banner pile ('+state.shopbanner.banners.length+')</summary><div class="fieldwrap">'
       + state.shopbanner.banners.map(bannerEditor).join("")
@@ -492,7 +514,7 @@ function renderPanel(){
       const anm=(ann.label&&ann.label.trim())?ann.label:adef;
       h+='<details class="sec annfolder" open><summary><span class="foldttl" id="alab'+i+'" data-fallback="'+esc(adef).replace(/"/g,"&quot;")+'">'+esc(anm)+'</span><span class="foldbtns">'
         + '<button class="li-mini" title="duplicate" onclick="dupAnnounce(event,'+i+')">Dup</button>'
-        + '<button class="li-mini" title="rename" onclick="renameAnn(event,'+i+')">Rename</button>'
+        + '<button class="li-mini" title="rename" onclick="renameAnn(event,'+i+')">Ren</button>'
         + (i>0?'<button class="li-mini" title="up" onclick="moveAnnounce(event,'+i+',-1)">&#8593;</button>':'')
         + (i<N-1?'<button class="li-mini" title="down" onclick="moveAnnounce(event,'+i+',1)">&#8595;</button>':'')
         + (N>1?'<button class="li-mini li-del" title="delete" onclick="delAnnounce(event,'+i+')">&#215;</button>':'')
@@ -521,13 +543,18 @@ function renderPanel(){
   }
   document.getElementById('sections').innerHTML=h;
 }
-function addSlide(){ state.carousel.slides.push({type:"teach",title:"",sub:"",body:"",img:"",tag:""}); renderPanel(); renderStage(); }
-function delSlide(i){ state.carousel.slides.splice(i,1); renderPanel(); renderStage(); }
-function moveSlide(i,d){
-  const s=state.carousel.slides, j=i+d;
+function addSlide(ci){ state.carousels[ci].slides.push({type:"teach",title:"",sub:"",body:"",img:"",tag:""}); renderPanel(); renderStage(); }
+function delSlide(ci,i){ state.carousels[ci].slides.splice(i,1); renderPanel(); renderStage(); }
+function moveSlide(ci,i,d){
+  const s=state.carousels[ci].slides, j=i+d;
   if(j<0||j>=s.length) return;
   [s[i],s[j]]=[s[j],s[i]]; renderPanel(); renderStage();
 }
+function addCarousel(){ state.carousels.push(clone(SAMPLE.carousel)); renderPanel(); renderStage(); }
+function dupCarousel(ev,ci){ stopFold(ev); state.carousels.splice(ci+1,0,clone(state.carousels[ci])); renderPanel(); renderStage(); }
+function delCarousel(ev,ci){ stopFold(ev); if(state.carousels.length<=1) return; const c=state.carousels[ci]; const nm=(c.label&&c.label.trim())?c.label:((c.kicker&&c.kicker.trim())?c.kicker:('Carousel '+(ci+1))); if(!confirm('Delete "'+nm+'"? This carousel and its slides will be removed.')) return; state.carousels.splice(ci,1); state.carousel=state.carousels[0]; renderPanel(); renderStage(); }
+function moveCarousel(ev,ci,d){ stopFold(ev); const s=state.carousels, j=ci+d; if(j<0||j>=s.length) return; [s[ci],s[j]]=[s[j],s[ci]]; renderPanel(); renderStage(); }
+function renameCar(ev,ci){ stopFold(ev); if(ev){ const d=ev.target.closest('details'); if(d)d.open=true; } const inp=document.getElementById('cren'+ci); if(inp){ inp.style.display='block'; inp.focus(); inp.select(); } }
 /* =============== shopify banner pile =============== */
 function bannerTextStack(rec){
   const vis=f=>f?'hidden':'visible';
@@ -579,7 +606,7 @@ function bannerEditor(b,i){
     + '<div class="li-head"><span class="reclabel" id="blab'+i+'" data-fallback="Banner '+(i+1)+'">'+esc(b.label&&b.label.trim()?b.label:'Banner '+(i+1))+'</span>'
     + '<input class="f" id="bren'+i+'" style="display:none;width:150px;padding:6px 8px;font-size:11px;letter-spacing:.08em;margin:0" value="'+esc(b.label||'').replace(/"/g,"&quot;")+'" placeholder="Banner '+(i+1)+'" oninput="renameSet(\'shopbanner.banners.'+i+'.label\',\'blab'+i+'\',this.value)">'
     + '<button class="li-mini" title="duplicate" onclick="dupBanner('+i+')">Dup</button>'
-    + '<button class="li-mini" title="rename" onclick="renameRec(\'bren'+i+'\',\'blab'+i+'\')">Rename</button>'
+    + '<button class="li-mini" title="rename" onclick="renameRec(\'bren'+i+'\',\'blab'+i+'\')">Ren</button>'
     + '<button class="li-mini" title="up" onclick="moveBanner('+i+',-1)">&#8593;</button>'
     + '<button class="li-mini" title="down" onclick="moveBanner('+i+',1)">&#8595;</button>'
     + '<button class="li-mini li-del" title="delete" onclick="delBanner('+i+')">&#215;</button></div>'
@@ -613,6 +640,9 @@ document.getElementById('imgFile').addEventListener('change', ev=>{
   r.readAsDataURL(f); ev.target.value='';
 });
 function migrateState(){
+  if(!state.carousels){ state.carousels=[ state.carousel || clone(SAMPLE.carousel) ]; }
+  state.carousels.forEach(c=>{ if(!c.slides)c.slides=[]; });
+  state.carousel=state.carousels[0];
   if(!state.announces){ state.announces=[ state.announce || clone(SAMPLE.announce) ]; }
   state.announces.forEach(a=>{ if(a.highlight===undefined)a.highlight=""; if(!a.outputs)a.outputs=clone(SAMPLE.announce.outputs); });
   state.announce=state.announces[0];
