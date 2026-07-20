@@ -63,6 +63,10 @@ textarea.f{resize:vertical;min-height:52px}
 .li-del:hover{color:#e0705a !important}
 .addbtn{width:100%;margin-top:6px;background:#181b16;border:1px dashed var(--panel-line);color:var(--panel-dim);padding:8px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase}
 .addbtn:hover{border-color:var(--amber);color:var(--amber)}
+.annfolder>summary{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.annfolder>summary .foldttl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.foldbtns{display:flex;gap:4px;flex:none}
+.ann-group-head{width:470px;max-width:100%;color:var(--amber);font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--panel-line);padding-bottom:6px;margin-top:8px}
 input[type=file]{display:none}
 .img-row{display:flex;gap:6px;align-items:center;margin-top:5px}
 #reopen{position:fixed;top:14px;left:14px;z-index:50;display:none}
@@ -109,7 +113,7 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13o</span></div>
+    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13p</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
     <button class="btn primary" id="saveStateBtn" onclick="saveState()">Save</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
@@ -344,6 +348,11 @@ function boardWrap(html, label, W, H, dlName){
     + '<div data-board="'+dlName+'" style="transform:scale('+sc+');transform-origin:top left">'+html+'</div>'
     + '</div></div>';
 }
+function stopFold(ev){ if(ev){ ev.stopPropagation(); ev.preventDefault(); } }
+function addAnnounce(){ state.announces.push(clone(SAMPLE.announce)); renderPanel(); renderStage(); }
+function dupAnnounce(ev,i){ stopFold(ev); state.announces.splice(i+1,0,clone(state.announces[i])); renderPanel(); renderStage(); }
+function delAnnounce(ev,i){ stopFold(ev); if(state.announces.length<=1) return; state.announces.splice(i,1); state.announce=state.announces[0]; renderPanel(); renderStage(); }
+function moveAnnounce(ev,i,d){ stopFold(ev); const s=state.announces, j=i+d; if(j<0||j>=s.length) return; [s[i],s[j]]=[s[j],s[i]]; renderPanel(); renderStage(); }
 function renderStage(){
   const st=document.getElementById('stage');
   if(state.mode==="carousel"){
@@ -354,16 +363,18 @@ function renderStage(){
     st.innerHTML = state.shopbanner.banners.map((b,i)=>
       boardWrap(bannerRecCard(b), (b.label&&b.label.trim()?esc(b.label):'Banner '+(i+1)), 1200,600, 'shopbanner-'+(i+1))).join("");
   } else {
-    const o=state.announce.outputs; let h="";
-    if(o.igfeed)  h+=boardWrap(announceCard('igfeed'),  'IG Feed', 1080,1350,'igfeed');
-    if(o.igstory) h+=boardWrap(announceCard('igstory'), 'IG Story',1080,1920,'igstory');
-    if(o.linkedin)h+=boardWrap(announceCard('linkedin'),'LinkedIn',1200,627,'linkedin');
-    if(o.banner)  h+=boardWrap(announceCard('banner'),  'Wide Banner',1920,820,'banner');
-    if(o.siteban) h+=boardWrap(announceCard('siteban'), 'Site Banner',1200,600,'siteban');
-    if(o.ytthumb) h+=boardWrap(announceCard('ytthumb'), 'YT Thumbnail',1280,720,'ytthumb');
-    if(o.ytcover) h+=boardWrap(announceCard('ytcover'), 'YT Channel Cover',2560,1440,'ytcover');
-    if(o.og)      h+=boardWrap(announceCard('og'),      'OG Card',1200,630,'og');
-    if(o.email)   h+=boardWrap(announceCard('email'),   'Email Header',1200,400,'email');
+    const SURF=[['igfeed','IG Feed',1080,1350],['igstory','IG Story',1080,1920],['linkedin','LinkedIn',1200,627],['banner','Wide Banner',1920,820],['siteban','Site Banner',1200,600],['ytthumb','YT Thumbnail',1280,720],['ytcover','YT Channel Cover',2560,1440],['og','OG Card',1200,630],['email','Email Header',1200,400]];
+    const prev=state.announce; let h="";
+    const multi=state.announces.length>1;
+    state.announces.forEach((ann,i)=>{
+      state.announce=ann;
+      let g="";
+      SURF.forEach(s=>{ if(ann.outputs[s[0]]) g+=boardWrap(announceCard(s[0]), s[1], s[2],s[3], 'a'+i+'-'+s[0]); });
+      const nm=(ann.title&&ann.title.trim())?ann.title:('Announcement '+(i+1));
+      if(multi) h+='<div class="ann-group-head">'+esc(nm)+'</div>';
+      h+=g;
+    });
+    state.announce=prev;
     st.innerHTML=h;
   }
 }
@@ -415,7 +426,7 @@ async function downloadAll(){
 const HINTS={
   carousel:"One layout, repeated. The swipe rhythm does the persuading. Cover hooks, teach slides give value, one quote breathes, close points home. Max 10 slides.",
   shopbanner:"Shopify banner records, 1200x600 preview. Five boxes per record, same as the theme section: image, alt text, heading, subheading, button label. Duplicate a record to make the next one.",
-  announce:"One content set, nine surfaces. Date and city lead, cap is a room fact, installment lives in the copy, no scarcity words, no counts. YT cover is evergreen: type the motto as title, campaign text stays off it."
+  announce:"Announcement folders, each its own Content + Outputs. Duplicate a folder to spin a variant (Roasting vs Q). Each folder renders only the surfaces it has ticked. YT cover is evergreen: motto as title."
 };
 function setMode(m){ state.mode=m; renderPanel(); renderStage(); }
 function field(label, path, type){
@@ -469,23 +480,36 @@ function renderPanel(){
       + '<button class="addbtn" onclick="addBanner(false)">+ New banner</button>'
       + '</div></details>';
   } else {
-    h+='<details class="sec" open><summary>Content</summary><div class="fieldwrap">'
-      + field("Kicker","announce.kicker") + field("Class title","announce.title")
-      + field("Dates","announce.dateline") + field("City / venue","announce.city")
-      + field("Seats line","announce.seats") + field("Language line","announce.lang")
-      + field("Included line (gold, optional)","announce.highlight")
-      + field("Price","announce.price") + field("Installment line","announce.installment","textarea")
-      + field("CTA","announce.cta") + field("Footer note","announce.extra")
-      + field("Theme","announce.theme","select:dark|light")
-      + '<div class="img-row"><button class="btn" onclick="pickImg(\'announce.img\')">Photo</button>'
-      + (state.announce.img?'<button class="btn" onclick="setPath(\'announce.img\',\'\');renderPanel()">Clear</button>':'')
-      + '</div></div></details>';
-    h+='<details class="sec" open><summary>Outputs</summary><div class="fieldwrap">'
-      + ["igfeed","igstory","linkedin","banner","siteban","ytthumb","ytcover","og","email"].map(k=>
-        '<label class="f-label" style="display:flex;gap:8px;align-items:center;text-transform:none">'
-        + '<input type="checkbox" '+(state.announce.outputs[k]?'checked':'')+' onchange="state.announce.outputs.'+k+'=this.checked;renderStage()"> '
-        + {igfeed:"IG Feed 1080x1350",igstory:"IG Story 1080x1920",linkedin:"LinkedIn 1200x627",banner:"Wide Banner 1920x820",siteban:"Site Banner 1200x600",ytthumb:"YT Thumbnail 1280x720",ytcover:"YT Channel Cover 2560x1440",og:"OG Card 1200x630",email:"Email Header 1200x400"}[k]+'</label>').join("")
-      + '</div></details>';
+    const N=state.announces.length;
+    const OUT={igfeed:"IG Feed 1080x1350",igstory:"IG Story 1080x1920",linkedin:"LinkedIn 1200x627",banner:"Wide Banner 1920x820",siteban:"Site Banner 1200x600",ytthumb:"YT Thumbnail 1280x720",ytcover:"YT Channel Cover 2560x1440",og:"OG Card 1200x630",email:"Email Header 1200x400"};
+    state.announces.forEach((ann,i)=>{
+      const P="announces."+i+".";
+      h+='<details class="sec annfolder" open><summary><span class="foldttl">Announcement '+(i+1)+(ann.title?' &#183; '+esc(ann.title):'')+'</span><span class="foldbtns">'
+        + '<button class="li-mini" title="duplicate" onclick="dupAnnounce(event,'+i+')">&#10697;</button>'
+        + (i>0?'<button class="li-mini" title="up" onclick="moveAnnounce(event,'+i+',-1)">&#8593;</button>':'')
+        + (i<N-1?'<button class="li-mini" title="down" onclick="moveAnnounce(event,'+i+',1)">&#8595;</button>':'')
+        + (N>1?'<button class="li-mini li-del" title="delete" onclick="delAnnounce(event,'+i+')">&#215;</button>':'')
+        + '</span></summary><div class="fieldwrap">'
+        + '<details class="sec" open><summary>Content</summary><div class="fieldwrap">'
+        +   field("Kicker",P+"kicker") + field("Class title",P+"title")
+        +   field("Dates",P+"dateline") + field("City / venue",P+"city")
+        +   field("Seats line",P+"seats") + field("Language line",P+"lang")
+        +   field("Included line (gold, optional)",P+"highlight")
+        +   field("Price",P+"price") + field("Installment line",P+"installment","textarea")
+        +   field("CTA",P+"cta") + field("Footer note",P+"extra")
+        +   field("Theme",P+"theme","select:dark|light")
+        +   '<div class="img-row"><button class="btn" onclick="pickImg(\''+P+'img\')">Photo</button>'
+        +   (ann.img?'<button class="btn" onclick="setPath(\''+P+'img\',\'\');renderPanel()">Clear</button>':'')
+        +   '</div></div></details>'
+        + '<details class="sec" open><summary>Outputs</summary><div class="fieldwrap">'
+        +   Object.keys(OUT).map(k=>
+              '<label class="f-label" style="display:flex;gap:8px;align-items:center;text-transform:none">'
+              + '<input type="checkbox" '+(ann.outputs[k]?'checked':'')+' onchange="state.announces['+i+'].outputs.'+k+'=this.checked;renderStage()"> '
+              + OUT[k]+'</label>').join("")
+        + '</div></details>'
+        + '</div></details>';
+    });
+    h+='<button class="addbtn" onclick="addAnnounce()">+ New announcement</button>';
   }
   document.getElementById('sections').innerHTML=h;
 }
@@ -525,7 +549,7 @@ function bannerRecCard(rec){
 }
 function addBanner(fromAnnounce){
   if(fromAnnounce){
-    const a=state.announce;
+    const a=state.announces[0];
     state.shopbanner.banners.push({ img:a.img||'', bgimg:false, label:'', alt:'',
       heading:a.title||'',
       subheading:[a.dateline,a.city,a.highlight].filter(Boolean).join(' · '),
@@ -579,7 +603,9 @@ document.getElementById('imgFile').addEventListener('change', ev=>{
   r.readAsDataURL(f); ev.target.value='';
 });
 function migrateState(){
-  if(state.announce&&state.announce.highlight===undefined)state.announce.highlight="";
+  if(!state.announces){ state.announces=[ state.announce || clone(SAMPLE.announce) ]; }
+  state.announces.forEach(a=>{ if(a.highlight===undefined)a.highlight=""; if(!a.outputs)a.outputs=clone(SAMPLE.announce.outputs); });
+  state.announce=state.announces[0];
   if(!state.shopbanner)state.shopbanner=clone(SAMPLE.shopbanner);
   (state.shopbanner.banners||[]).forEach(b=>{ if(b.heading===undefined){ b.heading=b.title||''; b.subheading=[b.dateline,b.city,b.highlight].filter(Boolean).join(' · '); b.button=b.cta||''; b.alt=b.alt||''; } });
 }
@@ -615,6 +641,7 @@ function doSave(){
 
 /* boot */
 loadSavedState();
+migrateState();
 renderPanel(); renderStage();
 </script>
 </body>
