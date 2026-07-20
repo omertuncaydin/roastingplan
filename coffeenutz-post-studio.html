@@ -109,7 +109,7 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13h</span></div>
+    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13i</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
     <button class="btn" onclick="document.getElementById('jsonFile').click()">Load</button>
@@ -156,16 +156,14 @@ const SAMPLE = {
     outputs:{ igfeed:true, igstory:true, linkedin:true, banner:true, siteban:true, ytthumb:false, ytcover:false, og:false, email:false }
   },
   shopbanner:{ banners:[
-    { theme:"dark", kicker:"SCA SERTİFİKALI EĞİTİM", title:"SCA Roasting Bundle",
-      dateline:"04-07 Ağustos 2026", city:"İzmir, CoffeeNutz HQ",
-      seats:"Kontenjan: 4 kişi", lang:"Eğitim dili: Türkçe",
-      highlight:"Roasting App Lisansı: 12 Ay Dahil",
-      cta:"Kayıtlar başladı", img:"" },
-    { theme:"dark", kicker:"SCA SERTİFİKALI EĞİTİM", title:"Q Grader Sertifikasyon",
-      dateline:"24-29 Ağustos 2026", city:"İzmir, CoffeeNutz HQ",
-      seats:"Kontenjan: 6 kişi", lang:"Eğitim dili: Türkçe",
-      highlight:"Cupper Lisansı: 36 Ay Dahil",
-      cta:"Kayıtlar başladı", img:"" }
+    { img:"", alt:"SCA Roasting Bundle sınıf afişi",
+      heading:"SCA Roasting Bundle",
+      subheading:"04-07 Ağustos 2026 · İzmir, CoffeeNutz HQ · Roasting App lisansı 12 ay dahil",
+      button:"Kayıtlar başladı" },
+    { img:"", alt:"Q Grader Sertifikasyon sınıf afişi",
+      heading:"Q Grader Sertifikasyon",
+      subheading:"24-29 Ağustos 2026 · İzmir, CoffeeNutz HQ · Cupper lisansı 36 ay dahil",
+      button:"Kayıtlar başladı" }
   ]}
 };
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -403,7 +401,7 @@ async function downloadAll(){
 /* =============== panel =============== */
 const HINTS={
   carousel:"One layout, repeated. The swipe rhythm does the persuading. Cover hooks, teach slides give value, one quote breathes, close points home. Max 10 slides.",
-  shopbanner:"Your Shopify banner, 1200x600, as a pile: every record is its own banner, duplicate one, edit, export PNG. Pull the current Announcement in with one button.",
+  shopbanner:"Shopify banner records, 1200x600 preview. Five boxes per record, same as the theme section: image, alt text, heading, subheading, button label. Duplicate a record to make the next one.",
   announce:"One content set, nine surfaces. Date and city lead, cap is a room fact, installment lives in the copy, no scarcity words, no counts. YT cover is evergreen: type the motto as title, campaign text stays off it."
 };
 function setMode(m){ state.mode=m; renderPanel(); renderStage(); }
@@ -487,17 +485,28 @@ function moveSlide(i,d){
 }
 /* =============== shopify banner pile =============== */
 function bannerRecCard(rec){
-  const keep=state.announce;
-  state.announce=Object.assign(clone(state.announce), rec);
-  let html;
-  try{ html=announceCard('siteban'); } finally { state.announce=keep; }
-  return html;
+  return card(1200,600,true,
+    '<div style="display:flex;gap:48px;height:100%;align-items:center">'
+    + '<div style="flex:1.2">'
+    +   '<h1 style="font-size:60px;line-height:1.05">'+esc(rec.heading)+'</h1>'
+    +   (rec.subheading?'<div class="metaline" style="font-size:20px;margin-top:22px">'+esc(trUp(rec.subheading))+'</div>':'')
+    +   (rec.button?'<div class="cta" style="font-size:20px;padding:14px 26px;margin-top:32px">'+esc(trUp(rec.button))+'</div>':'')
+    + '</div>'
+    + '<div style="flex:1;align-self:stretch;display:flex;flex-direction:column;justify-content:center">'
+    +   (rec.img?'<div class="imgbox" style="height:460px"><img src="'+rec.img+'" alt="'+esc(rec.alt)+'"></div>'
+              :'<div class="wavebox" style="height:250px">'+wave(60,4)+'</div>')
+    + '</div></div>', 56);
 }
 function addBanner(fromAnnounce){
-  const src=fromAnnounce?state.announce:SAMPLE.shopbanner.banners[0];
-  state.shopbanner.banners.push({ theme:src.theme, kicker:src.kicker, title:src.title,
-    dateline:src.dateline, city:src.city, seats:src.seats, lang:src.lang,
-    highlight:src.highlight||'', cta:src.cta, img:src.img||'' });
+  if(fromAnnounce){
+    const a=state.announce;
+    state.shopbanner.banners.push({ img:a.img||'', alt:'',
+      heading:a.title||'',
+      subheading:[a.dateline,a.city,a.highlight].filter(Boolean).join(' · '),
+      button:a.cta||'' });
+  } else {
+    state.shopbanner.banners.push({ img:'', alt:'', heading:'', subheading:'', button:'' });
+  }
   renderPanel(); renderStage();
 }
 function dupBanner(i){ state.shopbanner.banners.splice(i+1,0,clone(state.shopbanner.banners[i])); renderPanel(); renderStage(); }
@@ -514,15 +523,13 @@ function bannerEditor(b,i){
     + '<button class="li-mini" onclick="moveBanner('+i+',-1)">&#8593;</button>'
     + '<button class="li-mini" onclick="moveBanner('+i+',1)">&#8595;</button>'
     + '<button class="li-mini li-del" onclick="delBanner('+i+')">&#215;</button></div>'
-    + field("Kicker","shopbanner.banners."+i+".kicker")
-    + field("Title","shopbanner.banners."+i+".title")
-    + field("Dates","shopbanner.banners."+i+".dateline")
-    + field("City / venue","shopbanner.banners."+i+".city")
-    + field("Seats line","shopbanner.banners."+i+".seats")
-    + field("Language line","shopbanner.banners."+i+".lang")
-    + field("Included line (gold, optional)","shopbanner.banners."+i+".highlight")
-    + field("CTA","shopbanner.banners."+i+".cta")
-    + field("Theme","shopbanner.banners."+i+".theme","select:dark|light")
+    + '<div class="img-row"><button class="btn" onclick="pickImg(\'shopbanner.banners.'+i+'.img\')">Image</button>'
+    + (b.img?'<button class="btn" onclick="setPath(\'shopbanner.banners.'+i+'.img\',\'\');renderPanel()">Clear</button>':'')
+    + '</div>'
+    + field("Photo Alt Text","shopbanner.banners."+i+".alt")
+    + field("Heading","shopbanner.banners."+i+".heading")
+    + field("Subheading","shopbanner.banners."+i+".subheading")
+    + field("Button Label","shopbanner.banners."+i+".button")
     + '</div>';
 }
 let imgTarget=null;
@@ -536,7 +543,7 @@ document.getElementById('imgFile').addEventListener('change', ev=>{
 document.getElementById('jsonFile').addEventListener('change', ev=>{
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{ try{ state=Object.assign(clone(SAMPLE), JSON.parse(r.result)); if(state.announce&&state.announce.highlight===undefined)state.announce.highlight=""; if(!state.shopbanner)state.shopbanner=clone(SAMPLE.shopbanner); renderPanel(); renderStage(); }
+  r.onload=()=>{ try{ state=Object.assign(clone(SAMPLE), JSON.parse(r.result)); if(state.announce&&state.announce.highlight===undefined)state.announce.highlight=""; if(!state.shopbanner)state.shopbanner=clone(SAMPLE.shopbanner); (state.shopbanner.banners||[]).forEach(b=>{ if(b.heading===undefined){ b.heading=b.title||''; b.subheading=[b.dateline,b.city,b.highlight].filter(Boolean).join(' · '); b.button=b.cta||''; b.alt=b.alt||''; } }); renderPanel(); renderStage(); }
     catch(e){ alert('That file could not be read as Feed Studio JSON.'); } };
   r.readAsText(f); ev.target.value='';
 });
