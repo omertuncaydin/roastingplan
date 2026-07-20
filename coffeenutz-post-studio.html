@@ -109,7 +109,7 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13l</span></div>
+    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13m</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
     <button class="btn" onclick="document.getElementById('jsonFile').click()">Load</button>
@@ -493,6 +493,12 @@ function moveSlide(i,d){
   [s[i],s[j]]=[s[j],s[i]]; renderPanel(); renderStage();
 }
 /* =============== shopify banner pile =============== */
+function bannerTextStack(rec){
+  const vis=f=>f?'hidden':'visible';
+  return '<h1 style="font-size:60px;line-height:1.05;visibility:'+vis(rec.hHeading)+'">'+esc(rec.heading)+'</h1>'
+    + (rec.subheading?'<div class="metaline" style="font-size:20px;margin-top:22px;visibility:'+vis(rec.hSub)+'">'+esc(trUp(rec.subheading))+'</div>':'')
+    + (rec.button?'<div class="cta" style="font-size:20px;padding:14px 26px;margin-top:32px;visibility:'+vis(rec.hButton)+'">'+esc(trUp(rec.button))+'</div>':'');
+}
 function bannerRecCard(rec){
   if(rec.bgimg && rec.img){
     return card(1200,600,true,
@@ -500,17 +506,13 @@ function bannerRecCard(rec){
       + '<div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(20,17,13,.85) 0%,rgba(20,17,13,.55) 46%,rgba(20,17,13,.05) 78%)"></div>'
       + '<div style="position:relative;display:flex;height:100%;align-items:center">'
       + '<div style="max-width:640px">'
-      +   '<h1 style="font-size:60px;line-height:1.05">'+esc(rec.heading)+'</h1>'
-      +   (rec.subheading?'<div class="metaline" style="font-size:20px;margin-top:22px">'+esc(trUp(rec.subheading))+'</div>':'')
-      +   (rec.button?'<div class="cta" style="font-size:20px;padding:14px 26px;margin-top:32px">'+esc(trUp(rec.button))+'</div>':'')
+      +   bannerTextStack(rec)
       + '</div></div>', 56);
   }
   return card(1200,600,true,
     '<div style="display:flex;gap:48px;height:100%;align-items:center">'
     + '<div style="flex:1.2">'
-    +   '<h1 style="font-size:60px;line-height:1.05">'+esc(rec.heading)+'</h1>'
-    +   (rec.subheading?'<div class="metaline" style="font-size:20px;margin-top:22px">'+esc(trUp(rec.subheading))+'</div>':'')
-    +   (rec.button?'<div class="cta" style="font-size:20px;padding:14px 26px;margin-top:32px">'+esc(trUp(rec.button))+'</div>':'')
+    +   bannerTextStack(rec)
     + '</div>'
     + '<div style="flex:1;align-self:stretch;display:flex;flex-direction:column;justify-content:center">'
     +   (rec.img?'<div class="imgbox" style="height:460px"><img src="'+rec.img+'" alt="'+esc(rec.alt)+'"></div>'
@@ -548,10 +550,21 @@ function bannerEditor(b,i){
     + '</div>'
     + '<label class="f-label" style="display:flex;gap:8px;align-items:center;text-transform:none"><input type="checkbox" '+(b.bgimg?'checked':'')+' onchange="setPath(\'shopbanner.banners.'+i+'.bgimg\',this.checked)"> Use image as background</label>'
     + field("Photo Alt Text","shopbanner.banners."+i+".alt")
-    + field("Heading","shopbanner.banners."+i+".heading")
-    + field("Subheading","shopbanner.banners."+i+".subheading")
-    + field("Button Label","shopbanner.banners."+i+".button")
+    + eyeField("Heading","shopbanner.banners."+i+".heading","hHeading",i,b.hHeading)
+    + eyeField("Subheading","shopbanner.banners."+i+".subheading","hSub",i,b.hSub)
+    + eyeField("Button Label","shopbanner.banners."+i+".button","hButton",i,b.hButton)
     + '</div>';
+}
+function toggleEye(i,flag){
+  const b=state.shopbanner.banners[i];
+  b[flag]=!b[flag];
+  renderPanel(); renderStage();
+}
+function eyeField(label,path,flag,i,hidden){
+  const v=getPath(path);
+  return '<label class="f-label" style="display:flex;justify-content:space-between;align-items:center">'+label
+    + '<button class="li-mini" title="'+(hidden?'unhide':'hide')+'" style="'+(hidden?'opacity:.35;':'')+'font-size:13px;line-height:1" onclick="toggleEye('+i+',\''+flag+'\')">&#128065;</button></label>'
+    + '<input class="f"'+(hidden?' style="opacity:.45"':'')+' value="'+esc(v).replace(/"/g,"&quot;")+'" oninput="setPath(\''+path+'\',this.value)">';
 }
 let imgTarget=null;
 function pickImg(path){ imgTarget=path; document.getElementById('imgFile').click(); }
