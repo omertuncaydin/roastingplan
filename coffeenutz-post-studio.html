@@ -109,7 +109,7 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13n</span></div>
+    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13o</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
     <button class="btn primary" id="saveStateBtn" onclick="saveState()">Save</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
@@ -253,20 +253,23 @@ function announceCard(kind){
       + '<div class="foot" style="font-size:24px"><span class="fl">'+esc(state.brand.handle)+'</span><span class="fr">'+trUp('Detay profildeki linkte')+'</span></div>', 100);
   }
   if(kind==="banner"||kind==="linkedin"||kind==="siteban"){
-    const pad = kind==="banner"?70:(kind==="siteban"?56:64);
-    const ctaX = (kind==="siteban"||kind==="banner") ? '<div class="cta" style="font-size:'+(kind==="banner"?26:20)+'px;padding:'+(kind==="banner"?'16px 28px':'14px 24px')+';margin-top:'+(kind==="banner"?34:30)+'px">'+esc(trUp(a.cta))+' &#8594; '+esc(trUp(state.brand.site))+'</div>' : cta;
+    /* each surface hand-tuned; never inherit the width-ratio scale here (it overflows short frames like LinkedIn) */
+    const T={ banner:{pad:70,gap:60,kick:26,h1:76,h1m:18,meta:28,metam:24,cta:26,ctap:'16px 28px',ctam:34},
+              linkedin:{pad:46,gap:44,kick:18,h1:52,h1m:14,meta:19,metam:18,cta:18,ctap:'13px 22px',ctam:22},
+              siteban:{pad:56,gap:48,kick:19,h1:58,h1m:20,meta:20,metam:24,cta:20,ctap:'14px 24px',ctam:30} }[kind];
+    const ctaX = '<div class="cta" style="font-size:'+T.cta+'px;padding:'+T.ctap+';margin-top:'+T.ctam+'px">'+esc(trUp(a.cta))+' &#8594; '+esc(trUp(state.brand.site))+'</div>';
     return card(W,H,dark,
-      '<div style="display:flex;gap:'+(60*s)+'px;height:100%;align-items:center">'
-      + '<div style="flex:1.35">'
-      +   '<div class="k-top" style="font-size:'+(kind==="siteban"?19:(kind==="banner"?26:22*s))+'px"><span class="kk">'+esc(trUp(a.kicker))+'</span></div>'
-      +   '<h1 style="font-size:'+(kind==="banner"?76:(kind==="siteban"?58:64*s))+'px;margin-top:'+(kind==="banner"?18:22*s)+'px">'+esc(a.title)+'</h1>'
-      +   '<div class="metaline" style="font-size:'+(kind==="siteban"?20:(kind==="banner"?28:24*s))+'px;margin-top:'+(kind==="banner"?24:28*s)+'px">'+esc(trUp(a.dateline))+'  &#183;  '+esc(trUp(a.city))+'\n'+esc(trUp(a.seats))+'  &#183;  '+esc(trUp(a.lang))+(a.highlight?'\n<span class="mhl">'+esc(trUp(a.highlight))+'</span>':"")+'</div>'
+      '<div style="display:flex;gap:'+T.gap+'px;height:100%;align-items:center">'
+      + '<div style="flex:1.35;min-width:0">'
+      +   '<div class="k-top" style="font-size:'+T.kick+'px"><span class="kk">'+esc(trUp(a.kicker))+'</span></div>'
+      +   '<h1 style="font-size:'+T.h1+'px;margin-top:'+T.h1m+'px">'+esc(a.title)+'</h1>'
+      +   '<div class="metaline" style="font-size:'+T.meta+'px;margin-top:'+T.metam+'px">'+esc(trUp(a.dateline))+'  &#183;  '+esc(trUp(a.city))+'\n'+esc(trUp(a.seats))+'  &#183;  '+esc(trUp(a.lang))+(a.highlight?'\n<span class="mhl">'+esc(trUp(a.highlight))+'</span>':"")+'</div>'
       +   ctaX
       + '</div>'
       + '<div style="flex:1;align-self:stretch;display:flex;flex-direction:column;justify-content:center">'
-      +   (a.img?'<div class="imgbox" style="height:'+(H-2*pad-20)+'px"><img src="'+a.img+'"></div>'
+      +   (a.img?'<div class="imgbox" style="height:'+(H-2*T.pad-20)+'px"><img src="'+a.img+'"></div>'
               :'<div class="wavebox" style="height:'+(H*0.42)+'px">'+wave(60,4)+'</div>')
-      + '</div></div>', pad);
+      + '</div></div>', T.pad);
   }
   if(kind==="ytthumb"){
     return card(W,H,dark,
