@@ -109,7 +109,7 @@ body.collapsed #reopen{display:block}
 
 <aside id="panel">
   <div id="toolbar">
-    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13k</span></div>
+    <div class="brandline">CoffeeNutz Feed Studio <span style="opacity:.55">v2026-07-13l</span></div>
     <button class="btn primary" onclick="downloadAll()">Download PNGs</button>
     <button class="btn" onclick="doSave()">Save JSON</button>
     <button class="btn" onclick="document.getElementById('jsonFile').click()">Load</button>
@@ -181,7 +181,16 @@ function wave(amp,cycles){
 }
 function esc(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
 /* Turkish-correct uppercasing (i -> İ, ı -> I); CSS text-transform gets English casing wrong */
-function trUp(s){return (s||"").toLocaleUpperCase('tr-TR')}
+const EN_UP_WORDS=new Set(['roasting','roast','app','apps','listener','guide','bundle','studio','grader','graders','pro','foundation','intermediate','professional','sensory','skills','specialty','coffee','association','challenge','replay','bell','gallery','crack','game','jumper','scurve','nitrobrew','roasttale','zine','feed','post','online','story','stories','reel','reels','link','bio','premium','plan','plans','research','vault','forge','landing','email','emailing','banner','studio','cupping','brewing','barista']);
+function trUp(s){
+  return String(s||"").split(/(\s+)/).map(function(tok){
+    if(/^\s+$/.test(tok)) return tok;
+    var core=tok.replace(/[^A-Za-z\u00C7\u011E\u0130\u00D6\u015E\u00DC\u00E7\u011F\u0131i\u00F6\u015F\u00FC]/g,'');
+    if(core && !/[\u00E7\u011F\u0131\u015F\u00F6\u00FC\u00C7\u011E\u0130\u015E\u00D6\u00DC]/.test(tok) && EN_UP_WORDS.has(core.toLowerCase()))
+      return tok.toUpperCase();
+    return tok.toLocaleUpperCase('tr-TR');
+  }).join('');
+}
 
 /* =============== card renderers (native px) =============== */
 function slideCard(sl, idx, total, th){
