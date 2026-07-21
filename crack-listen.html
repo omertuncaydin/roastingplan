@@ -164,7 +164,8 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-20g</span>
+        <button class="hpill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">EVREN</button>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-20h</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1585,7 +1586,14 @@ function uniSave(){ try{
       const verse=JSON.parse(localStorage.getItem('bsCalVerse')||'{}');
       const pverse=JSON.parse(localStorage.getItem('bsCalPushedVerse')||'{}');
       verse[prevUid]=calMap(); pverse[prevUid]=UMSTAMP;
-      const nm2=verse[u.uid]||{}, np=pverse[u.uid]||{};
+      let nm2=verse[u.uid]||{}, np=pverse[u.uid]||{};
+      if(!Object.keys(nm2).length&&Object.keys(calMap()).length){
+        if(confirm(tr?'Eski evrenin haritaları yeni evrene KOPYALANSIN mı?\n\nYalnızca iki ortamın ölçümlerini hizaladıysan (aynı kahve, aynı Agtron) EVET de. Emin değilsen HAYIR: temiz başla, haritalar eski evrende saklı kalır.':'COPY the old universe\'s maps into the new one?\n\nSay YES only if you aligned the two environments (same coffee, same Agtron). If unsure say NO: start clean, the maps stay parked in the old universe.')){
+          nm2=JSON.parse(JSON.stringify(calMap()));
+          for(const k3 in nm2){ nm2[k3].universe=u; delete nm2[k3].up; }   // carried maps now claim the NEW universe and re-push under its id
+          np={};
+        }
+      }
       delete verse[u.uid]; delete pverse[u.uid];
       localStorage.setItem('bsCalVerse',JSON.stringify(verse));
       localStorage.setItem('bsCalPushedVerse',JSON.stringify(pverse));
@@ -1870,7 +1878,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-20g';
+const APPVER='v2026-07-20h';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
