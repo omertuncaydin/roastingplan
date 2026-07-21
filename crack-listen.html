@@ -165,7 +165,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-21b</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-21c</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1608,13 +1608,13 @@ function uniA0Log(v){ try{
   const log=JSON.parse(localStorage.getItem('bsUniA0Log')||'[]');
   log.push({v:+v, at:Date.now()}); while(log.length>10) log.shift();
   localStorage.setItem('bsUniA0Log',JSON.stringify(log));
-  const u=UNI(); if(!u||log.length<5) return;
-  const vs=log.slice(-5).map(x=>x.v).sort((a,b)=>a-b), med=vs[2];
+  const u=UNI(); if(!u||log.length<3) return;
+  const vs=log.slice(-3).map(x=>x.v).sort((a,b)=>a-b), med=vs[1];   // his call: 3 measurements move a young universe faster; >5 offset still filters coffee variance
   const m=Math.round(med);
   if(Math.abs(med-u.a0)<=5||UNIA0SUG===m) return;
   UNIA0SUG=m;
   const tr=(LANG==='tr');
-  if(confirm(tr?("Evren A0'ın "+u.a0+". Son 5 ölçümünün ortancası ~"+m+". Evren A0'ını "+m+" yapmak ister misin?"):("Your universe A0 is "+u.a0+". The median of your last 5 measurements is ~"+m+". Recalibrate the universe A0 to "+m+"?"))){
+  if(confirm(tr?("Evren A0'ın "+u.a0+". Son 3 ölçümünün ortancası ~"+m+". Evren A0'ını "+m+" yapmak ister misin?"):("Your universe A0 is "+u.a0+". The median of your last 3 measurements is ~"+m+". Recalibrate the universe A0 to "+m+"?"))){
     u.a0=m; u.guessed=0; localStorage.setItem('bsUniverse',JSON.stringify(u));
     try{ const all=JSON.parse(localStorage.getItem('bsUniverses')||'{}'); all[u.uid]=u; localStorage.setItem('bsUniverses',JSON.stringify(all)); }catch(e2){}
     toast(tr?('Evren A0 g\u00fcncellendi: '+m):('Universe A0 updated: '+m));
@@ -1938,7 +1938,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-21b';
+const APPVER='v2026-07-21c';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
