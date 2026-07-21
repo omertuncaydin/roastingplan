@@ -164,8 +164,8 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <button class="hpill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">EVREN</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-20h</span>
+        <button class="hpill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-20i</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -203,7 +203,7 @@ body.st-setup #btn{display:none}
     <div id="npWrap" style="margin:10px 0 8px;cursor:pointer" onclick="editName()">
       <span id="npName" style="font-size:21px;font-weight:800;color:var(--ink)">name the coffee</span> <span style="color:var(--accent);font-size:13px">&#9998;</span>
       <div id="npUnder" style="width:64px;height:2px;background:var(--accent);margin:7px auto 4px"></div>
-      <div class="lbl" style="font-size:10px">this bean's map · tap to edit</div>
+      <div class="lbl" style="font-size:10px">this bean's map · tap to rename</div>
     </div>
     <div id="nameEdit" style="display:none;text-align:left;margin:10px 0 8px">
       <div class="lbl" style="margin-bottom:5px">coffee · mapping key</div>
@@ -304,7 +304,7 @@ body.st-setup #btn{display:none}
           <input type="text" id="mAgWSd" placeholder="Whole SD" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
           <input type="text" id="mA0Ag" placeholder="A0 Agtron" inputmode="decimal" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
           <span class="info" onclick="showInfo('a0ag')" style="flex:0 0 auto;align-self:center">&#9432;</span>
-          <button onclick="uniOpen(false)" style="flex:0 0 auto;align-self:center;background:none;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer" title="Renk ölçüm evrenin · your measurement universe">EVREN</button>
+          <button onclick="uniOpen(false)" style="flex:0 0 auto;align-self:center;background:none;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
         </div>
       </details>
       <input type="text" id="mNote" placeholder="Note (machine, phone position, cup notes)" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)">
@@ -1878,7 +1878,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-20h';
+const APPVER='v2026-07-20i';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2204,7 +2204,7 @@ function doImport(){
 const EN2TR={
 'live gain':'canlı gain','projected color · Agtron scale':'öngörülen renk · Agtron skalası',
 'Target Agtron (recipe)':'Hedef Agtron (reçete)',
-"this bean's map · tap to edit":'bu çekirdeğin haritası · düzenle',
+"this bean's map · tap to rename":'bu çekirdeğin haritası · adını düzenle','UNIVERSE':'EVREN',
 'coffee · mapping key':'kahve · eşleme anahtarı','name the coffee':'kahveyi adlandır',
 'Coffee badge · sticker info':'Kahve rozeti · etiket bilgisi',
 'session timeline · DEV':'seans zaman çizgisi · DEV','total gain':'toplam gain','pace':'tempo',
