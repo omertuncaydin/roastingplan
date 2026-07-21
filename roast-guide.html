@@ -589,7 +589,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-20h</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-21a</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -2146,7 +2146,7 @@ async function loadRoastHist(){ try{
   const th='<tr style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px"><th style="text-align:left;padding:4px 6px;font-weight:600">'+T('Coffee')+'</th><th style="text-align:center;padding:4px 4px;font-weight:600;width:52px">'+T('Date')+'</th><th style="text-align:center;padding:4px 4px;font-weight:600;width:52px">'+T('Goal')+'</th><th style="text-align:center;padding:4px 4px;font-weight:600;width:52px">'+T('Est.')+'</th><th style="text-align:center;padding:4px 4px;font-weight:600;width:52px">'+T('Act.')+'</th></tr>';
   const CU=curUniverse();
   el.innerHTML='<div class="small" style="margin:14px 0 6px;font-weight:700">'+T('Roast history (cloud)')+' <span onclick="alert(T(\'Goal: your decided target color. Est.: the engine forecast at drop. Act.: the measured ground color.\'))" style="cursor:pointer">&#9432;</span>'
-    +(CU?('<span style="float:right;border:1px solid var(--gold,#e6c14b);color:var(--gold,#e6c14b);border-radius:999px;padding:1px 10px;font-size:10.5px;font-weight:700" title="'+T('measurement universe')+'">'+esc(CU.meter)+(CU.gset?('@'+esc(CU.gset)):'')+' \u00b7 A0 '+Math.round(CU.a0)+(CU.guessed?'~':'')+'</span>'):'')
+    +(CU?('<span style="float:right;border:1px solid var(--gold,#e6c14b);color:var(--gold,#e6c14b);border-radius:999px;padding:1px 10px;font-size:10.5px;font-weight:700" title="'+T('measurement universe')+'">'+esc(CU.name||CU.meter)+(CU.gset&&!CU.name?('@'+esc(CU.gset)):'')+' \u00b7 A0 '+Math.round(CU.a0)+(CU.guessed?'~':'')+'</span>'):'')
     +'</div>'
     +'<div style="border:1px solid var(--line);border-radius:10px;overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:380px">'+th
     +data.map((r,i)=>{ const dt=fmtLocal(r.roasted_at,'md');

@@ -164,8 +164,8 @@ body.st-setup #btn{display:none}
       <div style="font-size:14px;color:var(--ink);opacity:.92">the probe learns to read while the beans they speak</div>
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
-        <button class="hpill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-20i</span>
+        <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-21a</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -456,6 +456,7 @@ function wcToggle(on){ WCON=!!on; try{ localStorage.setItem('bsWatchCast',on?'1'
 function wcCopy(){ try{ navigator.clipboard.writeText(wcUrl()); toast(LANG==='tr'?'Watch linki kopyalandı.':'Watch link copied.'); }catch(e){ toast(wcUrl()); } }
 function wcShare(){ try{ if(navigator.share){ navigator.share({title:'Crack Watch', url:wcUrl()}); } else { wcCopy(); } }catch(e){ wcCopy(); } }
 function wcFresh(){ try{ cName.value=''; $('mCoffee').value=''; $('finalCall').textContent='';
+  LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PHASE=0; PHASE_DISP=0; PHPEAK=0; PHPEAKT=0; PHREV=0; try{ renderStopLine(); }catch(e){}   // a new coffee owes nothing to the last roast's numbers
   ['dlZip','dlCard','dlStory','metaBox','mapBtn','cupGo','nextRow','gameAdd','agTop'].forEach(i=>{ if($(i)) $(i).style.display='none'; });
   try{ renderNameplate(); }catch(e){} try{ updateGauge(); }catch(e){}
   setState('st-setup'); window.scrollTo({top:0,behavior:'smooth'}); cName.focus(); }catch(e){}
@@ -1486,7 +1487,7 @@ function saveCalIfMapped(verbose){
   const sm2=bshape.map((_,i)=>{ let s2=0,w2=0; for(let j=0;j<BP;j++){ const g2=Math.exp(-0.5*((j-i)/2)*((j-i)/2)); s2+=bshape[j]*g2; w2+=g2; } return s2/w2; });
   const pk2=Math.max(...sm2)||1; entry.bell=sm2.map(x2=>+(x2/pk2).toFixed(3));
   { const fcParsed=parseFloat($('mA0Ag').value);   // per-coffee A0 color: write if given, else keep any earlier calibration (never silently drop)
-    if(isFinite(fcParsed)) entry.fc_ag=fcParsed;
+    if(isFinite(fcParsed)){ entry.fc_ag=fcParsed; try{ uniA0Log(fcParsed); }catch(e9){} }
     else if(prevM&&isFinite(prevM.fc_ag)) entry.fc_ag=prevM.fc_ag; }
   m[k]=entry; m['__house']=entry;   // every map also becomes the house default: unmapped beans borrow it
   localStorage.setItem('bsCal',JSON.stringify(m));
@@ -1554,15 +1555,66 @@ function uniOpen(force){ try{
   $('uniL1').textContent=tr?'1 · Evrenin':'1 · Your universe';
   $('uniL2').innerHTML=(tr?'2 · Bu evrendeki A0 rengi':'2 · A0 color in this universe')+' <span onclick="uniInfo()" style="cursor:pointer;color:var(--muted)">&#9432;</span>';
   UNIHINTED=false;
+  $('uniName').placeholder=tr?'Evren adı (örn. Philos-Omni)':'Universe name (e.g. Philos-Omni)';
+  $('uniName').value=u.name||'';
   $('uniMeter').placeholder=tr?'Renk ölçer (Colormeter)':'Colormeter';
   $('uniOp').placeholder=tr?'Ölçümü yapan kişi':'Measurement operator';
   $('uniA0').placeholder=tr?'A0 Agtron':'A0 Agtron';
   $('uniBtnM').textContent=tr?'KAYDET':'SAVE';
   $('uniWarn').textContent=UNI()?(tr?'Dikkat: evreni değiştirmek eski haritalarını ve kayıtlarını yeni sayılarla KIYASLANAMAZ yapar.':'Careful: changing the universe makes your old maps and records INCOMPARABLE with new numbers.'):(tr?'Tahminle başlayabilirsin; ilk gerçek ölçümünde burayı güncelle.':'You can start with a guess; update this after your first real measurement.');
   $('uniMeter').value=u.meter||''; $('uniGrinder').value=u.grinder||''; $('uniGset').value=u.gset||''; $('uniOp').value=u.operator||''; $('uniA0').value=(u.a0!=null?u.a0:'');
+  try{ const all=JSON.parse(localStorage.getItem('bsUniverses')||'{}'); const cur=UNI();
+    if(cur&&!all[cur.uid]) all[cur.uid]=cur;
+    $('uniList').innerHTML=Object.keys(all).map(id=>{ const e2=all[id], on=cur&&cur.uid===id;
+      return '<span onclick="uniPick(\''+id+'\')" style="cursor:pointer;border:1px solid '+(on?'var(--gold)':'var(--line)')+';color:'+(on?'var(--gold)':'var(--muted)')+';border-radius:999px;padding:3px 11px;font-size:11.5px;font-weight:700">'+(e2.name||e2.meter||id)+' \u00b7 A0 '+(e2.a0!=null?Math.round(e2.a0):'?')+(e2.guessed?'~':'')+'</span>'; }).join('');
+  }catch(e2){ $('uniList').innerHTML=''; }
   $('uniModal').style.display='flex';
   UNIPEND=!!force;
 }catch(e){} }
+function setUniPill(){ try{ const p=$('uniPill'); if(!p) return; const u=UNI();
+  p.textContent=u?(u.name||u.meter):(LANG==='tr'?'EVREN':'UNIVERSE'); }catch(e){} }
+function uniPick(uid){ try{
+  const tr=(LANG==='tr');
+  const all=JSON.parse(localStorage.getItem('bsUniverses')||'{}');
+  const target=all[uid]; if(!target) return;
+  const cur=UNI();
+  if(cur&&cur.uid===uid){ return; }
+  if(cur){
+    const verse=JSON.parse(localStorage.getItem('bsCalVerse')||'{}');
+    const pverse=JSON.parse(localStorage.getItem('bsCalPushedVerse')||'{}');
+    verse[cur.uid]=calMap(); pverse[cur.uid]=UMSTAMP;
+    const nm2=verse[uid]||{}, np=pverse[uid]||{};
+    delete verse[uid]; delete pverse[uid];
+    localStorage.setItem('bsCalVerse',JSON.stringify(verse));
+    localStorage.setItem('bsCalPushedVerse',JSON.stringify(pverse));
+    localStorage.setItem('bsCal',JSON.stringify(nm2));
+    UMSTAMP=np; localStorage.setItem('bsCalPushed',JSON.stringify(UMSTAMP));
+  }
+  localStorage.setItem('bsUniverse',JSON.stringify(target));
+  setUniPill(); $('uniModal').style.display='none';
+  toast((tr?'Evren: ':'Universe: ')+(target.name||target.meter));
+  try{ updateGauge(); updateMapBtn(); }catch(e2){}
+  try{ umSync(true); }catch(e2){}
+}catch(e){} }
+let UNIA0SUG=0;
+function uniA0Log(v){ try{
+  if(!isFinite(v)) return;
+  const log=JSON.parse(localStorage.getItem('bsUniA0Log')||'[]');
+  log.push({v:+v, at:Date.now()}); while(log.length>10) log.shift();
+  localStorage.setItem('bsUniA0Log',JSON.stringify(log));
+  const u=UNI(); if(!u||log.length<5) return;
+  const vs=log.slice(-5).map(x=>x.v).sort((a,b)=>a-b), med=vs[2];
+  const m=Math.round(med);
+  if(Math.abs(med-u.a0)<=5||UNIA0SUG===m) return;
+  UNIA0SUG=m;
+  const tr=(LANG==='tr');
+  if(confirm(tr?("Evren A0'ın "+u.a0+". Son 5 ölçümünün ortancası ~"+m+". Evren A0'ını "+m+" yapmak ister misin?"):("Your universe A0 is "+u.a0+". The median of your last 5 measurements is ~"+m+". Recalibrate the universe A0 to "+m+"?"))){
+    u.a0=m; u.guessed=0; localStorage.setItem('bsUniverse',JSON.stringify(u));
+    try{ const all=JSON.parse(localStorage.getItem('bsUniverses')||'{}'); all[u.uid]=u; localStorage.setItem('bsUniverses',JSON.stringify(all)); }catch(e2){}
+    toast(tr?('Evren A0 g\u00fcncellendi: '+m):('Universe A0 updated: '+m));
+  }
+}catch(e){} }
+try{ setTimeout(setUniPill, 400); }catch(e){}
 function uniClose(){ try{ $('uniModal').style.display='none'; UNIPEND=false; }catch(e){} }
 let UNIHINTED=false;
 function uniInfo(){ const tr=(LANG==='tr');
@@ -1576,9 +1628,9 @@ function uniSave(){ try{
     return; }
   if(!isFinite(a0)||a0<=0){ toast(tr?'A0 rengi sayı olmalı.':'A0 color must be a number.'); return; }   // scale-agnostic: every meter speaks its own numbers
   const guessed=UNIHINTED?1:0;
-  const u={ meter, grinder:$('uniGrinder').value.trim()||null, gset:$('uniGset').value.trim()||null,
+  const u={ meter, name:($('uniName')&&$('uniName').value.trim())||null, grinder:$('uniGrinder').value.trim()||null, gset:$('uniGset').value.trim()||null,
     operator:$('uniOp').value.trim()||null, a0, guessed, at:new Date().toISOString() };
-  u.uid=uniUid(u.meter,u.grinder,u.gset,u.operator);
+  u.uid=uniUid(u.meter,u.grinder,u.gset,u.operator);   // the name is a label, never part of the identity
   const prevU=(function(){ try{ return JSON.parse(localStorage.getItem('bsUniverse')||'null'); }catch(e2){ return null; } })();
   const prevUid=prevU&&prevU.uid?prevU.uid:(prevU&&prevU.meter?uniUid(prevU.meter,prevU.grinder,prevU.gset,prevU.operator):null);
   if(prevUid&&prevUid!==u.uid){   // OPTION 2: parallel realities. Park this registry, wake the other.
@@ -1603,6 +1655,8 @@ function uniSave(){ try{
     }catch(e2){}
   }
   localStorage.setItem('bsUniverse',JSON.stringify(u));
+  try{ const all=JSON.parse(localStorage.getItem('bsUniverses')||'{}'); all[u.uid]=u; localStorage.setItem('bsUniverses',JSON.stringify(all)); }catch(e2){}
+  setUniPill();
   $('uniModal').style.display='none';
   toast(tr?('Evren kaydedildi · A0 '+a0+(guessed?' (tahmin)':'')):('Universe saved · A0 '+a0+(guessed?' (guess)':'')));
   try{ updateGauge(); }catch(e2){}
@@ -1878,7 +1932,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-20i';
+const APPVER='v2026-07-21a';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2130,7 +2184,7 @@ function a0Nudge(){
   const nowS=(performance.now()-startT)/1000;
   const hasA0=LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==='A0');
   if(A0PHASE===''){ if(hasA0){ A0PHASE='alarm'; A0T=nowS; a0NudgeUI(2); } else if(valid().length>=1){ A0PHASE='pre'; a0NudgeUI(1); } }
-  else if(A0PHASE==='pre'){ if(hasA0){ A0PHASE='alarm'; A0T=nowS; a0NudgeUI(2); } }
+  else if(A0PHASE==='pre'){ if(hasA0){ A0PHASE='alarm'; A0T=nowS; a0NudgeUI(2); } else if(!valid().length){ A0PHASE=''; a0NudgeUI(0); } }   // the lone candidate was discounted: stand down until the storm speaks again
   else if(A0PHASE==='alarm'&&nowS-A0T>60){ A0PHASE='done'; a0NudgeUI(0); } }   // window closed: never nag mid-roast
 function markSample(){
   if(!running){ toast(tt('Only during a live session.')); return; }
@@ -2159,13 +2213,14 @@ function renderSampChips(){
   const el=$('sampChips'); if(!el) return;
   if(!SAMPLES.length){ el.style.display='none'; el.innerHTML=''; return; }
   el.style.display='flex';
-  el.innerHTML=SAMPLES.map((s,i)=>'<span style="display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid '+(s.a0?'var(--gold)':'var(--accent)')+';border-radius:20px;padding:5px 10px;font-size:13px">S'+(i+1)+(s.a0?' · A0':(s.st?(' · '+s.st):''))+' · '+fmtT(s.t)+' <b style="color:var(--warn);cursor:pointer;padding:0 3px" onclick="delSample('+i+')">&times;</b></span>').join('');
+  el.innerHTML=SAMPLES.map((s,i)=>'<span style="display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid '+(s.a0?'var(--gold)':'var(--accent)')+';border-radius:20px;padding:5px 10px;font-size:13px">'+sampLbl(i)+(s.a0?'':(s.st?(' · '+s.st):''))+' · '+fmtT(s.t)+' <b style="color:var(--warn);cursor:pointer;padding:0 3px" onclick="delSample('+i+')">&times;</b></span>').join('');
 }
+function sampLbl(i){ let n=0; for(let j=0;j<=i;j++) if(!SAMPLES[j].a0) n++; return SAMPLES[i].a0?'A0':('S'+n); }
 function renderSamples(){
   const el=$('sampList'); if(!el) return;
   if(!SAMPLES.length){ el.innerHTML=''; return; }
   el.innerHTML='<div class="lbl" style="margin:8px 0 4px">'+tt('tryer samples (fill measured Agtron)')+'</div>'+
-    SAMPLES.map((s,i)=>'<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><span style="font-size:13px;color:var(--muted);min-width:74px">S'+(i+1)+' · '+fmtT(s.t)+'</span>'+
+    SAMPLES.map((s,i)=>'<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><span style="font-size:13px;color:var(--muted);min-width:74px">'+sampLbl(i)+' · '+fmtT(s.t)+'</span>'+
     '<input type="text" inputmode="decimal" value="'+(s.ag??'')+'" placeholder="Agtron" oninput="SAMPLES['+i+'].ag=parseFloat(this.value)||null" onchange="const v2=parseFloat(this.value); if(isFinite(v2)){ this.value=Math.round(v2); SAMPLES['+i+'].ag=Math.round(v2); }" style="flex:1;border:1px solid var(--line);border-radius:9px;padding:8px;font-size:16px;background:var(--panel2);color:var(--ink)">'+
     '<b style="color:var(--warn);cursor:pointer;padding:0 6px;font-size:17px" onclick="delSample('+i+')">&times;</b></div>').join('');
 }
@@ -2261,6 +2316,7 @@ function tt(s){ return LANG==='tr'?(EN2TR[s]||s):s; }
 const I18N_ORIG=new Map();
 function applyLang(){
   $('langBtn').textContent=LANG==='tr'?'EN':'TR';
+  try{ setUniPill(); }catch(e9){}
   const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT); const ns=[];
   while(w.nextNode()) ns.push(w.currentNode);
   ns.forEach(n=>{ const k=(n.nodeValue||'').trim(); if(!k) return;
@@ -2503,7 +2559,9 @@ function draw(){
   <div style="background:var(--panel);border:1px solid var(--gold);border-radius:14px;padding:16px;max-width:360px;width:100%;max-height:88vh;overflow:auto">
     <div id="uniTitle" style="font-weight:800;color:var(--gold);font-size:15px;margin-bottom:4px"></div>
     <div id="uniSub" class="small" style="color:var(--muted);font-size:12px;line-height:1.5;margin-bottom:12px"></div>
+    <div id="uniList" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
     <div class="small" style="font-weight:700;margin-bottom:4px" id="uniL1"></div>
+    <input type="text" id="uniName" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--gold);font-weight:700;margin-bottom:8px">
     <input type="text" id="uniMeter" list="uniMeterList" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;background:var(--panel2);color:var(--ink);margin-bottom:8px">
     <datalist id="uniMeterList"><option value="DiFluid Omni"></option><option value="DiFluid Omix+"></option><option value="Tonino"></option><option value="Lighttells CM-100+"></option><option value="Lighttells CM-200"></option><option value="RoastVision"></option><option value="Javalytics"></option><option value="ColorTrack"></option><option value="Agtron (lab)"></option></datalist>
     <div style="display:flex;gap:8px;margin-bottom:8px">
