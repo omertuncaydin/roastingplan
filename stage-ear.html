@@ -30,11 +30,12 @@ input[type=file]{width:100%;color:var(--muted);font-size:13px}
 </head>
 <body>
 <h1>Stage Ear</h1>
-<div class="sub">kulağın kalibre eder, matematik formülleşir · v2026-07-23a · <button onclick="location.href=location.pathname+'?v='+Date.now()" style="background:none;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer">Yenile</button></div>
+<div class="sub">kulağın kalibre eder, matematik formülleşir · v2026-07-23b · <button onclick="location.href=location.pathname+'?v='+Date.now()" style="background:none;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer">Yenile</button></div>
 
-<div class="card">
-  <div class="lbl">1 · seans zip'lerini yükle</div>
+<div class="card" id="dz" style="border:1.5px dashed var(--line);transition:border-color .15s">
+  <div class="lbl">1 · seans zip'lerini yükle · SÜRÜKLE-BIRAK</div>
   <input type="file" id="zips" multiple accept=".zip">
+  <div class="hint" style="margin-top:4px">Zip'leri bu kutuya bırakabilirsin.</div>
   <div id="files"></div>
   <div class="hint">Her zip'ten WAV çıkarılır; 15 sn'lik kesitler 15 sn adımlarla kesilir ve KARIŞIK sırada çalınır. Bağlam gösterilmez: sadece kulağın.</div>
 </div>
@@ -77,9 +78,9 @@ let LABELS=[]; try{ LABELS=JSON.parse(localStorage.getItem('seLabels')||'[]'); }
 function statUp(){ $('stat').textContent='kayıtlı etiket: '+LABELS.length; }
 statUp();
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-$('zips').addEventListener('change', async e=>{
+async function addZips(list){
   if(typeof JSZip==='undefined'){ alert('JSZip yüklenemedi: internet gerekli.'); return; }
-  for(const f of e.target.files){
+  for(const f of list){
     try{
       const z=await JSZip.loadAsync(f);
       let wavName=null,wavSize=0;
@@ -90,7 +91,15 @@ $('zips').addEventListener('change', async e=>{
     }catch(err){ FILES.push({name:f.name, err:String(err).slice(0,40)}); }
   }
   renderFiles(); buildQueue();
-});
+}
+$('zips').addEventListener('change', e=>addZips(e.target.files));
+(function(){ const dz=$('dz'); if(!dz) return;
+  ['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{ e.preventDefault(); dz.style.borderColor='var(--gold)'; }));
+  ['dragleave','dragend'].forEach(ev=>dz.addEventListener(ev,()=>{ dz.style.borderColor='var(--line)'; }));
+  dz.addEventListener('drop',e=>{ e.preventDefault(); dz.style.borderColor='var(--line)';
+    const fs2=[...(e.dataTransfer&&e.dataTransfer.files||[])].filter(x=>/\.zip$/i.test(x.name));
+    if(fs2.length) addZips(fs2); });
+})();
 function renderFiles(){ $('files').innerHTML=FILES.map((f,i)=>'&#128193; '+f.name+(f.err?(' · <span style="color:var(--warn)">'+f.err+'</span>'):(f.dur?(' · '+Math.round(f.dur)+'s'):' · hazır'))
   +(f.err?'':(' · <span onclick="susTog('+i+')" style="cursor:pointer;border:1px solid '+(f.sus?'var(--warn)':'var(--line)')+';color:'+(f.sus?'var(--warn)':'var(--dim)')+';border-radius:999px;padding:1px 8px;font-size:11px;font-weight:700">'+(f.sus?'&#9888; şüpheli':'şüpheli?')+'</span>'))).join('<br>'); }
 function susTog(i){ FILES[i].sus=!FILES[i].sus; renderFiles(); }
@@ -116,10 +125,13 @@ async function buildQueue(){
   $('playCard').style.display=QUEUE.length?'block':'none';
   drawCur();
 }
+function fmtDur(sec){ const m=Math.round(sec/60); return m>=60?(Math.floor(m/60)+'sa '+(m%60)+'dk'):(m+' dk'); }
 function drawCur(){
-  const total=QUEUE.length+LABELS.length;
-  $('prog').textContent=(CUR>=0?(LABELS.length+1):LABELS.length)+' / '+total;
-  $('meta').textContent=CUR>=0?'kesit hazır · çal ve etiketle':'bitti · etiketleri indir';
+  const doneLoaded=LABELS.filter(l=>FILES.some(f2=>f2.name===l.file)).length;
+  const total=QUEUE.length+doneLoaded;
+  $('prog').textContent=(CUR>=0?(doneLoaded+1):doneLoaded)+' / '+total;
+  $('meta').textContent=(CUR>=0?'kesit hazır · çal ve etiketle':'bitti · etiketleri indir')
+    +' · toplam '+fmtDur(total*EX_DUR)+' · kalan '+fmtDur(QUEUE.length*EX_DUR);
   $('playBtn').disabled=CUR<0;
 }
 async function playCur(){
