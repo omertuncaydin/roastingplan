@@ -30,7 +30,7 @@ input[type=file]{width:100%;color:var(--muted);font-size:13px}
 </head>
 <body>
 <h1>Stage Ear</h1>
-<div class="sub">kulağın kalibre eder, matematik formülleşir · v2026-07-19d · <button onclick="location.href=location.pathname+'?v='+Date.now()" style="background:none;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer">Yenile</button></div>
+<div class="sub">kulağın kalibre eder, matematik formülleşir · v2026-07-23a · <button onclick="location.href=location.pathname+'?v='+Date.now()" style="background:none;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer">Yenile</button></div>
 
 <div class="card">
   <div class="lbl">1 · seans zip'lerini yükle</div>
@@ -91,7 +91,9 @@ $('zips').addEventListener('change', async e=>{
   }
   renderFiles(); buildQueue();
 });
-function renderFiles(){ $('files').innerHTML=FILES.map(f=>'&#128193; '+f.name+(f.err?(' · <span style="color:var(--warn)">'+f.err+'</span>'):(f.dur?(' · '+Math.round(f.dur)+'s'):' · hazır'))).join('<br>'); }
+function renderFiles(){ $('files').innerHTML=FILES.map((f,i)=>'&#128193; '+f.name+(f.err?(' · <span style="color:var(--warn)">'+f.err+'</span>'):(f.dur?(' · '+Math.round(f.dur)+'s'):' · hazır'))
+  +(f.err?'':(' · <span onclick="susTog('+i+')" style="cursor:pointer;border:1px solid '+(f.sus?'var(--warn)':'var(--line)')+';color:'+(f.sus?'var(--warn)':'var(--dim)')+';border-radius:999px;padding:1px 8px;font-size:11px;font-weight:700">'+(f.sus?'&#9888; şüpheli':'şüpheli?')+'</span>'))).join('<br>'); }
+function susTog(i){ FILES[i].sus=!FILES[i].sus; renderFiles(); }
 async function ensureDecoded(fi){
   const f=FILES[fi];
   if(CURFILE===fi&&CURBUF) return CURBUF;
@@ -148,7 +150,7 @@ function undo(){
 }
 function expJson(){
   const out={exported:new Date().toISOString(), step:EX_STEP, dur:EX_DUR,
-    files:FILES.map(f=>({name:f.name, dur:f.dur||null, err:f.err||null})), labels:LABELS};
+    files:FILES.map(f=>({name:f.name, dur:f.dur||null, err:f.err||null, suspicious:!!f.sus})), labels:LABELS};
   const b=new Blob([JSON.stringify(out,null,1)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(b);
   a.download='stage-ear-labels-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
