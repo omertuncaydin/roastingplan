@@ -166,7 +166,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-21d</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-22a</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -358,6 +358,7 @@ body.st-setup #btn{display:none}
   <div class="card">
     <div class="ctl"><label>Watch cast <span class="info" onclick="event.stopPropagation();showInfo('wcast')">&#9432;</span></label><span class="v" id="wcV" style="margin-left:8px;font-size:12px;opacity:.85">off</span><label style="display:flex;align-items:center;margin-left:auto;cursor:pointer"><input type="checkbox" id="wcTog" onchange="wcToggle(this.checked)" style="width:19px;height:19px;accent-color:var(--accent2)"></label></div>
     <div class="ctl" id="wcRow" style="display:none;gap:8px"><label id="wcLink" style="font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8"></label><button class="pm" style="width:auto;padding:0 12px;font-size:13px" onclick="wcCopy()">copy</button><button class="pm" style="width:auto;padding:0 12px;font-size:13px" onclick="wcShare()">share</button></div>
+    <div class="hint" style="font-size:11.5px;margin-top:6px;color:var(--dim)">Tablet / iPad: tam ekran ikinci ekran &#183; <b style="color:var(--gold)">Apple Watch &#183; yakında / soon</b></div>
   </div>
   </details>
 
@@ -450,7 +451,7 @@ function wcPub(payload){ if(!WCON||performance.now()-LIVEPUB_T<=1000) return; LI
     .then(r=>{ const vv=$('wcV'); if(vv&&WCON) vv.textContent=(LANG==='tr'?'açık':'on')+' · '+r.status; })
     .catch(()=>{ const vv=$('wcV'); if(vv&&WCON) vv.textContent=(LANG==='tr'?'açık':'on')+' · ağ yok'; }); }catch(e){} }
 function WCKEY(){ let k2=localStorage.getItem('bsWatchKey'); if(!k2){ const b=new Uint8Array(8); crypto.getRandomValues(b); k2=Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join(''); localStorage.setItem('bsWatchKey',k2); } return k2; }
-function wcUrl(){ return location.origin+location.pathname.replace(/[^/]*$/,'')+'crack-watch.html?k='+WCKEY(); }
+function wcUrl(){ return location.origin+location.pathname.replace(/[^/]*$/,'')+'crack-screen.html?k='+WCKEY(); }
 function wcToggle(on){ WCON=!!on; try{ localStorage.setItem('bsWatchCast',on?'1':'0'); }catch(e){} wcCmdSub(!!on);
   const vv=$('wcV'); if(vv) vv.textContent=on?(LANG==='tr'?'açık · kayıt başlayınca yayın':'on · casts while recording'):(LANG==='tr'?'kapalı':'off');
   const r2=$('wcRow'); if(r2){ r2.style.display=on?'flex':'none'; const l2=$('wcLink'); if(l2) l2.textContent=wcUrl(); } }
@@ -1942,7 +1943,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-21d';
+const APPVER='v2026-07-22a';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
