@@ -166,7 +166,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-24f</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-24g</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -444,6 +444,7 @@ function wcNote(){ try{ const bc=((badgeMap()[badgeKey()]||{}).cue||'').trim(); 
   let lm={}; try{ lm=JSON.parse(localStorage.getItem('bsLastMeta'))||{}; }catch(e){}
   const e2=lm[(cName.value||'').trim().toLowerCase()]; return (e2&&e2.note)?String(e2.note).slice(0,80):''; }catch(e){ return ''; } }
 function wcPub(payload,force){ if(!WCON||(!force&&performance.now()-LIVEPUB_T<=1000)) return; LIVEPUB_T=performance.now();
+  try{ if(payload.a0t==null&&typeof effA0==='function'){ const a=effA0(valid()); if(isFinite(a)&&a>0) payload.a0t=Math.round(a); } }catch(e){}   // A0 moment rides along: the wrist counts development, not listening
   try{ const nt=wcNote(); if(nt) payload.nt=nt; }catch(e){}
   try{ payload.ctl=wcCtl()?1:0; }catch(e){}
   try{ fetch(SUPA_URL+'/realtime/v1/api/broadcast',{method:'POST',headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY,'content-type':'application/json'},
@@ -1967,7 +1968,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-24f';
+const APPVER='v2026-07-24g';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
