@@ -166,7 +166,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-24b</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-24c</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -452,6 +452,7 @@ function wcPub(payload){ if(!WCON||performance.now()-LIVEPUB_T<=1000) return; LI
     .catch(()=>{ const vv=$('wcV'); if(vv&&WCON) vv.textContent=(LANG==='tr'?'açık':'on')+' · ağ yok'; }); }catch(e){}
   wcTablePut(payload); }
 function wcTablePut(payload){
+  try{ payload.cl=payload.cl||wcNameList(); }catch(e){}   // coffee list rides every cast so the watch chips are never empty
   // POLLING ROAD (native watch): broadcast is push-only; the same payload is
   // upserted into live_cast so REST clients can poll it. Fire-and-forget.
   try{ fetch(SUPA_URL+'/rest/v1/live_cast?on_conflict=key',{method:'POST',
@@ -484,7 +485,7 @@ function wcCmdSub(on){ try{ if(!SB) return;
       if(running&&m&&m.payload&&m.payload.a==='sample'){ markSample(); toast(LANG==='tr'?'Watch: numune işaretlendi.':'Watch: sample marked.'); }
       if(running&&m&&m.payload&&m.payload.a==='drop'){ toast(LANG==='tr'?'Watch: DROP komutu.':'Watch: DROP command.'); stop(); }
       if(!running&&m&&m.payload&&m.payload.a==='again'){ toast(LANG==='tr'?'Watch: aynı kahve, başlıyor…':'Watch: same coffee, starting…'); try{ start().catch(()=>{}); }catch(e){} }
-      if(!running&&m&&m.payload&&m.payload.a==='fresh'){ wcFresh(); if(m.payload.c){ try{ pickCoffee(String(m.payload.c)); }catch(e){} } }
+      if(!running&&m&&m.payload&&m.payload.a==='fresh'){ wcFresh(); if(m.payload.c){ try{ pickCoffee(String(m.payload.c)).then(()=>start()).catch(()=>{}); }catch(e){} } }
     }catch(e){} }).subscribe(); }
   if(!on&&WCCH){ try{ SB.removeChannel(WCCH); }catch(e){} WCCH=null; } }catch(e){} }
 try{ WCON=localStorage.getItem('bsWatchCast')==='1'; const wt=$('wcTog'); if(wt){ wt.checked=WCON; if(WCON) wcToggle(true); } }catch(e){}
@@ -1958,7 +1959,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-24b';
+const APPVER='v2026-07-24c';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
