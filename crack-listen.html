@@ -166,7 +166,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-24h</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-24i</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -615,7 +615,7 @@ function stop(){
   $('recAudio').disabled=false;
   STOPT=(performance.now()-startT)/1000;   // the DROP moment: known exactly, never invented
   try{ if(WCON){ const lstE=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
-    wcPub({c:(cName.value||'').trim()||'?', st:lstE, n:valid().length, t:Math.round(STOPT), w:0, fin:1, ctl:(wcCtl()?1:0)}, true); } }catch(e){}   // the wrist hears the drop before the paperwork
+    wcPub({c:(cName.value||'').trim()||'?', st:lstE, n:valid().length, t:Math.round(STOPT), w:0, fin:1, ag:(String((($('mAgG')||{}).value||'')).trim()?1:0), ctl:(wcCtl()?1:0)}, true); } }catch(e){}   // the wrist hears the drop before the paperwork, homework flag included
   try{ isoSweep(STOPT); }catch(e){}   // ISOLATED FIRST CRACK: one retrospective pass at drop
   STOPPROJ=LASTPROJ; STOPBORROWED=PROJBORROWED;   // freeze projection AND its provenance at the drop; a rename later cannot launder a borrowed guess
   try{ BCLIVE=BCLIVE||new BroadcastChannel('cnLive');
@@ -1970,7 +1970,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-24h';
+const APPVER='v2026-07-24i';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
