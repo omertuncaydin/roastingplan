@@ -166,7 +166,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-24i</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-25a</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -552,7 +552,7 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('dlStory').style.display='none'; $('gameAdd').style.display='none'; $('mapBtn').style.display='none'; $('nextRow').style.display='none'; $('agTop').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); LASTROASTROW=null; try{ pushRoastStart(); }catch(e){} renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; PPFLIPT=null; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); LASTROASTROW=null; try{ pushRoastStart(); }catch(e){} renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw','mA0Ag'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -886,6 +886,21 @@ function renderStageStrip(){ const el=$('stageStrip'); if(!el) return;
 }
 function fmtT(t){ return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'); }
 function valid(){ return cracks.filter(c=>!c.fp); }
+// ---- TAGGER v1 stage-layer helpers (2026-07-25 fit on his Stage Ear labels; LORO-verified) ----
+let PPFLIPT=null;   // first instant the three peak witnesses agreed (his perceptual B1)
+function smaskCracks(vv,smp){   // tryer pulls ring the detector (metal cup, proven): mask ±4s around logged pulls
+  if(!smp||!smp.length) return vv;
+  return vv.filter(c=>!smp.some(s=>Math.abs(c.t-s.t)<=4)); }
+function smaskValid(){ return smaskCracks(valid(),SAMPLES); }
+function a1Burst(vts,a0c){   // first run of 3 masked cracks spanning <=6s, from a0c+2 ('cracks become frequent')
+  for(let i=0;i<vts.length-2;i++){ if(vts[i]>=a0c+2 && vts[i+2]-vts[i]<=6) return vts[i]; }
+  return null; }
+function a1Call(vts,a0c,peakT,peakKnown,smp){   // +6.5s = his recognition offset (LORO-fit); pull-on-A1 collision -> retro peak fraction
+  const raw=a1Burst(vts,a0c);
+  if(raw==null) return null;
+  const collide=(smp||[]).some(s2=>s2.t>=a0c&&s2.t<=raw);
+  if(collide&&peakKnown&&peakT>a0c) return a0c+0.57*(peakT-a0c);
+  return raw+6.5; }
 function renderLog(){
   $('log').innerHTML=cracks.map((c,i)=>'<div class="lr'+(c.fp?' fpr':'')+'" data-id="'+c.id+'"><span><input type="checkbox" '+(c.fp?'checked':'')+' onchange="fpCrack('+c.id+',this.checked)" style="width:16px;height:16px;accent-color:var(--warn);vertical-align:-3px"> #'+(i+1)+' &nbsp; '+fmtT(c.t)+(c.auto?' <b style="color:var(--warn);font-size:10px">'+(c.why==='voice'?'VOICE':c.why==='voiceband'?'HUMAN VOICE':c.why==='learned'?'LEARNED':c.why==='iso'?'ISO':'AUTO')+'</b>':'')+'</span><span>'+(c.f?((c.f/1000).toFixed(1)+'k · '):'')+'gain <b>'+c.g+'</b></span></div>').reverse().join('');
 }
@@ -1970,7 +1985,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-24i';
+const APPVER='v2026-07-25a';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2383,7 +2398,7 @@ setTimeout(applyLang,0);
 const tl=$('tl'), tx=tl.getContext('2d');
 function drawTimeline(){
   tx.clearRect(0,0,tl.width,tl.height);
-  const W=tl.width,H=tl.height, v=valid();
+  const W=tl.width,H=tl.height, v=smaskValid();   // stage layer reads the pull-masked stream; detection untouched
   if(!v.length){ tx.fillStyle='#8a7a68'; tx.font='18px -apple-system,sans-serif'; tx.fillText(running?tt('listening for first crack...'):tt('the DEV window draws itself from the first crack'), 14, 32); return; }
   // DEV window: auto-scale ladder, activity CENTERED. Snaps to standard sizes so
   // a 30s dev and a 2min dev each fill the frame, and same-class roasts stay comparable.
@@ -2512,6 +2527,7 @@ function drawTimeline(){
       pastPeak=wTrend && wPersist && wRhythm;
     }
     PASTPEAK=pastPeak;
+    if(pastPeak&&PPFLIPT==null) PPFLIPT=nowS;   // the witnessed-decline instant = his B1
     // stepless envelope PHASE 0-1 (Omer's thesis: color follows the loudness phase, not the clock).
     // Rising half: rate/peak maps 0->0.5, capped there until a REAL peak is proven. Monotonic, mic-invariant.
     const smNow=sm[Math.min(nowBin,lb)]||0;
@@ -2521,23 +2537,21 @@ function drawTimeline(){
     // cap (<=0.5) and let PHASE FALL. Monotone (running max) everywhere else, so honest confidence is never
     // manufactured, only ever withdrawn.
     if(pastPeak){ PHPEAK=peak; PHPEAKT=t0+(peakI+0.5)*bin; PHASE=Math.max(PHASE,Math.min(1,phRaw)); }
-    else if(PHASE>0.5 && PHPEAK>0 && (t0+(peakI+0.5)*bin)>PHPEAKT+bin && peak>PHPEAK*1.05){ PHASE=Math.min(0.5,phRaw); PHPEAK=0; PHREV=nowS; }
+    else if(PHASE>0.5 && PHPEAK>0 && (t0+(peakI+0.5)*bin)>PHPEAKT+bin && peak>PHPEAK*1.05){ PHASE=Math.min(0.5,phRaw); PHPEAK=0; PHREV=nowS; PPFLIPT=null; }   // fake peak withdrawn: B1 witness withdrawn too
     else PHASE=Math.max(PHASE,Math.min(1,phRaw));
-    // parameter-free rise tagging: A1 = steepest sustained rise (max slope of the envelope),
-    // B0 = the deceleration knee before the crown (most negative curvature). No 30/70 constants;
-    // legacy thresholds only as fallback when the rise is too short to differentiate.
-    let tA1=null,tB0=null;
-    if(peakI-a0Bin>=3){
-      let dmaxI=-1,dmax=-1e9;
-      for(let i2=Math.max(1,a0Bin);i2<=peakI;i2++){ const dd=sm[i2]-sm[i2-1]; if(dd>dmax){ dmax=dd; dmaxI=i2; } }
-      let s2minI=-1,s2min=1e9;
-      for(let i2=Math.max(2,dmaxI+1);i2<=peakI;i2++){ const s2v=(sm[i2]-sm[i2-1])-(sm[i2-1]-sm[i2-2]); if(s2v<s2min){ s2min=s2v; s2minI=i2; } }
-      if(dmaxI>0) tA1=t0+(dmaxI+0.5)*bin;
-      if(s2minI>0) tB0=t0+(s2minI+0.5)*bin;
-    }
-    const stages=[['A0',a0t],['A1',tA1!=null?tA1:susUp(EP.A1)],['B0',tB0!=null?tB0:susUp(EP.B0)]];
-    const tB1=t0+(peakI+0.5)*bin;
-    if(peakInterior&&(pastPeak||quiet>EP.QUIET_B1)) stages.push(['B1',tB1]);
+    // TAGGER v1 (2026-07-25 · fit on HIS Stage Ear labels, LORO median: A1 2.5s, B0 1.8s):
+    // A1 = live crack-burst onset + 6.5s recognition offset (his 'frequent' moment; pull-collision fallback).
+    // B0 = the bell TOP instant (his B0 calls land there: 194.6/196.4 · 204.9/201.5 · 149.7/148.5).
+    // B1 = the witnessed-decline instant (PPFLIPT); his B1 marks trail the top by seconds.
+    // Old steepest-rise A1 and curvature-knee B0 RETIRED. C0/C1 rules unchanged below.
+    const tPeak=t0+(peakI+0.5)*bin;
+    const peakKnown=peakInterior&&(pastPeak||quiet>EP.QUIET_B1);
+    const tA1=a1Call(v.map(c=>c.t),a0t,tPeak,peakKnown,SAMPLES);
+    const stages=[['A0',a0t]];
+    if(tA1!=null&&(!peakKnown||tA1<=tPeak)) stages.push(['A1',tA1]);
+    if(peakKnown) stages.push(['B0',tPeak]);
+    if(peakKnown&&PPFLIPT!=null) stages.push(['B1',PPFLIPT]);
+    const tB1=tPeak;   // C0/C1 anchor = the crown instant, exactly as before
     // C1 must be EARNED by observed silence: at least 10s, adaptive to roast speed (3x recent median gap).
     const rg=v.slice(-11).map(c=>c.t); let medGap=2;
     if(rg.length>3){ const dif=[]; for(let i=1;i<rg.length;i++) dif.push(rg[i]-rg[i-1]); dif.sort((a,b)=>a-b); medGap=dif[Math.floor(dif.length/2)]; }
