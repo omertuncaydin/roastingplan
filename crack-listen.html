@@ -166,7 +166,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-25a</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-25b</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -401,6 +401,7 @@ body.st-setup #btn{display:none}
 </div>
 
 <script>
+let LASTSIG=0, REMICED=false;   // zombie-mic watchdog (2026-07-25)
 let AC=null, stream=null, src=null, hpF=null, lpF=null, analyser=null, buf=null, running=false, raf=null;
 let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
@@ -490,8 +491,8 @@ function wcCmdSub(on){ try{ if(!SB) return;
       if(m&&m.payload&&!wcCtl()){ wcDeny(); return; }
       if(running&&m&&m.payload&&m.payload.a==='sample'){ markSample(); toast(LANG==='tr'?'Watch: numune işaretlendi.':'Watch: sample marked.'); }
       if(running&&m&&m.payload&&m.payload.a==='drop'){ toast(LANG==='tr'?'Watch: DROP komutu.':'Watch: DROP command.'); stop(); }
-      if(!running&&m&&m.payload&&m.payload.a==='again'){ toast(LANG==='tr'?'Watch: aynı kahve, başlıyor…':'Watch: same coffee, starting…'); try{ start().catch(()=>{}); }catch(e){} }
-      if(!running&&m&&m.payload&&m.payload.a==='fresh'){ wcFresh(); if(m.payload.c){ try{ pickCoffee(String(m.payload.c)).then(()=>start()).catch(()=>{}); }catch(e){} } }
+      if(!running&&m&&m.payload&&m.payload.a==='again'){ toast(LANG==='tr'?'Watch: aynı kahve, başlıyor…':'Watch: same coffee, starting…'); try{ start(true).catch(()=>{}); }catch(e){} }
+      if(!running&&m&&m.payload&&m.payload.a==='fresh'){ wcFresh(); if(m.payload.c){ try{ pickCoffee(String(m.payload.c)).then(()=>start(true)).catch(()=>{}); }catch(e){} } }
     }catch(e){} }).subscribe(); }
   if(!on&&WCCH){ try{ SB.removeChannel(WCCH); }catch(e){} WCCH=null; } }catch(e){} }
 try{ const agI=$('mAgG'); if(agI) agI.addEventListener('change',()=>{ try{ if(WCON&&!running&&WCFIN&&String(agI.value).trim()){ WCFIN.ag=1; wcTablePut(WCFIN); } }catch(e){} }); }catch(e){}   // entering ground Agtron updates the watch's fin row: the wrist knows the homework is done
@@ -511,14 +512,19 @@ hp.oninput=()=>{ $('hpV').textContent=fmtHz(+hp.value); if(hpF) hpF.frequency.va
 function toggle(){ running?stop():start(); }
 function hardRefresh(){ if(running||wav.len||rows.length||cracks.length){ if(!confirm('Refresh clears the unsaved session (audio + logs). Continue?')) return; } try{ const base=location.href.split('?')[0]; location.href=base+'?v='+Date.now(); }catch(e){ location.reload(); } }
 
-async function start(){
+async function start(remote){
   if(ENROLL) enrollStop();
   if(!UNI()){ uniOpen(true); return; }   // no roast without a universe: numbers need to know where they live
   $('err').textContent='';
   try{
-    if(!(stream&&stream.getAudioTracks().some(t=>t.readyState==='live'))){
+    const warmOK = stream && stream.getAudioTracks().some(t=>t.readyState==='live' && !t.muted);
+    if(!remote || !warmOK){
+      // manual tap = FRESH mic, always: iOS keeps a warm track "live" yet mutes it to exact silence (field find 2026-07-25, snaps dead on iPhone / fine on desktop)
+      try{ if(stream) stream.getTracks().forEach(t=>t.stop()); }catch(e){}
+      try{ if(AC && AC.state!=='closed') AC.close(); }catch(e){}
+      AC=null; stream=null; src=null;
       stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
-    }   // reuse the warm mic when stop() kept it (watch-cast remote restart)
+    }   // warm reuse survives ONLY for watch-remote restarts (no finger available); zombie watchdog below covers the rest
   }catch(e){ $('err').textContent=(LANG==='tr'?'Mikrofon engellendi. iPhone: Ayarlar > Safari > Mikrofon iznini ac (veya adres cubugundaki aA > Site Ayarlari), sayfayi yenile, Basla\'ya tekrar dokun.':'Microphone blocked. iPhone: Settings > Safari > Microphone, allow it (or tap aA in the address bar > Website Settings), reload, tap Start again.')+' ['+(e.name||e.message)+']'; return; }
   if(!(AC&&AC.state!=='closed')) AC=new (window.AudioContext||window.webkitAudioContext)();
   if(AC.state==='suspended') await AC.resume();
@@ -552,7 +558,7 @@ async function start(){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('dlStory').style.display='none'; $('gameAdd').style.display='none'; $('mapBtn').style.display='none'; $('nextRow').style.display='none'; $('agTop').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; PPFLIPT=null; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); LASTROASTROW=null; try{ pushRoastStart(); }catch(e){} renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; LASTSIG=performance.now(); REMICED=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; PPFLIPT=null; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); LASTROASTROW=null; try{ pushRoastStart(); }catch(e){} renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw','mA0Ag'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -696,6 +702,17 @@ function voiceTick(d){ let s=0; for(let i=0;i<d.length;i++) s+=d[i]*d[i]; const 
 function audioDead(){ if(!running) return; if(AUDDOWN==null) AUDDOWN=(performance.now()-startT)/1000;
   const el=$('err'); if(el){ el.textContent=(LANG==='tr'?'SES KESILDI ':'AUDIO INTERRUPTED ')+fmtT(AUDDOWN)+(LANG==='tr'?' - dokun, surdur':' - tap to resume'); el.style.cursor='pointer'; el.onclick=()=>audioRevive(); }
   audioRevive(); }
+async function reMic(){ try{
+  try{ if(stream) stream.getTracks().forEach(t=>t.stop()); }catch(e){}
+  stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+  if(AC&&AC.state!=='running'){ try{ await AC.resume(); }catch(e){} }
+  try{ if(src) src.disconnect(); }catch(e){}
+  src=AC.createMediaStreamSource(stream);
+  src.connect(hpF);
+  if(lpV) src.connect(lpV);
+  if(proc) src.connect(proc);
+  stream.getAudioTracks().forEach(t=>t.onended=()=>audioDead());
+}catch(e){} }   // live mid-roast mic transplant: chain stays, only the source is swapped (2026-07-25)
 async function audioRevive(){ try{ if(AC&&AC.state!=='running') await AC.resume(); }catch(e){}
   if(AC&&AC.state==='running'&&stream&&stream.getAudioTracks().some(t=>t.readyState==='live')){
     if(AUDDOWN!=null){ AUDGAPS.push({from:AUDDOWN,to:(performance.now()-startT)/1000}); AUDDOWN=null; }
@@ -732,6 +749,7 @@ function enrollStop(){ ENROLL=false;
 function detectBuf(d){
   let s=0; for(let i=0;i<d.length;i++) s+=d[i]*d[i];
   const bufRms=Math.sqrt(s/d.length);
+  if(bufRms>0) LASTSIG=performance.now();   // exact zeros = muted/zombie track; any real mic has floor noise
   bgEMA = bgEMA ? bgEMA*0.96 + bufRms*0.04 : bufRms;     // ~0.5s floor at 21ms buffers
   const W=48; let acc=0, maxE=0;
   for(let i=0;i<d.length;i++){ acc+=d[i]*d[i]; if(i>=W) acc-=d[i-W]*d[i-W]; if(i>=W-1&&acc>maxE) maxE=acc; }
@@ -797,6 +815,12 @@ function loop(){
   const recent=cracks.filter(c=> !c.fp && (now-startT)/1000 - c.t <= 10).length;
   $('rate').textContent=Math.round(recent*6);            // cracks in last 10s -> per minute
   isoUpdate((now-startT)/1000);                          // ISOLATED FIRST CRACK: per-frame O(1) check
+  // ZOMBIE-MIC WATCHDOG: muted iOS track streams exact zeros while claiming to be live. 2.5s of zeros -> rebuild the mic in place; still dead -> banner. (2026-07-25)
+  if(now-LASTSIG<500) REMICED=false;
+  if(now-startT>3000 && now-LASTSIG>2500){
+    if(!REMICED){ REMICED=true; reMic(); }
+    else if(now-LASTSIG>6000 && AUDDOWN==null) audioDead();
+  }
 
   // trace
   trace.push({g:gain, crack:crackFlash}); crackFlash=false; if(trace.length>TRACE_MAX) trace.shift();
@@ -1985,7 +2009,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-25a';
+const APPVER='v2026-07-25b';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
