@@ -30,14 +30,14 @@ input[type=file]{width:100%;color:var(--muted);font-size:13px}
 </head>
 <body>
 <h1>Stage Ear</h1>
-<div class="sub">kulağın kalibre eder, matematik formülleşir · v2026-07-25a · <button onclick="location.href=location.pathname+'?v='+Date.now()" style="background:none;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer">Yenile</button></div>
+<div class="sub">kulağın kalibre eder, matematik formülleşir · v2026-07-25b · <button onclick="location.href=location.pathname+'?v='+Date.now()" style="background:none;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer">Yenile</button></div>
 
 <div class="card" id="dz" style="border:1.5px dashed var(--line);transition:border-color .15s">
   <div class="lbl">1 · seans zip'lerini yükle · SÜRÜKLE-BIRAK</div>
   <input type="file" id="zips" multiple accept=".zip">
   <div class="hint" style="margin-top:4px">Zip'leri bu kutuya bırakabilirsin.</div>
   <div id="files"></div>
-  <div class="hint">Her zip'ten WAV çıkarılır; 15 sn'lik kesitler 15 sn adımlarla kesilir ve KARIŞIK sırada çalınır. Bağlam gösterilmez: sadece kulağın.</div>
+  <div class="hint">Her zip'ten WAV çıkarılır; 15 sn'lik kesitler 15 sn adımlarla kesilir ve KARIŞIK sırada çalınır. Bağlam gösterilmez: sadece kulağın. Çatlak içermeyen kesitler artık ATLANIR: sadece fırtına penceresi çalınır.</div>
 </div>
 
 <div class="card" id="playCard" style="display:none">
@@ -81,6 +81,29 @@ let LABELS=[]; try{ LABELS=JSON.parse(localStorage.getItem('seLabels')||'[]'); }
 function statUp(){ $('stat').textContent='kayıtlı etiket: '+LABELS.length; }
 statUp();
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+// ---- v25b: detector-informed queue filter (his order: no crackless pieces) ----
+// Raw detector rows from the session CSV ('# id,t,...'), fp-flagged INCLUDED:
+// detector false-positive zones are exactly the hard negatives worth his ear.
+function seCrkParse(txt){
+  try{ const ts=[];
+    for(const line of txt.split('\n')){
+      if(!line.startsWith('# ')) continue;
+      if(/^# (meta|sample|stages|cracks:)/.test(line)) continue;
+      const p=line.slice(2).split(',');
+      if(p.length>=3 && /^\s*\d+\s*$/.test(p[0])){ const v=parseFloat(p[1]); if(isFinite(v)) ts.push(v); }
+    }
+    ts.sort((a,b)=>a-b);
+    if(!ts.length) return {n:0, ts:[], a0:null, last:null};
+    let a0=ts[0]; for(let i=0;i<ts.length-2;i++){ if(ts[i+2]-ts[i]<=30){ a0=ts[i]; break; } }   // confirmed-A0 on raw rows: a stray FP cannot drag the bridge
+    return {n:ts.length, ts, a0, last:ts[ts.length-1]};
+  }catch(e){ return null; }
+}
+function seServe(t, crk){
+  if(!crk) return true;                                       // zip without CSV: fail open
+  if(!crk.n) return false;                                    // detector heard nothing all session
+  if(crk.ts.some(c=>c>=t&&c<t+EX_DUR)) return true;           // raw event inside the piece
+  return (t+EX_DUR)>(crk.a0-30) && t<(crk.last+30);           // storm bridge ±30s, anchored on confirmed-A0
+}
 async function addZips(list){
   if(typeof JSZip==='undefined'){ alert('JSZip yüklenemedi: internet gerekli.'); return; }
   for(const f of list){
@@ -90,7 +113,10 @@ async function addZips(list){
       z.forEach((n,zf)=>{ if(n.toLowerCase().endsWith('.wav')&&!zf.dir){ if((zf._data&&zf._data.uncompressedSize||0)>=wavSize){ wavName=n; wavSize=zf._data?zf._data.uncompressedSize:1; } } });
       if(!wavName){ FILES.push({name:f.name, err:'wav yok'}); continue; }
       const ab=await z.file(wavName).async('arraybuffer');
-      FILES.push({name:f.name, wav:ab, dur:null});
+      let crk=null;   // detector context for the queue filter; null = fail open
+      try{ let csvName=null; z.forEach((n2,zf2)=>{ if(n2.toLowerCase().endsWith('.csv')&&!zf2.dir) csvName=n2; });
+        if(csvName){ crk=seCrkParse(await z.file(csvName).async('string')); } }catch(e){ crk=null; }
+      FILES.push({name:f.name, wav:ab, dur:null, crk});
     }catch(err){ FILES.push({name:f.name, err:String(err).slice(0,40)}); }
   }
   renderFiles(); buildQueue();
@@ -103,7 +129,7 @@ $('zips').addEventListener('change', e=>addZips(e.target.files));
     const fs2=[...(e.dataTransfer&&e.dataTransfer.files||[])].filter(x=>/\.zip$/i.test(x.name));
     if(fs2.length) addZips(fs2); });
 })();
-function renderFiles(){ $('files').innerHTML=FILES.map((f,i)=>'&#128193; '+f.name+(f.err?(' · <span style="color:var(--warn)">'+f.err+'</span>'):(f.dur?(' · '+Math.round(f.dur)+'s'):' · hazır'))
+function renderFiles(){ $('files').innerHTML=FILES.map((f,i)=>'&#128193; '+f.name+(f.err?(' · <span style="color:var(--warn)">'+f.err+'</span>'):(f.dur?(' · '+Math.round(f.dur)+'s'):' · hazır'))+(f.crk&&f.crk.n?(' · '+f.crk.n+' çatlak'):'')
   +(f.err?'':(' · <span onclick="susTog('+i+')" style="cursor:pointer;border:1px solid '+(f.sus?'var(--warn)':'var(--line)')+';color:'+(f.sus?'var(--warn)':'var(--dim)')+';border-radius:999px;padding:1px 8px;font-size:11px;font-weight:700">'+(f.sus?'&#9888; şüpheli':'şüpheli?')+'</span>'))).join('<br>'); }
 function susTog(i){ FILES[i].sus=!FILES[i].sus; renderFiles(); }
 async function ensureDecoded(fi){
@@ -118,12 +144,18 @@ async function buildQueue(){
   const order=shuffle(FILES.map((f,i)=>i).filter(i=>!FILES[i].err));
   for(const fi of order){
     const buf=await ensureDecoded(fi);
-    const ts=[]; for(let t=0;t+EX_DUR<=buf.duration;t+=EX_STEP) ts.push(t);
+    const ts=[]; for(let t=0;t+EX_DUR<=buf.duration;t+=EX_STEP){ if(seServe(t, FILES[fi].crk)) ts.push(t); }
     shuffle(ts).forEach(t=>QUEUE.push({fi,t}));
   }
   CURBUF=null; CURFILE=null;
   const done=new Set(LABELS.map(l=>l.file+'@'+l.t));
   QUEUE=QUEUE.filter(q=>!done.has(FILES[q.fi].name+'@'+q.t));
+  // cross-regime test-retest (Opus verify 2026-07-25): crack-bearing pieces labeled ONCE
+  // in the unfiltered phase come back exactly once as hidden repeats (drift + ceiling)
+  const cnt={}; LABELS.forEach(l=>{ const k=l.file+'@'+l.t; cnt[k]=(cnt[k]||0)+1; });
+  FILES.forEach((f2,fi2)=>{ if(f2.err||!f2.crk||!f2.crk.n) return;
+    LABELS.forEach(l=>{ if(l.file!==f2.name||cnt[l.file+'@'+l.t]!==1) return;
+      if(f2.crk.ts.some(c=>c>=l.t&&c<l.t+EX_DUR)) QUEUE.push({fi:fi2, t:l.t, rep:1}); }); });
   // hidden repeats: duplicate ~15% of pieces, indistinguishable in the UI; export carries rep:1
   const reps=shuffle(QUEUE.slice()).slice(0,Math.ceil(QUEUE.length*REP_FRAC)).map(q=>({fi:q.fi,t:q.t,rep:1}));
   QUEUE=shuffle(QUEUE.concat(reps));
@@ -159,7 +191,7 @@ function tapAn(){
 function tag(st){
   if(CUR<0) return;
   const q=QUEUE[CUR];
-  if(st!=='skip') LABELS.push({file:FILES[q.fi].name, t:q.t, dur:EX_DUR, label:st, fl:($('flt').checked?1:0), mark:(PENDMARK!=null?PENDMARK:null), rep:(q.rep?1:0), at:new Date().toISOString()});
+  if(st!=='skip') LABELS.push({file:FILES[q.fi].name, t:q.t, dur:EX_DUR, label:st, fl:($('flt').checked?1:0), mark:(PENDMARK!=null?PENDMARK:null), rep:(q.rep?1:0), qm:'cb', ix:LABELS.length, at:new Date().toISOString()});
   PENDMARK=null; const av=$('anV'); if(av) av.textContent='';
   localStorage.setItem('seLabels', JSON.stringify(LABELS)); statUp();
   QUEUE.splice(CUR,1);
@@ -173,8 +205,8 @@ function undo(){
   if(fi>=0){ QUEUE.unshift({fi, t:l.t}); CUR=0; drawCur(); }
 }
 function expJson(){
-  const out={exported:new Date().toISOString(), step:EX_STEP, dur:EX_DUR, protocol:{marks:true, repeats:REP_FRAC, boundary:'full-weight-soft'},
-    files:FILES.map(f=>({name:f.name, dur:f.dur||null, err:f.err||null, suspicious:!!f.sus})), labels:LABELS};
+  const out={exported:new Date().toISOString(), step:EX_STEP, dur:EX_DUR, protocol:{marks:true, repeats:REP_FRAC, boundary:'full-weight-soft', filter:'a0bridge30-v1'},
+    files:FILES.map(f=>({name:f.name, dur:f.dur||null, err:f.err||null, suspicious:!!f.sus, crk_n:(f.crk?f.crk.n:null), crk_a0:(f.crk&&f.crk.a0!=null?+f.crk.a0.toFixed(2):null), crk_last:(f.crk&&f.crk.last!=null?+f.crk.last.toFixed(2):null)})), labels:LABELS};
   const b=new Blob([JSON.stringify(out,null,1)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(b);
   a.download='stage-ear-labels-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
