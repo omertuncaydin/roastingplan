@@ -166,7 +166,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-25b</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-25c</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -194,6 +194,7 @@ body.st-setup #btn{display:none}
     <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
       <div class="meter" style="flex:1;margin-top:0"><div class="meterFill" id="mfill"></div><div class="floor" id="mfloor" style="left:0%"></div></div>
       <div id="gain" style="font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;min-width:52px;text-align:right">0</div>
+      <div id="micChip" style="display:none;font-size:10px;font-weight:800;letter-spacing:.06em;padding:3px 7px;border-radius:8px;align-self:center"></div>
     </div>
     <div class="hint" id="status">Tap start, hold the phone near the drum, disable the case if it covers the mic.</div>
     <div id="sampChips" style="display:none;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
@@ -401,7 +402,7 @@ body.st-setup #btn{display:none}
 </div>
 
 <script>
-let LASTSIG=0, REMICED=false;   // zombie-mic watchdog (2026-07-25)
+let LASTSIG=0, REMICED=false, DEEPMIC=false, MICWARNED=false;   // zombie-mic ladder (2026-07-25c)
 let AC=null, stream=null, src=null, hpF=null, lpF=null, analyser=null, buf=null, running=false, raf=null;
 let bgEMA=0, fastEMA=0, refractoryUntil=0;
 let procDet=null, crackFlash=false, pendingCrackG=null, pendingUI=false, lastShort=0, lastBufRms=0, SAMPLES=[];
@@ -525,7 +526,7 @@ async function start(remote){
       AC=null; stream=null; src=null;
       stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
     }   // warm reuse survives ONLY for watch-remote restarts (no finger available); zombie watchdog below covers the rest
-  }catch(e){ $('err').textContent=(LANG==='tr'?'Mikrofon engellendi. iPhone: Ayarlar > Safari > Mikrofon iznini ac (veya adres cubugundaki aA > Site Ayarlari), sayfayi yenile, Basla\'ya tekrar dokun.':'Microphone blocked. iPhone: Settings > Safari > Microphone, allow it (or tap aA in the address bar > Website Settings), reload, tap Start again.')+' ['+(e.name||e.message)+']'; return; }
+  }catch(e){ $('err').textContent=(LANG==='tr'?'Mikrofon engellendi. Safari: adres cubugu aA > Web Sitesi Ayarlari > Mikrofon: Izin Ver. Chrome: uc nokta > Site ayarlari > Mikrofon. Ayrica iOS Ayarlar > Gizlilik > Mikrofon listesinde tarayici ACIK olmali. Sonra yenile + Basla.':'Microphone blocked. Safari: aA in the address bar > Website Settings > Microphone: Allow. Chrome: three-dot menu > Site settings > Microphone. Also iOS Settings > Privacy > Microphone must list your browser as ON. Then reload + Start.')+' ['+(e.name||e.message)+']'; return; }
   if(!(AC&&AC.state!=='closed')) AC=new (window.AudioContext||window.webkitAudioContext)();
   if(AC.state==='suspended') await AC.resume();
   src=AC.createMediaStreamSource(stream);
@@ -558,7 +559,7 @@ async function start(remote){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('dlStory').style.display='none'; $('gameAdd').style.display='none'; $('mapBtn').style.display='none'; $('nextRow').style.display='none'; $('agTop').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; LASTSIG=performance.now(); REMICED=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; PPFLIPT=null; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); LASTROASTROW=null; try{ pushRoastStart(); }catch(e){} renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; LASTSIG=performance.now(); REMICED=false; DEEPMIC=false; MICWARNED=false; pendingCrackG=null; SAMPLES=[]; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; PPFLIPT=null; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); LASTROASTROW=null; try{ pushRoastStart(); }catch(e){} renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw','mA0Ag'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -702,17 +703,36 @@ function voiceTick(d){ let s=0; for(let i=0;i<d.length;i++) s+=d[i]*d[i]; const 
 function audioDead(){ if(!running) return; if(AUDDOWN==null) AUDDOWN=(performance.now()-startT)/1000;
   const el=$('err'); if(el){ el.textContent=(LANG==='tr'?'SES KESILDI ':'AUDIO INTERRUPTED ')+fmtT(AUDDOWN)+(LANG==='tr'?' - dokun, surdur':' - tap to resume'); el.style.cursor='pointer'; el.onclick=()=>audioRevive(); }
   audioRevive(); }
-async function reMic(){ try{
+async function reMic(deep){ try{
   try{ if(stream) stream.getTracks().forEach(t=>t.stop()); }catch(e){}
   stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
-  if(AC&&AC.state!=='running'){ try{ await AC.resume(); }catch(e){} }
-  try{ if(src) src.disconnect(); }catch(e){}
-  src=AC.createMediaStreamSource(stream);
-  src.connect(hpF);
-  if(lpV) src.connect(lpV);
-  if(proc) src.connect(proc);
+  if(deep){
+    // attempt 2: the context itself may be poisoned - rebuild the whole graph on a fresh AudioContext (2026-07-25c)
+    try{ if(procDet){ procDet.onaudioprocess=null; } }catch(e){}
+    try{ if(procV){ procV.onaudioprocess=null; } }catch(e){}
+    try{ if(AC&&AC.state!=='closed') AC.close(); }catch(e){}
+    AC=new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended') await AC.resume();
+    src=AC.createMediaStreamSource(stream);
+    hpF=AC.createBiquadFilter(); hpF.type='highpass'; hpF.frequency.value=+hp.value; hpF.Q.value=0.7;
+    lpF=AC.createBiquadFilter(); lpF.type='lowpass'; lpF.frequency.value=16000; lpF.Q.value=0.7;
+    analyser=AC.createAnalyser(); analyser.fftSize=1024; analyser.smoothingTimeConstant=0; buf=new Float32Array(analyser.fftSize);
+    src.connect(hpF); hpF.connect(lpF); lpF.connect(analyser);
+    procDet=AC.createScriptProcessor(1024,1,1); procDet.onaudioprocess=e=>detectBuf(e.inputBuffer.getChannelData(0));
+    lpF.connect(procDet); procDet.connect(AC.destination);
+    lpV=AC.createBiquadFilter(); lpV.type='lowpass'; lpV.frequency.value=2800; lpV.Q.value=0.7;
+    procV=AC.createScriptProcessor(1024,1,1); procV.onaudioprocess=e=>voiceTick(e.inputBuffer.getChannelData(0));
+    src.connect(lpV); lpV.connect(procV); procV.connect(AC.destination);
+    AC.onstatechange=()=>{ if(running&&AC&&AC.state!=='running') audioDead(); };
+  } else {
+    if(AC&&AC.state!=='running'){ try{ await AC.resume(); }catch(e){} }
+    try{ if(src) src.disconnect(); }catch(e){}
+    src=AC.createMediaStreamSource(stream);
+    src.connect(hpF);
+    if(lpV) src.connect(lpV);
+    if(proc) src.connect(proc);
+  }
   stream.getAudioTracks().forEach(t=>t.onended=()=>audioDead());
-}catch(e){} }   // live mid-roast mic transplant: chain stays, only the source is swapped (2026-07-25)
+}catch(e){} }   // live mid-roast mic transplant: attempt 1 swaps the source, attempt 2 rebuilds the whole graph (2026-07-25c)
 async function audioRevive(){ try{ if(AC&&AC.state!=='running') await AC.resume(); }catch(e){}
   if(AC&&AC.state==='running'&&stream&&stream.getAudioTracks().some(t=>t.readyState==='live')){
     if(AUDDOWN!=null){ AUDGAPS.push({from:AUDDOWN,to:(performance.now()-startT)/1000}); AUDDOWN=null; }
@@ -815,11 +835,21 @@ function loop(){
   const recent=cracks.filter(c=> !c.fp && (now-startT)/1000 - c.t <= 10).length;
   $('rate').textContent=Math.round(recent*6);            // cracks in last 10s -> per minute
   isoUpdate((now-startT)/1000);                          // ISOLATED FIRST CRACK: per-frame O(1) check
-  // ZOMBIE-MIC WATCHDOG: muted iOS track streams exact zeros while claiming to be live. 2.5s of zeros -> rebuild the mic in place; still dead -> banner. (2026-07-25)
-  if(now-LASTSIG<500) REMICED=false;
-  if(now-startT>3000 && now-LASTSIG>2500){
-    if(!REMICED){ REMICED=true; reMic(); }
-    else if(now-LASTSIG>6000 && AUDDOWN==null) audioDead();
+  // ZOMBIE-MIC LADDER (2026-07-25c): chip truth -> source transplant -> full graph rebuild -> honest verdict.
+  const micDead = now-startT>2500 && now-LASTSIG>2000;
+  const mc=$('micChip');
+  if(mc){ if(micDead){ mc.style.display='block'; mc.style.background='#5c1a1a'; mc.style.color='#ff9b9b'; mc.textContent=(LANG==='tr'?'MIC SESSIZ':'MIC SILENT'); }
+          else { mc.style.display='block'; mc.style.background='#12351c'; mc.style.color='#7fe0a0'; mc.textContent='MIC \u2713'; } }
+  if(now-LASTSIG<500){ REMICED=false; DEEPMIC=false; if(MICWARNED){ MICWARNED=false; const el=$('err'); if(el&&el.dataset.mic){ el.textContent=''; delete el.dataset.mic; } } }
+  if(micDead){
+    if(!REMICED){ REMICED=true; reMic(false); }
+    else if(!DEEPMIC && now-LASTSIG>4500){ DEEPMIC=true; reMic(true); }
+    else if(now-LASTSIG>8000 && !MICWARNED){ MICWARNED=true;
+      const el=$('err'); if(el){ el.dataset.mic='1'; el.textContent=(LANG==='tr'
+        ?'MIKROFON SESSIZ - tarayici ses alamiyor. Onarim denendi, olmadi. TELEFONU YENIDEN BASLATIN (iOS ses sistemi takilir, tek care budur). Kavurma kaydi SAGIR ilerliyor.'
+        :'MIC IS SILENT - the browser receives no audio. Auto-repair failed. RESTART THE PHONE (iOS audio stack wedge; a restart is the only cure). The roast is currently DEAF.'); }
+      try{ if(WCON) wcPub({c:(cName.value||'').trim()||'?', mic:0}, true); }catch(e){}   // the wrist deserves to know the ear is dead
+    }
   }
 
   // trace
@@ -2009,7 +2039,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-25b';
+const APPVER='v2026-07-25c';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
