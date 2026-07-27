@@ -490,6 +490,10 @@
     <button class="nullbtn" title="Coming in the next version">Class Mode &nbsp;·&nbsp; aggregate a class on one coffee &nbsp;·&nbsp; coming soon</button>
     <div class="small" id="cupMsg" style="margin-top:10px;color:var(--accent2)"></div>
     <div class="card" style="margin-top:12px"><div class="cgrplbl">Saved cuppings</div><div id="cupList"></div></div>
+    <div class="card" style="margin-top:12px"><div class="cgrplbl" data-i18n="Watch link">Watch link</div>
+      <div class="cuprow" style="gap:8px;align-items:center"><input type="text" id="wsyncKey" placeholder="16-hex watch key" style="flex:1"><button class="iconbtn" onclick="wsyncAdd()" data-i18n="Link">Link</button></div>
+      <div class="small" id="wsyncList" style="margin-top:6px"></div>
+      <div class="small" style="color:var(--muted)" data-i18n="Cuppings rated on the watch land here by themselves.">Cuppings rated on the watch land here by themselves.</div></div>
   </div>
 
   <!-- FLIGHT (attribute-paged scoring across several coffees) -->
@@ -1386,6 +1390,45 @@ async function saveCup(){ if(!canSave('cup')){ cupMsg.style.color='var(--accent2
 function renderCupList(){ if(!CUPS.length){ cupList.innerHTML='<div class="small">None yet.</div>'; return; } cupList.innerHTML=CUPS.map(c=>`<div class="hxrow"><span>${esc(c.sample)} <span class="small">${c.date}</span></span><span class="tgtval">${(c.total||0).toFixed(2)} <button class="delx" data-delcup="${c.id}">×</button></span></div>`).join(''); cupList.querySelectorAll('[data-delcup]').forEach(b=>b.onclick=()=>delCup(b.dataset.delcup)); }
 async function delCup(id){ CUPS=CUPS.filter(c=>String(c.id)!==String(id)); cacheCG(); renderCupList(); if(sb&&!String(id).startsWith('local-')){ try{ await sb.from('cuppings').delete().eq('id',id); }catch(e){} } }
 
+// ===== GC1 · WATCH RELAY SYNC (design guide-connection-2026-07-27) =====
+// Watch upserts capture into live_cast["cup-<wk>"] (anon, key = capability).
+// This signed-in Guide persists into the user's cuppings rows (upsert-by-wid,
+// Guide-typed notes always survive) and acks on live_cast["gd-<wk>"].
+let WSYNC_KEYS=[]; try{ WSYNC_KEYS=JSON.parse(localStorage.getItem('cnWatchKeys')||'[]'); }catch(e){}
+function wsyncRenderList(){ const el=document.getElementById('wsyncList'); if(el) el.innerHTML=WSYNC_KEYS.length?WSYNC_KEYS.map(k=>`<span class="chip sub">${k.slice(0,4)}…${k.slice(-2)} <span style="cursor:pointer" onclick="wsyncDel('${k}')">×</span></span>`).join(' '):(LANG==='tr'?'Bağlı saat yok.':'No watch linked.'); }
+function wsyncAdd(){ const el=document.getElementById('wsyncKey'); const k=(el&&el.value||'').trim().toLowerCase();
+  if(!/^[0-9a-f]{16}$/.test(k)){ toast(LANG==='tr'?'Anahtar 16 hex karakter olmalı.':'Key must be 16 hex characters.'); return; }
+  if(!WSYNC_KEYS.includes(k)) WSYNC_KEYS.push(k); localStorage.setItem('cnWatchKeys',JSON.stringify(WSYNC_KEYS));
+  if(el) el.value=''; wsyncRenderList(); wsyncTick(); toast(LANG==='tr'?'Saat bağlandı.':'Watch linked.'); }
+function wsyncDel(k){ WSYNC_KEYS=WSYNC_KEYS.filter(x=>x!==k); localStorage.setItem('cnWatchKeys',JSON.stringify(WSYNC_KEYS)); wsyncRenderList(); }
+let WSYNC_BUSY=false;
+async function wsyncTick(){ if(WSYNC_BUSY||!sb||!MYUID||!WSYNC_KEYS.length) return; WSYNC_BUSY=true;
+ try{ for(const wk of WSYNC_KEYS){
+  let p=null;
+  try{ const r=await fetch(SUPA_URL+'/rest/v1/live_cast?key=eq.cup-'+wk+'&select=payload',{headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY}}); const rows=await r.json(); p=rows&&rows[0]&&rows[0].payload; }catch(e){}
+  if(!p||!Array.isArray(p.flights)) continue;
+  const ack={flights:{}}; let changed=false;
+  for(const fl of p.flights){ if(!fl||!fl.fid) continue;
+    for(const sm of (fl.capture&&fl.capture.samples)||[]){ if(!sm||!sm.data||!sm.data.wid) continue;
+      const wid=sm.data.wid;
+      const ex=CUPS.find(c=>c.wid===wid);
+      if(ex){ if((sm.data.watchRev||0)>(ex.watchRev||0)){
+          const hasNotes=ex.notes&&Object.values(ex.notes).some(v=>v);
+          const nd=Object.assign({},sm.data,{notes:hasNotes?ex.notes:sm.data.notes});   // Guide-typed notes always survive
+          try{ const u=await sb.from('cuppings').update({sample:sm.sample,date:sm.date,total:sm.total||0,data:nd}).eq('id',ex.id);
+            if(!u.error){ const ix=CUPS.findIndex(c=>String(c.id)===String(ex.id)); if(ix>=0) CUPS[ix]=rowToCup({id:ex.id,date:sm.date,sample:sm.sample,total:sm.total||0,data:nd}); changed=true; } }catch(e){}
+        } }
+      else{ try{ const r2=await sb.from('cuppings').insert({user_id:MYUID,sample:sm.sample,date:sm.date,total:sm.total||0,data:sm.data}).select('*').single();
+            if(r2&&!r2.error){ CUPS.unshift(rowToCup(r2.data)); changed=true; } }catch(e){} }
+    }
+    ack.flights[fl.fid]={rev:fl.rev||0};
+  }
+  try{ await fetch(SUPA_URL+'/rest/v1/live_cast?on_conflict=key',{method:'POST',headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY,'content-type':'application/json',prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({key:'gd-'+wk,payload:{v:1,device:'guide',ack}})}); }catch(e){}
+  if(changed){ try{ cacheCG(); renderCupList(); }catch(e){} }
+ } }finally{ WSYNC_BUSY=false; } }
+setInterval(wsyncTick, 5000);
+setTimeout(()=>{ try{ wsyncRenderList(); }catch(e){} wsyncTick(); }, 3000);
+
 // ---- Grade (Physical) ----
 const CAT1=[['fullblack','Full Black',1,'full-black'],['fullsour','Full Sour',1,'full-sour'],['driedcherry','Dried Cherry',1,'dried-cherry'],['fungus','Fungus Damage',1,'fungus'],['foreign','Foreign Matter',1,'foreign-matter'],['severeinsect','Severe Insect',5,'severe-insect']];
 const CAT2=[['partialblack','Partial Black',3,'partial-black'],['partialsour','Partial Sour',3,'partial-sour'],['parchment','Parchment',5,'parchment'],['floater','Floater',5,'floater'],['immature','Immature / Unripe',5,'immature'],['withered','Withered',5,'withered'],['shell','Shell',5,'shell'],['broken','Broken / Cut',5,'broken'],['hullhusk','Hull / Husk',5,'hull-husk'],['slightinsect','Slight Insect',10,'slight-insect']];
@@ -1647,8 +1690,8 @@ function renderValueCard(){ const s=valSample.value; const c=CUPS.find(x=>x.samp
 // ---- Cup/Grade persistence (local cache + best-effort Supabase) ----
 function cacheCG(){ try{ localStorage.setItem(CUPS_CACHE,JSON.stringify(CUPS)); localStorage.setItem(GRADES_CACHE,JSON.stringify(GRADES)); }catch(e){} }
 function loadCGCache(){ try{ CUPS=JSON.parse(localStorage.getItem(CUPS_CACHE)||'[]')||[]; }catch(e){ CUPS=[]; } try{ GRADES=JSON.parse(localStorage.getItem(GRADES_CACHE)||'[]')||[]; }catch(e){ GRADES=[]; } }
-function toCupPayload(r){ return {user_id:MYUID,sample:r.sample,date:r.date,total:r.total,data:{intens:r.intens,score:r.score,cata:r.cata,roast:r.roast,agtron:r.agtron,purpose:r.purpose,notes:r.notes,nonuniform:r.nonuniform,defective:r.defective,defect:r.defect,distinctive:r.distinctive}}; }
-function rowToCup(d){ const x=d.data||{}; return {id:d.id,date:d.date,sample:d.sample,total:(d.total!=null?+d.total:0),intens:x.intens||{},score:x.score||{},cata:x.cata||{fragAroma:[],flavAfter:[],main:[],mouth:[]},roast:x.roast||'',agtron:(x.agtron==null?'':x.agtron),purpose:x.purpose||'',notes:x.notes||{fragAroma:'',flavAfter:'',acidity:'',sweetness:'',mouthfeel:'',overall:''},nonuniform:x.nonuniform||0,defective:x.defective||0,defect:x.defect||'None',distinctive:x.distinctive||''}; }
+function toCupPayload(r){ const d={intens:r.intens,score:r.score,cata:r.cata,roast:r.roast,agtron:r.agtron,purpose:r.purpose,notes:r.notes,nonuniform:r.nonuniform,defective:r.defective,defect:r.defect,distinctive:r.distinctive}; if(r.wid){ d.wid=r.wid; d.src=r.src||'watch'; d.watchRev=r.watchRev||0; } return {user_id:MYUID,sample:r.sample,date:r.date,total:r.total,data:d}; }
+function rowToCup(d){ const x=d.data||{}; return {id:d.id,date:d.date,sample:d.sample,total:(d.total!=null?+d.total:0),intens:x.intens||{},score:x.score||{},cata:x.cata||{fragAroma:[],flavAfter:[],main:[],mouth:[]},roast:x.roast||'',agtron:(x.agtron==null?'':x.agtron),purpose:x.purpose||'',notes:x.notes||{fragAroma:'',flavAfter:'',acidity:'',sweetness:'',mouthfeel:'',overall:''},nonuniform:x.nonuniform||0,defective:x.defective||0,defect:x.defect||'None',distinctive:x.distinctive||'',wid:x.wid||null,src:x.src||null,watchRev:x.watchRev||0}; }
 function toGradePayload(r){ return {user_id:MYUID,sample:r.sample,date:r.date,data:{purpose:r.purpose,color:r.color,moisture:r.moisture,aw:r.aw,screen:r.screen,counts:r.counts,origin:r.origin,variety:r.variety,process:r.process,certs:r.certs,exnote:r.exnote}}; }
 function rowToGrade(d){ const x=d.data||{}; return {id:d.id,date:d.date,sample:d.sample,purpose:x.purpose||'',color:x.color||'',moisture:x.moisture||'',aw:x.aw||'',screen:x.screen||'',counts:x.counts||{},origin:x.origin||'',variety:x.variety||'',process:x.process||[],certs:x.certs||[],exnote:x.exnote||''}; }
 async function loadCupGrade(){ loadCGCache(); if(!sb) return;
