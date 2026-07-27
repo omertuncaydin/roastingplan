@@ -1406,7 +1406,32 @@ function wsyncAdd(){ const el=document.getElementById('wsyncKey'); const k=(el&&
   if(!WSYNC_KEYS.includes(k)) WSYNC_KEYS.push(k); localStorage.setItem('cnWatchKeys',JSON.stringify(WSYNC_KEYS));
   if(el) el.value=''; wsyncRenderList(); wsyncTick(); toast(LANG==='tr'?'Saat bağlandı.':'Watch linked.'); }
 function wsyncDel(k){ WSYNC_KEYS=WSYNC_KEYS.filter(x=>x!==k); localStorage.setItem('cnWatchKeys',JSON.stringify(WSYNC_KEYS)); wsyncRenderList(); }
-let WSYNC_BUSY=false;
+let WSYNC_BUSY=false, WSYNC_SEEN={};
+function wsyncMirror(latest){
+  // pour incoming watch ratings into whatever form is OPEN, matched by sample name = blind code.
+  const typing=document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName);
+  let did=false;
+  try{
+    if(CURVIEW==='cup'&&cup&&cup.sample&&latest[cup.sample]){
+      const d=latest[cup.sample];
+      if(d.intens) cup.intens=d.intens; if(d.score) cup.score=d.score; if(d.cata) cup.cata=d.cata;
+      if(d.roast) cup.roast=d.roast; if(d.agtron!==''&&d.agtron!=null) cup.agtron=d.agtron;
+      cup.nonuniform=d.nonuniform||0; cup.defective=d.defective||0; if(d.defect) cup.defect=d.defect;
+      did=true;
+      if(!typing){ renderCup(); }   // notes are cup.notes — untouched above, survive every mirror
+    }
+    if(CURVIEW==='flight'&&typeof FLIGHT!=='undefined'&&FLIGHT&&FLIGHT.coffees){
+      let hit=false;
+      FLIGHT.coffees.forEach(c=>{ const d=latest[c.sample]; if(d&&c.cup){
+        if(d.intens) c.cup.intens=d.intens; if(d.score) c.cup.score=d.score; if(d.cata) c.cup.cata=d.cata;
+        if(d.roast) c.cup.roast=d.roast; c.cup.nonuniform=d.nonuniform||0; c.cup.defective=d.defective||0;
+        hit=true; } });
+      if(hit&&!typing){ try{ renderFlight(); }catch(e){} }
+      did=did||hit;
+    }
+  }catch(e){}
+  return did;
+}
 async function wsyncTick(){ if(WSYNC_BUSY) return;
  if(!sb||!MYUID){ if(WSYNC_KEYS.length) wsyncSay(LANG==='tr'?'Giriş yapılmadı — eşitleme bekliyor.':'Not signed in — sync waiting.'); return; }
  if(!WSYNC_KEYS.length){ wsyncSay(''); return; }
@@ -1434,7 +1459,12 @@ async function wsyncTick(){ if(WSYNC_BUSY) return;
   }
   try{ await fetch(SUPA_URL+'/rest/v1/live_cast?on_conflict=key',{method:'POST',headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY,'content-type':'application/json',prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({key:'gd-'+wk,payload:{v:1,device:'guide',ack}})}); }catch(e){}
   const n=p.flights.reduce((a,fl)=>a+(((fl.capture||{}).samples)||[]).length,0);
-  wsyncSay((LANG==='tr'?'Saat verisi alındı: ':'Watch data received: ')+n+(LANG==='tr'?' numune · ':' samples · ')+new Date().toLocaleTimeString().slice(0,5)+(changed?(LANG==='tr'?' · kaydedildi':' · saved'):''));
+  const latest={}; let freshRev=false;
+  for(const fl of p.flights){ for(const sm of (fl.capture&&fl.capture.samples)||[]){ if(!sm||!sm.data) continue;
+    latest[sm.sample]=sm.data;
+    const w=sm.data.wid; if(w&&(sm.data.watchRev||0)>(WSYNC_SEEN[w]||0)){ WSYNC_SEEN[w]=sm.data.watchRev||0; freshRev=true; } } }
+  const mirrored=freshRev?wsyncMirror(latest):false;
+  wsyncSay((LANG==='tr'?'Saat verisi alındı: ':'Watch data received: ')+n+(LANG==='tr'?' numune · ':' samples · ')+new Date().toLocaleTimeString().slice(0,5)+(changed?(LANG==='tr'?' · kaydedildi':' · saved'):'')+(mirrored?(LANG==='tr'?' · forma yansıdı':' · mirrored to form'):''));
   if(changed){ try{ cacheCG(); renderCupList(); }catch(e){} }
  } }finally{ WSYNC_BUSY=false; } }
 setInterval(wsyncTick, 5000);
