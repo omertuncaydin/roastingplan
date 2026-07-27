@@ -171,7 +171,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-27c</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-27d</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -212,6 +212,7 @@ body.st-setup #btn{display:none}
       <div id="npUnder" style="width:64px;height:2px;background:var(--accent);margin:7px auto 4px"></div>
       <div class="lbl" style="font-size:10px">this bean's map · tap to rename</div>
     </div>
+    <div id="styleChips" style="display:none;flex-wrap:wrap;gap:5px;justify-content:center;margin:6px 0 2px"></div>
     <div id="nameEdit" style="display:none;text-align:left;margin:10px 0 8px">
       <div class="lbl" style="margin-bottom:5px">coffee · mapping key</div>
       <input type="text" id="coffeeName" placeholder="chirripó yıkanmış" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:16px;background:#15100b;color:var(--ink)">
@@ -578,7 +579,7 @@ async function start(remote){
   updateSD(); drawTimeline(); updateGauge();
   setState('st-live');
   const bcue=((badgeMap()[badgeKey()]||{}).cue||'').trim();   // recipe cue: no modal (his order 2026-07-18); it rides the status line here and the watch note line remotely
-  running=true; RCEDIT=false; try{ renderRcRow(); }catch(e){} $('btn').textContent=tt('Drop'); $('btn').className='stop';   // live: recipe editor folds shut, only the slim line speaks
+  running=true; RCEDIT=false; try{ renderRcRow(); }catch(e){} try{ renderStyleChips(); }catch(e){} $('btn').textContent=tt('Drop'); $('btn').className='stop';   // live: recipe editor + style chips fold shut, only the slim line speaks
   STATUSBASE=tt('Listening. Calibrating background for ~2s, keep it running steady.'); CUEON=!!bcue;
   $('status').textContent=STATUSBASE+(bcue?(' · '+fcCueWrap(bcue,LANG==='tr').replace(/</g,'&lt;')):'');
   loop();
@@ -623,7 +624,7 @@ function queueSamples(){ try{ if(!SAMPLES.length) return;
 function renderStopLine(){ try{ $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):''; }catch(e){} }   // one renderer, every path: stale text has nowhere to hide
 function stop(){
   running=false; if(raf) cancelAnimationFrame(raf);
-  A0PHASE='done'; a0NudgeUI(0); TGTPHASE='done'; tgtUI(0); RCPHASE='done'; rcUI(0); try{ renderRcRow(); }catch(e){} try{ renderStageStrip(); }catch(e){}   // Drop answers both questions: no alarm may outlive the roast
+  A0PHASE='done'; a0NudgeUI(0); TGTPHASE='done'; tgtUI(0); RCPHASE='done'; rcUI(0); try{ renderRcRow(); }catch(e){} try{ renderStageStrip(); }catch(e){} try{ renderStyleChips(); }catch(e){}   // Drop answers both questions: no alarm may outlive the roast
   if(procDet){ try{ lpF.disconnect(procDet); procDet.disconnect(); }catch(e){} procDet.onaudioprocess=null; procDet=null; }
   if(procV){ try{ lpV.disconnect(procV); procV.disconnect(); }catch(e){} procV.onaudioprocess=null; procV=null; }
   if(proc){ try{ src.disconnect(proc); proc.disconnect(); }catch(e){} proc.onaudioprocess=null; proc=null; }
@@ -1524,12 +1525,29 @@ const SEC_PER_AG=4, FC_AG=EP.FC_AG, AG_TOL=EP.BFLOOR, AG_MIN=40, AG_MAX=130;
 const cName=$('coffeeName'); cName.value=localStorage.getItem('bsCoffee')||'';
 cName.oninput=()=>{ localStorage.setItem('bsCoffee',cName.value); updateGauge(); };
 // nameplate: the bean's name is an instrument headline, not a form field. Tap to edit, Guide-style well while editing.
+// v27d (mockup panel 1, his call 2026-07-27): sibling styles live ON the setup card as chips; tap = switch register.
+function renderStyleChips(){ const el=$('styleChips'); if(!el) return;
+  const k=(cName.value||'').trim().toLowerCase();
+  if(!k||running){ el.style.display='none'; el.innerHTML=''; return; }   // live: the storm shows one name, no switching
+  let m={}; try{ m=JSON.parse(localStorage.getItem('bsCal'))||{}; }catch(e){}
+  const names=new Set(Object.keys(m).filter(x=>x!=='__house')); try{ CLOUDNAMES.forEach(n=>names.add(n)); }catch(e){}
+  names.add(k);
+  const b=beanOf(k), sibs=[...names].filter(n=>beanOf(n)===b).sort();
+  if(sibs.length<2&&!styleOf(k)){ el.style.display='none'; el.innerHTML=''; return; }   // single-style bean: nothing shown, nothing asked (his rule)
+  el.style.display='flex';
+  el.innerHTML=sibs.map(n=>{ const s9=styleOf(n)||(LANG==='tr'?'düz':'plain'), on=(n===k);
+    return '<span data-sc="'+escC(n)+'" style="cursor:pointer;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid '+(on?'var(--gold)':'var(--line)')+';color:'+(on?'var(--gold)':'var(--muted)')+';background:'+(on?'#241c0e':'none')+'">'+escC(s9)+'</span>'; }).join('')
+    +'<span data-scadd="1" style="cursor:pointer;font-size:11.5px;padding:4px 10px;border-radius:999px;border:1px dashed var(--line);color:var(--dim)">'+(LANG==='tr'?'+ stil':'+ style')+'</span>';
+  el.querySelectorAll('[data-sc]').forEach(x=>x.onpointerdown=ev=>{ ev.preventDefault(); pickCoffee(x.dataset.sc); });
+  const ad=el.querySelector('[data-scadd]'); if(ad) ad.onpointerdown=ev=>{ ev.preventDefault(); const b2=beanOf((cName.value||'').trim().toLowerCase()); editName(); cName.value=b2+': '; try{ cName.setSelectionRange(cName.value.length,cName.value.length); }catch(e){} };
+}
 function renderNameplate(){ const nv=(cName.value||'').trim(), n=$('npName');
   const i9=nv.indexOf(': ');   // v27c style register: 'bean: style' renders as bean · gold style; the key itself never changes
   if(i9>0) n.innerHTML=escC(nv.slice(0,i9))+' <span style="color:var(--gold)">· '+escC(nv.slice(i9+2))+'</span>';
   else n.textContent=nv||'name the coffee';
   n.style.color=nv?'var(--ink)':'var(--muted)';
-  $('npUnder').style.background=nv?'var(--accent)':'var(--line)'; }
+  $('npUnder').style.background=nv?'var(--accent)':'var(--line)';
+  try{ renderStyleChips(); }catch(e){} }
 function editName(){ $('npWrap').style.display='none'; $('nameEdit').style.display='block'; renderNameChips(); cName.focus(); }
 function closeName(){ $('nameEdit').style.display='none'; $('npWrap').style.display='block'; renderNameplate(); try{ renderRcRow(); }catch(e){} }
 cName.addEventListener('blur',closeName);
@@ -2087,7 +2105,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-27c';
+const APPVER='v2026-07-27d';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
