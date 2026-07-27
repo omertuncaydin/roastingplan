@@ -32,6 +32,11 @@ body.st-live #cCapture{display:none}
 body.st-live #btn{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:216px;height:108px;border-radius:216px 216px 0 0;background:rgba(217,102,63,0.78);font-size:25px;font-weight:800;padding:0 0 16px;z-index:9;box-shadow:0 -4px 22px rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;letter-spacing:.6px;border:none}
 body.st-live .wrap{padding-bottom:120px}
 body.st-live #cGauge details{display:none}
+/* v27c MINIMAL LIVE (mockup verdict 2026-07-27): the storm speaks with six things: STAGE+DEV, gauge, cracks, recipe line, DROP, sample */
+body.st-live #cPhase,body.st-live #agHint,body.st-live #cWalk,body.st-live #wcFold,body.st-live #cTune,body.st-live #cLog,body.st-live #uniPill,body.st-live #cGauge .lbl,body.st-live #npUnder,body.st-live #cStats .hint{display:none}
+body.st-live #npName{font-size:14px;font-weight:700;color:var(--muted)}
+body.st-live #npWrap{margin:3px 0 0}
+#stageNow{display:none;margin:4px 0 2px;line-height:1.05}
 #enrollBtn{display:none;background:none;border:1px dashed var(--line);color:var(--muted);border-radius:12px;font-size:13px;font-weight:600;padding:11px;width:100%;order:5}
 body.st-setup #enrollBtn{display:block}
 #sampleBtn{display:none;background:var(--panel);color:var(--ink);border:2px solid var(--accent);border-radius:14px;font-size:16px;font-weight:700;padding:13px;width:100%;align-items:center;justify-content:center;gap:10px}
@@ -166,7 +171,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-27a</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-27c</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -212,6 +217,7 @@ body.st-setup #btn{display:none}
       <input type="text" id="coffeeName" placeholder="chirripó yıkanmış" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:16px;background:#15100b;color:var(--ink)">
       <div id="nameChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
     </div>
+    <div id="stageNow"></div>
     <div id="agWrap" style="position:relative;display:flex;justify-content:center">
       <div id="ag" style="display:flex;justify-content:center"></div>
       <button class="micBtn" onclick="toggle()" aria-label="Start listening"><svg viewBox="0 0 60 60" width="46" height="46" aria-hidden="true"><rect x="24" y="14" width="12" height="21" rx="6" fill="#fff"/><path d="M19 30 a11 11 0 0 0 22 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="41" x2="30" y2="47" stroke="#fff" stroke-width="3"/><line x1="23" y1="47" x2="37" y2="47" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg></button>
@@ -219,7 +225,7 @@ body.st-setup #btn{display:none}
     </div>
     <div class="hint" id="agHint"></div>
     <div class="hint" id="stageStrip" style="margin-top:6px;color:var(--accent);font-variant-numeric:tabular-nums"></div>
-    <div class="hint" id="rcLine" style="display:none;margin-top:4px;color:var(--gold);font-weight:600"></div>
+    <div class="hint" id="rcLine" onclick="rcEditToggle()" style="display:none;margin-top:4px;color:var(--gold);font-weight:600;cursor:pointer"></div>
     <div id="rcRow" style="margin-top:6px"></div>
   </div>
 
@@ -572,7 +578,7 @@ async function start(remote){
   updateSD(); drawTimeline(); updateGauge();
   setState('st-live');
   const bcue=((badgeMap()[badgeKey()]||{}).cue||'').trim();   // recipe cue: no modal (his order 2026-07-18); it rides the status line here and the watch note line remotely
-  running=true; $('btn').textContent=tt('Drop'); $('btn').className='stop';
+  running=true; RCEDIT=false; try{ renderRcRow(); }catch(e){} $('btn').textContent=tt('Drop'); $('btn').className='stop';   // live: recipe editor folds shut, only the slim line speaks
   STATUSBASE=tt('Listening. Calibrating background for ~2s, keep it running steady.'); CUEON=!!bcue;
   $('status').textContent=STATUSBASE+(bcue?(' · '+fcCueWrap(bcue,LANG==='tr').replace(/</g,'&lt;')):'');
   loop();
@@ -617,7 +623,7 @@ function queueSamples(){ try{ if(!SAMPLES.length) return;
 function renderStopLine(){ try{ $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):''; }catch(e){} }   // one renderer, every path: stale text has nowhere to hide
 function stop(){
   running=false; if(raf) cancelAnimationFrame(raf);
-  A0PHASE='done'; a0NudgeUI(0); TGTPHASE='done'; tgtUI(0); RCPHASE='done'; rcUI(0);   // Drop answers both questions: no alarm may outlive the roast
+  A0PHASE='done'; a0NudgeUI(0); TGTPHASE='done'; tgtUI(0); RCPHASE='done'; rcUI(0); try{ renderRcRow(); }catch(e){} try{ renderStageStrip(); }catch(e){}   // Drop answers both questions: no alarm may outlive the roast
   if(procDet){ try{ lpF.disconnect(procDet); procDet.disconnect(); }catch(e){} procDet.onaudioprocess=null; procDet=null; }
   if(procV){ try{ lpV.disconnect(procV); procV.disconnect(); }catch(e){} procV.onaudioprocess=null; procV=null; }
   if(proc){ try{ src.disconnect(proc); proc.disconnect(); }catch(e){} proc.onaudioprocess=null; proc=null; }
@@ -650,7 +656,7 @@ function stop(){
     if(calP){ if(!$('mProc').value&&calP.proc) $('mProc').value=calP.proc;
       if(!$('mMoist').value&&calP.moist) $('mMoist').value=calP.moist;
       if(!$('mAw').value&&calP.aw) $('mAw').value=calP.aw;
-      if(!$('mA0Ag').value&&isFinite(calP.fc_ag)) $('mA0Ag').value=calP.fc_ag;   // A0 color is a bean constant: prefill from the map like proc/moist
+      if(!$('mA0Ag').value){ if(isFinite(calP.fc_ag)) $('mA0Ag').value=calP.fc_ag; else { const sib9=fcAgSib((cName.value||'').trim().toLowerCase()); if(sib9!=null) $('mA0Ag').value=sib9; } }   // A0 color is a bean constant: own map, else sibling style
       if(!$('mTarget').value&&calP.target) $('mTarget').value=calP.target; }
     let lmAll={}; try{ lmAll=JSON.parse(localStorage.getItem('bsLastMeta'))||{}; }catch(e){}
     const lm=lmAll[(cName.value||'').trim().toLowerCase()]||{};   // last save fills what the map does not
@@ -939,7 +945,18 @@ function saveSession(){
 }
 
 // the roast's named FC phases (Omer's thesis: every roast gets phase names, then you control by reference)
+let STAGENOWTXT='';
 function renderStageStrip(){ const el=$('stageStrip'); if(!el) return;
+  const sn=$('stageNow');   // v27c: the storm's crown line: current STAGE + DEV, biggest thing on the live screen (his mockup verdict)
+  if(sn){ let txt='';
+    if(running&&document.body.classList.contains('st-live')&&LASTSTAGES&&LASTSTAGES.length){
+      const a0s=LASTSTAGES[0][1], dev=Math.max(0,(performance.now()-startT)/1000-a0s);
+      txt=LASTSTAGES[LASTSTAGES.length-1][0]+'|DEV '+fmtT(dev); }
+    if(txt!==STAGENOWTXT){ STAGENOWTXT=txt;   // cache: RAF cadence, but the DOM only moves when the second ticks
+      if(!txt){ sn.style.display='none'; sn.innerHTML=''; }
+      else{ const pp=txt.split('|');
+        sn.style.display='block';
+        sn.innerHTML='<span style="font-size:46px;font-weight:900;letter-spacing:1px;color:var(--ink)">'+pp[0]+'</span><span style="font-size:18px;font-weight:800;color:var(--muted);margin-left:12px">'+pp[1]+'</span>'; } } }
   if(!LASTSTAGES||!LASTSTAGES.length||!document.body.classList.contains('st-done')){ el.textContent=''; return; }
   const a0=LASTSTAGES[0][1];
   el.textContent=LASTSTAGES.map(sg=>sg[0]+' '+fmtT(Math.max(0,sg[1]-a0))).join(' · ')+' (DEV)';
@@ -1377,8 +1394,16 @@ function chipParts(c){ const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5)
 function renderNameChips(){ const el=$('nameChips'); if(!el) return;
   let m={}; try{ m=JSON.parse(localStorage.getItem('bsCal'))||{}; }catch(e){}
   const names=new Set(Object.keys(m).filter(k=>k!=='__house')); CLOUDNAMES.forEach(n=>names.add(n));
-  el.innerHTML=[...names].sort().map(n=>{ const c=chipColor(n),cp=chipParts(c);
-    return '<span class="hpill" style="cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border:1.5px solid '+c+';background:'+cp.bg+';color:'+cp.tx+'" data-cn="'+escC(n)+'">'+(m[n]?'':((COMMNAMES.indexOf(n)>=0&&CLOUDNAMES.indexOf(n)<0)?'\ud83c\udf10 ':'\u2601 '))+escC(n)+'</span>'; }).join('')
+  const mark=n=>(m[n]?'':((COMMNAMES.indexOf(n)>=0&&CLOUDNAMES.indexOf(n)<0)?'\ud83c\udf10 ':'\u2601 '));
+  const groups={};   // v27c STYLE REGISTER: same bean roasted N ways = ONE card with style chips; 'bean: style' keys untouched
+  [...names].sort().forEach(n=>{ const b=beanOf(n); (groups[b]=groups[b]||[]).push(n); });
+  el.innerHTML=Object.keys(groups).sort().map(b=>{ const g=groups[b];
+    if(g.length===1){ const n=g[0],c=chipColor(n),cp=chipParts(c);   // single-style bean: exactly today's pill, nothing asked
+      return '<span class="hpill" style="cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border:1.5px solid '+c+';background:'+cp.bg+';color:'+cp.tx+'" data-cn="'+escC(n)+'">'+mark(n)+escC(n)+'</span>'; }
+    return '<span style="display:inline-flex;flex-wrap:wrap;align-items:center;gap:5px;border:1px solid var(--line);border-radius:14px;padding:6px 9px;background:var(--panel2)"><span style="font-size:12.5px;font-weight:700;color:var(--muted)">'+escC(b)+'</span>'
+      +g.map(n=>{ const c=chipColor(n),cp=chipParts(c),s9=styleOf(n)||(LANG==='tr'?'düz':'plain');
+        return '<span class="hpill" style="cursor:pointer;font-size:12.5px;font-weight:600;padding:6px 10px;border:1.5px solid '+c+';background:'+cp.bg+';color:'+cp.tx+'" data-cn="'+escC(n)+'">'+mark(n)+escC(s9)+'</span>'; }).join('')
+      +'</span>'; }).join('')
     ||'<span class="hint" style="font-size:11px">'+(LANG==='tr'?'Kayıtlı kahve yok; adını yaz, eşle.':'No known coffees yet; type a name and map it.')+'</span>';
   el.querySelectorAll('[data-cn]').forEach(x=>x.onpointerdown=ev=>{ ev.preventDefault(); pickCoffee(x.dataset.cn); });   // pointerdown beats the input blur
 }
@@ -1500,7 +1525,10 @@ const cName=$('coffeeName'); cName.value=localStorage.getItem('bsCoffee')||'';
 cName.oninput=()=>{ localStorage.setItem('bsCoffee',cName.value); updateGauge(); };
 // nameplate: the bean's name is an instrument headline, not a form field. Tap to edit, Guide-style well while editing.
 function renderNameplate(){ const nv=(cName.value||'').trim(), n=$('npName');
-  n.textContent=nv||'name the coffee'; n.style.color=nv?'var(--ink)':'var(--muted)';
+  const i9=nv.indexOf(': ');   // v27c style register: 'bean: style' renders as bean · gold style; the key itself never changes
+  if(i9>0) n.innerHTML=escC(nv.slice(0,i9))+' <span style="color:var(--gold)">· '+escC(nv.slice(i9+2))+'</span>';
+  else n.textContent=nv||'name the coffee';
+  n.style.color=nv?'var(--ink)':'var(--muted)';
   $('npUnder').style.background=nv?'var(--accent)':'var(--line)'; }
 function editName(){ $('npWrap').style.display='none'; $('nameEdit').style.display='block'; renderNameChips(); cName.focus(); }
 function closeName(){ $('nameEdit').style.display='none'; $('npWrap').style.display='block'; renderNameplate(); try{ renderRcRow(); }catch(e){} }
@@ -1509,6 +1537,14 @@ cName.addEventListener('keydown',e=>{ if(e.key==='Enter') cName.blur(); });
 renderNameplate();
 try{ renderRcRow(); }catch(e){}
 function calMap(){ try{ return JSON.parse(localStorage.getItem('bsCal')||'{}'); }catch(e){ return {}; } }
+// ---- STYLE REGISTER (Omer 2026-07-27, mockup approved): 'bean: style' naming IS the key; nothing migrates.
+function beanOf(k){ const i9=(k||'').indexOf(': '); return i9>0?k.slice(0,i9):(k||''); }
+function styleOf(k){ const i9=(k||'').indexOf(': '); return i9>0?k.slice(i9+2):''; }
+function fcAgSib(k){ try{ const m=calMap(), b=beanOf(k); if(!b) return null; let best=null;
+  for(const kk in m){ if(kk==='__house'||kk===k||beanOf(kk)!==b) continue;
+    const e2=m[kk]; if(!e2||e2.communal) continue;   // a borrowed/community sibling never lends its number (doctrine guard, Opus P2)
+    if(isFinite(e2.fc_ag)&&e2.fc_ag>=80&&e2.fc_ag<=140){ const u9=e2.up||0; if(!best||u9>best.u9) best={v:e2.fc_ag,u9:u9}; } }
+  return best?best.v:null; }catch(e){ return null; } }   // fc_ag is a BEAN constant: the freshest sibling style lends it (his approval 2026-07-27); color MAPS stay per-style
 function calFor(){ const k=(cName.value||'').trim().toLowerCase(); return k?calMap()[k]:null; }
 // confirmed A0: first crack that is followed by >=2 more within 30s (a lone clank cannot own the anchor)
 function effA0(v){ for(let i=0;i<v.length-2;i++){ if(v[i+2].t-v[i].t<=EP.FOLLOW) return v[i].t; } return v.length?v[0].t:0; }   // follower window: Ömer's field data, fast roasts 5-10s, slow 20-30s
@@ -1797,8 +1833,9 @@ function updateGauge(){
   // per-coffee A0 color: the projection's starting color at first crack. Global EP.FC_AG (125) unless this map
   // carries a sane fc_ag (80..140). The intercept error hits light drops hardest (weight 1 at A0, 0 at the mapped terminal).
   const fcActive=isFinite(cal.fc_ag)&&cal.fc_ag>=80&&cal.fc_ag<=140;
-  const fcAg=fcActive?cal.fc_ag:FCDEF();   // fallback chain: this coffee's map, else house map, else 125
-  const a0Tag=fcActive?(' · A0 '+cal.fc_ag):'';
+  const fcSib=fcActive?null:fcAgSib((cName.value||'').trim().toLowerCase());   // v27c: the bean constant crosses sibling styles (his approval)
+  const fcAg=fcActive?cal.fc_ag:(fcSib!=null?fcSib:FCDEF());   // fallback: own map, SIBLING STYLE, house, universe, 125
+  const a0Tag=fcActive?(' · A0 '+cal.fc_ag):(fcSib!=null?(' · A0 '+fcSib+' ('+(LANG==='tr'?'kardeş stil':'sibling style')+')'):'');
   const v=valid();
   if(!v.length){ drawGauge('wait'); $('agHint').textContent=tt('Mapped on')+' '+cal.date+' (Agtron '+cal.agtron+')'+bTag+a0Tag+'. '+tt('Projection starts at first crack.'); return; }
   if(v.length<5){ drawGauge('wait'); $('agHint').textContent=(LANG==='tr'?('Çatlaklar toplanıyor ('+v.length+'/5); birkaç pat henüz ilk çatlak değildir.'):('Gathering cracks ('+v.length+'/5) before projecting; a couple of pops is not a first crack yet.')); return; }
@@ -2050,7 +2087,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-27a';
+const APPVER='v2026-07-27c';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2235,7 +2272,7 @@ async function loadSession(file){
   $('mCoffee').value=meta.coffee||''; $('mBatch').value=meta.batch_g||''; $('mAgW').value=meta.agtron_whole||''; $('mAgG').value=meta.agtron_ground||''; $('mNote').value=meta.note||'';
   $('mAgWSd').value=meta.agtron_whole_sd||''; $('mAgSd').value=meta.agtron_ground_sd||''; $('mProc').value=meta.process||''; $('mChgFc').value=meta.charge_to_fc||''; if(meta.machine) $('mEquip').value=meta.machine; $('mChgT').value=meta.charge_c||''; $('mDrop').value=meta.drop_after_last_s||''; $('mTarget').value=meta.target||''; $('mMoist').value=meta.moisture||''; $('mAw').value=meta.water_activity||'';
   $('mA0Ag').value=meta.a0_agtron||'';   // A0 color from the CSV meta if the session carried one
-  if(!$('mA0Ag').value){ const cf=calFor(); if(cf&&isFinite(cf.fc_ag)) $('mA0Ag').value=cf.fc_ag; }   // else prefill from this coffee's map, like proc/moist
+  if(!$('mA0Ag').value){ const cf=calFor(); if(cf&&isFinite(cf.fc_ag)) $('mA0Ag').value=cf.fc_ag; else { const sib9=fcAgSib((cName.value||'').trim().toLowerCase()); if(sib9!=null) $('mA0Ag').value=sib9; } }   // else prefill: this coffee's map, else sibling style
   $('metaBox').style.display='block'; $('agTop').style.display='block'; $('mapBtn').style.display='block'; $('cupGo').style.display='block'; $('nextRow').style.display='flex';
   $('dlZip').style.display='block'; $('dlCard').style.display='block'; $('dlStory').style.display='block';   // re-save allowed: corrected FP labels are the training corpus
   setState('st-done');
@@ -2287,29 +2324,53 @@ function tgtNudge(proj){
   if(TGTPHASE===''){ if(proj<=tg){ TGTPHASE='alarm'; TGTT=nowS; tgtUI(2); tgtBeep(); wcAlertPing(); } else if(proj<=tg+4){ TGTPHASE='pre'; tgtUI(1); wcAlertPing(); } }
   else if(TGTPHASE==='pre'){ if(proj<=tg){ TGTPHASE='alarm'; TGTT=nowS; tgtUI(2); tgtBeep(); wcAlertPing(); } }
   else if(TGTPHASE==='alarm'&&nowS-TGTT>30){ TGTPHASE='done'; tgtUI(0); } }   // window closed: never nag mid-roast
-// ---- RECIPE DROP STAGE (Omer 2026-07-27): 'your recipe is B1' stays FIXED on screen; when the tagger
-// says the stage arrived, alarm to DROP. Gas stays a cinnamon decision (doctrine): the note reminds, never advises.
+// ---- RECIPE (Omer 2026-07-27, v27b): per-coffee {drop stage, gas note}. The note is a FIXED reminder,
+// never advice: gas stays a cinnamon decision (doctrine), the stage is the drop call. On screen it is ONE slim
+// line ("DROP B1 · -P2 tarçında"); the editor folds under it, never a modal, locked while roasting.
 const RC_LADDER=['A0','A1','B0','B1','C0','C1'];
+let RCEDIT=false;
 function rcKey(){ return (cName.value||'').trim().toLowerCase(); }
 function rcMap(){ try{ return JSON.parse(localStorage.getItem('bsRc')||'{}'); }catch(e){ return {}; } }
-function rcGet(k){ if(!k) return null; const c2=calMap()[k]; if(c2&&c2.rc) return c2.rc; return rcMap()[k]||null; }
-function rcSet(k,st){ if(!k) return; const m2=rcMap(); if(st) m2[k]=st; else delete m2[k]; localStorage.setItem('bsRc',JSON.stringify(m2));
-  const cm=calMap(); if(cm[k]){ if(st) cm[k].rc=st; else delete cm[k].rc; cm[k].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm)); }
+function rcNorm(v){ if(!v) return null; if(typeof v==='string') return {st:v,gas:''};   // v27a stored bare stage strings
+  const st0=(v.st||'')+'', gas0=(v.gas||'')+''; if(!st0&&!gas0) return null; return {st:st0,gas:gas0}; }
+function rcGet(k){ if(!k) return null; const c2=calMap()[k]; if(c2&&c2.rc){ const n2=rcNorm(c2.rc); if(n2) return n2; }
+  return rcNorm(rcMap()[k]||null); }
+function rcSet(k,st,gas){ if(!k) return; const cur=rcGet(k)||{st:'',gas:''};   // undefined = keep that half
+  const nst=(st===undefined)?cur.st:((st||'')+'');
+  const ngas=(gas===undefined)?cur.gas:((gas||'')+'');
+  const m2=rcMap();
+  if(nst||ngas){ const v2={}; if(nst) v2.st=nst; if(ngas) v2.gas=ngas; m2[k]=v2; } else delete m2[k];
+  localStorage.setItem('bsRc',JSON.stringify(m2));
+  const cm=calMap(); if(cm[k]){ if(m2[k]) cm[k].rc=m2[k]; else delete cm[k].rc; cm[k].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm)); }
   renderRcRow(); }
-function rcEval(rc,stages){ if(!rc) return '';
+function rcTog(s2){ const c3=rcGet(rcKey()); return (c3&&c3.st===s2)?'':s2; }
+function rcDone(){ const el2=$('rcGasIn'); if(el2) rcSet(rcKey(),undefined,el2.value.trim()); RCEDIT=false; renderRcRow(); }
+function rcEditToggle(){ if(running) return; RCEDIT=!RCEDIT; renderRcRow(); }
+function rcEval(rc,stages){ const st0=rc&&rc.st; if(!st0) return '';
   const has=s2=>stages&&stages.some(sg=>sg[0]===s2);
-  if(has(rc)) return 'alarm';
-  const i2=RC_LADDER.indexOf(rc);
+  if(has(st0)) return 'alarm';
+  const i2=RC_LADDER.indexOf(st0);
   if(i2>0&&has(RC_LADDER[i2-1])) return 'pre';
   return ''; }
-function renderRcRow(){ const el=$('rcRow'); if(!el) return; const k=(cName.value||'').trim().toLowerCase();
-  if(!k){ el.innerHTML=''; rcLineUI(); return; } const cur=rcGet(k);
-  el.innerHTML='<span style="font-size:11.5px;color:var(--muted);font-weight:600;margin-right:6px">'+(LANG==='tr'?'REÇETE DROP EVRESİ':'RECIPE DROP STAGE')+'</span>'+RC_LADDER.map(s2=>'<button onclick="rcSet(rcKey(),&quot;'+s2+'&quot;)" style="padding:5px 9px;font-size:12.5px;margin:2px;border-radius:8px;border:1px solid '+(cur===s2?'var(--gold)':'var(--line)')+';background:'+(cur===s2?'#3a2f14':'var(--panel2)')+';color:'+(cur===s2?'var(--gold)':'var(--ink)')+'">'+s2+'</button>').join('')+(cur?('<button onclick="rcSet(rcKey(),null)" style="padding:5px 8px;font-size:11px;margin:2px;border-radius:8px;background:none;border:1px solid var(--line);color:var(--dim)">&times;</button>'):'');
+function renderRcRow(){ const el=$('rcRow'); if(!el) return; const k=rcKey();
+  if(!k||running){ el.innerHTML=''; rcLineUI(); return; }   // live or unnamed: only the slim line may speak
+  const cur=rcGet(k);
+  if(!RCEDIT){ el.innerHTML=cur?'':('<button onclick="rcEditToggle()" style="padding:3px 10px;font-size:11px;border-radius:999px;border:1px dashed var(--line);background:none;color:var(--dim);cursor:pointer">'+(LANG==='tr'?'+ reçete':'+ recipe')+'</button>');
+    rcLineUI(); return; }
+  const st0=(cur&&cur.st)||'', gas0=(cur&&cur.gas)||'';
+  el.innerHTML='<div style="border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--panel2);text-align:center">'
+    +RC_LADDER.map(s2=>'<button onclick="rcSet(rcKey(),rcTog(&quot;'+s2+'&quot;))" style="padding:5px 9px;font-size:12.5px;margin:2px;border-radius:8px;border:1px solid '+(st0===s2?'var(--gold)':'var(--line)')+';background:'+(st0===s2?'#3a2f14':'none')+';color:'+(st0===s2?'var(--gold)':'var(--ink)')+'">'+s2+'</button>').join('')
+    +'<input id="rcGasIn" value="'+gas0.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" placeholder="'+(LANG==='tr'?'gaz notu: -P2 tarçında':'gas note: -P2 at cinnamon')+'" onchange="rcSet(rcKey(),undefined,this.value.trim())" style="display:block;width:88%;margin:7px auto 2px;padding:6px 8px;font-size:12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-align:center">'
+    +'<div style="display:flex;justify-content:center;gap:8px;margin-top:6px">'
+    +'<button onclick="rcDone()" style="padding:4px 14px;font-size:12px;border-radius:8px;border:1px solid var(--accent2);background:none;color:var(--accent2)">'+(LANG==='tr'?'tamam':'done')+'</button>'
+    +((st0||gas0)?('<button onclick="rcSet(rcKey(),&quot;&quot;,&quot;&quot;)" style="padding:4px 10px;font-size:11px;border-radius:8px;border:1px solid var(--line);background:none;color:var(--dim)">&times; '+(LANG==='tr'?'sil':'clear')+'</button>'):'')
+    +'</div></div>';
   rcLineUI(); }
-function rcLineUI(){ const el=$('rcLine'); if(!el) return; const k=(cName.value||'').trim().toLowerCase(); const cur=k?rcGet(k):null;
+function rcLineUI(){ const el=$('rcLine'); if(!el) return; const k=rcKey(); const cur=k?rcGet(k):null;
   if(!cur){ el.style.display='none'; el.textContent=''; return; }
   el.style.display='block';
-  el.textContent=(LANG==='tr'?('Reçete: '+cur+' · gaz tarçında kısılır · '+cur+' gelince DROP alarmı'):('Recipe: '+cur+' · gas down at cinnamon · DROP alarm at '+cur)); }
+  const parts=[]; if(cur.st) parts.push('DROP '+cur.st); if(cur.gas) parts.push(cur.gas);
+  el.textContent=parts.join(' · '); }
 function rcBeep(){ try{ if(!AC||!AC.createOscillator||AC.state!=='running') return; BEEPUNTIL=performance.now()+1600;
   const g=AC.createGain(); g.gain.value=0; g.connect(AC.destination);
   const o=AC.createOscillator(); o.type='sine'; o.frequency.value=988; o.connect(g); const t0=AC.currentTime;
@@ -2322,16 +2383,16 @@ function rcUI(level,st){ const bn=$('rcBanner'); if(!bn) return;
   else { bn.classList.add('tgnow'); bn.textContent=(LANG==='tr'?('REÇETE EVRESİ '+st+' · DROP'):('RECIPE STAGE '+st+' · DROP NOW')); } }
 let RCSEEN=0;
 function rcNudge(){ if(!running||RCPHASE==='done') return;
-  const k=(cName.value||'').trim().toLowerCase(); const rc=k?rcGet(k):null;
-  if(!rc){ if(RCPHASE){ RCPHASE='done'; rcUI(0); } return; }
+  const rc=rcGet(rcKey());
+  if(!rc||!rc.st){ if(RCPHASE){ RCPHASE='done'; rcUI(0); } return; }
   const nowS=(performance.now()-startT)/1000;
   const ev=rcEval(rc,LASTSTAGES);
   if(ev!=='alarm') RCSEEN=0;
   if((RCPHASE===''||RCPHASE==='pre')&&ev==='alarm'){
     RCSEEN++;
-    if((rc==='B0'||rc==='B1')&&RCSEEN<2) return;   // fake-peak debounce (Opus review): the crown must survive two ticks before DROP fires
-    RCPHASE='alarm'; RCT=nowS; rcUI(2,rc); rcBeep(); try{ if(navigator.vibrate) navigator.vibrate([250,120,250,120,250]); }catch(e){} wcAlertPing(); }
-  else if(RCPHASE===''&&ev==='pre'){ RCPHASE='pre'; rcUI(1,rc); wcAlertPing(); }
+    if((rc.st==='B0'||rc.st==='B1')&&RCSEEN<2) return;   // fake-peak debounce (Opus review): the crown must survive two ticks before DROP fires
+    RCPHASE='alarm'; RCT=nowS; rcUI(2,rc.st); rcBeep(); try{ if(navigator.vibrate) navigator.vibrate([250,120,250,120,250]); }catch(e){} wcAlertPing(); }
+  else if(RCPHASE===''&&ev==='pre'){ RCPHASE='pre'; rcUI(1,rc.st); wcAlertPing(); }
   else if(RCPHASE==='alarm'&&nowS-RCT>45){ RCPHASE='done'; rcUI(0); } }
 function a0NudgeUI(level){ const b=$('sampleBtn'), l=$('sampLbl'), bn=$('a0Banner'); if(!b||!l) return;
   b.classList.remove('a0urgent'); b.style.borderColor=''; if(bn) bn.style.display='none';
