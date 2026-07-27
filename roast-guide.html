@@ -493,6 +493,7 @@
     <div class="card" style="margin-top:12px"><div class="cgrplbl" data-i18n="Watch link">Watch link</div>
       <div class="cuprow" style="gap:8px;align-items:center"><input type="text" id="wsyncKey" placeholder="16-hex watch key" style="flex:1"><button class="iconbtn" onclick="wsyncAdd()" data-i18n="Link">Link</button></div>
       <div class="small" id="wsyncList" style="margin-top:6px"></div>
+      <div class="small" id="wsyncStatus" style="margin-top:4px;color:var(--accent2)"></div>
       <div class="small" style="color:var(--muted)" data-i18n="Cuppings rated on the watch land here by themselves.">Cuppings rated on the watch land here by themselves.</div></div>
   </div>
 
@@ -1395,6 +1396,10 @@ async function delCup(id){ CUPS=CUPS.filter(c=>String(c.id)!==String(id)); cache
 // This signed-in Guide persists into the user's cuppings rows (upsert-by-wid,
 // Guide-typed notes always survive) and acks on live_cast["gd-<wk>"].
 let WSYNC_KEYS=[]; try{ WSYNC_KEYS=JSON.parse(localStorage.getItem('cnWatchKeys')||'[]'); }catch(e){}
+// auto-link: the Listener already stores this browser's watch key (bsWatchKey, same origin)
+try{ const bk=(localStorage.getItem('bsWatchKey')||'').toLowerCase(); if(/^[0-9a-f]{16}$/.test(bk)&&!WSYNC_KEYS.includes(bk)){ WSYNC_KEYS.push(bk); localStorage.setItem('cnWatchKeys',JSON.stringify(WSYNC_KEYS)); } }catch(e){}
+let WSYNC_STATUS='';
+function wsyncSay(msg){ WSYNC_STATUS=msg; const el=document.getElementById('wsyncStatus'); if(el) el.textContent=msg; }
 function wsyncRenderList(){ const el=document.getElementById('wsyncList'); if(el) el.innerHTML=WSYNC_KEYS.length?WSYNC_KEYS.map(k=>`<span class="chip sub">${k.slice(0,4)}…${k.slice(-2)} <span style="cursor:pointer" onclick="wsyncDel('${k}')">×</span></span>`).join(' '):(LANG==='tr'?'Bağlı saat yok.':'No watch linked.'); }
 function wsyncAdd(){ const el=document.getElementById('wsyncKey'); const k=(el&&el.value||'').trim().toLowerCase();
   if(!/^[0-9a-f]{16}$/.test(k)){ toast(LANG==='tr'?'Anahtar 16 hex karakter olmalı.':'Key must be 16 hex characters.'); return; }
@@ -1402,11 +1407,15 @@ function wsyncAdd(){ const el=document.getElementById('wsyncKey'); const k=(el&&
   if(el) el.value=''; wsyncRenderList(); wsyncTick(); toast(LANG==='tr'?'Saat bağlandı.':'Watch linked.'); }
 function wsyncDel(k){ WSYNC_KEYS=WSYNC_KEYS.filter(x=>x!==k); localStorage.setItem('cnWatchKeys',JSON.stringify(WSYNC_KEYS)); wsyncRenderList(); }
 let WSYNC_BUSY=false;
-async function wsyncTick(){ if(WSYNC_BUSY||!sb||!MYUID||!WSYNC_KEYS.length) return; WSYNC_BUSY=true;
+async function wsyncTick(){ if(WSYNC_BUSY) return;
+ if(!sb||!MYUID){ if(WSYNC_KEYS.length) wsyncSay(LANG==='tr'?'Giriş yapılmadı — eşitleme bekliyor.':'Not signed in — sync waiting.'); return; }
+ if(!WSYNC_KEYS.length){ wsyncSay(''); return; }
+ WSYNC_BUSY=true;
  try{ for(const wk of WSYNC_KEYS){
-  let p=null;
-  try{ const r=await fetch(SUPA_URL+'/rest/v1/live_cast?key=eq.cup-'+wk+'&select=payload',{headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY}}); const rows=await r.json(); p=rows&&rows[0]&&rows[0].payload; }catch(e){}
-  if(!p||!Array.isArray(p.flights)) continue;
+  let p=null, ferr=null;
+  try{ const r=await fetch(SUPA_URL+'/rest/v1/live_cast?key=eq.cup-'+wk+'&select=payload,updated_at',{headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY}}); if(!r.ok) ferr='HTTP '+r.status; const rows=await r.json(); p=rows&&rows[0]&&rows[0].payload; }catch(e){ ferr=String(e).slice(0,60); }
+  if(ferr){ wsyncSay((LANG==='tr'?'Saat satırı okunamadı: ':'Relay read failed: ')+ferr); continue; }
+  if(!p||!Array.isArray(p.flights)){ wsyncSay(LANG==='tr'?'Saatten henüz veri yok ('+wk.slice(0,4)+'…).':'No data from the watch yet ('+wk.slice(0,4)+'…).'); continue; }
   const ack={flights:{}}; let changed=false;
   for(const fl of p.flights){ if(!fl||!fl.fid) continue;
     for(const sm of (fl.capture&&fl.capture.samples)||[]){ if(!sm||!sm.data||!sm.data.wid) continue;
@@ -1424,6 +1433,8 @@ async function wsyncTick(){ if(WSYNC_BUSY||!sb||!MYUID||!WSYNC_KEYS.length) retu
     ack.flights[fl.fid]={rev:fl.rev||0};
   }
   try{ await fetch(SUPA_URL+'/rest/v1/live_cast?on_conflict=key',{method:'POST',headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY,'content-type':'application/json',prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({key:'gd-'+wk,payload:{v:1,device:'guide',ack}})}); }catch(e){}
+  const n=p.flights.reduce((a,fl)=>a+(((fl.capture||{}).samples)||[]).length,0);
+  wsyncSay((LANG==='tr'?'Saat verisi alındı: ':'Watch data received: ')+n+(LANG==='tr'?' numune · ':' samples · ')+new Date().toLocaleTimeString().slice(0,5)+(changed?(LANG==='tr'?' · kaydedildi':' · saved'):''));
   if(changed){ try{ cacheCG(); renderCupList(); }catch(e){} }
  } }finally{ WSYNC_BUSY=false; } }
 setInterval(wsyncTick, 5000);
