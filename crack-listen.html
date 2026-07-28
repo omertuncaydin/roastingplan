@@ -189,7 +189,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-28f</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-28g</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -978,7 +978,7 @@ function renderStageStrip(){ const el=$('stageStrip'); if(!el) return;
     if(live9&&LASTSTAGES&&LASTSTAGES.length){
       const a0s=LASTSTAGES[0][1], dev=Math.max(0,(performance.now()-startT)/1000-a0s);
       txt=((RCPHASE==='alarm'&&RCALSTG)?RCALSTG:LASTSTAGES[LASTSTAGES.length-1][0])+'|DEV '+fmtT(dev); }
-    else if(live9&&STAGEGAS&&((performance.now()-startT)/1000)<60){ txt='GAZ|'+STAGEGAS; }   // timely alarm: first 60s of listening (he opens near cinnamon) or until first crack, then silence
+    else if(live9&&STAGEGAS){ txt='GAZ|'+STAGEGAS; }   // stays until it stops making sense: A0's arrival retires every pre-A0 milestone reminder (his rule 2026-07-28)
     if(txt!==STAGENOWTXT){ STAGENOWTXT=txt;   // cache: RAF cadence, but the DOM only moves when the second ticks
       if(!txt){ sn.style.display='none'; sn.innerHTML=''; }
       else{ const pp=txt.split('|');
@@ -2137,7 +2137,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-28f';
+const APPVER='v2026-07-28g';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2379,7 +2379,7 @@ function tgtNudge(proj){
 // line ("DROP B1 · -P2 tarçında"); the editor folds under it, never a modal, locked while roasting.
 const RC_LADDER=['A0','A1','B0','B1','C0','C1'];
 const RCLOC={tu:['dönüşte','at turnaround'],ye:['sararmada','at yellowing'],ci:['tarçında','at cinnamon'],a0:["A0'da",'at A0']};
-let RCEDIT=false;
+let RCEDIT=false; let RCEQ='', RCVAR=null;   // editor machine + other-machine draft (cloud-only, never a local override)
 // ---- GUIDE RECIPES BRIDGE (Omer 2026-07-28): the Guide's account recipes are the AUTHORITY (his first-built
 // system; cloud table 'recipes' + same-origin cache cnRecipes_cache). The listener READS them; manual edits here
 // stay local overrides until the write-bridge lands. Grammar, Guide-identical: "-P2 / 7:00 / B0 / 60s / 100A".
@@ -2408,10 +2408,12 @@ function gdCachePatch(d){ try{ if(!d) return; const a=gdRecipes(); const i=a.fin
   const row={id:d.id,name:d.name,match:d.match||[],bullet:d.bullet||'',hsr:d.hsr||'-',note:d.note||'',active:!!d.active,sortOrder:(d.sort_order==null?null:d.sort_order)};
   if(i>=0) a[i]=row; else a.push(row);
   localStorage.setItem('cnRecipes_cache',JSON.stringify(a)); GDPULLED=Date.now(); }catch(e){} }   // patched jar + pull suppressed = no sync loop
-async function gdUpsert(k){ try{ if(!SB) return; const u=await cloudUser(); if(!u) return;
-  const man=rcGetMan(k); if(!man||(!man.st&&!man.gas)) return;
-  if(man.gasAt&&man.gasAt!=='ci') return;   // Guide grammar has no slot for non-cinnamon cuts: stays local, never corrupts a row
-  const eq=localStorage.getItem('bsEquip')||'Bullet'; const field=(eq==='Bullet')?'bullet':'hsr';
+async function gdUpsert(k){ const eq=localStorage.getItem('bsEquip')||'Bullet';
+  const ok9=await gdUpsertM(k,eq,rcGetMan(k),true); return ok9; }
+async function gdUpsertM(k,eq,man,retire){ try{ if(!SB) return false; const u=await cloudUser(); if(!u) return false;
+  if(!man||(!man.st&&!man.gas)) return false;
+  if(man.gasAt&&man.gasAt!=='ci') return false;   // Guide grammar has no slot for non-cinnamon cuts: stays local, never corrupts a row
+  const field=(eq==='Bullet')?'bullet':'hsr';
   const r=gdMatch(k);
   const exact9=r&&((r.name||'').toLowerCase()===k);
   if(styleOf(k)&&!exact9){ toast(LANG==='tr'?'Alternatif kavrum yerelde saklandı · buluta yalnızca ana kahve yazılır':'Alternative kept local · only the main coffee syncs'); return; }   // his rule: the ORIGINAL coffee owns its row; a variant never inserts a new row nor rewrites the parent
@@ -2424,19 +2426,30 @@ async function gdUpsert(k){ try{ if(!SB) return; const u=await cloudUser(); if(!
     res=await SB.from('recipes').insert({name:nm,match:[k],bullet:(field==='bullet')?s2:'-',hsr:(field==='hsr')?s2:'-',note:'',active:true,sort_order:null}).select().single(); }
   if(res.error) throw res.error;
   gdCachePatch(res.data);
-  { const m2=rcMap(); const cur9=m2[k];   // cloud accepted: local override retires (wn stays); the Guide row is the single voice again
+  if(retire){ const m2=rcMap(); const cur9=m2[k];   // cloud accepted: local override retires (wn stays); the Guide row is the single voice again
     if(cur9){ const v9={}; if(cur9.wn) v9.wn=cur9.wn; if(v9.wn) m2[k]=v9; else delete m2[k];
       localStorage.setItem('bsRc',JSON.stringify(m2));
       const cm9=calMap(); if(cm9[k]){ if(m2[k]) cm9[k].rc=m2[k]; else delete cm9[k].rc; cm9[k].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm9)); } } }
   try{ renderRcRow(); }catch(e2){}
   toast(LANG==='tr'?'Reçete buluta yazıldı (Guide ile ortak)':'Recipe saved to cloud (shared with Guide)');
- }catch(e){ try{ toast(LANG==='tr'?'Reçete buluta yazılamadı · yerelde tutuldu':'Recipe not saved to cloud · kept locally'); }catch(e3){} } }
-function gdRc(k){ const r=gdMatch(k); if(!r) return null;
-  const eq=localStorage.getItem('bsEquip')||'Bullet';
-  const s2=((eq==='Bullet'?r.bullet:r.hsr)||r.bullet||'');
-  if(!s2||s2==='-') return null;
-  const st=gdParseStage(s2), gas=gdParseP(s2); if(!st&&!gas) return null;
-  return {st:st,gas:gas,gasAt:(gas?'ci':''),wn:'',dev:gdParseDev(s2),ag:gdParseAg(s2),src:'guide'}; }
+  return true;
+ }catch(e){ try{ toast(LANG==='tr'?'Reçete buluta yazılamadı · yerelde tutuldu':'Recipe not saved to cloud · kept locally'); }catch(e3){} return false; } }
+function gdRcFor(k,eq){ const r=gdMatch(k); if(!r) return null;
+  const s2=(((eq==='Bullet')?r.bullet:r.hsr)||''); if(!s2||s2==='-') return null;
+  const st=gdParseStage(s2), gas=gdParseP(s2);
+  return {st:st,gas:gas,gasAt:(gas?'ci':''),dev:gdParseDev(s2),ag:gdParseAg(s2)}; }
+function gdRc(k){ const eq=localStorage.getItem('bsEquip')||'Bullet';
+  let x=gdRcFor(k,eq); if(!x&&eq!=='Bullet') x=gdRcFor(k,'Bullet');
+  if(!x||(!x.st&&!x.gas)) return null;
+  x.wn=''; x.src='guide'; return x; }
+function rcEqSwitch(m9){ if(m9===RCEQ) return; RCEQ=m9; const act9=localStorage.getItem('bsEquip')||'Bullet';
+  RCVAR=(m9===act9)?null:(gdRcFor(rcKey(),m9)||{st:'',gas:'',gasAt:'ci'});
+  renderRcRow(); }
+function rcEdSet(part,val){ const act9=localStorage.getItem('bsEquip')||'Bullet';
+  if(RCVAR&&RCEQ&&RCEQ!==act9){ if(part==='st') RCVAR.st=val; else if(part==='gas') RCVAR.gas=(val||'').trim(); else RCVAR.gasAt=val; return; }
+  if(part==='st') rcSet(rcKey(),val,undefined,undefined,1);
+  else if(part==='gas') rcSet(rcKey(),undefined,(val||'').trim(),((($('rcGasAt')||{}).value)||undefined),1);
+  else rcSet(rcKey(),undefined,undefined,val,1); }
 // ---- v28a chrome: setup config line + lab mode (his 4 orders 2026-07-28); nothing is deleted, lab mode reveals it all
 function cfgToggle(){ document.body.classList.toggle('cfg'); const c9=$('cfgCar'); if(c9) c9.textContent=document.body.classList.contains('cfg')?'▴':'▾'; }
 function cfgWatch(){ if(!document.body.classList.contains('cfg')) cfgToggle(); const wf=$('wcFold'); if(wf){ wf.open=true; try{ wf.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){} } }
@@ -2481,7 +2494,7 @@ function rcTableOpen(){ try{ gdPull(); }catch(e){}
   const eq=localStorage.getItem('bsEquip')||'Bullet';
   $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:17px">'+(LANG==='tr'?'Reçeteler':'Recipes')+'</h1>'
    +'<div class="hint" style="font-size:11px;margin-bottom:4px">'+(LANG==='tr'?'Hesap reçeteleri (Guide ile ortak) · satıra dokun, burada düzenle':'Account recipes (shared with the Guide) · tap a row to edit here')+'</div>'
-   +(L.length?L.map(r=>'<div data-rn="'+escC(r.name)+'" style="padding:9px 4px;border-top:1px solid var(--line);cursor:pointer;font-size:13.5px">'+escC(r.name)+' <span style="color:var(--dim);font-size:11.5px">· '+escC(((eq==='Bullet'?r.bullet:r.hsr)||'-'))+'</span></div>').join(''):('<div class="hint">'+(LANG==='tr'?'Reçete yok':'No recipes yet')+'</div>'))
+   +(L.length?L.map(r=>'<div data-rn="'+escC(r.name)+'" style="padding:9px 4px;border-top:1px solid var(--line);cursor:pointer;font-size:13.5px">'+escC(r.name)+' <span style="color:var(--dim);font-size:11px">· B: '+escC(r.bullet||'-')+' · H: '+escC(r.hsr||'-')+'</span></div>').join(''):('<div class="hint">'+(LANG==='tr'?'Reçete yok':'No recipes yet')+'</div>'))
    +'<div style="margin-top:10px;text-align:center"><a href="roast-guide.html" target="_blank" rel="noopener" style="color:var(--gold);font-size:12px;font-weight:700">Guide &#8599; · '+(LANG==='tr'?'sıra/takma ad/not':'order/alias/note')+'</a></div>'
    +'<button style="margin-top:10px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(LANG==='tr'?'Kapat':'Close')+'</button>';
   $('modal').style.display='flex';
@@ -2489,8 +2502,11 @@ function rcTableOpen(){ try{ gdPull(); }catch(e){}
 function rcWnGo(){ const c9=(($('rcWnC')||{}).value||''), n9=((($('rcWnN')||{}).value||'')+'').trim().toUpperCase().slice(0,5);
   if(!c9&&!n9) return; rcSetWn(rcKey(), (c9&&n9)?(c9+'-'+n9):(c9||n9));
   toast(LANG==='tr'?'Saat çipi adı kaydedildi':'Watch chip name saved'); }
-function rcDone(){ const el2=$('rcGasIn'), s2=$('rcGasAt'); if(el2) rcSet(rcKey(),undefined,el2.value.trim(),(s2&&s2.value)||undefined); RCEDIT=false; renderRcRow(); try{ gdUpsert(rcKey()); }catch(e){} }   // done = the ONLY write-bridge trigger (tap-happy editing never hammers SB)
-function rcEditToggle(){ if(running) return; RCEDIT=!RCEDIT; if(RCEDIT){ try{ gdPull(); }catch(e){} } renderRcRow(); }
+function rcDone(){ const act9=localStorage.getItem('bsEquip')||'Bullet';
+  if(RCVAR&&RCEQ&&RCEQ!==act9){ const el2=$('rcGasIn'); if(el2) RCVAR.gas=(el2.value||'').trim();
+    const dv=RCVAR; RCVAR=null; RCEDIT=false; renderRcRow(); try{ gdUpsertM(rcKey(),RCEQ,dv,false); }catch(e){} return; }   // other machine: cloud row only, no local override
+  const el2=$('rcGasIn'), s2=$('rcGasAt'); if(el2) rcSet(rcKey(),undefined,el2.value.trim(),(s2&&s2.value)||undefined); RCEDIT=false; renderRcRow(); try{ gdUpsert(rcKey()); }catch(e){} }   // done = the ONLY write-bridge trigger
+function rcEditToggle(){ if(running) return; RCEDIT=!RCEDIT; if(RCEDIT){ RCEQ=localStorage.getItem('bsEquip')||'Bullet'; RCVAR=null; try{ gdPull(); }catch(e){} } renderRcRow(); }
 function rcEval(rc,stages){ const st0=rc&&rc.st; if(!st0) return '';
   const has=s2=>stages&&stages.some(sg=>sg[0]===s2);
   if(has(st0)) return 'alarm';
@@ -2502,18 +2518,25 @@ function renderRcRow(){ const el=$('rcRow'); if(!el) return; const k=rcKey();
   const cur=rcGet(k); RCWN=(cur&&cur.wn)||'';
   if(!RCEDIT){ el.innerHTML=cur?'':('<button onclick="rcEditToggle()" style="padding:3px 10px;font-size:11px;border-radius:999px;border:1px dashed var(--line);background:none;color:var(--dim);cursor:pointer">'+(LANG==='tr'?'+ reçete':'+ recipe')+'</button>');
     rcLineUI(); return; }
-  const st0=(cur&&cur.st)||'', gas0=(cur&&cur.gas)||'';
+  const act8=localStorage.getItem('bsEquip')||'Bullet'; if(!RCEQ) RCEQ=act8;
+  const eff=(RCVAR&&RCEQ!==act8)?RCVAR:cur;   // other-machine draft edits the cloud string; active machine edits as before
+  const st0=(eff&&eff.st)||'', gas0=(eff&&eff.gas)||'', at00=(eff&&eff.gasAt)||'';
   el.innerHTML='<div style="border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--panel2);text-align:center">'
-    +(function(){ const at0=(cur&&cur.gasAt)||'', selv=at0||'ci';   // cinnamon is the default cut point (his order; legacy text migrates in rcNorm)
+    +(function(){ const ms=[...new Set(['Bullet','HSR15',act8])]; const r9=gdMatch(k);   // his 2 machines: each recipe carries 2 gas cuts + 2 dev references
+      return '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:5px">'
+      +ms.map(m9=>'<span onclick="rcEqSwitch(&quot;'+m9+'&quot;)" style="cursor:pointer;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;border:1px solid '+(RCEQ===m9?'var(--gold)':'var(--line)')+';color:'+(RCEQ===m9?'var(--gold)':'var(--muted)')+'">'+m9+(m9===act8?' \u00b7':'')+'</span>').join('')
+      +'</div>'
+      +(r9?('<div style="font-size:10px;color:var(--dim);text-align:center;margin-bottom:4px">B: '+escC(r9.bullet||'-')+' \u00b7 H: '+escC(r9.hsr||'-')+'</div>'):''); })()
+    +(function(){ const at0=at00, selv=at0||'ci';   // cinnamon is the default cut point (his order; legacy text migrates in rcNorm)
       const OPT=[['','—','—'],['tu','dönüşte','at turnaround'],['ye','sararmada','at yellowing'],['ci','tarçında','at cinnamon'],['a0',"A0'da",'at A0']];
       return '<div style="display:flex;gap:6px;width:96%;margin:0 auto 2px">'
-      +'<select id="rcStage" onchange="rcSet(rcKey(),this.value,undefined,undefined,1)" style="flex:1.15;min-width:0;background:var(--panel2);color:'+(st0?'var(--gold)':'var(--ink)')+';border:1px solid '+(st0?'var(--gold)':'var(--line)')+';border-radius:8px;padding:8px 6px;font-size:16px;font-weight:700">'
+      +'<select id="rcStage" onchange="rcEdSet(&quot;st&quot;,this.value)" style="flex:1.15;min-width:0;background:var(--panel2);color:'+(st0?'var(--gold)':'var(--ink)')+';border:1px solid '+(st0?'var(--gold)':'var(--line)')+';border-radius:8px;padding:8px 6px;font-size:16px;font-weight:700">'
       +[['',(LANG==='tr'?'drop —':'drop —')]].concat(RC_LADDER.map(s3=>[s3,'DROP '+s3])).map(o8=>'<option value="'+o8[0]+'"'+(st0===o8[0]?' selected':'')+'>'+o8[1]+'</option>').join('')
       +'</select>'
-      +'<select id="rcGasAt" onchange="rcSet(rcKey(),undefined,undefined,this.value,1)" style="flex:1.1;min-width:0;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 6px;font-size:16px">'
+      +'<select id="rcGasAt" onchange="rcEdSet(&quot;at&quot;,this.value)" style="flex:1.1;min-width:0;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 6px;font-size:16px">'
       +OPT.map(o9=>'<option value="'+o9[0]+'"'+(selv===o9[0]?' selected':'')+'>'+(LANG==='tr'?o9[1]:o9[2])+'</option>').join('')
       +'</select>'
-      +'<input id="rcGasIn" value="'+gas0.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" placeholder="-P2" onchange="rcSet(rcKey(),undefined,this.value.trim(),($(&quot;rcGasAt&quot;)||{}).value||undefined,1)" style="flex:0.75;min-width:0;padding:8px 6px;font-size:16px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-align:center">'
+      +'<input id="rcGasIn" value="'+gas0.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" placeholder="-P2" onchange="rcEdSet(&quot;gas&quot;,this.value)" style="flex:0.75;min-width:0;padding:8px 6px;font-size:16px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-align:center">'
       +'</div>'; })()
     +'<div style="display:flex;justify-content:center;gap:8px;margin-top:6px">'
     +'<button onclick="rcDone()" style="padding:4px 14px;font-size:12px;border-radius:8px;border:1px solid var(--accent2);background:none;color:var(--accent2)">'+(LANG==='tr'?'tamam':'done')+'</button>'
