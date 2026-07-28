@@ -23,7 +23,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Se
 #hdr{order:0}
 /* SETUP: coffee + gauge, start, capture(load), tuning. Nothing else. */
 #cWalk{display:none}
-body.st-setup #cWalk{display:block;order:1}
+body.st-setup #cWalk{display:none} body.st-setup.cfg #cWalk{display:block;order:1}
 body.st-setup #cGauge{order:1} body.st-setup #btn{order:2} body.st-setup #err{order:2} body.st-setup #cCapture{order:3} body.st-setup #cTune{order:4}
 body.st-setup #cGain,body.st-setup #cTimeline,body.st-setup #cStats,body.st-setup #cLog{display:none}
 /* LIVE: gauge, bell, gain, STOP (sticky), compact stats. Chores hidden. */
@@ -31,14 +31,30 @@ body.st-live #cGauge{order:1} body.st-live #cStats{order:2} body.st-live #cTimel
 body.st-live #cCapture{display:none}
 body.st-live #btn{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:216px;height:108px;border-radius:216px 216px 0 0;background:rgba(217,102,63,0.78);font-size:25px;font-weight:800;padding:0 0 16px;z-index:9;box-shadow:0 -4px 22px rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;letter-spacing:.6px;border:none}
 body.st-live .wrap{padding-bottom:120px}
-body.st-live #cGauge details{display:none}
+body.st-live:not(.lab) #cGauge details{display:none}
 /* v27c MINIMAL LIVE (mockup verdict 2026-07-27): the storm speaks with six things: STAGE+DEV, gauge, cracks, recipe line, DROP, sample */
-body.st-live #cPhase,body.st-live #agHint,body.st-live #cWalk,body.st-live #wcFold,body.st-live #cTune,body.st-live #cLog,body.st-live #uniPill,body.st-live #cGauge .lbl,body.st-live #npUnder,body.st-live #cStats .hint{display:none}
+body.st-live:not(.lab) #cPhase,body.st-live:not(.lab) #agHint,body.st-live:not(.lab) #cWalk,body.st-live:not(.lab) #wcFold,body.st-live:not(.lab) #cTune,body.st-live:not(.lab) #cLog,body.st-live:not(.lab) #uniPill,body.st-live:not(.lab) #cGauge .lbl,body.st-live:not(.lab) #npUnder,body.st-live:not(.lab) #cStats .hint{display:none}
 body.st-live #npName{font-size:14px;font-weight:700;color:var(--muted)}
 body.st-live #npWrap{margin:3px 0 0}
 #stageNow{display:none;margin:4px 0 2px;line-height:1.05}
+/* v28a (his 4 orders, 2026-07-28): minimal storm is DEFAULT; every instrument stays alive behind the lab mode chip */
+@media (max-width:899px){ body.st-live:not(.lab) #hdr,body.st-live:not(.lab) #cGain,body.st-live:not(.lab) #cTimeline,body.st-live:not(.lab) #styleChips{display:none} }
+body.st-live:not(.lab) #cStats{justify-content:center}
+body.st-live:not(.lab) #cStats>.card{flex:0 1 220px}
+#labChip{display:none}
+body.st-live #labChip{display:flex;position:fixed;right:12px;bottom:14px;z-index:10;width:auto;padding:7px 12px;font-size:11px;font-weight:700;border-radius:999px;background:var(--panel);color:var(--muted);border:1px solid var(--line);cursor:pointer}
+@media (min-width:900px){ #labChip{display:none!important} }
+body.rc-alarm #stageNow>span:first-child{color:var(--warn)!important}
+body.rc-alarm #agWrap{filter:drop-shadow(0 0 6px var(--warn))}
+#cfgLine{display:none}
+body.st-setup #cfgLine{display:block;order:2;text-align:center;font-size:13px;color:var(--muted);margin:2px 0 12px}
+#cfgLine span{cursor:pointer;color:var(--accent);font-weight:600}
+body.st-setup #cCapture,body.st-setup #cTune,body.st-setup #wcFold{display:none}
+body.st-setup.cfg #cCapture{display:block}
+body.st-setup.cfg #cTune{display:block}
+body.st-setup.cfg #wcFold{display:block}
 #enrollBtn{display:none;background:none;border:1px dashed var(--line);color:var(--muted);border-radius:12px;font-size:13px;font-weight:600;padding:11px;width:100%;order:5}
-body.st-setup #enrollBtn{display:block}
+body.st-setup.cfg #enrollBtn{display:block}
 #sampleBtn{display:none;background:var(--panel);color:var(--ink);border:2px solid var(--accent);border-radius:14px;font-size:16px;font-weight:700;padding:13px;width:100%;align-items:center;justify-content:center;gap:10px}
 body.st-live #sampleBtn{display:flex;position:sticky;bottom:118px;z-index:9;box-shadow:0 6px 18px rgba(0,0,0,.45);order:5}
 #sampN{background:var(--accent);color:#fff;border-radius:10px;padding:2px 9px;font-size:13px;display:none}
@@ -144,10 +160,10 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 body.st-live .brandFull,body.st-done .brandFull{display:none}
 body.st-live .brandCompact,body.st-done .brandCompact{display:block}
 .micBtn{display:none;position:absolute;top:60%;left:50%;transform:translate(-50%,-50%);width:92px;height:92px;border-radius:50%;background:var(--accent2);border:none;padding:0;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.45);cursor:pointer;align-items:center;justify-content:center}
-body.st-setup .micBtn{display:flex}
+body.st-setup .micBtn{display:none}   /* v28a: BASLAT button takes over as the one start */
 .micHint{display:none;position:absolute;top:calc(60% + 56px);left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap;pointer-events:none}
-body.st-setup .micHint{display:block}
-body.st-setup #btn{display:none}
+body.st-setup .micHint{display:none}
+body.st-setup #btn{display:block;background:var(--accent2);font-size:20px;font-weight:800;padding:20px;border-radius:16px;box-shadow:0 6px 18px rgba(60,122,90,.35)}
 .row>.card .lbl{min-height:2.4em;line-height:1.2;display:flex;align-items:flex-end;justify-content:center}
 </style>
 </head>
@@ -171,7 +187,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-27d</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-28a</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -273,7 +289,9 @@ body.st-setup #btn{display:none}
   <button id="enrollBtn" onclick="enrollToggle()">Teach it your voice</button>
   <button id="sampleBtn" onclick="markSample()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><ellipse cx="7.4" cy="7.4" rx="4" ry="5.2" transform="rotate(-45 7.4 7.4)" fill="#e6c14b"/><line x1="10.6" y1="10.6" x2="20" y2="20" stroke="#e6c14b" stroke-width="2.6" stroke-linecap="round"/></svg><span id="sampLbl">Sample pulled</span><b id="sampN"></b></button>
   <button class="go" id="btn" onclick="toggle()">Start listening</button>
+  <div id="cfgLine"><span onclick="uniOpen(false)">evren</span> · <span onclick="cfgWatch()">watch</span> · <span onclick="cfgToggle()">ayarlar <span id="cfgCar">▾</span></span></div>
   <div class="err" id="err"></div>
+  <button id="labChip" onclick="labToggle()">lab mode</button>
   <div id="a0Banner" onclick="markSample()"></div>
   <div id="tgtBanner" onclick="this.style.display='none'"></div>
   <div id="rcBanner" onclick="this.style.display='none'"></div>
@@ -2105,7 +2123,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-27d';
+const APPVER='v2026-07-28a';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2347,22 +2365,28 @@ function tgtNudge(proj){
 // line ("DROP B1 · -P2 tarçında"); the editor folds under it, never a modal, locked while roasting.
 const RC_LADDER=['A0','A1','B0','B1','C0','C1'];
 let RCEDIT=false;
+// ---- v28a chrome: setup config line + lab mode (his 4 orders 2026-07-28); nothing is deleted, lab mode reveals it all
+function cfgToggle(){ document.body.classList.toggle('cfg'); const c9=$('cfgCar'); if(c9) c9.textContent=document.body.classList.contains('cfg')?'▴':'▾'; }
+function cfgWatch(){ if(!document.body.classList.contains('cfg')) cfgToggle(); const wf=$('wcFold'); if(wf){ wf.open=true; try{ wf.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){} } }
+function labToggle(){ document.body.classList.toggle('lab'); try{ localStorage.setItem('bsLab',document.body.classList.contains('lab')?'1':'0'); }catch(e){} }
+try{ if(localStorage.getItem('bsLab')==='1') document.body.classList.add('lab'); }catch(e){}
 function rcKey(){ return (cName.value||'').trim().toLowerCase(); }
 function rcMap(){ try{ return JSON.parse(localStorage.getItem('bsRc')||'{}'); }catch(e){ return {}; } }
-function rcNorm(v){ if(!v) return null; if(typeof v==='string') return {st:v,gas:''};   // v27a stored bare stage strings
-  const st0=(v.st||'')+'', gas0=(v.gas||'')+''; if(!st0&&!gas0) return null; return {st:st0,gas:gas0}; }
+function rcNorm(v){ if(!v) return null; if(typeof v==='string') return {st:v,gas:'',gasAt:''};   // v27a stored bare stage strings
+  const st0=(v.st||'')+'', gas0=(v.gas||'')+'', at0=(v.gasAt||'')+''; if(!st0&&!gas0) return null; return {st:st0,gas:gas0,gasAt:at0}; }
 function rcGet(k){ if(!k) return null; const c2=calMap()[k]; if(c2&&c2.rc){ const n2=rcNorm(c2.rc); if(n2) return n2; }
   return rcNorm(rcMap()[k]||null); }
-function rcSet(k,st,gas){ if(!k) return; const cur=rcGet(k)||{st:'',gas:''};   // undefined = keep that half
+function rcSet(k,st,gas,gasAt){ if(!k) return; const cur=rcGet(k)||{st:'',gas:'',gasAt:''};   // undefined = keep that part
   const nst=(st===undefined)?cur.st:((st||'')+'');
   const ngas=(gas===undefined)?cur.gas:((gas||'')+'');
+  const nat=(gasAt===undefined)?(cur.gasAt||''):((gasAt||'')+'');
   const m2=rcMap();
-  if(nst||ngas){ const v2={}; if(nst) v2.st=nst; if(ngas) v2.gas=ngas; m2[k]=v2; } else delete m2[k];
+  if(nst||ngas){ const v2={}; if(nst) v2.st=nst; if(ngas) v2.gas=ngas; if(nat) v2.gasAt=nat; m2[k]=v2; } else delete m2[k];
   localStorage.setItem('bsRc',JSON.stringify(m2));
   const cm=calMap(); if(cm[k]){ if(m2[k]) cm[k].rc=m2[k]; else delete cm[k].rc; cm[k].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm)); }
   renderRcRow(); }
 function rcTog(s2){ const c3=rcGet(rcKey()); return (c3&&c3.st===s2)?'':s2; }
-function rcDone(){ const el2=$('rcGasIn'); if(el2) rcSet(rcKey(),undefined,el2.value.trim()); RCEDIT=false; renderRcRow(); }
+function rcDone(){ const el2=$('rcGasIn'), s2=$('rcGasAt'); if(el2) rcSet(rcKey(),undefined,el2.value.trim(),(s2&&s2.value)||undefined); RCEDIT=false; renderRcRow(); }
 function rcEditToggle(){ if(running) return; RCEDIT=!RCEDIT; renderRcRow(); }
 function rcEval(rc,stages){ const st0=rc&&rc.st; if(!st0) return '';
   const has=s2=>stages&&stages.some(sg=>sg[0]===s2);
@@ -2378,7 +2402,14 @@ function renderRcRow(){ const el=$('rcRow'); if(!el) return; const k=rcKey();
   const st0=(cur&&cur.st)||'', gas0=(cur&&cur.gas)||'';
   el.innerHTML='<div style="border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--panel2);text-align:center">'
     +RC_LADDER.map(s2=>'<button onclick="rcSet(rcKey(),rcTog(&quot;'+s2+'&quot;))" style="padding:5px 9px;font-size:12.5px;margin:2px;border-radius:8px;border:1px solid '+(st0===s2?'var(--gold)':'var(--line)')+';background:'+(st0===s2?'#3a2f14':'none')+';color:'+(st0===s2?'var(--gold)':'var(--ink)')+'">'+s2+'</button>').join('')
-    +'<input id="rcGasIn" value="'+gas0.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" placeholder="'+(LANG==='tr'?'gaz notu: -P2 tarçında':'gas note: -P2 at cinnamon')+'" onchange="rcSet(rcKey(),undefined,this.value.trim())" style="display:block;width:88%;margin:7px auto 2px;padding:6px 8px;font-size:12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-align:center">'
+    +(function(){ const at0=(cur&&cur.gasAt)||'', selv=at0||(gas0?'':'ci');   // legacy free-text keeps '—' so it is never re-locativized (Opus trap 2)
+      const OPT=[['','—','—'],['tu','dönüşte','at turnaround'],['ye','sararmada','at yellowing'],['ci','tarçında','at cinnamon'],['a0',"A0'da",'at A0']];
+      return '<div style="display:flex;gap:6px;justify-content:center;margin:7px auto 2px;width:92%">'
+      +'<select id="rcGasAt" onchange="rcSet(rcKey(),undefined,undefined,this.value)" style="flex:1.2;min-width:0;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:16px">'
+      +OPT.map(o9=>'<option value="'+o9[0]+'"'+(selv===o9[0]?' selected':'')+'>'+(LANG==='tr'?o9[1]:o9[2])+'</option>').join('')
+      +'</select>'
+      +'<input id="rcGasIn" value="'+gas0.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" placeholder="-P2" onchange="rcSet(rcKey(),undefined,this.value.trim(),($(&quot;rcGasAt&quot;)||{}).value||undefined)" style="flex:1;min-width:0;padding:6px 8px;font-size:16px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-align:center">'
+      +'</div>'; })()
     +'<div style="display:flex;justify-content:center;gap:8px;margin-top:6px">'
     +'<button onclick="rcDone()" style="padding:4px 14px;font-size:12px;border-radius:8px;border:1px solid var(--accent2);background:none;color:var(--accent2)">'+(LANG==='tr'?'tamam':'done')+'</button>'
     +((st0||gas0)?('<button onclick="rcSet(rcKey(),&quot;&quot;,&quot;&quot;)" style="padding:4px 10px;font-size:11px;border-radius:8px;border:1px solid var(--line);background:none;color:var(--dim)">&times; '+(LANG==='tr'?'sil':'clear')+'</button>'):'')
@@ -2387,14 +2418,17 @@ function renderRcRow(){ const el=$('rcRow'); if(!el) return; const k=rcKey();
 function rcLineUI(){ const el=$('rcLine'); if(!el) return; const k=rcKey(); const cur=k?rcGet(k):null;
   if(!cur){ el.style.display='none'; el.textContent=''; return; }
   el.style.display='block';
-  const parts=[]; if(cur.st) parts.push('DROP '+cur.st); if(cur.gas) parts.push(cur.gas);
+  const LOC={tu:['dönüşte','at turnaround'],ye:['sararmada','at yellowing'],ci:['tarçında','at cinnamon'],a0:["A0'da",'at A0']};
+  const parts=[]; if(cur.st) parts.push('DROP '+cur.st);
+  if(cur.gas){ const L9=cur.gasAt&&LOC[cur.gasAt]; parts.push(L9?(cur.gas+' '+L9[LANG==='tr'?0:1]):cur.gas); }
   el.textContent=parts.join(' · '); }
 function rcBeep(){ try{ if(!AC||!AC.createOscillator||AC.state!=='running') return; BEEPUNTIL=performance.now()+1600;
   const g=AC.createGain(); g.gain.value=0; g.connect(AC.destination);
   const o=AC.createOscillator(); o.type='sine'; o.frequency.value=988; o.connect(g); const t0=AC.currentTime;
   for(let i=0;i<4;i++){ const a=t0+i*0.19; g.gain.setValueAtTime(0,a); g.gain.linearRampToValueAtTime(0.3,a+0.015); g.gain.setValueAtTime(0.3,a+0.1); g.gain.linearRampToValueAtTime(0,a+0.12); }
   o.start(t0); o.stop(t0+0.85); o.onended=()=>{ try{ o.disconnect(); g.disconnect(); }catch(e){} }; }catch(e){} }
-function rcUI(level,st){ const bn=$('rcBanner'); if(!bn) return;
+function rcUI(level,st){ try{ document.body.classList.toggle('rc-alarm',level===2); }catch(e){}   // v28a: the stage crown goes red with the banner
+  const bn=$('rcBanner'); if(!bn) return;
   if(!level){ bn.style.display='none'; bn.classList.remove('tgnow'); return; }
   bn.style.display='block';
   if(level===1){ bn.classList.remove('tgnow'); bn.textContent=(LANG==='tr'?('Reçete evresi '+st+' yaklaşıyor · drop hazırlığı'):('Recipe stage '+st+' approaching · get ready to drop')); }
@@ -2514,7 +2548,7 @@ const EN2TR={
 'tuning & trace':'ayar & iz','watch cast':'watch yayını','Watch cast':'Watch yayını','Roast this coffee again':'Bu kahveyi tekrar kavur','Roast new coffee':'Yeni kahve kavur','reset all values':'tüm değerleri sıfırla','crack log':'çatlak kaydı','gain trace (cracks marked)':'gain izi (çatlaklar işaretli)',
 'signal purity':'sinyal saflığı','high':'yüksek','medium':'orta','low':'düşük','cracks / 30s':'çatlak / 30 sn','vs reference':'referansa göre',
 'Record raw audio (WAV, pre-filter)':'Ham sesi kaydet (WAV, filtre öncesi)',
-'Start listening':'Dinlemeye başla','Teach it your voice':'Sesini öğret','Stop':'Durdur','Drop':'Drop','New session':'Yeni seans','Sample pulled':'Numune çekildi','Pull a sample':'Numune çek',
+'Start listening':'BAŞLAT','Teach it your voice':'Sesini öğret','Stop':'Durdur','Drop':'Drop','New session':'Yeni seans','Sample pulled':'Numune çekildi','Pull a sample':'Numune çek',
 'Save session (.zip)':'Seansı kaydet (.zip)','Batch card (PNG)':'Parti kartı (PNG)',
 'Load session (.zip / .csv)':'Seans yükle (.zip / .csv)','Export maps':'Haritaları dışa aktar','Import maps':'Haritaları içe aktar',
 'Map this coffee (save color)':'Bu kahveyi eşle (rengi kaydet)','Bin':'Aralık','Trigger ×':'Tetik ×','High-pass':'Yüksek geçiren','Refresh':'Yenile',
