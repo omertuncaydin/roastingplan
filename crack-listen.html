@@ -33,7 +33,7 @@ body.st-live #btn{position:fixed;left:50%;bottom:0;transform:translateX(-50%);wi
 body.st-live .wrap{padding-bottom:120px}
 body.st-live:not(.lab) #cGauge details{display:none}
 /* v27c MINIMAL LIVE (mockup verdict 2026-07-27): the storm speaks with six things: STAGE+DEV, gauge, cracks, recipe line, DROP, sample */
-body.st-live:not(.lab) #cPhase,body.st-live:not(.lab) #agHint,body.st-live:not(.lab) #cWalk,body.st-live:not(.lab) #wcFold,body.st-live:not(.lab) #cTune,body.st-live:not(.lab) #cLog,body.st-live:not(.lab) #uniPill,body.st-live:not(.lab) #cGauge .lbl,body.st-live:not(.lab) #npUnder,body.st-live:not(.lab) #cStats .hint{display:none}
+body.st-live:not(.lab) #cPhase,body.st-live:not(.lab) #agHint,body.st-live:not(.lab) #cWalk,body.st-live:not(.lab) #wcFold,body.st-live:not(.lab) #cTune,body.st-live:not(.lab) #uniPill,body.st-live:not(.lab) #cGauge .lbl,body.st-live:not(.lab) #npUnder,body.st-live:not(.lab) #cStats .hint{display:none}
 body.st-live #npName{font-size:14px;font-weight:700;color:var(--muted)}
 body.st-live #npWrap{margin:3px 0 0}
 #stageNow{display:none;margin:4px 0 2px;line-height:1.05}
@@ -42,8 +42,10 @@ body.st-live #npWrap{margin:3px 0 0}
 body.st-live:not(.lab) #cStats{justify-content:center}
 body.st-live:not(.lab) #cStats>.card{flex:0 1 220px}
 #labChip{display:none}
-body.st-live #labChip{display:flex;position:fixed;right:12px;bottom:14px;z-index:10;width:auto;padding:7px 12px;font-size:11px;font-weight:700;border-radius:999px;background:var(--panel);color:var(--muted);border:1px solid var(--line);cursor:pointer}
+body.st-live #labChip,body.st-done #labChip{display:flex;position:fixed;right:12px;bottom:14px;z-index:10;width:auto;padding:7px 12px;font-size:11px;font-weight:700;border-radius:999px;background:var(--panel);color:var(--muted);border:1px solid var(--line);cursor:pointer}
 @media (min-width:900px){ #labChip{display:none!important} }
+@media (max-width:899px){ body.st-done:not(.lab) #cCapture,body.st-done:not(.lab) #cTimeline,body.st-done:not(.lab) #cStats,body.st-done:not(.lab) #cLog,body.st-done:not(.lab) #cTune{display:none} }
+body.st-live:not(.lab) #cAdmin,body.st-live:not(.lab) #adminStatsRow,body.st-done:not(.lab) #cAdmin,body.st-done:not(.lab) #adminStatsRow{display:none}
 body.rc-alarm #stageNow>span:first-child{color:var(--warn)!important}
 body.rc-alarm #agWrap{filter:drop-shadow(0 0 6px var(--warn))}
 #cfgLine{display:none}
@@ -160,10 +162,10 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 body.st-live .brandFull,body.st-done .brandFull{display:none}
 body.st-live .brandCompact,body.st-done .brandCompact{display:block}
 .micBtn{display:none;position:absolute;top:60%;left:50%;transform:translate(-50%,-50%);width:92px;height:92px;border-radius:50%;background:var(--accent2);border:none;padding:0;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.45);cursor:pointer;align-items:center;justify-content:center}
-body.st-setup .micBtn{display:none}   /* v28a: BASLAT button takes over as the one start */
+body.st-setup .micBtn{display:flex}   /* v28b: mic icon back as the one start (his order) */
 .micHint{display:none;position:absolute;top:calc(60% + 56px);left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap;pointer-events:none}
-body.st-setup .micHint{display:none}
-body.st-setup #btn{display:block;background:var(--accent2);font-size:20px;font-weight:800;padding:20px;border-radius:16px;box-shadow:0 6px 18px rgba(60,122,90,.35)}
+body.st-setup .micHint{display:block}
+body.st-setup #btn{display:none}
 .row>.card .lbl{min-height:2.4em;line-height:1.2;display:flex;align-items:flex-end;justify-content:center}
 </style>
 </head>
@@ -187,7 +189,7 @@ body.st-setup #btn{display:block;background:var(--accent2);font-size:20px;font-w
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-28a</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-28b</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -2123,7 +2125,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-28a';
+const APPVER='v2026-07-28b';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2368,8 +2370,9 @@ let RCEDIT=false;
 // ---- v28a chrome: setup config line + lab mode (his 4 orders 2026-07-28); nothing is deleted, lab mode reveals it all
 function cfgToggle(){ document.body.classList.toggle('cfg'); const c9=$('cfgCar'); if(c9) c9.textContent=document.body.classList.contains('cfg')?'▴':'▾'; }
 function cfgWatch(){ if(!document.body.classList.contains('cfg')) cfgToggle(); const wf=$('wcFold'); if(wf){ wf.open=true; try{ wf.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){} } }
-function labToggle(){ document.body.classList.toggle('lab'); try{ localStorage.setItem('bsLab',document.body.classList.contains('lab')?'1':'0'); }catch(e){} }
-try{ if(localStorage.getItem('bsLab')==='1') document.body.classList.add('lab'); }catch(e){}
+function labChipUI(){ const lc=$('labChip'); if(lc) lc.textContent=document.body.classList.contains('lab')?'basic mode':'lab mode'; }   // the chip names the mode you would switch TO (his order 2026-07-28)
+function labToggle(){ document.body.classList.toggle('lab'); try{ localStorage.setItem('bsLab',document.body.classList.contains('lab')?'1':'0'); }catch(e){} labChipUI(); }
+try{ if(localStorage.getItem('bsLab')==='1') document.body.classList.add('lab'); }catch(e){} try{ labChipUI(); }catch(e){}
 function rcKey(){ return (cName.value||'').trim().toLowerCase(); }
 function rcMap(){ try{ return JSON.parse(localStorage.getItem('bsRc')||'{}'); }catch(e){ return {}; } }
 function rcNorm(v){ if(!v) return null; if(typeof v==='string') return {st:v,gas:'',gasAt:''};   // v27a stored bare stage strings
@@ -2548,7 +2551,7 @@ const EN2TR={
 'tuning & trace':'ayar & iz','watch cast':'watch yayını','Watch cast':'Watch yayını','Roast this coffee again':'Bu kahveyi tekrar kavur','Roast new coffee':'Yeni kahve kavur','reset all values':'tüm değerleri sıfırla','crack log':'çatlak kaydı','gain trace (cracks marked)':'gain izi (çatlaklar işaretli)',
 'signal purity':'sinyal saflığı','high':'yüksek','medium':'orta','low':'düşük','cracks / 30s':'çatlak / 30 sn','vs reference':'referansa göre',
 'Record raw audio (WAV, pre-filter)':'Ham sesi kaydet (WAV, filtre öncesi)',
-'Start listening':'BAŞLAT','Teach it your voice':'Sesini öğret','Stop':'Durdur','Drop':'Drop','New session':'Yeni seans','Sample pulled':'Numune çekildi','Pull a sample':'Numune çek',
+'Start listening':'Dinlemeye başla','Teach it your voice':'Sesini öğret','Stop':'Durdur','Drop':'Drop','New session':'Yeni seans','Sample pulled':'Numune çekildi','Pull a sample':'Numune çek',
 'Save session (.zip)':'Seansı kaydet (.zip)','Batch card (PNG)':'Parti kartı (PNG)',
 'Load session (.zip / .csv)':'Seans yükle (.zip / .csv)','Export maps':'Haritaları dışa aktar','Import maps':'Haritaları içe aktar',
 'Map this coffee (save color)':'Bu kahveyi eşle (rengi kaydet)','Bin':'Aralık','Trigger ×':'Tetik ×','High-pass':'Yüksek geçiren','Refresh':'Yenile',
