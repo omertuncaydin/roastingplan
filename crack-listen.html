@@ -189,7 +189,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-28d</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-28e</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -599,7 +599,7 @@ async function start(remote){
   updateSD(); drawTimeline(); updateGauge();
   setState('st-live');
   const bcue=((badgeMap()[badgeKey()]||{}).cue||'').trim();   // recipe cue: no modal (his order 2026-07-18); it rides the status line here and the watch note line remotely
-  running=true; RCEDIT=false; try{ renderRcRow(); }catch(e){} try{ renderStyleChips(); }catch(e){} $('btn').textContent=tt('Drop'); $('btn').className='stop';   // live: recipe editor + style chips fold shut, only the slim line speaks
+  running=true; RCEDIT=false; STAGEGAS=rcGasCue(); try{ renderRcRow(); }catch(e){} try{ renderStyleChips(); }catch(e){} try{ renderStageStrip(); }catch(e){} $('btn').textContent=tt('Drop'); $('btn').className='stop';   // live: recipe editor + style chips fold shut, only the slim line speaks
   STATUSBASE=tt('Listening. Calibrating background for ~2s, keep it running steady.'); CUEON=!!bcue;
   $('status').textContent=STATUSBASE+(bcue?(' · '+fcCueWrap(bcue,LANG==='tr').replace(/</g,'&lt;')):'');
   loop();
@@ -966,18 +966,24 @@ function saveSession(){
 }
 
 // the roast's named FC phases (Omer's thesis: every roast gets phase names, then you control by reference)
-let STAGENOWTXT='';
+let STAGENOWTXT=''; let STAGEGAS='';
+function rcGasCue(){ try{ const r9=rcGet((cName.value||'').trim().toLowerCase());
+  if(r9&&r9.gas){ const L8=r9.gasAt&&RCLOC[r9.gasAt]; return r9.gas+(L8?(' '+L8[LANG==='tr'?0:1]):''); } }catch(e){} return ''; }
 function renderStageStrip(){ const el=$('stageStrip'); if(!el) return;
   const sn=$('stageNow');   // v27c: the storm's crown line: current STAGE + DEV, biggest thing on the live screen (his mockup verdict)
   if(sn){ let txt='';
-    if(running&&document.body.classList.contains('st-live')&&LASTSTAGES&&LASTSTAGES.length){
+    const live9=running&&document.body.classList.contains('st-live');
+    if(live9&&LASTSTAGES&&LASTSTAGES.length){
       const a0s=LASTSTAGES[0][1], dev=Math.max(0,(performance.now()-startT)/1000-a0s);
       txt=LASTSTAGES[LASTSTAGES.length-1][0]+'|DEV '+fmtT(dev); }
+    else if(live9&&STAGEGAS){ txt='GAZ|'+STAGEGAS; }   // before any cracks: the actionable info is the gas cut (his order 2026-07-28)
     if(txt!==STAGENOWTXT){ STAGENOWTXT=txt;   // cache: RAF cadence, but the DOM only moves when the second ticks
       if(!txt){ sn.style.display='none'; sn.innerHTML=''; }
       else{ const pp=txt.split('|');
         sn.style.display='block';
-        sn.innerHTML='<span style="font-size:46px;font-weight:900;letter-spacing:1px;color:var(--ink)">'+pp[0]+'</span><span style="font-size:18px;font-weight:800;color:var(--muted);margin-left:12px">'+pp[1]+'</span>'; } } }
+        sn.innerHTML=(pp[0]==='GAZ')
+          ?('<span style="font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--dim);margin-right:10px">'+(LANG==='tr'?'GAZ':'GAS')+'</span><span style="font-size:24px;font-weight:900;color:var(--gold)">'+pp[1]+'</span>')
+          :('<span style="font-size:46px;font-weight:900;letter-spacing:1px;color:var(--ink)">'+pp[0]+'</span><span style="font-size:18px;font-weight:800;color:var(--muted);margin-left:12px">'+pp[1]+'</span>'); } } }
   if(!LASTSTAGES||!LASTSTAGES.length||!document.body.classList.contains('st-done')){ el.textContent=''; return; }
   const a0=LASTSTAGES[0][1];
   el.textContent=LASTSTAGES.map(sg=>sg[0]+' '+fmtT(Math.max(0,sg[1]-a0))).join(' · ')+' (DEV)';
@@ -1553,10 +1559,10 @@ function renderStyleChips(){ const el=$('styleChips'); if(!el) return;
   const names=new Set(Object.keys(m).filter(x=>x!=='__house')); try{ CLOUDNAMES.forEach(n=>names.add(n)); }catch(e){}
   names.add(k);
   const b=beanOf(k), sibs=[...names].filter(n=>beanOf(n)===b).sort();
-  if(sibs.length<2&&!styleOf(k)){ el.style.display='none'; el.innerHTML=''; return; }   // single-style bean: nothing shown, nothing asked (his rule)
+  const only9=(sibs.length<2&&!styleOf(k));   // single-style bean: just the quiet dashed add-door (the ONE door now, editor duplicate removed)
   el.style.display='flex';
-  el.innerHTML=sibs.map(n=>{ const s9=styleOf(n)||(LANG==='tr'?'düz':'plain'), on=(n===k);
-    return '<span data-sc="'+escC(n)+'" style="cursor:pointer;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid '+(on?'var(--gold)':'var(--line)')+';color:'+(on?'var(--gold)':'var(--muted)')+';background:'+(on?'#241c0e':'none')+'">'+escC(s9)+'</span>'; }).join('')
+  el.innerHTML=(only9?'':sibs.map(n=>{ const s9=styleOf(n)||(LANG==='tr'?'düz':'plain'), on=(n===k);
+    return '<span data-sc="'+escC(n)+'" style="cursor:pointer;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid '+(on?'var(--gold)':'var(--line)')+';color:'+(on?'var(--gold)':'var(--muted)')+';background:'+(on?'#241c0e':'none')+'">'+escC(s9)+'</span>'; }).join(''))
     +'<span data-scadd="1" style="cursor:pointer;font-size:11.5px;padding:4px 10px;border-radius:999px;border:1px dashed var(--line);color:var(--dim)">'+(LANG==='tr'?'+ alternatif':'+ alternative')+'</span>';
   el.querySelectorAll('[data-sc]').forEach(x=>x.onpointerdown=ev=>{ ev.preventDefault(); pickCoffee(x.dataset.sc); });
   const ad=el.querySelector('[data-scadd]'); if(ad) ad.onpointerdown=ev=>{ ev.preventDefault(); const b2=beanOf((cName.value||'').trim().toLowerCase()); editName(); cName.value=b2+' ('; try{ cName.setSelectionRange(cName.value.length,cName.value.length); }catch(e){} };
@@ -2129,7 +2135,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-28d';
+const APPVER='v2026-07-28e';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2370,6 +2376,7 @@ function tgtNudge(proj){
 // never advice: gas stays a cinnamon decision (doctrine), the stage is the drop call. On screen it is ONE slim
 // line ("DROP B1 · -P2 tarçında"); the editor folds under it, never a modal, locked while roasting.
 const RC_LADDER=['A0','A1','B0','B1','C0','C1'];
+const RCLOC={tu:['dönüşte','at turnaround'],ye:['sararmada','at yellowing'],ci:['tarçında','at cinnamon'],a0:["A0'da",'at A0']};
 let RCEDIT=false;
 // ---- GUIDE RECIPES BRIDGE (Omer 2026-07-28): the Guide's account recipes are the AUTHORITY (his first-built
 // system; cloud table 'recipes' + same-origin cache cnRecipes_cache). The listener READS them; manual edits here
@@ -2404,6 +2411,8 @@ async function gdUpsert(k){ try{ if(!SB) return; const u=await cloudUser(); if(!
   if(man.gasAt&&man.gasAt!=='ci') return;   // Guide grammar has no slot for non-cinnamon cuts: stays local, never corrupts a row
   const eq=localStorage.getItem('bsEquip')||'Bullet'; const field=(eq==='Bullet')?'bullet':'hsr';
   const r=gdMatch(k);
+  const exact9=r&&((r.name||'').toLowerCase()===k);
+  if(styleOf(k)&&!exact9){ toast(LANG==='tr'?'Alternatif kavrum yerelde saklandı · buluta yalnızca ana kahve yazılır':'Alternative kept local · only the main coffee syncs'); return; }   // his rule: the ORIGINAL coffee owns its row; a variant never inserts a new row nor rewrites the parent
   const s2=gdCompose(r?((field==='bullet'?r.bullet:r.hsr)||''):'', man.st, man.gas);
   if(!s2) return;
   let res;
@@ -2475,11 +2484,6 @@ function rcTableOpen(){ try{ gdPull(); }catch(e){}
    +'<button style="margin-top:10px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(LANG==='tr'?'Kapat':'Close')+'</button>';
   $('modal').style.display='flex';
   $('modalBox').querySelectorAll('[data-rn]').forEach(x=>x.onclick=()=>{ cName.value=x.dataset.rn; try{ localStorage.setItem('bsCoffee',x.dataset.rn); }catch(e){} $('modal').style.display='none'; RCEDIT=true; renderNameplate(); try{ renderNameChips(); }catch(e){} renderRcRow(); }); }
-function rcAltGo(){ const el2=$('rcAltIn'); const s9=(el2&&el2.value||'').trim().toLowerCase(); if(!s9) return;
-  const nk=beanOf(rcKey())+' ('+s9+')';   // 'bean (style)': the app understands same coffee, different roasting
-  cName.value=nk; try{ localStorage.setItem('bsCoffee',nk); }catch(e){}
-  RCEDIT=true; renderNameplate(); try{ renderNameChips(); }catch(e){} renderRcRow();
-  toast(LANG==='tr'?('Alternatif kavrum: '+nk+' · evre ve gaz gir'):('Alternative roast: '+nk+' · set stage and gas')); }
 function rcWnGo(){ const c9=(($('rcWnC')||{}).value||''), n9=((($('rcWnN')||{}).value||'')+'').trim().toUpperCase().slice(0,5);
   if(!c9&&!n9) return; rcSetWn(rcKey(), (c9&&n9)?(c9+'-'+n9):(c9||n9));
   toast(LANG==='tr'?'Saat çipi adı kaydedildi':'Watch chip name saved'); }
@@ -2501,13 +2505,13 @@ function renderRcRow(){ const el=$('rcRow'); if(!el) return; const k=rcKey();
     +(function(){ const at0=(cur&&cur.gasAt)||'', selv=at0||'ci';   // cinnamon is the default cut point (his order; legacy text migrates in rcNorm)
       const OPT=[['','—','—'],['tu','dönüşte','at turnaround'],['ye','sararmada','at yellowing'],['ci','tarçında','at cinnamon'],['a0',"A0'da",'at A0']];
       return '<div style="display:flex;gap:6px;width:96%;margin:0 auto 2px">'
-      +'<select id="rcStage" onchange="rcSet(rcKey(),this.value,undefined,undefined,1)" style="flex:0.9;min-width:0;background:var(--panel2);color:'+(st0?'var(--gold)':'var(--ink)')+';border:1px solid '+(st0?'var(--gold)':'var(--line)')+';border-radius:8px;padding:8px 6px;font-size:16px;font-weight:700">'
+      +'<select id="rcStage" onchange="rcSet(rcKey(),this.value,undefined,undefined,1)" style="flex:1.15;min-width:0;background:var(--panel2);color:'+(st0?'var(--gold)':'var(--ink)')+';border:1px solid '+(st0?'var(--gold)':'var(--line)')+';border-radius:8px;padding:8px 6px;font-size:16px;font-weight:700">'
       +[['',(LANG==='tr'?'drop —':'drop —')]].concat(RC_LADDER.map(s3=>[s3,'DROP '+s3])).map(o8=>'<option value="'+o8[0]+'"'+(st0===o8[0]?' selected':'')+'>'+o8[1]+'</option>').join('')
       +'</select>'
-      +'<select id="rcGasAt" onchange="rcSet(rcKey(),undefined,undefined,this.value,1)" style="flex:1.15;min-width:0;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 6px;font-size:16px">'
+      +'<select id="rcGasAt" onchange="rcSet(rcKey(),undefined,undefined,this.value,1)" style="flex:1.1;min-width:0;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 6px;font-size:16px">'
       +OPT.map(o9=>'<option value="'+o9[0]+'"'+(selv===o9[0]?' selected':'')+'>'+(LANG==='tr'?o9[1]:o9[2])+'</option>').join('')
       +'</select>'
-      +'<input id="rcGasIn" value="'+gas0.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" placeholder="-P2" onchange="rcSet(rcKey(),undefined,this.value.trim(),($(&quot;rcGasAt&quot;)||{}).value||undefined,1)" style="flex:0.85;min-width:0;padding:8px 6px;font-size:16px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-align:center">'
+      +'<input id="rcGasIn" value="'+gas0.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" placeholder="-P2" onchange="rcSet(rcKey(),undefined,this.value.trim(),($(&quot;rcGasAt&quot;)||{}).value||undefined,1)" style="flex:0.75;min-width:0;padding:8px 6px;font-size:16px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-align:center">'
       +'</div>'; })()
     +'<div style="display:flex;justify-content:center;gap:8px;margin-top:6px">'
     +'<button onclick="rcDone()" style="padding:4px 14px;font-size:12px;border-radius:8px;border:1px solid var(--accent2);background:none;color:var(--accent2)">'+(LANG==='tr'?'tamam':'done')+'</button>'
@@ -2515,10 +2519,8 @@ function renderRcRow(){ const el=$('rcRow'); if(!el) return; const k=rcKey();
     +'</div>'
     +(function(){ const gsrc=(cur&&cur.src==='guide');
       return '<div style="margin-top:7px;font-size:10px;color:var(--dim);text-align:center">'+(gsrc?(LANG==='tr'?'kaynak: Guide reçetesi (hesap)':'source: Guide recipe (account)'):'')+'</div>'; })()
-    +'<div style="display:flex;gap:6px;justify-content:center;margin-top:7px;width:92%;margin-left:auto;margin-right:auto">'
-    +'<input id="rcAltIn" maxlength="18" placeholder="'+(LANG==='tr'?'alternatif: bittersweet':'alternative: bittersweet')+'" style="flex:1.4;min-width:0;padding:6px 8px;font-size:16px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)">'
-    +'<button onclick="rcAltGo()" style="flex:1;padding:4px 8px;font-size:11.5px;border-radius:8px;border:1px dashed var(--gold);background:none;color:var(--gold)">'+(LANG==='tr'?'+ alternatif kavrum':'+ alternative roast')+'</button>'
-    +'</div>'
+    +'<div style="height:1px;background:var(--line);width:92%;margin:9px auto"></div>'
+    +'<div style="font-size:10px;letter-spacing:.08em;color:var(--dim);text-align:center;margin:2px 0 4px">'+(LANG==='tr'?'SAAT ÇİPİ · BU KAHVENİN KİMLİĞİ':"WATCH CHIP · THIS COFFEE'S IDENTITY")+'</div>'
     +(function(){ const wn0=((rcGetMan(k)||{}).wn||''); const wc0=wn0.indexOf('-')>0?wn0.slice(0,wn0.indexOf('-')):'' , wn5=wn0.indexOf('-')>0?wn0.slice(wn0.indexOf('-')+1):wn0;
       const CTRY=[['',(LANG==='tr'?'ülke':'country')],['ET','Etiyopya'],['KE','Kenya'],['CO','Kolombiya'],['BR','Brezilya'],['GT','Guatemala'],['CR','Kosta Rika'],['PA','Panama'],['RW','Ruanda'],['BI','Burundi'],['YE','Yemen'],['ID','Endonezya'],['IN','Hindistan'],['VN','Vietnam'],['HN','Honduras'],['SV','El Salvador'],['NI','Nikaragua'],['PE','Peru'],['BO','Bolivya'],['MX','Meksika'],['TZ','Tanzanya'],['UG','Uganda'],['PG','Papua YG'],['EC','Ekvador'],['DO','Dominik'],['JM','Jamaika'],['US','ABD/Hawaii'],['TL','Timor'],['CN','Çin'],['TH','Tayland'],['MM','Myanmar'],['TR','Türkiye']];
       return '<div style="display:flex;gap:6px;justify-content:center;align-items:center;margin-top:6px;width:92%;margin-left:auto;margin-right:auto">'
@@ -2533,9 +2535,8 @@ function renderRcRow(){ const el=$('rcRow'); if(!el) return; const k=rcKey();
 function rcLineUI(){ const el=$('rcLine'); if(!el) return; const k=rcKey(); const cur=k?rcGet(k):null;
   if(!cur){ el.style.display='none'; el.textContent=''; return; }
   el.style.display='block';
-  const LOC={tu:['dönüşte','at turnaround'],ye:['sararmada','at yellowing'],ci:['tarçında','at cinnamon'],a0:["A0'da",'at A0']};
   const parts=[]; if(cur.st) parts.push('DROP '+cur.st);
-  if(cur.gas){ const L9=cur.gasAt&&LOC[cur.gasAt]; parts.push(L9?(cur.gas+' '+L9[LANG==='tr'?0:1]):cur.gas); }
+  if(cur.gas){ const L9=cur.gasAt&&RCLOC[cur.gasAt]; parts.push(L9?(cur.gas+' '+L9[LANG==='tr'?0:1]):cur.gas); }
   if(cur.dev) parts.push(cur.dev+'s'); if(cur.ag) parts.push(cur.ag+'A');   // the Guide recipe's full grammar at a glance
   el.textContent=parts.join(' · '); }
 function rcBeep(){ try{ if(!AC||!AC.createOscillator||AC.state!=='running') return; BEEPUNTIL=performance.now()+1600;
