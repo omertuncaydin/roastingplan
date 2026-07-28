@@ -30,7 +30,7 @@ input[type=file]{width:100%;color:var(--muted);font-size:13px}
 </head>
 <body>
 <h1>Stage Ear</h1>
-<div class="sub">kulağın kalibre eder, matematik formülleşir · v2026-07-25b · <button onclick="location.href=location.pathname+'?v='+Date.now()" style="background:none;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer">Yenile</button></div>
+<div class="sub">kulağın kalibre eder, matematik formülleşir · v2026-07-28a · <button onclick="location.href=location.pathname+'?v='+Date.now()" style="background:none;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer">Yenile</button></div>
 
 <div class="card" id="dz" style="border:1.5px dashed var(--line);transition:border-color .15s">
   <div class="lbl">1 · seans zip'lerini yükle · SÜRÜKLE-BIRAK</div>
@@ -38,6 +38,11 @@ input[type=file]{width:100%;color:var(--muted);font-size:13px}
   <div class="hint" style="margin-top:4px">Zip'leri bu kutuya bırakabilirsin.</div>
   <div id="files"></div>
   <div class="hint">Her zip'ten WAV çıkarılır; 15 sn'lik kesitler 15 sn adımlarla kesilir ve KARIŞIK sırada çalınır. Bağlam gösterilmez: sadece kulağın. Çatlak içermeyen kesitler artık ATLANIR: sadece fırtına penceresi çalınır.</div>
+  <div style="display:flex;gap:8px;margin-top:10px">
+    <button onclick="modeSet('ex')" id="mEx" style="flex:1;border:1.5px solid var(--gold);color:var(--gold);background:#241c0e">15 sn KESİT</button>
+    <button onclick="modeSet('ca')" id="mCa" style="flex:1;border:1px solid var(--line)">ÇATLAK ANALİZİ</button>
+  </div>
+  <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-top:8px;cursor:pointer"><input type="checkbox" id="caOnlyFp" checked style="width:17px;height:17px;accent-color:var(--gold)"> analizde: uygulamanın ELEDİKLERİ + %25 kontrol karışımı (kapatırsan tüm çatlaklar)</label>
 </div>
 
 <div class="card" id="playCard" style="display:none">
@@ -64,6 +69,22 @@ input[type=file]{width:100%;color:var(--muted);font-size:13px}
   </div>
 </div>
 
+<div class="card" id="caCard" style="display:none">
+  <div class="lbl">Ç · ÇATLAK ANALİZİ · tek tek dinle, sen karar ver</div>
+  <div id="caProg" style="font-size:26px;font-weight:800;text-align:center;margin:6px 0 2px">0 / 0</div>
+  <div id="caMeta" style="font-size:12px;color:var(--dim);text-align:center;margin-bottom:6px">·</div>
+  <button id="caPlayBtn" onclick="caPlay()" style="width:100%;background:var(--accent2);font-size:17px;padding:16px">&#9654; ÇAL (2 sn)</button>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button onclick="caTag(1)" style="flex:1;background:#14301f;border:1.5px solid var(--accent2);color:var(--ink);font-weight:800">ÇATLAK</button>
+    <button onclick="caTag(0)" style="flex:1;background:#2a1512;border:1.5px solid var(--warn);color:var(--ink);font-weight:800">DEĞİL</button>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button onclick="caTag(-1)" style="flex:1;font-size:12.5px;font-weight:600">emin değilim · atla</button>
+    <button onclick="caUndo()" style="flex:1;font-size:12.5px;font-weight:600">geri al</button>
+  </div>
+  <div class="hint">KÖR mod: uygulamanın verdiği karar (geçerli/elenmiş) sana gösterilmez; dışa aktarım ikisini yan yana koyar. Dedektörün eğitim seti buradan doğar.</div>
+</div>
+
 <div class="card">
   <div class="lbl">3 · etiketler</div>
   <div id="stat">kayıtlı etiket: 0</div>
@@ -85,17 +106,17 @@ function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.rand
 // Raw detector rows from the session CSV ('# id,t,...'), fp-flagged INCLUDED:
 // detector false-positive zones are exactly the hard negatives worth his ear.
 function seCrkParse(txt){
-  try{ const ts=[];
+  try{ const ts=[], rows=[];
     for(const line of txt.split('\n')){
       if(!line.startsWith('# ')) continue;
       if(/^# (meta|sample|stages|cracks:)/.test(line)) continue;
       const p=line.slice(2).split(',');
-      if(p.length>=3 && /^\s*\d+\s*$/.test(p[0])){ const v=parseFloat(p[1]); if(isFinite(v)) ts.push(v); }
+      if(p.length>=3 && /^\s*\d+\s*$/.test(p[0])){ const v=parseFloat(p[1]); if(isFinite(v)){ ts.push(v); rows.push({t:v, g:parseFloat(p[2])||0, fp:(p.length>3&&p[3]==='1')?1:0}); } }
     }
-    ts.sort((a,b)=>a-b);
-    if(!ts.length) return {n:0, ts:[], a0:null, last:null};
+    ts.sort((a,b)=>a-b); rows.sort((a,b)=>a.t-b.t);
+    if(!ts.length) return {n:0, ts:[], rows:[], a0:null, last:null};
     let a0=ts[0]; for(let i=0;i<ts.length-2;i++){ if(ts[i+2]-ts[i]<=30){ a0=ts[i]; break; } }   // confirmed-A0 on raw rows: a stray FP cannot drag the bridge
-    return {n:ts.length, ts, a0, last:ts[ts.length-1]};
+    return {n:ts.length, ts, rows, a0, last:ts[ts.length-1]};
   }catch(e){ return null; }
 }
 function seServe(t, crk){
@@ -204,8 +225,48 @@ function undo(){
   const fi=FILES.findIndex(f=>f.name===l.file);
   if(fi>=0){ QUEUE.unshift({fi, t:l.t}); CUR=0; drawCur(); }
 }
+// ---- ÇATLAK ANALİZİ (his order 2026-07-28): every detector row becomes a 2s blind clip; his verdict = the tuning corpus ----
+let MODE='ex', CAQ=[], CACUR=-1;
+let CAV=[]; try{ CAV=JSON.parse(localStorage.getItem('seCrkVerdicts')||'[]'); }catch(e){}
+function modeSet(m){ MODE=m;
+  $('mEx').style.cssText='flex:1;'+(m==='ex'?'border:1.5px solid var(--gold);color:var(--gold);background:#241c0e':'border:1px solid var(--line)');
+  $('mCa').style.cssText='flex:1;'+(m==='ca'?'border:1.5px solid var(--gold);color:var(--gold);background:#241c0e':'border:1px solid var(--line)');
+  $('playCard').style.display=(m==='ex'&&QUEUE.length)?'block':'none';
+  $('caCard').style.display=(m==='ca')?'block':'none';
+  if(m==='ca') caBuild(); }
+function caBuild(){
+  CAQ=[];
+  const done=new Set(CAV.map(v=>v.file+'@'+v.t));
+  FILES.forEach((f,fi)=>{ if(f.err||!f.crk||!f.crk.rows||!f.crk.rows.length) return;
+    let rows=f.crk.rows;
+    if($('caOnlyFp')&&$('caOnlyFp').checked){
+      const fps=rows.filter(r=>r.fp), oks=shuffle(rows.filter(r=>!r.fp).slice()).slice(0,Math.ceil(rows.filter(r=>r.fp).length*0.25)+3);
+      rows=fps.concat(oks); }
+    rows.forEach(r=>{ if(!done.has(f.name+'@'+r.t)) CAQ.push({fi, t:r.t, g:r.g, fp:r.fp}); }); });
+  shuffle(CAQ); CACUR=CAQ.length?0:-1; caDraw(); }
+function caDraw(){
+  $('caProg').textContent=CAV.length+' karar · kalan '+CAQ.length;
+  $('caMeta').textContent=(CACUR>=0?'klip hazır · çal ve karar ver':'kuyruk boş');
+  $('caPlayBtn').disabled=CACUR<0; }
+async function caPlay(){
+  if(CACUR<0) return; const q=CAQ[CACUR];
+  const buf=await ensureDecoded(q.fi);
+  if(SRC){ try{ SRC.stop(); }catch(e){} }
+  if(AC.state==='suspended') await AC.resume();
+  SRC=AC.createBufferSource(); SRC.buffer=buf;
+  if($('flt').checked){ const hp=AC.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=8000; hp.Q.value=0.7; SRC.connect(hp); hp.connect(AC.destination); }
+  else SRC.connect(AC.destination);
+  SRC.start(0, Math.max(0,q.t-0.7), 2.0); }
+function caTag(v){
+  if(CACUR<0) return; const q=CAQ[CACUR];
+  if(v>=0) CAV.push({file:FILES[q.fi].name, t:+q.t.toFixed(2), g:q.g, fp_app:q.fp, verdict:(v?'crack':'not'), at:new Date().toISOString()});
+  localStorage.setItem('seCrkVerdicts', JSON.stringify(CAV));
+  CAQ.splice(CACUR,1); if(!CAQ.length) CACUR=-1; else if(CACUR>=CAQ.length) CACUR=0;
+  caDraw(); if(CACUR>=0) caPlay(); }
+function caUndo(){ if(!CAV.length) return; const v=CAV.pop(); localStorage.setItem('seCrkVerdicts', JSON.stringify(CAV));
+  const fi=FILES.findIndex(f=>f.name===v.file); if(fi>=0){ CAQ.unshift({fi,t:v.t,g:v.g,fp:v.fp_app}); CACUR=0; } caDraw(); }
 function expJson(){
-  const out={exported:new Date().toISOString(), step:EX_STEP, dur:EX_DUR, protocol:{marks:true, repeats:REP_FRAC, boundary:'full-weight-soft', filter:'a0bridge30-v1'},
+  const out={exported:new Date().toISOString(), step:EX_STEP, dur:EX_DUR, protocol:{marks:true, repeats:REP_FRAC, boundary:'full-weight-soft', filter:'a0bridge30-v1', crack_verdicts:'blind-2s-v1'}, crack_verdicts:CAV,
     files:FILES.map(f=>({name:f.name, dur:f.dur||null, err:f.err||null, suspicious:!!f.sus, crk_n:(f.crk?f.crk.n:null), crk_a0:(f.crk&&f.crk.a0!=null?+f.crk.a0.toFixed(2):null), crk_last:(f.crk&&f.crk.last!=null?+f.crk.last.toFixed(2):null)})), labels:LABELS};
   const b=new Blob([JSON.stringify(out,null,1)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(b);
