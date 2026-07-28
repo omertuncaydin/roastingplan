@@ -189,7 +189,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-28c</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-28d</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -291,7 +291,7 @@ body.st-setup #btn{display:none}
   <button id="enrollBtn" onclick="enrollToggle()">Teach it your voice</button>
   <button id="sampleBtn" onclick="markSample()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><ellipse cx="7.4" cy="7.4" rx="4" ry="5.2" transform="rotate(-45 7.4 7.4)" fill="#e6c14b"/><line x1="10.6" y1="10.6" x2="20" y2="20" stroke="#e6c14b" stroke-width="2.6" stroke-linecap="round"/></svg><span id="sampLbl">Sample pulled</span><b id="sampN"></b></button>
   <button class="go" id="btn" onclick="toggle()">Start listening</button>
-  <div id="cfgLine"><span onclick="uniOpen(false)">evren</span> · <span onclick="cfgWatch()">watch</span> · <span onclick="cfgToggle()">ayarlar <span id="cfgCar">▾</span></span></div>
+  <div id="cfgLine"><span onclick="rcTableOpen()">reçeteler</span> · <span onclick="uniOpen(false)">evren</span> · <span onclick="cfgWatch()">watch</span> · <span onclick="cfgToggle()">ayarlar <span id="cfgCar">▾</span></span></div>
   <div class="err" id="err"></div>
   <button id="labChip" onclick="labToggle()">lab mode</button>
   <div id="a0Banner" onclick="markSample()"></div>
@@ -2129,7 +2129,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-28c';
+const APPVER='v2026-07-28d';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2391,6 +2391,35 @@ function gdMatch(k){ if(!k) return null; const L=gdRecipes().filter(r=>r&&r.acti
   let r=L.find(x=>(x.name||'').toLowerCase()===k); if(r) return r;
   r=L.find(x=>(x.match||[]).some(a2=>(a2||'').toLowerCase()===k)); if(r) return r;
   return L.find(x=>(x.match||[]).some(a2=>a2&&k.includes((a2||'').toLowerCase())))||null; }
+function gdCompose(s2,st,gas){ s2=(s2&&s2!=='-')?(s2+''):'';   // in-place token replace ONLY: FC time / dev / ag are never touched (Opus R3)
+  if(st){ s2=/\b[ABC][0-2]\b/.test(s2)?s2.replace(/\b[ABC][0-2]\b/,st):(s2?(s2+' / '+st):st); }
+  if(gas){ s2=/[+-]?P\d+/i.test(s2)?s2.replace(/[+-]?P\d+/i,gas):(gas+(s2?(' / '+s2):'')); }
+  return s2; }
+function gdCachePatch(d){ try{ if(!d) return; const a=gdRecipes(); const i=a.findIndex(x=>x.id===d.id);
+  const row={id:d.id,name:d.name,match:d.match||[],bullet:d.bullet||'',hsr:d.hsr||'-',note:d.note||'',active:!!d.active,sortOrder:(d.sort_order==null?null:d.sort_order)};
+  if(i>=0) a[i]=row; else a.push(row);
+  localStorage.setItem('cnRecipes_cache',JSON.stringify(a)); GDPULLED=Date.now(); }catch(e){} }   // patched jar + pull suppressed = no sync loop
+async function gdUpsert(k){ try{ if(!SB) return; const u=await cloudUser(); if(!u) return;
+  const man=rcGetMan(k); if(!man||(!man.st&&!man.gas)) return;
+  if(man.gasAt&&man.gasAt!=='ci') return;   // Guide grammar has no slot for non-cinnamon cuts: stays local, never corrupts a row
+  const eq=localStorage.getItem('bsEquip')||'Bullet'; const field=(eq==='Bullet')?'bullet':'hsr';
+  const r=gdMatch(k);
+  const s2=gdCompose(r?((field==='bullet'?r.bullet:r.hsr)||''):'', man.st, man.gas);
+  if(!s2) return;
+  let res;
+  if(r&&r.id){ const payload={}; payload[field]=s2;   // ONLY the current machine's string; note/match/active/sort/other machine untouched
+    res=await SB.from('recipes').update(payload).eq('id',r.id).select().single(); }
+  else { const nm=(cName.value||'').trim()||k;
+    res=await SB.from('recipes').insert({name:nm,match:[k],bullet:(field==='bullet')?s2:'-',hsr:(field==='hsr')?s2:'-',note:'',active:true,sort_order:null}).select().single(); }
+  if(res.error) throw res.error;
+  gdCachePatch(res.data);
+  { const m2=rcMap(); const cur9=m2[k];   // cloud accepted: local override retires (wn stays); the Guide row is the single voice again
+    if(cur9){ const v9={}; if(cur9.wn) v9.wn=cur9.wn; if(v9.wn) m2[k]=v9; else delete m2[k];
+      localStorage.setItem('bsRc',JSON.stringify(m2));
+      const cm9=calMap(); if(cm9[k]){ if(m2[k]) cm9[k].rc=m2[k]; else delete cm9[k].rc; cm9[k].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm9)); } } }
+  try{ renderRcRow(); }catch(e2){}
+  toast(LANG==='tr'?'Reçete buluta yazıldı (Guide ile ortak)':'Recipe saved to cloud (shared with Guide)');
+ }catch(e){ try{ toast(LANG==='tr'?'Reçete buluta yazılamadı · yerelde tutuldu':'Recipe not saved to cloud · kept locally'); }catch(e3){} } }
 function gdRc(k){ const r=gdMatch(k); if(!r) return null;
   const eq=localStorage.getItem('bsEquip')||'Bullet';
   const s2=((eq==='Bullet'?r.bullet:r.hsr)||r.bullet||'');
@@ -2405,15 +2434,18 @@ function labToggle(){ document.body.classList.toggle('lab'); try{ localStorage.s
 try{ if(localStorage.getItem('bsLab')==='1') document.body.classList.add('lab'); }catch(e){} try{ labChipUI(); }catch(e){} try{ setTimeout(()=>{ try{ gdPull(); }catch(e2){} },1500); }catch(e){}
 function rcKey(){ return (cName.value||'').trim().toLowerCase(); }
 function rcMap(){ try{ return JSON.parse(localStorage.getItem('bsRc')||'{}'); }catch(e){ return {}; } }
-function rcNorm(v){ if(!v) return null; if(typeof v==='string') return {st:v,gas:'',gasAt:'',wn:''};   // v27a stored bare stage strings
-  const st0=(v.st||'')+'', gas0=(v.gas||'')+'', at0=(v.gasAt||'')+'', wn0=(v.wn||'')+'';
-  if(!st0&&!gas0&&!wn0) return null; return {st:st0,gas:gas0,gasAt:at0,wn:wn0}; }
+function rcNorm(v){ if(!v) return null; if(typeof v==='string') v={st:v};   // v27a stored bare stage strings
+  const st0=(v.st||'')+'', wn0=(v.wn||'')+''; let g=(v.gas||'')+'', at=(v.gasAt||'')+'';
+  if(g){ const M9=[[/\s*(tarçında|at cinnamon)$/i,'ci'],[/\s*(sararmada|at yellow(ing)?)$/i,'ye'],[/\s*(dönüşte|at turn(around)?)$/i,'tu'],[/\s*(a0'?da|at a0)$/i,'a0']];
+    for(const mm of M9){ if(mm[0].test(g)){ g=g.replace(mm[0],'').trim(); if(!at) at=mm[1]; break; } }   // '-P2 tarçında' -> gas '-P2', at ci: stored word-free, double-locative impossible
+    if(g&&!at) at='ci'; }   // cinnamon default (his order)
+  if(!st0&&!g&&!wn0) return null; return {st:st0,gas:g,gasAt:at,wn:wn0}; }
 function rcGetMan(k){ if(!k) return null; const c2=calMap()[k]; if(c2&&c2.rc){ const n2=rcNorm(c2.rc); if(n2) return n2; }
   return rcNorm(rcMap()[k]||null); }
 function rcGet(k){ const man=rcGetMan(k); if(man&&(man.st||man.gas)) return man;   // manual override wins
   const g=gdRc(k); if(g){ if(man&&man.wn) g.wn=man.wn; return g; }   // else the Guide account recipe speaks
   return man; }
-function rcSet(k,st,gas,gasAt){ if(!k) return; const cur=rcGet(k)||{st:'',gas:'',gasAt:'',wn:''};   // undefined = keep that part
+function rcSet(k,st,gas,gasAt,quiet){ if(!k) return; const cur=rcGet(k)||{st:'',gas:'',gasAt:'',wn:''};   // undefined = keep that part; quiet=1: don't rebuild the open editor (native wheel survives)
   const nst=(st===undefined)?cur.st:((st||'')+'');
   const ngas=(gas===undefined)?cur.gas:((gas||'')+'');
   const nat=(gasAt===undefined)?(cur.gasAt||''):((gasAt||'')+'');
@@ -2422,15 +2454,27 @@ function rcSet(k,st,gas,gasAt){ if(!k) return; const cur=rcGet(k)||{st:'',gas:''
   if(nst||ngas||nwn){ const v2={}; if(nst) v2.st=nst; if(ngas) v2.gas=ngas; if(nat) v2.gasAt=nat; if(nwn) v2.wn=nwn; m2[k]=v2; } else delete m2[k];
   localStorage.setItem('bsRc',JSON.stringify(m2));
   const cm=calMap(); if(cm[k]){ if(m2[k]) cm[k].rc=m2[k]; else delete cm[k].rc; cm[k].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm)); }
-  renderRcRow(); }
+  if(quiet){ try{ rcLineUI(); }catch(e){} } else renderRcRow(); }
 function rcTog(s2){ const c3=rcGet(rcKey()); return (c3&&c3.st===s2)?'':s2; }
 function rcSetWn(k,wn){ if(!k) return; const cur=rcGetMan(k)||{}; const m2=rcMap();
   const v2={}; if(cur.st) v2.st=cur.st; if(cur.gas) v2.gas=cur.gas; if(cur.gasAt) v2.gasAt=cur.gasAt;
-  const w9=(wn||'').trim().toUpperCase().slice(0,12); if(w9) v2.wn=w9;
+  let w8=(wn||'').trim().toUpperCase(); const i8=w8.indexOf('-');
+  w8=(i8>0)?(w8.slice(0,i8)+'-'+w8.slice(i8+1).replace(/-/g,'').slice(0,5)):w8.slice(0,5);   // name part hard-capped at 5 on EVERY path; legacy self-heals on next save
+  const w9=w8; if(w9) v2.wn=w9;
   if(v2.st||v2.gas||v2.wn) m2[k]=v2; else delete m2[k];
   localStorage.setItem('bsRc',JSON.stringify(m2));
   const cm=calMap(); if(cm[k]){ if(m2[k]) cm[k].rc=m2[k]; else delete cm[k].rc; cm[k].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm)); }
   renderRcRow(); }
+function rcTableOpen(){ try{ gdPull(); }catch(e){}
+  const L=gdRecipes().filter(r=>r&&r.active!==false).sort((a,b)=>((a.sortOrder==null?9e9:a.sortOrder)-(b.sortOrder==null?9e9:b.sortOrder)));
+  const eq=localStorage.getItem('bsEquip')||'Bullet';
+  $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:17px">'+(LANG==='tr'?'Reçeteler':'Recipes')+'</h1>'
+   +'<div class="hint" style="font-size:11px;margin-bottom:4px">'+(LANG==='tr'?'Hesap reçeteleri (Guide ile ortak) · satıra dokun, burada düzenle':'Account recipes (shared with the Guide) · tap a row to edit here')+'</div>'
+   +(L.length?L.map(r=>'<div data-rn="'+escC(r.name)+'" style="padding:9px 4px;border-top:1px solid var(--line);cursor:pointer;font-size:13.5px">'+escC(r.name)+' <span style="color:var(--dim);font-size:11.5px">· '+escC(((eq==='Bullet'?r.bullet:r.hsr)||'-'))+'</span></div>').join(''):('<div class="hint">'+(LANG==='tr'?'Reçete yok':'No recipes yet')+'</div>'))
+   +'<div style="margin-top:10px;text-align:center"><a href="roast-guide.html" target="_blank" rel="noopener" style="color:var(--gold);font-size:12px;font-weight:700">Guide &#8599; · '+(LANG==='tr'?'sıra/takma ad/not':'order/alias/note')+'</a></div>'
+   +'<button style="margin-top:10px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(LANG==='tr'?'Kapat':'Close')+'</button>';
+  $('modal').style.display='flex';
+  $('modalBox').querySelectorAll('[data-rn]').forEach(x=>x.onclick=()=>{ cName.value=x.dataset.rn; try{ localStorage.setItem('bsCoffee',x.dataset.rn); }catch(e){} $('modal').style.display='none'; RCEDIT=true; renderNameplate(); try{ renderNameChips(); }catch(e){} renderRcRow(); }); }
 function rcAltGo(){ const el2=$('rcAltIn'); const s9=(el2&&el2.value||'').trim().toLowerCase(); if(!s9) return;
   const nk=beanOf(rcKey())+' ('+s9+')';   // 'bean (style)': the app understands same coffee, different roasting
   cName.value=nk; try{ localStorage.setItem('bsCoffee',nk); }catch(e){}
@@ -2439,7 +2483,7 @@ function rcAltGo(){ const el2=$('rcAltIn'); const s9=(el2&&el2.value||'').trim()
 function rcWnGo(){ const c9=(($('rcWnC')||{}).value||''), n9=((($('rcWnN')||{}).value||'')+'').trim().toUpperCase().slice(0,5);
   if(!c9&&!n9) return; rcSetWn(rcKey(), (c9&&n9)?(c9+'-'+n9):(c9||n9));
   toast(LANG==='tr'?'Saat çipi adı kaydedildi':'Watch chip name saved'); }
-function rcDone(){ const el2=$('rcGasIn'), s2=$('rcGasAt'); if(el2) rcSet(rcKey(),undefined,el2.value.trim(),(s2&&s2.value)||undefined); RCEDIT=false; renderRcRow(); }
+function rcDone(){ const el2=$('rcGasIn'), s2=$('rcGasAt'); if(el2) rcSet(rcKey(),undefined,el2.value.trim(),(s2&&s2.value)||undefined); RCEDIT=false; renderRcRow(); try{ gdUpsert(rcKey()); }catch(e){} }   // done = the ONLY write-bridge trigger (tap-happy editing never hammers SB)
 function rcEditToggle(){ if(running) return; RCEDIT=!RCEDIT; if(RCEDIT){ try{ gdPull(); }catch(e){} } renderRcRow(); }
 function rcEval(rc,stages){ const st0=rc&&rc.st; if(!st0) return '';
   const has=s2=>stages&&stages.some(sg=>sg[0]===s2);
@@ -2454,14 +2498,16 @@ function renderRcRow(){ const el=$('rcRow'); if(!el) return; const k=rcKey();
     rcLineUI(); return; }
   const st0=(cur&&cur.st)||'', gas0=(cur&&cur.gas)||'';
   el.innerHTML='<div style="border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--panel2);text-align:center">'
-    +RC_LADDER.map(s2=>'<button onclick="rcSet(rcKey(),rcTog(&quot;'+s2+'&quot;))" style="padding:5px 9px;font-size:12.5px;margin:2px;border-radius:8px;border:1px solid '+(st0===s2?'var(--gold)':'var(--line)')+';background:'+(st0===s2?'#3a2f14':'none')+';color:'+(st0===s2?'var(--gold)':'var(--ink)')+'">'+s2+'</button>').join('')
-    +(function(){ const at0=(cur&&cur.gasAt)||'', selv=at0||(gas0?'':'ci');   // legacy free-text keeps '—' so it is never re-locativized (Opus trap 2)
+    +(function(){ const at0=(cur&&cur.gasAt)||'', selv=at0||'ci';   // cinnamon is the default cut point (his order; legacy text migrates in rcNorm)
       const OPT=[['','—','—'],['tu','dönüşte','at turnaround'],['ye','sararmada','at yellowing'],['ci','tarçında','at cinnamon'],['a0',"A0'da",'at A0']];
-      return '<div style="display:flex;gap:6px;justify-content:center;margin:7px auto 2px;width:92%">'
-      +'<select id="rcGasAt" onchange="rcSet(rcKey(),undefined,undefined,this.value)" style="flex:1.2;min-width:0;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:16px">'
+      return '<div style="display:flex;gap:6px;width:96%;margin:0 auto 2px">'
+      +'<select id="rcStage" onchange="rcSet(rcKey(),this.value,undefined,undefined,1)" style="flex:0.9;min-width:0;background:var(--panel2);color:'+(st0?'var(--gold)':'var(--ink)')+';border:1px solid '+(st0?'var(--gold)':'var(--line)')+';border-radius:8px;padding:8px 6px;font-size:16px;font-weight:700">'
+      +[['',(LANG==='tr'?'drop —':'drop —')]].concat(RC_LADDER.map(s3=>[s3,'DROP '+s3])).map(o8=>'<option value="'+o8[0]+'"'+(st0===o8[0]?' selected':'')+'>'+o8[1]+'</option>').join('')
+      +'</select>'
+      +'<select id="rcGasAt" onchange="rcSet(rcKey(),undefined,undefined,this.value,1)" style="flex:1.15;min-width:0;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 6px;font-size:16px">'
       +OPT.map(o9=>'<option value="'+o9[0]+'"'+(selv===o9[0]?' selected':'')+'>'+(LANG==='tr'?o9[1]:o9[2])+'</option>').join('')
       +'</select>'
-      +'<input id="rcGasIn" value="'+gas0.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" placeholder="-P2" onchange="rcSet(rcKey(),undefined,this.value.trim(),($(&quot;rcGasAt&quot;)||{}).value||undefined)" style="flex:1;min-width:0;padding:6px 8px;font-size:16px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-align:center">'
+      +'<input id="rcGasIn" value="'+gas0.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" placeholder="-P2" onchange="rcSet(rcKey(),undefined,this.value.trim(),($(&quot;rcGasAt&quot;)||{}).value||undefined,1)" style="flex:0.85;min-width:0;padding:8px 6px;font-size:16px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-align:center">'
       +'</div>'; })()
     +'<div style="display:flex;justify-content:center;gap:8px;margin-top:6px">'
     +'<button onclick="rcDone()" style="padding:4px 14px;font-size:12px;border-radius:8px;border:1px solid var(--accent2);background:none;color:var(--accent2)">'+(LANG==='tr'?'tamam':'done')+'</button>'
@@ -2479,7 +2525,7 @@ function renderRcRow(){ const el=$('rcRow'); if(!el) return; const k=rcKey();
       +'<select id="rcWnC" style="flex:1.2;min-width:0;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 6px;font-size:16px">'
       +CTRY.map(c2=>'<option value="'+c2[0]+'"'+(wc0===c2[0]?' selected':'')+'>'+c2[1]+(c2[0]?(' ('+c2[0]+')'):'')+'</option>').join('')
       +'</select>'
-      +'<input id="rcWnN" maxlength="5" value="'+wn5.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" placeholder="YIRGA" style="flex:0.9;min-width:0;padding:6px 8px;font-size:16px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-transform:uppercase;text-align:center">'
+      +'<input id="rcWnN" maxlength="5" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,&quot;&quot;).slice(0,5)" value="'+wn5.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" placeholder="YIRGA" style="flex:0.9;min-width:0;padding:6px 8px;font-size:16px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-transform:uppercase;text-align:center">'
       +'<button onclick="rcWnGo()" style="flex:0.9;padding:4px 8px;font-size:11px;border-radius:8px;border:1px solid var(--line);background:none;color:var(--muted)">'+(LANG==='tr'?'saat çipi':'watch chip')+(wn0?(' ✓'):'')+'</button>'
       +'</div>'; })()
     +'</div>';
