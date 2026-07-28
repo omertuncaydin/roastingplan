@@ -189,7 +189,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-28e</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-28f</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -532,6 +532,7 @@ function wcCmdSub(on){ try{ if(!SB) return;
 try{ const agI=$('mAgG'); if(agI) agI.addEventListener('change',()=>{ try{ if(WCON&&!running&&WCFIN&&String(agI.value).trim()){ WCFIN.ag=1; wcTablePut(WCFIN); } }catch(e){} }); }catch(e){}   // entering ground Agtron updates the watch's fin row: the wrist knows the homework is done
 try{ WCON=localStorage.getItem('bsWatchCast')==='1'; const wt=$('wcTog'); if(wt){ wt.checked=WCON; if(WCON) wcToggle(true); } }catch(e){}
 setInterval(()=>{ try{ if(!running) return;
+  try{ renderStageStrip(); }catch(e9){}   // v28f: the pre-crack GAZ cue expires on the clock even before drawTimeline has cracks to run on
   if(CUEON&&LASTSTAGES&&LASTSTAGES.length){ CUEON=false; $('status').textContent=STATUSBASE; }
   if(performance.now()-LASTBC>1500){ LASTBC=performance.now();
     try{ BCLIVE=BCLIVE||new BroadcastChannel('cnLive');
@@ -684,7 +685,8 @@ function stop(){
     if(!$('mProc').value&&lm.proc) $('mProc').value=lm.proc;
     if(!$('mMoist').value&&lm.moist) $('mMoist').value=lm.moist;
     if(!$('mAw').value&&lm.aw) $('mAw').value=lm.aw;
-    if(!$('mTarget').value&&lm.target) $('mTarget').value=lm.target; }
+    if(!$('mTarget').value&&lm.target) $('mTarget').value=lm.target;
+    if(!$('mTarget').value){ const rr9=rcGet((cName.value||'').trim().toLowerCase()); if(rr9&&rr9.ag) $('mTarget').value=rr9.ag; } }   // v28f: the recipe's goal Agtron never needs retyping
   queueSamples();   // sample pulls ride to the Guide's Cup section (deduped)
   // TWO-PULL CALIBRATION: an unmapped bean must not leave this screen without seeing why mapping matters
   try{ const tpk=(cName.value||'').trim().toLowerCase(), tp=$('twoPull');
@@ -975,8 +977,8 @@ function renderStageStrip(){ const el=$('stageStrip'); if(!el) return;
     const live9=running&&document.body.classList.contains('st-live');
     if(live9&&LASTSTAGES&&LASTSTAGES.length){
       const a0s=LASTSTAGES[0][1], dev=Math.max(0,(performance.now()-startT)/1000-a0s);
-      txt=LASTSTAGES[LASTSTAGES.length-1][0]+'|DEV '+fmtT(dev); }
-    else if(live9&&STAGEGAS){ txt='GAZ|'+STAGEGAS; }   // before any cracks: the actionable info is the gas cut (his order 2026-07-28)
+      txt=((RCPHASE==='alarm'&&RCALSTG)?RCALSTG:LASTSTAGES[LASTSTAGES.length-1][0])+'|DEV '+fmtT(dev); }
+    else if(live9&&STAGEGAS&&((performance.now()-startT)/1000)<60){ txt='GAZ|'+STAGEGAS; }   // timely alarm: first 60s of listening (he opens near cinnamon) or until first crack, then silence
     if(txt!==STAGENOWTXT){ STAGENOWTXT=txt;   // cache: RAF cadence, but the DOM only moves when the second ticks
       if(!txt){ sn.style.display='none'; sn.innerHTML=''; }
       else{ const pp=txt.split('|');
@@ -2135,7 +2137,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-28e';
+const APPVER='v2026-07-28f';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2534,6 +2536,7 @@ function renderRcRow(){ const el=$('rcRow'); if(!el) return; const k=rcKey();
   rcLineUI(); }
 function rcLineUI(){ const el=$('rcLine'); if(!el) return; const k=rcKey(); const cur=k?rcGet(k):null;
   if(!cur){ el.style.display='none'; el.textContent=''; return; }
+  if(running){ if(cur.st){ el.style.display='block'; el.textContent='DROP '+cur.st; } else { el.style.display='none'; el.textContent=''; } return; }   // v28f: in the storm only the drop call speaks; gas already had its timely moment
   el.style.display='block';
   const parts=[]; if(cur.st) parts.push('DROP '+cur.st);
   if(cur.gas){ const L9=cur.gasAt&&RCLOC[cur.gasAt]; parts.push(L9?(cur.gas+' '+L9[LANG==='tr'?0:1]):cur.gas); }
@@ -2544,7 +2547,9 @@ function rcBeep(){ try{ if(!AC||!AC.createOscillator||AC.state!=='running') retu
   const o=AC.createOscillator(); o.type='sine'; o.frequency.value=988; o.connect(g); const t0=AC.currentTime;
   for(let i=0;i<4;i++){ const a=t0+i*0.19; g.gain.setValueAtTime(0,a); g.gain.linearRampToValueAtTime(0.3,a+0.015); g.gain.setValueAtTime(0.3,a+0.1); g.gain.linearRampToValueAtTime(0,a+0.12); }
   o.start(t0); o.stop(t0+0.85); o.onended=()=>{ try{ o.disconnect(); g.disconnect(); }catch(e){} }; }catch(e){} }
+let RCALSTG='';
 function rcUI(level,st){ try{ document.body.classList.toggle('rc-alarm',level===2); }catch(e){}   // v28a: the stage crown goes red with the banner
+  RCALSTG=(level===2&&st)?st:'';   // v28f: while the DROP alarm is latched, the alarm OWNS the crown (witness flap stays in the record, off the face)
   const bn=$('rcBanner'); if(!bn) return;
   if(!level){ bn.style.display='none'; bn.classList.remove('tgnow'); return; }
   bn.style.display='block';
