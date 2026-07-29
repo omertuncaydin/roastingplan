@@ -39,6 +39,12 @@ a.card:hover{border-color:var(--accent)}
 .card .en{font-size:13px;color:var(--muted);line-height:1.5;display:block;margin-top:2px}
 a.card.quiet{background:none;border-color:var(--line);opacity:.9}
 a.card.quiet .t{font-size:17px}
+.betatag{font-size:10px;font-weight:800;letter-spacing:.08em;color:#1a1410;background:var(--gold);border-radius:9px;padding:2px 8px}
+.beta{border:1px solid var(--gold);border-radius:14px;padding:12px 14px;margin:0 0 14px;font-size:13px;line-height:1.55}
+.beta .bt{font-weight:800;color:var(--gold);margin-bottom:6px}
+.beta .bt .en{display:block;font-weight:600;font-size:12px;color:var(--muted)}
+.beta .btr{color:var(--ink);opacity:.92;margin-top:7px;font-size:12.5px}
+.beta .btr .en{display:block;margin-top:2px;color:var(--muted);font-size:12px}
 a.card.soon{cursor:default}
 a.card.soon:hover{border-color:var(--line)}
 .soontag{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:12px;padding:2px 9px}
@@ -53,7 +59,7 @@ a.card.soon:hover{border-color:var(--line)}
 <div class="wrap">
   <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Apps</span></div>
   <div class="pills">
-    <span class="hpill" id="ver">v2026-07-17a</span>
+    <span class="hpill" id="ver">v2026-07-29a</span>
     <span class="hpill chip" onclick="location.href=location.pathname+'?v='+Date.now()">Refresh</span>
   </div>
 
@@ -68,8 +74,16 @@ a.card.soon:hover{border-color:var(--line)}
 
   <div class="divider"></div>
 
+  <div class="beta">
+    <div class="bt">2026-07-29 &middot; Crack Listener BETA yayında! <span class="en">Crack Listener BETA is live!</span></div>
+    <div class="btr">Beta ücretsiz: test et, zorla, istersen günlük kavrumlarını onunla yönet. Dinleme, evre çağrıları, drop alarmı ve renk öngörüsü telefonunda çalışır. Prob yok, ek donanım yok.
+      <span class="en">The beta is free: test it, push it, even run your daily roasts with it. Listening, stage calls, drop alarms and color projection all on your phone. No probes, no extra hardware.</span></div>
+    <div class="btr">Tam sürüm hafıza katmanını ekler: kahve bulutu (haritalar, reçeteler, kayıtlar her cihazda) &middot; watch cast (tablet ya da Apple Watch; numune ve drop bileğinden) &middot; Guide'ı besleyen kavrum geçmişi &middot; Kurucu Roaster: ilk 100 hesap ömür boyu yıllık 149$, numaralı, 41'i alındı; Kavurma sınıfına katılana 12 ay tam sürüm dahil.
+      <span class="en">The full version adds the memory layer: coffee cloud on every device &middot; watch cast with sample and drop from the wrist &middot; roast history feeding the Guide &middot; Founding Roaster: first 100 accounts lock $149/yr for life, numbered, 41 taken; any Roasting class includes 12 months.</span></div>
+  </div>
+
   <a class="card" href="/crack-listen">
-    <div class="t">Crack Listener <span class="arw">&#8599;</span></div>
+    <div class="t">Crack Listener <span class="betatag">BETA</span> <span class="arw">&#8599;</span></div>
     <div class="tr">telefonun kavurmayı dinler, evreleri adlandırır, rengi öngörür</div>
     <span class="en">your phone listens to the roast, names the stages, projects color</span>
   </a>
@@ -100,8 +114,8 @@ a.card.soon:hover{border-color:var(--line)}
 
   <div class="divider"></div>
 
-  <a class="card quiet" href="https://coffeenutz.net/grupal">
-    <div class="t">Grup-Al <span class="arw">&#8599;</span></div>
+  <a class="card quiet soon" href="#">
+    <div class="t">Grup-Al <span class="soontag">yakında &middot; soon</span></div>
     <div class="tr">kolektif kavurma günü partileri</div>
     <span class="en">collective roast-day lots</span>
   </a>
