@@ -189,7 +189,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-28g</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-29a</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1087,7 +1087,7 @@ const INFO={
  sens:['Trigger threshold','A crack counts only when a 1 ms burst is this many times louder than the rolling background floor. LOWER catches more (more sensitive, more noise too); HIGHER is stricter. Start low (3-5) by the machine and raise only until scoop taps and clanks stop registering.'],
  hp:['High-pass','Everything below this frequency is cut before detection: drum rumble, fan, motor hum. Raise it until the background floor stops riding the roar; lower it if real cracks arrive thin. The raw WAV is recorded before this filter, so recordings are never affected.'],
  bin:['Bin width','Bar width of the timeline histogram. Each bar is the share of all cracks that fell in that time slot. Small bins show texture, large bins show shape. Display only; it changes no detection math.'],
- tl:['Session timeline, the whole story','Gold ticks on the floor: every valid crack. Thick green with the soft fill: the smoothed crack rate, the bell. Grey dashed: the GHOST of your mapped reference roast, raced live, with the lap chip telling you how far ahead or behind you are. The gold floor edge is DEV progress from A0. The window centers the crack activity and snaps to standard sizes (top-right badge).<br><br>The gain stages ride the bell:<br>&bull; <b>A0</b> · the literal first crack (confirmed by followers, a lone pop cannot claim it)<br>&bull; <b>A1</b> · the acceleration point: steepest sustained rise of the envelope<br>&bull; <b>B0</b> · the deceleration knee: rise still climbing but bending toward the crown<br>&bull; <b>B1</b> · the crown (appears once the fall is real)<br>&bull; <b>C0</b> · the confirmed decline: live once the bell has fallen for 20% of the FC span (the reference span when mapped, estimated from this roast\'s own rise when not), settling at the B1-C1 midpoint when C1 is known<br>&bull; <b>C1</b> · the definite last crack, earned only by OBSERVED silence: 10s minimum, longer for slow roasts (3x the recent crack gap). A roast stopped before that ends with a <b>DROP</b> chip at the stop moment instead: nothing is invented beyond the evidence<br><br>Right-side markers settle as the data does; thresholds are provisional until labeled sessions calibrate them.'],
+ tl:['Session timeline, the whole story','Gold ticks on the floor: every valid crack. Thick green with the soft fill: the smoothed crack rate, the bell. Grey dashed: the GHOST of your mapped reference roast, raced live, with the lap chip telling you how far ahead or behind you are. The gold floor edge is DEV progress from A0. The window centers the crack activity and snaps to standard sizes (top-right badge).<br><br>The gain stages ride the bell:<br>&bull; <b>A0</b> · the literal first crack (confirmed by followers, a lone pop cannot claim it)<br>&bull; <b>A1</b> · the acceleration point: steepest sustained rise of the envelope<br>&bull; <b>B0</b> · the deceleration knee: rise still climbing but bending toward the crown<br>&bull; <b>B1</b> · the crown (appears once the fall is real)<br>&bull; <b>C0</b> · the confirmed decline: the instant the fall is witnessed by three independent checks (trend, persistence, rhythm); midpoint fallback only when silence ends a roast unwitnessed<br>&bull; <b>C1</b> · the definite last crack, earned only by OBSERVED silence: 10s minimum, longer for slow roasts (3x the recent crack gap). A roast stopped before that ends with a <b>DROP</b> chip at the stop moment instead: nothing is invented beyond the evidence<br><br>Right-side markers settle as the data does; thresholds are provisional until labeled sessions calibrate them.'],
  cap:['Session capture, the whole story','While listening, the app keeps three things: the raw microphone audio as WAV (tapped BEFORE the high-pass, ~5.5 MB per minute), a per-frame CSV (time, loudness, floor, ratio, your slider settings, every crack), and your crack log edits: ticked rows travel as labeled false positives, swiped rows are removed. Fill the roast record (coffee, batch, Agtron) after Stop and it rides inside the CSV header; the Agtron ground value is also what unlocks the color gauge for that coffee. Save session packs WAV + CSV into one zip. Everything lives only in this page’s memory: close or reload without saving and the session is gone.'],
  a0ag:['A0 Agtron, color at first crack','This is where the gauge STARTS at first crack: the ground color of THIS coffee at the very first pop, before any development. Leave it blank and the app falls back to your most recent measured A0 from any of your coffees (125 only until your first measurement). An error here shifts a light-drop projection almost one-to-one at the start, then fades to nothing by the color you mapped at drop: the darker you take the roast, the less A0 matters. No sacrifice roast needed: two-pull calibration measures it inside a normal roast. When the A0 alarm fires, pull a small sample with the trier and keep roasting to your drop; grind and read BOTH the A0 pull and the drop, enter them, tap Map. It rides with the map from then on.']
 };
@@ -2137,7 +2137,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-28g';
+const APPVER='v2026-07-29a';
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2908,28 +2908,38 @@ function drawTimeline(){
     if(pastPeak){ PHPEAK=peak; PHPEAKT=t0+(peakI+0.5)*bin; PHASE=Math.max(PHASE,Math.min(1,phRaw)); }
     else if(PHASE>0.5 && PHPEAK>0 && (t0+(peakI+0.5)*bin)>PHPEAKT+bin && peak>PHPEAK*1.05){ PHASE=Math.min(0.5,phRaw); PHPEAK=0; PHREV=nowS; PPFLIPT=null; }   // fake peak withdrawn: B1 witness withdrawn too
     else PHASE=Math.max(PHASE,Math.min(1,phRaw));
-    // TAGGER v1 (2026-07-25 · fit on HIS Stage Ear labels, LORO median: A1 2.5s, B0 1.8s):
-    // A1 = live crack-burst onset + 6.5s recognition offset (his 'frequent' moment; pull-collision fallback).
-    // B0 = the bell TOP instant (his B0 calls land there: 194.6/196.4 · 204.9/201.5 · 149.7/148.5).
-    // B1 = the witnessed-decline instant (PPFLIPT); his B1 marks trail the top by seconds.
-    // Old steepest-rise A1 and curvature-knee B0 RETIRED. C0/C1 rules unchanged below.
+    // TAGGER v2 · LADDER REALIGNED (Omer's doctrine 2026-07-28: "B1 IS the peak; B0 is BEFORE it, climbing;
+    // C0 requires the witnessed decline"; Opus 17-session re-fit confirmed his own blind marks sit on the top = B1):
+    // A1 = burst onset + 6.5s (unchanged). B0 = the climb's KNEE, live, NO witness: first instant after the
+    // steepest post-A1 rise where slope falls to 0.5x its max while the bell holds >=50% of its running max
+    // (K=0.5, gated >= A1). B1 = the bell TOP (asserted when the peak is witnessed; was shipped as 'B0').
+    // C0 = the witnessed-decline instant PPFLIPT (was shipped as 'B1'). C1 = earned silence, unchanged.
     const tPeak=t0+(peakI+0.5)*bin;
     const peakKnown=peakInterior&&(pastPeak||quiet>EP.QUIET_B1);
     const tA1=a1Call(v.map(c=>c.t),a0t,tPeak,peakKnown,SAMPLES);
+    let tKnee=null;
+    if(tA1!=null){ const iA1=Math.max(1,Math.floor((tA1-t0)/bin));
+      let iMx=-1,mxd=0;
+      for(let i=iA1;i<=nowBin&&i<=lb;i++){ const d9=sm[i]-(sm[i-1]||0); if(d9>mxd){ mxd=d9; iMx=i; } }
+      if(iMx>0&&mxd>0){ let rmax=0;
+        for(let i=iMx;i<=nowBin&&i<=lb;i++){ rmax=Math.max(rmax,sm[i]);
+          const d9=sm[i]-(sm[i-1]||0);
+          if(d9<=0.5*mxd&&sm[i]>=0.5*rmax){ tKnee=t0+(i+0.5)*bin; break; } } }
+      if(tKnee!=null&&tKnee<tA1) tKnee=tA1; }   // B0 never precedes A1 (Opus caveat: clears all 3 fit violations)
     const stages=[['A0',a0t]];
     if(tA1!=null&&(!peakKnown||tA1<=tPeak)) stages.push(['A1',tA1]);
-    if(peakKnown) stages.push(['B0',tPeak]);
-    if(peakKnown&&PPFLIPT!=null) stages.push(['B1',PPFLIPT]);
-    const tB1=tPeak;   // C0/C1 anchor = the crown instant, exactly as before
+    if(tKnee!=null&&(!peakKnown||tKnee<=tPeak)) stages.push(['B0',tKnee]);
+    if(peakKnown) stages.push(['B1',tPeak]);
+    if(peakKnown&&PPFLIPT!=null) stages.push(['C0',PPFLIPT]);
+    const tB1=tPeak;   // C-side anchor = the crown instant
     // C1 must be EARNED by observed silence: at least 10s, adaptive to roast speed (3x recent median gap).
     const rg=v.slice(-11).map(c=>c.t); let medGap=2;
     if(rg.length>3){ const dif=[]; for(let i=1;i<rg.length;i++) dif.push(rg[i]-rg[i-1]); dif.sort((a,b)=>a-b); medGap=dif[Math.floor(dif.length/2)]; }
     const silThr=Math.max(5,3*medGap);   // 5s floor (Omer 2026-07-07), scaled up for slow roasts by the recent gap
-    if(peakInterior&&quiet>=silThr){ const tC1=v[v.length-1].t; stages.push(['C0',(tB1+tC1)/2]); stages.push(['C1',tC1]); }
-    else{ if(peakInterior&&pastPeak){ const calS=calFor()||calMap()['__house'];
-        const fcEst=(calS&&calS.devSpan)?calS.devSpan:((tB1-a0t)*2.6);
-        if(nowS-tB1>=0.2*fcEst) stages.push(['C0',tB1+0.2*fcEst]); }
-      if(!running&&STOPT!=null) stages.push(['DROP',Math.min(STOPT,t0+span-0.5)]); }   // the cut, marked honestly
+    if(peakInterior&&quiet>=silThr){ const tC1=v[v.length-1].t;
+      if(!(peakKnown&&PPFLIPT!=null)) stages.push(['C0',(tB1+tC1)/2]);   // C0 fallback only when the decline was never witnessed
+      stages.push(['C1',tC1]); }
+    else{ if(!running&&STOPT!=null) stages.push(['DROP',Math.min(STOPT,t0+span-0.5)]); }   // the cut, marked honestly; the 20% C0 estimate retired (C0 = PPFLIPT now)
     // hard monotonic clamp: the sequence A0<=A1<=B0<=B1<=C0<=C1 is a law, not a suggestion
     for(let i=1;i<stages.length;i++) if(stages[i][1]<stages[i-1][1]) stages[i][1]=stages[i-1][1];
     LASTSTAGES=stages.map(sg=>[sg[0],sg[1]]); renderStageStrip(); a0Nudge(); rcNudge();
