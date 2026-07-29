@@ -40,6 +40,7 @@ a.issue:active{border-color:var(--accent)}
 .pill.live{border-color:var(--accent);color:var(--ink);background:rgba(201,138,60,.14)}
 .issue.soon{opacity:.85}
 .issue.next{opacity:.42;pointer-events:none}
+.issue.mid{opacity:.62;pointer-events:none}
 .note{margin-top:22px;color:var(--muted);font-size:13.5px}
 .note .en{display:block;font-size:12.5px;opacity:.75}
 .foot{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
@@ -51,7 +52,7 @@ a.issue:active{border-color:var(--accent)}
   <header>
     <div class="kicker">kavurma &middot; bilim &middot; zanaat</div>
     <h1><span class="cn">CoffeeNutz</span> Zine</h1>
-    <div class="hrow"><span class="hpill" id="ver">v2026-07-29a</span><span class="hpill">sezonluk &middot; seasonal</span></div>
+    <div class="hrow"><span class="hpill" id="ver">v2026-07-29b</span><span class="hpill">sezonluk &middot; seasonal</span></div>
     <p class="sub">Kavurmahaneden çıkan sezonluk dergi. Her sayı bu raftan PDF olarak açılır.
       <span class="en">The seasonal zine from the roastery. Every issue opens from this shelf as a PDF.</span></p>
   </header>
@@ -68,16 +69,17 @@ a.issue:active{border-color:var(--accent)}
 <script>
 var ISSUES=[
   {no:'01',tr:'İlk Çatlak',en:'First Crack',season:'Yaz &middot; Summer 2026',pdf:'zine-01.pdf',live:false},
-  {no:'02',tr:'Q Sezonu',en:'The Q Season',season:'Sonbahar &middot; Autumn 2026',pdf:'',live:false,next:true}
+  {no:'SE',noLabel:'Özel Sayı &middot; Special Edition',tr:'Dinleme Sayısı',en:'The Listening Issue',season:'2026',pdf:'',live:false,next:true,mid:true,pill:'sırada &middot; next'},
+  {no:'02',tr:'Q Sezonu',en:'The Q Season',season:'Sonbahar &middot; Autumn 2026',pdf:'',live:false,next:true,pill:'sonbahar &middot; autumn'}
 ];
 var sh=document.getElementById('shelf');
 ISSUES.forEach(function(i){
   var el=document.createElement(i.live?'a':'div');
-  el.className='issue'+(i.next?' next':(i.live?'':' soon'));
+  el.className='issue'+(i.next?(i.mid?' mid':' next'):(i.live?'':' soon'));
   if(i.live){el.href=i.pdf;el.target='_blank';el.rel='noopener';}
   el.innerHTML='<div class="cover"><div class="mast">COFFEENUTZ<br>ZINE</div><div class="big">'+i.no+'</div><div class="cfoot">'+i.season+'</div></div>'+
-    '<div class="meta"><div class="no">No. '+i.no+'</div><div class="title">'+i.tr+' &middot; '+i.en+'</div><div class="season">'+i.season+'</div>'+
-    '<span class="pill'+(i.live?' live':'')+'">'+(i.next?'sırada &middot; next':(i.live?'PDF &middot; aç &middot; open':'bu hafta &middot; this week'))+'</span></div>';
+    '<div class="meta"><div class="no">'+(i.noLabel||('No. '+i.no))+'</div><div class="title">'+i.tr+' &middot; '+i.en+'</div><div class="season">'+i.season+'</div>'+
+    '<span class="pill'+(i.live?' live':'')+'">'+(i.pill||(i.next?'sırada &middot; next':(i.live?'PDF &middot; aç &middot; open':'bu hafta &middot; this week')))+'</span></div>';
   sh.appendChild(el);
 });
 </script>
