@@ -1,0 +1,85 @@
+<!doctype html>
+<!-- CoffeeNutz Zine Shelf. (c) 2026 Omer Aydin / CoffeeNutz. Every issue, one shelf, PDF on tap. -->
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CoffeeNutz Zine</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="canonical" href="https://guide.coffeenutz.net/zine">
+<meta name="description" content="CoffeeNutz Zine: sezonluk kavurma dergisi. Her sayı PDF olarak açılır. The seasonal roasting zine, every issue opens as a PDF.">
+<meta property="og:title" content="CoffeeNutz Zine">
+<meta property="og:description" content="kavurma &middot; bilim &middot; zanaat. Sezonluk dergi, her sayı PDF.">
+<meta property="og:image" content="https://guide.coffeenutz.net/og-cover.png">
+<meta property="og:type" content="website">
+<style>
+:root{--bg:#1a1410;--panel:#241c16;--accent:#c98a3c;--gold:#e6c14b;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--red:#D8453B}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.5}
+.wrap{max-width:560px;margin:0 auto;padding:28px 20px 48px}
+header h1{font-size:30px;margin:0 0 4px;letter-spacing:.3px}
+header h1 .cn{color:var(--red)}
+.kicker{color:var(--muted);font-size:13px;letter-spacing:.14em;text-transform:lowercase}
+.hrow{display:flex;align-items:center;gap:10px;margin:10px 0 6px}
+.hpill{font-size:11px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted)}
+.sub{color:var(--muted);font-size:14.5px;margin:14px 0 0}
+.sub .en{display:block;font-size:13px;opacity:.75}
+.shelf{margin-top:26px;display:flex;flex-direction:column;gap:14px}
+.issue{display:flex;gap:16px;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;text-decoration:none;color:var(--ink)}
+a.issue:active{border-color:var(--accent)}
+.cover{flex:0 0 84px;height:114px;border:1px solid var(--line);border-radius:6px;background:linear-gradient(160deg,#201812,#241c16);display:flex;flex-direction:column;justify-content:space-between;padding:8px;overflow:hidden}
+.cover .mast{font-size:7.5px;letter-spacing:.12em;color:var(--gold);font-weight:700}
+.cover .big{font-size:30px;font-weight:800;color:var(--ink);line-height:1}
+.cover .cfoot{font-size:7px;color:var(--muted);letter-spacing:.08em}
+.meta{flex:1;display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:0}
+.no{font-size:12px;color:var(--accent);letter-spacing:.1em}
+.title{font-size:18.5px;font-weight:700;line-height:1.25}
+.season{font-size:13px;color:var(--muted)}
+.pill{align-self:flex-start;margin-top:7px;font-size:11.5px;border-radius:999px;padding:3px 11px;border:1px solid var(--gold);color:var(--gold)}
+.pill.live{border-color:var(--accent);color:var(--ink);background:rgba(201,138,60,.14)}
+.issue.soon{opacity:.85}
+.issue.next{opacity:.42;pointer-events:none}
+.note{margin-top:22px;color:var(--muted);font-size:13.5px}
+.note .en{display:block;font-size:12.5px;opacity:.75}
+.foot{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+.foot a{color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">kavurma &middot; bilim &middot; zanaat</div>
+    <h1><span class="cn">CoffeeNutz</span> Zine</h1>
+    <div class="hrow"><span class="hpill" id="ver">v2026-07-29a</span><span class="hpill">sezonluk &middot; seasonal</span></div>
+    <p class="sub">Kavurmahaneden çıkan sezonluk dergi. Her sayı bu raftan PDF olarak açılır.
+      <span class="en">The seasonal zine from the roastery. Every issue opens from this shelf as a PDF.</span></p>
+  </header>
+
+  <div class="shelf" id="shelf"></div>
+
+  <p class="note">Yeni sayı çıktığında bu raf kendiliğinden uzar; adres hep aynı kalır.
+    <span class="en">New issues extend this shelf; the address never changes.</span></p>
+
+  <div class="foot">
+    <a href="https://apps.coffeenutz.net">apps.coffeenutz.net</a> &middot; @coffeenutzacademy
+  </div>
+</div>
+<script>
+var ISSUES=[
+  {no:'01',tr:'İlk Çatlak',en:'First Crack',season:'Yaz &middot; Summer 2026',pdf:'zine-01.pdf',live:false},
+  {no:'02',tr:'Q Sezonu',en:'The Q Season',season:'Sonbahar &middot; Autumn 2026',pdf:'',live:false,next:true}
+];
+var sh=document.getElementById('shelf');
+ISSUES.forEach(function(i){
+  var el=document.createElement(i.live?'a':'div');
+  el.className='issue'+(i.next?' next':(i.live?'':' soon'));
+  if(i.live){el.href=i.pdf;el.target='_blank';el.rel='noopener';}
+  el.innerHTML='<div class="cover"><div class="mast">COFFEENUTZ<br>ZINE</div><div class="big">'+i.no+'</div><div class="cfoot">'+i.season+'</div></div>'+
+    '<div class="meta"><div class="no">No. '+i.no+'</div><div class="title">'+i.tr+' &middot; '+i.en+'</div><div class="season">'+i.season+'</div>'+
+    '<span class="pill'+(i.live?' live':'')+'">'+(i.next?'sırada &middot; next':(i.live?'PDF &middot; aç &middot; open':'bu hafta &middot; this week'))+'</span></div>';
+  sh.appendChild(el);
+});
+</script>
+</body>
+</html>
