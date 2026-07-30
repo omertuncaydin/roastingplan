@@ -189,7 +189,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-29c · BETA</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-30a · BETA</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1277,7 +1277,7 @@ async function applyCode(){ const el=$('licInput'), c=((el&&el.value)||'').repla
 }
 let CLASSES=null;
 try{ fetch('classes.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{ if(j&&typeof j==='object') CLASSES=j; }).catch(()=>{}); }catch(e){}
-function foundingBanner(tr){ let msg=tr?'KURUCU ROASTER · ilk 100 hesap: ömür boyu sabit $149/yıl, numaralı.':'FOUNDING ROASTER · first 100 accounts: $149/yr locked for life, numbered.';
+function foundingBanner(tr){ let msg=tr?'KURUCU ROASTER · ilk 100 hesap: ömür boyu sabit $149/yıl, sayılı.':'FOUNDING ROASTER · first 100 accounts: $149/yr locked for life, numbered.';
   if(CLASSES&&typeof CLASSES.founding_taken==='number') msg+=(tr?(' · '+CLASSES.founding_taken+'/100 dolu'):(' · '+CLASSES.founding_taken+'/100 taken'));
   return '<div style="border:1px solid var(--gold);border-radius:10px;padding:8px 10px;margin-top:10px;font-size:11.5px;font-weight:700;color:var(--gold)">'+msg+'</div>'
     +'<div style="text-align:center;margin-top:8px"><a href="plans.html" target="_blank" rel="noopener" style="color:var(--gold);font-size:12px;font-weight:700">'+(tr?'Planlar ve Lisans \u2192':'Plans & License \u2192')+'</a></div>'; }
@@ -2137,7 +2137,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-29c';   // chip shows '· BETA'; the machine string stays clean for telemetry
+const APPVER='v2026-07-30a';   // chip shows '· BETA'; the machine string stays clean for telemetry
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
