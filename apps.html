@@ -55,13 +55,23 @@ a.card.soon:hover{border-color:var(--line)}
 .free{margin-top:14px;font-size:12.5px;color:var(--muted)}
 .free .en{display:block;color:var(--muted);opacity:.85}
 .gold{color:var(--gold)}
+.adm{display:none;position:absolute;top:8px;right:8px;gap:6px;z-index:3}
+body.admin .card{position:relative}
+body.admin .adm{display:flex}
+.adm button{background:#2e241c;border:1px solid var(--accent);color:var(--accent);border-radius:8px;font-size:13px;padding:2px 9px;cursor:pointer}
+.card.apphidden{opacity:.35;filter:grayscale(1)}
+body:not(.admin) .card.apphidden{display:none}
+#admbar{display:none;position:fixed;left:0;right:0;bottom:0;background:#241c16;border-top:1px solid var(--accent);padding:10px 14px;z-index:9;gap:8px;flex-wrap:wrap;align-items:center;font-size:12.5px}
+body.admin #admbar{display:flex}
+#admbar button{background:none;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:6px 12px;font-weight:700;font-size:12px;cursor:pointer}
+#admbar .hint{color:var(--muted)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Apps</span></div>
   <div class="pills">
-    <span class="hpill" id="ver">v2026-07-30a</span>
+    <span class="hpill" id="ver">v2026-07-31a</span>
     <span class="hpill chip" onclick="location.href=location.pathname+'?v='+Date.now()">Refresh</span>
   </div>
 
@@ -88,31 +98,31 @@ a.card.soon:hover{border-color:var(--line)}
     </div>
   </div>
 
-  <a class="card" href="https://guide.coffeenutz.net/crack-listen">
+  <a class="card" data-app="crack-listen" href="https://guide.coffeenutz.net/crack-listen">
     <div class="t">Crack Listener <span class="betatag">BETA</span> <span class="arw">&#8599;</span></div>
     <div class="tr">telefonun kavurmayı dinler, evreleri adlandırır, rengi öngörür</div>
     <span class="en">your phone listens to the roast, names the stages, projects color</span>
   </a>
 
-  <a class="card" href="https://guide.coffeenutz.net/roast-guide">
+  <a class="card" data-app="roast-guide" href="https://guide.coffeenutz.net/roast-guide">
     <div class="t">CoffeeNutz Guide <span class="arw">&#8599;</span></div>
     <div class="tr">kavurma, tadım ve analiz kokpiti</div>
     <span class="en">the roast, cup and grade cockpit</span>
   </a>
 
-  <a class="card" href="https://guide.coffeenutz.net/crack-game">
+  <a class="card" data-app="crack-game" href="https://guide.coffeenutz.net/crack-game">
     <div class="t">Agtron Challenge <span class="arw">&#8599;</span></div>
     <div class="tr">kulağın kaç Agtron? gerçek çatlak sesleriyle oyna</div>
     <span class="en">play with real crack sounds</span>
   </a>
 
-  <a class="card" href="https://guide.coffeenutz.net/roasttale">
+  <a class="card" data-app="roasttale" href="https://guide.coffeenutz.net/roasttale">
     <div class="t">RoastTale <span class="arw">&#8599;</span></div>
     <div class="tr">bir kavurma masalı</div>
     <span class="en">a coffee adventure</span>
   </a>
 
-  <a class="card" href="https://guide.coffeenutz.net/scurve-jumper">
+  <a class="card" data-app="scurve-jumper" href="https://guide.coffeenutz.net/scurve-jumper">
     <div class="t">SCurve Jumper <span class="arw">&#8599;</span></div>
     <div class="tr">oyun X'i çizer, sen ona kavurursun</div>
     <span class="en">the game paints the X, you roast to it</span>
@@ -120,13 +130,13 @@ a.card.soon:hover{border-color:var(--line)}
 
   <div class="divider"></div>
 
-  <a class="card quiet soon" href="#">
+  <a class="card quiet soon" data-app="grupal" href="#">
     <div class="t">Grup-Al <span class="soontag">yakında &middot; soon</span></div>
     <div class="tr">kolektif kavurma günü partileri</div>
     <span class="en">collective roast-day lots</span>
   </a>
 
-  <a class="card" href="https://guide.coffeenutz.net/zine">
+  <a class="card" data-app="zine" href="https://guide.coffeenutz.net/zine">
     <div class="t">CoffeeNutz Zine <span class="soontag">ilk sayı bu hafta &middot; this week</span> <span class="arw">&#8599;</span></div>
     <div class="tr">sezonluk dergi rafı, her sayı PDF</div>
     <span class="en">the seasonal shelf, every issue a PDF</span>
@@ -141,5 +151,78 @@ a.card.soon:hover{border-color:var(--line)}
   </div>
 </div>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "cc241b05cd704f42a333be3d552415e9"}'></script><!-- End Cloudflare Web Analytics -->
+
+<div id="admbar"><span class="hint">Yönetici: sıra ve görünürlük · admin: order and visibility</span><button data-adm="dl">İndir apps-config.json</button><button data-adm="cp">Kopyala</button><button data-adm="rs">Sıfırla</button><button data-adm="cl">Kapat</button></div>
+<script>
+(function(){
+var IDS=['crack-listen','roast-guide','crack-game','roasttale','scurve-jumper','grupal','zine'];
+function cards(){ return IDS.map(function(id){ return document.querySelector('[data-app="'+id+'"]'); }).filter(Boolean); }
+function currentCfg(){
+  var els=[].slice.call(document.querySelectorAll('[data-app]'));
+  return { order: els.map(function(e){return e.getAttribute('data-app');}),
+           hidden: els.filter(function(e){return e.classList.contains('apphidden');}).map(function(e){return e.getAttribute('data-app');}) };
+}
+function applyAppsConfig(cfg){
+  if(!cfg||!cfg.order) return;
+  var all={}; [].slice.call(document.querySelectorAll('[data-app]')).forEach(function(e){ all[e.getAttribute('data-app')]=e; });
+  var first=document.querySelector('[data-app]'); if(!first) return;
+  var parent=first.parentNode, anchor=document.createComment('apps-anchor');
+  parent.insertBefore(anchor, first);
+  var seq=cfg.order.filter(function(id){return all[id];});
+  Object.keys(all).forEach(function(id){ if(seq.indexOf(id)<0) seq.push(id); });
+  seq.forEach(function(id){ parent.insertBefore(all[id], anchor); });
+  parent.removeChild(anchor);
+  Object.keys(all).forEach(function(id){ all[id].classList.toggle('apphidden',(cfg.hidden||[]).indexOf(id)>=0); });
+  var div=document.querySelector('.divider:last-of-type')||document.querySelector('.divider');
+  if(div){ var firstSoon=null; seq.some(function(id){ var e=all[id]; if(e.classList.contains('soon')&&!e.classList.contains('apphidden')){ firstSoon=e; return true; } return false; });
+    if(firstSoon){ div.style.display=''; firstSoon.parentNode.insertBefore(div, firstSoon); } else { div.style.display='none'; } }
+}
+window.applyAppsConfig=applyAppsConfig;
+function boot(){
+  var draft=null; try{ draft=JSON.parse(localStorage.getItem('apps_admin_draft')||'null'); }catch(e){}
+  if(draft){ applyAppsConfig(draft); return; }
+  try{ fetch('apps-config.json?t='+Date.now()).then(function(r){ return r.ok?r.json():null; }).then(function(c){ if(c) applyAppsConfig(c); }).catch(function(){}); }catch(e){}
+}
+boot();
+/* admin: 5 taps on the version pill */
+var taps=0, t0=0;
+var ver=document.getElementById('ver');
+if(ver) ver.addEventListener('click', function(){
+  var now=Date.now(); if(now-t0>3000){ taps=0; t0=now; }
+  taps++;
+  if(taps>=5){ taps=0; enterAdmin(); }
+});
+function saveDraft(){ try{ localStorage.setItem('apps_admin_draft', JSON.stringify(currentCfg())); }catch(e){} }
+function enterAdmin(){
+  document.body.classList.add('admin');
+  [].slice.call(document.querySelectorAll('[data-app]')).forEach(function(e){
+    if(e.querySelector('.adm')) return;
+    var d=document.createElement('div'); d.className='adm';
+    d.innerHTML='<button data-mv="up">&#8593;</button><button data-mv="dn">&#8595;</button><button data-mv="eye">&#128065;</button>';
+    d.addEventListener('click', function(ev){
+      ev.preventDefault(); ev.stopPropagation();
+      var b=ev.target.closest('button'); if(!b) return;
+      var mv=b.getAttribute('data-mv');
+      if(mv==='eye'){ e.classList.toggle('apphidden'); }
+      else { var sib = mv==='up'? e.previousElementSibling : e.nextElementSibling;
+        while(sib && !sib.hasAttribute('data-app')) sib = mv==='up'? sib.previousElementSibling : sib.nextElementSibling;
+        if(sib){ if(mv==='up') e.parentNode.insertBefore(e,sib); else e.parentNode.insertBefore(sib,e); } }
+      saveDraft(); applyAppsConfig(currentCfg());
+    });
+    e.appendChild(d);
+  });
+}
+var bar=document.getElementById('admbar');
+if(bar) bar.addEventListener('click', function(ev){
+  var b=ev.target.closest('button'); if(!b) return;
+  var a=b.getAttribute('data-adm');
+  var cfg=JSON.stringify(currentCfg(),null,2);
+  if(a==='dl'){ var bl=new Blob([cfg],{type:'application/json'}); var u=URL.createObjectURL(bl); var l=document.createElement('a'); l.href=u; l.download='apps-config.json'; l.click(); URL.revokeObjectURL(u); }
+  else if(a==='cp'){ try{ navigator.clipboard.writeText(cfg); }catch(e){} }
+  else if(a==='rs'){ try{ localStorage.removeItem('apps_admin_draft'); }catch(e){} location.reload(); }
+  else if(a==='cl'){ document.body.classList.remove('admin'); }
+});
+})();
+</script>
 </body>
 </html>
