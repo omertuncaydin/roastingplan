@@ -165,6 +165,7 @@ span.lang-en{opacity:.55;font-style:italic;font-weight:400}
 .cup-table td{padding:11px 8px 11px 0;border-bottom:1px solid rgba(31,35,32,.22);vertical-align:top}
 .cup-table .c-org{font-family:var(--serif-display);font-size:14px;font-weight:500;line-height:1.15}
 .cup-table .c-proc{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);opacity:.7;margin-top:3px}
+.cup-table th:nth-child(2),.cup-table td:nth-child(2){min-width:36mm}
 .cup-table .c-notes{font-family:var(--serif-body);font-size:11px;font-style:italic;line-height:1.4}
 .cup-table td.sc{font-family:var(--mono);font-size:15px;color:var(--teal);font-weight:500;white-space:nowrap}
 .cup-foot{margin-top:12px;font-family:var(--mono);font-size:8.5px;letter-spacing:.05em;color:var(--ink);opacity:.65}
@@ -326,7 +327,6 @@ body.concept-riso .cover .c-sub .bi-tr{display:block;font-family:-apple-system,B
 body.concept-riso .cover .c-sub .bi-en{display:block;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:800;font-size:21px;color:var(--amber);margin-top:6px}
 body.concept-riso .cover .c-foot{color:var(--ink);font-weight:600;position:relative;z-index:2}
 
-
 /* ---------------- PRINT ---------------- */
 /* guest note */
 .guest-sign{margin-top:22px;font-family:var(--serif-display);font-style:italic;font-size:17px;line-height:1.4;color:var(--ink)}
@@ -342,6 +342,7 @@ body.concept-riso .cover .c-foot{color:var(--ink);font-weight:600;position:relat
   .page.grupal .starburst{animation:none !important}
   #stage{padding:0;margin:0;background:none;overflow:visible;display:block;height:auto}
   .page{box-shadow:none;margin:0;page-break-after:always;break-after:page}
+  main .page:last-child{page-break-after:auto;break-after:auto}
   .page:last-child{page-break-after:auto;break-after:auto}
 }
 
@@ -370,7 +371,7 @@ h1.sec-title .bi-en{font-size:.42em;margin-top:2px;line-height:1.12;letter-spaci
 
 <!-- ================= TOP BAR (spans the app) ================= -->
 <div id="topbar">
-  <div class="brandline">CoffeeNutz Zine Studio <span class="vercode">v2026-07-31b</span></div>
+  <div class="brandline">CoffeeNutz Zine Studio <span class="vercode">v2026-07-31c</span></div>
   <button class="btn" data-action="refresh" title="reload the studio">Refresh</button>
   <div class="issuebar"><select id="issueSel" title="current issue"></select><button class="btn" data-action="newissue">+ New</button><button class="btn" data-action="renameissue" title="rename this issue">Rename</button><button class="btn" data-action="delissue" title="delete this issue">Delete</button></div>
   <div class="stylebar"><select id="styleSel" title="style for this issue"></select><button class="btn styleplus" data-action="styleinfo" title="About styles" aria-label="about styles">+</button></div>
@@ -430,6 +431,22 @@ h1.sec-title .bi-en{font-size:.42em;margin-top:2px;line-height:1.12;letter-spaci
   </details>
 
   <details class="sec">
+    <summary><span class="num">01</span> Cover</summary>
+    <div class="fieldwrap">
+      <label class="f-label">Kicker (top line)</label>
+      <input class="f" data-path="cover.kicker" data-mono>
+      <label class="f-label">Masthead word</label>
+      <input class="f" data-path="cover.mast">
+      <label class="f-label">Cover subtitle (poem line)</label>
+      <textarea class="f" data-path="cover.sub"></textarea>
+      <label class="f-label">Bottom left note</label>
+      <input class="f" data-path="cover.footL" data-mono>
+      <label class="f-label">Bottom right note</label>
+      <input class="f" data-path="cover.footR" data-mono>
+    </div>
+  </details>
+
+  <details class="sec">
     <summary><span class="num">02</span> İçindekiler · Contents</summary>
     <div class="fieldwrap">
       <div class="f-label" style="opacity:.7">Sayfa adları bölüm başlıklarını kendiliğinden izler; burada yalnızca kısa açıklama satırları düzenlenir. · Page names follow the section titles by themselves; only the short description lines are edited here.</div>
@@ -449,22 +466,6 @@ h1.sec-title .bi-en{font-size:.42em;margin-top:2px;line-height:1.12;letter-spaci
       <input class="f" data-path="toc.grupal" placeholder="Kolektif kavurma günü · Collective roast day">
       <label class="f-label">Künye · Colophon</label>
       <input class="f" data-path="toc.colophon" placeholder="Krediler ve sırada ne var · Credits and what is next">
-    </div>
-  </details>
-
-  <details class="sec">
-    <summary><span class="num">01</span> Cover</summary>
-    <div class="fieldwrap">
-      <label class="f-label">Kicker (top line)</label>
-      <input class="f" data-path="cover.kicker" data-mono>
-      <label class="f-label">Masthead word</label>
-      <input class="f" data-path="cover.mast">
-      <label class="f-label">Cover subtitle (poem line)</label>
-      <textarea class="f" data-path="cover.sub"></textarea>
-      <label class="f-label">Bottom left note</label>
-      <input class="f" data-path="cover.footL" data-mono>
-      <label class="f-label">Bottom right note</label>
-      <input class="f" data-path="cover.footR" data-mono>
     </div>
   </details>
 
@@ -559,18 +560,7 @@ h1.sec-title .bi-en{font-size:.42em;margin-top:2px;line-height:1.12;letter-spaci
   </details>
 
   <details class="sec">
-    <summary><span class="num">08</span> Colophon</summary>
-    <div class="fieldwrap">
-      <label class="f-label">Credits block</label>
-      <textarea class="f" data-path="colophon.credits" style="min-height:90px"></textarea>
-      <label class="f-label">Contact / place block</label>
-      <textarea class="f" data-path="colophon.contact"></textarea>
-      <label class="f-label">Print note</label>
-      <textarea class="f" data-path="colophon.printnote"></textarea>
-    </div>
-  </details>
-  <details class="sec">
-    <summary><span class="num">09</span> Guest Note <button class="eye" data-action="toggleeye" data-sec="guest" title="Bu bolumu goster/gizle - Show or hide this section" aria-label="toggle visibility"><svg class="eyesvg" viewBox="0 0 24 24" aria-hidden="true"><path class="eyeball" d="M12 5C6.5 5 2.3 8.6 1 12c1.3 3.4 5.5 7 11 7s9.7-3.6 11-7C21.7 8.6 17.5 5 12 5zm0 11.5A4.5 4.5 0 1112 7a4.5 4.5 0 010 9.5zM12 9.2A2.8 2.8 0 1012 14.8 2.8 2.8 0 0012 9.2z"/><line class="slash" x1="4" y1="4" x2="20" y2="20"/></svg></button></summary>
+    <summary><span class="num">08</span> Guest Note <button class="eye" data-action="toggleeye" data-sec="guest" title="Bu bolumu goster/gizle - Show or hide this section" aria-label="toggle visibility"><svg class="eyesvg" viewBox="0 0 24 24" aria-hidden="true"><path class="eyeball" d="M12 5C6.5 5 2.3 8.6 1 12c1.3 3.4 5.5 7 11 7s9.7-3.6 11-7C21.7 8.6 17.5 5 12 5zm0 11.5A4.5 4.5 0 1112 7a4.5 4.5 0 010 9.5zM12 9.2A2.8 2.8 0 1012 14.8 2.8 2.8 0 0012 9.2z"/><line class="slash" x1="4" y1="4" x2="20" y2="20"/></svg></button></summary>
     <div class="fieldwrap">
       <label class="f-label">Section title</label>
       <input class="f" data-path="guest.title">
@@ -591,7 +581,7 @@ h1.sec-title .bi-en{font-size:.42em;margin-top:2px;line-height:1.12;letter-spaci
     </div>
   </details>
   <details class="sec" data-sec="grupal">
-    <summary><span class="num">10</span> Grup-Al <button class="eye" data-action="toggleeye" data-sec="grupal" title="Bu bolumu goster/gizle - Show or hide this section" aria-label="toggle visibility"><svg class="eyesvg" viewBox="0 0 24 24" aria-hidden="true"><path class="eyeball" d="M12 5C6.5 5 2.3 8.6 1 12c1.3 3.4 5.5 7 11 7s9.7-3.6 11-7C21.7 8.6 17.5 5 12 5zm0 11.5A4.5 4.5 0 1112 7a4.5 4.5 0 010 9.5zM12 9.2A2.8 2.8 0 1012 14.8 2.8 2.8 0 0012 9.2z"/><line class="slash" x1="4" y1="4" x2="20" y2="20"/></svg></button></summary>
+    <summary><span class="num">09</span> Grup-Al <button class="eye" data-action="toggleeye" data-sec="grupal" title="Bu bolumu goster/gizle - Show or hide this section" aria-label="toggle visibility"><svg class="eyesvg" viewBox="0 0 24 24" aria-hidden="true"><path class="eyeball" d="M12 5C6.5 5 2.3 8.6 1 12c1.3 3.4 5.5 7 11 7s9.7-3.6 11-7C21.7 8.6 17.5 5 12 5zm0 11.5A4.5 4.5 0 1112 7a4.5 4.5 0 010 9.5zM12 9.2A2.8 2.8 0 1012 14.8 2.8 2.8 0 0012 9.2z"/><line class="slash" x1="4" y1="4" x2="20" y2="20"/></svg></button></summary>
     <div class="fieldwrap">
       <label class="f-label">Kicker</label>
       <input class="f" data-path="grupal.kicker" data-mono>
@@ -612,6 +602,20 @@ h1.sec-title .bi-en{font-size:.42em;margin-top:2px;line-height:1.12;letter-spaci
       <input type="file" class="imgfile" data-target="grupal.img" accept="image/*">
       <label class="f-label">Image caption</label>
       <input class="f" data-path="grupal.cap" data-mono>
+    </div>
+  </details>
+
+    <details class="sec">
+    <summary><span class="num">10</span> Künye · Colophon</summary>
+    <div class="fieldwrap">
+      <label class="f-label">Başlık · Heading</label>
+      <input class="f" data-path="colophon.heading">
+      <label class="f-label">Credits block</label>
+      <textarea class="f" data-path="colophon.credits" style="min-height:90px"></textarea>
+      <label class="f-label">Contact / place block</label>
+      <textarea class="f" data-path="colophon.contact"></textarea>
+      <label class="f-label">Print note</label>
+      <textarea class="f" data-path="colophon.printnote"></textarea>
     </div>
   </details>
   <div style="height:40px"></div>
@@ -811,7 +815,7 @@ h1.sec-title .bi-en{font-size:.42em;margin-top:2px;line-height:1.12;letter-spaci
   <section class="page colophon">
     <div class="pad">
       <div class="co-kicker"><span class="bi-tr">Künye</span><span class="bi-en lang-en">Colophon</span></div>
-      <h1 class="sec-title"><span class="bi-tr" lang="tr">Ölçümler, yapanlar</span><span class="bi-en lang-en" lang="en">The measurements, the makers</span></h1>
+      <h1 class="sec-title" data-bind="colophon.heading" data-type="stack"></h1>
       <div class="co-wave wave" data-variant="hero" data-seed="99"></div>
       <div class="co-block" data-bind="colophon.credits" data-type="para"></div>
       <div class="co-block" data-bind="colophon.contact" data-type="para" style="font-size:12px;color:#cfc7b5"></div>
@@ -1073,6 +1077,7 @@ function ensureShape(st){
   if(!st.grupal) st.grupal=clone(SAMPLE.grupal);
   if(!st.hidden || typeof st.hidden!=='object' || Array.isArray(st.hidden)) st.hidden={};
   if(!st.toc || typeof st.toc!=='object' || Array.isArray(st.toc)) st.toc={};
+  if(st.colophon && st.colophon.heading==null) st.colophon.heading='Ölçümler, yapanlar · The measurements, the makers';
   if(st.letter){ if(st.letter.img==null) st.letter.img=''; if(st.letter.cap==null) st.letter.cap=''; }
   if(st.beyond){ if(st.beyond.img==null) st.beyond.img=''; if(st.beyond.cap==null) st.beyond.cap=''; }
   if(st.grupal){ if(st.grupal.img==null) st.grupal.img=''; if(st.grupal.cap==null) st.grupal.cap=''; }
