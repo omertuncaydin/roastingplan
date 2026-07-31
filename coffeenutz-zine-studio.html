@@ -373,7 +373,7 @@ h1.sec-title .bi-en{font-size:.42em;margin-top:2px;line-height:1.12;letter-spaci
 
 <!-- ================= TOP BAR (spans the app) ================= -->
 <div id="topbar">
-  <div class="brandline">CoffeeNutz Zine Studio <span class="vercode">v2026-07-31f</span></div>
+  <div class="brandline">CoffeeNutz Zine Studio <span class="vercode">v2026-07-31g</span></div>
   <button class="btn" data-action="refresh" title="reload the studio">Refresh</button>
   <div class="issuebar"><select id="issueSel" title="current issue"></select><button class="btn" data-action="newissue">+ New</button><button class="btn" data-action="renameissue" title="rename this issue">Rename</button><button class="btn" data-action="delissue" title="delete this issue">Delete</button></div>
   <div class="stylebar"><select id="styleSel" title="style for this issue"></select><button class="btn styleplus" data-action="styleinfo" title="About styles" aria-label="about styles">+</button></div>
@@ -1192,13 +1192,22 @@ function paras(el, text){
   blocks.forEach(function(p,i){
     var d=document.createElement('p');
     if(b>=0 && i>=b){ d.className='lang-en'+(i===b?' lang-lead':''); }
-    d.textContent=p; el.appendChild(d);
+    d.innerHTML=linkifyEsc(p); el.appendChild(d);
   });
 }
 // single-line 'TR \u00b7 EN' -> TR normal + EN in a lighter span (only when both halves non-empty)
 function bilHTML(s){ s=String(s==null?'':s); var i=s.lastIndexOf(' \u00b7 '); if(i>0 && s.slice(i+3).trim()){ return '<span lang="tr">'+esc(s.slice(0,i))+'</span><span class="lang-en" lang="en"> \u00b7 '+esc(s.slice(i+3))+'</span>'; } return '<span lang="tr">'+esc(s)+'</span>'; }
 function bilSet(el, v){ el.innerHTML = (el.dataset && el.dataset.lang==='en') ? '<span lang="en">'+esc(v)+'</span>' : bilHTML(v); }
 function esc(s){ const d=document.createElement('div'); d.textContent=s==null?'':s; return d.innerHTML; }
+function linkifyEsc(s){
+  s=esc(s);
+  return s.replace(/(?:https?:\/\/)?(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(?:\/[\w\-.\/?=&%#]*)?/g, function(m){
+    var trail=''; var mm=m.replace(/[.,;:)\]]+$/, function(t){ trail=t; return ''; });
+    if(!mm) return m;
+    var href=/^https?:\/\//.test(mm)?mm:'https://'+mm;
+    return '<a href="'+href+'" style="color:inherit;text-decoration:none">'+mm+'</a>'+trail;
+  });
+}
 function escAttr(s){ return esc(s).replace(/"/g,'&quot;'); }
 
 function renderMyths(){
