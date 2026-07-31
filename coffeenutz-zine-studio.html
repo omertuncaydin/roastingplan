@@ -371,7 +371,7 @@ h1.sec-title .bi-en{font-size:.42em;margin-top:2px;line-height:1.12;letter-spaci
 
 <!-- ================= TOP BAR (spans the app) ================= -->
 <div id="topbar">
-  <div class="brandline">CoffeeNutz Zine Studio <span class="vercode">v2026-07-31c</span></div>
+  <div class="brandline">CoffeeNutz Zine Studio <span class="vercode">v2026-07-31d</span></div>
   <button class="btn" data-action="refresh" title="reload the studio">Refresh</button>
   <div class="issuebar"><select id="issueSel" title="current issue"></select><button class="btn" data-action="newissue">+ New</button><button class="btn" data-action="renameissue" title="rename this issue">Rename</button><button class="btn" data-action="delissue" title="delete this issue">Delete</button></div>
   <div class="stylebar"><select id="styleSel" title="style for this issue"></select><button class="btn styleplus" data-action="styleinfo" title="About styles" aria-label="about styles">+</button></div>
@@ -1169,10 +1169,13 @@ var TR_WORDS = ['ve','bir','bu','\u015fu','ile','ama','ancak','veya','\u00e7ok',
   'h\u00e2l\u00e2','birlikte','se\u00e7en','beraber'];
 var TR_WORD_RE = new RegExp('(^|[^a-z\u00e7\u011f\u0131\u00f6\u015f\u00fc])(' + TR_WORDS.join('|') + ')($|[^a-z\u00e7\u011f\u0131\u00f6\u015f\u00fc])', 'i');
 function isTrPara(p){
-  var s = String(p==null?'':p);
-  var m = s.match(TR_DIACRITIC_RE);
+  var s = ' '+String(p==null?'':p).toLowerCase()+' ';
+  var en = 0; [' the ',' and ',' of ',' with ',' for ',' by ',' is ',' are ',' to ',' in ',' a ',' we ',' you '].forEach(function(w){ en += s.split(w).length-1; });
+  var tr = 0; [' ve ',' bir ',' bu ',' için ',' ile ',' her ',' daha ',' olan '].forEach(function(w){ tr += s.split(w).length-1; });
+  if(en >= 2 && en > tr) return false; /* clearly English even when Turkish names bring diacritics */
+  var m = String(p==null?'':p).match(TR_DIACRITIC_RE);
   if(m && m.length >= 2) return true;
-  return TR_WORD_RE.test(s);
+  return TR_WORD_RE.test(String(p==null?'':p));
 }
 function isEnPara(p){ return !isTrPara(p); }
 function paras(el, text){
