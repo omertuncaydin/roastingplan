@@ -56,13 +56,15 @@ a.card.soon:hover{border-color:var(--line)}
 .free .en{display:block;color:var(--muted);opacity:.85}
 .gold{color:var(--gold)}
 .apphidden{display:none}
+body.align-title .brand,body.align-all .brand,body.align-all .motto,body.align-all .sub{text-align:center}
+body.align-title .pills,body.align-all .pills{justify-content:center}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Apps</span></div>
   <div class="pills">
-    <span class="hpill" id="ver">v2026-08-01b</span>
+    <span class="hpill" id="ver">v2026-08-01c</span>
     <span class="hpill chip" onclick="location.href=location.pathname+'?v='+Date.now()">Refresh</span>
   </div>
 
@@ -147,6 +149,10 @@ a.card.soon:hover{border-color:var(--line)}
 (function(){
 function applyAppsConfig(cfg){
   if(!cfg||!cfg.order) return;
+  document.body.classList.remove('align-title','align-all');
+  if(cfg.align==='title'){document.body.classList.add('align-title');}else if(cfg.align==='all'){document.body.classList.add('align-all');}
+  function setTx(sel,v){ var el=document.querySelector(sel); if(!el||!v) return; if(v.tr!=null){ el.childNodes[0].textContent=v.tr; } var en=el.querySelector('.en'); if(en&&v.en!=null){ en.textContent=v.en; } }
+  setTx('.motto',cfg.head); setTx('.sub',cfg.sub);
   var all={}; [].slice.call(document.querySelectorAll('[data-app]')).forEach(function(e){ all[e.getAttribute('data-app')]=e; });
   var first=document.querySelector('[data-app]'); if(!first) return;
   var parent=first.parentNode, anchor=document.createComment('a');

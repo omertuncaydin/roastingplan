@@ -34,15 +34,34 @@ h1 .lr{color:var(--red)}
 #save:disabled{opacity:.5}
 #st{font-size:12.5px;color:var(--muted)}
 a.back{color:var(--accent);text-decoration:none;font-size:13px;font-weight:600}
+#look{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin:8px 0 10px}
+#look input{width:100%;background:#2e241c;border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:8px 10px;font-size:14px;margin:2px 0 10px}
+.flab{font-size:12px;color:var(--muted);display:block}
+#alignbtns{display:flex;gap:6px;margin:4px 0 12px}
+#alignbtns button{background:#2e241c;border:1px solid var(--line);color:var(--muted);border-radius:9px;font-size:13px;padding:7px 12px;cursor:pointer}
+#alignbtns button.on{border-color:var(--gold);color:var(--gold)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1><span class="lr">CoffeeNutz</span> Apps Yöneticisi</h1>
-  <div class="pills"><span class="hpill" id="ver">v2026-08-01a</span><span class="hpill">apps.coffeenutz.net</span></div>
+  <div class="pills"><span class="hpill" id="ver">v2026-08-01b</span><span class="hpill">apps.coffeenutz.net</span></div>
   <p class="sub">Ön kapıdaki kart sırası ve görünürlük. Oklarla sırala, gözle gizle, Kaydet ile yayınla; ziyaretçiler anında yeni düzeni görür.</p>
   <div id="auth">Yazmak için Guide hesabınla giriş gerekli. <a href="/roast-guide" target="_blank">Guide'ı aç, giriş yap</a>, sonra bu sayfayı yenile.</div>
   <div id="list"></div>
+  <p class="sub" style="margin:16px 0 4px">Giriş · başlık, alt başlık ve hizalama</p>
+  <div id="look">
+    <span class="flab">Hizalama · alignment</span>
+    <div id="alignbtns">
+      <button data-al="left">Sol</button>
+      <button data-al="title">Başlık ortalı</button>
+      <button data-al="all">Hepsi ortalı</button>
+    </div>
+    <label class="flab" for="f_head_tr">Başlık (TR)</label><input id="f_head_tr">
+    <label class="flab" for="f_head_en">Heading (EN)</label><input id="f_head_en">
+    <label class="flab" for="f_sub_tr">Alt başlık (TR)</label><input id="f_sub_tr">
+    <label class="flab" for="f_sub_en">Subheading (EN)</label><input id="f_sub_en">
+  </div>
   <p class="sub"><a class="back" href="/hub">&#8592; Hub</a></p>
 </div>
 <div id="bar"><div class="in"><button id="save" disabled>Kaydet · Yayınla</button><span id="st">yükleniyor...</span></div></div>
@@ -65,6 +84,8 @@ const BLOCKS=[
 ];
 let ORDER=APPS.map(a=>a.id), HIDDEN=[];
 const VALID=APPS.map(a=>a.id).concat(BLOCKS.map(b=>b.id));
+const DEF={align:'left',head:{tr:'Kahveyi farklı düşünüyoruz!',en:'We think about coffee differently.'},sub:{tr:"CoffeeNutz'ın geliştirdiği tüm kahve uygulamalarını burada bulabilirsiniz.",en:'All the coffee apps CoffeeNutz builds, in one place.'}};
+let ALIGN=DEF.align, HEAD=Object.assign({},DEF.head), SUB=Object.assign({},DEF.sub);
 const $=id=>document.getElementById(id);
 function render(){
   const map={}; APPS.forEach(a=>map[a.id]=a);
@@ -85,6 +106,14 @@ function render(){
       +'<div class="ctl"><button class="eye'+(hid?' off':'')+'" data-a="eye">&#128065;</button></div></div>';
   }).join('');
 }
+function paintLook(){
+  [].forEach.call(document.querySelectorAll('#alignbtns button'),b=>b.classList.toggle('on',b.dataset.al===ALIGN));
+  $('f_head_tr').value=HEAD.tr; $('f_head_en').value=HEAD.en; $('f_sub_tr').value=SUB.tr; $('f_sub_en').value=SUB.en;
+}
+$('alignbtns').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; ALIGN=b.dataset.al; paintLook(); $('st').textContent='kaydedilmedi · unsaved'; });
+['f_head_tr','f_head_en','f_sub_tr','f_sub_en'].forEach(id=>{ $(id).addEventListener('input',()=>{
+  HEAD={tr:$('f_head_tr').value,en:$('f_head_en').value}; SUB={tr:$('f_sub_tr').value,en:$('f_sub_en').value};
+  $('st').textContent='kaydedilmedi · unsaved'; }); });
 $('list').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
   const row=e.target.closest('.row'), id=row.dataset.id, i=ORDER.indexOf(id), act=b.dataset.a;
@@ -96,16 +125,18 @@ $('list').addEventListener('click',e=>{
 async function load(){
   try{
     const {data}=await sb.from('apps_config').select('cfg').eq('id',1).maybeSingle();
-    if(data&&data.cfg){ if(Array.isArray(data.cfg.order)&&data.cfg.order.length) ORDER=data.cfg.order.filter(id=>APPS.some(a=>a.id===id)); APPS.forEach(a=>{ if(!ORDER.includes(a.id)) ORDER.push(a.id); }); HIDDEN=(data.cfg.hidden||[]).filter(id=>VALID.includes(id)); }
+    if(data&&data.cfg){ if(Array.isArray(data.cfg.order)&&data.cfg.order.length) ORDER=data.cfg.order.filter(id=>APPS.some(a=>a.id===id)); APPS.forEach(a=>{ if(!ORDER.includes(a.id)) ORDER.push(a.id); }); HIDDEN=(data.cfg.hidden||[]).filter(id=>VALID.includes(id));
+      if(['left','title','all'].includes(data.cfg.align)) ALIGN=data.cfg.align;
+      HEAD=Object.assign({},DEF.head,data.cfg.head||{}); SUB=Object.assign({},DEF.sub,data.cfg.sub||{}); }
   }catch(e){}
-  render();
+  render(); paintLook();
   const {data:s}=await sb.auth.getSession();
   if(s&&s.session){ $('save').disabled=false; $('st').textContent='hazır · '+(s.session.user.email||''); }
   else{ $('auth').style.display='block'; $('st').textContent='salt okunur · read-only'; }
 }
 $('save').addEventListener('click',async()=>{
   $('save').disabled=true; $('st').textContent='kaydediliyor...';
-  const {error}=await sb.from('apps_config').upsert({id:1,cfg:{order:ORDER,hidden:HIDDEN},updated_at:new Date().toISOString()});
+  const {error}=await sb.from('apps_config').upsert({id:1,cfg:{order:ORDER,hidden:HIDDEN,align:ALIGN,head:HEAD,sub:SUB},updated_at:new Date().toISOString()});
   $('save').disabled=false;
   $('st').textContent=error?('hata: '+error.message):'yayında · live';
 });
