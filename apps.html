@@ -55,14 +55,14 @@ a.card.soon:hover{border-color:var(--line)}
 .free{margin-top:14px;font-size:12.5px;color:var(--muted)}
 .free .en{display:block;color:var(--muted);opacity:.85}
 .gold{color:var(--gold)}
-.card.apphidden{display:none}
+.apphidden{display:none}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">Apps</span></div>
   <div class="pills">
-    <span class="hpill" id="ver">v2026-07-31b</span>
+    <span class="hpill" id="ver">v2026-08-01a</span>
     <span class="hpill chip" onclick="location.href=location.pathname+'?v='+Date.now()">Refresh</span>
   </div>
 
@@ -77,7 +77,7 @@ a.card.soon:hover{border-color:var(--line)}
 
   <div class="divider"></div>
 
-  <div class="beta">
+  <div class="beta" data-block="announce">
     <div class="bt">2026-07-29 &middot; Crack Listener BETA yayında! <span class="en">Crack Listener BETA is live!</span></div>
     <div class="btr">Uygulama ücretsiz: test et, zorla, istersen günlük kavrumlarını onunla yönet. Dinleme, evre çağrıları, drop alarmı ve renk öngörüsü telefonunda çalışır. Prob yok, ek donanım yok.
       <span class="en">The app is free: test it, push it, even run your daily roasts with it. Listening, stage calls, drop alarms and color projection all on your phone. No probes, no extra hardware.</span></div>
@@ -156,6 +156,7 @@ function applyAppsConfig(cfg){
   seq.forEach(function(id){ parent.insertBefore(all[id], anchor); });
   parent.removeChild(anchor);
   Object.keys(all).forEach(function(id){ all[id].classList.toggle('apphidden',(cfg.hidden||[]).indexOf(id)>=0); });
+  [].slice.call(document.querySelectorAll('[data-block]')).forEach(function(e){ e.classList.toggle('apphidden',(cfg.hidden||[]).indexOf(e.getAttribute('data-block'))>=0); });
   var div=document.querySelector('.divider:last-of-type');
   if(div){ var firstSoon=null; seq.some(function(id){ var e=all[id]; if(e.classList.contains('soon')&&!e.classList.contains('apphidden')){ firstSoon=e; return true; } return false; });
     if(firstSoon){ div.style.display=''; firstSoon.parentNode.insertBefore(div, firstSoon); } else { div.style.display='none'; } }

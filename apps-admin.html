@@ -39,7 +39,7 @@ a.back{color:var(--accent);text-decoration:none;font-size:13px;font-weight:600}
 <body>
 <div class="wrap">
   <h1><span class="lr">CoffeeNutz</span> Apps Yöneticisi</h1>
-  <div class="pills"><span class="hpill" id="ver">v2026-07-31a</span><span class="hpill">apps.coffeenutz.net</span></div>
+  <div class="pills"><span class="hpill" id="ver">v2026-08-01a</span><span class="hpill">apps.coffeenutz.net</span></div>
   <p class="sub">Ön kapıdaki kart sırası ve görünürlük. Oklarla sırala, gözle gizle, Kaydet ile yayınla; ziyaretçiler anında yeni düzeni görür.</p>
   <div id="auth">Yazmak için Guide hesabınla giriş gerekli. <a href="/roast-guide" target="_blank">Guide'ı aç, giriş yap</a>, sonra bu sayfayı yenile.</div>
   <div id="list"></div>
@@ -60,7 +60,11 @@ const APPS=[
  {id:'zine',         nm:'CoffeeNutz Zine', d:'dergi rafı', b:'Z', c:'#9a5b8f'},
  {id:'grupal',       nm:'Grup-Al', d:'yakında', b:'GA', c:'#b9742f'}
 ];
+const BLOCKS=[
+ {id:'announce', nm:'Duyuru Bandı', d:'Crack Listener BETA duyurusu (kartların üstündeki çerçeve)', b:'!', c:'#D8453B'}
+];
 let ORDER=APPS.map(a=>a.id), HIDDEN=[];
+const VALID=APPS.map(a=>a.id).concat(BLOCKS.map(b=>b.id));
 const $=id=>document.getElementById(id);
 function render(){
   const map={}; APPS.forEach(a=>map[a.id]=a);
@@ -71,6 +75,14 @@ function render(){
       +'<div class="nm"><b>'+a.nm+'</b><span>'+a.d+'</span></div>'
       +'<div class="ctl"><button data-a="up">&#8593;</button><button data-a="dn">&#8595;</button>'
       +'<button class="eye'+(hid?' off':'')+'" data-a="eye">&#128065;</button></div></div>';
+  }).join('')
+  +'<p class="sub" style="margin:16px 0 8px">Bloklar &middot; sayfa b&ouml;l&uuml;mleri</p>'
+  +BLOCKS.map(a=>{
+    const hid=HIDDEN.includes(a.id);
+    return '<div class="row'+(hid?' hid':'')+'" data-id="'+a.id+'">'
+      +'<div class="badge" style="background:'+a.c+'">'+a.b+'</div>'
+      +'<div class="nm"><b>'+a.nm+'</b><span>'+a.d+'</span></div>'
+      +'<div class="ctl"><button class="eye'+(hid?' off':'')+'" data-a="eye">&#128065;</button></div></div>';
   }).join('');
 }
 $('list').addEventListener('click',e=>{
@@ -84,7 +96,7 @@ $('list').addEventListener('click',e=>{
 async function load(){
   try{
     const {data}=await sb.from('apps_config').select('cfg').eq('id',1).maybeSingle();
-    if(data&&data.cfg){ if(Array.isArray(data.cfg.order)&&data.cfg.order.length) ORDER=data.cfg.order.filter(id=>APPS.some(a=>a.id===id)); APPS.forEach(a=>{ if(!ORDER.includes(a.id)) ORDER.push(a.id); }); HIDDEN=(data.cfg.hidden||[]).filter(id=>APPS.some(a=>a.id===id)); }
+    if(data&&data.cfg){ if(Array.isArray(data.cfg.order)&&data.cfg.order.length) ORDER=data.cfg.order.filter(id=>APPS.some(a=>a.id===id)); APPS.forEach(a=>{ if(!ORDER.includes(a.id)) ORDER.push(a.id); }); HIDDEN=(data.cfg.hidden||[]).filter(id=>VALID.includes(id)); }
   }catch(e){}
   render();
   const {data:s}=await sb.auth.getSession();
