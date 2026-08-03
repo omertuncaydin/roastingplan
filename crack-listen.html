@@ -189,7 +189,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-07-30a · BETA</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03a · BETA</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1329,7 +1329,7 @@ const SUPA_URL='https://efjvfggwnhqkunjvoyjb.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA';
 let SB=null; try{ if(typeof supabase!=='undefined') SB=supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
 try{ if(WCON) wcCmdSub(true); }catch(e){}   // boot-time cast restore runs before SB exists (TDZ); re-arm the command ear here, after the client is born
-try{ if(SB){ SB.auth.onAuthStateChange(()=>{ syncPlanFromAccount(); umSync(true); }); setTimeout(syncPlanFromAccount, 1200); setTimeout(()=>umSync(true), 1800); } }catch(e){}   // codes retired: the account IS the license
+try{ if(SB){ SB.auth.onAuthStateChange(()=>{ syncPlanFromAccount(); uniSync(true); umSync(true); }); setTimeout(syncPlanFromAccount, 1200); setTimeout(()=>uniSync(true), 1500); setTimeout(()=>umSync(true), 1800); } }catch(e){}   // codes retired: the account IS the license
 try{ fetch(SUPA_URL+'/rest/v1/noise_lib?select=f,hf,w',{headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY}}).then(r=>r.ok?r.json():[]).then(rows=>{ (rows||[]).forEach(e=>NLC.push({f:e.f,hf:e.hf,w:e.w,src:'global'})); }).catch(()=>{}); }catch(e){}
 try{ const eb=$('enrollBtn'); if(eb) eb.textContent=tt('Teach it your voice'); }catch(e){}
 async function cloudUser(){ if(!SB) return null; try{ const {data}=await SB.auth.getUser(); return (data&&data.user)||null; }catch(e){ return null; } }
@@ -1353,8 +1353,30 @@ async function umSync(pull){ try{
       if(!error){ UMSTAMP[k]=h; dirty=true; localStorage.setItem('bsCal',JSON.stringify(m)); } } }
   if(dirty) localStorage.setItem('bsCalPushed',JSON.stringify(UMSTAMP));
 }catch(e){} }
-setInterval(()=>{ umSync(false); },20000);
-try{ document.addEventListener('visibilitychange',()=>{ if(document.hidden) umSync(false); }); }catch(e){}
+setInterval(()=>{ umSync(false); uniSync(false); },20000);
+try{ document.addEventListener('visibilitychange',()=>{ if(document.hidden){ umSync(false); uniSync(false); } }); }catch(e){}
+// ---- universes cloud: the LIBRARY follows the account; the active choice stays per-device.
+// Fresh device, empty pocket: pull the library, adopt the most recently touched universe, then let the maps follow it.
+let USTAMP={}; try{ USTAMP=JSON.parse(localStorage.getItem('bsUniPushed')||'{}'); }catch(e){}
+function uniHash(x){ try{ const c=Object.assign({},x); delete c.up; return JSON.stringify(c); }catch(e2){ return ''; } }
+async function uniSync(pull){ try{
+  if(!SB) return; if(!proPowers()) return;   // the library is memory, and memory is the service
+  const u=await cloudUser(); if(!u||!u.email) return;
+  let all={}; try{ all=JSON.parse(localStorage.getItem('bsUniverses')||'{}'); }catch(e2){}
+  const cur=UNI(); if(cur&&cur.uid&&!all[cur.uid]){ all[cur.uid]=cur; }   // old installs kept the current one outside the library
+  let dirty=false, adopted=false;
+  if(pull){ const {data:rws}=await SB.from('user_universes').select('uid,uni');
+    if(Array.isArray(rws)){ for(const r2 of rws){ const k=r2.uid, ce=r2.uni||{}, le=all[k];
+      if(!le||((ce.up||0)>(le.up||0))){ all[k]=ce; USTAMP[k]=uniHash(ce); dirty=true; } } }
+    if(!UNI()){ let best=null; for(const k in all){ if(!best||((all[k].up||0)>(best.up||0))) best=all[k]; }
+      if(best){ localStorage.setItem('bsUniverse',JSON.stringify(best)); adopted=true; } } }
+  for(const k in all){ const h=uniHash(all[k]);
+    if(USTAMP[k]!==h){ all[k].up=Date.now();
+      const {error}=await SB.from('user_universes').upsert({email:u.email,uid:k,uni:all[k]});
+      if(!error){ USTAMP[k]=h; dirty=true; } } }
+  if(dirty){ localStorage.setItem('bsUniverses',JSON.stringify(all)); localStorage.setItem('bsUniPushed',JSON.stringify(USTAMP)); }
+  if(adopted){ try{ setUniPill(); updateGauge(); updateMapBtn(); renderNameChips(); }catch(e2){} try{ umSync(true); }catch(e2){} }
+}catch(e){} }
 let LASTROASTROW=null;
 async function pushRoastStart(){ try{
   if(!SB||!proPowers()) return;
@@ -1813,6 +1835,7 @@ function uniA0Log(v){ try{
     u.a0=m; u.guessed=0; localStorage.setItem('bsUniverse',JSON.stringify(u));
     try{ const all=JSON.parse(localStorage.getItem('bsUniverses')||'{}'); all[u.uid]=u; localStorage.setItem('bsUniverses',JSON.stringify(all)); }catch(e2){}
     toast(tr?('Evren A0 g\u00fcncellendi: '+m):('Universe A0 updated: '+m));
+    try{ uniSync(false); }catch(e3){}
   }
 }catch(e){} }
 try{ setTimeout(setUniPill, 400); }catch(e){}
@@ -1860,6 +1883,7 @@ function uniSave(){ try{
   setUniPill();
   $('uniModal').style.display='none';
   toast(tr?('Evren kaydedildi · A0 '+a0+(guessed?' (tahmin)':'')):('Universe saved · A0 '+a0+(guessed?' (guess)':'')));
+  try{ uniSync(false); }catch(e3){}
   try{ updateGauge(); }catch(e2){}
   if(UNIPEND){ UNIPEND=false; try{ start(); }catch(e2){} }
 }catch(e){} }
@@ -2137,7 +2161,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-07-30a';   // chip shows '· BETA'; the machine string stays clean for telemetry
+const APPVER='v2026-08-03a';   // chip shows '· BETA'; the machine string stays clean for telemetry
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
