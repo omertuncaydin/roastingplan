@@ -189,7 +189,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03a · BETA</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03b · BETA</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -504,7 +504,7 @@ function wcAlertPing(){ try{ if(!WCON||!running) return; const lst=(LASTSTAGES&&
   wcPub({c:(cName.value||'').trim()||'?', st:lst, n:valid().length, proj:(LASTPROJ!=null?Math.round(LASTPROJ):null), t:Math.round((performance.now()-startT)/1000),
     w:(A0PHASE==='alarm'?2:(A0PHASE==='pre'?1:0)), g:(TGTPHASE==='alarm'?2:(TGTPHASE==='pre'?1:0)), r:(RCPHASE==='alarm'?2:(RCPHASE==='pre'?1:0)), wn:RCWN}, true); }catch(e){} }   // alarm transitions jump the queue: the wrist must not lag the drum
 function wcUrl(){ return location.origin+location.pathname.replace(/[^/]*$/,'')+'crack-screen.html?k='+WCKEY(); }
-function wcToggle(on){ WCON=!!on; try{ localStorage.setItem('bsWatchCast',on?'1':'0'); }catch(e){} wcCmdSub(!!on);
+function wcToggle(on){ WCON=!!on; try{ localStorage.setItem('bsWatchCast',on?'1':'0'); }catch(e){} wcCmdSub(!!on); if(on){ try{ wkSync(); }catch(e){} }
   const vv=$('wcV'); if(vv) vv.textContent=on?(LANG==='tr'?'açık · kayıt başlayınca yayın':'on · casts while recording'):(LANG==='tr'?'kapalı':'off');
   const r2=$('wcRow'); if(r2){ r2.style.display=on?'flex':'none'; const l2=$('wcLink'); if(l2) l2.textContent=wcUrl(); } }
 function wcCopy(){ try{ navigator.clipboard.writeText(wcUrl()); toast(LANG==='tr'?'Watch linki kopyalandı.':'Watch link copied.'); }catch(e){ toast(wcUrl()); } }
@@ -1329,7 +1329,7 @@ const SUPA_URL='https://efjvfggwnhqkunjvoyjb.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA';
 let SB=null; try{ if(typeof supabase!=='undefined') SB=supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
 try{ if(WCON) wcCmdSub(true); }catch(e){}   // boot-time cast restore runs before SB exists (TDZ); re-arm the command ear here, after the client is born
-try{ if(SB){ SB.auth.onAuthStateChange(()=>{ syncPlanFromAccount(); uniSync(true); umSync(true); }); setTimeout(syncPlanFromAccount, 1200); setTimeout(()=>uniSync(true), 1500); setTimeout(()=>umSync(true), 1800); } }catch(e){}   // codes retired: the account IS the license
+try{ if(SB){ SB.auth.onAuthStateChange(()=>{ syncPlanFromAccount(); uniSync(true); wkSync(); umSync(true); }); setTimeout(syncPlanFromAccount, 1200); setTimeout(()=>uniSync(true), 1500); setTimeout(()=>wkSync(), 1600); setTimeout(()=>umSync(true), 1800); } }catch(e){}   // codes retired: the account IS the license
 try{ fetch(SUPA_URL+'/rest/v1/noise_lib?select=f,hf,w',{headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY}}).then(r=>r.ok?r.json():[]).then(rows=>{ (rows||[]).forEach(e=>NLC.push({f:e.f,hf:e.hf,w:e.w,src:'global'})); }).catch(()=>{}); }catch(e){}
 try{ const eb=$('enrollBtn'); if(eb) eb.textContent=tt('Teach it your voice'); }catch(e){}
 async function cloudUser(){ if(!SB) return null; try{ const {data}=await SB.auth.getUser(); return (data&&data.user)||null; }catch(e){ return null; } }
@@ -1376,6 +1376,20 @@ async function uniSync(pull){ try{
       if(!error){ USTAMP[k]=h; dirty=true; } } }
   if(dirty){ localStorage.setItem('bsUniverses',JSON.stringify(all)); localStorage.setItem('bsUniPushed',JSON.stringify(USTAMP)); }
   if(adopted){ try{ setUniPill(); updateGauge(); updateMapBtn(); renderNameChips(); }catch(e2){} try{ umSync(true); }catch(e2){} }
+}catch(e){} }
+// ---- watch key follows the account: pair the wrist ONCE, every signed-in phone speaks on the same channel.
+// Cloud key wins; a phone with no cloud key donates its own. watchOS has no paste, so the key must never need typing.
+async function wkSync(){ try{
+  if(!SB) return; if(!proPowers()) return;
+  const u=await cloudUser(); if(!u) return;
+  const {data}=await SB.from('user_settings').select('watch_key').eq('owner',u.id);
+  const ck=data&&data[0]&&data[0].watch_key;
+  const lk=localStorage.getItem('bsWatchKey');
+  if(ck){ if(ck!==lk){ localStorage.setItem('bsWatchKey',ck);
+      try{ if(WCCH){ try{ SB.removeChannel(WCCH); }catch(e2){} WCCH=null; } if(WCON) wcCmdSub(true); }catch(e2){}
+      try{ const l2=$('wcLink'); if(l2&&WCON) l2.textContent=wcUrl(); }catch(e2){}
+      toast(LANG==='tr'?'Watch anahtarı hesabından alındı.':'Watch key adopted from your account.'); } }
+  else{ await SB.from('user_settings').upsert({owner:u.id, watch_key:WCKEY(), updated_at:new Date().toISOString()},{onConflict:'owner'}); }
 }catch(e){} }
 let LASTROASTROW=null;
 async function pushRoastStart(){ try{
@@ -2161,7 +2175,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-03a';   // chip shows '· BETA'; the machine string stays clean for telemetry
+const APPVER='v2026-08-03b';   // chip shows '· BETA'; the machine string stays clean for telemetry
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
