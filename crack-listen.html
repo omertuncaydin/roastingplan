@@ -189,7 +189,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03b · BETA</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03c · BETA</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -2175,7 +2175,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-03b';   // chip shows '· BETA'; the machine string stays clean for telemetry
+const APPVER='v2026-08-03c';   // chip shows '· BETA'; the machine string stays clean for telemetry
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2954,6 +2954,23 @@ function drawTimeline(){
     // C0 = the witnessed-decline instant PPFLIPT (was shipped as 'B1'). C1 = earned silence, unchanged.
     const tPeak=t0+(peakI+0.5)*bin;
     const peakKnown=peakInterior&&(pastPeak||quiet>EP.QUIET_B1);
+    // PLATEAU CROWN (2026-08-03, dark-roast field find on HSR15 + shotgun mic: a long rolling crack never
+    // declines inside the session, so peakKnown stays false and the ladder parrots B0 forever. Doctrine
+    // holds: C0 still REQUIRES the witnessed decline. But a bell that has sat within 20% of its running max,
+    // flat, for a full `run` window has TOPPED: a flat crown is still a crown. B1 may stand on it; only B1.
+    // If the bell later outgrows that crown by >5%, the plateau premise dies and B1 withdraws (recomputed
+    // every pass, same honesty-by-withdrawal as revisable phase).
+    let tPlateau=null;
+    if(!peakKnown && running && v.length>=12){
+      // RAW bins, not sm: the gaussian tail sags into the empty future and would hide any live plateau.
+      const hi=Math.min(nowBin,lb)-1;   // last COMPLETE bin (the partial edge bin is rescaled, still noisier)
+      const lo2=hi-run+1;
+      if(lo2>a0Bin+1){ let rawMax=0;
+        for(let i=a0Bin;i<=hi;i++){ if((counts[i]||0)>rawMax) rawMax=counts[i]; }
+        let flat=rawMax>0;
+        for(let i=lo2;i<=hi;i++){ if((counts[i]||0)<0.6*rawMax){ flat=false; break; } }
+        if(flat && ((counts[hi]||0)-(counts[lo2]||0))>0.25*rawMax) flat=false;   // still climbing = not a crown
+        if(flat){ for(let i=a0Bin;i<=hi;i++){ if((counts[i]||0)>=0.8*rawMax){ tPlateau=t0+(i+0.5)*bin; break; } } } } }
     const tA1=a1Call(v.map(c=>c.t),a0t,tPeak,peakKnown,SAMPLES);
     let tKnee=null;
     if(tA1!=null){ const iA1=Math.max(1,Math.floor((tA1-t0)/bin));
@@ -2967,7 +2984,7 @@ function drawTimeline(){
     const stages=[['A0',a0t]];
     if(tA1!=null&&(!peakKnown||tA1<=tPeak)) stages.push(['A1',tA1]);
     if(tKnee!=null&&(!peakKnown||tKnee<=tPeak)) stages.push(['B0',tKnee]);
-    if(peakKnown) stages.push(['B1',tPeak]);
+    if(peakKnown) stages.push(['B1',tPeak]); else if(tPlateau!=null) stages.push(['B1',tPlateau]);   // plateau crown: B1 only, C0 keeps its decline witness
     if(peakKnown&&PPFLIPT!=null) stages.push(['C0',PPFLIPT]);
     const tB1=tPeak;   // C-side anchor = the crown instant
     // C1 must be EARNED by observed silence: at least 10s, adaptive to roast speed (3x recent median gap).
