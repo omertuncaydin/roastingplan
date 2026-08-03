@@ -490,6 +490,13 @@
     <button class="nullbtn" title="Coming in the next version">Class Mode &nbsp;·&nbsp; aggregate a class on one coffee &nbsp;·&nbsp; coming soon</button>
     <div class="small" id="cupMsg" style="margin-top:10px;color:var(--accent2)"></div>
     <div class="card" style="margin-top:12px"><div class="cgrplbl">Saved cuppings</div><div id="cupList"></div></div>
+    <div class="card" style="margin-top:12px"><div class="cgrplbl" data-i18n="Watch pairing">Watch pairing</div>
+      <div class="small" id="wsyncList" style="margin-top:2px"></div>
+      <div class="small" id="wsyncStatus" style="margin-top:4px;color:var(--accent2)"></div>
+      <div id="wsyncFrom" style="margin-top:6px"></div>
+      <div class="small" style="color:var(--muted)" data-i18n="Paired to your account: every device you sign into syncs your watch cuppings automatically.">Paired to your account: every device you sign into syncs your watch cuppings automatically.</div>
+      <details style="margin-top:6px"><summary class="small" style="cursor:pointer" data-i18n="Pair manually">Pair manually</summary>
+        <div class="cuprow" style="gap:8px;align-items:center;margin-top:6px"><input type="text" id="wsyncKey" placeholder="watch key (Settings → watch)" style="flex:1"><button class="iconbtn" onclick="wsyncAdd()" data-i18n="Pair">Pair</button></div></details></div>
   </div>
 
   <!-- FLIGHT (attribute-paged scoring across several coffees) -->
@@ -589,7 +596,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-30a</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-07-30b</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1386,6 +1393,116 @@ async function saveCup(){ if(!canSave('cup')){ cupMsg.style.color='var(--accent2
 function renderCupList(){ if(!CUPS.length){ cupList.innerHTML='<div class="small">None yet.</div>'; return; } cupList.innerHTML=CUPS.map(c=>`<div class="hxrow"><span>${esc(c.sample)} <span class="small">${c.date}</span></span><span class="tgtval">${(c.total||0).toFixed(2)} <button class="delx" data-delcup="${c.id}">×</button></span></div>`).join(''); cupList.querySelectorAll('[data-delcup]').forEach(b=>b.onclick=()=>delCup(b.dataset.delcup)); }
 async function delCup(id){ CUPS=CUPS.filter(c=>String(c.id)!==String(id)); cacheCG(); renderCupList(); if(sb&&!String(id).startsWith('local-')){ try{ await sb.from('cuppings').delete().eq('id',id); }catch(e){} } }
 
+// ===== GC1 · WATCH RELAY SYNC (design guide-connection-2026-07-27) =====
+// Watch upserts capture into live_cast["cup-<wk>"] (anon, key = capability).
+// This signed-in Guide persists into the user's cuppings rows (upsert-by-wid,
+// Guide-typed notes always survive) and acks on live_cast["gd-<wk>"].
+let WSYNC_KEYS=[]; try{ WSYNC_KEYS=JSON.parse(localStorage.getItem('cnWatchKeys')||'[]'); }catch(e){}
+// auto-link: the Listener already stores this browser's watch key (bsWatchKey, same origin)
+try{ const bk=(localStorage.getItem('bsWatchKey')||'').toLowerCase(); if(/^[0-9a-f]{16}$/.test(bk)&&!WSYNC_KEYS.includes(bk)){ WSYNC_KEYS.push(bk); localStorage.setItem('cnWatchKeys',JSON.stringify(WSYNC_KEYS)); } }catch(e){}
+let WSYNC_STATUS='';
+function wsyncSay(msg){ WSYNC_STATUS=msg; const el=document.getElementById('wsyncStatus'); if(el) el.textContent=msg; }
+function wsyncRenderList(){ const el=document.getElementById('wsyncList'); if(el) el.innerHTML=WSYNC_KEYS.length?WSYNC_KEYS.map(k=>`<span class="chip sub">${k.slice(0,4)}…${k.slice(-2)} <span style="cursor:pointer" onclick="wsyncDel('${k}')">×</span></span>`).join(' '):(LANG==='tr'?'Bağlı saat yok.':'No watch linked.'); }
+function wsyncAdd(){ const el=document.getElementById('wsyncKey'); const k=(el&&el.value||'').trim().toLowerCase();
+  if(!/^[0-9a-f]{16}$/.test(k)){ toast(LANG==='tr'?'Anahtar 16 hex karakter olmalı.':'Key must be 16 hex characters.'); return; }
+  if(!WSYNC_KEYS.includes(k)) WSYNC_KEYS.push(k); localStorage.setItem('cnWatchKeys',JSON.stringify(WSYNC_KEYS));
+  if(el) el.value=''; wsyncRenderList(); wsyncAccountSave(); wsyncTick(); toast(LANG==='tr'?'Saat eşleşti.':'Watch paired.'); }
+function wsyncDel(k){ WSYNC_KEYS=WSYNC_KEYS.filter(x=>x!==k); localStorage.setItem('cnWatchKeys',JSON.stringify(WSYNC_KEYS)); wsyncRenderList(); wsyncAccountSave(); }
+let WSYNC_BUSY=false, WSYNC_SEEN={}, WSYNC_LATEST={}, WSYNC_ACCT=false;
+async function wsyncEmail(){ try{ const r=await sb.auth.getUser(); return r&&r.data&&r.data.user&&r.data.user.email||null; }catch(e){ return null; } }
+async function wsyncAccountSave(){ if(!sb) return; try{ const em=await wsyncEmail(); if(!em) return;
+  await sb.from('user_maps').upsert({email:em,universe_id:'__watch__',coffee:'__link__',cal:{keys:WSYNC_KEYS}}); }catch(e){} }
+async function wsyncAccountLoad(){ if(!sb||WSYNC_ACCT) return; try{ const em=await wsyncEmail(); if(!em) return; WSYNC_ACCT=true;
+  const r=await sb.from('user_maps').select('cal').eq('email',em).eq('universe_id','__watch__').eq('coffee','__link__');
+  const ks=(r&&r.data&&r.data[0]&&r.data[0].cal&&r.data[0].cal.keys)||[];
+  let grew=false;
+  ks.forEach(k=>{ if(/^[0-9a-f]{16}$/.test(k)&&!WSYNC_KEYS.includes(k)){ WSYNC_KEYS.push(k); grew=true; } });
+  if(grew){ localStorage.setItem('cnWatchKeys',JSON.stringify(WSYNC_KEYS)); wsyncRenderList(); }
+  if(WSYNC_KEYS.some(k=>!ks.includes(k))) await wsyncAccountSave();   // union up: local pairs join the account
+}catch(e){} }
+function wsyncRenderFrom(){ const el=document.getElementById('wsyncFrom'); if(!el) return;
+  const codes=Object.keys(WSYNC_LATEST).sort();
+  el.innerHTML=codes.length?('<span class="small" style="color:var(--muted)">'+(LANG==='tr'?'Saatten: ':'From watch: ')+'</span>'+codes.map(c=>`<span class="chip sub" style="cursor:pointer" onclick="wsyncOpen('${c}')">${esc(c)}</span>`).join(' ')):'';
+}
+function wsyncOpen(code){ const d=WSYNC_LATEST[code]; if(!d) return;
+  try{ show('cup'); }catch(e){}
+  const ex=CUPS.find(c=>c.wid===d.wid);
+  cup=blankCup();
+  cup.sample=code; cup.date=new Date().toISOString().slice(0,10);
+  if(d.intens) cup.intens=JSON.parse(JSON.stringify(d.intens));
+  if(d.score) cup.score=JSON.parse(JSON.stringify(d.score));
+  if(d.cata) cup.cata=JSON.parse(JSON.stringify(d.cata));
+  if(d.roast) cup.roast=d.roast; if(d.agtron!==''&&d.agtron!=null) cup.agtron=d.agtron;
+  cup.nonuniform=d.nonuniform||0; cup.defective=d.defective||0; if(d.defect) cup.defect=d.defect;
+  if(ex&&ex.notes) cup.notes=JSON.parse(JSON.stringify(ex.notes));   // your typed notes come along
+  try{ renderCup(); }catch(e){}
+  toast((LANG==='tr'?'Saatten yüklendi: ':'Loaded from watch: ')+code);
+}
+function wsyncMirror(latest){
+  // pour incoming watch ratings into whatever form is OPEN, matched by sample name = blind code.
+  const typing=document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName);
+  let did=false;
+  try{
+    if(CURVIEW==='cup'&&cup&&cup.sample&&latest[cup.sample]){
+      const d=latest[cup.sample];
+      if(d.intens) cup.intens=d.intens; if(d.score) cup.score=d.score; if(d.cata) cup.cata=d.cata;
+      if(d.roast) cup.roast=d.roast; if(d.agtron!==''&&d.agtron!=null) cup.agtron=d.agtron;
+      cup.nonuniform=d.nonuniform||0; cup.defective=d.defective||0; if(d.defect) cup.defect=d.defect;
+      did=true;
+      if(!typing){ renderCup(); }   // notes are cup.notes — untouched above, survive every mirror
+    }
+    if(CURVIEW==='flight'&&typeof FLIGHT!=='undefined'&&FLIGHT&&FLIGHT.coffees){
+      let hit=false;
+      FLIGHT.coffees.forEach(c=>{ const d=latest[c.sample]; if(d&&c.cup){
+        if(d.intens) c.cup.intens=d.intens; if(d.score) c.cup.score=d.score; if(d.cata) c.cup.cata=d.cata;
+        if(d.roast) c.cup.roast=d.roast; c.cup.nonuniform=d.nonuniform||0; c.cup.defective=d.defective||0;
+        hit=true; } });
+      if(hit&&!typing){ try{ renderFlight(); }catch(e){} }
+      did=did||hit;
+    }
+  }catch(e){}
+  return did;
+}
+async function wsyncTick(){ if(WSYNC_BUSY) return;
+ if(!sb||!MYUID){ if(WSYNC_KEYS.length) wsyncSay(LANG==='tr'?'Giriş yapılmadı — eşitleme bekliyor.':'Not signed in — sync waiting.'); return; }
+ if(!WSYNC_KEYS.length){ wsyncSay(''); return; }
+ WSYNC_BUSY=true;
+ try{ for(const wk of WSYNC_KEYS){
+  let p=null, ferr=null;
+  try{ const r=await fetch(SUPA_URL+'/rest/v1/live_cast?key=eq.cup-'+wk+'&select=payload,updated_at',{headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY}}); if(!r.ok) ferr='HTTP '+r.status; const rows=await r.json(); p=rows&&rows[0]&&rows[0].payload; }catch(e){ ferr=String(e).slice(0,60); }
+  if(ferr){ wsyncSay((LANG==='tr'?'Saat satırı okunamadı: ':'Relay read failed: ')+ferr); continue; }
+  if(!p||!Array.isArray(p.flights)){ wsyncSay(LANG==='tr'?'Saatten henüz veri yok ('+wk.slice(0,4)+'…).':'No data from the watch yet ('+wk.slice(0,4)+'…).'); continue; }
+  const ack={flights:{}}; let changed=false;
+  for(const fl of p.flights){ if(!fl||!fl.fid) continue;
+    for(const sm of (fl.capture&&fl.capture.samples)||[]){ if(!sm||!sm.data||!sm.data.wid) continue;
+      const wid=sm.data.wid;
+      const ex=CUPS.find(c=>c.wid===wid);
+      if(ex){ if((sm.data.watchRev||0)>(ex.watchRev||0)){
+          const hasNotes=ex.notes&&Object.values(ex.notes).some(v=>v);
+          const nd=Object.assign({},sm.data,{notes:hasNotes?ex.notes:sm.data.notes});   // Guide-typed notes always survive
+          try{ const u=await sb.from('cuppings').update({sample:sm.sample,date:sm.date,total:sm.total||0,data:nd}).eq('id',ex.id);
+            if(!u.error){ const ix=CUPS.findIndex(c=>String(c.id)===String(ex.id)); if(ix>=0) CUPS[ix]=rowToCup({id:ex.id,date:sm.date,sample:sm.sample,total:sm.total||0,data:nd}); changed=true; } }catch(e){}
+        } }
+      else{ try{ const r2=await sb.from('cuppings').insert({user_id:MYUID,sample:sm.sample,date:sm.date,total:sm.total||0,data:sm.data}).select('*').single();
+            if(r2&&!r2.error){ CUPS.unshift(rowToCup(r2.data)); changed=true; } }catch(e){} }
+    }
+    ack.flights[fl.fid]={rev:fl.rev||0};
+  }
+  try{ await fetch(SUPA_URL+'/rest/v1/live_cast?on_conflict=key',{method:'POST',headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY,'content-type':'application/json',prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({key:'gd-'+wk,payload:{v:1,device:'guide',ack}})}); }catch(e){}
+  const n=p.flights.reduce((a,fl)=>a+(((fl.capture||{}).samples)||[]).length,0);
+  const latest={}; let freshRev=false;
+  for(const fl of p.flights){ for(const sm of (fl.capture&&fl.capture.samples)||[]){ if(!sm||!sm.data) continue;
+    latest[sm.sample]=sm.data; WSYNC_LATEST[sm.sample]=sm.data;
+    const w=sm.data.wid; if(w&&(sm.data.watchRev||0)>(WSYNC_SEEN[w]||0)){ WSYNC_SEEN[w]=sm.data.watchRev||0; freshRev=true; } } }
+  try{ wsyncRenderFrom(); }catch(e){}
+  const mirrored=freshRev?wsyncMirror(latest):false;
+  wsyncSay((LANG==='tr'?'Saat verisi alındı: ':'Watch data received: ')+n+(LANG==='tr'?' numune · ':' samples · ')+new Date().toLocaleTimeString().slice(0,5)+(changed?(LANG==='tr'?' · kaydedildi':' · saved'):'')+(mirrored?(LANG==='tr'?' · forma yansıdı':' · mirrored to form'):''));
+  if(changed){ try{ cacheCG(); renderCupList(); }catch(e){} }
+ } }finally{ WSYNC_BUSY=false; } }
+setInterval(wsyncTick, 5000);
+setTimeout(()=>{ try{ wsyncRenderList(); }catch(e){} wsyncAccountLoad().then(()=>wsyncTick()); }, 3000);
+setInterval(()=>{ WSYNC_ACCT=false; wsyncAccountLoad(); }, 120000);   // late sign-in / pairs made on other devices
+
 // ---- Grade (Physical) ----
 const CAT1=[['fullblack','Full Black',1,'full-black'],['fullsour','Full Sour',1,'full-sour'],['driedcherry','Dried Cherry',1,'dried-cherry'],['fungus','Fungus Damage',1,'fungus'],['foreign','Foreign Matter',1,'foreign-matter'],['severeinsect','Severe Insect',5,'severe-insect']];
 const CAT2=[['partialblack','Partial Black',3,'partial-black'],['partialsour','Partial Sour',3,'partial-sour'],['parchment','Parchment',5,'parchment'],['floater','Floater',5,'floater'],['immature','Immature / Unripe',5,'immature'],['withered','Withered',5,'withered'],['shell','Shell',5,'shell'],['broken','Broken / Cut',5,'broken'],['hullhusk','Hull / Husk',5,'hull-husk'],['slightinsect','Slight Insect',10,'slight-insect']];
@@ -1647,8 +1764,8 @@ function renderValueCard(){ const s=valSample.value; const c=CUPS.find(x=>x.samp
 // ---- Cup/Grade persistence (local cache + best-effort Supabase) ----
 function cacheCG(){ try{ localStorage.setItem(CUPS_CACHE,JSON.stringify(CUPS)); localStorage.setItem(GRADES_CACHE,JSON.stringify(GRADES)); }catch(e){} }
 function loadCGCache(){ try{ CUPS=JSON.parse(localStorage.getItem(CUPS_CACHE)||'[]')||[]; }catch(e){ CUPS=[]; } try{ GRADES=JSON.parse(localStorage.getItem(GRADES_CACHE)||'[]')||[]; }catch(e){ GRADES=[]; } }
-function toCupPayload(r){ return {user_id:MYUID,sample:r.sample,date:r.date,total:r.total,data:{intens:r.intens,score:r.score,cata:r.cata,roast:r.roast,agtron:r.agtron,purpose:r.purpose,notes:r.notes,nonuniform:r.nonuniform,defective:r.defective,defect:r.defect,distinctive:r.distinctive}}; }
-function rowToCup(d){ const x=d.data||{}; return {id:d.id,date:d.date,sample:d.sample,total:(d.total!=null?+d.total:0),intens:x.intens||{},score:x.score||{},cata:x.cata||{fragAroma:[],flavAfter:[],main:[],mouth:[]},roast:x.roast||'',agtron:(x.agtron==null?'':x.agtron),purpose:x.purpose||'',notes:x.notes||{fragAroma:'',flavAfter:'',acidity:'',sweetness:'',mouthfeel:'',overall:''},nonuniform:x.nonuniform||0,defective:x.defective||0,defect:x.defect||'None',distinctive:x.distinctive||''}; }
+function toCupPayload(r){ const d={intens:r.intens,score:r.score,cata:r.cata,roast:r.roast,agtron:r.agtron,purpose:r.purpose,notes:r.notes,nonuniform:r.nonuniform,defective:r.defective,defect:r.defect,distinctive:r.distinctive}; if(r.wid){ d.wid=r.wid; d.src=r.src||'watch'; d.watchRev=r.watchRev||0; } return {user_id:MYUID,sample:r.sample,date:r.date,total:r.total,data:d}; }
+function rowToCup(d){ const x=d.data||{}; return {id:d.id,date:d.date,sample:d.sample,total:(d.total!=null?+d.total:0),intens:x.intens||{},score:x.score||{},cata:x.cata||{fragAroma:[],flavAfter:[],main:[],mouth:[]},roast:x.roast||'',agtron:(x.agtron==null?'':x.agtron),purpose:x.purpose||'',notes:x.notes||{fragAroma:'',flavAfter:'',acidity:'',sweetness:'',mouthfeel:'',overall:''},nonuniform:x.nonuniform||0,defective:x.defective||0,defect:x.defect||'None',distinctive:x.distinctive||'',wid:x.wid||null,src:x.src||null,watchRev:x.watchRev||0}; }
 function toGradePayload(r){ return {user_id:MYUID,sample:r.sample,date:r.date,data:{purpose:r.purpose,color:r.color,moisture:r.moisture,aw:r.aw,screen:r.screen,counts:r.counts,origin:r.origin,variety:r.variety,process:r.process,certs:r.certs,exnote:r.exnote}}; }
 function rowToGrade(d){ const x=d.data||{}; return {id:d.id,date:d.date,sample:d.sample,purpose:x.purpose||'',color:x.color||'',moisture:x.moisture||'',aw:x.aw||'',screen:x.screen||'',counts:x.counts||{},origin:x.origin||'',variety:x.variety||'',process:x.process||[],certs:x.certs||[],exnote:x.exnote||''}; }
 async function loadCupGrade(){ loadCGCache(); if(!sb) return;
@@ -1930,7 +2047,7 @@ function printClassCard(){
 function infoModal(title,body){ hxBox.innerHTML=`<h1 style="margin:0 0 8px;font-size:18px">${title}</h1><div class="small" style="line-height:1.6">${body}</div><button class="btn ghost" style="margin-top:16px" onclick="closeHx()">Close</button>`; hxModal.style.display='flex'; }
 let CLASSES=null;
 try{ fetch('classes.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{ if(j&&typeof j==='object') CLASSES=j; }).catch(()=>{}); }catch(e){}
-function gFoundingBanner(tr){ let msg=tr?'KURUCU ROASTER · ilk 100 hesap: ömür boyu sabit $149/yıl, sayılı.':'FOUNDING ROASTER · first 100 accounts: $149/yr locked for life, numbered.';
+function gFoundingBanner(tr){ let msg=tr?'KURUCU ROASTER · ilk 100 hesap: ömür boyu sabit $149/yıl, numaralı.':'FOUNDING ROASTER · first 100 accounts: $149/yr locked for life, numbered.';
   if(CLASSES&&typeof CLASSES.founding_taken==='number') msg+=(tr?(' · '+CLASSES.founding_taken+'/100 dolu'):(' · '+CLASSES.founding_taken+'/100 taken'));
   return '<div style="border:1px solid var(--gold);border-radius:10px;padding:8px 10px;margin-top:10px;font-size:11.5px;font-weight:700;color:var(--gold)">'+msg+'</div>'
     +'<div style="text-align:center;margin-top:8px"><a href="plans.html" target="_blank" rel="noopener" style="color:var(--gold,#e6c14b);font-size:12px;font-weight:700">'+(tr?'Planlar ve Lisans \u2192':'Plans & License \u2192')+'</a></div>'; }
