@@ -170,6 +170,7 @@ body.st-live #tmpRow{display:flex}
 @keyframes tmpPulse{0%,100%{border-color:var(--line)}50%{border-color:var(--gold)}}
 #btStrip{display:none;margin:12px 0 2px}
 body.st-setup #btStrip,body.st-live #btStrip{display:block}
+body.st-live #btStrip{order:0}
 body.notemps #btStrip,body.notemps #tmpRow{display:none!important}
 .btrow{display:flex;align-items:center;gap:10px}
 .btwheelWrap{position:relative;flex:1;height:44px;min-width:0}
@@ -206,7 +207,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03f · BETA</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03g · BETA</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -215,12 +216,13 @@ body.st-setup #btn{display:none}
       <input type="text" id="licInput" placeholder="Code" autocapitalize="characters" autocorrect="off" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;border:1px solid var(--accent);border-radius:9px;padding:11px 12px;font-size:16px;background:#15100b;color:var(--ink);text-transform:uppercase">
       <button class="pm" style="width:auto;padding:11px 18px;font-size:14px;background:var(--accent2);color:#fff;border:none" onclick="applyCode()">Apply</button>
     </div>
-    <div id="btStrip">
-      <div class="btrow">
-        <div class="btwheelWrap"><div class="btwheel" id="btWheel"><div class="btwheelInner" id="btWheelInner"></div></div><div class="btwheelSel"></div></div>
-        <button id="btOk" onclick="btCommit()" aria-label="charge / temp ekle">Charge</button>
-        <div id="btRor">&nbsp;</div>
-      </div>
+  </div>
+
+  <div id="btStrip">
+    <div class="btrow">
+      <div class="btwheelWrap"><div class="btwheel" id="btWheel"><div class="btwheelInner" id="btWheelInner"></div></div><div class="btwheelSel"></div></div>
+      <button id="btOk" onclick="btCommit()" aria-label="charge / temp ekle">Charge</button>
+      <div id="btRor">&nbsp;</div>
     </div>
   </div>
 
@@ -1072,6 +1074,12 @@ function btBuild(){ const inn=$('btWheelInner'); if(!inn||inn.childElementCount)
 function btSet(v){ const wh=$('btWheel'); if(!wh) return; const cv=Math.max(BT_MIN,Math.min(BT_MAX,Math.round(v))); wh.scrollLeft=(cv-BT_MIN)*BT_CW; }
 function btVal(){ const wh=$('btWheel'); if(!wh) return NaN; return Math.max(BT_MIN,Math.min(BT_MAX,BT_MIN+Math.round(wh.scrollLeft/BT_CW))); }
 function btDue(on){ const st=$('btStrip'); if(st) st.classList.toggle('due',!!on); }
+function btAim(){ try{ if(running||CHGT0) return; const k=(cName.value||'').trim().toLowerCase(); if(!k) return;
+  let li={}; try{ li=(JSON.parse(localStorage.getItem('bsInputs')||'{}'))[k]||{}; }catch(e){}
+  let c=parseFloat(li.chg);
+  if(!isFinite(c)){ try{ const eq=localStorage.getItem('bsEquip')||($('mEquip')&&$('mEquip').value)||''; const cm=(chgMap()[eq])||{}; const b=li.batch||($('mBatch')&&$('mBatch').value)||''; if(b&&cm[b]!=null) c=parseFloat(cm[b]); }catch(e){} }
+  if(isFinite(c)&&c>0) btSet(c);
+}catch(e){} }
 function btCommit(){ const c=btVal(); if(!isFinite(c)) return;
   if(running){ const t=(performance.now()-startT)/1000;
     TEMPS.push({t:t,c:c}); tmpDraw(); btDue(false);
@@ -1143,6 +1151,7 @@ function toggle(){ if(running){ stop(); return; }
   if(!INPUTSOK){ inputsSheet(); return; }
   INPUTSOK=false; start(); }
 try{ btBuild(); if(localStorage.getItem('bsTempsOn')==='0') document.body.classList.add('notemps'); }catch(e){}
+setTimeout(function(){ try{ btAim(); cName.addEventListener('change',btAim); cName.addEventListener('blur',btAim); }catch(e){} },0);   // deferred: cName is declared below this block (TDZ)
 function valid(){ return cracks.filter(c=>!c.fp); }
 // ---- TAGGER v1 stage-layer helpers (2026-07-25 fit on his Stage Ear labels; LORO-verified) ----
 let PPFLIPT=null;   // first instant the three peak witnesses agreed (his perceptual B1)
@@ -1625,7 +1634,7 @@ function renderNameChips(){ const el=$('nameChips'); if(!el) return;
     ||'<span class="hint" style="font-size:11px">'+(LANG==='tr'?'Kayıtlı kahve yok; adını yaz, eşle.':'No known coffees yet; type a name and map it.')+'</span>';
   el.querySelectorAll('[data-cn]').forEach(x=>x.onpointerdown=ev=>{ ev.preventDefault(); pickCoffee(x.dataset.cn); });   // pointerdown beats the input blur
 }
-async function pickCoffee(n){
+async function pickCoffee(n){ setTimeout(function(){ try{ btAim(); }catch(e){} },50);
   cName.value=n; localStorage.setItem('bsCoffee',n);
   const m=calMap();
   if(!m[n]&&SB){ try{ const u=await cloudUser();
@@ -2328,7 +2337,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-03f';   // chip shows '· BETA'; the machine string stays clean for telemetry
+const APPVER='v2026-08-03g';   // chip shows '· BETA'; the machine string stays clean for telemetry
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2690,7 +2699,7 @@ function rcTableOpen(){ try{ gdPull(); }catch(e){}
    +'<div style="margin-top:10px;text-align:center"><a href="roast-guide.html" target="_blank" rel="noopener" style="color:var(--gold);font-size:12px;font-weight:700">Guide &#8599; · '+(LANG==='tr'?'sıra/takma ad/not':'order/alias/note')+'</a></div>'
    +'<button style="margin-top:10px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(LANG==='tr'?'Kapat':'Close')+'</button>';
   $('modal').style.display='flex';
-  $('modalBox').querySelectorAll('[data-rn]').forEach(x=>x.onclick=()=>{ cName.value=x.dataset.rn; try{ localStorage.setItem('bsCoffee',x.dataset.rn); }catch(e){} $('modal').style.display='none'; RCEDIT=true; renderNameplate(); try{ renderNameChips(); }catch(e){} renderRcRow(); }); }
+  $('modalBox').querySelectorAll('[data-rn]').forEach(x=>x.onclick=()=>{ cName.value=x.dataset.rn; try{ localStorage.setItem('bsCoffee',x.dataset.rn); }catch(e){} $('modal').style.display='none'; RCEDIT=true; renderNameplate(); try{ renderNameChips(); }catch(e){} renderRcRow(); try{ btAim(); }catch(e){} }); }
 function rcWnGo(){ const c9=(($('rcWnC')||{}).value||''), n9=((($('rcWnN')||{}).value||'')+'').trim().toUpperCase().slice(0,5);
   if(!c9&&!n9) return; rcSetWn(rcKey(), (c9&&n9)?(c9+'-'+n9):(c9||n9));
   toast(LANG==='tr'?'Saat çipi adı kaydedildi':'Watch chip name saved'); }
