@@ -186,6 +186,14 @@ body.notemps #btStrip,body.notemps #tmpRow{display:none!important}
 .btwheelSel:after{content:'\00b0C';position:absolute;right:3px;top:1px;font-size:9px;color:var(--muted)}
 #btStrip.due .btwheel{animation:tmpPulse 1.2s infinite}
 #modalBox.wide{max-width:780px!important}
+#eqStrip,#sumStrip{display:none}
+body.st-setup #eqStrip{display:block}
+body.st-setup #sumStrip{display:block}
+.eqp,.bp{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12.5px;color:var(--muted);cursor:pointer}
+.eqp.on{border-color:var(--gold);color:var(--gold);font-weight:700}
+.bp.on{border-color:var(--accent2);color:var(--ink);font-weight:700;background:rgba(217,102,63,.14)}
+@keyframes micPulse{0%,100%{box-shadow:0 4px 14px rgba(0,0,0,.45)}50%{box-shadow:0 0 0 8px rgba(230,193,75,.45)}}
+.micBtn.due{animation:micPulse 1.2s infinite}
 #btOk{background:var(--accent2);border:none;color:#fff;border-radius:12px;min-width:52px;width:auto;padding:0 14px;height:44px;font-size:15px;font-weight:800;flex:none;cursor:pointer;letter-spacing:.02em}
 #btRor{flex:none;min-width:78px;text-align:right;font-size:13px;color:var(--gold);font-variant-numeric:tabular-nums;font-weight:700}
 body.st-setup #btn{display:none}
@@ -212,7 +220,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03h · BETA</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03i · BETA</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -221,6 +229,11 @@ body.st-setup #btn{display:none}
       <input type="text" id="licInput" placeholder="Code" autocapitalize="characters" autocorrect="off" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;border:1px solid var(--accent);border-radius:9px;padding:11px 12px;font-size:16px;background:#15100b;color:var(--ink);text-transform:uppercase">
       <button class="pm" style="width:auto;padding:11px 18px;font-size:14px;background:var(--accent2);color:#fff;border:none" onclick="applyCode()">Apply</button>
     </div>
+  </div>
+
+  <div id="eqStrip" style="margin:12px 0 2px;text-align:center">
+    <div id="eqPills" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap"></div>
+    <div id="batchPills" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px"></div>
   </div>
 
   <div id="btStrip">
@@ -414,6 +427,8 @@ body.st-setup #btn{display:none}
     <input type="file" id="mapsF" accept=".json" style="display:none" onchange="importMaps(this.files[0])">
     <input type="file" id="loadF" accept=".zip,.csv" style="display:none" onchange="loadSession(this.files[0])">
   </div>
+
+  <div id="sumStrip" onclick="inputsSheet()" style="margin:10px 0 2px;text-align:center;border:1px dashed var(--line);border-radius:12px;padding:9px 12px;font-size:13px;color:var(--muted);cursor:pointer"></div>
 
   <div class="row" id="cStats" style="margin-top:12px">
     <div class="card" id="cPhase" style="flex:1;min-width:0;text-align:center"><div class="lbl">gain phase <span class="info" onclick="showInfo('phase')">&#9432;</span></div><canvas id="phaseG" width="300" height="240" style="width:100%;height:auto;background:none;margin-top:4px"></canvas><div class="hint" style="margin-top:2px;font-size:11px">position inside the bell of first crack</div></div>
@@ -632,7 +647,7 @@ async function start(remote){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('dlStory').style.display='none'; $('gameAdd').style.display='none'; $('mapBtn').style.display='none'; $('nextRow').style.display='none'; $('agTop').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=(typeof CHGT0==='number'&&CHGT0&&(performance.now()-CHGT0)<1800000)?CHGT0:performance.now(); refractoryUntil=0; crackFlash=false; LASTSIG=performance.now(); REMICED=false; DEEPMIC=false; MICWARNED=false; pendingCrackG=null; SAMPLES=[]; try{ tmpSeed(); }catch(e){} CHGT0=null; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; PPFLIPT=null; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); RCPHASE=''; RCT=0; RCSEEN=0; rcUI(0); LASTROASTROW=null; try{ pushRoastStart(); }catch(e){} renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=(typeof CHGT0==='number'&&CHGT0&&(performance.now()-CHGT0)<1800000)?CHGT0:performance.now(); refractoryUntil=0; crackFlash=false; LASTSIG=performance.now(); REMICED=false; DEEPMIC=false; MICWARNED=false; pendingCrackG=null; SAMPLES=[]; try{ tmpSeed(); }catch(e){} CHGT0=null; MICARMED=true; try{ const mb0=document.querySelector('.micBtn'); if(mb0) mb0.classList.remove('due'); }catch(e){} LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; PPFLIPT=null; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); RCPHASE=''; RCT=0; RCSEEN=0; rcUI(0); LASTROASTROW=null; try{ pushRoastStart(); }catch(e){} renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw','mA0Ag'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -1058,7 +1073,7 @@ function inputsSheet(){ try{
     +'<select id="iDropSt" style="width:100%;background:#241c16;border:1px solid var(--gold);border-radius:9px;color:var(--gold);padding:9px 10px;font-size:15px;font-weight:700;margin-top:3px">'
     +RC_LADDER.map(st=>'<option'+(st===st0?' selected':'')+'>'+st+'</option>').join('')+'</select></div>'
     +'<div style="margin-top:10px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;text-align:left"><input type="checkbox" id="iTmpOn" '+(localStorage.getItem('bsTempsOn')!=='0'?'checked':'')+' style="width:17px;height:17px;accent-color:var(--accent2);flex:none"><label for="iTmpOn">'+(tr?'Sıcaklık şeridi ve S eğrisi (Cropster vb. kullanıyorsan kapat)':'Temp strip and S curve (turn off if you run Cropster etc.)')+'</label></div>'
-    +'<button class="go" style="margin-top:14px;width:100%" onclick="inputsGo()">'+(tr?'KAVURMAYA DEVAM':'CONTINUE ROASTING')+'</button>'
+    +'<button class="go" style="margin-top:14px;width:100%" onclick="inputsGo()">'+(tr?'TAMAM':'DONE')+'</button>'
     +'<button style="margin-top:8px;background:none;border:1px solid var(--line);color:var(--muted)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'sonra':'later')+'</button>';
   $('modal').style.display='flex';
 }catch(e){ INPUTSOK=true; } }
@@ -1072,28 +1087,79 @@ function inputsGo(){ try{
   try{ const on=!$('iTmpOn')||$('iTmpOn').checked; localStorage.setItem('bsTempsOn',on?'1':'0'); document.body.classList.toggle('notemps',!on); }catch(e){}
   $('modal').style.display='none';
 }catch(e){}
-  INPUTSOK=true; toggle(); }
+  try{ renderEqStrip(); renderSum(); btAim(); }catch(e){} }
 const BT_MIN=60, BT_MAX=260, BT_CW=36;
 let TPIDX=99; const TPROMPTS=[18,38,58,100,140,178];
 function btBuild(){ const inn=$('btWheelInner'); if(!inn||inn.childElementCount) return; let h=''; for(let v=BT_MIN;v<=BT_MAX;v++) h+='<div>'+v+'</div>'; inn.innerHTML=h; btSet(200); }
 function btSet(v){ const wh=$('btWheel'); if(!wh) return; const cv=Math.max(BT_MIN,Math.min(BT_MAX,Math.round(v))); wh.scrollLeft=(cv-BT_MIN)*BT_CW; }
 function btVal(){ const wh=$('btWheel'); if(!wh) return NaN; return Math.max(BT_MIN,Math.min(BT_MAX,BT_MIN+Math.round(wh.scrollLeft/BT_CW))); }
 function btDue(on){ const st=$('btStrip'); if(st) st.classList.toggle('due',!!on); }
-function btAim(){ try{ if(running||CHGT0) return; const k=(cName.value||'').trim().toLowerCase(); if(!k) return;
-  let li={}; try{ li=(JSON.parse(localStorage.getItem('bsInputs')||'{}'))[k]||{}; }catch(e){}
-  let c=parseFloat(li.chg);
-  if(!isFinite(c)){ try{ const eq=localStorage.getItem('bsEquip')||($('mEquip')&&$('mEquip').value)||''; const cm=(chgMap()[eq])||{}; const b=li.batch||($('mBatch')&&$('mBatch').value)||''; if(b&&cm[b]!=null) c=parseFloat(cm[b]); }catch(e){} }
-  if(isFinite(c)&&c>0) btSet(c);
+function btAim(){ try{ if(running||CHGT0) return;
+  const eq=localStorage.getItem('bsEquip')||(($('mEquip')&&$('mEquip').value)||'');
+  const k=rcKey(); let li={}; try{ li=(JSON.parse(localStorage.getItem('bsInputs')||'{}'))[k]||{}; }catch(e){}
+  let byEq={}; try{ byEq=JSON.parse(localStorage.getItem('bsBatchByEq')||'{}'); }catch(e){}
+  const cm=chgMap()[eq]||{};
+  const ks=Object.keys(cm).sort((x,y)=>+x-+y);
+  const b=(li.batch&&cm[li.batch]!=null)?li.batch:((byEq[eq]&&cm[byEq[eq]]!=null)?byEq[eq]:ks[0]);
+  if(b){ byEq[eq]=b; localStorage.setItem('bsBatchByEq',JSON.stringify(byEq));
+    if($('mBatch')) $('mBatch').value=b;
+    if(cm[b]!=null) btSet(parseFloat(cm[b])); }
+  try{ renderEqStrip(); renderSum(); }catch(e){}
 }catch(e){} }
+function renderEqStrip(){ try{ const ep=$('eqPills'), bp=$('batchPills'); if(!ep||!bp) return;
+  const tr=(LANG==='tr'), cmAll=chgMap();
+  const eq=localStorage.getItem('bsEquip')||'HSR15';
+  const ms=[...new Set([...Object.keys(cmAll),'Bullet','HSR15'])].filter(Boolean);
+  ep.innerHTML=ms.map(m=>'<span class="eqp'+(m===eq?' on':'')+'" data-m="'+m+'">'+m+'</span>').join('')
+    +'<span class="eqp" data-m="__edit" title="'+(tr?'şarj tablosunu düzenle':'edit charge table')+'">&#9881;</span>';
+  const cm=cmAll[eq]||{}; let byEq={}; try{ byEq=JSON.parse(localStorage.getItem('bsBatchByEq')||'{}'); }catch(e){}
+  const cur=byEq[eq], ks=Object.keys(cm).sort((a,b)=>+a-+b);
+  bp.innerHTML=ks.length?ks.map(g=>'<span class="bp'+(g===cur?' on':'')+'" data-g="'+g+'">'+g+'g \u00b7 '+cm[g]+'\u00b0</span>').join('')
+    :('<span style="font-size:11px;color:var(--muted)">'+(tr?'şarj tablosu boş \u00b7 \u2699 ile doldur':'charge table empty \u00b7 fill via \u2699')+'</span>');
+  ep.querySelectorAll('.eqp').forEach(x=>{ x.onclick=()=>{ const m=x.dataset.m;
+    if(m==='__edit'){ try{ if($('mEquip')) $('mEquip').value=eq; }catch(e){} try{ chargeEditor(); }catch(e){} return; }
+    localStorage.setItem('bsEquip',m); btAim(); }; });
+  bp.querySelectorAll('.bp').forEach(x=>{ x.onclick=()=>{ let b2={}; try{ b2=JSON.parse(localStorage.getItem('bsBatchByEq')||'{}'); }catch(e){}
+    b2[eq]=x.dataset.g; localStorage.setItem('bsBatchByEq',JSON.stringify(b2));
+    if($('mBatch')) $('mBatch').value=x.dataset.g;
+    const t=cm[x.dataset.g]; if(t!=null) btSet(parseFloat(t));
+    renderEqStrip(); renderSum(); }; });
+}catch(e){} }
+function renderSum(){ try{ const el=$('sumStrip'); if(!el) return;
+  const eq=localStorage.getItem('bsEquip')||'\u2014';
+  let byEq={}; try{ byEq=JSON.parse(localStorage.getItem('bsBatchByEq')||'{}'); }catch(e){}
+  const b=byEq[eq]||(($('mBatch')&&$('mBatch').value)||'\u2014');
+  let rc=null; try{ rc=rcGet(rcKey()); }catch(e){}
+  const st=(rc&&rc.st)||'\u2014';
+  const gas=(((rc&&rc.gas)||'').split('\n')[0])||'\u2014';
+  const v=btVal();
+  el.textContent=eq+' \u00b7 '+b+'g \u00b7 '+(isFinite(v)?v:'\u2014')+'\u00b0 \u00b7 DROP '+st+' \u00b7 '+gas+'  \u270e';
+}catch(e){} }
+let MICARMED=false;
+function micArmCheck(){ try{ if(MICARMED||!CHGT0||running) return; const A=PREROLL||[]; if(!A.length) return;
+  const last=A[A.length-1]; let arm=last.c>=175;
+  if(!arm&&A.length>=3){ const rr=tmpRoR(A); if(rr.length){ const r=rr[rr.length-1].v;
+    if(r>0){ const eta=(185-last.c)/r*60; if(eta<=90) arm=true; } } }
+  if(arm){ MICARMED=true; try{ const mb=document.querySelector('.micBtn'); if(mb) mb.classList.add('due'); }catch(e){}
+    toast(LANG==='tr'?'Çatlak yaklaşıyor \u00b7 kulağı aç.':'Crack is near \u00b7 open the ear.'); } }catch(e){} }
 function btCommit(){ const c=btVal(); if(!isFinite(c)) return;
   if(running){ const t=(performance.now()-startT)/1000;
     TEMPS.push({t:t,c:c}); tmpDraw(); btDue(false);
     try{ if(WCON) wcPub({c:(cName.value||'').trim()||'?', bt:Math.round(c)},true); }catch(e){} return; }
-  if(!CHGT0){ CHGT0=performance.now(); PREROLL=[{t:0,c:c}];
+  if(!CHGT0){ CHGT0=performance.now(); PREROLL=[{t:0,c:c}]; MICARMED=false;
     if($('mChgT')) $('mChgT').value=c;
+    const k9=rcKey(); let li9={}; try{ li9=(JSON.parse(localStorage.getItem('bsInputs')||'{}'))[k9]||{}; }catch(e){}
+    let rc9=null; try{ rc9=rcGet(k9); }catch(e){}
+    const eq9=localStorage.getItem('bsEquip')||(($('mEquip')&&$('mEquip').value)||'');
+    let byEq9={}; try{ byEq9=JSON.parse(localStorage.getItem('bsBatchByEq')||'{}'); }catch(e){}
+    const bt9=byEq9[eq9]||(($('mBatch')&&$('mBatch').value)||li9.batch||'');
+    INPUTS={eq:eq9,batch:bt9,chg:String(c),gas:(rc9&&rc9.gas)||li9.gas||'',dropSt:(rc9&&rc9.st)||li9.dropSt||''};
+    try{ if($('mEquip')&&eq9) $('mEquip').value=eq9; }catch(e){}
+    if($('mBatch')) $('mBatch').value=bt9||'';
+    if(k9){ try{ const all9=JSON.parse(localStorage.getItem('bsInputs')||'{}'); all9[k9]=INPUTS; localStorage.setItem('bsInputs',JSON.stringify(all9)); }catch(e){} }
     try{ $('btOk').innerHTML='&#10003;'; }catch(e){}
-    toast(LANG==='tr'?('Şarj '+c+'°C · süre başladı'):('Charge '+c+'°C · clock running'));
-    tmpDraw(); inputsSheet(); return; }
+    toast(LANG==='tr'?('Şarj '+c+'\u00b0C \u00b7 süre başladı \u00b7 kulak FC yaklaşınca'):('Charge '+c+'\u00b0C \u00b7 clock running \u00b7 ear waits for FC'));
+    tmpDraw(); return; }
   const t=(performance.now()-CHGT0)/1000;
   PREROLL.push({t:t,c:c}); tmpDraw(); btDue(false); }
 function tmpSeed(){ TPIDX=0;
@@ -1143,20 +1209,24 @@ function tmpDraw(){ try{ const cv=$('tmpG'); if(!cv) return; const x=cv.getConte
   if(rorEl) rorEl.textContent=(lr!=null)?((lr>=0?'+':'')+lr.toFixed(1)+'°/dk'):'RoR · --';
 }catch(e){} }
 setInterval(function(){ try{
-  if(!running||document.body.classList.contains('notemps')) return;
+  if(document.body.classList.contains('notemps')) return;
+  if(!running){ micArmCheck(); return; }
   const nowS=(performance.now()-startT)/1000, lastT=TEMPS.length?TEMPS[TEMPS.length-1].t:0;
   if(TPIDX<TPROMPTS.length){
     if(nowS>=TPROMPTS[TPIDX]){ const late=nowS>TPROMPTS[TPIDX]+15; TPIDX++;
       if(!late&&nowS-lastT>12){ btDue(true); toast(LANG==='tr'?'Şu anki sıcaklığı seçer misin? RoR ve S eğrisi ilk dakikalarda kurulur.':'Would you pick the current temp? RoR and the S curve are built in the first minutes.'); } } }
   else if(nowS-lastT>75){ btDue(true); }
 }catch(e){} },5000);
-setInterval(function(){ try{ if((running||CHGT0)&&!document.body.classList.contains('notemps')) tmpDraw(); }catch(e){} },1000);
+setInterval(function(){ try{ if((running||CHGT0)&&!document.body.classList.contains('notemps')) tmpDraw(); if(document.body.classList.contains('st-setup')) renderSum(); }catch(e){} },1000);
 function toggle(){ if(running){ stop(); return; }
   if(!CHGT0){ btDue(true); toast(LANG==='tr'?'Önce şarj: çarkı ayarla, Charge\u0027a bas.':'Charge first: set the wheel, tap Charge.'); return; }
-  if(!INPUTSOK){ inputsSheet(); return; }
-  INPUTSOK=false; start(); }
+  try{ const mb=document.querySelector('.micBtn'); if(mb) mb.classList.remove('due'); }catch(e){}
+  start(); }
 try{ btBuild(); if(localStorage.getItem('bsTempsOn')==='0') document.body.classList.add('notemps'); }catch(e){}
-setTimeout(function(){ try{ btAim(); cName.addEventListener('change',btAim); cName.addEventListener('blur',btAim); }catch(e){} },0);   // deferred: cName is declared below this block (TDZ)
+try{ const m0=chgMap(); m0.Bullet=m0.Bullet||{}; let ch0=false;
+  [['500',240],['600',250],['105',170]].forEach(function(p){ if(m0.Bullet[p[0]]==null||(p[0]==='500'&&+m0.Bullet[p[0]]===190)){ m0.Bullet[p[0]]=p[1]; ch0=true; } });   // 190 was the shipped placeholder, never his; his stated table wins over it, never over an edit
+  if(ch0) localStorage.setItem('gCharge',JSON.stringify(m0)); }catch(e){}   // his Bullet table, seeded once, never overwriting
+setTimeout(function(){ try{ btAim(); renderEqStrip(); renderSum(); cName.addEventListener('change',btAim); cName.addEventListener('blur',btAim); }catch(e){} },0);   // deferred: cName is declared below this block (TDZ)
 function valid(){ return cracks.filter(c=>!c.fp); }
 // ---- TAGGER v1 stage-layer helpers (2026-07-25 fit on his Stage Ear labels; LORO-verified) ----
 let PPFLIPT=null;   // first instant the three peak witnesses agreed (his perceptual B1)
@@ -2329,7 +2399,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-03h';   // chip shows '· BETA'; the machine string stays clean for telemetry
+const APPVER='v2026-08-03i';   // chip shows '· BETA'; the machine string stays clean for telemetry
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
