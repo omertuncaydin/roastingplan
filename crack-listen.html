@@ -175,12 +175,12 @@ body.notemps #btStrip,body.notemps #tmpRow{display:none!important}
 .btwheelWrap{position:relative;flex:1;height:44px;min-width:0}
 .btwheel{width:100%;height:44px;overflow-x:scroll;overflow-y:hidden;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;background:#15100b;border:1px solid var(--line);border-radius:12px;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,transparent,#000 25%,#000 75%,transparent);mask-image:linear-gradient(90deg,transparent,#000 25%,#000 75%,transparent);white-space:nowrap}
 .btwheel::-webkit-scrollbar{display:none}
-.btwheelInner{display:inline-flex;padding:0 calc(50% - 28px)}
-.btwheelInner div{width:56px;flex:none;text-align:center;line-height:44px;font-size:19px;color:var(--muted);scroll-snap-align:center;font-variant-numeric:tabular-nums}
-.btwheelSel{position:absolute;top:0;bottom:0;left:calc(50% - 28px);width:56px;border-left:1px solid var(--accent);border-right:1px solid var(--accent);pointer-events:none}
+.btwheelInner{display:inline-flex;padding:0 calc(50% - 18px)}
+.btwheelInner div{width:36px;flex:none;text-align:center;line-height:44px;font-size:17px;color:var(--muted);scroll-snap-align:center;font-variant-numeric:tabular-nums}
+.btwheelSel{position:absolute;top:0;bottom:0;left:calc(50% - 18px);width:36px;border-left:1px solid var(--accent);border-right:1px solid var(--accent);pointer-events:none}
 .btwheelSel:after{content:'\00b0C';position:absolute;right:3px;top:1px;font-size:9px;color:var(--muted)}
 #btStrip.due .btwheel{animation:tmpPulse 1.2s infinite}
-#btOk{background:var(--accent2);border:none;color:#fff;border-radius:12px;width:52px;height:44px;font-size:20px;font-weight:800;flex:none;cursor:pointer}
+#btOk{background:var(--accent2);border:none;color:#fff;border-radius:12px;min-width:52px;width:auto;padding:0 14px;height:44px;font-size:15px;font-weight:800;flex:none;cursor:pointer;letter-spacing:.02em}
 #btRor{flex:none;min-width:78px;text-align:right;font-size:13px;color:var(--gold);font-variant-numeric:tabular-nums;font-weight:700}
 body.st-setup #btn{display:none}
 .row>.card .lbl{min-height:2.4em;line-height:1.2;display:flex;align-items:flex-end;justify-content:center}
@@ -206,7 +206,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03e · BETA</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03f · BETA</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -218,7 +218,7 @@ body.st-setup #btn{display:none}
     <div id="btStrip">
       <div class="btrow">
         <div class="btwheelWrap"><div class="btwheel" id="btWheel"><div class="btwheelInner" id="btWheelInner"></div></div><div class="btwheelSel"></div></div>
-        <button id="btOk" onclick="btCommit()" aria-label="temp ekle">&#10003;</button>
+        <button id="btOk" onclick="btCommit()" aria-label="charge / temp ekle">Charge</button>
         <div id="btRor">&nbsp;</div>
       </div>
     </div>
@@ -472,7 +472,7 @@ let NLC=nlLoad(), ENROLL=false, ENCOUNT=0, enAC=null, enStream=null, enNodes=nul
 let A0PHASE='', A0T=0, A0PULLED=false, BEEPUNTIL=0;
 let TGTPHASE='', TGTT=0, STATUSBASE='', CUEON=false;
 let RCPHASE='', RCT=0;   // recipe drop-stage machine (Omer 2026-07-27): recipe FIXED, tagger only announces arrival   // target-drop machine for ROUTINE (mapped) roasts: ''=idle, pre=within 4 Agtron of target, alarm=target reached, done=resolved   // A0-pull machine: ''=idle, pre=first cracks heard, alarm=A0 confirmed, done=resolved; BEEPUNTIL mutes the guard while we beep
-let TEMPS=[], INPUTS=null, INPUTSOK=false;
+let TEMPS=[], INPUTS=null, INPUTSOK=false, CHGT0=null, PREROLL=null;
 let BCLIVE=null, cracks=[], crackSeq=0, startT=0, peakGain=0, LASTPROJ=null, STOPPROJ=null, PASTPEAK=false, ENGINE={}, STOPT=null, PHASE=0, STOPBORROWED=false, PHPEAK=0, PHPEAKT=0, PHREV=0;
 let LANG=localStorage.getItem('bsLang')||'en';   // declared at the very top: eval-order safe (v07e lesson)
 let proc=null, wav={chunks:[],len:0,sr:48000}, rows=[], wakeLock=null;
@@ -576,7 +576,7 @@ setInterval(()=>{ try{ if(!running) return;
 }catch(e){} },1000);   // hidden-tab repaint + heartbeat for the states that never reach the projection publisher (unmapped, no cracks yet)
 hp.oninput=()=>{ $('hpV').textContent=fmtHz(+hp.value); if(hpF) hpF.frequency.value=+hp.value; };
 
-function toggle(){ if(running){ stop(); return; } if(!INPUTSOK){ inputsSheet(); return; } INPUTSOK=false; start(); }
+/* toggle() lives in the INPUTS & OUTPUTS v3 block: Charge owns the clock, the popup owns the start */
 function hardRefresh(){ if(running||wav.len||rows.length||cracks.length){ if(!confirm('Refresh clears the unsaved session (audio + logs). Continue?')) return; } try{ const base=location.href.split('?')[0]; location.href=base+'?v='+Date.now(); }catch(e){ location.reload(); } }
 
 async function start(remote){
@@ -625,7 +625,7 @@ async function start(remote){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('dlStory').style.display='none'; $('gameAdd').style.display='none'; $('mapBtn').style.display='none'; $('nextRow').style.display='none'; $('agTop').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=performance.now(); refractoryUntil=0; crackFlash=false; LASTSIG=performance.now(); REMICED=false; DEEPMIC=false; MICWARNED=false; pendingCrackG=null; SAMPLES=[]; try{ tmpSeed(); }catch(e){} LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; PPFLIPT=null; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); RCPHASE=''; RCT=0; RCSEEN=0; rcUI(0); LASTROASTROW=null; try{ pushRoastStart(); }catch(e){} renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=(typeof CHGT0==='number'&&CHGT0&&(performance.now()-CHGT0)<1800000)?CHGT0:performance.now(); refractoryUntil=0; crackFlash=false; LASTSIG=performance.now(); REMICED=false; DEEPMIC=false; MICWARNED=false; pendingCrackG=null; SAMPLES=[]; try{ tmpSeed(); }catch(e){} CHGT0=null; LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; PPFLIPT=null; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); RCPHASE=''; RCT=0; RCSEEN=0; rcUI(0); LASTROASTROW=null; try{ pushRoastStart(); }catch(e){} renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw','mA0Ag'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -677,7 +677,7 @@ function queueSamples(){ try{ if(!SAMPLES.length) return;
 function renderStopLine(){ try{ $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):''; }catch(e){} }   // one renderer, every path: stale text has nowhere to hide
 function stop(){
   running=false; if(raf) cancelAnimationFrame(raf);
-  A0PHASE='done'; a0NudgeUI(0); TGTPHASE='done'; tgtUI(0); RCPHASE='done'; rcUI(0); try{ renderRcRow(); }catch(e){} try{ renderStageStrip(); }catch(e){} try{ renderStyleChips(); }catch(e){}   // Drop answers both questions: no alarm may outlive the roast
+  A0PHASE='done'; a0NudgeUI(0); TGTPHASE='done'; tgtUI(0); RCPHASE='done'; rcUI(0); CHGT0=null; PREROLL=null; try{ if($('btOk')) $('btOk').textContent='Charge'; }catch(e){} try{ renderRcRow(); }catch(e){} try{ renderStageStrip(); }catch(e){} try{ renderStyleChips(); }catch(e){}   // Drop answers both questions: no alarm may outlive the roast
   if(procDet){ try{ lpF.disconnect(procDet); procDet.disconnect(); }catch(e){} procDet.onaudioprocess=null; procDet=null; }
   if(procV){ try{ lpV.disconnect(procV); procV.disconnect(); }catch(e){} procV.onaudioprocess=null; procV=null; }
   if(proc){ try{ src.disconnect(proc); proc.disconnect(); }catch(e){} proc.onaudioprocess=null; proc=null; }
@@ -943,7 +943,7 @@ function wavHeader(){
 }
 function csvText(){
   const mv=id=>($(id)&&$(id).value||'').replace(/,/g,';').trim();
-  let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,machine,'+mv('mEquip')+'\n# meta,charge_c,'+mv('mChgT')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,moisture,'+mv('mMoist')+'\n# meta,water_activity,'+mv('mAw')+'\n# meta,a0_agtron,'+mv('mA0Ag')+'\n# meta,target,'+mv('mTarget')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+(function(){ const un=UNI(); return un?('\n# meta,universe_meter,'+(un.meter||'')+'\n# meta,universe_grinder,'+(un.grinder||'')+'\n# meta,universe_gset,'+(un.gset||'')+'\n# meta,universe_operator,'+(un.operator||'')+'\n# meta,universe_a0,'+(un.a0!=null?un.a0:'')+(un.guessed?' (guess)':'')):''; })()+(INPUTS&&INPUTS.gas?('\n# meta,input_gas,'+String(INPUTS.gas).replace(/,/g,';')):'')+'\n'+SAMPLES.map((s,i)=>'# sample,'+(i+1)+','+s.t.toFixed(1)+','+(s.ag||'')+'\n').join('')+TEMPS.map((p,i)=>'# temp,'+(i+1)+','+p.t.toFixed(1)+','+p.c+'\n').join('');
+  let s='# meta,coffee,'+mv('mCoffee')+'\n# meta,machine,'+mv('mEquip')+'\n# meta,charge_c,'+mv('mChgT')+'\n# meta,batch_g,'+mv('mBatch')+'\n# meta,agtron_whole,'+mv('mAgW')+'\n# meta,agtron_whole_sd,'+mv('mAgWSd')+'\n# meta,agtron_ground,'+mv('mAgG')+'\n# meta,agtron_ground_sd,'+mv('mAgSd')+'\n# meta,process,'+mv('mProc')+'\n# meta,charge_to_fc,'+mv('mChgFc')+'\n# meta,drop_after_last_s,'+mv('mDrop')+'\n# meta,moisture,'+mv('mMoist')+'\n# meta,water_activity,'+mv('mAw')+'\n# meta,a0_agtron,'+mv('mA0Ag')+'\n# meta,target,'+mv('mTarget')+'\n# meta,note,'+mv('mNote')+'\n# meta,date,'+new Date().toISOString()+(function(){ const un=UNI(); return un?('\n# meta,universe_meter,'+(un.meter||'')+'\n# meta,universe_grinder,'+(un.grinder||'')+'\n# meta,universe_gset,'+(un.gset||'')+'\n# meta,universe_operator,'+(un.operator||'')+'\n# meta,universe_a0,'+(un.a0!=null?un.a0:'')+(un.guessed?' (guess)':'')):''; })()+(INPUTS&&INPUTS.gas?('\n# meta,input_gas,'+String(INPUTS.gas).replace(/,/g,';').replace(/\n/g,' / ')):'')+(INPUTS&&INPUTS.dropSt?('\n# meta,input_dropst,'+INPUTS.dropSt):'')+'\n'+SAMPLES.map((s,i)=>'# sample,'+(i+1)+','+s.t.toFixed(1)+','+(s.ag||'')+'\n').join('')+TEMPS.map((p,i)=>'# temp,'+(i+1)+','+p.t.toFixed(1)+','+p.c+'\n').join('');
   s+='t_s,rms,gain,bg_gain,ratio,trigger_x,hp_hz,crack_gain\n'+rows.map(r=>r.join(',')).join('\n');
   const vv=valid(), fss=vv.filter(c=>c.f).map(c=>c.f);
   if(vv.length>1) s+='\n# stats,total_gain,'+vv.reduce((a,c)=>a+c.g,0)+',time_sd,'+sd(vv.map(c=>c.t)).toFixed(2)+',gain_sd,'+sd(vv.map(c=>c.g)).toFixed(2)+(fss.length>1?',f_mean,'+Math.round(fss.reduce((a,b)=>a+b,0)/fss.length)+',f_sd,'+Math.round(sd(fss)):'')+(LASTPROJ?',proj_final,'+LASTPROJ:'')+(STOPPROJ?',proj_stop,'+STOPPROJ:'')+(PHASE?',phase_final,'+PHASE.toFixed(3):'');
@@ -1023,71 +1023,90 @@ function renderStageStrip(){ const el=$('stageStrip'); if(!el) return;
   el.textContent=LASTSTAGES.map(sg=>sg[0]+' '+fmtT(Math.max(0,sg[1]-a0))).join(' · ')+' (DEV)';
 }
 function fmtT(t){ return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'); }
-// ---- INPUTS & OUTPUTS v2 (his spec 2026-08-03): the wheel is the probe's hand.
-// Horizontal Guide-style temp wheel rides the top of BOTH screens; charge before start, BT during.
-// First-minute courtesy: 3 gentle asks, then 3 more over the next two minutes; never mandatory (Cropster users switch the strip off in the Girdiler sheet).
+// ---- INPUTS & OUTPUTS v3 (his spec 2026-08-03 evening): the CHARGE CLICK is the clock.
+// Wheel on top of both screens. First tap on the button (reading 'Charge') = charge temp + timer start + inputs popup.
+// The popup confirms machine / batch / power plan / DROP STAGE and its button says 'continue roasting'.
+// The mic no longer starts anything; it reopens the popup pre-roast and stays the stopper mid-roast.
+function inputsBatchOpts(m){ try{ return Object.keys(chgMap()[m]||{}).sort((a,b)=>+a-+b).map(g=>'<option value="'+g+'">').join(''); }catch(e){ return ''; } }
 function inputsSheet(){ try{
   const tr=(LANG==='tr'), k=(cName.value||'').trim();
   let li={}; try{ li=(JSON.parse(localStorage.getItem('bsInputs')||'{}'))[k.toLowerCase()]||{}; }catch(e){}
-  const eq=($('mEquip')&&$('mEquip').value)||localStorage.getItem('bsEquip')||li.eq||'';
-  const chg=($('mChgT')&&$('mChgT').value)||li.chg||'';
+  const cur=($('mEquip')&&$('mEquip').value)||localStorage.getItem('bsEquip')||li.eq||'HSR15';
+  const ms=[...new Set([...Object.keys(chgMap()),'Bullet','HSR15',cur])].filter(Boolean);
   const batch=($('mBatch')&&$('mBatch').value)||li.batch||'';
-  let gas=li.gas||''; try{ if(!gas&&k){ const rc=rcGet(rcKey()); if(rc&&rc.gas) gas=rc.gas; } }catch(e){}
-  const F=(id,lb,vl,ph)=>'<div style="text-align:left;margin-top:8px"><span style="font-size:11px;color:var(--muted)">'+lb+'</span><input id="'+id+'" value="'+String(vl||'').replace(/"/g,'&quot;')+'" placeholder="'+ph+'" style="width:100%;background:#241c16;border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:9px 10px;font-size:15px;margin-top:3px"></div>';
-  $('modalBox').innerHTML='<h1 style="margin:0 0 2px;font-size:17px">'+(tr?'Girdiler · bu kavrum':'Inputs · this roast')+'</h1>'
-    +'<div class="hint" style="font-size:11.5px">'+(tr?'Girdiler reçetedir; çıktılar ses ve renktir. Onayla, kayıt seninle başlasın.':'Inputs are the recipe; outputs are sound and color. Confirm and the record starts with you.')+'</div>'
-    +F('iEq',tr?'Makine':'Machine',eq,'HSR15')
-    +F('iBatch',tr?'Parti (g)':'Batch (g)',batch,'250')
-    +F('iChg',tr?'Şarj sıcaklığı (°C)':'Charge temp (°C)',chg,'200')
-    +F('iGas',tr?'Güç / gaz planı':'Power / gas plan',gas,tr?'örn. P8, tarçında P6':'e.g. P8, P6 at cinnamon')
+  let gas=li.gas||''; let st0='B1';
+  try{ if(k){ const rc=rcGet(rcKey()); if(rc){ if(rc.gas&&!gas) gas=rc.gas; if(rc.st) st0=rc.st; } } }catch(e){}
+  if(li.dropSt) st0=li.dropSt;
+  const chgNow=(PREROLL&&PREROLL.length)?PREROLL[0].c:(($('mChgT')&&$('mChgT').value)||'');
+  $('modalBox').innerHTML='<h1 style="margin:0 0 2px;font-size:17px">'+(tr?'Girdiler · süre işliyor':'Inputs · the clock is running')+'</h1>'
+    +'<div class="hint" style="font-size:11.5px">'+(tr?('Şarj '+chgNow+'°C çarktan alındı. Girdiler reçetedir; çıktılar ses ve renk.'):('Charge '+chgNow+'°C came from the wheel. Inputs are the recipe; outputs are sound and color.'))+'</div>'
+    +'<div style="text-align:left;margin-top:8px"><span style="font-size:11px;color:var(--muted)">'+(tr?'Makine':'Machine')+'</span>'
+    +'<select id="iEq" onchange="try{document.getElementById(\'iBatchL\').innerHTML=inputsBatchOpts(this.value)}catch(e){}" style="width:100%;background:#241c16;border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:9px 10px;font-size:15px;margin-top:3px">'
+    +ms.map(m=>'<option'+(m===cur?' selected':'')+'>'+m+'</option>').join('')+'</select></div>'
+    +'<div style="text-align:left;margin-top:8px"><span style="font-size:11px;color:var(--muted)">'+(tr?'Parti (g)':'Batch (g)')+'</span>'
+    +'<input id="iBatch" list="iBatchL" value="'+String(batch).replace(/"/g,'&quot;')+'" placeholder="250" inputmode="numeric" style="width:100%;background:#241c16;border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:9px 10px;font-size:15px;margin-top:3px"><datalist id="iBatchL">'+inputsBatchOpts(cur)+'</datalist></div>'
+    +'<div style="text-align:left;margin-top:8px"><span style="font-size:11px;color:var(--muted)">'+(tr?'Güç / gaz planı (reçeteden)':'Power / gas plan (from the recipe)')+'</span>'
+    +'<textarea id="iGas" rows="2" placeholder="'+(tr?'örn. P8 · tarçında P6 · A0 sonrası P5':'e.g. P8 · P6 at cinnamon · P5 after A0')+'" style="width:100%;background:#241c16;border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:9px 10px;font-size:14px;margin-top:3px;resize:vertical">'+String(gas).replace(/</g,'&lt;')+'</textarea></div>'
+    +'<div style="text-align:left;margin-top:8px"><span style="font-size:11px;color:var(--gold);font-weight:700">'+(tr?'Drop Stage · reçetenin kalbi':'Drop Stage · the heart of the recipe')+'</span>'
+    +'<select id="iDropSt" style="width:100%;background:#241c16;border:1px solid var(--gold);border-radius:9px;color:var(--gold);padding:9px 10px;font-size:15px;font-weight:700;margin-top:3px">'
+    +RC_LADDER.map(st=>'<option'+(st===st0?' selected':'')+'>'+st+'</option>').join('')+'</select></div>'
     +'<div style="margin-top:10px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;text-align:left"><input type="checkbox" id="iTmpOn" '+(localStorage.getItem('bsTempsOn')!=='0'?'checked':'')+' style="width:17px;height:17px;accent-color:var(--accent2);flex:none"><label for="iTmpOn">'+(tr?'Sıcaklık şeridi ve S eğrisi (Cropster vb. kullanıyorsan kapat)':'Temp strip and S curve (turn off if you run Cropster etc.)')+'</label></div>'
-    +'<button class="go" style="margin-top:14px;width:100%" onclick="inputsGo()">'+(tr?'ONAYLA & BAŞLA':'CONFIRM & START')+'</button>'
-    +'<button style="margin-top:8px;background:none;border:1px solid var(--line);color:var(--muted)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Vazgeç':'Cancel')+'</button>';
+    +'<button class="go" style="margin-top:14px;width:100%" onclick="inputsGo()">'+(tr?'KAVURMAYA DEVAM':'CONTINUE ROASTING')+'</button>'
+    +'<button style="margin-top:8px;background:none;border:1px solid var(--line);color:var(--muted)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'sonra':'later')+'</button>';
   $('modal').style.display='flex';
-}catch(e){ INPUTSOK=false; start(); } }
+}catch(e){ INPUTSOK=true; } }
 function inputsGo(){ try{
   const g=id=>($(id)&&$(id).value||'').trim(), k=(cName.value||'').trim().toLowerCase();
-  if($('mChgT')) $('mChgT').value=g('iChg'); if($('mBatch')) $('mBatch').value=g('iBatch');
-  try{ if($('mEquip')&&g('iEq')) $('mEquip').value=g('iEq'); }catch(e){}
-  INPUTS={eq:g('iEq'),batch:g('iBatch'),chg:g('iChg'),gas:g('iGas')};
+  if($('mBatch')) $('mBatch').value=g('iBatch');
+  try{ if($('mEquip')&&g('iEq')){ $('mEquip').value=g('iEq'); localStorage.setItem('bsEquip',g('iEq')); } }catch(e){}
+  INPUTS={eq:g('iEq'),batch:g('iBatch'),chg:(PREROLL&&PREROLL.length?String(PREROLL[0].c):(($('mChgT')&&$('mChgT').value)||'')),gas:g('iGas'),dropSt:g('iDropSt')};
   if(k){ try{ const all=JSON.parse(localStorage.getItem('bsInputs')||'{}'); all[k]=INPUTS; localStorage.setItem('bsInputs',JSON.stringify(all)); }catch(e){} }
+  try{ if(k&&g('iDropSt')&&rcGet(rcKey())){ rcSet(rcKey(),g('iDropSt')); try{ renderRcRow(); }catch(e2){} } }catch(e){}
   try{ const on=!$('iTmpOn')||$('iTmpOn').checked; localStorage.setItem('bsTempsOn',on?'1':'0'); document.body.classList.toggle('notemps',!on); }catch(e){}
-  try{ const c0=parseFloat(g('iChg')); if(isFinite(c0)) btSet(c0); }catch(e){}
   $('modal').style.display='none';
 }catch(e){}
   INPUTSOK=true; toggle(); }
-const BT_MIN=60, BT_MAX=260, BT_CW=56;
+const BT_MIN=60, BT_MAX=260, BT_CW=36;
 let TPIDX=99; const TPROMPTS=[18,38,58,100,140,178];
 function btBuild(){ const inn=$('btWheelInner'); if(!inn||inn.childElementCount) return; let h=''; for(let v=BT_MIN;v<=BT_MAX;v++) h+='<div>'+v+'</div>'; inn.innerHTML=h; btSet(200); }
 function btSet(v){ const wh=$('btWheel'); if(!wh) return; const cv=Math.max(BT_MIN,Math.min(BT_MAX,Math.round(v))); wh.scrollLeft=(cv-BT_MIN)*BT_CW; }
 function btVal(){ const wh=$('btWheel'); if(!wh) return NaN; return Math.max(BT_MIN,Math.min(BT_MAX,BT_MIN+Math.round(wh.scrollLeft/BT_CW))); }
 function btDue(on){ const st=$('btStrip'); if(st) st.classList.toggle('due',!!on); }
 function btCommit(){ const c=btVal(); if(!isFinite(c)) return;
-  if(!running){ if($('mChgT')) $('mChgT').value=c;
-    if(TEMPS.length&&TEMPS[0].t===0) TEMPS[0].c=c; else TEMPS.unshift({t:0,c:c});
-    tmpDraw(); btDue(false); toast(LANG==='tr'?('Şarj '+c+'\u00b0C'):('Charge '+c+'\u00b0C')); return; }
-  const t=(performance.now()-startT)/1000;
-  TEMPS.push({t:t,c:c}); tmpDraw(); btDue(false);
-  try{ if(WCON) wcPub({c:(cName.value||'').trim()||'?', bt:Math.round(c)},true); }catch(e){} }
-function tmpSeed(){ TEMPS=[]; TPIDX=0;
-  try{ const c0=parseFloat(($('mChgT')&&$('mChgT').value)||(INPUTS&&INPUTS.chg)||''); if(isFinite(c0)&&c0>0){ TEMPS.push({t:0,c:c0}); btSet(c0); } }catch(e){}
+  if(running){ const t=(performance.now()-startT)/1000;
+    TEMPS.push({t:t,c:c}); tmpDraw(); btDue(false);
+    try{ if(WCON) wcPub({c:(cName.value||'').trim()||'?', bt:Math.round(c)},true); }catch(e){} return; }
+  if(!CHGT0){ CHGT0=performance.now(); PREROLL=[{t:0,c:c}];
+    if($('mChgT')) $('mChgT').value=c;
+    try{ $('btOk').innerHTML='&#10003;'; }catch(e){}
+    toast(LANG==='tr'?('Şarj '+c+'°C · süre başladı'):('Charge '+c+'°C · clock running'));
+    tmpDraw(); inputsSheet(); return; }
+  const t=(performance.now()-CHGT0)/1000;
+  PREROLL.push({t:t,c:c}); tmpDraw(); btDue(false); }
+function tmpSeed(){ TPIDX=0;
+  if(PREROLL&&PREROLL.length){ TEMPS=PREROLL.slice(); PREROLL=null; }
+  else{ TEMPS=[]; try{ const c0=parseFloat(($('mChgT')&&$('mChgT').value)||(INPUTS&&INPUTS.chg)||''); if(isFinite(c0)&&c0>0){ TEMPS.push({t:0,c:c0}); btSet(c0); } }catch(e){} }
   btDue(false); tmpDraw(); }
-function tmpRoR(){ const r=[]; for(let i=1;i<TEMPS.length;i++){ const dt=(TEMPS[i].t-TEMPS[i-1].t)/60; if(dt>0.05) r.push({t:TEMPS[i].t,v:(TEMPS[i].c-TEMPS[i-1].c)/dt}); } return r; }
+function tmpRoR(arr){ arr=arr||TEMPS; const r=[]; for(let i=1;i<arr.length;i++){ const dt=(arr[i].t-arr[i-1].t)/60; if(dt>0.05) r.push({t:arr[i].t,v:(arr[i].c-arr[i-1].c)/dt}); } return r; }
 function tmpDraw(){ try{ const cv=$('tmpG'); if(!cv) return; const x=cv.getContext('2d'), W=cv.width, H=cv.height;
   x.clearRect(0,0,W,H);
   const lastEl=$('tmpLast'), rorEl=$('btRor');
-  if(TEMPS.length<1){ x.fillStyle='#7a6a5a'; x.font='13px sans-serif'; x.fillText(LANG==='tr'?'çarkı çevir, onayla; S eğrisi kendini çizer':'spin the wheel, confirm; the S curve draws itself',10,H/2); if(lastEl) lastEl.textContent=''; if(rorEl) rorEl.innerHTML='&nbsp;'; return; }
-  const ror=tmpRoR(), last=TEMPS[TEMPS.length-1];
-  const horizon=(running&&TEMPS.length>=3)?185:8;
-  const tMax=Math.max(60,last.t+horizon), cs=TEMPS.map(p=>p.c);
+  const ARR=(!running&&PREROLL&&PREROLL.length)?PREROLL:TEMPS;
+  let tShow=null; if(running){ tShow=(performance.now()-startT)/1000; } else if(CHGT0){ tShow=(performance.now()-CHGT0)/1000; }
+  if(ARR.length<1){ x.fillStyle='#7a6a5a'; x.font='13px sans-serif'; x.fillText(LANG==='tr'?'çarkı çevir, Charge ile süre başlasın; S eğrisi kendini çizer':'spin the wheel, Charge starts the clock; the S curve draws itself',10,H/2);
+    if(lastEl) lastEl.textContent=''; if(rorEl) rorEl.innerHTML='&nbsp;';
+    if(tShow!=null){ x.fillStyle='#e6c14b'; x.font='800 20px ui-monospace,Menlo,monospace'; x.textAlign='right'; x.fillText(fmtT(tShow),W-10,24); x.textAlign='left'; }
+    return; }
+  const ror=tmpRoR(ARR), last=ARR[ARR.length-1];
+  const horizon=(running&&ARR.length>=3)?185:8;
+  const tMax=Math.max(60,last.t+horizon,(tShow||0)+5), cs=ARR.map(p=>p.c);
   const cMin=Math.min.apply(null,cs)-6, cMax=Math.max.apply(null,cs)+22;
   const X=t=>8+(W-16)*(t/tMax), Y=c=>H-18-(H-34)*((c-cMin)/Math.max(1,cMax-cMin));
   const YR=v=>H-18-(H-34)*((Math.max(-5,Math.min(30,v))+5)/35);
   x.strokeStyle='#3a2f26'; x.lineWidth=1; x.beginPath(); x.moveTo(8,H-18); x.lineTo(W-8,H-18); x.stroke();
-  // prediction first, under the real lines: RoR fitted linear on post-turning entries, integrated forward
-  if(running&&TEMPS.length>=3){
-    let ti=0; for(let i=1;i<TEMPS.length;i++) if(TEMPS[i].c<TEMPS[ti].c) ti=i;
-    const pts=TEMPS.slice(ti), rr=[];
+  if(running&&ARR.length>=3){
+    let ti=0; for(let i=1;i<ARR.length;i++) if(ARR[i].c<ARR[ti].c) ti=i;
+    const pts=ARR.slice(ti), rr=[];
     for(let i=1;i<pts.length;i++){ const dt=(pts[i].t-pts[i-1].t)/60; if(dt>0.05) rr.push({t:(pts[i].t+pts[i-1].t)/2, v:(pts[i].c-pts[i-1].c)/dt}); }
     if(rr.length>=2){ let n=rr.length,sx=0,sy=0,sxx=0,sxy=0;
       rr.forEach(p=>{ sx+=p.t; sy+=p.v; sxx+=p.t*p.t; sxy+=p.t*p.v; });
@@ -1101,22 +1120,28 @@ function tmpDraw(){ try{ const cv=$('tmpG'); if(!cv) return; const x=cv.getConte
     ror.forEach((p,i)=>{ const px=X(p.t), py=YR(p.v); i?x.lineTo(px,py):x.moveTo(px,py); }); x.stroke();
     x.fillStyle='rgba(230,193,75,0.9)'; ror.forEach(p=>{ x.fillRect(X(p.t)-2,YR(p.v)-2,4,4); }); }
   x.strokeStyle='#f3ede4'; x.lineWidth=2.5; x.beginPath();
-  TEMPS.forEach((p,i)=>{ const px=X(p.t), py=Y(p.c); i?x.lineTo(px,py):x.moveTo(px,py); }); x.stroke();
-  x.fillStyle='#f3ede4'; TEMPS.forEach(p=>{ x.beginPath(); x.arc(X(p.t),Y(p.c),3.4,0,7); x.fill(); });
+  ARR.forEach((p,i)=>{ const px=X(p.t), py=Y(p.c); i?x.lineTo(px,py):x.moveTo(px,py); }); x.stroke();
+  x.fillStyle='#f3ede4'; ARR.forEach(p=>{ x.beginPath(); x.arc(X(p.t),Y(p.c),3.4,0,7); x.fill(); });
   x.fillStyle='#a8998a'; x.font='11px sans-serif';
-  x.fillText(Math.round(cMax-22)+'\u00b0',10,14); x.fillText(Math.round(cMin+6)+'\u00b0',10,H-24);
+  x.fillText(Math.round(cMax-22)+'°',10,14); x.fillText(Math.round(cMin+6)+'°',10,H-24);
+  if(tShow!=null){ x.fillStyle='#e6c14b'; x.font='800 20px ui-monospace,Menlo,monospace'; x.textAlign='right'; x.fillText(fmtT(tShow),W-10,24); x.textAlign='left'; }
   const lr=ror.length?ror[ror.length-1].v:null;
-  if(lastEl) lastEl.textContent=Math.round(last.c)+'\u00b0C';
-  if(rorEl) rorEl.textContent=(lr!=null)?((lr>=0?'+':'')+lr.toFixed(1)+'\u00b0/dk'):'RoR \u00b7 --';
+  if(lastEl) lastEl.textContent=Math.round(last.c)+'°C';
+  if(rorEl) rorEl.textContent=(lr!=null)?((lr>=0?'+':'')+lr.toFixed(1)+'°/dk'):'RoR · --';
 }catch(e){} }
 setInterval(function(){ try{
   if(!running||document.body.classList.contains('notemps')) return;
   const nowS=(performance.now()-startT)/1000, lastT=TEMPS.length?TEMPS[TEMPS.length-1].t:0;
   if(TPIDX<TPROMPTS.length){
-    if(nowS>=TPROMPTS[TPIDX]){ TPIDX++;
-      if(nowS-lastT>12){ btDue(true); toast(LANG==='tr'?'Şu anki sıcaklığı seçer misin? RoR ve S eğrisi ilk dakikalarda kurulur.':'Would you pick the current temp? RoR and the S curve are built in the first minutes.'); } } }
+    if(nowS>=TPROMPTS[TPIDX]){ const late=nowS>TPROMPTS[TPIDX]+15; TPIDX++;
+      if(!late&&nowS-lastT>12){ btDue(true); toast(LANG==='tr'?'Şu anki sıcaklığı seçer misin? RoR ve S eğrisi ilk dakikalarda kurulur.':'Would you pick the current temp? RoR and the S curve are built in the first minutes.'); } } }
   else if(nowS-lastT>75){ btDue(true); }
 }catch(e){} },5000);
+setInterval(function(){ try{ if((running||CHGT0)&&!document.body.classList.contains('notemps')) tmpDraw(); }catch(e){} },1000);
+function toggle(){ if(running){ stop(); return; }
+  if(!CHGT0){ btDue(true); toast(LANG==='tr'?'Önce şarj: çarkı ayarla, Charge\u0027a bas.':'Charge first: set the wheel, tap Charge.'); return; }
+  if(!INPUTSOK){ inputsSheet(); return; }
+  INPUTSOK=false; start(); }
 try{ btBuild(); if(localStorage.getItem('bsTempsOn')==='0') document.body.classList.add('notemps'); }catch(e){}
 function valid(){ return cracks.filter(c=>!c.fp); }
 // ---- TAGGER v1 stage-layer helpers (2026-07-25 fit on his Stage Ear labels; LORO-verified) ----
@@ -2303,7 +2328,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-03e';   // chip shows '· BETA'; the machine string stays clean for telemetry
+const APPVER='v2026-08-03f';   // chip shows '· BETA'; the machine string stays clean for telemetry
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
