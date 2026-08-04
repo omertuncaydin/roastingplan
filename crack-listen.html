@@ -220,7 +220,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03i · BETA</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03j · BETA</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1136,12 +1136,20 @@ function renderSum(){ try{ const el=$('sumStrip'); if(!el) return;
   el.textContent=eq+' \u00b7 '+b+'g \u00b7 '+(isFinite(v)?v:'\u2014')+'\u00b0 \u00b7 DROP '+st+' \u00b7 '+gas+'  \u270e';
 }catch(e){} }
 let MICARMED=false;
-function micArmCheck(){ try{ if(MICARMED||!CHGT0||running) return; const A=PREROLL||[]; if(!A.length) return;
-  const last=A[A.length-1]; let arm=last.c>=175;
-  if(!arm&&A.length>=3){ const rr=tmpRoR(A); if(rr.length){ const r=rr[rr.length-1].v;
+function micArmCheck(){ try{ if(MICARMED||!CHGT0||running) return;
+  // POLITICAL EAR (2026-08-03, his correction): the first build fired at charge because the charge reading
+  // itself is >=175. The nudge may only speak when it can barely be wrong, and even then it only REMINDS
+  // his own doctrine (listen 1-2 min before FC) — it never claims to know where the crack is.
+  const A=PREROLL||[]; if(A.length<3) return;                                     // one point knows nothing
+  const el2=(performance.now()-CHGT0)/1000; if(el2<300) return;                    // no drum cracks before 5 min
+  let ti=0; for(let i=1;i<A.length;i++) if(A[i].c<A[ti].c) ti=i;                   // turning point
+  if(ti===0||ti===A.length-1) return;                                             // TP not witnessed yet
+  const last=A[A.length-1]; if(last.c<=A[ti].c+15) return;                         // not meaningfully climbing yet
+  let arm=last.c>=175;
+  if(!arm){ const rr=tmpRoR(A.slice(ti)); if(rr.length){ const r=rr[rr.length-1].v;
     if(r>0){ const eta=(185-last.c)/r*60; if(eta<=90) arm=true; } } }
   if(arm){ MICARMED=true; try{ const mb=document.querySelector('.micBtn'); if(mb) mb.classList.add('due'); }catch(e){}
-    toast(LANG==='tr'?'Çatlak yaklaşıyor \u00b7 kulağı aç.':'Crack is near \u00b7 open the ear.'); } }catch(e){} }
+    toast(LANG==='tr'?'Hazır olduğunda kulağı açabilirsin; çatlak penceresine yaklaşıyor olabilirsin.':'Whenever you are ready you can open the ear; you may be nearing the crack window.'); } }catch(e){} }
 function btCommit(){ const c=btVal(); if(!isFinite(c)) return;
   if(running){ const t=(performance.now()-startT)/1000;
     TEMPS.push({t:t,c:c}); tmpDraw(); btDue(false);
@@ -2399,7 +2407,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-03i';   // chip shows '· BETA'; the machine string stays clean for telemetry
+const APPVER='v2026-08-03j';   // chip shows '· BETA'; the machine string stays clean for telemetry
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
