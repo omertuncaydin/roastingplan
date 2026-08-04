@@ -171,6 +171,10 @@ body.st-live #tmpRow{display:flex}
 #btStrip{display:none;margin:12px 0 2px}
 body.st-setup #btStrip,body.st-live #btStrip{display:block}
 body.st-live #btStrip{order:0}
+body.st-live #tmpRow{order:0}
+body.st-done .wrap{display:flex;flex-direction:column}
+body.st-done #tmpRow{order:99}
+#nameChips{display:none!important}
 body.notemps #btStrip,body.notemps #tmpRow{display:none!important}
 .btrow{display:flex;align-items:center;gap:10px}
 .btwheelWrap{position:relative;flex:1;height:44px;min-width:0}
@@ -181,6 +185,7 @@ body.notemps #btStrip,body.notemps #tmpRow{display:none!important}
 .btwheelSel{position:absolute;top:0;bottom:0;left:calc(50% - 18px);width:36px;border-left:1px solid var(--accent);border-right:1px solid var(--accent);pointer-events:none}
 .btwheelSel:after{content:'\00b0C';position:absolute;right:3px;top:1px;font-size:9px;color:var(--muted)}
 #btStrip.due .btwheel{animation:tmpPulse 1.2s infinite}
+#modalBox.wide{max-width:780px!important}
 #btOk{background:var(--accent2);border:none;color:#fff;border-radius:12px;min-width:52px;width:auto;padding:0 14px;height:44px;font-size:15px;font-weight:800;flex:none;cursor:pointer;letter-spacing:.02em}
 #btRor{flex:none;min-width:78px;text-align:right;font-size:13px;color:var(--gold);font-variant-numeric:tabular-nums;font-weight:700}
 body.st-setup #btn{display:none}
@@ -207,7 +212,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03g · BETA</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03h · BETA</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -223,6 +228,12 @@ body.st-setup #btn{display:none}
       <div class="btwheelWrap"><div class="btwheel" id="btWheel"><div class="btwheelInner" id="btWheelInner"></div></div><div class="btwheelSel"></div></div>
       <button id="btOk" onclick="btCommit()" aria-label="charge / temp ekle">Charge</button>
       <div id="btRor">&nbsp;</div>
+    </div>
+  </div>
+  <div class="row" id="tmpRow" style="margin-top:10px">
+    <div class="card" style="flex:1;min-width:0">
+      <div class="lbl">sıcaklık · S eğrisi <span class="info" onclick="showInfo('tmp')">&#9432;</span> <span id="tmpLast" style="color:var(--gold);font-weight:700;margin-left:6px"></span></div>
+      <canvas id="tmpG" width="640" height="150" style="width:100%;height:auto;background:none;margin-top:4px"></canvas>
     </div>
   </div>
 
@@ -454,12 +465,6 @@ body.st-setup #btn{display:none}
   </div>
   </details>
 
-  <div class="row" id="tmpRow" style="margin-top:10px">
-    <div class="card" style="flex:1;min-width:0">
-      <div class="lbl">sıcaklık · S eğrisi <span class="info" onclick="showInfo('tmp')">&#9432;</span> <span id="tmpLast" style="color:var(--gold);font-weight:700;margin-left:6px"></span></div>
-      <canvas id="tmpG" width="640" height="150" style="width:100%;height:auto;background:none;margin-top:4px"></canvas>
-    </div>
-  </div>
 
   <div id="modal" onclick="if(event.target===this)this.style.display='none'" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:none;align-items:center;justify-content:center;padding:20px"><div class="card" id="modalBox" style="max-width:420px;width:100%;margin:0;max-height:86vh;overflow-y:auto;-webkit-overflow-scrolling:touch"></div></div>
 </div>
@@ -1618,36 +1623,7 @@ function chipColor(n){ const t=String(n).toLowerCase(); for(const oh of ORIGIN_H
   let h=0; for(let i=0;i<t.length;i++) h=(h*31+t.charCodeAt(i))>>>0; return CHIP_PAL[h%CHIP_PAL.length]; }
 function chipParts(c){ const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
   return {bg:'rgba('+r+','+g+','+b+',.14)', tx:'rgb('+Math.min(255,Math.round(r+(255-r)*.45))+','+Math.min(255,Math.round(g+(255-g)*.45))+','+Math.min(255,Math.round(b+(255-b)*.45))+')'}; }
-function renderNameChips(){ const el=$('nameChips'); if(!el) return;
-  let m={}; try{ m=JSON.parse(localStorage.getItem('bsCal'))||{}; }catch(e){}
-  const names=new Set(Object.keys(m).filter(k=>k!=='__house')); CLOUDNAMES.forEach(n=>names.add(n));
-  const mark=n=>(m[n]?'':((COMMNAMES.indexOf(n)>=0&&CLOUDNAMES.indexOf(n)<0)?'\ud83c\udf10 ':'\u2601 '));
-  const groups={};   // v27c STYLE REGISTER: same bean roasted N ways = ONE card with style chips; 'bean: style' keys untouched
-  [...names].sort().forEach(n=>{ const b=beanOf(n); (groups[b]=groups[b]||[]).push(n); });
-  el.innerHTML=Object.keys(groups).sort().map(b=>{ const g=groups[b];
-    if(g.length===1){ const n=g[0],c=chipColor(n),cp=chipParts(c);   // single-style bean: exactly today's pill, nothing asked
-      return '<span class="hpill" style="cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border:1.5px solid '+c+';background:'+cp.bg+';color:'+cp.tx+'" data-cn="'+escC(n)+'">'+mark(n)+escC(n)+'</span>'; }
-    return '<span style="display:inline-flex;flex-wrap:wrap;align-items:center;gap:5px;border:1px solid var(--line);border-radius:14px;padding:6px 9px;background:var(--panel2)"><span style="font-size:12.5px;font-weight:700;color:var(--muted)">'+escC(b)+'</span>'
-      +g.map(n=>{ const c=chipColor(n),cp=chipParts(c),s9=styleOf(n)||(LANG==='tr'?'düz':'plain');
-        return '<span class="hpill" style="cursor:pointer;font-size:12.5px;font-weight:600;padding:6px 10px;border:1.5px solid '+c+';background:'+cp.bg+';color:'+cp.tx+'" data-cn="'+escC(n)+'">'+mark(n)+escC(s9)+'</span>'; }).join('')
-      +'</span>'; }).join('')
-    ||'<span class="hint" style="font-size:11px">'+(LANG==='tr'?'Kayıtlı kahve yok; adını yaz, eşle.':'No known coffees yet; type a name and map it.')+'</span>';
-  el.querySelectorAll('[data-cn]').forEach(x=>x.onpointerdown=ev=>{ ev.preventDefault(); pickCoffee(x.dataset.cn); });   // pointerdown beats the input blur
-}
-async function pickCoffee(n){ setTimeout(function(){ try{ btAim(); }catch(e){} },50);
-  cName.value=n; localStorage.setItem('bsCoffee',n);
-  const m=calMap();
-  if(!m[n]&&SB){ try{ const u=await cloudUser();
-    if(u){ const {data}=await SB.from('coffees').select('name,badge,map').eq('owner',u.id).eq('name',n);
-      const c=data&&data[0];
-      if(c&&c.map&&typeof c.map==='object'){ const mm={...c.map}; delete mm.grades;   // bias stays per-device
-        if(mm.bell&&!Array.isArray(mm.bell)) delete mm.bell;
-        m[n]=mm; localStorage.setItem('bsCal',JSON.stringify(m));
-        if(c.badge&&typeof c.badge==='object'&&Object.keys(c.badge).length){ const b=badgeMap(); b[n]=c.badge; localStorage.setItem('bsBadge',JSON.stringify(b)); }
-        toast((LANG==='tr'?'Buluttan alındı: ':'Pulled from cloud: ')+n); } } }catch(e){} }
-  if(!calMap()[n]&&!calMap()[(n||'').trim().toLowerCase()]){ try{ await communityPull(n); }catch(e){} }   // no local map, no own cloud map -> community prior (borrowed)
-  loadBadge(); closeName(); updateGauge();
-}
+function renderNameChips(){ try{ const el=$('nameChips'); if(el) el.innerHTML=''; }catch(e){} }   // chips retired 2026-08-03 (his order): the recipe list is the one picker; bsCal/CLOUDNAMES data untouched
 let PICK_CB=null;
 function pickModal(title,hint,items,btnLabel,cb){
   PICK_CB=cb;
@@ -1774,7 +1750,23 @@ function renderNameplate(){ const nv=(cName.value||'').trim(), n=$('npName');
   n.style.color=nv?'var(--ink)':'var(--muted)';
   $('npUnder').style.background=nv?'var(--accent)':'var(--line)';
   try{ renderStyleChips(); }catch(e){} }
-function editName(){ $('npWrap').style.display='none'; $('nameEdit').style.display='block'; renderNameChips(); cName.focus(); }
+function editName(){ rcNamesOpen(); }
+function rcNamesSet(n){ try{ cName.value=n; localStorage.setItem('bsCoffee',n); }catch(e){}
+  $('modal').style.display='none'; RCEDIT=true;
+  try{ renderNameplate(); }catch(e){} try{ renderRcRow(); }catch(e){} try{ btAim(); }catch(e){} }
+function rcNamesOpen(){ try{ gdPull(); }catch(e){}
+  const tr=(LANG==='tr');
+  const L=gdRecipes().filter(r=>r&&r.active!==false).sort((a,b)=>((a.sortOrder==null?9e9:a.sortOrder)-(b.sortOrder==null?9e9:b.sortOrder)));
+  $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:17px">'+(tr?'Kahve seç':'Pick the coffee')+'</h1>'
+   +'<div style="display:flex;gap:6px;margin-bottom:6px"><input id="rcNameIn" value="'+String(cName.value||'').replace(/"/g,'&quot;')+'" placeholder="'+(tr?'ya da yeni isim yaz':'or type a new name')+'" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:15px;background:#15100b;color:var(--ink)">'
+   +'<button class="pm" style="width:auto;padding:0 16px;font-size:14px;background:var(--accent2);color:#fff;border:none" onclick="rcNamesSet(document.getElementById(\'rcNameIn\').value.trim())">OK</button></div>'
+   +(L.length?L.map(r=>'<div data-rn="'+escC(r.name)+'" style="padding:10px 4px;border-top:1px solid var(--line);cursor:pointer;font-size:15px">'+escC(r.name)+'</div>').join(''):('<div class="hint">'+(tr?'Reçete yok':'No recipes yet')+'</div>'))
+   +'<button style="margin-top:10px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Kapat':'Close')+'</button>';
+  $('modal').style.display='flex';
+  try{ const inp=$('rcNameIn'); inp.addEventListener('keydown',e=>{ if(e.key==='Enter') rcNamesSet(inp.value.trim()); });
+    inp.addEventListener('input',()=>{ const q=inp.value.trim().toLowerCase();
+      $('modalBox').querySelectorAll('[data-rn]').forEach(x=>{ x.style.display=(!q||x.dataset.rn.toLowerCase().includes(q))?'':'none'; }); }); }catch(e){}
+  $('modalBox').querySelectorAll('[data-rn]').forEach(x=>x.onclick=()=>rcNamesSet(x.dataset.rn)); }
 function closeName(){ { let v9=(cName.value||'').trim();   // 'bean (bittersweet' -> auto ')' ; abandoned 'bean (' -> stripped
     if(/\([^)]+$/.test(v9)) cName.value=v9+')'; else if(/\($/.test(v9)) cName.value=v9.slice(0,-1).trim(); }
   $('nameEdit').style.display='none'; $('npWrap').style.display='block'; renderNameplate(); try{ renderRcRow(); }catch(e){} }
@@ -2337,7 +2329,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-03g';   // chip shows '· BETA'; the machine string stays clean for telemetry
+const APPVER='v2026-08-03h';   // chip shows '· BETA'; the machine string stays clean for telemetry
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
@@ -2691,15 +2683,38 @@ function rcSetWn(k,wn){ if(!k) return; const cur=rcGetMan(k)||{}; const m2=rcMap
   const cm=calMap(); if(cm[k]){ if(m2[k]) cm[k].rc=m2[k]; else delete cm[k].rc; cm[k].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm)); }
   renderRcRow(); }
 function rcTableOpen(){ try{ gdPull(); }catch(e){}
-  const L=gdRecipes().filter(r=>r&&r.active!==false).sort((a,b)=>((a.sortOrder==null?9e9:a.sortOrder)-(b.sortOrder==null?9e9:b.sortOrder)));
-  const eq=localStorage.getItem('bsEquip')||'Bullet';
-  $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:17px">'+(LANG==='tr'?'Reçeteler':'Recipes')+'</h1>'
-   +'<div class="hint" style="font-size:11px;margin-bottom:4px">'+(LANG==='tr'?'Hesap reçeteleri (Guide ile ortak) · satıra dokun, burada düzenle':'Account recipes (shared with the Guide) · tap a row to edit here')+'</div>'
-   +(L.length?L.map(r=>'<div data-rn="'+escC(r.name)+'" style="padding:9px 4px;border-top:1px solid var(--line);cursor:pointer;font-size:13.5px">'+escC(r.name)+' <span style="color:var(--dim);font-size:11px">· B: '+escC(r.bullet||'-')+' · H: '+escC(r.hsr||'-')+'</span></div>').join(''):('<div class="hint">'+(LANG==='tr'?'Reçete yok':'No recipes yet')+'</div>'))
-   +'<div style="margin-top:10px;text-align:center"><a href="roast-guide.html" target="_blank" rel="noopener" style="color:var(--gold);font-size:12px;font-weight:700">Guide &#8599; · '+(LANG==='tr'?'sıra/takma ad/not':'order/alias/note')+'</a></div>'
-   +'<button style="margin-top:10px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(LANG==='tr'?'Kapat':'Close')+'</button>';
+  const tr=(LANG==='tr');
+  const L=gdRecipes().sort((a,b)=>((a.sortOrder==null?9e9:a.sortOrder)-(b.sortOrder==null?9e9:b.sortOrder)));
+  const cell='border:1px solid var(--line);border-radius:7px;background:#15100b;color:var(--ink);padding:7px 8px;font-size:13px;width:100%;min-width:110px';
+  $('modalBox').classList.add('wide');
+  $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:17px">'+(tr?'Reçete tablosu':'Recipe table')+'</h1>'
+   +'<div class="hint" style="font-size:11px;margin-bottom:6px">'+(tr?'Guide ile ortak hesap reçeteleri. Satırı düzenle, KAYDET; grameri serbest yaz (örn. DROP B1 · -P2 tarçında).':'Account recipes shared with the Guide. Edit a row, SAVE; write the grammar freely (e.g. DROP B1 · -P2 at cinnamon).')+'</div>'
+   +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="border-collapse:separate;border-spacing:4px;width:100%;min-width:640px">'
+   +'<tr style="font-size:11px;color:var(--muted);text-align:left"><th>'+(tr?'Ad':'Name')+'</th><th>Bullet</th><th>HSR15</th><th>'+(tr?'Not':'Note')+'</th><th>'+(tr?'Aktif':'On')+'</th><th></th></tr>'
+   +(L.length?L.map((r,i)=>'<tr data-i="'+i+'">'
+     +'<td style="font-size:13.5px;font-weight:700;white-space:nowrap;padding-right:6px">'+escC(r.name)+'</td>'
+     +'<td><input class="rcTb" value="'+escC(r.bullet||'')+'" style="'+cell+'"></td>'
+     +'<td><input class="rcTh" value="'+escC(r.hsr||'')+'" style="'+cell+'"></td>'
+     +'<td><input class="rcTn" value="'+escC(r.note||'')+'" style="'+cell+';min-width:90px"></td>'
+     +'<td style="text-align:center"><input type="checkbox" class="rcTa"'+(r.active!==false?' checked':'')+' style="width:17px;height:17px;accent-color:var(--accent2)"></td>'
+     +'<td><button class="pm rcTs" style="width:auto;padding:6px 12px;font-size:12px">'+(tr?'KAYDET':'SAVE')+'</button></td>'
+     +'</tr>').join(''):'<tr><td colspan="6" class="hint">'+(tr?'Reçete yok':'No recipes yet')+'</td></tr>')
+   +'</table></div>'
+   +'<div style="display:flex;gap:6px;margin-top:10px"><input id="rcNewName" placeholder="'+(tr?'yeni reçete adı':'new recipe name')+'" style="flex:1;min-width:0;'+cell+'"><button class="pm" id="rcNewGo" style="width:auto;padding:0 14px;font-size:13px;background:var(--accent2);color:#fff;border:none">'+(tr?'Ekle':'Add')+'</button></div>'
+   +'<button style="margin-top:10px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modalBox\').classList.remove(\'wide\');document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Kapat':'Close')+'</button>';
   $('modal').style.display='flex';
-  $('modalBox').querySelectorAll('[data-rn]').forEach(x=>x.onclick=()=>{ cName.value=x.dataset.rn; try{ localStorage.setItem('bsCoffee',x.dataset.rn); }catch(e){} $('modal').style.display='none'; RCEDIT=true; renderNameplate(); try{ renderNameChips(); }catch(e){} renderRcRow(); try{ btAim(); }catch(e){} }); }
+  $('modalBox').querySelectorAll('tr[data-i]').forEach(row=>{ const r=L[+row.dataset.i]; const sb=row.querySelector('.rcTs'); if(!sb) return;
+    sb.onclick=async()=>{ if(!SB){ toast(tr?'Çevrimdışı: kaydedilemedi':'Offline: not saved'); return; }
+      sb.disabled=true; sb.textContent='...';
+      try{ const p={bullet:row.querySelector('.rcTb').value.trim()||'-', hsr:row.querySelector('.rcTh').value.trim()||'-', note:row.querySelector('.rcTn').value.trim(), active:row.querySelector('.rcTa').checked};
+        const {data,error}=await SB.from('recipes').update(p).eq('id',r.id).select().single();
+        if(error){ toast('hata: '+error.message); } else { gdCachePatch(data); try{ rcLineUI(); renderRcRow(); }catch(e2){} toast(tr?(r.name+' kaydedildi'):(r.name+' saved')); }
+      }catch(e){ toast('hata'); }
+      sb.disabled=false; sb.textContent=(tr?'KAYDET':'SAVE'); }; });
+  const ng=$('rcNewGo'); if(ng) ng.onclick=async()=>{ const nm=($('rcNewName').value||'').trim(); if(!nm) return;
+    if(!SB){ toast(tr?'Çevrimdışı':'Offline'); return; }
+    try{ const {data,error}=await SB.from('recipes').insert({name:nm,match:[nm.toLowerCase()],bullet:'-',hsr:'-',note:'',active:true,sort_order:null}).select().single();
+      if(error){ toast('hata: '+error.message); } else { gdCachePatch(data); rcTableOpen(); } }catch(e){ toast('hata'); } }; }
 function rcWnGo(){ const c9=(($('rcWnC')||{}).value||''), n9=((($('rcWnN')||{}).value||'')+'').trim().toUpperCase().slice(0,5);
   if(!c9&&!n9) return; rcSetWn(rcKey(), (c9&&n9)?(c9+'-'+n9):(c9||n9));
   toast(LANG==='tr'?'Saat çipi adı kaydedildi':'Watch chip name saved'); }
