@@ -202,6 +202,23 @@ body.st-setup #btn{display:none}
 </head>
 <body>
 <div class="wrap">
+  <div id="eqStrip" style="margin:12px 0 2px;text-align:center">
+    <div id="eqPills" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap"></div>
+    <div id="batchPills" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px"></div>
+  </div>
+  <div id="btStrip">
+    <div class="btrow">
+      <div class="btwheelWrap"><div class="btwheel" id="btWheel"><div class="btwheelInner" id="btWheelInner"></div></div><div class="btwheelSel"></div></div>
+      <button id="btOk" onclick="btCommit()" aria-label="charge / temp ekle">Charge</button>
+      <div id="btRor">&nbsp;</div>
+    </div>
+  </div>
+  <div class="row" id="tmpRow" style="margin-top:10px">
+    <div class="card" style="flex:1;min-width:0">
+      <div class="lbl">sıcaklık · S eğrisi <span class="info" onclick="showInfo('tmp')">&#9432;</span> <span id="tmpLast" style="color:var(--gold);font-weight:700;margin-left:6px"></span></div>
+      <canvas id="tmpG" width="640" height="150" style="width:100%;height:auto;background:none;margin-top:4px"></canvas>
+    </div>
+  </div>
   <div id="hdr">
     <a href="roast-guide.html" style="text-decoration:none;color:inherit" title="CoffeeNutz Guide"><div class="brandFull">
       <img class="tlogo" src="coffeenutz-turtle.png" alt="CoffeeNutz">
@@ -220,7 +237,7 @@ body.st-setup #btn{display:none}
       <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03j · BETA</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03k · BETA</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -231,24 +248,7 @@ body.st-setup #btn{display:none}
     </div>
   </div>
 
-  <div id="eqStrip" style="margin:12px 0 2px;text-align:center">
-    <div id="eqPills" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap"></div>
-    <div id="batchPills" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px"></div>
-  </div>
 
-  <div id="btStrip">
-    <div class="btrow">
-      <div class="btwheelWrap"><div class="btwheel" id="btWheel"><div class="btwheelInner" id="btWheelInner"></div></div><div class="btwheelSel"></div></div>
-      <button id="btOk" onclick="btCommit()" aria-label="charge / temp ekle">Charge</button>
-      <div id="btRor">&nbsp;</div>
-    </div>
-  </div>
-  <div class="row" id="tmpRow" style="margin-top:10px">
-    <div class="card" style="flex:1;min-width:0">
-      <div class="lbl">sıcaklık · S eğrisi <span class="info" onclick="showInfo('tmp')">&#9432;</span> <span id="tmpLast" style="color:var(--gold);font-weight:700;margin-left:6px"></span></div>
-      <canvas id="tmpG" width="640" height="150" style="width:100%;height:auto;background:none;margin-top:4px"></canvas>
-    </div>
-  </div>
 
   <details class="fold" id="cWalk">
   <summary>how it works · 5 steps</summary>
@@ -2407,7 +2407,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-03j';   // chip shows '· BETA'; the machine string stays clean for telemetry
+const APPVER='v2026-08-03k';   // chip shows '· BETA'; the machine string stays clean for telemetry
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
