@@ -270,7 +270,7 @@ body.st-setup #btn{display:none}
     <div class="pillRow">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer" title="v2026-08-05h">BETA · 08-05h</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer" title="v2026-08-05i">BETA · 08-05i</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -728,7 +728,7 @@ function chargeEditor(){ const m=$('mEquip').value, cm=chgMap()[m]||{}; const ks
    +'<button style="margin-top:14px;background:var(--accent2)" onclick="chargeSave()">'+(LANG==='tr'?'Kaydet':'Save')+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="$(\'modal\').style.display=\'none\'">'+(LANG==='tr'?'Kapat':'Close')+'</button>';
   $('modal').style.display='flex'; }
-function chargeSave(){ const gs=[...document.querySelectorAll('[data-cg]')], ts=[...document.querySelectorAll('[data-ct]')];
+function chargeSave(){ CHGEDIT=Date.now(); const gs=[...document.querySelectorAll('[data-cg]')], ts=[...document.querySelectorAll('[data-ct]')];
   const cm=chgMap(), m=$('mEquip').value, o={};
   gs.forEach((g,i)=>{ const gv=parseFloat(g.value), tv=parseFloat(ts[i].value); if(isFinite(gv)&&isFinite(tv)) o[gv]=tv; });
   cm[m]=o; localStorage.setItem('gCharge',JSON.stringify(cm));   // the Guide reads this same key
@@ -1819,16 +1819,15 @@ async function cloudPull(){
 }
 async function chargePush(){ try{ if(!SB) return; const u=await cloudUser(); if(!u) return;
   await SB.from('user_settings').upsert({owner:u.id, charge:chgMap(), updated_at:new Date().toISOString()},{onConflict:'owner'}); }catch(e){} }
-function chgNorm(o){ try{ return JSON.stringify(Object.keys(o).sort().reduce(function(a,k){ var m=o[k]||{}; a[k]=Object.keys(m).sort().reduce(function(b,g){ b[g]=+m[g]; return b; },{}); return a; },{})); }catch(e){ return ''; } }
-const CHG_PRISTINE=chgNorm({'Bullet':{500:190},'HSR15':{1000:140,2500:150,5000:160,7500:165}});
+let CHGEDIT=0;   // v05i: moment of the last LOCAL human edit — pull yields to it briefly instead of racing it
 async function chargePull(){ try{ if(!SB) return; const u=await cloudUser(); if(!u) return;
   const {data}=await SB.from('user_settings').select('charge,updated_at').eq('owner',u.id);
   const r=data&&data[0]; if(!r||!r.charge) return;
-  const rT=Date.parse(r.updated_at)||0, lT=Date.parse(localStorage.getItem('gChargeTs')||'')||0;   // v05h numeric compare: postgres echoes '+00:00', clients stamp 'Z' — string order lied
-  let lc=null; try{ lc=JSON.parse(localStorage.getItem('gCharge')||'null'); }catch(e){}
-  if(chgNorm(r.charge)===CHG_PRISTINE && lc && chgNorm(lc)!==CHG_PRISTINE){ chargePush(); return; }   // v05h: a seeder's untouched defaults NEVER beat a real table, whatever their stamp (his 08-05 table loss)
-  if(!lT||rT>lT){ localStorage.setItem('gCharge',JSON.stringify(r.charge)); localStorage.setItem('gChargeTs',r.updated_at); renderEquipSel(); try{ btAim(); }catch(e){} }
-  else if(lT>rT) chargePush();
+  if(Date.now()-CHGEDIT<15000) return;   // a just-saved table outranks an in-flight read
+  /* v05i SINGLE WRITER: the account is the ONLY truth and ONLY a human Kaydet ever writes it.
+     No timestamp duels, no heal-pushes — those let any stale device resurrect dead tables (his 08-05 170/240/250 ghost). */
+  localStorage.setItem('gCharge',JSON.stringify(r.charge)); localStorage.setItem('gChargeTs',r.updated_at);
+  renderEquipSel(); try{ btAim(); }catch(e){}
 }catch(e){} }
 async function cloudAutoSync(){   // on open, signed in: pull ADDITIONS only (zero overwrite risk); differing coffees are counted, never touched
   const u=await cloudStatus(); if(!u||!SB) return;
@@ -1853,7 +1852,7 @@ async function cloudAutoSync(){   // on open, signed in: pull ADDITIONS only (ze
   }catch(e){}
 }
 setTimeout(cloudAutoSync,400); setTimeout(chargePull,700); renderEquipSel();
-window.addEventListener('storage',e=>{ if(e&&e.key==='gCharge') renderBatchSel(); });
+window.addEventListener('storage',e=>{ if(e&&e.key==='gCharge'){ renderBatchSel(); try{ btAim(); }catch(e2){} } });
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ renderBatchSel(); try{ chargePull(); }catch(e){} } });   // v05g: a PWA resumes from memory, not from boot — edit the table on the iMac, lift the phone, the pull lands here
 // walkthrough: opens itself for a fresh app copy, then remembers being folded
 try{ const cw=$('cWalk');
@@ -2478,7 +2477,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-05h';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-05i';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
