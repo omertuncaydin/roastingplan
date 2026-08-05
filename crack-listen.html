@@ -169,8 +169,8 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 #cWalk summary::before{content:'?';display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#1a1410;font-weight:800;font-size:14px}
 #cWalk[open] summary{margin-bottom:10px}
 #cWalk .card{text-align:left}
-body.st-live .brandFull,body.st-done .brandFull{display:none}
-body.st-live .brandCompact,body.st-done .brandCompact{display:block}
+body.st-live .brandFull{display:none}
+body.st-live .brandCompact{display:block}
 .micBtn{display:none;position:absolute;top:60%;left:50%;transform:translate(-50%,-50%);width:92px;height:92px;border-radius:50%;background:var(--accent2);border:none;padding:0;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.45);cursor:pointer;align-items:center;justify-content:center}
 body.st-setup .micBtn{display:flex}   /* v28b: mic icon back as the one start (his order) */
 .micHint{display:none;position:absolute;top:calc(60% + 56px);left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap;pointer-events:none}
@@ -196,7 +196,7 @@ body.notemps #btStrip,body.notemps #tmpRow{display:none!important}
 .btwheelSel:after{content:'\00b0C';position:absolute;right:3px;top:1px;font-size:9px;color:var(--muted)}
 #btStrip.due .btwheel{animation:tmpPulse 1.2s infinite}
 #modalBox.wide{max-width:780px!important}
-#hdr .hpill{max-width:calc(10ch + 26px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#hdr .hpill{max-width:calc(7ch + 26px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #chargeBox{display:none;border:1.5px solid var(--accent);border-radius:16px;padding:10px 10px 12px;margin:12px 0 4px}
 body.st-setup #chargeBox,body.st-live #chargeBox{display:block}
 body.st-setup #chargeBox{order:0}
@@ -210,7 +210,7 @@ body.st-setup #sumStrip{display:block;order:1}
 #hdrTop,.tlogo,#hdr .logoName,.logoSub,.brandFull{transition:all .55s ease}
 body.hdrmini #hdrTop{flex-direction:row;justify-content:flex-start;align-items:center;gap:12px}
 body.hdrmini .brandFull{display:flex;align-items:center;gap:8px;text-align:left}
-body.hdrmini .brandFull div{margin:0}
+body.hdrmini .brandFull div{margin:0!important}
 body.hdrmini .tlogo{height:30px;width:30px}
 body.hdrmini .brandFull .logoName{font-size:14px!important}
 body.hdrmini .logoSub{display:none}
@@ -251,16 +251,16 @@ body.st-setup #btn{display:none}
     </div></a>
     <div class="hdrDivider"></div>
     <div id="titleWrap" style="text-align:center">
-      <div id="clLogo" role="img" aria-label="Crack Listener">
+      <a href="crack-listen.html" style="text-decoration:none;color:inherit"><div id="clLogo" role="img" aria-label="Crack Listener">
         <svg id="clWave" width="34" height="24" viewBox="0 0 34 24" aria-hidden="true"><polyline points="0,12 9,12 12,4 15,21 18,7 21,16 24,12 34,12" fill="none" stroke="var(--gold)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span class="clTxt"><span class="clA">CRACK</span><span class="clB">LISTENER</span></span>
-      </div>
+      </div></a>
     </div>
     </div>
     <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-05c · BETA</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-05d · BETA</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -2453,7 +2453,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-05c';   // chip shows '· BETA'; the machine string stays clean for telemetry
+const APPVER='v2026-08-05d';   // chip shows '· BETA'; the machine string stays clean for telemetry
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
