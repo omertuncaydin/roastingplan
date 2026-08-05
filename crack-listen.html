@@ -186,6 +186,7 @@ body.notemps #btStrip,body.notemps #tmpRow{display:none!important}
 .btwheelSel:after{content:'\00b0C';position:absolute;right:3px;top:1px;font-size:9px;color:var(--muted)}
 #btStrip.due .btwheel{animation:tmpPulse 1.2s infinite}
 #modalBox.wide{max-width:780px!important}
+#hdr .hpill{max-width:calc(10ch + 26px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #chargeBox{display:none;border:1.5px solid var(--accent);border-radius:16px;padding:10px 10px 12px;margin:12px 0 4px}
 body.st-setup #chargeBox,body.st-live #chargeBox{display:block}
 body.st-setup #chargeBox{order:0}
@@ -196,7 +197,7 @@ body.st-setup #tmpRow{order:0}
 #sumStrip{display:none}
 body.st-setup #sumStrip{display:block;order:1}
 #hdrTop{display:flex;flex-direction:column;align-items:center}
-#hdrTop,.tlogo,#hdr .logoName,#hdr h1,.logoSub,.brandFull{transition:all .55s ease}
+#hdrTop,.tlogo,#hdr .logoName,.logoSub,.brandFull{transition:all .55s ease}
 body.hdrmini #hdrTop{flex-direction:row;justify-content:flex-start;align-items:center;gap:12px}
 body.hdrmini .brandFull{display:flex;align-items:center;gap:8px;text-align:left}
 body.hdrmini .brandFull div{margin:0}
@@ -205,8 +206,13 @@ body.hdrmini .brandFull .logoName{font-size:14px!important}
 body.hdrmini .logoSub{display:none}
 body.hdrmini .hdrDivider{display:none}
 body.hdrmini #titleWrap{text-align:left}
-body.hdrmini #hdr h1{font-size:20px;margin:0}
-body.hdrmini #titleBar{display:none}
+body.hdrmini #clLogo .clA,body.hdrmini #clLogo .clB{font-size:15px}
+body.hdrmini #clWave{width:24px;height:17px}
+#clLogo{display:flex;align-items:center;justify-content:center;gap:8px;margin:2px 0 4px}
+#clLogo .clA,#clLogo .clB{font-weight:900;letter-spacing:.07em;font-size:22px;transition:font-size .55s ease}
+#clLogo .clA{color:var(--ink)}
+#clLogo .clB{color:var(--gold)}
+#clWave{transition:all .55s ease}
 .eqp,.bp{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12.5px;color:var(--muted);cursor:pointer}
 .eqp.on{border-color:var(--gold);color:var(--gold);font-weight:700}
 .bp.on{border-color:var(--accent2);color:var(--ink);font-weight:700;background:rgba(217,102,63,.14)}
@@ -233,14 +239,16 @@ body.st-setup #btn{display:none}
     </div></a>
     <div class="hdrDivider"></div>
     <div id="titleWrap" style="text-align:center">
-      <h1 style="font-size:25px;margin:2px 0 0">Crack Listener</h1>
-      <div id="titleBar" style="width:64px;height:2px;background:var(--accent);margin:8px auto 7px"></div>
+      <div id="clLogo" role="img" aria-label="Crack Listener">
+        <svg id="clWave" width="34" height="24" viewBox="0 0 34 24" aria-hidden="true"><polyline points="0,12 9,12 12,4 15,21 18,7 21,16 24,12 34,12" fill="none" stroke="var(--gold)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="clA">CRACK</span><span class="clB">LISTENER</span>
+      </div>
     </div>
     </div>
     <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-03n · BETA</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-05a · BETA</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -294,11 +302,9 @@ body.st-setup #btn{display:none}
   </div>
 
   <div class="card" id="cGauge" style="text-align:center">
-    <div class="lbl">projected color · Agtron scale</div>
     <div id="npWrap" style="margin:10px 0 8px;cursor:pointer" onclick="editName()">
       <span id="npName" style="font-size:21px;font-weight:800;color:var(--ink)">name the coffee</span> <span style="color:var(--accent);font-size:13px">&#9998;</span>
       <div id="npUnder" style="width:64px;height:2px;background:var(--accent);margin:7px auto 4px"></div>
-      <div class="lbl" style="font-size:10px">this bean's map · tap to rename</div>
     </div>
     <div id="styleChips" style="display:none;flex-wrap:wrap;gap:5px;justify-content:center;margin:6px 0 2px"></div>
     <div id="nameEdit" style="display:none;text-align:left;margin:10px 0 8px">
@@ -1548,9 +1554,10 @@ function foundingBanner(tr){ let msg=tr?'KURUCU ROASTER · ilk 100 hesap: ömür
   return '<div style="border:1px solid var(--gold);border-radius:10px;padding:8px 10px;margin-top:10px;font-size:11.5px;font-weight:700;color:var(--gold)">'+msg+'</div>'
     +'<div style="text-align:center;margin-top:8px"><a href="plans.html" target="_blank" rel="noopener" style="color:var(--gold);font-size:12px;font-weight:700">'+(tr?'Planlar ve Lisans \u2192':'Plans & License \u2192')+'</a></div>'; }
 function classStrip(tr){ if(!CLASSES) return ''; let h='';
-  const rc=CLASSES.next_roasting_class;
-  if(rc&&(rc.date_en||rc.date_tr)){ const d=tr?(rc.date_tr||rc.date_en):(rc.date_en||rc.date_tr);
-    h+='<a href="https://www.coffeenutz.net/products/roasting-foundation-intermediate" target="_blank" rel="noopener" style="display:inline-block;border:1px solid var(--gold);color:var(--gold);border-radius:14px;padding:4px 10px;font-weight:700;margin:2px 4px 0 4px;text-decoration:none">'+(tr?('Sıradaki Kavurma sınıfı: '+escC(d)+' · '+(rc.seats_left||0)+' koltuk'):('Next Roasting class: '+escC(d)+' · '+(rc.seats_left||0)+' seats left'))+'</a>'; }
+  const ba=CLASSES.next_barista_class;
+  if(ba&&(ba.date_en||ba.date_tr)){ const d=tr?(ba.date_tr||ba.date_en):(ba.date_en||ba.date_tr);
+    const seats=(typeof ba.seats_left==='number')?(tr?(' · '+ba.seats_left+' koltuk'):(' · '+ba.seats_left+' seats left')):'';
+    h+='<a href="'+escC(ba.link||'https://www.coffeenutz.net/products/sca-barista-foundation-intermediate')+'" target="_blank" rel="noopener" style="display:inline-block;border:1px solid var(--gold);color:var(--gold);border-radius:14px;padding:4px 10px;font-weight:700;margin:2px 4px 0 4px;text-decoration:none">'+(tr?('Sıradaki Barista sınıfı: '+escC(d)+seats):('Next Barista class: '+escC(d)+seats))+'</a>'; }
   const q=CLASSES.next_q_class;
   if(q&&(q.date_en||q.date_tr)){ const d=tr?(q.date_tr||q.date_en):(q.date_en||q.date_tr);
     h+='<a href="https://www.coffeenutz.net/products/q-grader" target="_blank" rel="noopener" style="display:inline-block;border:1px solid var(--gold);color:var(--gold);border-radius:14px;padding:4px 10px;font-weight:700;margin:2px 4px 0 4px;text-decoration:none">'+(tr?('Sıradaki Q Grader sınıfı: '+escC(d)+' · '+(q.seats_left||0)+' koltuk'):('Next Q Grader class: '+escC(d)+' · '+(q.seats_left||0)+' seats left'))+'</a>'; }
@@ -2428,7 +2435,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-03n';   // chip shows '· BETA'; the machine string stays clean for telemetry
+const APPVER='v2026-08-05a';   // chip shows '· BETA'; the machine string stays clean for telemetry
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
