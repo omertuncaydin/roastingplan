@@ -200,6 +200,7 @@ body.notemps #btStrip,body.notemps #tmpRow{display:none!important}
 #btStrip.due .btwheel{animation:tmpPulse 1.2s infinite}
 #modalBox.wide{max-width:780px!important}
 #hdr .hpill{max-width:calc(7ch + 26px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#hdr .hpill.vtag{direction:rtl}   /* v05f: version chip clips from the LEFT — the ellipsis eats the year, the meaningful tail (…08-05f · BETA) stays visible */
 #chargeBox{display:none;border:1.5px solid var(--accent);border-radius:16px;padding:10px 10px 12px;margin:12px 0 4px}
 body.st-setup #chargeBox,body.st-live #chargeBox{display:block}
 body.st-setup #chargeBox{order:0}
@@ -263,7 +264,7 @@ body.st-setup #btn{display:none}
     <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-05e · BETA</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-05f · BETA</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -726,7 +727,9 @@ function chargeSave(){ const gs=[...document.querySelectorAll('[data-cg]')], ts=
   gs.forEach((g,i)=>{ const gv=parseFloat(g.value), tv=parseFloat(ts[i].value); if(isFinite(gv)&&isFinite(tv)) o[gv]=tv; });
   cm[m]=o; localStorage.setItem('gCharge',JSON.stringify(cm));   // the Guide reads this same key
   localStorage.setItem('gChargeTs',new Date().toISOString()); chargePush();   // and the cloud carries it across contexts/devices
-  $('modal').style.display='none'; renderBatchSel(); toast(LANG==='tr'?'Şarj tablosu kaydedildi (Guide ile ortak).':'Charge table saved (shared with the Guide).'); }
+  $('modal').style.display='none'; renderBatchSel();
+  try{ btAim(); }catch(e){}   // v05f: the table is the sole ruler — a save must re-seat the wheel and repaint the machine/batch pills + summary NOW, not on next reload (btAim guards running/CHGT0, so a live roast's wheel is never jumped)
+  toast(LANG==='tr'?'Şarj tablosu kaydedildi (Guide ile ortak).':'Charge table saved (shared with the Guide).'); }
 function cupHandoff(){ const n=(cName.value||$('mCoffee').value||'').trim();
   // sampled scenario: hand the whole pull set to the Guide's cupping table; plain roast: single cup view
   window.open('roast-guide.html?'+(SAMPLES.length?'cupflight=':'cup=')+encodeURIComponent(n),'_blank'); }
@@ -1275,9 +1278,10 @@ function toggle(){ if(running){ stop(); return; }
   try{ const mb=document.querySelector('.micBtn'); if(mb) mb.classList.remove('due'); }catch(e){}
   start(); }
 try{ btBuild(); if(localStorage.getItem('bsTempsOn')==='0') document.body.classList.add('notemps'); }catch(e){}
-try{ const m0=chgMap(); m0.Bullet=m0.Bullet||{}; let ch0=false;
-  [['500',240],['600',250],['105',170]].forEach(function(p){ if(m0.Bullet[p[0]]==null||(p[0]==='500'&&+m0.Bullet[p[0]]===190)){ m0.Bullet[p[0]]=p[1]; ch0=true; } });   // 190 was the shipped placeholder, never his; his stated table wins over it, never over an edit
-  if(ch0) localStorage.setItem('gCharge',JSON.stringify(m0)); }catch(e){}   // his Bullet table, seeded once, never overwriting
+/* v05f: Bullet seed DELETED (Ömer 2026-08-05: "use this table as the sole ruler of the charge temps and do
+   not push anything replacing these values"). The seed's ==190 clause re-stamped 240 over his deliberate
+   500g→190 on every boot, and its ==null clause resurrected deleted rows. chgMap()'s first-run default is
+   the only remaining fill, and only when NO stored table exists. */
 setTimeout(function(){ try{ btAim(); renderEqStrip(); renderSum(); cName.addEventListener('change',btAim); cName.addEventListener('blur',btAim); }catch(e){} },0);
 setTimeout(function(){ try{ document.body.classList.add('hdrmini'); }catch(e){} },3000);   // the logo greets for 3 seconds, then steps aside (his order)
 function a2hsClose(){ try{ localStorage.setItem('bsA2HS','1'); const el=$('a2hs'); if(el) el.style.display='none'; }catch(e){} }
@@ -2456,7 +2460,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-05e';   // chip shows '· BETA'; the machine string stays clean for telemetry
+const APPVER='v2026-08-05f';   // chip shows '· BETA'; the machine string stays clean for telemetry
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
