@@ -200,7 +200,7 @@ body.notemps #btStrip,body.notemps #tmpRow{display:none!important}
 #btStrip.due .btwheel{animation:tmpPulse 1.2s infinite}
 #modalBox.wide{max-width:780px!important}
 #hdr .hpill{max-width:calc(7ch + 26px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#hdr .hpill.vtag{direction:rtl}   /* v05f: version chip clips from the LEFT — the ellipsis eats the year, the meaningful tail (…08-05f · BETA) stays visible */
+#hdr .hpill.vtag{max-width:calc(13ch + 26px)}   /* v05g: BETA leads, then the version tail — chip text is derived from APPVER at boot, no clipping games (rtl trick retired) */
 #chargeBox{display:none;border:1.5px solid var(--accent);border-radius:16px;padding:10px 10px 12px;margin:12px 0 4px}
 body.st-setup #chargeBox,body.st-live #chargeBox{display:block}
 body.st-setup #chargeBox{order:0}
@@ -264,7 +264,7 @@ body.st-setup #btn{display:none}
     <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-05f · BETA</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer" title="v2026-08-05g">BETA · 08-05g</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1541,9 +1541,17 @@ function renderAdmin(){
   +admRow('admPhiProj','φ-curve call',E.projPhi?String(Math.round(E.projPhi)):'·',null)
   +admRow('admBias','learned bias',E.bias?((E.bias>0?'+':'')+E.bias.toFixed(1)):'0',null);
 }
+let ADMTAPS=[];
 function adminTap(){
-  if(document.body.classList.contains('admin')){ toast('Admin is on. Panel is below the tuning fold.'); return; }
-  revealCode();
+  /* v05g (his question 08-05: "when version name is clicked a code textbox appears what is that for?"):
+     a single tap now does the OBVIOUS thing — show the full version. The code box (the admin door,
+     PATRON code; customer codes retired 07-19) hides behind FIVE taps within 3s, Android-build-number
+     style, so a stray tap during setup never throws a keyboard at him. */
+  const now=performance.now(); ADMTAPS=ADMTAPS.filter(t=>now-t<3000); ADMTAPS.push(now);
+  if(ADMTAPS.length>=5){ ADMTAPS=[];
+    if(document.body.classList.contains('admin')){ toast('Admin is on. Panel is below the tuning fold.'); return; }
+    revealCode(); return; }
+  toast(APPVER+' · BETA'+(document.body.classList.contains('admin')?' · admin':''));
 }
 function adminLock(){ localStorage.removeItem('bsAdmin'); document.body.classList.remove('admin'); refreshPlanUI(); toast('Admin locked.'); }
 if(localStorage.getItem('bsAdmin')==='1') document.body.classList.add('admin');
@@ -1809,7 +1817,7 @@ async function chargePull(){ try{ if(!SB) return; const u=await cloudUser(); if(
   const {data}=await SB.from('user_settings').select('charge,updated_at').eq('owner',u.id);
   const r=data&&data[0]; if(!r||!r.charge) return;
   const lts=localStorage.getItem('gChargeTs')||'';
-  if(!lts||r.updated_at>lts){ localStorage.setItem('gCharge',JSON.stringify(r.charge)); localStorage.setItem('gChargeTs',r.updated_at); renderEquipSel(); }
+  if(!lts||r.updated_at>lts){ localStorage.setItem('gCharge',JSON.stringify(r.charge)); localStorage.setItem('gChargeTs',r.updated_at); renderEquipSel(); try{ btAim(); }catch(e){} }   // v05g: a fresh pull must repaint the wheel/pills/summary too, not just the old modal select
   else if(lts>r.updated_at) chargePush();   // this side is newer: heal the cloud
 }catch(e){} }
 async function cloudAutoSync(){   // on open, signed in: pull ADDITIONS only (zero overwrite risk); differing coffees are counted, never touched
@@ -1836,7 +1844,7 @@ async function cloudAutoSync(){   // on open, signed in: pull ADDITIONS only (ze
 }
 setTimeout(cloudAutoSync,400); setTimeout(chargePull,700); renderEquipSel();
 window.addEventListener('storage',e=>{ if(e&&e.key==='gCharge') renderBatchSel(); });
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden) renderBatchSel(); });
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ renderBatchSel(); try{ chargePull(); }catch(e){} } });   // v05g: a PWA resumes from memory, not from boot — edit the table on the iMac, lift the phone, the pull lands here
 // walkthrough: opens itself for a fresh app copy, then remembers being folded
 try{ const cw=$('cWalk');
   if(cw){ if(!localStorage.getItem('bsWalkSeen')&&!Object.keys(calMap()).length&&roastCount()===0) cw.open=true;
@@ -2460,7 +2468,8 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-05f';   // chip shows '· BETA'; the machine string stays clean for telemetry
+const APPVER='v2026-08-05g';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();
