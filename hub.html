@@ -88,6 +88,7 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
 <div id="app" class="wrap" style="display:none">
   <div class="hdrrow">
     <div class="brand" onclick="location.reload()" title="refresh" style="cursor:pointer"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
+    <div id="a2hs" style="display:none;margin:10px 0 4px;border:1px dashed #3a3128;border-radius:12px;padding:9px 12px;font-size:12.5px;color:#a8998a;text-align:left;align-items:center;gap:10px"><span style="flex:1">Tam ekran ve daha iyi bir görünüm için: <b style="color:#f3ede4">Paylaş &#x2192; Ana Ekrana Ekle</b>.</span><button onclick="try{localStorage.setItem('bsA2HS','1');document.getElementById('a2hs').style.display='none'}catch(e){}" style="width:auto;background:none;border:1px solid #3a3128;color:#a8998a;border-radius:999px;padding:4px 10px;font-size:12px">&#10005;</button></div>
     <div style="display:flex;align-items:center;gap:8px">
       <span class="sub" style="margin:0" id="hubVer">v2026-07-20a</span>
       <select class="stsel" id="colSel" title="cards per row" onchange="setCols(this.value)"><option value="auto">Auto</option><option value="1">1/row</option><option value="2">2/row</option><option value="3">3/row</option><option value="4">4/row</option><option value="5">5/row</option><option value="6">6/row</option></select>
@@ -228,6 +229,8 @@ function loadAll(){ allApps().forEach(a=>{ if(/^https?:/i.test(a.path)){ const v
 
 // soft admin gate: reuses the cockpit key stored by the other tools
 if(localStorage.getItem('ccKey')) show(); else $('gate').style.display='block';
+try{ const sa=(('standalone' in navigator)&&navigator.standalone)||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+  if(!sa&&localStorage.getItem('bsA2HS')!=='1'){ const el=document.getElementById('a2hs'); if(el) el.style.display='flex'; } }catch(e){}
 </script>
 </body>
 </html>
