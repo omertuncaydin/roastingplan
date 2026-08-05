@@ -200,7 +200,13 @@ body.notemps #btStrip,body.notemps #tmpRow{display:none!important}
 #btStrip.due .btwheel{animation:tmpPulse 1.2s infinite}
 #modalBox.wide{max-width:780px!important}
 #hdr .hpill{max-width:calc(7ch + 26px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#hdr .hpill.vtag{max-width:calc(13ch + 26px)}   /* v05g: BETA leads, then the version tail — chip text is derived from APPVER at boot, no clipping games (rtl trick retired) */
+#hdr .hpill.vtag{max-width:calc(13ch + 26px)}
+/* v05h: one row, always — overflow scrolls sideways under faded edges instead of wrapping (his order). Auto side-margins center the row when it fits and collapse to 0 when it scrolls. */
+.pillRow{display:flex;gap:8px;align-items:center;margin:12px 0 10px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;-webkit-mask-image:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent);mask-image:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent)}
+.pillRow::-webkit-scrollbar{display:none}
+.pillRow .hpill{flex:none}
+.pillRow>:first-child{margin-left:auto}
+.pillRow>:last-child{margin-right:auto}   /* v05g: BETA leads, then the version tail — chip text is derived from APPVER at boot, no clipping games (rtl trick retired) */
 #chargeBox{display:none;border:1.5px solid var(--accent);border-radius:16px;padding:10px 10px 12px;margin:12px 0 4px}
 body.st-setup #chargeBox,body.st-live #chargeBox{display:block}
 body.st-setup #chargeBox{order:0}
@@ -261,10 +267,10 @@ body.st-setup #btn{display:none}
       </div></a>
     </div>
     </div>
-    <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
+    <div class="pillRow">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer" title="v2026-08-05g">BETA · 08-05g</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer" title="v2026-08-05h">BETA · 08-05h</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -1813,12 +1819,16 @@ async function cloudPull(){
 }
 async function chargePush(){ try{ if(!SB) return; const u=await cloudUser(); if(!u) return;
   await SB.from('user_settings').upsert({owner:u.id, charge:chgMap(), updated_at:new Date().toISOString()},{onConflict:'owner'}); }catch(e){} }
+function chgNorm(o){ try{ return JSON.stringify(Object.keys(o).sort().reduce(function(a,k){ var m=o[k]||{}; a[k]=Object.keys(m).sort().reduce(function(b,g){ b[g]=+m[g]; return b; },{}); return a; },{})); }catch(e){ return ''; } }
+const CHG_PRISTINE=chgNorm({'Bullet':{500:190},'HSR15':{1000:140,2500:150,5000:160,7500:165}});
 async function chargePull(){ try{ if(!SB) return; const u=await cloudUser(); if(!u) return;
   const {data}=await SB.from('user_settings').select('charge,updated_at').eq('owner',u.id);
   const r=data&&data[0]; if(!r||!r.charge) return;
-  const lts=localStorage.getItem('gChargeTs')||'';
-  if(!lts||r.updated_at>lts){ localStorage.setItem('gCharge',JSON.stringify(r.charge)); localStorage.setItem('gChargeTs',r.updated_at); renderEquipSel(); try{ btAim(); }catch(e){} }   // v05g: a fresh pull must repaint the wheel/pills/summary too, not just the old modal select
-  else if(lts>r.updated_at) chargePush();   // this side is newer: heal the cloud
+  const rT=Date.parse(r.updated_at)||0, lT=Date.parse(localStorage.getItem('gChargeTs')||'')||0;   // v05h numeric compare: postgres echoes '+00:00', clients stamp 'Z' — string order lied
+  let lc=null; try{ lc=JSON.parse(localStorage.getItem('gCharge')||'null'); }catch(e){}
+  if(chgNorm(r.charge)===CHG_PRISTINE && lc && chgNorm(lc)!==CHG_PRISTINE){ chargePush(); return; }   // v05h: a seeder's untouched defaults NEVER beat a real table, whatever their stamp (his 08-05 table loss)
+  if(!lT||rT>lT){ localStorage.setItem('gCharge',JSON.stringify(r.charge)); localStorage.setItem('gChargeTs',r.updated_at); renderEquipSel(); try{ btAim(); }catch(e){} }
+  else if(lT>rT) chargePush();
 }catch(e){} }
 async function cloudAutoSync(){   // on open, signed in: pull ADDITIONS only (zero overwrite risk); differing coffees are counted, never touched
   const u=await cloudStatus(); if(!u||!SB) return;
@@ -2468,7 +2478,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-05g';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-05h';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
