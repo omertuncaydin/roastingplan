@@ -206,7 +206,15 @@ body.notemps #btStrip,body.notemps #tmpRow{display:none!important}
 .pillRow::-webkit-scrollbar{display:none}
 .pillRow .hpill{flex:none}
 .pillRow>:first-child{margin-left:auto}
-.pillRow>:last-child{margin-right:auto}   /* v05g: BETA leads, then the version tail — chip text is derived from APPVER at boot, no clipping games (rtl trick retired) */
+.pillRow>:last-child{margin-right:auto}
+.cgDel{flex:none;width:42px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--muted);font-size:15px;cursor:pointer}
+.cgDel:active{color:var(--warn);border-color:var(--warn)}
+/* v05k: generic one-line swipe row (his order: batch options swipe like the header chips) */
+.swipeRow{display:flex;gap:6px;align-items:center;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;-webkit-mask-image:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent);mask-image:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent)}
+.swipeRow::-webkit-scrollbar{display:none}
+.swipeRow>*{flex:none}
+.swipeRow>:first-child{margin-left:auto}
+.swipeRow>:last-child{margin-right:auto}   /* v05g: BETA leads, then the version tail — chip text is derived from APPVER at boot, no clipping games (rtl trick retired) */
 #chargeBox{display:none;border:1.5px solid var(--accent);border-radius:16px;padding:10px 10px 12px;margin:12px 0 4px}
 body.st-setup #chargeBox,body.st-live #chargeBox{display:block}
 body.st-setup #chargeBox{order:0}
@@ -270,7 +278,7 @@ body.st-setup #btn{display:none}
     <div class="pillRow">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer" title="v2026-08-05j">BETA · 08-05j</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer" title="v2026-08-05k">BETA · 08-05k</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -283,7 +291,7 @@ body.st-setup #btn{display:none}
   <div id="chargeBox">
   <div id="eqStrip" style="margin:12px 0 2px;text-align:center">
     <div id="eqPills" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap"></div>
-    <div id="batchPills" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px"></div>
+    <div id="batchPills" class="swipeRow" style="margin-top:6px"></div>
   </div>
   <div id="btStrip">
     <div class="btrow">
@@ -724,7 +732,7 @@ function chargeEditor(){ const m=$('mEquip').value, cm=chgMap()[m]||{}; const ks
   const rows=(ks.length?ks.map(k=>[k,cm[k]]):[['','']]).concat([['','']]);
   $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:17px">Charge temps \u00b7 '+escC(m)+'</h1>'
    +'<div class="hint" style="font-size:12px">'+(LANG==='tr'?'Guide ile ortak tablo: burada değişir, orada görünür.':'Shared with the Guide: edit here, it shows there.')+'</div>'
-   +rows.map(r=>'<div style="display:flex;gap:8px;margin-top:8px"><input data-cg type="text" inputmode="numeric" placeholder="g" value="'+r[0]+'" style="flex:1;border:1px solid var(--line);border-radius:9px;padding:10px;background:var(--panel2);color:var(--ink)"><input data-ct type="text" inputmode="numeric" placeholder="\u00b0C" value="'+r[1]+'" style="flex:1;border:1px solid var(--line);border-radius:9px;padding:10px;background:var(--panel2);color:var(--ink)"></div>').join('')
+   +rows.map(r=>'<div style="display:flex;gap:8px;margin-top:8px;align-items:stretch"><input data-cg type="text" inputmode="numeric" placeholder="g" value="'+r[0]+'" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;background:var(--panel2);color:var(--ink)"><input data-ct type="text" inputmode="numeric" placeholder="\u00b0C" value="'+r[1]+'" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;background:var(--panel2);color:var(--ink)"><button type="button" class="cgDel" aria-label="sil / delete" onclick="this.parentNode.remove()">\u2715</button></div>').join('')
    +'<button style="margin-top:14px;background:var(--accent2)" onclick="chargeSave()">'+(LANG==='tr'?'Kaydet':'Save')+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="$(\'modal\').style.display=\'none\'">'+(LANG==='tr'?'Kapat':'Close')+'</button>';
   $('modal').style.display='flex'; }
@@ -2478,7 +2486,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-05j';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-05k';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
