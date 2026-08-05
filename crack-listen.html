@@ -270,7 +270,7 @@ body.st-setup #btn{display:none}
     <div class="pillRow">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer" title="v2026-08-05i">BETA · 08-05i</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer" title="v2026-08-05j">BETA · 08-05j</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -734,7 +734,8 @@ function chargeSave(){ CHGEDIT=Date.now(); const gs=[...document.querySelectorAl
   cm[m]=o; localStorage.setItem('gCharge',JSON.stringify(cm));   // the Guide reads this same key
   localStorage.setItem('gChargeTs',new Date().toISOString()); chargePush();   // and the cloud carries it across contexts/devices
   $('modal').style.display='none'; renderBatchSel();
-  try{ btAim(); }catch(e){}   // v05f: the table is the sole ruler — a save must re-seat the wheel and repaint the machine/batch pills + summary NOW, not on next reload (btAim guards running/CHGT0, so a live roast's wheel is never jumped)
+  try{ btAim(); }catch(e){}   // re-seats the wheel (guards running/CHGT0: a live roast's wheel is never jumped)
+  try{ renderEqStrip(); renderSum(); }catch(e){}   // v05j: pills+summary repaint ALWAYS — btAim's charge-armed early-return was silently skipping them
   toast(LANG==='tr'?'Şarj tablosu kaydedildi (Guide ile ortak).':'Charge table saved (shared with the Guide).'); }
 function cupHandoff(){ const n=(cName.value||$('mCoffee').value||'').trim();
   // sampled scenario: hand the whole pull set to the Guide's cupping table; plain roast: single cup view
@@ -1827,7 +1828,7 @@ async function chargePull(){ try{ if(!SB) return; const u=await cloudUser(); if(
   /* v05i SINGLE WRITER: the account is the ONLY truth and ONLY a human Kaydet ever writes it.
      No timestamp duels, no heal-pushes — those let any stale device resurrect dead tables (his 08-05 170/240/250 ghost). */
   localStorage.setItem('gCharge',JSON.stringify(r.charge)); localStorage.setItem('gChargeTs',r.updated_at);
-  renderEquipSel(); try{ btAim(); }catch(e){}
+  renderEquipSel(); try{ btAim(); }catch(e){} try{ renderEqStrip(); renderSum(); }catch(e){}
 }catch(e){} }
 async function cloudAutoSync(){   // on open, signed in: pull ADDITIONS only (zero overwrite risk); differing coffees are counted, never touched
   const u=await cloudStatus(); if(!u||!SB) return;
@@ -2477,7 +2478,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-05i';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-05j';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
