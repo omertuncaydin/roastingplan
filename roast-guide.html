@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1a1410">
 <title>CoffeeNutz Guide</title>
@@ -31,7 +32,8 @@
   #gBrand .gname{transition:font-size .55s ease}
   body.hdrmini #gBrand{display:flex;align-items:center;gap:8px;text-align:left}
   body.hdrmini .gtlogo{width:30px;height:30px;margin:0}
-  body.hdrmini #gBrand .gname{font-size:14px!important}
+  body.hdrmini #gBrand .gname{font-size:11px!important;line-height:1.12;text-align:left}
+  body.hdrmini #gBrand .gname .lr,body.hdrmini #gBrand .gname .lg{display:block}
   body.hdrmini #gsub{display:none}
   h1{font-size:19px;margin:0}
   @font-face{font-family:'Aardvark';src:url('AardvarkBold.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
@@ -608,7 +610,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-05a</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-05b</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">

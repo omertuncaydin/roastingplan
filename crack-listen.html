@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <title>Crack Listener · Crack Analyzer App · free first crack detection</title>
   <meta property="og:title" content="Crack Listener · Telefonun kavurmayı dinler">
@@ -35,7 +37,11 @@ body.st-live:not(.lab) #cGauge details{display:none}
 /* v27c MINIMAL LIVE (mockup verdict 2026-07-27): the storm speaks with six things: STAGE+DEV, gauge, cracks, recipe line, DROP, sample */
 body.st-live:not(.lab) #cPhase,body.st-live:not(.lab) #agHint,body.st-live:not(.lab) #cWalk,body.st-live:not(.lab) #wcFold,body.st-live:not(.lab) #cTune,body.st-live:not(.lab) #uniPill,body.st-live:not(.lab) #cGauge .lbl,body.st-live:not(.lab) #npUnder,body.st-live:not(.lab) #cStats .hint{display:none}
 body.st-live #npName{font-size:14px;font-weight:700;color:var(--muted)}
-body.st-live #npWrap{margin:3px 0 0}
+body.st-live #npWrap{margin:0;pointer-events:none}
+body.st-live #nameRcRow{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:12px;padding:7px 12px;margin:4px 0 6px;min-height:44px}
+body.st-live #npName{font-size:16px}
+body.st-live #npEdit{display:none}
+body.st-live #stageNow{text-align:right;flex:1;min-width:0}
 #stageNow{display:none;margin:4px 0 2px;line-height:1.05}
 /* v28a (his 4 orders, 2026-07-28): minimal storm is DEFAULT; every instrument stays alive behind the lab mode chip */
 @media (max-width:899px){ body.st-live:not(.lab) #hdr,body.st-live:not(.lab) #cGain,body.st-live:not(.lab) #cTimeline,body.st-live:not(.lab) #styleChips{display:none} }
@@ -202,7 +208,8 @@ body.hdrmini #hdrTop{flex-direction:row;justify-content:flex-start;align-items:c
 body.hdrmini .brandFull{display:flex;align-items:center;gap:8px;text-align:left}
 body.hdrmini .brandFull div{margin:0}
 body.hdrmini .tlogo{height:30px;width:30px}
-body.hdrmini .brandFull .logoName{font-size:14px!important}
+body.hdrmini .brandFull .logoName{font-size:11px!important;line-height:1.12;text-align:left}
+body.hdrmini .cnbrA,body.hdrmini .cnbrB{display:block}
 body.hdrmini .logoSub{display:none}
 body.hdrmini .hdrDivider{display:none}
 body.hdrmini #titleWrap{text-align:left}
@@ -230,8 +237,7 @@ body.st-setup #btn{display:none}
     <div id="hdrTop">
     <a href="roast-guide.html" style="text-decoration:none;color:inherit" title="CoffeeNutz Guide"><div class="brandFull">
       <img class="tlogo" src="coffeenutz-turtle.png" alt="CoffeeNutz">
-      <div class="logoName" style="font-size:24px;color:#D8453B"><span style="display:inline-block">CoffeeNutz<sup class="rmark">&reg;</sup></span></div>
-      <div class="logoName" style="font-size:24px;color:var(--ink);margin-top:2px"><span style="display:inline-block">Guide</span></div>
+      <div class="logoName" style="font-size:24px"><span class="cnbrA" style="color:#D8453B">CoffeeNutz<sup class="rmark">&reg;</sup></span> <span class="cnbrB" style="color:var(--ink)">Guide</span></div>
       <div class="logoSub">ROAST · CUP · GRADE</div>
     </div></a>
     <a href="roast-guide.html" style="text-decoration:none;color:inherit" title="CoffeeNutz Guide"><div class="brandCompact">
@@ -248,7 +254,7 @@ body.st-setup #btn{display:none}
     <div style="display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;margin-bottom:10px">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-05a · BETA</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer">v2026-08-05b · BETA</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -302,9 +308,12 @@ body.st-setup #btn{display:none}
   </div>
 
   <div class="card" id="cGauge" style="text-align:center">
+    <div id="nameRcRow">
     <div id="npWrap" style="margin:10px 0 8px;cursor:pointer" onclick="editName()">
-      <span id="npName" style="font-size:21px;font-weight:800;color:var(--ink)">name the coffee</span> <span style="color:var(--accent);font-size:13px">&#9998;</span>
+      <span id="npName" style="font-size:21px;font-weight:800;color:var(--ink)">name the coffee</span> <span id="npEdit" style="color:var(--accent);font-size:13px">&#9998;</span>
       <div id="npUnder" style="width:64px;height:2px;background:var(--accent);margin:7px auto 4px"></div>
+    </div>
+    <div id="stageNow"></div>
     </div>
     <div id="styleChips" style="display:none;flex-wrap:wrap;gap:5px;justify-content:center;margin:6px 0 2px"></div>
     <div id="nameEdit" style="display:none;text-align:left;margin:10px 0 8px">
@@ -312,7 +321,6 @@ body.st-setup #btn{display:none}
       <input type="text" id="coffeeName" placeholder="chirripó yıkanmış" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:16px;background:#15100b;color:var(--ink)">
       <div id="nameChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
     </div>
-    <div id="stageNow"></div>
     <div id="agWrap" style="position:relative;display:flex;justify-content:center">
       <div id="ag" style="display:flex;justify-content:center"></div>
       <button class="micBtn" onclick="toggle()" aria-label="Start listening"><svg viewBox="0 0 60 60" width="46" height="46" aria-hidden="true"><rect x="24" y="14" width="12" height="21" rx="6" fill="#fff"/><path d="M19 30 a11 11 0 0 0 22 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="41" x2="30" y2="47" stroke="#fff" stroke-width="3"/><line x1="23" y1="47" x2="37" y2="47" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg></button>
@@ -1064,8 +1072,8 @@ function renderStageStrip(){ const el=$('stageStrip'); if(!el) return;
       else{ const pp=txt.split('|');
         sn.style.display='block';
         sn.innerHTML=(pp[0]==='GAZ')
-          ?('<span style="font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--dim);margin-right:10px">'+(LANG==='tr'?'GAZ':'GAS')+'</span><span style="font-size:24px;font-weight:900;color:var(--gold)">'+pp[1]+'</span>')
-          :('<span style="font-size:46px;font-weight:900;letter-spacing:1px;color:var(--ink)">'+pp[0]+'</span><span style="font-size:18px;font-weight:800;color:var(--muted);margin-left:12px">'+pp[1]+'</span>'); } } }
+          ?('<span style="font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--dim);margin-right:8px">'+(LANG==='tr'?'GAZ':'GAS')+'</span><span style="font-size:20px;font-weight:900;color:var(--gold)">'+pp[1]+'</span>')
+          :('<span style="font-size:30px;font-weight:900;letter-spacing:1px;color:var(--ink)">'+pp[0]+'</span><span style="font-size:14px;font-weight:800;color:var(--muted);margin-left:10px">'+pp[1]+'</span>'); } } }
   if(!LASTSTAGES||!LASTSTAGES.length||!document.body.classList.contains('st-done')){ el.textContent=''; return; }
   const a0=LASTSTAGES[0][1];
   el.textContent=LASTSTAGES.map(sg=>sg[0]+' '+fmtT(Math.max(0,sg[1]-a0))).join(' · ')+' (DEV)';
@@ -2435,7 +2443,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-05a';   // chip shows '· BETA'; the machine string stays clean for telemetry
+const APPVER='v2026-08-05b';   // chip shows '· BETA'; the machine string stays clean for telemetry
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
   const v=valid();

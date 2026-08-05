@@ -1,0 +1,12 @@
+{
+  "name": "CoffeeNutz Guide",
+  "short_name": "CoffeeNutz",
+  "start_url": "/hub",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#191512",
+  "theme_color": "#191512",
+  "icons": [
+    { "src": "coffeenutz-turtle.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
