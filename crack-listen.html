@@ -278,7 +278,7 @@ body.st-setup #btn{display:none}
     <div class="pillRow">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer" title="v2026-08-06c">BETA · 08-06c</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer" title="v2026-08-06d">BETA · 08-06d</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -619,7 +619,7 @@ function wcAlertPing(){ try{ if(!WCON||!running) return; const lst=(LASTSTAGES&&
   wcPub({c:(cName.value||'').trim()||'?', st:lst, n:valid().length, proj:(LASTPROJ!=null?Math.round(LASTPROJ):null), t:Math.round((performance.now()-startT)/1000),
     w:(A0PHASE==='alarm'?2:(A0PHASE==='pre'?1:0)), g:(TGTPHASE==='alarm'?2:(TGTPHASE==='pre'?1:0)), r:(RCPHASE==='alarm'?2:(RCPHASE==='pre'?1:0)), wn:RCWN}, true); }catch(e){} }   // alarm transitions jump the queue: the wrist must not lag the drum
 function wcUrl(){ return location.origin+location.pathname.replace(/[^/]*$/,'')+'crack-screen.html?k='+WCKEY(); }
-function wcToggle(on){ WCON=!!on; try{ localStorage.setItem('bsWatchCast',on?'1':'0'); }catch(e){} wcCmdSub(!!on); if(on){ try{ wkSync(); }catch(e){} }
+function wcToggle(on){ WCON=!!on; try{ localStorage.setItem('bsWatchCast',on?'1':'0'); }catch(e){} wcCmdSub(!!on); if(on){ try{ wkSync(); }catch(e){} try{ WCCHGPUB=null; btAim(); }catch(e){} }
   const vv=$('wcV'); if(vv) vv.textContent=on?(LANG==='tr'?'açık · kayıt başlayınca yayın':'on · casts while recording'):(LANG==='tr'?'kapalı':'off');
   const r2=$('wcRow'); if(r2){ r2.style.display=on?'flex':'none'; const l2=$('wcLink'); if(l2) l2.textContent=wcUrl(); } }
 function wcApp(){ try{ location.href='coffeenutz://pair?key='+WCKEY();   // w34: hands the key to the native iPhone app; WatchConnectivity walks it to the wrist
@@ -632,7 +632,7 @@ function wcFresh(){ try{ cName.value=''; $('mCoffee').value=''; $('finalCall').t
   try{ renderNameplate(); }catch(e){} try{ updateGauge(); }catch(e){} try{ renderNameChips(); }catch(e){} try{ renderRcRow(); }catch(e){}
   setState('st-setup'); window.scrollTo({top:0,behavior:'smooth'}); cName.focus(); }catch(e){}
   toast(LANG==='tr'?'Yeni kahve: ismini seç.':'New coffee: name it.'); }
-let WCCH=null, WCDENY_T=0, WCFIN=null;
+let WCCH=null, WCDENY_T=0, WCFIN=null, WCCHGPUB=null;
 function proPowers(){ return !!planActive() || document.body.classList.contains('admin') || CLOUDEMAIL==='omer_aydin@coffeenutz.net'; }
 function wcCtl(){ return proPowers(); }
 function wcDeny(){ if(performance.now()-WCDENY_T<5000) return; WCDENY_T=performance.now();
@@ -1177,6 +1177,8 @@ function btAim(){ try{ if(running||CHGT0) return;
     if($('mBatch')) $('mBatch').value=b;
     if(cm[b]!=null) btSet(parseFloat(cm[b])); }
   try{ renderEqStrip(); renderSum(); }catch(e){}
+  try{ if(WCON&&!running&&!CHGT0&&!WCFIN){ const a9=btVal();   // w37: the wrist's charge dial wakes up on the plan — prep cast carries the aim
+    if(isFinite(a9)&&a9!==WCCHGPUB){ WCCHGPUB=a9; wcPub({c:(cName.value||'').trim()||'?', chg:a9, prep:1},true); } } }catch(e){}
 }catch(e){} }
 function renderEqStrip(){ try{ const ep=$('eqPills'), bp=$('batchPills'); if(!ep||!bp) return;
   const tr=(LANG==='tr'), cmAll=chgMap();
@@ -2496,7 +2498,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-06c';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-06d';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
