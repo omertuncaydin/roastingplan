@@ -278,7 +278,7 @@ body.st-setup #btn{display:none}
     <div class="pillRow">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer" title="v2026-08-06a">BETA · 08-06a</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer" title="v2026-08-06b">BETA · 08-06b</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -595,6 +595,8 @@ function wcPub(payload,force){ if(!WCON||(!force&&performance.now()-LIVEPUB_T<=1
   try{ const nt=wcNote(); if(nt) payload.nt=nt; }catch(e){}
   try{ payload.ctl=wcCtl()?1:0; }catch(e){}
   try{ if(MICWARNED) payload.mic=0; }catch(e){}   // a deaf ear confesses on every cast, not once
+  try{ if(running&&TEMPS.length){ const lp=TEMPS[TEMPS.length-1]; payload.bt=Math.round(lp.c);
+    const rr=tmpRoR(); if(rr.length){ payload.ror=Math.round(rr[rr.length-1].v*10)/10; payload.trs=rr.slice(-24).map(p9=>[Math.round(p9.t),Math.round(p9.v*10)/10]); } } }catch(e){}   // w35: probe + RoR ride every cast to the wrist
   try{ fetch(SUPA_URL+'/realtime/v1/api/broadcast',{method:'POST',headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY,'content-type':'application/json'},
     body:JSON.stringify({messages:[{topic:'cnw-'+WCKEY(), event:'live', payload, private:false}]})})
     .then(r=>{ const vv=$('wcV'); if(vv&&WCON) vv.textContent=(LANG==='tr'?'açık':'on')+' · '+r.status; })
@@ -640,6 +642,10 @@ function wcCmdSub(on){ try{ if(!SB) return;
       if(m&&m.payload&&!wcCtl()){ wcDeny(); return; }
       if(running&&m&&m.payload&&m.payload.a==='sample'){ markSample(); toast(LANG==='tr'?'Watch: numune işaretlendi.':'Watch: sample marked.'); }
       if(running&&m&&m.payload&&m.payload.a==='drop'){ toast(LANG==='tr'?'Watch: DROP komutu.':'Watch: DROP command.'); stop(); }
+      if(running&&m&&m.payload&&m.payload.a==='temp'&&isFinite(+m.payload.v)){ const c9=+m.payload.v; const t9=(performance.now()-startT)/1000;
+        TEMPS.push({t:t9,c:c9}); try{ btSet(c9); }catch(e9){} tmpDraw(); btDue(false);
+        toast((LANG==='tr'?'Watch: sıcaklık ':'Watch: temp ')+Math.round(c9)+'°C');
+        try{ wcAlertPing(); }catch(e9){} }   // w35: the wrist writes the probe too; the echo rides back so the watch sees its own mark land
       if(!running&&m&&m.payload&&m.payload.a==='again'){ toast(LANG==='tr'?'Watch: aynı kahve, başlıyor…':'Watch: same coffee, starting…'); try{ start(true).catch(()=>{}); }catch(e){} }
       if(!running&&m&&m.payload&&m.payload.a==='fresh'){ wcFresh(); if(m.payload.c){ try{ pickCoffee(String(m.payload.c)).then(()=>start(true)).catch(()=>{}); }catch(e){} } }
     }catch(e){} }).subscribe(); }
@@ -2488,7 +2494,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-06a';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-06b';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
