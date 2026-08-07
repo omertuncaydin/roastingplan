@@ -278,7 +278,7 @@ body.st-setup #btn{display:none}
     <div class="pillRow">
         <button class="hpill" style="border-color:var(--accent);color:var(--accent)" onclick="hardRefresh()">Refresh</button>
         <button class="hpill" id="uniPill" style="border-color:var(--gold);color:var(--gold)" onclick="uniOpen(false)" title="Renk ölçüm evrenin · your measurement universe">UNIVERSE</button>
-        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer" title="v2026-08-06e">BETA · 08-06e</span>
+        <span class="hpill vtag" onclick="adminTap()" style="cursor:pointer" title="v2026-08-06f">BETA · 08-06f</span>
         <button class="hpill" id="langBtn" onclick="toggleLang()">TR</button>
         <span class="hpill" style="border-color:var(--accent2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="showPaywall()"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent2)"></span><span id="planTag"></span></span>
       </div>
@@ -596,7 +596,9 @@ function wcPub(payload,force){ if(!WCON||(!force&&performance.now()-LIVEPUB_T<=1
   try{ payload.ctl=wcCtl()?1:0; }catch(e){}
   try{ if(MICWARNED) payload.mic=0; }catch(e){}   // a deaf ear confesses on every cast, not once
   try{ if(running&&TEMPS.length){ const lp=TEMPS[TEMPS.length-1]; payload.bt=Math.round(lp.c);
-    const rr=tmpRoR(); if(rr.length){ payload.ror=Math.round(rr[rr.length-1].v*10)/10; payload.trs=rr.slice(-24).map(p9=>[Math.round(p9.t),Math.round(p9.v*10)/10]); } } }catch(e){}   // w35: probe + RoR ride every cast to the wrist
+    const ti9=TEMPS.reduce((b9,p9,i9,a9)=>p9.c<a9[b9].c?i9:b9,0);   // w39: turning point — pre-TP RoR is thermometer shock, not bean physics; the wrist never sees it
+    const rr=tmpRoR(ti9>0?TEMPS.slice(ti9):TEMPS);
+    if(rr.length){ payload.ror=Math.round(rr[rr.length-1].v*10)/10; payload.trs=rr.slice(-24).map(p9=>[Math.round(p9.t),Math.round(p9.v*10)/10]); } } }catch(e){}   // w35: probe + RoR ride every cast to the wrist
   try{ fetch(SUPA_URL+'/realtime/v1/api/broadcast',{method:'POST',headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY,'content-type':'application/json'},
     body:JSON.stringify({messages:[{topic:'cnw-'+WCKEY(), event:'live', payload, private:false}]})})
     .then(r=>{ const vv=$('wcV'); if(vv&&WCON) vv.textContent=(LANG==='tr'?'açık':'on')+' · '+r.status; })
@@ -2508,7 +2510,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-06e';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-06f';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
