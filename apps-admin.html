@@ -45,7 +45,7 @@ a.back{color:var(--accent);text-decoration:none;font-size:13px;font-weight:600}
 <body>
 <div class="wrap">
   <h1><span class="lr">CoffeeNutz</span> Apps Yöneticisi</h1>
-  <div class="pills"><span class="hpill" id="ver">v2026-08-05a</span><span class="hpill">apps.coffeenutz.net</span></div>
+  <div class="pills"><span class="hpill" id="ver">v2026-08-08a</span><span class="hpill">apps.coffeenutz.net</span><span class="hpill" style="border-color:var(--accent);color:var(--accent);cursor:pointer" onclick="location.href=location.pathname+'?v='+Date.now()">Yenile</span></div>
   <p class="sub">Ön kapıdaki kart sırası ve görünürlük. Oklarla sırala, gözle gizle, Kaydet ile yayınla; ziyaretçiler anında yeni düzeni görür.</p>
   <div id="auth">Yazmak için Guide hesabınla giriş gerekli. <a href="/roast-guide" target="_blank">Guide'ı aç, giriş yap</a>, sonra bu sayfayı yenile.</div>
   <div id="list"></div>
@@ -62,7 +62,7 @@ a.back{color:var(--accent);text-decoration:none;font-size:13px;font-weight:600}
     <label class="flab" for="f_sub_tr">Alt başlık (TR)</label><input id="f_sub_tr">
     <label class="flab" for="f_sub_en">Subheading (EN)</label><input id="f_sub_en">
   </div>
-  <p class="sub" style="margin:16px 0 4px">Kullanıcı yüzleri · her yüz için kart sırası (ön kapıdaki "Kahvenin neresindesin?" seçimi)</p>
+  <p class="sub" style="margin:16px 0 4px">Kullanıcı yüzleri · her yüz için kart sırası ve görünürlük (göz = o yüzde gizle); ön kapıdaki "Kahvenin neresindesin?" seçimi</p>
   <div id="faces"></div>
   <p class="sub"><a class="back" href="/hub">&#8592; Hub</a></p>
 </div>
@@ -93,6 +93,7 @@ const FACEDEF={
 };
 const FACENM={roa:'Kavurucu · Roaster',cup:'Tadımcı · Cupper',ent:'Meraklı · Enthusiast'};
 let FACES=JSON.parse(JSON.stringify(FACEDEF));
+let FACEHIDE={roa:[],cup:[],ent:[]};
 const VALID=APPS.map(a=>a.id).concat(BLOCKS.map(b=>b.id));
 const DEF={align:'left',head:{tr:'Kahveyi farklı düşünüyoruz!',en:'We think about coffee differently.'},sub:{tr:"CoffeeNutz'ın geliştirdiği tüm kahve uygulamalarını burada bulabilirsiniz.",en:'All the coffee apps CoffeeNutz builds, in one place.'}};
 let ALIGN=DEF.align, HEAD=Object.assign({},DEF.head), SUB=Object.assign({},DEF.sub);
@@ -122,10 +123,12 @@ function renderFaces(){
     FACES[k]=(FACES[k]||[]).filter(id=>map[id]); APPS.forEach(a=>{ if(!FACES[k].includes(a.id)) FACES[k].push(a.id); });
     return '<p class="sub" style="margin:10px 0 6px"><b>'+FACENM[k]+'</b></p>'+FACES[k].map(id=>{
       const a=map[id];
-      return '<div class="row" data-face="'+k+'" data-id="'+id+'" style="padding:8px 12px">'
+      const fh=(FACEHIDE[k]||[]).includes(id);
+      return '<div class="row'+(fh?' hid':'')+'" data-face="'+k+'" data-id="'+id+'" style="padding:8px 12px">'
         +'<div class="badge" style="background:'+a.c+';width:30px;height:30px;flex-basis:30px;font-size:12px">'+a.b+'</div>'
         +'<div class="nm"><b style="font-size:13.5px">'+a.nm+'</b></div>'
-        +'<div class="ctl"><button data-a="fup">&#8593;</button><button data-a="fdn">&#8595;</button></div></div>';
+        +'<div class="ctl"><button data-a="fup">&#8593;</button><button data-a="fdn">&#8595;</button>'
+        +'<button class="eye'+(fh?' off':'')+'" data-a="feye">&#128065;</button></div></div>';
     }).join('');
   }).join('');
 }
@@ -142,6 +145,7 @@ $('faces').addEventListener('click',e=>{
   const row=e.target.closest('.row'), k=row.dataset.face, id=row.dataset.id, arr=FACES[k], i=arr.indexOf(id);
   if(b.dataset.a==='fup'&&i>0){ arr.splice(i,1); arr.splice(i-1,0,id); }
   else if(b.dataset.a==='fdn'&&i<arr.length-1){ arr.splice(i,1); arr.splice(i+1,0,id); }
+  else if(b.dataset.a==='feye'){ const h=FACEHIDE[k]||(FACEHIDE[k]=[]); h.includes(id)?h.splice(h.indexOf(id),1):h.push(id); }
   renderFaces(); $('st').textContent='kaydedilmedi · unsaved';
 });
 $('list').addEventListener('click',e=>{
@@ -158,7 +162,8 @@ async function load(){
     if(data&&data.cfg){ if(Array.isArray(data.cfg.order)&&data.cfg.order.length) ORDER=data.cfg.order.filter(id=>APPS.some(a=>a.id===id)); APPS.forEach(a=>{ if(!ORDER.includes(a.id)) ORDER.push(a.id); }); HIDDEN=(data.cfg.hidden||[]).filter(id=>VALID.includes(id));
       if(['left','title','all'].includes(data.cfg.align)) ALIGN=data.cfg.align;
       HEAD=Object.assign({},DEF.head,data.cfg.head||{}); SUB=Object.assign({},DEF.sub,data.cfg.sub||{});
-      if(data.cfg.faces){ ['roa','cup','ent'].forEach(k=>{ if(Array.isArray(data.cfg.faces[k])&&data.cfg.faces[k].length) FACES[k]=data.cfg.faces[k].slice(); }); } }
+      if(data.cfg.faces){ ['roa','cup','ent'].forEach(k=>{ if(Array.isArray(data.cfg.faces[k])&&data.cfg.faces[k].length) FACES[k]=data.cfg.faces[k].slice(); }); }
+      if(data.cfg.facehide){ ['roa','cup','ent'].forEach(k=>{ if(Array.isArray(data.cfg.facehide[k])) FACEHIDE[k]=data.cfg.facehide[k].slice(); }); } }
   }catch(e){}
   render(); renderFaces(); paintLook();
   const {data:s}=await sb.auth.getSession();
@@ -167,7 +172,7 @@ async function load(){
 }
 $('save').addEventListener('click',async()=>{
   $('save').disabled=true; $('st').textContent='kaydediliyor...';
-  const {error}=await sb.from('apps_config').upsert({id:1,cfg:{order:ORDER,hidden:HIDDEN,align:ALIGN,head:HEAD,sub:SUB,faces:FACES},updated_at:new Date().toISOString()});
+  const {error}=await sb.from('apps_config').upsert({id:1,cfg:{order:ORDER,hidden:HIDDEN,align:ALIGN,head:HEAD,sub:SUB,faces:FACES,facehide:FACEHIDE},updated_at:new Date().toISOString()});
   $('save').disabled=false;
   $('st').textContent=error?('hata: '+error.message):'yayında · live';
 });

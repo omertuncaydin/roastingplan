@@ -5,9 +5,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>CoffeeNutz Apps</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-turtle-32.png">
 <link rel="icon" type="image/svg+xml" href="favicon-turtle.svg">
-<link rel="icon" href="favicon.ico" sizes="any">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" href="favicon-turtle-180.png">
 <link rel="manifest" href="manifest-apps.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -26,6 +26,11 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;padding:20px 16px 44px;padding-top:calc(20px + env(safe-area-inset-top,0px));line-height:1.5}
 .wrap{max-width:560px;margin:0 auto}
+/* one language at a time: a normal translation page. div.en/span.en hidden in TR, the mirror in EN. */
+.en{display:none}
+body.lang-en div.en{display:block}
+body.lang-en span.en{display:inline}
+body.lang-en .tr{display:none}
 .brand{display:flex;align-items:center;gap:10px;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:700}
 .brand .lr{color:var(--terra)}
 svg.ic{width:22px;height:22px;flex:none;stroke:var(--ink);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
@@ -33,15 +38,8 @@ svg.ic{width:22px;height:22px;flex:none;stroke:var(--ink);fill:none;stroke-width
 .pills{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
 .hpill{border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--soft);background:var(--card);text-decoration:none;display:inline-block}
 .hpill.chip{border-color:var(--terra);color:var(--terra);cursor:pointer}
-.hpill.chip.on{background:var(--terraSoft);font-weight:800}
-body.showen #enBtn{background:var(--terraSoft);font-weight:800}
 .motto{margin:16px 0 4px;font-family:Georgia,serif;font-size:17px;font-weight:700;line-height:1.5}
-.motto .en{color:var(--soft);font-family:-apple-system,sans-serif;font-weight:500;font-size:13.5px;margin-top:2px}
 .sub{color:var(--soft);font-size:13px;margin:8px 0 14px;line-height:1.55}
-.sub .en{margin-top:2px}
-.en{display:none}
-body.showen .en{display:block}
-/* the three faces */
 .faces{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0 6px}
 .face{border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;color:var(--soft);cursor:pointer;display:inline-flex;align-items:center;gap:7px}
 .face svg.ic{width:17px;height:17px;stroke:var(--soft)}
@@ -54,8 +52,7 @@ a.card:active{transform:scale(.99)}
 a.card:hover{border-color:var(--terra)}
 .card .t{font-family:Georgia,serif;font-size:18px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:9px}
 .card .arw{margin-left:auto;color:var(--terra);font-size:15px;font-weight:700}
-.card .tr{font-size:13.5px;color:var(--ink);opacity:.9;line-height:1.5}
-.card .en{font-size:12.5px;color:var(--soft);line-height:1.5;margin-top:2px}
+.card .d{font-size:13.5px;color:var(--ink);opacity:.9;line-height:1.5}
 .proof{border-radius:12px;margin:9px 0 8px;overflow:hidden;border:1px solid var(--line)}
 .proof svg{display:block;width:100%;height:58px}
 a.card.quiet{background:none;opacity:.92}
@@ -63,9 +60,7 @@ a.card.quiet .t{font-size:16px}
 .betatag{font-size:9.5px;font-weight:800;letter-spacing:.08em;color:#fff;background:var(--terra);border-radius:9px;padding:2px 8px}
 .beta{border:1.5px solid var(--butter);background:var(--butterSoft);border-radius:16px;padding:12px 14px;margin:0 0 14px;font-size:13px;line-height:1.55}
 .beta .bt{font-family:Georgia,serif;font-weight:700;color:var(--ink);margin-bottom:6px}
-.beta .bt .en{font-family:-apple-system,sans-serif;font-weight:600;font-size:12px;color:var(--soft)}
 .beta .btr{color:var(--ink);opacity:.92;margin-top:7px;font-size:12.5px}
-.beta .btr .en{margin-top:2px;color:var(--soft);font-size:12px}
 .betabtn{display:inline-block;border:1.5px solid var(--terra);color:var(--terra);border-radius:999px;padding:7px 14px;font-weight:700;font-size:12.5px;text-decoration:none;margin:8px 6px 0 0;background:var(--card)}
 .betabtn.q{border-color:var(--line);color:var(--soft);font-weight:600}
 a.card.soon{cursor:default}
@@ -73,14 +68,13 @@ a.card.soon:hover{border-color:var(--line)}
 .soontag{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--soft);border:1px solid var(--line);border-radius:12px;padding:2px 9px;background:var(--paper)}
 .foot{margin-top:26px;font-size:13px;color:var(--soft);line-height:1.7}
 .foot a{color:var(--terra);text-decoration:none;font-weight:600}
-.free{margin-top:14px;font-size:12.5px;color:var(--soft)}
-.free b{color:var(--ink)}
+.free{margin-top:14px;font-size:12.5px;color:var(--ink)}
 .apphidden{display:none}
+.facehidden{display:none}
 body.align-title .brand,body.align-all .brand{justify-content:center}
 body.align-title .brand,body.align-all .brand,body.align-all .motto,body.align-all .sub{text-align:center}
 body.align-title .pills,body.align-all .pills,body.align-title .faces,body.align-all .faces{justify-content:center}
 body.align-title .faceq,body.align-all .faceq{text-align:center}
-/* the little knock: add-to-home-screen nudge */
 #knock{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:9;border:1.5px solid var(--terra);background:var(--card);border-radius:999px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--terra);cursor:pointer;box-shadow:0 6px 18px rgba(90,70,40,.22)}
 #knock::before{content:'';position:absolute;inset:-5px;border-radius:999px;border:1.5px solid var(--terra);opacity:0;animation:knockring 2.6s ease-out infinite}
 @keyframes knockring{0%{opacity:.55;transform:scale(.92)}60%{opacity:0;transform:scale(1.15)}100%{opacity:0}}
@@ -112,39 +106,37 @@ body.align-title .faceq,body.align-all .faceq{text-align:center}
 <div class="wrap">
   <a class="brand" href="https://www.coffeenutz.net" style="text-decoration:none;color:inherit"><svg class="ic"><use href="#i-turtle"/></svg><span><span class="lr">CoffeeNutz</span> Apps</span></a>
   <div class="pills">
-    <span class="hpill" id="ver">v2026-08-05a</span>
-    <span class="hpill chip" onclick="location.href=location.pathname+'?v='+Date.now()">Yenile</span>
-    <span class="hpill chip" id="enBtn" onclick="document.body.classList.toggle('showen');try{localStorage.setItem('bsShowEN',document.body.classList.contains('showen')?'1':'0')}catch(e){}">EN</span>
+    <span class="hpill" id="ver">v2026-08-08a</span>
+    <span class="hpill chip" onclick="location.href=location.pathname+'?v='+Date.now()"><span class="tr">Yenile</span><span class="en">Refresh</span></span>
+    <span class="hpill chip" id="langBtn" onclick="setLang(document.body.classList.contains('lang-en')?'tr':'en')">EN</span>
   </div>
 
   <div class="motto">
-    Kahveyi farklı düşünüyoruz!
-    <span class="en">We think about coffee differently.</span>
+    <div class="tr">Kahveyi farklı düşünüyoruz!</div>
+    <div class="en">We think about coffee differently.</div>
   </div>
   <div class="sub">
-    CoffeeNutz'ın geliştirdiği tüm kahve uygulamalarını burada bulabilirsiniz.
-    <span class="en">All the coffee apps CoffeeNutz builds, in one place.</span>
+    <div class="tr">CoffeeNutz'ın geliştirdiği tüm kahve uygulamalarını burada bulabilirsiniz.</div>
+    <div class="en">All the coffee apps CoffeeNutz builds, in one place.</div>
   </div>
 
-  <div class="faceq">Kahvenin neresindesin? <span class="en">Which side of coffee are you on?</span></div>
+  <div class="faceq"><span class="tr">Kahvenin neresindesin?</span><span class="en">Which side of coffee are you on?</span></div>
   <div class="faces">
-    <span class="face" data-face="all">Tümü</span>
-    <span class="face" data-face="ent"><svg class="ic"><use href="#i-cup"/></svg>Meraklı</span>
-    <span class="face" data-face="roa"><svg class="ic"><use href="#i-bean"/></svg>Kavurucu</span>
-    <span class="face" data-face="cup"><svg class="ic"><use href="#i-spoon"/></svg>Tadımcı</span>
+    <span class="face" data-face="all"><span class="tr">Tümü</span><span class="en">All</span></span>
+    <span class="face" data-face="ent"><svg class="ic"><use href="#i-cup"/></svg><span class="tr">Meraklı</span><span class="en">Enthusiast</span></span>
+    <span class="face" data-face="roa"><svg class="ic"><use href="#i-bean"/></svg><span class="tr">Kavurucu</span><span class="en">Roaster</span></span>
+    <span class="face" data-face="cup"><svg class="ic"><use href="#i-spoon"/></svg><span class="tr">Tadımcı</span><span class="en">Cupper</span></span>
   </div>
 
   <div class="divider"></div>
 
   <div class="beta" data-block="announce">
-    <div class="bt">2026-07-29 &middot; Crack Listener BETA yayında! <span class="en">Crack Listener BETA is live!</span></div>
-    <div class="btr">Uygulama ücretsiz: test et, zorla, istersen günlük kavrumlarını onunla yönet. Dinleme, evre çağrıları, drop alarmı ve renk öngörüsü telefonunda çalışır. Prob yok, ek donanım yok.
-      <span class="en">The app is free: test it, push it, even run your daily roasts with it. Listening, stage calls, drop alarms and color projection all on your phone. No probes, no extra hardware.</span></div>
-    <div class="btr">Tam sürüm hafıza katmanını ekler: kahve bulutu (haritalar, reçeteler, kayıtlar her cihazda) &middot; watch cast (tablet ya da Apple Watch; numune ve drop bileğinden) &middot; Guide'ı besleyen kavrum geçmişi &middot; Kurucu Roaster: ilk 100 hesap ömür boyu yıllık 149$, sayılı; Kavurma sınıfına katılana 12 ay tam sürüm dahil.
-      <span class="en">The full version adds the memory layer: coffee cloud on every device &middot; watch cast with sample and drop from the wrist &middot; roast history feeding the Guide &middot; Founding Roaster: first 100 accounts lock $149/yr for life, numbered; any Roasting class includes 12 months.</span></div>
+    <div class="bt"><span class="tr">2026-07-29 &middot; Crack Listener BETA yayında!</span><span class="en">2026-07-29 &middot; Crack Listener BETA is live!</span></div>
+    <div class="btr"><span class="tr">Uygulama ücretsiz: test et, zorla, istersen günlük kavrumlarını onunla yönet. Dinleme, evre çağrıları, drop alarmı ve renk öngörüsü telefonunda çalışır. Prob yok, ek donanım yok.</span><span class="en">The app is free: test it, push it, even run your daily roasts with it. Listening, stage calls, drop alarms and color projection all on your phone. No probes, no extra hardware.</span></div>
+    <div class="btr"><span class="tr">Tam sürüm hafıza katmanını ekler: kahve bulutu (haritalar, reçeteler, kayıtlar her cihazda) &middot; watch cast (tablet ya da Apple Watch; numune ve drop bileğinden) &middot; Guide'ı besleyen kavrum geçmişi &middot; Kurucu Roaster: ilk 100 hesap ömür boyu yıllık 149$, sayılı; Kavurma sınıfına katılana 12 ay tam sürüm dahil.</span><span class="en">The full version adds the memory layer: coffee cloud on every device &middot; watch cast with sample and drop from the wrist &middot; roast history feeding the Guide &middot; Founding Roaster: first 100 accounts lock $149/yr for life, numbered; any Roasting class includes 12 months.</span></div>
     <div>
-      <a class="betabtn" href="https://www.coffeenutz.net/products/crack-listener">Tam s&#252;r&#252;m&#252; al &#8599;</a>
-      <a class="betabtn q" href="https://guide.coffeenutz.net/plans">planlar &amp; lisans</a>
+      <a class="betabtn" href="https://www.coffeenutz.net/products/crack-listener"><span class="tr">Tam s&#252;r&#252;m&#252; al &#8599;</span><span class="en">Get the full version &#8599;</span></a>
+      <a class="betabtn q" href="https://guide.coffeenutz.net/plans"><span class="tr">planlar &amp; lisans</span><span class="en">plans &amp; license</span></a>
     </div>
   </div>
 
@@ -156,90 +148,100 @@ body.align-title .faceq,body.align-all .faceq{text-align:center}
       <path d="M14 50 C 40 46 52 14 84 12 C 116 12 136 30 170 42 C 200 50 240 52 306 53" stroke="#e6c14b" stroke-width="3" fill="none" stroke-linecap="round"/>
       <g fill="#e6c14b" font-family="sans-serif" font-size="8" font-weight="700"><text x="16" y="56">A0</text><text x="58" y="56">A1</text><text x="76" y="56">B1</text><text x="128" y="56">C0</text></g>
     </svg></div>
-    <div class="tr">telefonun kavurmayı dinler, evreleri adlandırır, rengi öngörür</div>
-    <span class="en">your phone listens to the roast, names the stages, projects color</span>
+    <div class="d tr">telefonun kavurmayı dinler, evreleri adlandırır, rengi öngörür</div>
+    <div class="d en">your phone listens to the roast, names the stages, projects color</div>
   </a>
 
   <a class="card" data-app="roast-guide" href="https://guide.coffeenutz.net/roast-guide">
     <div class="t"><svg class="ic"><use href="#i-spoon"/></svg>CoffeeNutz Guide <span class="arw">&#8599;</span></div>
     <div class="proof"><svg viewBox="0 0 320 58" preserveAspectRatio="none">
       <rect width="320" height="58" fill="#1a1410"/>
-      <path d="M14 46 C 60 44 70 20 110 16 C 150 13 170 26 210 32 C 250 38 280 40 306 41" stroke="#f3ede4" stroke-width="2.5" fill="none"/>
-      <path d="M110 16 C 150 13 200 10 306 8" stroke="#f3ede4" stroke-width="2" stroke-dasharray="5 5" fill="none" opacity=".45"/>
-      <g fill="#e6c14b"><circle cx="46" cy="44" r="3"/><circle cx="110" cy="16" r="3"/><circle cx="210" cy="32" r="3"/></g>
-      <text x="256" y="18" fill="#e6c14b" font-family="Georgia,serif" font-size="11" font-weight="700">86.25</text>
+      <g fill="#c98a3c" opacity=".38"><rect x="18" y="42" width="7" height="8"/><rect x="34" y="34" width="7" height="16"/><rect x="50" y="26" width="7" height="24"/><rect x="66" y="18" width="7" height="32"/><rect x="82" y="14" width="7" height="36"/><rect x="98" y="18" width="7" height="32"/><rect x="114" y="24" width="7" height="26"/><rect x="130" y="30" width="7" height="20"/><rect x="146" y="34" width="7" height="16"/><rect x="162" y="38" width="7" height="12"/><rect x="178" y="42" width="7" height="8"/><rect x="196" y="45" width="7" height="5"/></g>
+      <path d="M14 48 C 44 44 60 16 96 14 C 140 13 170 26 210 36 C 250 44 280 48 306 50" stroke="#e6c14b" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <g fill="#e6c14b"><circle cx="70" cy="20" r="3.2"/><circle cx="160" cy="24" r="3.2"/><circle cx="250" cy="44" r="3.2"/></g>
+      <g fill="#f3ede4" font-family="Georgia,serif" font-size="10" font-weight="700"><text x="54" y="12">86.25</text><text x="144" y="14">84.50</text><text x="234" y="36">88.00</text></g>
+      <g fill="#a8998a" font-family="sans-serif" font-size="7.5" font-weight="700"><text x="62" y="56">95</text><text x="152" y="56">105</text><text x="243" y="56">115</text></g>
     </svg></div>
-    <div class="tr">kavurma, tadım ve analiz kokpiti</div>
-    <span class="en">the roast, cup and grade cockpit</span>
+    <div class="d tr">kavurma, tadım ve analiz kokpiti</div>
+    <div class="d en">the roast, cup and grade cockpit</div>
   </a>
 
   <a class="card soon" data-app="cupping-watch" href="#">
-    <div class="t"><svg class="ic"><use href="#i-watch"/></svg>Cupping Watch <span class="soontag">yakında App Store'da &middot; soon</span></div>
-    <div class="tr">tadım bileğinden: numune, skor ve drop — Guide'a canlı akar</div>
-    <span class="en">cupping from the wrist: samples, scores and drop, cast live to the Guide</span>
+    <div class="t"><svg class="ic"><use href="#i-watch"/></svg>Cupping Watch <span class="soontag"><span class="tr">yakında App Store'da</span><span class="en">soon on the App Store</span></span></div>
+    <div class="d tr">tadım bileğinden: numune, skor ve drop — Guide'a canlı akar</div>
+    <div class="d en">cupping from the wrist: samples, scores and drop, cast live to the Guide</div>
   </a>
 
   <a class="card" data-app="crack-game" href="https://guide.coffeenutz.net/crack-game">
     <div class="t"><svg class="ic"><use href="#i-game"/></svg>Agtron Challenge <span class="arw">&#8599;</span></div>
-    <div class="tr">kulağın kaç Agtron? gerçek çatlak sesleriyle oyna</div>
-    <span class="en">play with real crack sounds</span>
+    <div class="d tr">kulağın kaç Agtron? gerçek çatlak sesleriyle oyna</div>
+    <div class="d en">how many Agtron is your ear? play with real crack sounds</div>
   </a>
 
   <a class="card" data-app="roasttale" href="https://guide.coffeenutz.net/roasttale">
     <div class="t"><svg class="ic"><use href="#i-tale"/></svg>RoastTale <span class="arw">&#8599;</span></div>
-    <div class="tr">bir kavurma masalı</div>
-    <span class="en">a coffee adventure</span>
+    <div class="d tr">bir kavurma masalı</div>
+    <div class="d en">a coffee adventure</div>
   </a>
 
   <a class="card" data-app="scurve-jumper" href="https://guide.coffeenutz.net/scurve-jumper">
     <div class="t"><svg class="ic"><use href="#i-game"/></svg>SCurve Jumper <span class="arw">&#8599;</span></div>
-    <div class="tr">oyun X'i çizer, sen ona kavurursun</div>
-    <span class="en">the game paints the X, you roast to it</span>
+    <div class="d tr">oyun X'i çizer, sen ona kavurursun</div>
+    <div class="d en">the game paints the X, you roast to it</div>
   </a>
 
   <div class="divider"></div>
 
   <a class="card quiet soon" data-app="grupal" href="#">
-    <div class="t">Grup-Al <span class="soontag">yakında &middot; soon</span></div>
-    <div class="tr">kolektif kavurma günü partileri</div>
-    <span class="en">collective roast-day lots</span>
+    <div class="t">Grup-Al <span class="soontag"><span class="tr">yakında</span><span class="en">soon</span></span></div>
+    <div class="d tr">kolektif kavurma günü partileri</div>
+    <div class="d en">collective roast-day lots</div>
   </a>
 
   <a class="card" data-app="zine" href="https://guide.coffeenutz.net/zine">
-    <div class="t"><svg class="ic"><use href="#i-zine"/></svg>CoffeeNutz Zine <span class="soontag">No.01 yayında &middot; out now</span> <span class="arw">&#8599;</span></div>
-    <div class="tr">sezonluk dergi rafı, her sayı PDF</div>
-    <span class="en">the seasonal shelf, every issue a PDF</span>
+    <div class="t"><svg class="ic"><use href="#i-zine"/></svg>CoffeeNutz Zine <span class="soontag"><span class="tr">No.01 yayında</span><span class="en">No.01 out now</span></span> <span class="arw">&#8599;</span></div>
+    <div class="d tr">sezonluk dergi rafı, her sayı PDF</div>
+    <div class="d en">the seasonal shelf, every issue a PDF</div>
   </a>
 
   <div class="foot">
-    sınıflar &middot; classes &rarr; <a href="https://www.coffeenutz.net/collections/egitimler">coffeenutz.net/egitimler</a>
+    <span class="tr">sınıflar &rarr; </span><span class="en">classes &rarr; </span><a href="https://www.coffeenutz.net/collections/egitimler">coffeenutz.net/egitimler</a>
     <div class="free">
-      <b>Bilim asla ücrete kilitlenmez.</b>
-      <span class="en">The science is never paywalled.</span>
+      <span class="tr">Uygulamalarımızı bilimsel araştırmalarınız için ücretsiz olarak kullanabilirsiniz.</span>
+      <span class="en">You can use our apps free of charge for your scientific research.</span>
     </div>
   </div>
 </div>
 
 <div id="knock" onclick="document.getElementById('knockSheet').style.display='block';this.style.display='none'">
-  <svg class="ic"><use href="#i-turtle"/></svg> ana ekrana
+  <svg class="ic"><use href="#i-turtle"/></svg> <span class="tr">ana ekrana</span><span class="en">to home screen</span>
 </div>
 <div id="knockSheet">
   <button class="x" onclick="this.parentNode.style.display='none';try{localStorage.setItem('bsKnock','1')}catch(e){}">&#10005;</button>
-  <b>Kaplumbağayı cebine al.</b><br>
+  <span class="tr"><b>Kaplumbağayı cebine al.</b><br>
   Safari: Paylaş <span style="opacity:.6">&#8679;</span> &rarr; <b>Ana Ekrana Ekle</b>. Chrome: men&uuml; &rarr; <b>Uygulamayı y&uuml;kle</b>.<br>
-  <span style="color:var(--soft);font-size:12px">Tek dokunuşla t&uuml;m uygulamalar — tarayıcı çubukları olmadan. <span class="en">One tap to everything, no browser bars.</span></span>
+  <span style="color:var(--soft);font-size:12px">Tek dokunuşla t&uuml;m uygulamalar — tarayıcı çubukları olmadan.</span></span>
+  <span class="en"><b>Put the turtle in your pocket.</b><br>
+  Safari: Share <span style="opacity:.6">&#8679;</span> &rarr; <b>Add to Home Screen</b>. Chrome: menu &rarr; <b>Install app</b>.<br>
+  <span style="color:var(--soft);font-size:12px">One tap to everything — no browser bars.</span></span>
 </div>
 
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "cc241b05cd704f42a333be3d552415e9"}'></script><!-- End Cloudflare Web Analytics -->
 
 <script>
 (function(){
-/* language memory */
-try{ if(localStorage.getItem('bsShowEN')==='1') document.body.classList.add('showen'); }catch(e){}
+/* language: one at a time, remembered */
+window.setLang=function(l){
+  document.body.classList.toggle('lang-en',l==='en');
+  document.documentElement.lang=(l==='en')?'en':'tr';
+  var b=document.getElementById('langBtn'); if(b) b.textContent=(l==='en')?'TR':'EN';
+  try{ localStorage.setItem('bsLangApps',l); }catch(e){}
+};
+try{ setLang(localStorage.getItem('bsLangApps')==='en'?'en':'tr'); }catch(e){}
 /* knock: hide if dismissed or standalone */
 try{ if(localStorage.getItem('bsKnock')==='1'||window.matchMedia('(display-mode: standalone)').matches||navigator.standalone) document.getElementById('knock').style.display='none'; }catch(e){}
 
-/* the three faces: reorder the same cards, hide nothing (admin's hidden list still rules) */
+/* the three faces: reorder + per-face hide. Admin cfg.faces / cfg.facehide override the defaults. */
 var FACEORD={};
 var FACEDEF={
   roa:['crack-listen','roast-guide','cupping-watch','scurve-jumper','crack-game','roasttale','grupal','zine'],
@@ -247,6 +249,7 @@ var FACEDEF={
   ent:['zine','crack-game','roasttale','scurve-jumper','crack-listen','roast-guide','cupping-watch','grupal']
 };
 FACEORD=JSON.parse(JSON.stringify(FACEDEF));
+var FACEHIDE={roa:[],cup:[],ent:[]};
 function reorder(seq){
   var all={}; [].slice.call(document.querySelectorAll('[data-app]')).forEach(function(e){ all[e.getAttribute('data-app')]=e; });
   var first=document.querySelector('[data-app]'); if(!first) return;
@@ -262,22 +265,27 @@ function applyFace(f){
   [].slice.call(document.querySelectorAll('.face')).forEach(function(x){ x.classList.toggle('on',x.getAttribute('data-face')===f); });
   if(f!=='all'&&FACEORD[f]) reorder(FACEORD[f]);
   else if(ADMINSEQ) reorder(ADMINSEQ);
+  var hid=(f!=='all'&&FACEHIDE[f])?FACEHIDE[f]:[];
+  [].slice.call(document.querySelectorAll('[data-app]')).forEach(function(e){ e.classList.toggle('facehidden',hid.indexOf(e.getAttribute('data-app'))>=0); });
   try{ localStorage.setItem('bsFace',f); }catch(e){}
 }
 [].slice.call(document.querySelectorAll('.face')).forEach(function(x){ x.onclick=function(){ applyFace(x.getAttribute('data-face')); }; });
 
-/* admin config: unchanged contract with apps-admin (order, hidden, align, head, sub) */
+/* admin config: order, hidden, align, head, sub, faces, facehide */
 function applyAppsConfig(cfg){
   if(!cfg||!cfg.order) return;
   document.body.classList.remove('align-title','align-all');
   if(cfg.align==='title'){document.body.classList.add('align-title');}else if(cfg.align==='all'){document.body.classList.add('align-all');}
-  function setTx(sel,v){ var el=document.querySelector(sel); if(!el||!v) return; if(v.tr!=null){ el.childNodes[0].textContent=v.tr; } var en=el.querySelector('.en'); if(en&&v.en!=null){ en.textContent=v.en; } }
+  function setTx(sel,v){ var el=document.querySelector(sel); if(!el||!v) return;
+    var t=el.querySelector('.tr'), e=el.querySelector('.en');
+    if(t&&v.tr!=null) t.textContent=v.tr; if(e&&v.en!=null) e.textContent=v.en; }
   setTx('.motto',cfg.head); setTx('.sub',cfg.sub);
   var all={}; [].slice.call(document.querySelectorAll('[data-app]')).forEach(function(e){ all[e.getAttribute('data-app')]=e; });
   var seq=cfg.order.filter(function(id){return all[id];});
   Object.keys(all).forEach(function(id){ if(seq.indexOf(id)<0) seq.push(id); });
   ADMINSEQ=seq;
   if(cfg.faces){ ['roa','cup','ent'].forEach(function(k){ if(Array.isArray(cfg.faces[k])&&cfg.faces[k].length) FACEORD[k]=cfg.faces[k]; }); }
+  if(cfg.facehide){ ['roa','cup','ent'].forEach(function(k){ if(Array.isArray(cfg.facehide[k])) FACEHIDE[k]=cfg.facehide[k]; }); }
   Object.keys(all).forEach(function(id){ all[id].classList.toggle('apphidden',(cfg.hidden||[]).indexOf(id)>=0); });
   [].slice.call(document.querySelectorAll('[data-block]')).forEach(function(e){ e.classList.toggle('apphidden',(cfg.hidden||[]).indexOf(e.getAttribute('data-block'))>=0); });
   var f='all'; try{ f=localStorage.getItem('bsFace')||'all'; }catch(e){}
@@ -290,7 +298,6 @@ try{
     .then(function(a){ if(a&&a[0]&&a[0].cfg) applyAppsConfig(a[0].cfg); })
     .catch(function(){});
 }catch(e){}
-/* no admin config yet: still honor a remembered face */
 try{ var f0=localStorage.getItem('bsFace'); if(f0&&f0!=='all') applyFace(f0); else document.querySelector('.face[data-face="all"]').classList.add('on'); }catch(e){}
 })();
 </script>
