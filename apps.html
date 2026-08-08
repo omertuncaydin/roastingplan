@@ -160,7 +160,7 @@ body.align-title .faceq,body.align-all .faceq{text-align:center}
       <path d="M14 48 C 44 44 60 16 96 14 C 140 13 170 26 210 36 C 250 44 280 48 306 50" stroke="#e6c14b" stroke-width="3" fill="none" stroke-linecap="round"/>
       <g fill="#e6c14b"><circle cx="70" cy="20" r="3.2"/><circle cx="160" cy="24" r="3.2"/><circle cx="250" cy="44" r="3.2"/></g>
       <g fill="#f3ede4" font-family="Georgia,serif" font-size="10" font-weight="700"><text x="54" y="12">86.25</text><text x="144" y="14">84.50</text><text x="234" y="36">88.00</text></g>
-      <g fill="#a8998a" font-family="sans-serif" font-size="7.5" font-weight="700"><text x="62" y="56">95</text><text x="152" y="56">105</text><text x="243" y="56">115</text></g>
+      <g fill="#a8998a" font-family="sans-serif" font-size="7.5" font-weight="700"><text x="60" y="56">95A</text><text x="149" y="56">105A</text><text x="240" y="56">115A</text></g>
     </svg></div>
     <div class="d tr">kavurma, tadım ve analiz kokpiti</div>
     <div class="d en">the roast, cup and grade cockpit</div>
@@ -217,12 +217,12 @@ body.align-title .faceq,body.align-all .faceq{text-align:center}
   <svg class="ic"><use href="#i-turtle"/></svg> <span class="tr">ana ekrana</span><span class="en">to home screen</span>
 </div>
 <div id="knockSheet">
-  <button class="x" onclick="this.parentNode.style.display='none';try{localStorage.setItem('bsKnock','1')}catch(e){}">&#10005;</button>
+  <button class="x" onclick="this.parentNode.style.display='none';try{localStorage.setItem('bsKnock',localStorage.getItem('bsKnockN')||'1')}catch(e){}">&#10005;</button>
   <span class="tr"><b>Kaplumbağayı cebine al.</b><br>
-  Safari: Paylaş <span style="opacity:.6">&#8679;</span> &rarr; <b>Ana Ekrana Ekle</b>. Chrome: men&uuml; &rarr; <b>Uygulamayı y&uuml;kle</b>.<br>
+  iPhone: Paylaş <span style="opacity:.6">&#8679;</span> &rarr; <b>Ana Ekrana Ekle</b> (Safari da Chrome da b&ouml;yle). Android / masa&uuml;st&uuml; Chrome: men&uuml; &#8942; &rarr; <b>Uygulamayı y&uuml;kle</b>.<br>
   <span style="color:var(--soft);font-size:12px">Tek dokunuşla t&uuml;m uygulamalar — tarayıcı çubukları olmadan.</span></span>
   <span class="en"><b>Put the turtle in your pocket.</b><br>
-  Safari: Share <span style="opacity:.6">&#8679;</span> &rarr; <b>Add to Home Screen</b>. Chrome: menu &rarr; <b>Install app</b>.<br>
+  iPhone: Share <span style="opacity:.6">&#8679;</span> &rarr; <b>Add to Home Screen</b> (same in Safari and Chrome). Android / desktop Chrome: menu &#8942; &rarr; <b>Install app</b>.<br>
   <span style="color:var(--soft);font-size:12px">One tap to everything — no browser bars.</span></span>
 </div>
 
@@ -238,8 +238,12 @@ window.setLang=function(l){
   try{ localStorage.setItem('bsLangApps',l); }catch(e){}
 };
 try{ setLang(localStorage.getItem('bsLangApps')==='en'?'en':'tr'); }catch(e){}
-/* knock: hide if dismissed or standalone */
-try{ if(localStorage.getItem('bsKnock')==='1'||window.matchMedia('(display-mode: standalone)').matches||navigator.standalone) document.getElementById('knock').style.display='none'; }catch(e){}
+/* knock: quiet after ✕, but knocks again around the 10th visit if the turtle still is not on a home screen */
+try{
+  var kn=+(localStorage.getItem('bsKnockN')||0)+1; localStorage.setItem('bsKnockN',String(kn));
+  var kd=+(localStorage.getItem('bsKnock')||0);
+  if((window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||navigator.standalone||(kd&&kn-kd<10)) document.getElementById('knock').style.display='none';
+}catch(e){}
 
 /* the three faces: reorder + per-face hide. Admin cfg.faces / cfg.facehide override the defaults. */
 var FACEORD={};
