@@ -1,0 +1,12 @@
+{
+  "name": "CoffeeNutz Apps",
+  "short_name": "CoffeeNutz",
+  "start_url": "/apps",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f0e4",
+  "theme_color": "#f6f0e4",
+  "icons": [
+    { "src": "coffeenutz-turtle.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
