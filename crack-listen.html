@@ -599,6 +599,11 @@ function wcPub(payload,force){ if(!WCON||(!force&&performance.now()-LIVEPUB_T<=1
     const ti9=TEMPS.reduce((b9,p9,i9,a9)=>p9.c<a9[b9].c?i9:b9,0);   // w39: turning point — pre-TP RoR is thermometer shock, not bean physics; the wrist never sees it
     const rr=tmpRoR(ti9>0?TEMPS.slice(ti9):TEMPS);
     if(rr.length){ payload.ror=Math.round(rr[rr.length-1].v*10)/10; payload.trs=rr.slice(-24).map(p9=>[Math.round(p9.t),Math.round(p9.v*10)/10]); } } }catch(e){}   // w35: probe + RoR ride every cast to the wrist
+  try{ if((running||CHGT0)&&INPUTS){ if(INPUTS.eq) payload.eq=String(INPUTS.eq).slice(0,16);   // w43/w46: inputs are the recipes — the wrist's ready room shows the plan
+    if(INPUTS.batch) payload.bg=String(INPUTS.batch).slice(0,8);
+    if(payload.chg==null&&INPUTS.chg&&isFinite(parseFloat(INPUTS.chg))) payload.chg=parseFloat(INPUTS.chg);
+    if(INPUTS.gas) payload.gas=String(INPUTS.gas).slice(0,240);
+    if(INPUTS.dropSt) payload.dst=String(INPUTS.dropSt).slice(0,24); } }catch(e){}
   try{ fetch(SUPA_URL+'/realtime/v1/api/broadcast',{method:'POST',headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY,'content-type':'application/json'},
     body:JSON.stringify({messages:[{topic:'cnw-'+WCKEY(), event:'live', payload, private:false}]})})
     .then(r=>{ const vv=$('wcV'); if(vv&&WCON) vv.textContent=(LANG==='tr'?'açık':'on')+' · '+r.status; })
@@ -1181,7 +1186,15 @@ function btAim(){ try{ if(running||CHGT0) return;
     if(cm[b]!=null) btSet(parseFloat(cm[b])); }
   try{ renderEqStrip(); renderSum(); }catch(e){}
   try{ if(WCON&&!running&&!CHGT0&&!WCFIN){ const a9=btVal();   // w37: the wrist's charge dial wakes up on the plan — prep cast carries the aim
-    if(isFinite(a9)&&a9!==WCCHGPUB){ WCCHGPUB=a9; wcPub({c:(cName.value||'').trim()||'?', chg:a9, prep:1},true); } } }catch(e){}
+    const k8=rcKey(); let li8={}; try{ li8=(JSON.parse(localStorage.getItem('bsInputs')||'{}'))[k8]||{}; }catch(e8){}
+    let rc8=null; try{ rc8=rcGet(k8); }catch(e8){}
+    const eq8=localStorage.getItem('bsEquip')||(($('mEquip')&&$('mEquip').value)||'');
+    const bg8=($('mBatch')&&$('mBatch').value)||'';
+    const gas8=String((rc8&&rc8.gas)||li8.gas||'').slice(0,240);
+    const dst8=String((rc8&&rc8.st)||li8.dropSt||'').slice(0,24);
+    const sig8=[a9,eq8,bg8,gas8,dst8].join('|');   // w46: any piece changing re-arms the wrist's ready room
+    if(isFinite(a9)&&sig8!==WCCHGPUB){ WCCHGPUB=sig8;
+      wcPub({c:(cName.value||'').trim()||'?', chg:a9, prep:1, eq:eq8.slice(0,16), bg:String(bg8).slice(0,8), gas:gas8, dst:dst8},true); } } }catch(e){}
 }catch(e){} }
 function renderEqStrip(){ try{ const ep=$('eqPills'), bp=$('batchPills'); if(!ep||!bp) return;
   const tr=(LANG==='tr'), cmAll=chgMap();
@@ -2510,7 +2523,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-08c';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-08d';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
