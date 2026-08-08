@@ -69,8 +69,8 @@ a.card.soon:hover{border-color:var(--line)}
 .foot{margin-top:26px;font-size:13px;color:var(--soft);line-height:1.7}
 .foot a{color:var(--terra);text-decoration:none;font-weight:600}
 .free{margin-top:14px;font-size:12.5px;color:var(--ink)}
-.apphidden{display:none}
-.facehidden{display:none}
+.apphidden{display:none!important}
+.facehidden{display:none!important}   /* !important: a.card{display:block} outranks a lone class — hidden must ALWAYS win */
 body.align-title .brand,body.align-all .brand{justify-content:center}
 body.align-title .brand,body.align-all .brand,body.align-all .motto,body.align-all .sub{text-align:center}
 body.align-title .pills,body.align-all .pills,body.align-title .faces,body.align-all .faces{justify-content:center}
@@ -167,7 +167,7 @@ body.align-title .faceq,body.align-all .faceq{text-align:center}
   </a>
 
   <a class="card soon" data-app="cupping-watch" href="#">
-    <div class="t"><svg class="ic"><use href="#i-watch"/></svg>Cupping Watch <span class="soontag"><span class="tr">yakında App Store'da</span><span class="en">soon on the App Store</span></span></div>
+    <div class="t"><svg class="ic"><use href="#i-watch"/></svg>CoffeeNutz Watch <span class="soontag"><span class="tr">yakında App Store'da</span><span class="en">soon on the App Store</span></span></div>
     <div class="d tr">tadım bileğinden: numune, skor ve drop — Guide'a canlı akar</div>
     <div class="d en">cupping from the wrist: samples, scores and drop, cast live to the Guide</div>
   </a>

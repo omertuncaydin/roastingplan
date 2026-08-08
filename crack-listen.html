@@ -625,9 +625,9 @@ function wcToggle(on){ WCON=!!on; try{ localStorage.setItem('bsWatchCast',on?'1'
   const vv=$('wcV'); if(vv) vv.textContent=on?(LANG==='tr'?'açık · kayıt başlayınca yayın':'on · casts while recording'):(LANG==='tr'?'kapalı':'off');
   const r2=$('wcRow'); if(r2){ r2.style.display=on?'flex':'none'; const l2=$('wcLink'); if(l2) l2.textContent=wcUrl(); } }
 function wcApp(){ try{ location.href='coffeenutz://pair?key='+WCKEY();   // w34: hands the key to the native iPhone app; WatchConnectivity walks it to the wrist
-  toast(LANG==='tr'?'CoffeeNutz uygulaması açılıyor — anahtar bileğe kendiliğinden gider. (Açılmadıysa uygulama telefonda kurulu değil.)':'Opening the CoffeeNutz app — the key walks to the wrist by itself. (Nothing happened? The app is not installed.)'); }catch(e){} }
+  toast(LANG==='tr'?'CoffeeNutz Watch uygulaması açılıyor — anahtar bileğe kendiliğinden gider. (Açılmadıysa uygulama telefonda kurulu değil.)':'Opening the CoffeeNutz Watch app — the key walks to the wrist by itself. (Nothing happened? The app is not installed.)'); }catch(e){} }
 function wcCopy(){ try{ navigator.clipboard.writeText(wcUrl()); toast(LANG==='tr'?'Watch linki kopyalandı.':'Watch link copied.'); }catch(e){ toast(wcUrl()); } }
-function wcShare(){ try{ if(navigator.share){ navigator.share({title:'Crack Watch', url:wcUrl()}); } else { wcCopy(); } }catch(e){ wcCopy(); } }
+function wcShare(){ try{ if(navigator.share){ navigator.share({title:'CoffeeNutz Watch', url:wcUrl()}); } else { wcCopy(); } }catch(e){ wcCopy(); } }
 function wcFresh(){ try{ cName.value=''; $('mCoffee').value=''; $('finalCall').textContent='';
   LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PHASE=0; PHASE_DISP=0; PHPEAK=0; PHPEAKT=0; PHREV=0; try{ renderStopLine(); }catch(e){}   // a new coffee owes nothing to the last roast's numbers
   ['dlZip','dlCard','dlStory','metaBox','mapBtn','cupGo','nextRow','gameAdd','agTop'].forEach(i=>{ if($(i)) $(i).style.display='none'; });
@@ -686,7 +686,7 @@ async function start(remote){
       AC=null; stream=null; src=null;
       stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
     }   // warm reuse survives ONLY for watch-remote restarts (no finger available); zombie watchdog below covers the rest
-  }catch(e){ $('err').textContent=(LANG==='tr'?'Mikrofon engellendi. Chrome: uc nokta menu > Site ayarlari > Mikrofon: Izin Ver. (Safari: adres cubugu aA > Web Sitesi Ayarlari > Mikrofon.) Ayrica iOS Ayarlar > Gizlilik > Mikrofon listesinde tarayicin ACIK olmali. Sonra yenile + Basla.':'Microphone blocked. Chrome: three-dot menu > Site settings > Microphone: Allow. (Safari: aA in the address bar > Website Settings > Microphone.) Also iOS Settings > Privacy > Microphone must list your browser as ON. Then reload + Start.')+' ['+(e.name||e.message)+']'; return; }
+  }catch(e){ $('err').textContent=(LANG==='tr'?'Mikrofon engellendi. Tarayicinin site ayarlarindan mikrofona izin ver (adres cubugundaki menu). Ayrica iOS Ayarlar > Gizlilik > Mikrofon listesinde tarayicin ACIK olmali. Sonra yenile + Basla.':'Microphone blocked. Allow the microphone in the browser site settings (the menu by the address bar). Also iOS Settings > Privacy > Microphone must list your browser as ON. Then reload + Start.')+' ['+(e.name||e.message)+']'; return; }
   if(!(AC&&AC.state!=='closed')) AC=new (window.AudioContext||window.webkitAudioContext)();
   if(AC.state==='suspended') await AC.resume();
   src=AC.createMediaStreamSource(stream);
