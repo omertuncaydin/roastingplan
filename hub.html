@@ -90,14 +90,14 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
     <div class="brand" onclick="location.reload()" title="refresh" style="cursor:pointer"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div id="a2hs" style="display:none;margin:10px 0 4px;border:1px dashed #3a3128;border-radius:12px;padding:9px 12px;font-size:12.5px;color:#a8998a;text-align:left;align-items:center;gap:10px"><span style="flex:1">Tam ekran ve daha iyi bir görünüm için: <b style="color:#f3ede4">Paylaş &#x2192; Ana Ekrana Ekle</b>.</span><button onclick="try{localStorage.setItem('bsA2HS','1');document.getElementById('a2hs').style.display='none'}catch(e){}" style="width:auto;background:none;border:1px solid #3a3128;color:#a8998a;border-radius:999px;padding:4px 10px;font-size:12px">&#10005;</button></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0" id="hubVer">v2026-07-20a</span>
+      <span class="sub" style="margin:0" id="hubVer">v2026-08-08a</span>
       <select class="stsel" id="colSel" title="cards per row" onchange="setCols(this.value)"><option value="auto">Auto</option><option value="1">1/row</option><option value="2">2/row</option><option value="3">3/row</option><option value="4">4/row</option><option value="5">5/row</option><option value="6">6/row</option></select>
       <button class="iconbtn" onclick="loadAll()">Recheck Versions</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
   </div>
   <h1>Your apps <button class="ordbtn" style="width:auto;padding:4px 12px;font-size:13px;vertical-align:middle" onclick="newCard()">+ New card</button> <button class="ordbtn" style="width:auto;padding:4px 12px;font-size:13px;vertical-align:middle;border-color:var(--accent);color:var(--accent)" onclick="location.href=location.pathname+'?v='+Date.now()">Refresh</button></h1>
-  <div class="sub">Tap a card to open. Arrows reorder within a group. Version is read live. <span style="opacity:.5">hub v2026-07-20a</span></div>
+  <div class="sub">Tap a card to open. Arrows reorder within a group. Version is read live. <span style="opacity:.5">hub v2026-08-08a</span></div>
   <div id="sections"></div>
   <div id="restore" class="restore"></div>
 
@@ -130,7 +130,16 @@ const APPS=[
   {nm:'Procurement Manager', path:'/procurement-manager', desc:'Procurement management',        b:'PM', c:'#5a7d3a', cat:'mgmt'},
   {nm:'Landing Forge', path:'/landing-forge', desc:'Landing page builder',                      b:'LF', c:'#c98a3c', cat:'mgmt'},
   {nm:'Emailing Vault', path:'/emailing-vault', desc:'Email drafts · sent / unsent tracker',      b:'EV', c:'#8a6d3b', cat:'mgmt'},
-  {nm:'Apps Yöneticisi', path:'/apps-admin', desc:'apps.coffeenutz.net kart sırası ve görünürlük', b:'AY', c:'#c98a3c', cat:'mgmt'}
+  {nm:'Apps Yöneticisi', path:'/apps-admin', desc:'apps.coffeenutz.net kart sırası ve görünürlük', b:'AY', c:'#c98a3c', cat:'mgmt'},
+  {nm:'CoffeeNutz Apps', path:'/apps', desc:'Ön kapı · the public front door', b:'CA', c:'#c96f4a', cat:'mon'},
+  {nm:'Roast Planner', path:'/roast-planner', desc:'Shopify orders → green kg, batches, roast sequence', b:'RP', c:'#5a7d3a', cat:'mgmt'},
+  {nm:'Zine Shelf', path:'/zine', desc:'Dergi rafı · the public shelf', b:'Z', c:'#9a5b8f', cat:'other'},
+  {nm:'Privacy', path:'/privacy', desc:'Gizlilik politikası · App Store link', b:'PR', c:'#8a6d3b', cat:'other'},
+  {nm:'Crack Screen', path:'/crack-screen', desc:'Second-screen cast viewer', b:'CS', c:'#3c7a5a', cat:'other'},
+  {nm:'Crack Watch Page', path:'/crack-watch', desc:'Watch cast web viewer', b:'CW', c:'#3c7a5a', cat:'other'},
+  {nm:'Replay', path:'/replay', desc:'Session replay', b:'RE', c:'#b9742f', cat:'other'},
+  {nm:'Zine Signoff', path:'/zine-signoff', desc:'Zine proof signoff', b:'ZS', c:'#9a5b8f', cat:'other'},
+  {nm:'Input Test', path:'/input-test', desc:'Dev scratch page', b:'IT', c:'#3f3e39', cat:'other'}
 ];
 // external apps (cross-origin: link only, no live version). Add per Ömer.
 const EXT=[];
@@ -149,7 +158,7 @@ function newCard(){
   cust.push({nm:nm, path:url, desc:desc||url, b:b, c:'#8a6d3b', cat:'mgmt', custom:1});
   saveCustom(cust); render(); loadAll();
 }
-const CATS=[['mon','Monetized'],['admin','Friction'],['mgmt','Management']];
+const CATS=[['mon','Monetized'],['admin','Friction'],['mgmt','Management'],['other','Not Grouped']];
 
 // cards-per-row: 'auto' keeps the original responsive default; a number forces N columns and widens the page to fit
 function getCols(){ return localStorage.getItem('hubCols')||'auto'; }
