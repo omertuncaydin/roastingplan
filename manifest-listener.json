@@ -1,0 +1,16 @@
+{
+ "name": "Crack Listener",
+ "short_name": "Listener",
+ "start_url": "/crack-listen",
+ "scope": "/",
+ "display": "standalone",
+ "background_color": "#191512",
+ "theme_color": "#191512",
+ "icons": [
+  {
+   "src": "coffeenutz-turtle.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  }
+ ]
+}
