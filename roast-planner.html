@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
 <title>Roast Planner · CoffeeNutz</title>
 <style>
   :root{
@@ -107,8 +108,15 @@
 </style>
 </head>
 <body>
+  <div id="gate" style="max-width:420px;margin:16vh auto 0;text-align:center">
+    <h1 style="font-size:22px">Roast Planner</h1>
+    <div class="sub">CoffeeNutz iç aracı · internal tool</div>
+    <input id="keyIn" type="password" placeholder="anahtar · key" style="width:100%;background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:11px 12px;font-size:15px;margin:8px 0">
+    <button onclick="try{var k=document.getElementById('keyIn').value.trim();if(k){localStorage.setItem('ccKey',k);planShow();}}catch(e){}">Aç · Unlock</button>
+  </div>
+  <div id="planApp" style="display:none">
   <h1>Roast Planner</h1>
-  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included.</div>
+  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-08-08a</span></div>
 
   <div class="err" id="err"></div>
 
@@ -194,8 +202,12 @@
       <td class="ck" id="fCk">0/0</td>
     </tr></tfoot>
   </table>
+  </div><!-- /planApp -->
 
-
+<script>
+function planShow(){ document.getElementById("gate").style.display="none"; document.getElementById("planApp").style.display="block"; }
+try{ if(localStorage.getItem("ccKey")) planShow(); }catch(e){}
+</script>
 <script>
 const FILTER = "Sonraki Kavrulma Tarihinde Gönderim";
 const KG = {g90:0.09, g250:0.25, g1000:1.0};   // bag weights in kg
