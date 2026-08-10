@@ -656,6 +656,12 @@ function wcCmdSub(on){ try{ if(!SB) return;
           try{ wcAlertPing(); }catch(e9){} }   // w35: the wrist writes the probe; the echo rides back so the watch sees its own mark land
         else{ try{ btSet(c9); btCommit(); }catch(e9){} } }   // w36: SET from the wrist before the mic = the CHARGE button — charge owns the clock, now from the wrist too
       if(!running&&m&&m.payload&&m.payload.a==='aim'&&isFinite(+m.payload.v)){ WCAIM_T=performance.now(); try{ btSet(+m.payload.v); }catch(e9){} }   // w38: crown turns, wheel follows — mirror only, no commit
+      if(!running&&m&&m.payload&&m.payload.a==='pick'&&m.payload.c){ const n9=String(m.payload.c).slice(0,48);   // w48: the wrist chooses the coffee — setup only, the mic stays shut, charge stays the ignition
+        try{ wcFresh(); }catch(e9){}
+        try{ cName.value=n9; cName.dispatchEvent(new Event('change')); }catch(e9){}
+        try{ renderNameplate(); }catch(e9){} try{ renderNameChips(); }catch(e9){}
+        WCCHGPUB=null; try{ btAim(); }catch(e9){}
+        toast((LANG==='tr'?'Watch: kahve — ':'Watch: coffee — ')+n9); }
       if(!running&&m&&m.payload&&m.payload.a==='again'){ toast(LANG==='tr'?'Watch: aynı kahve, başlıyor…':'Watch: same coffee, starting…'); try{ start(true).catch(()=>{}); }catch(e){} }
       if(!running&&m&&m.payload&&m.payload.a==='fresh'){ wcFresh(); if(m.payload.c){ try{ pickCoffee(String(m.payload.c)).then(()=>start(true)).catch(()=>{}); }catch(e){} } }
     }catch(e){} }).subscribe(); }
@@ -2527,7 +2533,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-08e';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-08f';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
