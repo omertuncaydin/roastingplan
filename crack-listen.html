@@ -663,7 +663,7 @@ function wcCmdSub(on){ try{ if(!SB) return;
         WCCHGPUB=null; try{ btAim(); }catch(e9){}
         toast((LANG==='tr'?'Watch: kahve — ':'Watch: coffee — ')+n9); }
       if(!running&&m&&m.payload&&m.payload.a==='again'){ toast(LANG==='tr'?'Watch: aynı kahve, başlıyor…':'Watch: same coffee, starting…'); try{ start(true).catch(()=>{}); }catch(e){} }
-      if(!running&&m&&m.payload&&m.payload.a==='fresh'){ wcFresh(); if(m.payload.c){ try{ pickCoffee(String(m.payload.c)).then(()=>start(true)).catch(()=>{}); }catch(e){} } }
+      if(!running&&m&&m.payload&&m.payload.a==='fresh'){ wcFresh(); if(m.payload.c){ try{ pickCoffee(String(m.payload.c)); }catch(e){} } }   // v08-10h: setup only — the mic NEVER opens remotely (doctrine + browser law); the dead auto-start is gone
     }catch(e){} }).subscribe(); }
   if(!on&&WCCH){ try{ SB.removeChannel(WCCH); }catch(e){} WCCH=null; } }catch(e){} }
 try{ const agI=$('mAgG'); if(agI) agI.addEventListener('change',()=>{ try{ if(WCON&&!running&&WCFIN&&String(agI.value).trim()){ WCFIN.ag=1; wcTablePut(WCFIN); } }catch(e){} }); }catch(e){}   // entering ground Agtron updates the watch's fin row: the wrist knows the homework is done
@@ -1280,7 +1280,10 @@ function tmpDraw(){ try{ const cv=$('tmpG'); if(!cv) return; const x=cv.getConte
     if(lastEl) lastEl.textContent=''; if(rorEl) rorEl.innerHTML='&nbsp;';
     if(tShow!=null){ x.fillStyle='#e6c14b'; x.font='800 20px ui-monospace,Menlo,monospace'; x.textAlign='right'; x.fillText(fmtT(tShow),W-10,24); x.textAlign='left'; }
     return; }
-  const ror=tmpRoR(ARR), last=ARR[ARR.length-1];
+  // v08-10g: turnaround index — the descent gets physics, and RoR only exists past TP
+  // (same gate the cast and the wrist already use; a falling probe has no rate-of-RISE).
+  let ti9=0; for(let i9=1;i9<ARR.length;i9++) if(ARR[i9].c<ARR[ti9].c) ti9=i9;
+  const ror=tmpRoR(ti9>0?ARR.slice(ti9):ARR), last=ARR[ARR.length-1];
   const horizon=(running&&ARR.length>=3)?185:8;
   const tMax=Math.max(60,last.t+horizon,(tShow||0)+5), cs=ARR.map(p=>p.c);
   const cMin=Math.min.apply(null,cs)-6, cMax=Math.max.apply(null,cs)+22;
@@ -1302,8 +1305,17 @@ function tmpDraw(){ try{ const cv=$('tmpG'); if(!cv) return; const x=cv.getConte
   if(ror.length){ x.strokeStyle='rgba(230,193,75,0.85)'; x.lineWidth=2; x.beginPath();
     ror.forEach((p,i)=>{ const px=X(p.t), py=YR(p.v); i?x.lineTo(px,py):x.moveTo(px,py); }); x.stroke();
     x.fillStyle='rgba(230,193,75,0.9)'; ror.forEach(p=>{ x.fillRect(X(p.t)-2,YR(p.v)-2,4,4); }); }
+  // v08-10g: the descent is ALWAYS a decelerating decay into the turnaround — sparse
+  // early readings get a physical curve, not polygon corners. Each falling segment is a
+  // power ease; the segment that lands ON the TP arrives flat (vertex at the turnaround,
+  // drawn with full knowledge the moment TP exists). Measured dots stay untouched below.
   x.strokeStyle='#f3ede4'; x.lineWidth=2.5; x.beginPath();
-  ARR.forEach((p,i)=>{ const px=X(p.t), py=Y(p.c); i?x.lineTo(px,py):x.moveTo(px,py); }); x.stroke();
+  x.moveTo(X(ARR[0].t),Y(ARR[0].c));
+  for(let i9=1;i9<ARR.length;i9++){ const a9=ARR[i9-1], b9=ARR[i9];
+    if(i9<=ti9&&b9.c<a9.c){ const e9=(i9===ti9)?2:1.5;
+      for(let s9=1;s9<=12;s9++){ const u9=s9/12; x.lineTo(X(a9.t+(b9.t-a9.t)*u9),Y(b9.c+(a9.c-b9.c)*Math.pow(1-u9,e9))); } }
+    else { x.lineTo(X(b9.t),Y(b9.c)); } }
+  x.stroke();
   x.fillStyle='#f3ede4'; ARR.forEach(p=>{ x.beginPath(); x.arc(X(p.t),Y(p.c),3.4,0,7); x.fill(); });
   x.fillStyle='#a8998a'; x.font='11px sans-serif';
   x.fillText(Math.round(cMax-22)+'°',10,14); x.fillText(Math.round(cMin+6)+'°',10,H-24);
@@ -1947,6 +1959,14 @@ function renderStyleChips(){ const el=$('styleChips'); if(!el) return;
   el.querySelectorAll('[data-sc]').forEach(x=>x.onpointerdown=ev=>{ ev.preventDefault(); pickCoffee(x.dataset.sc); });
   const ad=el.querySelector('[data-scadd]'); if(ad) ad.onpointerdown=ev=>{ ev.preventDefault(); const b2=beanOf((cName.value||'').trim().toLowerCase()); editName(); cName.value=b2+' ('; try{ cName.setSelectionRange(cName.value.length,cName.value.length); }catch(e){} };
 }
+// v08-10h: pickCoffee finally EXISTS — the style chips and the watch 'fresh' path both
+// called it into the void (silently caught). Sets the name, re-keys the gauge, republishes prep.
+function pickCoffee(n){ const n9=String(n||'').trim().slice(0,48); if(!n9) return;
+  try{ cName.value=n9; localStorage.setItem('bsCoffee',n9); }catch(e){}
+  try{ updateGauge(); }catch(e){}
+  try{ renderNameplate(); }catch(e){}
+  try{ renderRcRow(); }catch(e){}
+  try{ WCCHGPUB=null; btAim(); }catch(e){} }
 function renderNameplate(){ const nv=(cName.value||'').trim(), n=$('npName');
   const b8=beanOf(nv), s8=styleOf(nv);   // 'bean (style)' or legacy 'bean: style' renders as bean · gold style; the key never changes
   if(s8) n.innerHTML=escC(b8)+' <span style="color:var(--gold)">· '+escC(s8)+'</span>';
@@ -2533,7 +2553,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-08f';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-10h';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
