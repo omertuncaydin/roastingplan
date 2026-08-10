@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <title>Roast Planner · CoffeeNutz</title>
 <style>
   :root{
@@ -116,7 +117,7 @@
   </div>
   <div id="planApp" style="display:none">
   <h1>Roast Planner</h1>
-  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-08-08a</span></div>
+  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-08-08b</span></div>
 
   <div class="err" id="err"></div>
 
@@ -128,6 +129,7 @@
     </div>
     <div class="actions" id="actions">
       <button id="save" class="cardbtn">Save</button>
+      <button id="hist" class="cardbtn">Geçmiş<br>History</button>
       <button id="dl" class="cardbtn">Download<br>CSV</button>
       <div class="datecard">
         <span class="dc-label">Roast Date</span>
@@ -167,6 +169,13 @@
     </div>
   </div>
 
+  <div id="histPanel" style="display:none;background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:14px;margin:10px 0;max-width:560px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <b>Kavurma günleri · Roast days</b>
+      <button class="ghost" style="padding:4px 12px" onclick="document.getElementById('histPanel').style.display='none'">&#10005;</button>
+    </div>
+    <div id="histList" class="sub" style="margin:0">yükleniyor…</div>
+  </div>
   <table id="tbl">
     <thead><tr>
       <th data-k="name">Item Name</th>
@@ -622,17 +631,11 @@ async function pushToSmartsheet(){
 const SAVE_KEY="roastPlannerState";
 function saveState(){
   try{
-    const state={v:1,DATA,
-      loss:document.getElementById("loss").value,
-      capB:document.getElementById("capBullet").value,
-      capH:document.getElementById("capHSR").value,
-      roundB:document.getElementById("roundBullet").value,
-      roundH:document.getElementById("roundHSR").value,
-      roastDate:document.getElementById("roastDate").value,
-      sortKey,sortDir};
+    const state=planBlob();
     localStorage.setItem(SAVE_KEY,JSON.stringify(state));
     const b=document.getElementById("save");const t=b.dataset.label||b.textContent;b.dataset.label=t;
-    b.textContent="Saved ✓"; setTimeout(()=>{b.textContent=t;},1200);
+    b.textContent="Saved ✓"; setTimeout(()=>{b.textContent=t;},1600);
+    cloudSave().then(ok=>{ b.textContent= ok ? "Cloud ✓ "+planDay() : "Saved (bu tarayıcı)"; setTimeout(()=>{b.textContent=t;},1600); });
   }catch(e){ alert("Could not save in this browser: "+e.message); }
 }
 function restoreState(){
@@ -700,6 +703,56 @@ document.querySelectorAll("th[data-k]").forEach(th=>th.onclick=()=>{
   const k=th.dataset.k; if(sortKey===k)sortDir*=-1; else{sortKey=k;sortDir=k==="name"?1:-1;} render();
 });
 restoreState();   // auto-load the last saved plan, if any
+</script>
+<script>
+// ---- roast-day archive on the account (roast_plans: one plan per day, newest list, pick & load) ----
+const SUPA_URL="https://efjvfggwnhqkunjvoyjb.supabase.co";
+const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA";
+let sbp=null; try{ sbp=window.supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
+async function planUser(){ try{ const {data}=await sbp.auth.getSession(); return (data&&data.session)?data.session.user:null; }catch(e){ return null; } }
+function planDay(){ const d=document.getElementById("roastDate").value; return d || new Date().toISOString().slice(0,10); }
+function planBlob(){ return {v:1,DATA,
+  loss:document.getElementById("loss").value,
+  capB:document.getElementById("capBullet").value,
+  capH:document.getElementById("capHSR").value,
+  roundB:document.getElementById("roundBullet").value,
+  roundH:document.getElementById("roundHSR").value,
+  roastDate:document.getElementById("roastDate").value,
+  sortKey,sortDir,
+  meta:{items:DATA.length, green:Math.round(DATA.reduce((a,o)=>a+effGreen(o),0)*100)/100}}; }
+async function cloudSave(){ try{ if(!sbp||!DATA.length) return false; const u=await planUser(); if(!u) return false;
+  const {error}=await sbp.from('roast_plans').upsert({owner:u.id, day:planDay(), plan:planBlob(), updated_at:new Date().toISOString()});
+  return !error; }catch(e){ return false; } }
+let HISTCACHE=[];
+async function histOpen(){ const p=document.getElementById('histPanel'), l=document.getElementById('histList');
+  p.style.display='block'; l.textContent='yükleniyor…';
+  if(!sbp){ l.textContent='Bulut kapalı · cloud unavailable.'; return; }
+  const u=await planUser();
+  if(!u){ l.innerHTML='Bulut arşivi için bu cihazda bir kez <a href="/roast-guide" target="_blank" style="color:var(--accent)">Guide üzerinden giriş yap</a>, sonra tekrar dene. · Sign in once via the Guide on this device, then retry.'; return; }
+  const {data,error}=await sbp.from('roast_plans').select('day,updated_at,plan').order('day',{ascending:false}).limit(200);
+  if(error){ l.textContent='Hata: '+error.message; return; }
+  HISTCACHE=data||[];
+  if(!HISTCACHE.length){ l.textContent='Henüz kayıtlı gün yok. Save, seçili Roast Date altına buluta yazar. · No saved days yet.'; return; }
+  l.innerHTML=HISTCACHE.map(function(r,i){ var m=(r.plan&&r.plan.meta)||{};
+    return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line)">'
+      +'<b style="min-width:96px">'+r.day+'</b>'
+      +'<span style="flex:1">'+(m.items!=null?(m.items+' kahve · '+(m.green!=null?m.green+' kg green':'')):'')+'</span>'
+      +'<button class="ghost" style="padding:4px 12px" onclick="histLoad('+i+')">Yükle · Load</button></div>'; }).join('');
+}
+function histLoad(i){ try{ const r=HISTCACHE[i]; if(!r||!r.plan||!r.plan.DATA) return;
+  const sp=r.plan;
+  DATA=sp.DATA;
+  if(sp.loss!=null) document.getElementById("loss").value=sp.loss;
+  if(sp.capB!=null) document.getElementById("capBullet").value=sp.capB;
+  if(sp.capH!=null) document.getElementById("capHSR").value=sp.capH;
+  if(sp.roundB!=null) document.getElementById("roundBullet").value=sp.roundB;
+  if(sp.roundH!=null) document.getElementById("roundHSR").value=sp.roundH;
+  document.getElementById("roastDate").value=sp.roastDate||r.day;
+  if(sp.sortKey) sortKey=sp.sortKey; if(sp.sortDir) sortDir=sp.sortDir;
+  render();
+  document.getElementById('histPanel').style.display='none';
+}catch(e){} }
+document.getElementById('hist').addEventListener('click',histOpen);
 </script>
 </body>
 </html>
