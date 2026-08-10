@@ -598,7 +598,8 @@ function wcPub(payload,force){ if(!WCON||(!force&&performance.now()-LIVEPUB_T<=1
   try{ if(running&&TEMPS.length){ const lp=TEMPS[TEMPS.length-1]; payload.bt=Math.round(lp.c);
     const ti9=TEMPS.reduce((b9,p9,i9,a9)=>p9.c<a9[b9].c?i9:b9,0);   // w39: turning point — pre-TP RoR is thermometer shock, not bean physics; the wrist never sees it
     const rr=tmpRoR(ti9>0?TEMPS.slice(ti9):TEMPS);
-    if(rr.length){ payload.ror=Math.round(rr[rr.length-1].v*10)/10; payload.trs=rr.slice(-24).map(p9=>[Math.round(p9.t),Math.round(p9.v*10)/10]); } } }catch(e){}   // w35: probe + RoR ride every cast to the wrist
+    if(rr.length){ payload.ror=Math.round(rr[rr.length-1].v*10)/10; payload.trs=rr.slice(-24).map(p9=>[Math.round(p9.t),Math.round(p9.v*10)/10]); } }
+  else if(!running&&CHGT0&&typeof PREROLL!=='undefined'&&PREROLL&&PREROLL.length){ payload.bt=Math.round(PREROLL[PREROLL.length-1].c); } }catch(e){}   // w35 + v08-10j: probe rides every cast — preroll SETs included, the wrist graph starts at the charge
   try{ if((running||CHGT0)&&INPUTS){ if(INPUTS.eq) payload.eq=String(INPUTS.eq).slice(0,16);   // w43/w46: inputs are the recipes — the wrist's ready room shows the plan
     if(INPUTS.batch) payload.bg=String(INPUTS.batch).slice(0,8);
     if(payload.chg==null&&INPUTS.chg&&isFinite(parseFloat(INPUTS.chg))) payload.chg=parseFloat(INPUTS.chg);
@@ -622,7 +623,15 @@ function wcNameList(){ try{ let m={}; try{ m=JSON.parse(localStorage.getItem('bs
   const names=new Set(Object.keys(m).filter(k=>k!=='__house')); (typeof CLOUDNAMES!=='undefined'?CLOUDNAMES:[]).forEach(n=>names.add(n));
   return [...names].sort().slice(0,12); }catch(e){ return []; } }   // the watch's coffee chips drink from the same well as the phone's
 function wcNameColors(){ try{ return wcNameList().map(n=>{ try{ return chipColor(n)||''; }catch(e){ return ''; } }); }catch(e){ return []; } }   // same colors on the wrist as on the phone
-function wcAlertPing(){ try{ if(!WCON||!running) return; const lst=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
+// v08-10j: THE LABEL RATCHET (his law, field find 08-10: "after B0 and B1 have passed
+// it is never B0 again; a definite decline is never B0"). The stage PINS stay honest —
+// withdrawals still repaint the strip — but the LIVE LABEL refuses to walk backwards
+// below the highest rung it has stood on, capped at C0. C1 stays withdrawable:
+// a new crack unmakes "last crack", and that regression is truth, not noise.
+function stgLabel(){ try{ const raw=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
+  const ri=RC_LADDER.indexOf(raw); if(ri<0) return raw;
+  return RC_LADDER[Math.max(ri,Math.min(STGFLOOR,4))]; }catch(e){ return ''; } }
+function wcAlertPing(){ try{ if(!WCON||!running) return; const lst=stgLabel();
   wcPub({c:(cName.value||'').trim()||'?', st:lst, n:valid().length, proj:(LASTPROJ!=null?Math.round(LASTPROJ):null), t:Math.round((performance.now()-startT)/1000),
     w:(A0PHASE==='alarm'?2:(A0PHASE==='pre'?1:0)), g:(TGTPHASE==='alarm'?2:(TGTPHASE==='pre'?1:0)), r:(RCPHASE==='alarm'?2:(RCPHASE==='pre'?1:0)), wn:RCWN}, true); }catch(e){} }   // alarm transitions jump the queue: the wrist must not lag the drum
 function wcUrl(){ return location.origin+location.pathname.replace(/[^/]*$/,'')+'crack-screen.html?k='+WCKEY(); }
@@ -673,10 +682,10 @@ setInterval(()=>{ try{ if(!running) return;
   if(CUEON&&LASTSTAGES&&LASTSTAGES.length){ CUEON=false; $('status').textContent=STATUSBASE; }
   if(performance.now()-LASTBC>1500){ LASTBC=performance.now();
     try{ BCLIVE=BCLIVE||new BroadcastChannel('cnLive');
-      const lst=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
+      const lst=stgLabel();
       BCLIVE.postMessage({coffee:(cName.value||'').trim()||'?', stage:lst, n:valid().length, t:(performance.now()-startT)/1000, hb:1}); }catch(e){} }
   if(document.hidden) updateGauge();
-  if(WCON&&performance.now()-LIVEPUB_T>1500){ const vv2=valid(); const lst=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
+  if(WCON&&performance.now()-LIVEPUB_T>1500){ const vv2=valid(); const lst=stgLabel();
     wcPub({c:(cName.value||'').trim()||'?', st:lst, n:vv2.length, t:Math.round((performance.now()-startT)/1000), w:(A0PHASE==='alarm'?2:(A0PHASE==='pre'?1:0)), r:(RCPHASE==='alarm'?2:(RCPHASE==='pre'?1:0)), wn:RCWN, hb:1}); }
 }catch(e){} },1000);   // hidden-tab repaint + heartbeat for the states that never reach the projection publisher (unmapped, no cracks yet)
 hp.oninput=()=>{ $('hpV').textContent=fmtHz(+hp.value); if(hpF) hpF.frequency.value=+hp.value; };
@@ -730,7 +739,7 @@ async function start(remote){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('dlStory').style.display='none'; $('gameAdd').style.display='none'; $('mapBtn').style.display='none'; $('nextRow').style.display='none'; $('agTop').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=(typeof CHGT0==='number'&&CHGT0&&(performance.now()-CHGT0)<1800000)?CHGT0:performance.now(); refractoryUntil=0; crackFlash=false; LASTSIG=performance.now(); REMICED=false; DEEPMIC=false; MICWARNED=false; pendingCrackG=null; SAMPLES=[]; try{ tmpSeed(); }catch(e){} CHGT0=null; MICARMED=true; try{ const mb0=document.querySelector('.micBtn'); if(mb0) mb0.classList.remove('due'); }catch(e){} LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; PPFLIPT=null; LASTSTAGES=null; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); RCPHASE=''; RCT=0; RCSEEN=0; rcUI(0); LASTROASTROW=null; try{ pushRoastStart(); }catch(e){} renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=(typeof CHGT0==='number'&&CHGT0&&(performance.now()-CHGT0)<1800000)?CHGT0:performance.now(); refractoryUntil=0; crackFlash=false; LASTSIG=performance.now(); REMICED=false; DEEPMIC=false; MICWARNED=false; pendingCrackG=null; SAMPLES=[]; try{ tmpSeed(); }catch(e){} CHGT0=null; MICARMED=true; try{ const mb0=document.querySelector('.micBtn'); if(mb0) mb0.classList.remove('due'); }catch(e){} LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; PPFLIPT=null; LASTSTAGES=null; STGFLOOR=0; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); RCPHASE=''; RCT=0; RCSEEN=0; rcUI(0); LASTROASTROW=null; try{ pushRoastStart(); }catch(e){} renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw','mA0Ag'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -802,7 +811,7 @@ function stop(){
   try{ BCLIVE=BCLIVE||new BroadcastChannel('cnLive');
     const lstF=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
     BCLIVE.postMessage({coffee:(cName.value||'').trim()||'?', stage:lstF, n:valid().length, t:STOPT, proj:(STOPPROJ!=null?Math.round(STOPPROJ):null), fin:1}); }catch(e){}   // the same-device ear deserves the same goodbye the watch gets
-  try{ if(WCON){ const lst=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
+  try{ if(WCON){ const lst=stgLabel();
     fetch(SUPA_URL+'/realtime/v1/api/broadcast',{method:'POST',headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY,'content-type':'application/json'},
       body:JSON.stringify({messages:[{topic:'cnw-'+WCKEY(), event:'live', payload:{c:(cName.value||'').trim()||'?', st:lst, n:valid().length, proj:STOPPROJ||null, band:(ENGINE&&isFinite(ENGINE.band))?Math.round(ENGINE.band*2)/2:null, t:Math.round(STOPT), w:0, fin:1, ctl:(wcCtl()?1:0)}, private:false}]})}).catch(()=>{}); } }catch(e){}
   try{ if(WCON){ const lst2=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
@@ -1117,7 +1126,7 @@ function renderStageStrip(){ const el=$('stageStrip'); if(!el) return;
     const live9=running&&document.body.classList.contains('st-live');
     if(live9&&LASTSTAGES&&LASTSTAGES.length){
       const a0s=LASTSTAGES[0][1], dev=Math.max(0,(performance.now()-startT)/1000-a0s);
-      txt=((RCPHASE==='alarm'&&RCALSTG)?RCALSTG:LASTSTAGES[LASTSTAGES.length-1][0])+'|DEV '+fmtT(dev); }
+      txt=((RCPHASE==='alarm'&&RCALSTG)?RCALSTG:stgLabel())+'|DEV '+fmtT(dev); }
     else if(live9&&STAGEGAS){ txt='GAZ|'+STAGEGAS; }   // stays until it stops making sense: A0's arrival retires every pre-A0 milestone reminder (his rule 2026-07-28)
     if(txt!==STAGENOWTXT){ STAGENOWTXT=txt;   // cache: RAF cadence, but the DOM only moves when the second ticks
       if(!txt){ sn.style.display='none'; sn.innerHTML=''; }
@@ -2159,7 +2168,7 @@ function drawGauge(state,projLo,projHi){
   else h=gaugeSVG(null,0,0,setup?'':'&#128274;',setup?'':(tt('unmapped bean')+' · '+tt('roast 1 teaches · roast 2 predicts')),true);
   $('ag').innerHTML=h;
 }
-let TGT_U=null, LASTSTAGES=null, MAPWARN=0, PROJBORROWED=false;
+let TGT_U=null, LASTSTAGES=null, STGFLOOR=0, MAPWARN=0, PROJBORROWED=false;
 function FCDEF(){ try{ const h=calMap()['__house'];
   if(h&&isFinite(h.fc_ag)&&h.fc_ag>=80&&h.fc_ag<=140) return h.fc_ag;
   const un=UNI(); if(un&&isFinite(un.a0)&&un.a0>0) return un.a0; }catch(e){} return EP.FC_AG; }   // OPTION B+U (2026-07-20): own map, house, YOUR UNIVERSE's A0, then 125; never another coffee's number
@@ -2381,7 +2390,7 @@ function updateGauge(){
   const bandR=Math.round(band*2)/2;
   ENGINE={pT,pE,p,tq,band,seT,curveT,dTerm,devEff,projPhi,bias};
   try{ if(running){ BCLIVE=BCLIVE||new BroadcastChannel('cnLive');
-    const lastSt=(LASTSTAGES&&LASTSTAGES.length)?LASTSTAGES[LASTSTAGES.length-1][0]:'';
+    const lastSt=stgLabel();
     const smpL=SAMPLES.length?sampLbl(SAMPLES.length-1):null;
     LASTBC=performance.now();
     BCLIVE.postMessage({coffee:k, stage:lastSt, n:v.length, proj:Math.round(proj), band:bandR, t:(performance.now()-startT)/1000, p:+(p.toFixed(3)), smp:smpL, tgt:(cal&&parseFloat(cal.target))||null});
@@ -2565,7 +2574,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-10i';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-10j';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -3412,7 +3421,9 @@ function drawTimeline(){
     else{ if(!running&&STOPT!=null) stages.push(['DROP',Math.min(STOPT,t0+span-0.5)]); }   // the cut, marked honestly; the 20% C0 estimate retired (C0 = PPFLIPT now)
     // hard monotonic clamp: the sequence A0<=A1<=B0<=B1<=C0<=C1 is a law, not a suggestion
     for(let i=1;i<stages.length;i++) if(stages[i][1]<stages[i-1][1]) stages[i][1]=stages[i-1][1];
-    LASTSTAGES=stages.map(sg=>[sg[0],sg[1]]); renderStageStrip(); a0Nudge(); rcNudge();
+    LASTSTAGES=stages.map(sg=>[sg[0],sg[1]]);
+    try{ const li9=RC_LADDER.indexOf(stages[stages.length-1][0]); if(li9>=0&&running) STGFLOOR=Math.max(STGFLOOR,Math.min(li9,4)); }catch(e){}   // v08-10j: the ratchet climbs, never descends
+    renderStageStrip(); a0Nudge(); rcNudge();
     // stage pins: simultaneous stages MERGE into one chip (a late-opened session collapses A0·A1·B0
     // onto the same instant; painting them separately buried A0 under the others). Staggered when crowded.
     const merged=[];
