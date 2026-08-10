@@ -1333,8 +1333,12 @@ setTimeout(function(){ try{ const wh9=$('btWheel'); if(!wh9) return; let wt9=nul
       const a9=btVal(); if(!isFinite(a9)||a9===WCCHGPUB) return; WCCHGPUB=a9;
       wcPub({c:(cName.value||'').trim()||'?', chg:a9, prep:1, pr:(CHGT0?1:0), t:(CHGT0?(performance.now()-CHGT0)/1000:null)},true); }catch(e9){} },400); },{passive:true}); }catch(e){} },0);
 // w38: preroll caster — charge started the clock, the wrist must see it tick before the mic opens
-setInterval(function(){ try{ if(!WCON||running||!CHGT0) return;
-  wcPub({c:(cName.value||'').trim()||'?', chg:btVal(), t:(performance.now()-CHGT0)/1000, pr:1, prep:1},false); }catch(e){} },2000);
+// w47: + a 20 s prep heartbeat pre-charge, so the wrist can say "linked" instead of lying "no connection"
+let WCHB9=0;
+setInterval(function(){ try{ if(!WCON||running) return;
+  if(CHGT0){ wcPub({c:(cName.value||'').trim()||'?', chg:btVal(), t:(performance.now()-CHGT0)/1000, pr:1, prep:1},false); return; }
+  WCHB9++; if(WCHB9%10===0){ WCCHGPUB=null; btAim(); }   // re-arms the prep cast with identical data: freshness IS the message
+}catch(e){} },2000);
 setTimeout(function(){ try{ document.body.classList.add('hdrmini'); }catch(e){} },3000);   // the logo greets for 3 seconds, then steps aside (his order)
 function a2hsClose(){ try{ localStorage.setItem('bsA2HS','1'); const el=$('a2hs'); if(el) el.style.display='none'; }catch(e){} }
 try{ const sa=(('standalone' in navigator)&&navigator.standalone)||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
@@ -2523,7 +2527,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-08d';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-08e';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
