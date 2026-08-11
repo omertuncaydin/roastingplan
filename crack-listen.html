@@ -671,7 +671,11 @@ function wcCmdSub(on){ try{ if(!SB) return;
         try{ renderNameplate(); }catch(e9){} try{ renderNameChips(); }catch(e9){}
         WCCHGPUB=null; try{ btAim(); }catch(e9){}
         toast((LANG==='tr'?'Watch: kahve — ':'Watch: coffee — ')+n9); }
-      if(!running&&m&&m.payload&&m.payload.a==='again'){ toast(LANG==='tr'?'Watch: aynı kahve, başlıyor…':'Watch: same coffee, starting…'); try{ start(true).catch(()=>{}); }catch(e){} }
+      if(!running&&m&&m.payload&&m.payload.a==='again'){   // v08-10k: SETUP ONLY (his law) — no charge yet, so a mic attempt was always doomed; AYNI now returns the phone to the main screen with the same name
+        try{ ['dlZip','dlCard','dlStory','metaBox','mapBtn','cupGo','nextRow','gameAdd','agTop'].forEach(i9=>{ if($(i9)) $(i9).style.display='none'; }); }catch(e){}
+        try{ setState('st-setup'); }catch(e){} try{ renderNameplate(); }catch(e){} try{ renderRcRow(); }catch(e){}
+        try{ WCCHGPUB=null; btAim(); }catch(e){}
+        toast(LANG==='tr'?'Watch: aynı kahve — hazır; şarj ve mikrofon sende.':'Watch: same coffee — set up; charge and mic are yours.'); }
       if(!running&&m&&m.payload&&m.payload.a==='fresh'){ wcFresh(); if(m.payload.c){ try{ pickCoffee(String(m.payload.c)); }catch(e){} } }   // v08-10h: setup only — the mic NEVER opens remotely (doctrine + browser law); the dead auto-start is gone
     }catch(e){} }).subscribe(); }
   if(!on&&WCCH){ try{ SB.removeChannel(WCCH); }catch(e){} WCCH=null; } }catch(e){} }
@@ -1554,7 +1558,7 @@ function updateVoice(){
 function updatePace(){
   const cal=calFor()||calMap()['__house'], v=valid();
   if(!(cal&&cal.tg&&cal.q25)){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:tt('needs a mapped ref')}); return; }
-  if(v.length<5){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:tt('waiting for cracks')}); return; }
+  if(v.length<3){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:tt('waiting for cracks')}); return; }   // v08-10k: pace dial wakes with the projection, at 3
   const a0=effA0(v); let cum=0,tq=null;
   for(const c of v){ cum+=c.g; if(cum>=cal.tg*0.25){ tq=c.t-a0; break; } }
   if(!(tq&&tq>2)){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:tt('before the 25% point')}); return; }
@@ -2325,7 +2329,7 @@ function updateGauge(){
   const a0Tag=fcActive?(' · A0 '+cal.fc_ag):(fcSib!=null?(' · A0 '+fcSib+' ('+(LANG==='tr'?'kardeş stil':'sibling style')+')'):'');
   const v=valid();
   if(!v.length){ drawGauge('wait'); $('agHint').textContent=tt('Mapped on')+' '+cal.date+' (Agtron '+cal.agtron+')'+bTag+a0Tag+'. '+tt('Projection starts at first crack.'); return; }
-  if(v.length<5){ drawGauge('wait'); $('agHint').textContent=(LANG==='tr'?('Çatlaklar toplanıyor ('+v.length+'/5); birkaç pat henüz ilk çatlak değildir.'):('Gathering cracks ('+v.length+'/5) before projecting; a couple of pops is not a first crack yet.')); return; }
+  if(v.length<3){ drawGauge('wait'); $('agHint').textContent=(LANG==='tr'?('Çatlaklar toplanıyor ('+v.length+'/3); birkaç pat henüz ilk çatlak değildir.'):('Gathering cracks ('+v.length+'/3) before projecting; a couple of pops is not a first crack yet.')); return; }   // v08-10k: 3 cracks open the projection (his call; mapping still asks 5)
   // live: clock runs. done/loaded: retrospective final call at last crack + coast (Drop after last, if filled)
   const nowDev=running?((performance.now()-startT)/1000):(v[v.length-1].t+(parseFloat($('mDrop').value)||0));
   const a0=effA0(v), devCur=nowDev-a0;
@@ -2574,7 +2578,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-10j';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-11k';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
