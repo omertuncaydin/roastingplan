@@ -88,7 +88,7 @@ body.st-done #btn{display:none}
 .sPop{animation:sPop .4s ease}
 @media (min-width:900px){
   .wrap{max-width:1240px}
-  body.st-live .wrap{display:grid;grid-template-columns:1.5fr 1fr;column-gap:18px;align-items:start;
+  body.st-live .wrap{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);column-gap:18px;align-items:start;
     grid-template-areas:"hdr hdr" "tl gauge" "tl gain" "tl sample" "tl btn" "stats err" "tune tune" "log log"}
   body.st-live #hdr{grid-area:hdr}
   body.st-live #cTimeline{grid-area:tl}
@@ -102,6 +102,7 @@ body.st-done #btn{display:none}
   body.st-live #cTune{grid-area:tune}
   body.st-live #cLog{grid-area:log}
   body.st-live #tl{height:320px}
+  body.st-live .wrap>*{min-width:0}   /* the temp wheel's 14000px inner strip must never dictate a grid column: content min-width capped, scroll stays inside the wheel */
 }
 /* DONE: results first, then record/save, log for fp ticking. */
 body.st-done #cGauge{order:1} body.st-done #agTop{order:2} body.st-done #cCapture{order:3} body.st-done #cTimeline{order:4} body.st-done #cStats{order:5} body.st-done #cLog{order:6} body.st-done #cTune{order:7} body.st-done #btn{order:8} body.st-done #err{order:8}
@@ -2664,7 +2665,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17b';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17c';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
