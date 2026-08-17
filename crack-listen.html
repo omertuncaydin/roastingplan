@@ -188,6 +188,7 @@ body.st-live #tmpRow{order:0}
 body.st-done .wrap{display:flex;flex-direction:column}
 body.st-done #tmpRow{order:99}
 #nameChips{display:none!important}
+body.st-live .mmark{display:none}
 body.notemps #btStrip,body.notemps #tmpRow{display:none!important}
 .btrow{display:flex;align-items:center;gap:10px}
 .btwheelWrap{position:relative;flex:1;height:44px;min-width:0}
@@ -751,7 +752,7 @@ async function start(remote){
   }
   if(navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
   $('recAudio').disabled=true; $('dlZip').style.display='none'; $('dlCard').style.display='none'; $('dlStory').style.display='none'; $('gameAdd').style.display='none'; $('mapBtn').style.display='none'; $('nextRow').style.display='none'; $('agTop').style.display='none';
-  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=(typeof CHGT0==='number'&&CHGT0&&(performance.now()-CHGT0)<1800000)?CHGT0:performance.now(); refractoryUntil=0; crackFlash=false; LASTSIG=performance.now(); REMICED=false; DEEPMIC=false; MICWARNED=false; pendingCrackG=null; SAMPLES=[]; try{ tmpSeed(); }catch(e){} CHGT0=null; MICARMED=true; try{ const mb0=document.querySelector('.micBtn'); if(mb0) mb0.classList.remove('due'); }catch(e){} LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; PPFLIPT=null; LASTSTAGES=null; STGFLOOR=0; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); RCPHASE=''; RCT=0; RCSEEN=0; rcUI(0); LASTROASTROW=null; try{ pushRoastStart(); }catch(e){} renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
+  bgEMA=0; fastEMA=0; cracks=[]; crackSeq=0; peakGain=0; VGF=0; VGS=0; VGN=0; AUDGAPS=[]; AUDDOWN=null; trace.length=0; startT=(typeof CHGT0==='number'&&CHGT0&&(performance.now()-CHGT0)<1800000)?CHGT0:performance.now(); refractoryUntil=0; crackFlash=false; LASTSIG=performance.now(); REMICED=false; DEEPMIC=false; MICWARNED=false; pendingCrackG=null; SAMPLES=[]; try{ tmpSeed(); }catch(e){} CHGT0=null; MICARMED=true; try{ const mb0=document.querySelector('.micBtn'); if(mb0) mb0.classList.remove('due'); }catch(e){} LASTPROJ=null; STOPPROJ=null; STOPBORROWED=false; PASTPEAK=false; PPFLIPT=null; LASTSTAGES=null; PACE2LOCK=null; STGFLOOR=0; STOPT=null; PHASE=0; PHPEAK=0; PHPEAKT=0; PHREV=0; PHASE_DISP=0; ISOFLAGGED=new Set(); ISO_CONFIRMED=false; A0PHASE=''; A0T=0; A0PULLED=false; a0NudgeUI(0); TGTPHASE=''; TGTT=0; tgtUI(0); RCPHASE=''; RCT=0; RCSEEN=0; rcUI(0); LASTROASTROW=null; try{ pushRoastStart(); }catch(e){} renderSamples(); renderSampChips(); $('sampN').style.display='none'; $('finalCall').textContent='';
   $('log').innerHTML=''; $('metaBox').style.display='none';
   $('cnt').textContent='0'; $('rate').textContent='0'; $('last').textContent='0'; $('peak').textContent='0';   // else previous roast's numbers linger until first crack
   ['mCoffee','mBatch','mAgW','mAgWSd','mAgG','mAgSd','mProc','mChgFc','mDrop','mNote','mTarget','mMoist','mAw','mA0Ag'].forEach(i=>{ if($(i)) $(i).value=''; });
@@ -1567,7 +1568,16 @@ function updatePace(){
   const cal=calFor()||calMap()['__house'], v=valid();
   if(!(cal&&cal.tg&&cal.q25)){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:tt('needs a mapped ref')}); return; }
   if(v.length<3){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:tt('waiting for cracks')}); return; }   // v08-10k: pace dial wakes with the projection, at 3
-  const a0=effA0(v); let cum=0,tq=null;
+  const a0=effA0(v);
+  // v08-17a PACE-V2: continuous mass-fraction pace vs the OWN map's bell, live 25%→B1, frozen at the crown.
+  // Communal maps carry no bell (skeleton doctrine) and stay on the 25% checkpoint below.
+  const r2=(!cal.communal)?pace2(cal,v,a0):null;
+  if(r2){ const pace=Math.min(EP.PMAX,Math.max(EP.PMIN,r2.pace)), u=(Math.log2(pace)+1)/2;
+    const lk=!!(LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==='B1'));
+    drawCockpit('paceG',{u, zone:[(Math.log2(0.95)+1)/2,(Math.log2(1.05)+1)/2], tick:0.5,
+      num:pace.toFixed(2)+'×', sub:(pace<0.97?tt('faster than ref'):(pace>1.03?tt('slower than ref'):tt('on pace')))+(lk?' · B1':'')});
+    return; }
+  let cum=0,tq=null;
   for(const c of v){ cum+=c.g; if(cum>=cal.tg*0.25){ tq=c.t-a0; break; } }
   if(!(tq&&tq>2)){ drawCockpit('paceG',{dim:true,num:'· · ·',sub:tt('before the 25% point')}); return; }
   const pace=Math.min(EP.PMAX,Math.max(EP.PMIN,tq/cal.q25)), u=(Math.log2(pace)+1)/2;
@@ -1869,6 +1879,12 @@ function pickModal(title,hint,items,btnLabel,cb){
   $('modal').style.display='flex';
 }
 function pickGo(){ const sel=[]; document.querySelectorAll('[data-pick]').forEach(cb=>{ if(cb.checked) sel.push(+cb.dataset.pick); }); $('modal').style.display='none'; const f=PICK_CB; PICK_CB=null; if(f) f(sel); }
+async function cloudUpsertOne(k){ try{   // v08-17a UNIFORM LIST: the Eşle tap is the single writer — every own map rides to the account by itself
+  if(!SB) return; const u=await cloudStatus(); if(!u||!planActive()) return;
+  const m=calMap(), cal=m[k]; if(!cal||cal.communal) return; const b=badgeMap()[k]||{};
+  const row={ owner:u.id, name:k, badge:b, green:{moisture:cal.moist||null, aw:cal.aw||null, process:cal.proc||null}, map:cal };
+  await SB.from('coffees').upsert(row,{onConflict:'owner,name'});
+}catch(e){} }
 async function cloudSend(){
   if(!planActive()){ showPaywall(LANG==='tr'?'Kahve bulutu':'Coffee cloud'); return; }
   const u=await cloudStatus(); if(!u){ toast(LANG==='tr'?"Önce Guide'da giriş yap.":'Sign in via the Guide first.'); return; }
@@ -1990,8 +2006,10 @@ function pickCoffee(n){ const n9=String(n||'').trim().slice(0,48); if(!n9) retur
   try{ WCCHGPUB=null; btAim(); }catch(e){} }
 function renderNameplate(){ const nv=(cName.value||'').trim(), n=$('npName');
   const b8=beanOf(nv), s8=styleOf(nv);   // 'bean (style)' or legacy 'bean: style' renders as bean · gold style; the key never changes
-  if(s8) n.innerHTML=escC(b8)+' <span style="color:var(--gold)">· '+escC(s8)+'</span>';
-  else n.textContent=nv||'name the coffee';
+  const mk9=nv?(' '+mapMarkTag(mapMark(nv))):'';   // v08-17a mapped-mark (setup only; .mmark hidden live)
+  if(s8) n.innerHTML=escC(b8)+' <span style="color:var(--gold)">· '+escC(s8)+'</span>'+mk9;
+  else if(nv) n.innerHTML=escC(nv)+mk9;
+  else n.textContent='name the coffee';
   n.style.color=nv?'var(--ink)':'var(--muted)';
   $('npUnder').style.background=nv?'var(--accent)':'var(--line)';
   try{ renderStyleChips(); }catch(e){} }
@@ -2013,16 +2031,29 @@ function rcNamesOK(){ const tr=(LANG==='tr'); let v=document.getElementById('rcN
 function rcNamesOpen(){ try{ gdPull(); }catch(e){}
   const tr=(LANG==='tr');
   const L=gdRecipes().filter(r=>r&&r.active!==false).sort((a,b)=>((a.sortOrder==null?9e9:a.sortOrder)-(b.sortOrder==null?9e9:b.sortOrder)));
+  // v08-17a UNIFORM LIST (his order): one well for every surface — recipe book first, then own mapped
+  // coffees missing from the book (newest first, display name if saved), then account cloud names.
+  const seen9={}; L.forEach(r=>{ seen9[(r.name||'').trim().toLowerCase()]=1; });
+  const m9=calMap();
+  const ext9=Object.keys(m9).filter(k9=>k9!=='__house'&&!seen9[k9]);
+  ext9.sort((a,b)=>String((m9[b]||{}).date||'').localeCompare(String((m9[a]||{}).date||'')));
+  const LX=ext9.map(k9=>({name:((m9[k9]&&m9[k9].disp)||k9)}));
+  ext9.forEach(k9=>{ seen9[k9]=1; });
+  try{ (typeof CLOUDNAMES!=='undefined'?CLOUDNAMES:[]).slice().sort().forEach(n9=>{ const k9=(n9||'').trim().toLowerCase(); if(k9&&!seen9[k9]){ seen9[k9]=1; LX.push({name:n9}); } }); }catch(e9){}
+  const LR=L.concat(LX);
   $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:17px">'+(tr?'Kahve seç':'Pick the coffee')+'</h1>'
    +'<div style="display:flex;gap:6px;margin-bottom:6px"><select id="rcOriginSel" style="width:34%;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px 6px;font-size:14px;background:#15100b;color:var(--ink)"><option value="">'+(tr?'ülke…':'origin…')+'</option>'+RCORIGINS.map(o=>'<option>'+o+'</option>').join('')+'</select>'
    +'<input id="rcNameIn" value="'+String(cName.value||'').replace(/"/g,'&quot;')+'" placeholder="'+(tr?'ya da yeni isim yaz':'or type a new name')+'" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:15px;background:#15100b;color:var(--ink)">'
    +'<button class="pm" style="width:auto;padding:0 16px;font-size:14px;background:var(--accent2);color:#fff;border:none" onclick="rcNamesOK()">OK</button></div>'
-   +(L.length?L.map(r=>'<div data-rn="'+escC(r.name)+'" style="padding:10px 4px;border-top:1px solid var(--line);cursor:pointer;font-size:15px">'+escC(r.name)+'</div>').join(''):('<div class="hint">'+(tr?'Reçete yok':'No recipes yet')+'</div>'))
+   +(LR.length?(LR.map(r=>{ const mk=mapMark(r.name); const sec=mk.st==='own'?(String(mk.n||0)+' '+(tr?'öğrenilmiş':'learned')):(mk.st==='comm'?(tr?'ödünç ses':'borrowed sound'):'');
+      return '<div data-rn="'+escC(r.name)+'" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer;font-size:15px"><span>'+escC(r.name)+'</span><span style="display:flex;align-items:baseline;gap:7px">'+(sec?('<span style="font-size:10.5px;color:var(--muted)">'+sec+'</span>'):'')+mapMarkTag(mk)+'</span></div>'; }).join('')
+      +(function(){ let mo=0,mc=0; LR.forEach(r2=>{ const s9=mapMark(r2.name).st; if(s9==='own') mo++; else if(s9==='comm') mc++; });
+        return '<div style="border-top:1px solid var(--line);margin-top:2px;padding-top:7px;font-size:11px;color:var(--muted);text-align:center">'+(tr?(LR.length+' kahveden '+mo+' eşli'+(mc?(' · '+mc+' ödünç'):'')):(mo+' of '+LR.length+' mapped'+(mc?(' · '+mc+' borrowed'):'')))+'</div>'; })()):('<div class="hint">'+(tr?'Reçete yok':'No recipes yet')+'</div>'))
    +'<button style="margin-top:10px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Kapat':'Close')+'</button>';
   $('modal').style.display='flex';
   try{ const inp=$('rcNameIn'); inp.addEventListener('keydown',e=>{ if(e.key==='Enter') rcNamesOK(); });
     inp.addEventListener('input',()=>{ const q=inp.value.trim().toLowerCase();
-      $('modalBox').querySelectorAll('[data-rn]').forEach(x=>{ x.style.display=(!q||x.dataset.rn.toLowerCase().includes(q))?'':'none'; }); }); }catch(e){}
+      $('modalBox').querySelectorAll('[data-rn]').forEach(x=>{ x.style.display=(!q||x.dataset.rn.toLowerCase().includes(q))?'flex':'none'; }); }); }catch(e){}
   $('modalBox').querySelectorAll('[data-rn]').forEach(x=>x.onclick=()=>rcNamesSet(x.dataset.rn)); }
 function closeName(){ { let v9=(cName.value||'').trim();   // 'bean (bittersweet' -> auto ')' ; abandoned 'bean (' -> stripped
     if(/\([^)]+$/.test(v9)) cName.value=v9+')'; else if(/\($/.test(v9)) cName.value=v9.slice(0,-1).trim(); }
@@ -2043,6 +2074,38 @@ function fcAgSib(k){ try{ const m=calMap(), b=beanOf(k); if(!b) return null; let
     if(isFinite(e2.fc_ag)&&e2.fc_ag>=80&&e2.fc_ag<=140){ const u9=e2.up||0; if(!best||u9>best.u9) best={v:e2.fc_ag,u9:u9}; } }
   return best?best.v:null; }catch(e){ return null; } }   // fc_ag is a BEAN constant: the freshest sibling style lends it (his approval 2026-07-27); color MAPS stay per-style
 function calFor(){ const k=(cName.value||'').trim().toLowerCase(); return k?calMap()[k]:null; }
+// ---- v08-17a MAPPED-MARK + PACE-V2 (rebased onto 11l after the 08-15 working-tree clobber) ----
+// mark states: own map (his measured drop agtron, gold) · communal (dashed bell: the skeleton travels,
+// the number does not — cross-universe color doesn't travel, his law 08-15) · none (eşlenmemiş: an invitation)
+function mapMark(name){ try{ const k=(name||'').trim().toLowerCase(); if(!k) return {st:'none'};
+  const e=calMap()[k]; if(!e) return {st:'none'};
+  if(e.communal) return {st:'comm'};
+  if(isFinite(e.agtron)) return {st:'own', ag:Math.round(e.agtron), n:((e.hist||[]).length)||1};
+  return {st:'none'}; }catch(e9){ return {st:'none'}; } }
+const MMBELL='<svg width="18" height="10" viewBox="0 0 22 12" style="vertical-align:-1px"><path d="M1 11 Q7 11 9 5 Q11 -1 13 5 Q15 11 21 11" fill="none" stroke="#e6c14b" stroke-width="2" stroke-linecap="round"/></svg>';
+function mapMarkTag(mk){
+  if(mk.st==='own') return '<span class="mmark" style="display:inline-block;font-size:11.5px;font-weight:800;color:#1a1410;background:var(--gold);border-radius:6px;padding:1.5px 7px;vertical-align:2px">'+mk.ag+'</span>';
+  if(mk.st==='comm') return '<span class="mmark" style="display:inline-block;border:1.5px dashed var(--gold);border-radius:6px;padding:0.5px 6px;vertical-align:2px;opacity:.85">'+MMBELL+'</span>';
+  return '<span class="mmark" style="display:inline-block;font-size:11px;font-weight:700;color:var(--muted);border:1px dashed var(--line);border-radius:6px;padding:1px 7px;vertical-align:2px">'+(LANG==='tr'?'eşlenmemiş':'unmapped')+'</span>'; }
+let PACE2LOCK=null;   // crown freeze: past B1 the rhythm belongs to descent physics, not the pace dial
+function pace2At(cal,v,a0){ try{
+  if(!(cal&&Array.isArray(cal.bell)&&cal.bell.length>1&&cal.devSpan&&cal.tg)||v.length<3) return null;
+  let cum=0; for(const c of v) cum+=c.g;
+  const F=Math.min(0.98,cum/cal.tg); if(F<0.25) return null;   // pre-quarter is noise (existing doctrine)
+  let cf=0,tl=null; const thr=F*cal.tg;
+  for(const c of v){ cf+=c.g; if(cf>=thr){ tl=c.t-a0; break; } }
+  if(!(tl&&tl>2)) return null;
+  const b=cal.bell, n9=b.length; let tot=0; for(let i=0;i<n9;i++) tot+=b[i]; if(!(tot>0)) return null;
+  let acc=0, tr9=null;
+  for(let i=0;i<n9;i++){ const nx=acc+b[i];
+    if(nx>=F*tot){ const fr=(F*tot-acc)/(b[i]||1e-9); tr9=((i+Math.max(0,Math.min(1,fr)))/n9)*cal.devSpan; break; } acc=nx; }
+  if(!(tr9&&tr9>1)) return null;
+  return { pace: tl/tr9, dd: tl-tr9, F };
+}catch(e9){ return null; } }
+function pace2(cal,v,a0){ const hasB1=!!(LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==='B1'));
+  if(hasB1&&PACE2LOCK) return PACE2LOCK;
+  const r=pace2At(cal,v,a0); if(!r) return hasB1?PACE2LOCK:null;
+  if(hasB1) PACE2LOCK=r; return r; }
 // confirmed A0: first crack that is followed by >=2 more within 30s (a lone clank cannot own the anchor)
 function effA0(v){ for(let i=0;i<v.length-2;i++){ if(v[i+2].t-v[i].t<=EP.FOLLOW) return v[i].t; } return v.length?v[0].t:0; }   // follower window: Ömer's field data, fast roasts 5-10s, slow 20-30s
 // learned seconds-per-Agtron slope: least squares over a coffee's mapped history, else pooled house, else 4
@@ -2097,14 +2160,14 @@ function saveCalIfMapped(verbose){
       prevM.hist=(prevM.hist||[]).concat([{devSpan:v[v.length-1].t-a0, agtron:ag, tg, q25, ph:+PHASE.toFixed(3)||null, date:today}]).slice(-8);
       { const fcP=parseFloat($('mA0Ag').value); if(isFinite(fcP)) prevM.fc_ag=fcP; }   // update A0 color if newly entered; otherwise the fuller reference keeps its own
       m[k]=prevM; if(m['__house']&&m['__house'].src===k) m['__house']=prevM;
-      localStorage.setItem('bsCal',JSON.stringify(m));
-      if(verbose) toast(LANG==='tr'?"Ders kaydedildi (öz-not + φ noktası), dolu referans korundu. Tamamen üzerine yazmak için 8 sn içinde tekrar Eşle'ye dokun.":'Lesson recorded (self-grade + φ point); fuller reference kept. Tap Map again within 8s to fully overwrite instead.');
+      localStorage.setItem('bsCal',JSON.stringify(m)); try{ cloudUpsertOne(k); }catch(e9){}
+      if(verbose) toast(LANG==='tr'?"Öğrenilmiş kaydedildi (öz-not + φ noktası), dolu referans korundu. Tamamen üzerine yazmak için 8 sn içinde tekrar Eşle'ye dokun.":'Lesson recorded (self-grade + φ point); fuller reference kept. Tap Map again within 8s to fully overwrite instead.');
     } else {
       if(verbose) toast(LANG==='tr'?"Kesik kavurma (C1 yok). Üzerine yazmak için 8 sn içinde tekrar Eşle'ye dokun.":'Cut roast (no C1). Tap Map again within 8s to overwrite your fuller reference.');
     }
     return;
   }
-  const entry={a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, gsd:Math.round(sd(v.map(c=>c.g))*10)/10, phDrop:+PHASE.toFixed(3)||null, moist:parseFloat($('mMoist').value)||null, aw:parseFloat($('mAw').value)||null, proc:(($('mProc').value||'').trim())||((m[k]&&m[k].proc)||null), date:new Date().toISOString().slice(0,10), src:k,
+  const entry={disp:(cName.value||$('mCoffee').value||'').trim(), a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, gsd:Math.round(sd(v.map(c=>c.g))*10)/10, phDrop:+PHASE.toFixed(3)||null, moist:parseFloat($('mMoist').value)||null, aw:parseFloat($('mAw').value)||null, proc:(($('mProc').value||'').trim())||((m[k]&&m[k].proc)||null), date:new Date().toISOString().slice(0,10), src:k,
     bgg:parseFloat($('mBatch').value)||null, hist:(m[k]&&m[k].hist)||[]};
   const lsig=k+'|'+(STOPT!=null?Math.round(STOPT):'x')+'|'+(v.length);
   if(LESSONSIG!==lsig){ entry.hist=entry.hist.concat([{devSpan:entry.devSpan, agtron:ag, tg, q25, ph:entry.phDrop, date:entry.date}]).slice(-8); LESSONSIG=lsig; }   // tap Map ten times, learn once
@@ -2128,11 +2191,15 @@ function saveCalIfMapped(verbose){
   for(const c of v){ const rel=(c.t-a0)/(entry.devSpan||1); if(rel>=0&&rel<=1) bshape[Math.min(BP-1,Math.floor(rel*BP))]+=c.g; }
   const sm2=bshape.map((_,i)=>{ let s2=0,w2=0; for(let j=0;j<BP;j++){ const g2=Math.exp(-0.5*((j-i)/2)*((j-i)/2)); s2+=bshape[j]*g2; w2+=g2; } return s2/w2; });
   const pk2=Math.max(...sm2)||1; entry.bell=sm2.map(x2=>+(x2/pk2).toFixed(3));
+  { const bsN=new Array(BP).fill(0);   // v08-17a: count-based twin — true crack-count tempo for a future wrist ref-tempo
+    for(const c of v){ const rel=(c.t-a0)/(entry.devSpan||1); if(rel>=0&&rel<=1) bsN[Math.min(BP-1,Math.floor(rel*BP))]+=1; }
+    const smN=bsN.map((_,i)=>{ let s3=0,w3=0; for(let j=0;j<BP;j++){ const g3=Math.exp(-0.5*((j-i)/2)*((j-i)/2)); s3+=bsN[j]*g3; w3+=g3; } return s3/w3; });
+    const pkN=Math.max(...smN)||1; entry.bellN=smN.map(x3=>+(x3/pkN).toFixed(3)); }
   { const fcParsed=parseFloat($('mA0Ag').value);   // per-coffee A0 color: write if given, else keep any earlier calibration (never silently drop)
     if(isFinite(fcParsed)){ entry.fc_ag=fcParsed; try{ uniA0Log(fcParsed); }catch(e9){} }
     else if(prevM&&isFinite(prevM.fc_ag)) entry.fc_ag=prevM.fc_ag; }
   m[k]=entry; m['__house']=entry;   // every map also becomes the house default: unmapped beans borrow it
-  localStorage.setItem('bsCal',JSON.stringify(m)); try{ renderNameChips(); }catch(e9){}
+  localStorage.setItem('bsCal',JSON.stringify(m)); try{ renderNameChips(); }catch(e9){} try{ cloudUpsertOne(k); }catch(e9){}
   toast('Color map saved for "'+k+'" ('+entry.hist.length+' roast'+(entry.hist.length>1?'s':'')+' in its history).');
   if(verbose) maybeOfferGame();
 }
@@ -2412,7 +2479,7 @@ function updateGauge(){
   TGT_U=(cal.target)?agU(cal.target):null;   // recipe target ring: free
   drawGauge('live',proj-band,proj+band);
   let hint=LANG==='tr'
-    ?((running?('~'+Math.round(proj)+' ±'+bandR+' şimdi bırakılırsa'):('son çağrı ~'+Math.round(proj)+' ±'+bandR))+' (saat '+Math.round(prT)+' · enerji '+Math.round(prE)+' · tempo '+pace.toFixed(2)+')'+bTag+'. Öngörü, ölçüm değil; ± bandı bu kahvenin kendi ders geçmişinden.')
+    ?((running?('~'+Math.round(proj)+' ±'+bandR+' şimdi bırakılırsa'):('son çağrı ~'+Math.round(proj)+' ±'+bandR))+' (saat '+Math.round(prT)+' · enerji '+Math.round(prE)+' · tempo '+pace.toFixed(2)+')'+bTag+'. Öngörü, ölçüm değil; ± bandı bu kahvenin kendi öğrenilmişlerinden.')
     :((running?('~'+Math.round(proj)+' ±'+bandR+' if dropped now'):('final call ~'+Math.round(proj)+' ±'+bandR))+' (clock '+Math.round(prT)+' · energy '+Math.round(prE)+' · pace '+pace.toFixed(2)+')'+bTag+'. Projection, not measurement; the ± comes from this coffee\'s own lesson history.');
   if(TGT_U!=null){ hint+=' · '+(LANG==='tr'?'hedef':'target')+' '+cal.target;
     if(running&&Math.abs(proj-cal.target)<=AG_TOL) hint+=LANG==='tr'?' · TAHLİYE PENCERESİ':' · DROP WINDOW'; }
@@ -2586,7 +2653,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-11l';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17a';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -2790,7 +2857,7 @@ function updateMapBtn(){ const b=$('mapBtn'); if(!b) return;
   const prev=k?calMap()[k]:null, v=valid();
   const isCut=!(LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==='C1'));
   const fuller=prev&&v.length&&prev.devSpan>((v[v.length-1].t-effA0(v))*1.3);
-  b.textContent=(isCut&&fuller)?(LANG==='tr'?'Dersi kaydet (referansı koru)':'Record lesson (keep reference)'):tt('Map this coffee (save color)');
+  b.textContent=(isCut&&fuller)?(LANG==='tr'?'Öğrenilmişi kaydet (referansı koru)':'Record lesson (keep reference)'):tt('Map this coffee (save color)');
   updateGameAddBtn();
 }
 // ---- SampleInRoast: tryer pulls become color anchors ----
@@ -3181,7 +3248,7 @@ const EN2TR={
 'Roast by the bell':'Çana göre kavur',
 'The stages pin themselves as they are earned, the ghost races your reference roast, and the gauge shows the color if you dropped right now. When you drop the beans, tap Drop.':'Evreler hak edildikçe kendini işaretler, hayalet referans kavurmanla yarışır, gösterge şu an bıraksan oluşacak rengi söyler. Çekirdekleri bıraktığında Drop\'a dokun.',
 'Measure, fill, tap the button':'Ölç, doldur, düğmeye dokun',
-'After cooling, enter the measured color and tap the Map button - on early-cut roasts it says "Record lesson" and keeps your reference safe. Every measured roast makes the next prediction better; that is the app learning your coffee. Save the session (.zip) as your archive.':'Soğuduktan sonra ölçtüğün rengi gir ve Eşle düğmesine dokun - erken kesilen kavurmalarda "Dersi kaydet" yazar ve referansını korur. Ölçülen her kavurma bir sonraki tahmini iyileştirir; uygulamanın kahveni öğrenmesi budur. Seansı (.zip) arşivin olarak kaydet.',
+'After cooling, enter the measured color and tap the Map button - on early-cut roasts it says "Record lesson" and keeps your reference safe. Every measured roast makes the next prediction better; that is the app learning your coffee. Save the session (.zip) as your archive.':'Soğuduktan sonra ölçtüğün rengi gir ve Eşle düğmesine dokun - erken kesilen kavurmalarda "Öğrenilmişi kaydet" yazar ve referansını korur. Ölçülen her kavurma bir sonraki tahmini iyileştirir; uygulamanın kahveni öğrenmesi budur. Seansı (.zip) arşivin olarak kaydet.',
 'The whole instrument is free, forever. Roaster and Cupper add cloud memory across your devices.':'Enstrümanın tamamı ücretsiz, süresiz. Roaster ve Cupper, cihazların arasında bulut hafızası ekler.',
 'the probe learns to read while the beans they speak':'çekirdekler konuşurken probe okumayı öğrenir','CoffeeNutz cockpit:':'CoffeeNutz kokpiti:','tap to listen':'dinlemek için dokun','the crack analyzer · the probe learns to read while the beans they speak':'çatlak analizörü · çekirdekler konuşurken probe okumayı öğrenir',
 'Tap start, hold the phone near the drum, disable the case if it covers the mic.':'Başlata dokun, telefonu kazana yaklaştır, kılıf mikrofonu kapatıyorsa çıkar.',
@@ -3309,10 +3376,13 @@ function drawTimeline(){
       tx.fillText(LANG==='tr'?'hayalet · referans':'ghost · reference', glx, gly);
       tx.font='16px sans-serif';
     }
-    // lap delta chip: time to 25% of ref gain vs the ref's own
-    if(calT.tg&&calT.q25){ let cum2=0,tq2=null;
-      for(const c of v){ cum2+=c.g; if(cum2>=calT.tg*0.25){ tq2=c.t-a0c; break; } }
-      if(tq2&&tq2>2){ const dd=Math.round(tq2-calT.q25);
+    // lap delta chip — v08-17a: continuous mass-fraction lap (own bell), frozen at B1; 25% checkpoint fallback
+    { let dd=null;
+      if(!calT.communal){ const r9=pace2(calT,v,a0c); if(r9) dd=Math.round(r9.dd); }
+      if(dd==null&&calT.tg&&calT.q25){ let cum2=0,tq2=null;
+        for(const c of v){ cum2+=c.g; if(cum2>=calT.tg*0.25){ tq2=c.t-a0c; break; } }
+        if(tq2&&tq2>2) dd=Math.round(tq2-calT.q25); }
+      if(dd!=null){
         const txt=Math.abs(dd)<2?tt('with ref'):(LANG==='tr'?(dd<0?((-dd)+' sn önde'):(dd+' sn geride')):(dd<0?((-dd)+'s ahead of ref'):(dd+'s behind ref')));
         tx.font='bold 21px -apple-system,sans-serif';
         const tw=tx.measureText(txt).width+30, bx=W-8-tw;
