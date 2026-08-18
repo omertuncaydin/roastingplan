@@ -1891,9 +1891,18 @@ function pickModal(title,hint,items,btnLabel,cb){
   $('modal').style.display='flex';
 }
 function pickGo(){ const sel=[]; document.querySelectorAll('[data-pick]').forEach(cb=>{ if(cb.checked) sel.push(+cb.dataset.pick); }); $('modal').style.display='none'; const f=PICK_CB; PICK_CB=null; if(f) f(sel); }
-async function cloudUpsertOne(k){ try{   // v08-17a UNIFORM LIST: the Eşle tap is the single writer — every own map rides to the account by itself
+async function cloudUpsertOne(k){ try{   // v08-17a: every own map rides to the account by itself.
+  // v08-17j MONOTONIC ACCOUNT: before writing, union with the row already there — histories only grow;
+  // a device holding a poorer copy can never shrink the account's richer one (the 8→3 class of loss).
   if(!SB) return; const u=await cloudStatus(); if(!u||!planActive()) return;
-  const m=calMap(), cal=m[k]; if(!cal||cal.communal) return; const b=badgeMap()[k]||{};
+  const m=calMap(); let cal=m[k]; if(!cal||cal.communal) return;
+  try{ const {data:ex9}=await SB.from('coffees').select('map').eq('owner',u.id).eq('name',k);
+    const cm9=ex9&&ex9[0]&&ex9[0].map;
+    if(cm9&&typeof cm9==='object'&&!cm9.communal){
+      const g9=mapMerge(cal,cm9); g9.rcs={...(cm9.rcs||{}),...(cal.rcs||{})}; if(cal.disp) g9.disp=cal.disp;
+      m[k]=g9; cal=g9; localStorage.setItem('bsCal',JSON.stringify(m)); }
+  }catch(e8){}
+  const b=badgeMap()[k]||{};
   const row={ owner:u.id, name:k, badge:b, green:{moisture:cal.moist||null, aw:cal.aw||null, process:cal.proc||null}, map:cal };
   await SB.from('coffees').upsert(row,{onConflict:'owner,name'});
 }catch(e){} }
@@ -2033,7 +2042,7 @@ function rcNamesSet(n){ try{ cName.value=n; localStorage.setItem('bsCoffee',n); 
 // the wrist folds the origin word into a country code, so the word must exist.
 const RCORIGINS=['Etiyopya','Kenya','Kolombiya','Brezilya','Guatemala','Kostarika','Honduras','Peru','Ruanda','Burundi','Yemen','Hindistan','Endonezya','Sumatra','Java','Panama','Nikaragua','Salvador','Meksika','Tanzanya','Uganda','Papua','Vietnam','Ekvador','Bolivya','China'];
 // v08-17i HIS NAME LAW: names carry the country CODE ("ET Yirgacheffe"), one code per origin word (TR+EN).
-const RCCODE={'etiyopya':'ET','ethiopia':'ET','kenya':'KE','kenia':'KE','kolombiya':'CO','colombia':'CO','brezilya':'BR','brazil':'BR','brasil':'BR','guatemala':'GT','kostarika':'CR','costa':'CR','honduras':'HN','peru':'PE','ruanda':'RW','rwanda':'RW','burundi':'BI','yemen':'YE','hindistan':'IN','india':'IN','endonezya':'ID','indonesia':'ID','sumatra':'SM','java':'JV','panama':'PA','nikaragua':'NI','nicaragua':'NI','salvador':'SV','meksika':'MX','mexico':'MX','tanzanya':'TZ','tanzania':'TZ','uganda':'UG','papua':'PG','vietnam':'VN','ekvador':'EC','ecuador':'EC','bolivya':'BO','bolivia':'BO','china':'CN'};
+const RCCODE={'etiyopya':'ET','ethiopia':'ET','kenya':'KE','kenia':'KE','kolombiya':'COL','colombia':'COL','co':'COL','brezilya':'BR','brazil':'BR','brasil':'BR','guatemala':'GT','kostarika':'CR','costa':'CR','honduras':'HN','peru':'PE','ruanda':'RW','rwanda':'RW','burundi':'BI','yemen':'YE','hindistan':'IN','india':'IN','endonezya':'ID','indonesia':'ID','sumatra':'SM','java':'JV','panama':'PA','nikaragua':'NI','nicaragua':'NI','salvador':'SV','meksika':'MX','mexico':'MX','tanzanya':'TZ','tanzania':'TZ','uganda':'UG','papua':'PG','vietnam':'VN','ekvador':'EC','ecuador':'EC','bolivya':'BO','bolivia':'BO','china':'CN'};
 const RCCODES=(function(){ const st={}; for(const k in RCCODE) st[RCCODE[k]]=1; return Object.keys(st); })();
 function codeName(n){ try{ const v=(n||'').trim(); if(!v) return null; const ws=v.split(/\s+/);
   const w1=(ws[0]||'').toLowerCase();
@@ -2218,14 +2227,21 @@ function renameMapKey(oldK,newRaw){ try{
   return {ok:true, merged, n:(m[nk].hist||[]).length};
 }catch(e9){ return {ok:false}; } }
 function rowSwapUI(el,cur,goFn){ try{ const row=el.closest('[data-rn]'); if(!row) return; row.onclick=null; row.style.cursor='default';
-  row.innerHTML='<input id="mrnIn" value="'+String(cur).replace(/"/g,'&quot;')+'" style="flex:1;min-width:0;border:1px solid var(--gold);border-radius:8px;padding:8px 10px;font-size:14px;background:#15100b;color:var(--ink)">'
+  row.innerHTML='<select id="mrnSel" style="width:31%;min-width:0;border:1px solid var(--line);border-radius:8px;padding:8px 4px;font-size:13px;background:#15100b;color:var(--ink)"><option value="">'+(LANG==='tr'?'ülke…':'origin…')+'</option>'+RCORIGINS.map(o=>'<option>'+o+'</option>').join('')+'</select>'
+    +'<input id="mrnIn" value="'+String(cur).replace(/"/g,'&quot;')+'" style="flex:1;min-width:0;border:1px solid var(--gold);border-radius:8px;padding:8px 10px;font-size:14px;background:#15100b;color:var(--ink)">'
     +'<button class="pm" style="width:auto;padding:6px 12px;font-size:13px;background:var(--accent2);color:#fff;border:none;border-radius:8px" onclick="'+goFn+'">OK</button>'
     +'<button style="width:auto;padding:6px 10px;font-size:12px;background:var(--panel2);border:1px solid var(--line);border-radius:8px" onclick="MRNKEY=null;RRNM=null;rcNamesOpen()">&times;</button>';
   const i9=$('mrnIn'); i9.focus(); i9.addEventListener('keydown',ev=>{ if(ev.key==='Enter') eval(goFn); });
 }catch(e9){} }
+function mrnResolve(nv){ try{ const selv=(($('mrnSel')||{}).value||'').trim();
+  if(selv){ const code=RCCODE[selv.toLowerCase()]||selv; const ws=nv.split(/\s+/);
+    const w1u=(ws[0]||'').toUpperCase(), w1l=(ws[0]||'').toLowerCase();
+    const hasCode=(RCCODES.indexOf(w1u)>=0)||!!RCCODE[w1l];
+    return code+' '+(hasCode?ws.slice(1).join(' '):nv); }
+  const cv=codeName(nv); return cv||nv; }catch(e9){ return nv; } }   // v08-17j: pick "Kolombiya" + "Bango" → "COL Bango"
 function mapRenameUI(el){ const oldK=el.dataset.mrn, e=calMap()[oldK]; if(!e) return; MRNKEY=oldK; rowSwapUI(el,e.disp||oldK,'mapRenameGo()'); }
 function mapRenameGo(){ try{ const tr=(LANG==='tr'); if(!MRNKEY) return;
-  const nv=($('mrnIn')&&$('mrnIn').value||'').trim();
+  let nv=($('mrnIn')&&$('mrnIn').value||'').trim(); if(nv) nv=mrnResolve(nv);
   const r=renameMapKey(MRNKEY,nv); MRNKEY=null;
   if(r.ok) toast(r.merged?(tr?('Birleştirildi — '+r.n+' öğrenilmiş tek isimde.'):('Merged — '+r.n+' learned under one name.')):(tr?'İsim taşındı; öğrenilmişler yeni adında.':'Renamed; the lessons follow the name.'));
   rcNamesOpen();
@@ -2285,13 +2301,24 @@ async function cloudRenameOne(oldK,newK){ try{ if(!SB) return; const u=await clo
       if(!er8&&d8){ gdCachePatch(d8); } }
   }catch(e8){} })();
 }catch(e9){} })();
+// v08-17j HIS ORDER: "all rumudamo are the same — merge and say ET Rumudamo." Map folds (merge-safe), recipe renames.
+(function(){ try{
+  if(calMap()['rumudamo']){ const r7=renameMapKey('rumudamo','ET Rumudamo'); if(r7&&r7.ok) toast(LANG==='tr'?'Rumudamo birleşti: ET Rumudamo.':'Rumudamo merged: ET Rumudamo.'); }
+  { const m7=calMap(); if(m7['et rumudamo']&&m7['et rumudamo'].disp!=='ET Rumudamo'){ m7['et rumudamo'].disp='ET Rumudamo'; localStorage.setItem('bsCal',JSON.stringify(m7)); } }
+  (async()=>{ try{ if(!SB) return; const u7=await cloudStatus(); if(!u7) return;
+    const row7=gdCacheGet().find(r7=>r7&&r7.id&&r7.name==='Rumudamo'); if(!row7) return;
+    const {data:d7,error:er7}=await SB.from('recipes').update({name:'ET Rumudamo'}).eq('id',row7.id).select().single();
+    if(!er7&&d7) gdCachePatch(d7);
+  }catch(e7){} })();
+}catch(e9){} })();
 // ---- recipe rows: rename + delete, synced to the account's recipe book (the Guide's jar, same session) ----
 let RRNM=null;
 function gdCacheGet(){ try{ const a=JSON.parse(localStorage.getItem('cnRecipes_cache')||'null'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
 function gdCacheSet(a){ try{ localStorage.setItem('cnRecipes_cache',JSON.stringify(a)); }catch(e){} }
 function rcpRenameUI(el){ RRNM=el.dataset.rrn; rowSwapUI(el,RRNM,'rcpRenameGo()'); }
 async function rcpRenameGo(){ try{ const tr=(LANG==='tr'); if(!RRNM) return;
-  const oldN=RRNM, nv=($('mrnIn')&&$('mrnIn').value||'').trim(); RRNM=null;
+  const oldN=RRNM; let nv=($('mrnIn')&&$('mrnIn').value||'').trim(); RRNM=null;
+  if(nv) nv=mrnResolve(nv);
   if(!nv||nv===oldN){ rcNamesOpen(); return; }
   if(!SB||!planActive()){ toast(tr?'Reçete adı için Guide oturumu gerek.':'Recipe names need the Guide session.'); rcNamesOpen(); return; }
   const u=await cloudStatus(); if(!u){ toast(tr?"Önce Guide'da giriş yap.":'Sign in via the Guide first.'); rcNamesOpen(); return; }
@@ -2875,7 +2902,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17i';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17j';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){

@@ -609,7 +609,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-17f</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-17g</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1105,7 +1105,7 @@ function moveRecipe(i,dir){ const j=i+dir; if(j<0||j>=RECIPES.length) return; co
 function gBeanOf(k){ k=(k||''); const m9=k.match(/^(.*?)\s*\(([^)]+)\)\s*$/); if(m9) return m9[1].trim();
   const i9=k.indexOf(': '); return i9>0?k.slice(0,i9):k; }
 // v08-17f: country-code register (mirror of the Listener's) — names enter with their code, origin words fold to it
-const GCODE={'etiyopya':'ET','ethiopia':'ET','kenya':'KE','kenia':'KE','kolombiya':'CO','colombia':'CO','brezilya':'BR','brazil':'BR','brasil':'BR','guatemala':'GT','kostarika':'CR','costa':'CR','honduras':'HN','peru':'PE','ruanda':'RW','rwanda':'RW','burundi':'BI','yemen':'YE','hindistan':'IN','india':'IN','endonezya':'ID','indonesia':'ID','sumatra':'SM','java':'JV','panama':'PA','nikaragua':'NI','nicaragua':'NI','salvador':'SV','meksika':'MX','mexico':'MX','tanzanya':'TZ','tanzania':'TZ','uganda':'UG','papua':'PG','vietnam':'VN','ekvador':'EC','ecuador':'EC','bolivya':'BO','bolivia':'BO','china':'CN'};
+const GCODE={'etiyopya':'ET','ethiopia':'ET','kenya':'KE','kenia':'KE','kolombiya':'COL','colombia':'COL','co':'COL','brezilya':'BR','brazil':'BR','brasil':'BR','guatemala':'GT','kostarika':'CR','costa':'CR','honduras':'HN','peru':'PE','ruanda':'RW','rwanda':'RW','burundi':'BI','yemen':'YE','hindistan':'IN','india':'IN','endonezya':'ID','indonesia':'ID','sumatra':'SM','java':'JV','panama':'PA','nikaragua':'NI','nicaragua':'NI','salvador':'SV','meksika':'MX','mexico':'MX','tanzanya':'TZ','tanzania':'TZ','uganda':'UG','papua':'PG','vietnam':'VN','ekvador':'EC','ecuador':'EC','bolivya':'BO','bolivia':'BO','china':'CN'};
 const GCODES=(function(){ const st={}; for(const k in GCODE) st[GCODE[k]]=1; return st; })();
 function gCodeName(n){ try{ const v=(n||'').trim(); if(!v) return null; const ws=v.split(/\s+/);
   const w1=(ws[0]||'').toLowerCase();
