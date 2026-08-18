@@ -2455,7 +2455,7 @@ function saveCalIfMapped(verbose){
       { const fcP=parseFloat($('mA0Ag').value); if(isFinite(fcP)) prevM.fc_ag=fcP; }   // update A0 color if newly entered; otherwise the fuller reference keeps its own
       m[k]=prevM; if(m['__house']&&m['__house'].src===k) m['__house']=prevM;
       localStorage.setItem('bsCal',JSON.stringify(m)); try{ cloudUpsertOne(k); }catch(e9){}
-      if(verbose) toast(LANG==='tr'?"Öğrenilmiş kaydedildi (öz-not + φ noktası), dolu referans korundu. Tamamen üzerine yazmak için 8 sn içinde tekrar Eşle'ye dokun.":'Lesson recorded (self-grade + φ point); fuller reference kept. Tap Map again within 8s to fully overwrite instead.');
+      if(verbose) toast(LANG==='tr'?('Öğrenilmiş kaydedildi ('+prevM.hist.length+') · referans korundu. Üzerine yazmak için 8 sn içinde tekrar dokun.'):('Lesson recorded ('+prevM.hist.length+') · reference kept. Tap again within 8s to overwrite instead.'));
     } else {
       if(verbose) toast(LANG==='tr'?"Kesik kavurma (C1 yok). Üzerine yazmak için 8 sn içinde tekrar Eşle'ye dokun.":'Cut roast (no C1). Tap Map again within 8s to overwrite your fuller reference.');
     }
@@ -2495,7 +2495,7 @@ function saveCalIfMapped(verbose){
     else if(prevM&&isFinite(prevM.fc_ag)) entry.fc_ag=prevM.fc_ag; }
   m[k]=entry; m['__house']=entry;   // every map also becomes the house default: unmapped beans borrow it
   localStorage.setItem('bsCal',JSON.stringify(m)); try{ renderNameChips(); }catch(e9){} try{ cloudUpsertOne(k); }catch(e9){}
-  toast('Color map saved for "'+k+'" ('+entry.hist.length+' roast'+(entry.hist.length>1?'s':'')+' in its history).');
+  toast(LANG==='tr'?('Referans güncellendi · '+entry.hist.length+' öğrenilmiş ('+(entry.disp||k)+')'):('Reference updated · '+entry.hist.length+' learned ('+(entry.disp||k)+')'));
   if(verbose) maybeOfferGame();
 }
 // consent gate, auto-offered ONCE per session after a real Map; admin (Omer) approves or deletes
@@ -2948,7 +2948,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17m';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17n';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -3146,13 +3146,11 @@ async function loadSession(file){
   if(parseFloat(meta.agtron_ground)){ saveCalIfMapped(true); updateGauge(); }
   else toast('Loaded: '+cracks.length+' cracks'+(meta.coffee?' ('+meta.coffee+')':'')+'. Fill Agtron ground, tap Map.');
 }
-// the Map button announces its own behavior: reference-write vs lesson-record
+// v08-17n ONE BUTTON, NO MODES (his order): the label never changes; saveCalIfMapped routes by itself
+// (full roast -> reference, cut-over-fuller -> lesson only) and the toast reports which one happened.
+// Bonus fix: the old label read calMap() with the STYLED key, so alternatives could carry the wrong label.
 function updateMapBtn(){ const b=$('mapBtn'); if(!b) return;
-  const k=(cName.value||($('mCoffee')&&$('mCoffee').value)||'').trim().toLowerCase();
-  const prev=k?calMap()[k]:null, v=valid();
-  const isCut=!(LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==='C1'));
-  const fuller=prev&&v.length&&prev.devSpan>((v[v.length-1].t-effA0(v))*1.3);
-  b.textContent=(isCut&&fuller)?(LANG==='tr'?'Öğrenilmişi kaydet (referansı koru)':'Record lesson (keep reference)'):tt('Map this coffee (save color)');
+  b.textContent=tt('Map this coffee (save color)');
   updateGameAddBtn();
 }
 // ---- SampleInRoast: tryer pulls become color anchors ----
@@ -3566,7 +3564,7 @@ const EN2TR={
 'Roast by the bell':'Çana göre kavur',
 'The stages pin themselves as they are earned, the ghost races your reference roast, and the gauge shows the color if you dropped right now. When you drop the beans, tap Drop.':'Evreler hak edildikçe kendini işaretler, hayalet referans kavurmanla yarışır, gösterge şu an bıraksan oluşacak rengi söyler. Çekirdekleri bıraktığında Drop\'a dokun.',
 'Measure, fill, tap the button':'Ölç, doldur, düğmeye dokun',
-'After cooling, enter the measured color and tap the Map button - on early-cut roasts it says "Record lesson" and keeps your reference safe. Every measured roast makes the next prediction better; that is the app learning your coffee. Save the session (.zip) as your archive.':'Soğuduktan sonra ölçtüğün rengi gir ve Eşle düğmesine dokun - erken kesilen kavurmalarda "Öğrenilmişi kaydet" yazar ve referansını korur. Ölçülen her kavurma bir sonraki tahmini iyileştirir; uygulamanın kahveni öğrenmesi budur. Seansı (.zip) arşivin olarak kaydet.',
+'After cooling, enter the measured color and tap the Map button - a full roast updates the reference; an early-cut roast keeps the reference and records the lesson (the toast tells you which). Every measured roast makes the next prediction better; that is the app learning your coffee. Save the session (.zip) as your archive.':'Soğuduktan sonra ölçtüğün rengi gir ve Eşle düğmesine dokun - tam kavurmada referans güncellenir; erken kesilende referans korunur, öğrenilmiş kaydedilir (hangisi olduğunu bildirim söyler). Ölçülen her kavurma bir sonraki tahmini iyileştirir; uygulamanın kahveni öğrenmesi budur. Seansı (.zip) arşivin olarak kaydet.',
 'The whole instrument is free, forever. Roaster and Cupper add cloud memory across your devices.':'Enstrümanın tamamı ücretsiz, süresiz. Roaster ve Cupper, cihazların arasında bulut hafızası ekler.',
 'the probe learns to read while the beans they speak':'çekirdekler konuşurken probe okumayı öğrenir','CoffeeNutz cockpit:':'CoffeeNutz kokpiti:','tap to listen':'dinlemek için dokun','the crack analyzer · the probe learns to read while the beans they speak':'çatlak analizörü · çekirdekler konuşurken probe okumayı öğrenir',
 'Tap start, hold the phone near the drum, disable the case if it covers the mic.':'Başlata dokun, telefonu kazana yaklaştır, kılıf mikrofonu kapatıyorsa çıkar.',
