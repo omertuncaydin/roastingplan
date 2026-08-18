@@ -609,7 +609,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-17e</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-17f</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1104,9 +1104,20 @@ function moveRecipe(i,dir){ const j=i+dir; if(j<0||j>=RECIPES.length) return; co
 // none = eşlenmemiş. Read-only here: the Eşle tap in the Listener stays the single writer.
 function gBeanOf(k){ k=(k||''); const m9=k.match(/^(.*?)\s*\(([^)]+)\)\s*$/); if(m9) return m9[1].trim();
   const i9=k.indexOf(': '); return i9>0?k.slice(0,i9):k; }
+// v08-17f: country-code register (mirror of the Listener's) — names enter with their code, origin words fold to it
+const GCODE={'etiyopya':'ET','ethiopia':'ET','kenya':'KE','kenia':'KE','kolombiya':'CO','colombia':'CO','brezilya':'BR','brazil':'BR','brasil':'BR','guatemala':'GT','kostarika':'CR','costa':'CR','honduras':'HN','peru':'PE','ruanda':'RW','rwanda':'RW','burundi':'BI','yemen':'YE','hindistan':'IN','india':'IN','endonezya':'ID','indonesia':'ID','sumatra':'SM','java':'JV','panama':'PA','nikaragua':'NI','nicaragua':'NI','salvador':'SV','meksika':'MX','mexico':'MX','tanzanya':'TZ','tanzania':'TZ','uganda':'UG','papua':'PG','vietnam':'VN','ekvador':'EC','ecuador':'EC','bolivya':'BO','bolivia':'BO','china':'CN'};
+const GCODES=(function(){ const st={}; for(const k in GCODE) st[GCODE[k]]=1; return st; })();
+function gCodeName(n){ try{ const v=(n||'').trim(); if(!v) return null; const ws=v.split(/\s+/);
+  const w1=(ws[0]||'').toLowerCase();
+  if(GCODE[w1]) return GCODE[w1]+(ws.length>1?(' '+ws.slice(1).join(' ')):'');
+  return null; }catch(e9){ return null; } }
+function gNameGate(n){ const w1=((n||'').trim().split(/\s+/)[0]||''); if(!w1) return null;
+  if(GCODES[w1.toUpperCase()]||GCODE[w1.toLowerCase()]) return gCodeName(n)||n;
+  return null; }   // null = no country; caller alerts
 function gMapMark(name){ try{ const k=(name||'').trim().toLowerCase(); if(!k) return {st:'none'};
   const m=JSON.parse(localStorage.getItem('bsCal')||'{}'); let e=m[k];
-  if(!e){ const b0=(gBeanOf(k)||'').trim().toLowerCase(); if(b0&&b0!==k) e=m[b0]; }   // v08-17e: styles share the bean's mark
+  if(!e){ const b0=(gBeanOf(k)||'').trim().toLowerCase(); if(b0&&b0!==k) e=m[b0];
+    if(!e){ const c0=(gCodeName(b0||k)||'').toLowerCase(); if(c0) e=m[c0]; } }   // v08-17e/f: bean, then its code form
   if(!e) return {st:'none'};
   if(e.communal) return {st:'comm'};
   if(isFinite(e.agtron)) return {st:'own', ag:Math.round(e.agtron), n:((e.hist||[]).length)||1};
@@ -1140,8 +1151,9 @@ async function gInlineRename(i){ try{ const r=getRecipes()[i]; if(!r) return;
   const inp=document.getElementById('grnIn'); inp.focus(); inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') gInlineRenameGo(i); });
 }catch(e9){} }
 async function gInlineRenameGo(i){ try{ const r=getRecipes()[i]; if(!r) return;
-  const inp=document.getElementById('grnIn'); const nv=(inp&&inp.value||'').trim();
+  const inp=document.getElementById('grnIn'); let nv=(inp&&inp.value||'').trim();
   if(!nv||nv===r.name){ renderRecipes(); return; }
+  { const g9=gNameGate(nv); if(!g9){ alert('İsim ülke koduyla girer — örn. "ET Yirgacheffe".'); renderRecipes(); return; } nv=g9; }
   if(!canSave('roast')){ alert(enrollPrompt('recipes')); renderRecipes(); return; }
   const oldName9=r.name; const rec={...r, name:nv};
   const saved=await upsertRecipe(rec); RECIPES[i]=saved||rec; cacheRecipes();
@@ -1197,7 +1209,8 @@ async function upsertRecipe(rec){
 function newRecipe(){ editIdx=-1; rfName.value=rfMatch.value=rfBullet.value=rfHsr.value=rfNote.value=''; rfActive.checked=true; document.getElementById('rform').classList.remove('hide'); window.scrollTo(0,0); }
 function editRecipe(i){ const r=getRecipes()[i]; editIdx=i; rfName.value=r.name; rfMatch.value=(r.match||[]).join(', '); rfBullet.value=r.bullet; rfHsr.value=r.hsr; rfNote.value=r.note||''; rfActive.checked=!!r.active; document.getElementById('rform').classList.remove('hide'); window.scrollTo(0,0); }
 function closeForm(){ document.getElementById('rform').classList.add('hide'); }
-async function saveRecipe(){ if(!canSave('roast')){ alert(enrollPrompt('recipes')); return; } const name=rfName.value.trim(); if(!name){alert('Name required');return;}
+async function saveRecipe(){ if(!canSave('roast')){ alert(enrollPrompt('recipes')); return; } let name=rfName.value.trim(); if(!name){alert('Name required');return;}
+  { const g9=gNameGate(name); if(!g9){ alert('İsim ülke koduyla girer — örn. "ET Yirgacheffe". / Names enter with their country code — e.g. "ET Yirgacheffe".'); return; } name=g9; rfName.value=name; }
   const rec={name, match:rfMatch.value.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean), bullet:rfBullet.value.trim(), hsr:rfHsr.value.trim()||'-', note:rfNote.value.trim(), active:rfActive.checked};
   if(!rec.match.length) rec.match=[name.toLowerCase()];
   const oldName9=(editIdx>=0&&RECIPES[editIdx])?RECIPES[editIdx].name:null;   // v08-17b: a rename must carry its map — silent renames were manufacturing name-drift

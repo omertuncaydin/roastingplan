@@ -2006,7 +2006,7 @@ function renderStyleChips(){ const el=$('styleChips'); if(!el) return;
     return '<span data-sc="'+escC(n)+'" style="cursor:pointer;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid '+(on?'var(--gold)':'var(--line)')+';color:'+(on?'var(--gold)':'var(--muted)')+';background:'+(on?'#241c0e':'none')+'">'+escC(s9)+'</span>'; }).join(''))
     +'<span data-scadd="1" style="cursor:pointer;font-size:11.5px;padding:4px 10px;border-radius:999px;border:1px dashed var(--line);color:var(--dim)">'+(LANG==='tr'?'+ alternatif':'+ alternative')+'</span>';
   el.querySelectorAll('[data-sc]').forEach(x=>x.onpointerdown=ev=>{ ev.preventDefault(); pickCoffee(x.dataset.sc); });
-  const ad=el.querySelector('[data-scadd]'); if(ad) ad.onpointerdown=ev=>{ ev.preventDefault(); const b2=beanOf((cName.value||'').trim().toLowerCase()); editName(); cName.value=b2+' ('; try{ cName.setSelectionRange(cName.value.length,cName.value.length); }catch(e){} };
+  const ad=el.querySelector('[data-scadd]'); if(ad) ad.onpointerdown=ev=>{ ev.preventDefault(); altOpen(); };
 }
 // v08-10h: pickCoffee finally EXISTS — the style chips and the watch 'fresh' path both
 // called it into the void (silently caught). Sets the name, re-keys the gauge, republishes prep.
@@ -2032,20 +2032,32 @@ function rcNamesSet(n){ try{ cName.value=n; localStorage.setItem('bsCoffee',n); 
 // v08-10i: a coffee enters the book with its ORIGIN or not at all (his law) —
 // the wrist folds the origin word into a country code, so the word must exist.
 const RCORIGINS=['Etiyopya','Kenya','Kolombiya','Brezilya','Guatemala','Kostarika','Honduras','Peru','Ruanda','Burundi','Yemen','Hindistan','Endonezya','Sumatra','Java','Panama','Nikaragua','Salvador','Meksika','Tanzanya','Uganda','Papua','Vietnam','Ekvador','Bolivya','China'];
+// v08-17i HIS NAME LAW: names carry the country CODE ("ET Yirgacheffe"), one code per origin word (TR+EN).
+const RCCODE={'etiyopya':'ET','ethiopia':'ET','kenya':'KE','kenia':'KE','kolombiya':'CO','colombia':'CO','brezilya':'BR','brazil':'BR','brasil':'BR','guatemala':'GT','kostarika':'CR','costa':'CR','honduras':'HN','peru':'PE','ruanda':'RW','rwanda':'RW','burundi':'BI','yemen':'YE','hindistan':'IN','india':'IN','endonezya':'ID','indonesia':'ID','sumatra':'SM','java':'JV','panama':'PA','nikaragua':'NI','nicaragua':'NI','salvador':'SV','meksika':'MX','mexico':'MX','tanzanya':'TZ','tanzania':'TZ','uganda':'UG','papua':'PG','vietnam':'VN','ekvador':'EC','ecuador':'EC','bolivya':'BO','bolivia':'BO','china':'CN'};
+const RCCODES=(function(){ const st={}; for(const k in RCCODE) st[RCCODE[k]]=1; return Object.keys(st); })();
+function codeName(n){ try{ const v=(n||'').trim(); if(!v) return null; const ws=v.split(/\s+/);
+  const w1=(ws[0]||'').toLowerCase();
+  if(RCCODE[w1]) return RCCODE[w1]+(ws.length>1?(' '+ws.slice(1).join(' ')):'');
+  return null; }catch(e9){ return null; } }
 const RCKNOWN=(function(){ const s={}; RCORIGINS.forEach(o=>s[o.toLowerCase()]=1);
-  ['ethiopia','kenia','colombia','brazil','brasil','costa','india','indonesia','mexico','tanzania','ecuador','bolivia','rwanda','nicaragua'].forEach(o=>s[o]=1); return s; })();
+  ['ethiopia','kenia','colombia','brazil','brasil','costa','india','indonesia','mexico','tanzania','ecuador','bolivia','rwanda','nicaragua'].forEach(o=>s[o]=1);
+  RCCODES.forEach(c=>s[c.toLowerCase()]=1); return s; })();
 function rcNamesOK(){ const tr=(LANG==='tr'); let v=document.getElementById('rcNameIn').value.trim();
   if(v){ const sel=document.getElementById('rcOriginSel'), o=sel?sel.value:'';
     const w1=(v.split(/\s+/)[0]||'').toLowerCase();
-    if(!RCKNOWN[w1]){ if(o) v=o+' '+v;
-      else { toast(tr?'Önce ülkeyi listeden seç — isim kodsuz giremez':'Pick the origin from the list first — no name enters without its code'); return; } } }
+    if(!RCKNOWN[w1]){ if(o) v=(RCCODE[o.toLowerCase()]||o)+' '+v;
+      else { toast(tr?'Önce ülkeyi listeden seç — isim kodsuz giremez':'Pick the origin from the list first — no name enters without its code'); return; } }
+    else { const cv=codeName(v); if(cv) v=cv; } }   // v08-17i: origin words fold to their code on entry
   rcNamesSet(v); }
 function rcNamesOpen(){ try{ gdPull(); }catch(e){}
   const tr=(LANG==='tr');
   const L=gdRecipes().filter(r=>r&&r.active!==false).sort((a,b)=>((a.sortOrder==null?9e9:a.sortOrder)-(b.sortOrder==null?9e9:b.sortOrder)));
   // v08-17a UNIFORM LIST (his order): one well for every surface — recipe book first, then own mapped
   // coffees missing from the book (newest first, display name if saved), then account cloud names.
-  const seen9={}; const see9=n9=>{ const kk=(n9||'').trim().toLowerCase(); if(!kk) return; seen9[kk]=1; const bb=(beanOf(kk)||'').trim().toLowerCase(); if(bb) seen9[bb]=1; };
+  const seen9={}; const see9=n9=>{ const kk=(n9||'').trim().toLowerCase(); if(!kk) return; seen9[kk]=1;
+    const bb=(beanOf(kk)||'').trim().toLowerCase(); if(bb) seen9[bb]=1;
+    const ck=(codeName(kk)||'').toLowerCase(); if(ck) seen9[ck]=1;
+    const cb=(codeName(bb)||'').toLowerCase(); if(cb) seen9[cb]=1; };   // v08-17i: code forms count as seen — no duplicate rows while recipe renames land
   L.forEach(r=>see9(r.name));
   const m9=calMap();
   const ext9=Object.keys(m9).filter(k9=>k9!=='__house'&&!seen9[k9]);
@@ -2097,13 +2109,49 @@ function fcAgSib(k){ try{ const m=calMap(), b=beanOf(k); if(!b) return null; let
   return best?best.v:null; }catch(e){ return null; } }   // fc_ag is a BEAN constant: the freshest sibling style lends it (his approval 2026-07-27); color MAPS stay per-style
 function calFor(){ const k=(cName.value||'').trim().toLowerCase(); if(!k) return null;
   const m=calMap(); if(m[k]) return m[k];
-  const b=(beanOf(k)||'').trim().toLowerCase(); return (b&&b!==k&&m[b])?m[b]:null; }   // v08-17h: styles drink from the bean's shared map
+  const b=(beanOf(k)||'').trim().toLowerCase();
+  if(b&&m[b]) return m[b];
+  const cb=(codeName(b||k)||'').toLowerCase(); return (cb&&m[cb])?m[cb]:null; }   // v08-17h/i: styles drink from the bean's shared map; origin-worded names find their code-keyed map
+// v08-17i "+ alternatif" (his spec): asks the alternative NAME and its RECIPE, then a book entry
+// "Bean (Alt)" is born — own recipe and drop goal, the bean's shared map. Signed-in only.
+function altOpen(){ try{ const tr=(LANG==='tr');
+  const cur=(cName.value||'').trim(); const bean=beanOf(cur)||cur; if(!bean){ toast(tr?'Önce kahveyi seç.':'Pick the coffee first.'); return; }
+  const cell9='width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 10px;font-size:14px;background:#15100b;color:var(--ink)';
+  $('modalBox').innerHTML='<h1 style="margin:0 0 4px;font-size:17px">'+escC(bean)+' · '+(tr?'alternatif':'alternative')+'</h1>'
+   +'<div class="hint" style="font-size:11px;margin-bottom:8px">'+(tr?'Aynı çekirdek, aynı öğrenilmişler — sadece reçetesi ve düşüş hedefi kendine ait.':'Same bean, same learning — only its recipe and drop goal are its own.')+'</div>'
+   +'<label style="font-size:11px;color:var(--muted)">'+(tr?'alternatif adı':'alternative name')+'</label>'
+   +'<input id="altNm" placeholder="BitterSweet" style="'+cell9+';margin:3px 0 8px">'
+   +'<label style="font-size:11px;color:var(--muted)">Bullet '+(tr?'reçetesi':'recipe')+'</label>'
+   +'<input id="altBu" placeholder="DROP B1 · -P2 tarçında" style="'+cell9+';margin:3px 0 8px">'
+   +'<label style="font-size:11px;color:var(--muted)">HSR15 '+(tr?'reçetesi':'recipe')+'</label>'
+   +'<input id="altHs" placeholder="-" style="'+cell9+';margin:3px 0 8px">'
+   +'<label style="font-size:11px;color:var(--muted)">'+(tr?'not':'note')+'</label>'
+   +'<input id="altNo" style="'+cell9+';margin:3px 0 10px">'
+   +'<button class="pm" style="background:var(--accent2);color:#fff;border:none" onclick="altGo()">'+(tr?'Alternatifi ekle':'Add the alternative')+'</button>'
+   +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Vazgeç':'Cancel')+'</button>';
+  $('modal').style.display='flex'; const i9=$('altNm'); if(i9) i9.focus();
+}catch(e9){} }
+async function altGo(){ try{ const tr=(LANG==='tr');
+  const cur=(cName.value||'').trim(); const bean=beanOf(cur)||cur;
+  const alt=($('altNm')&&$('altNm').value||'').trim(); if(!alt){ toast(tr?'Alternatif adı gerek.':'The alternative needs a name.'); return; }
+  const nm=bean+' ('+alt+')';
+  if(!SB){ toast(tr?'Çevrimdışı: eklenemedi.':'Offline: not added.'); return; }
+  const u=await cloudStatus(); if(!u){ toast(tr?"Önce Guide'da giriş yap.":'Sign in via the Guide first.'); return; }
+  const bu=($('altBu')&&$('altBu').value||'').trim()||'-', hs=($('altHs')&&$('altHs').value||'').trim()||'-', no=($('altNo')&&$('altNo').value||'').trim();
+  const {data,error}=await SB.from('recipes').insert({name:nm,match:[nm.toLowerCase()],bullet:bu,hsr:hs,note:no,active:true,sort_order:null}).select().single();
+  if(error){ toast('hata: '+error.message); return; }
+  gdCachePatch(data); $('modal').style.display='none';
+  cName.value=nm; localStorage.setItem('bsCoffee',nm);
+  try{ renderNameplate(); renderRcRow(); }catch(e9){}
+  toast(tr?(nm+' eklendi — çekirdeğin öğrenilmişleri ortak.'):(nm+' added — the bean\'s learning is shared.'));
+}catch(e9){ toast('hata'); } }
 // ---- v08-17a MAPPED-MARK + PACE-V2 (rebased onto 11l after the 08-15 working-tree clobber) ----
 // mark states: own map (his measured drop agtron, gold) · communal (dashed bell: the skeleton travels,
 // the number does not — cross-universe color doesn't travel, his law 08-15) · none (eşlenmemiş: an invitation)
 function mapMark(name){ try{ const k=(name||'').trim().toLowerCase(); if(!k) return {st:'none'};
   const m0=calMap(); let e=m0[k];
-  if(!e){ const b0=(beanOf(k)||'').trim().toLowerCase(); if(b0&&b0!==k) e=m0[b0]; }   // v08-17h: styles share the bean's mark
+  if(!e){ const b0=(beanOf(k)||'').trim().toLowerCase(); if(b0&&b0!==k) e=m0[b0];
+    if(!e){ const c0=(codeName(b0||k)||'').toLowerCase(); if(c0) e=m0[c0]; } }   // v08-17h/i: bean, then its code form
   if(!e) return {st:'none'};
   if(e.communal) return {st:'comm'};
   if(isFinite(e.agtron)) return {st:'own', ag:Math.round(e.agtron), n:((e.hist||[]).length)||1};
@@ -2220,6 +2268,22 @@ async function cloudRenameOne(oldK,newK){ try{ if(!SB) return; const u=await clo
   });
   if(moved){ localStorage.setItem('bsCal',JSON.stringify(m));
     try{ toast(LANG==='tr'?('Alternatifler çekirdekte birleşti ('+moved+').'):('Alternatives merged under their bean ('+moved+').')); }catch(e8){} }
+}catch(e9){} })();
+// v08-17i NAME MIGRATION (his order): origin words become their country code — "Etiyopya Yirgacheffe" → "ET Yirgacheffe".
+// Local maps rename via renameMapKey (merge-safe, cloud follows). Recipe book rows rename via SB (best-effort,
+// idempotent: reruns while origin-worded names remain, e.g. after an offline boot).
+(function(){ try{ let n8=0;
+  Object.keys(calMap()).filter(k8=>k8!=='__house').forEach(k8=>{
+    const e8=calMap()[k8]; if(!e8) return;
+    const disp8=e8.disp||k8; const cd8=codeName(disp8);
+    if(cd8&&cd8.toLowerCase()!==k8){ const r8=renameMapKey(k8,cd8); if(r8&&r8.ok) n8++; } });
+  if(n8){ try{ toast(LANG==='tr'?('İsimler ülke koduna taşındı ('+n8+').'):('Names moved to country codes ('+n8+').')); }catch(e8){} }
+  (async()=>{ try{ if(!SB) return; const u8=await cloudStatus(); if(!u8) return;
+    const rows8=gdCacheGet(); for(const r8 of rows8){ if(!r8||!r8.id||!r8.name) continue;
+      const cd8=codeName(r8.name); if(!cd8||cd8===r8.name) continue;
+      const {data:d8,error:er8}=await SB.from('recipes').update({name:cd8}).eq('id',r8.id).select().single();
+      if(!er8&&d8){ gdCachePatch(d8); } }
+  }catch(e8){} })();
 }catch(e9){} })();
 // ---- recipe rows: rename + delete, synced to the account's recipe book (the Guide's jar, same session) ----
 let RRNM=null;
@@ -2811,7 +2875,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17h';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17i';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -3184,7 +3248,7 @@ function rcTableOpen(){ try{ gdPull(); }catch(e){}
      +'<td><button class="rcTd" title="'+(tr?'sil':'delete')+'" style="width:auto;padding:6px 9px;font-size:13px;background:none;border:1px solid var(--line);border-radius:7px;color:var(--muted);cursor:pointer">&#128465;</button></td>'
      +'</tr>').join(''):'<tr><td colspan="6" class="hint">'+(tr?'Reçete yok':'No recipes yet')+'</td></tr>')
    +'</table></div>'
-   +'<div style="display:flex;gap:6px;margin-top:10px"><input id="rcNewName" placeholder="'+(tr?'yeni reçete adı':'new recipe name')+'" style="flex:1;min-width:0;'+cell+'"><button class="pm" id="rcNewGo" style="width:auto;padding:0 14px;font-size:13px;background:var(--accent2);color:#fff;border:none">'+(tr?'Ekle':'Add')+'</button></div>'
+   +'<div style="display:flex;gap:6px;margin-top:10px"><select id="rcNewOrigin" style="width:30%;min-width:0;'+cell+'"><option value="">'+(tr?'ülke…':'origin…')+'</option>'+RCORIGINS.map(o=>'<option>'+o+'</option>').join('')+'</select><input id="rcNewName" placeholder="'+(tr?'yeni reçete adı':'new recipe name')+'" style="flex:1;min-width:0;'+cell+'"><button class="pm" id="rcNewGo" style="width:auto;padding:0 14px;font-size:13px;background:var(--accent2);color:#fff;border:none">'+(tr?'Ekle':'Add')+'</button></div>'
    +'<button style="margin-top:10px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modalBox\').classList.remove(\'wide\');document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Kapat':'Close')+'</button>';
   $('modal').style.display='flex';
   $('modalBox').querySelectorAll('tr[data-i]').forEach(row=>{ const r=L[+row.dataset.i]; const sb=row.querySelector('.rcTs'); if(!sb) return;
@@ -3208,7 +3272,11 @@ function rcTableOpen(){ try{ gdPull(); }catch(e){}
         gdCacheSet(gdCacheGet().filter(x9=>x9&&x9.id!==r.id));
         toast(tr?(r.name+' silindi'):(r.name+' deleted')); rcTableOpen();
       }catch(e){ toast('hata'); db9.disabled=false; } }; });
-  const ng=$('rcNewGo'); if(ng) ng.onclick=async()=>{ const nm=($('rcNewName').value||'').trim(); if(!nm) return;
+  const ng=$('rcNewGo'); if(ng) ng.onclick=async()=>{ let nm=($('rcNewName').value||'').trim(); if(!nm) return;
+    { const o=($('rcNewOrigin')||{}).value||''; const w1=(nm.split(/\s+/)[0]||'').toLowerCase();   // v08-17i: no name enters without its country
+      if(!RCKNOWN[w1]){ if(o) nm=(RCCODE[o.toLowerCase()]||o)+' '+nm;
+        else { toast(tr?'Önce ülkeyi listeden seç — isim kodsuz giremez':'Pick the origin from the list first — no name enters without its code'); return; } }
+      else { const cv=codeName(nm); if(cv) nm=cv; } }
     if(!SB){ toast(tr?'Çevrimdışı':'Offline'); return; }
     try{ const {data,error}=await SB.from('recipes').insert({name:nm,match:[nm.toLowerCase()],bullet:'-',hsr:'-',note:'',active:true,sort_order:null}).select().single();
       if(error){ toast('hata: '+error.message); } else { gdCachePatch(data); rcTableOpen(); } }catch(e){ toast('hata'); } }; }
