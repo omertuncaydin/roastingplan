@@ -609,7 +609,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-17a</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-17b</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1111,6 +1111,22 @@ function gMapMarkTag(mk){ const tr9=(typeof LANG!=='undefined'&&LANG==='tr');
   if(mk.st==='own') return ' <span style="font-size:10px;color:var(--muted)">'+mk.n+' '+(tr9?'öğrenilmiş':'learned')+'</span> <span style="display:inline-block;font-size:11px;font-weight:800;color:#1a1410;background:var(--gold);border-radius:6px;padding:1px 6px;vertical-align:1px">'+mk.ag+'</span>';
   if(mk.st==='comm') return ' <span style="display:inline-block;border:1.5px dashed var(--gold);border-radius:6px;padding:0 5px;vertical-align:1px;opacity:.85"><svg width="16" height="9" viewBox="0 0 22 12" style="vertical-align:-1px"><path d="M1 11 Q7 11 9 5 Q11 -1 13 5 Q15 11 21 11" fill="none" stroke="#e6c14b" stroke-width="2" stroke-linecap="round"/></svg></span>';
   return ' <span style="display:inline-block;font-size:10px;font-weight:700;color:var(--muted);border:1px dashed var(--line);border-radius:6px;padding:0 6px;vertical-align:1px">'+(tr9?'eşlenmemiş':'unmapped')+'</span>'; }
+async function gMapFollowRename(oldName,newName){ try{   // v08-17b: lessons follow the recipe's new name; cloud row moves too
+  const ok=(oldName||'').trim().toLowerCase(), nk=(newName||'').trim().toLowerCase(); if(!ok||!nk||ok===nk) return;
+  const m=JSON.parse(localStorage.getItem('bsCal')||'{}');
+  if(!m[ok]||m[nk]) return;   // nothing to carry, or target occupied — no silent merges
+  const e=m[ok]; e.disp=newName; if(e.src) e.src=nk; m[nk]=e; delete m[ok];
+  if(m['__house']&&m['__house'].src===ok){ m['__house']={...e}; }
+  localStorage.setItem('bsCal',JSON.stringify(m));
+  try{ const b=JSON.parse(localStorage.getItem('bsBadge')||'{}'); if(b[ok]){ b[nk]=b[ok]; delete b[ok]; localStorage.setItem('bsBadge',JSON.stringify(b)); } }catch(e2){}
+  try{ if((localStorage.getItem('bsCoffee')||'').trim().toLowerCase()===ok) localStorage.setItem('bsCoffee',newName); }catch(e2){}
+  if(sb&&MYUID){ try{
+    let b2={}; try{ b2=JSON.parse(localStorage.getItem('bsBadge')||'{}')[nk]||{}; }catch(e3){}
+    await sb.from('coffees').upsert({ owner:MYUID, name:nk, badge:b2, green:{moisture:e.moist||null, aw:e.aw||null, process:e.proc||null}, map:e },{onConflict:'owner,name'});
+    await sb.from('coffees').delete().eq('owner',MYUID).eq('name',ok);
+  }catch(e2){} }
+  try{ renderRecipes(); }catch(e2){}
+}catch(e9){} }
 function renderRecipes(){ const eb=document.getElementById('exportBtn'); if(eb) eb.style.display=IS_ADMIN?'':'none';
   const el=document.getElementById('rlist'); el.innerHTML=''; const list=getRecipes();
   list.forEach((r,i)=>{ const d=document.createElement('div'); d.className='ritem'; d.dataset.idx=i;
@@ -1161,9 +1177,11 @@ function closeForm(){ document.getElementById('rform').classList.add('hide'); }
 async function saveRecipe(){ if(!canSave('roast')){ alert(enrollPrompt('recipes')); return; } const name=rfName.value.trim(); if(!name){alert('Name required');return;}
   const rec={name, match:rfMatch.value.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean), bullet:rfBullet.value.trim(), hsr:rfHsr.value.trim()||'-', note:rfNote.value.trim(), active:rfActive.checked};
   if(!rec.match.length) rec.match=[name.toLowerCase()];
+  const oldName9=(editIdx>=0&&RECIPES[editIdx])?RECIPES[editIdx].name:null;   // v08-17b: a rename must carry its map — silent renames were manufacturing name-drift
   if(editIdx>=0){ rec.id=RECIPES[editIdx].id; rec.sortOrder=RECIPES[editIdx].sortOrder; } else { rec.sortOrder=RECIPES.length; }
   const saved=await upsertRecipe(rec);
   if(editIdx>=0) RECIPES[editIdx]=saved||rec; else RECIPES.push(saved||rec);
+  if(oldName9&&oldName9.trim().toLowerCase()!==name.trim().toLowerCase()){ try{ gMapFollowRename(oldName9,name); }catch(e9){} }
   cacheRecipes(); await ensureOrder();
   if(!saved && sb) alert('Saved on this device only - sync failed (offline?). Re-save when back online.');
   closeForm(); renderRecipes(); buildBeans();

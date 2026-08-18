@@ -2049,7 +2049,7 @@ function rcNamesOpen(){ try{ gdPull(); }catch(e){}
   const m9=calMap();
   const ext9=Object.keys(m9).filter(k9=>k9!=='__house'&&!seen9[k9]);
   ext9.sort((a,b)=>String((m9[b]||{}).date||'').localeCompare(String((m9[a]||{}).date||'')));
-  const LX=ext9.map(k9=>({name:((m9[k9]&&m9[k9].disp)||k9)}));
+  const LX=ext9.map(k9=>({name:((m9[k9]&&m9[k9].disp)||k9), mx:k9}));   // mx = renameable map key (v08-17d)
   ext9.forEach(k9=>{ seen9[k9]=1; });
   try{ (typeof CLOUDNAMES!=='undefined'?CLOUDNAMES:[]).slice().sort().forEach(n9=>{ const k9=(n9||'').trim().toLowerCase(); if(k9&&!seen9[k9]){ seen9[k9]=1; LX.push({name:n9}); } }); }catch(e9){}
   const LR=L.concat(LX);
@@ -2058,7 +2058,7 @@ function rcNamesOpen(){ try{ gdPull(); }catch(e){}
    +'<input id="rcNameIn" value="'+String(cName.value||'').replace(/"/g,'&quot;')+'" placeholder="'+(tr?'ya da yeni isim yaz':'or type a new name')+'" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:15px;background:#15100b;color:var(--ink)">'
    +'<button class="pm" style="width:auto;padding:0 16px;font-size:14px;background:var(--accent2);color:#fff;border:none" onclick="rcNamesOK()">OK</button></div>'
    +(LR.length?(LR.map(r=>{ const mk=mapMark(r.name); const sec=mk.st==='own'?(String(mk.n||0)+' '+(tr?'öğrenilmiş':'learned')):(mk.st==='comm'?(tr?'ödünç ses':'borrowed sound'):'');
-      return '<div data-rn="'+escC(r.name)+'" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer;font-size:15px"><span>'+escC(r.name)+'</span><span style="display:flex;align-items:baseline;gap:7px">'+(sec?('<span style="font-size:10.5px;color:var(--muted)">'+sec+'</span>'):'')+mapMarkTag(mk)+'</span></div>'; }).join('')
+      return '<div data-rn="'+escC(r.name)+'" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer;font-size:15px"><span>'+escC(r.name)+(r.mx?(' <span data-mrn="'+escC(r.mx)+'" style="color:var(--accent);font-size:12px;cursor:pointer;padding:0 4px">&#9998;</span>'):'')+'</span><span style="display:flex;align-items:baseline;gap:7px">'+(sec?('<span style="font-size:10.5px;color:var(--muted)">'+sec+'</span>'):'')+mapMarkTag(mk)+'</span></div>'; }).join('')
       +(function(){ let mo=0,mc=0; LR.forEach(r2=>{ const s9=mapMark(r2.name).st; if(s9==='own') mo++; else if(s9==='comm') mc++; });
         return '<div style="border-top:1px solid var(--line);margin-top:2px;padding-top:7px;font-size:11px;color:var(--muted);text-align:center">'+(tr?(LR.length+' kahveden '+mo+' eşli'+(mc?(' · '+mc+' ödünç'):'')):(mo+' of '+LR.length+' mapped'+(mc?(' · '+mc+' borrowed'):'')))+'</div>'; })()):('<div class="hint">'+(tr?'Reçete yok':'No recipes yet')+'</div>'))
    +'<button style="margin-top:10px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Kapat':'Close')+'</button>';
@@ -2066,7 +2066,8 @@ function rcNamesOpen(){ try{ gdPull(); }catch(e){}
   try{ const inp=$('rcNameIn'); inp.addEventListener('keydown',e=>{ if(e.key==='Enter') rcNamesOK(); });
     inp.addEventListener('input',()=>{ const q=inp.value.trim().toLowerCase();
       $('modalBox').querySelectorAll('[data-rn]').forEach(x=>{ x.style.display=(!q||x.dataset.rn.toLowerCase().includes(q))?'flex':'none'; }); }); }catch(e){}
-  $('modalBox').querySelectorAll('[data-rn]').forEach(x=>x.onclick=()=>rcNamesSet(x.dataset.rn)); }
+  $('modalBox').querySelectorAll('[data-rn]').forEach(x=>x.onclick=()=>rcNamesSet(x.dataset.rn));
+  $('modalBox').querySelectorAll('[data-mrn]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); mapRenameUI(x); }; }); }
 function closeName(){ { let v9=(cName.value||'').trim();   // 'bean (bittersweet' -> auto ')' ; abandoned 'bean (' -> stripped
     if(/\([^)]+$/.test(v9)) cName.value=v9+')'; else if(/\($/.test(v9)) cName.value=v9.slice(0,-1).trim(); }
   $('nameEdit').style.display='none'; $('npWrap').style.display='block'; renderNameplate(); try{ renderRcRow(); }catch(e){} }
@@ -2118,6 +2119,35 @@ function pace2(cal,v,a0){ const hasB1=!!(LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==
   if(hasB1&&PACE2LOCK) return PACE2LOCK;
   const r=pace2At(cal,v,a0); if(!r) return hasB1?PACE2LOCK:null;
   if(hasB1) PACE2LOCK=r; return r; }
+// ---- v08-17d RENAME: the name section of a map-owned row is editable; the lessons follow the name.
+// No origin-law gate on renames (corrections/alignments, not new entries — products like Türk Kahvesi must stay reachable).
+// No silent merges: a taken target name refuses. Cloud follows: upsert new row, delete old row (single writer stays the human act).
+let MRNKEY=null;
+function mapRenameUI(el){ try{ const oldK=el.dataset.mrn, m=calMap(), e=m[oldK]; if(!e) return; MRNKEY=oldK;
+  const row=el.closest('[data-rn]'); if(!row) return; row.onclick=null; row.style.cursor='default';
+  row.innerHTML='<input id="mrnIn" value="'+String(e.disp||oldK).replace(/"/g,'&quot;')+'" style="flex:1;min-width:0;border:1px solid var(--gold);border-radius:8px;padding:8px 10px;font-size:14px;background:#15100b;color:var(--ink)">'
+    +'<button class="pm" style="width:auto;padding:6px 12px;font-size:13px;background:var(--accent2);color:#fff;border:none;border-radius:8px" onclick="mapRenameGo()">OK</button>'
+    +'<button style="width:auto;padding:6px 10px;font-size:12px;background:var(--panel2);border:1px solid var(--line);border-radius:8px" onclick="MRNKEY=null;rcNamesOpen()">&times;</button>';
+  const i9=$('mrnIn'); i9.focus(); i9.addEventListener('keydown',ev=>{ if(ev.key==='Enter') mapRenameGo(); });
+}catch(e9){} }
+function mapRenameGo(){ try{ const tr=(LANG==='tr'); if(!MRNKEY) return;
+  const nv=($('mrnIn')&&$('mrnIn').value||'').trim(); const nk=nv.toLowerCase();
+  if(!nv||nk===MRNKEY){ MRNKEY=null; rcNamesOpen(); return; }
+  const m=calMap(); if(m[nk]){ toast(tr?'Bu isimde bir harita zaten var.':'A map with this name already exists.'); return; }
+  const e=m[MRNKEY]; if(!e){ MRNKEY=null; rcNamesOpen(); return; }
+  const oldK=MRNKEY; e.disp=nv; if(e.src) e.src=nk; m[nk]=e; delete m[oldK];
+  if(m['__house']&&m['__house'].src===oldK){ const h={...e}; m['__house']=h; }
+  localStorage.setItem('bsCal',JSON.stringify(m));
+  try{ const b=badgeMap(); if(b[oldK]){ b[nk]=b[oldK]; delete b[oldK]; localStorage.setItem('bsBadge',JSON.stringify(b)); } }catch(e9){}
+  try{ if((localStorage.getItem('bsCoffee')||'').trim().toLowerCase()===oldK){ cName.value=nv; localStorage.setItem('bsCoffee',nv); renderNameplate(); } }catch(e9){}
+  try{ cloudRenameOne(oldK,nk); }catch(e9){}
+  toast(tr?'İsim taşındı; öğrenilmişler yeni adında.':'Renamed; the lessons follow the name.');
+  MRNKEY=null; rcNamesOpen();
+}catch(e9){} }
+async function cloudRenameOne(oldK,newK){ try{ if(!SB) return; const u=await cloudStatus(); if(!u||!planActive()) return;
+  await cloudUpsertOne(newK);
+  await SB.from('coffees').delete().eq('owner',u.id).eq('name',oldK);
+}catch(e9){} }
 // confirmed A0: first crack that is followed by >=2 more within 30s (a lone clank cannot own the anchor)
 function effA0(v){ for(let i=0;i<v.length-2;i++){ if(v[i+2].t-v[i].t<=EP.FOLLOW) return v[i].t; } return v.length?v[0].t:0; }   // follower window: Ömer's field data, fast roasts 5-10s, slow 20-30s
 // learned seconds-per-Agtron slope: least squares over a coffee's mapped history, else pooled house, else 4
@@ -2665,7 +2695,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17c';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17d';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
