@@ -2140,7 +2140,7 @@ function altOpen(){ try{ const tr=(LANG==='tr');
    +'<input id="altHs" placeholder="-" style="'+cell9+';margin:3px 0 8px">'
    +'<label style="font-size:11px;color:var(--muted)">'+(tr?'not':'note')+'</label>'
    +'<input id="altNo" style="'+cell9+';margin:3px 0 10px">'
-   +'<button class="pm" style="background:var(--accent2);color:#fff;border:none" onclick="altGo()">'+(tr?'Alternatifi ekle':'Add the alternative')+'</button>'
+   +'<button style="width:100%;padding:12px 0;font-size:15px;font-weight:700;border-radius:10px;background:var(--accent2);color:#fff;border:none;cursor:pointer" onclick="altGo()">'+(tr?'Alternatifi ekle':'Add the alternative')+'</button>'
    +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Vazgeç':'Cancel')+'</button>';
   $('modal').style.display='flex'; const i9=$('altNm'); if(i9) i9.focus();
 }catch(e9){} }
@@ -2305,6 +2305,17 @@ async function cloudRenameOne(oldK,newK){ try{ if(!SB) return; const u=await clo
       if(!er8&&d8){ gdCachePatch(d8); } }
   }catch(e8){} })();
 }catch(e9){} })();
+// v08-17l: legacy colon alternatives become paren alternatives — "Yaye: Cocoa" → "Yaye (Cocoa)" (his order,
+// matching the Yirgacheffe example). Recipe rows rename via SB best-effort, idempotent; target-name collisions skipped.
+(function(){ (async()=>{ try{ if(!SB) return; const u6=await cloudStatus(); if(!u6) return;
+  const rows6=gdCacheGet();
+  for(const r6 of rows6){ if(!r6||!r6.id||!r6.name) continue;
+    const m6=r6.name.match(/^(.+?):\s+(.+)$/); if(!m6) continue;
+    const nn6=m6[1].trim()+' ('+m6[2].trim()+')';
+    if(rows6.some(x6=>x6&&x6.name===nn6)) continue;
+    const {data:d6,error:er6}=await SB.from('recipes').update({name:nn6}).eq('id',r6.id).select().single();
+    if(!er6&&d6) gdCachePatch(d6); }
+}catch(e6){} })(); })();
 // v08-17j HIS ORDER: "all rumudamo are the same — merge and say ET Rumudamo." Map folds (merge-safe), recipe renames.
 (function(){ try{
   if(calMap()['rumudamo']){ const r7=renameMapKey('rumudamo','ET Rumudamo'); if(r7&&r7.ok) toast(LANG==='tr'?'Rumudamo birleşti: ET Rumudamo.':'Rumudamo merged: ET Rumudamo.'); }
@@ -2906,7 +2917,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17k';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17l';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -3270,7 +3281,7 @@ function rcTableOpen(){ try{ gdPull(); }catch(e){}
    +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="border-collapse:separate;border-spacing:4px;width:100%;min-width:640px">'
    +'<tr style="font-size:11px;color:var(--muted);text-align:left"><th>'+(tr?'Ad':'Name')+'</th><th>Bullet</th><th>HSR15</th><th>'+(tr?'Not':'Note')+'</th><th>'+(tr?'Aktif':'On')+'</th><th></th><th></th></tr>'
    +(L.length?L.map((r,i)=>'<tr data-i="'+i+'">'
-     +'<td><input class="rcTnm" value="'+escC(r.name)+'" style="'+cell+';font-weight:700;min-width:130px"></td>'
+     +'<td style="white-space:nowrap"><select class="rcTsel" style="width:74px;border:1px solid var(--line);border-radius:7px;background:#15100b;color:var(--ink);padding:7px 2px;font-size:12px"><option value="">'+(tr?'ülke…':'origin…')+'</option>'+RCORIGINS.map(o=>'<option>'+o+'</option>').join('')+'</select> <input class="rcTnm" value="'+escC(r.name)+'" style="'+cell+';font-weight:700;min-width:120px;width:auto;display:inline-block"></td>'
      +'<td><input class="rcTb" value="'+escC(r.bullet||'')+'" style="'+cell+'"></td>'
      +'<td><input class="rcTh" value="'+escC(r.hsr||'')+'" style="'+cell+'"></td>'
      +'<td><input class="rcTn" value="'+escC(r.note||'')+'" style="'+cell+';min-width:90px"></td>'
@@ -3285,7 +3296,12 @@ function rcTableOpen(){ try{ gdPull(); }catch(e){}
   $('modalBox').querySelectorAll('tr[data-i]').forEach(row=>{ const r=L[+row.dataset.i]; const sb=row.querySelector('.rcTs'); if(!sb) return;
     sb.onclick=async()=>{ if(!SB){ toast(tr?'Çevrimdışı: kaydedilemedi':'Offline: not saved'); return; }
       sb.disabled=true; sb.textContent='...';
-      try{ const nm9=((row.querySelector('.rcTnm')||{}).value||'').trim();   // v08-17f: the name cell is editable; the map follows (merge-safe)
+      try{ let nm9=((row.querySelector('.rcTnm')||{}).value||'').trim();   // v08-17f: the name cell is editable; the map follows (merge-safe)
+        { const sel9=((row.querySelector('.rcTsel')||{}).value||'').trim();   // v08-17l: per-row country select — pick Etiyopya on "Killenso" → "ET Killenso"
+          if(sel9&&nm9){ const code9=RCCODE[sel9.toLowerCase()]||sel9; const ws9=nm9.split(/\s+/);
+            const hasC9=(RCCODES.indexOf((ws9[0]||'').toUpperCase())>=0)||!!RCCODE[(ws9[0]||'').toLowerCase()];
+            nm9=code9+' '+(hasC9?ws9.slice(1).join(' '):nm9); }
+          else if(nm9){ const cv9=codeName(nm9); if(cv9) nm9=cv9; } }
         const p={bullet:row.querySelector('.rcTb').value.trim()||'-', hsr:row.querySelector('.rcTh').value.trim()||'-', note:row.querySelector('.rcTn').value.trim(), active:row.querySelector('.rcTa').checked};
         if(nm9&&nm9!==r.name) p.name=nm9;
         const {data,error}=await SB.from('recipes').update(p).eq('id',r.id).select().single();
