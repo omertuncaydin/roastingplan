@@ -1764,7 +1764,7 @@ async function umSync(pull){ try{
   const m=calMap(); let dirty=false;
   const uidNow=(UNI()&&UNI().uid)||'u0';
   for(const k in UMSTAMP){ if(!m[k]){ try{ await SB.from('user_maps').delete().eq('email',u.email).eq('universe_id',uidNow).eq('coffee',k); }catch(e3){} delete UMSTAMP[k]; dirty=true; } }   // local unmap wins: tombstone before pull
-  if(pull){ const {data:rws}=await SB.from('user_maps').select('coffee,cal').eq('universe_id',uidNow);
+  if(pull){ const {data:rws}=await SB.from('user_maps').select('coffee,cal').eq('email',u.email).eq('universe_id',uidNow);   // v08-17p: scope by account too — same-uid universes of OTHER people must never donate maps
     if(Array.isArray(rws)){ let ch=false;
       for(const r2 of rws){ const k=r2.coffee, ce=r2.cal||{}, le=m[k];
         if(!le||((ce.up||0)>(le.up||0))){ m[k]=ce; UMSTAMP[k]=umHash(ce); ch=true; dirty=true; } }
@@ -1788,7 +1788,7 @@ async function uniSync(pull){ try{
   let all={}; try{ all=JSON.parse(localStorage.getItem('bsUniverses')||'{}'); }catch(e2){}
   const cur=UNI(); if(cur&&cur.uid&&!all[cur.uid]){ all[cur.uid]=cur; }   // old installs kept the current one outside the library
   let dirty=false, adopted=false;
-  if(pull){ const {data:rws}=await SB.from('user_universes').select('uid,uni');
+  if(pull){ const {data:rws}=await SB.from('user_universes').select('uid,uni').eq('email',u.email);   // v08-17p: HIS rows only — a foreign universe (e.g. a teacher's) must never ride in on a loose policy
     if(Array.isArray(rws)){ for(const r2 of rws){ const k=r2.uid, ce=r2.uni||{}, le=all[k];
       if(ce&&ce.tomb&&!le) continue;   // v08-17o: a tombstone for something we never had is silence
       if(!le||((ce.up||0)>(le.up||0))){ all[k]=ce; USTAMP[k]=uniHash(ce); dirty=true; } } }
@@ -2978,7 +2978,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17o';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17p';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
