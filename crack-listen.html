@@ -1790,10 +1790,17 @@ async function uniSync(pull){ try{
   let dirty=false, adopted=false;
   if(pull){ const {data:rws}=await SB.from('user_universes').select('uid,uni');
     if(Array.isArray(rws)){ for(const r2 of rws){ const k=r2.uid, ce=r2.uni||{}, le=all[k];
+      if(ce&&ce.tomb&&!le) continue;   // v08-17o: a tombstone for something we never had is silence
       if(!le||((ce.up||0)>(le.up||0))){ all[k]=ce; USTAMP[k]=uniHash(ce); dirty=true; } } }
-    if(!UNI()){ let best=null; for(const k in all){ if(!best||((all[k].up||0)>(best.up||0))) best=all[k]; }
+    for(const k in all){ if(!(all[k]&&all[k].tomb)) continue;   // v08-17o: apply universe tombstones (17m law)
+      const curU=UNI();
+      if(curU&&curU.uid===k){ all[k]=curU; continue; }   // in active use HERE: not remotely deletable; re-pushes below
+      delete all[k]; delete USTAMP[k]; dirty=true;
+      try{ const v9=JSON.parse(localStorage.getItem('bsCalVerse')||'{}'); if(v9[k]!=null){ delete v9[k]; localStorage.setItem('bsCalVerse',JSON.stringify(v9)); } }catch(e9){}
+      try{ const p9=JSON.parse(localStorage.getItem('bsCalPushedVerse')||'{}'); if(p9[k]!=null){ delete p9[k]; localStorage.setItem('bsCalPushedVerse',JSON.stringify(p9)); } }catch(e9){} }
+    if(!UNI()){ let best=null; for(const k in all){ if(all[k]&&all[k].tomb) continue; if(!best||((all[k].up||0)>(best.up||0))) best=all[k]; }
       if(best){ localStorage.setItem('bsUniverse',JSON.stringify(best)); adopted=true; } } }
-  for(const k in all){ const h=uniHash(all[k]);
+  for(const k in all){ if(all[k]&&all[k].tomb) continue; const h=uniHash(all[k]);
     if(USTAMP[k]!==h){ all[k].up=Date.now();
       const {error}=await SB.from('user_universes').upsert({email:u.email,uid:k,uni:all[k]});
       if(!error){ USTAMP[k]=h; dirty=true; } } }
@@ -2570,7 +2577,7 @@ function uniOpen(force){ try{
   try{ const all=JSON.parse(localStorage.getItem('bsUniverses')||'{}'); const cur=UNI();
     if(cur&&!all[cur.uid]) all[cur.uid]=cur;
     $('uniList').innerHTML=Object.keys(all).map(id=>{ const e2=all[id], on=cur&&cur.uid===id;
-      return '<span '+(on?'':'onclick="uniPick(\''+id+'\')" ')+'style="cursor:'+(on?'default':'pointer')+';border:1px solid '+(on?'var(--gold)':'var(--line)')+';color:'+(on?'var(--gold)':'var(--muted)')+';border-radius:999px;padding:3px 11px;font-size:11.5px;font-weight:700">'+(e2.name||e2.meter||id)+' \u00b7 A0 '+(e2.a0!=null?Math.round(e2.a0):'?')+(e2.guessed?'~':'')+'</span>'; }).join('')
+      return '<span '+(on?'':'onclick="uniPick(\''+id+'\')" ')+'style="cursor:'+(on?'default':'pointer')+';border:1px solid '+(on?'var(--gold)':'var(--line)')+';color:'+(on?'var(--gold)':'var(--muted)')+';border-radius:999px;padding:3px 11px;font-size:11.5px;font-weight:700">'+(e2.name||e2.meter||id)+' \u00b7 A0 '+(e2.a0!=null?Math.round(e2.a0):'?')+(e2.guessed?'~':'')+'</span>'+(on?'':'<span data-udel="'+id+'" onclick="uniDeleteGo(this.dataset.udel)" title="'+(tr?'sil':'delete')+'" style="cursor:pointer;color:var(--muted);font-size:12px;margin-left:-4px">&#128465;</span>'); }).join('')
       +'<span onclick="uniNew()" style="cursor:pointer;border:1px dashed var(--accent);color:var(--accent);border-radius:999px;padding:3px 11px;font-size:11.5px;font-weight:700">+ '+(tr?'yeni evren':'new universe')+'</span>';
   }catch(e2){ $('uniList').innerHTML=''; }
   $('uniModal').style.display='flex';
@@ -2606,6 +2613,29 @@ function uniPick(uid){ try{
   try{ updateGauge(); updateMapBtn(); renderNameChips(); }catch(e2){}
   try{ umSync(true); }catch(e2){}
 }catch(e){} }
+// v08-17o (his order): universes are deletable from the chip menu. The active one is protected;
+// the delete also parks a TOMBSTONE row on the account so other devices drop their copy at next pull
+// (same convergence law as 17m coffees). A universe ACTIVE on another device survives there and re-pushes.
+function uniDeleteGo(uid){ try{
+  const tr=(LANG==='tr');
+  const all=JSON.parse(localStorage.getItem('bsUniverses')||'{}');
+  const e2=all[uid]; if(!e2) return;
+  const cur=UNI(); if(cur&&cur.uid===uid){ toast(tr?'Aktif evren silinemez: önce başka evrene geç.':'The active universe cannot be deleted: switch first.'); return; }
+  let verse={}, nParked=0;
+  try{ verse=JSON.parse(localStorage.getItem('bsCalVerse')||'{}'); nParked=Object.keys(verse[uid]||{}).filter(k9=>k9!=='__house').length; }catch(e9){}
+  if(!confirm((tr?('«'+(e2.name||e2.meter||uid)+'» evreni silinsin mi?\n'):('Delete the universe “'+(e2.name||e2.meter||uid)+'”?\n'))
+    +(nParked?(tr?('İçinde park edilmiş '+nParked+' kahve haritası da silinir.\n'):('Its '+nParked+' parked coffee maps are deleted with it.\n')):'')
+    +(tr?'Geri alınamaz.':'Cannot be undone.'))) return;
+  delete all[uid]; localStorage.setItem('bsUniverses',JSON.stringify(all));
+  try{ if(verse[uid]!=null){ delete verse[uid]; localStorage.setItem('bsCalVerse',JSON.stringify(verse)); } }catch(e9){}
+  try{ const pv=JSON.parse(localStorage.getItem('bsCalPushedVerse')||'{}'); if(pv[uid]!=null){ delete pv[uid]; localStorage.setItem('bsCalPushedVerse',JSON.stringify(pv)); } }catch(e9){}
+  try{ delete USTAMP[uid]; localStorage.setItem('bsUniPushed',JSON.stringify(USTAMP)); }catch(e9){}
+  (async()=>{ try{ if(!SB) return; const u9=await cloudUser(); if(!u9||!u9.email) return;
+    await SB.from('user_universes').upsert({email:u9.email,uid:uid,uni:{tomb:true,ts:new Date().toISOString().slice(0,10),up:Date.now()}});
+  }catch(e9){} })();
+  toast(tr?'Evren silindi.':'Universe deleted.');
+  uniOpen(false);
+}catch(e9){} }
 let UNIA0SUG=0;
 function uniA0Log(v){ try{
   if(!isFinite(v)) return;
@@ -2948,7 +2978,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17n';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17o';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
