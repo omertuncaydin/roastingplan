@@ -609,7 +609,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-17e</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-08a</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1098,65 +1098,14 @@ async function ensureOrder(){ RECIPES.sort((a,b)=>((a.active?0:1)-(b.active?0:1)
   let changed=[]; RECIPES.forEach((r,i)=>{ if(r.sortOrder!==i){ r.sortOrder=i; changed.push(r); } });
   if(changed.length){ cacheRecipes(); if(sb){ await Promise.all(changed.filter(r=>r.id).map(r=>sb.from('recipes').update({sort_order:r.sortOrder}).eq('id',r.id))); } } }
 function moveRecipe(i,dir){ const j=i+dir; if(j<0||j>=RECIPES.length) return; const t=RECIPES[i]; RECIPES[i]=RECIPES[j]; RECIPES[j]=t; ensureOrder(); renderRecipes(); buildBeans(); }
-// ---- v08-17a mapped-mark in the recipe book (his order: "also add this feature to recipes") ----
-// Mirrors the Listener's marks and reads the SAME bsCal well (same origin). Own map = gold drop
-// Agtron + learned count · communal = dashed bell, no number (cross-universe color doesn't travel) ·
-// none = eşlenmemiş. Read-only here: the Eşle tap in the Listener stays the single writer.
-function gBeanOf(k){ k=(k||''); const m9=k.match(/^(.*?)\s*\(([^)]+)\)\s*$/); if(m9) return m9[1].trim();
-  const i9=k.indexOf(': '); return i9>0?k.slice(0,i9):k; }
-function gMapMark(name){ try{ const k=(name||'').trim().toLowerCase(); if(!k) return {st:'none'};
-  const m=JSON.parse(localStorage.getItem('bsCal')||'{}'); let e=m[k];
-  if(!e){ const b0=(gBeanOf(k)||'').trim().toLowerCase(); if(b0&&b0!==k) e=m[b0]; }   // v08-17e: styles share the bean's mark
-  if(!e) return {st:'none'};
-  if(e.communal) return {st:'comm'};
-  if(isFinite(e.agtron)) return {st:'own', ag:Math.round(e.agtron), n:((e.hist||[]).length)||1};
-  return {st:'none'}; }catch(e9){ return {st:'none'}; } }
-function gMapMarkTag(mk){ const tr9=(typeof LANG!=='undefined'&&LANG==='tr');
-  if(mk.st==='own') return ' <span style="font-size:10px;color:var(--muted)">'+mk.n+' '+(tr9?'öğrenilmiş':'learned')+'</span> <span style="display:inline-block;font-size:11px;font-weight:800;color:#1a1410;background:var(--gold);border-radius:6px;padding:1px 6px;vertical-align:1px">'+mk.ag+'A</span>';
-  if(mk.st==='comm') return ' <span style="display:inline-block;border:1.5px dashed var(--gold);border-radius:6px;padding:0 5px;vertical-align:1px;opacity:.85"><svg width="16" height="9" viewBox="0 0 22 12" style="vertical-align:-1px"><path d="M1 11 Q7 11 9 5 Q11 -1 13 5 Q15 11 21 11" fill="none" stroke="#e6c14b" stroke-width="2" stroke-linecap="round"/></svg></span>';
-  return ' <span style="display:inline-block;font-size:10px;font-weight:700;color:var(--muted);border:1px dashed var(--line);border-radius:6px;padding:0 6px;vertical-align:1px">'+(tr9?'eşlenmemiş':'unmapped')+'</span>'; }
-async function gMapFollowRename(oldName,newName){ try{   // v08-17b: lessons follow the recipe's new name; cloud row moves too
-  const ok=(oldName||'').trim().toLowerCase(), nk=(newName||'').trim().toLowerCase(); if(!ok||!nk||ok===nk) return;
-  const m=JSON.parse(localStorage.getItem('bsCal')||'{}');
-  if(!m[ok]||m[nk]) return;   // nothing to carry, or target occupied — no silent merges
-  const e=m[ok]; e.disp=newName; if(e.src) e.src=nk; m[nk]=e; delete m[ok];
-  if(m['__house']&&m['__house'].src===ok){ m['__house']={...e}; }
-  localStorage.setItem('bsCal',JSON.stringify(m));
-  try{ const b=JSON.parse(localStorage.getItem('bsBadge')||'{}'); if(b[ok]){ b[nk]=b[ok]; delete b[ok]; localStorage.setItem('bsBadge',JSON.stringify(b)); } }catch(e2){}
-  try{ if((localStorage.getItem('bsCoffee')||'').trim().toLowerCase()===ok) localStorage.setItem('bsCoffee',newName); }catch(e2){}
-  if(sb&&MYUID){ try{
-    let b2={}; try{ b2=JSON.parse(localStorage.getItem('bsBadge')||'{}')[nk]||{}; }catch(e3){}
-    await sb.from('coffees').upsert({ owner:MYUID, name:nk, badge:b2, green:{moisture:e.moist||null, aw:e.aw||null, process:e.proc||null}, map:e },{onConflict:'owner,name'});
-    await sb.from('coffees').delete().eq('owner',MYUID).eq('name',ok);
-  }catch(e2){} }
-  try{ renderRecipes(); }catch(e2){}
-}catch(e9){} }
-// v08-17c: inline ✎ on the recipe name — quick rename without the form; the map follows the name.
-async function gInlineRename(i){ try{ const r=getRecipes()[i]; if(!r) return;
-  const rows=document.querySelectorAll('#rlist .ritem'); const row=rows[i]; if(!row) return;
-  const rn=row.querySelector('.rn'); if(!rn) return;
-  rn.innerHTML='<input id="grnIn" value="'+String(r.name).replace(/"/g,'&quot;')+'" style="width:70%;max-width:260px;border:1px solid var(--gold);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--panel);color:var(--ink)"> '
-    +'<button class="iconbtn" onclick="gInlineRenameGo('+i+')">OK</button> <button class="iconbtn" onclick="renderRecipes()">&times;</button>';
-  const inp=document.getElementById('grnIn'); inp.focus(); inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') gInlineRenameGo(i); });
-}catch(e9){} }
-async function gInlineRenameGo(i){ try{ const r=getRecipes()[i]; if(!r) return;
-  const inp=document.getElementById('grnIn'); const nv=(inp&&inp.value||'').trim();
-  if(!nv||nv===r.name){ renderRecipes(); return; }
-  if(!canSave('roast')){ alert(enrollPrompt('recipes')); renderRecipes(); return; }
-  const oldName9=r.name; const rec={...r, name:nv};
-  const saved=await upsertRecipe(rec); RECIPES[i]=saved||rec; cacheRecipes();
-  try{ gMapFollowRename(oldName9,nv); }catch(e9){}
-  if(!saved&&sb) alert('Saved on this device only - sync failed (offline?).');
-  renderRecipes(); buildBeans();
-}catch(e9){ renderRecipes(); } }
 function renderRecipes(){ const eb=document.getElementById('exportBtn'); if(eb) eb.style.display=IS_ADMIN?'':'none';
   const el=document.getElementById('rlist'); el.innerHTML=''; const list=getRecipes();
   list.forEach((r,i)=>{ const d=document.createElement('div'); d.className='ritem'; d.dataset.idx=i;
     d.innerHTML=`<div style="display:flex;flex-direction:column;gap:3px;align-items:center;margin-right:8px"><span class="grip" draggable="true" title="Drag to reorder">⠿</span><button class="iconbtn mv" data-up="${i}" ${i===0?'disabled':''}>▲</button><button class="iconbtn mv" data-down="${i}" ${i===list.length-1?'disabled':''}>▼</button></div>`+
-      `<div style="flex:1"><div class="rn">${esc(r.name)} <span class="grn" data-grn="${i}" style="cursor:pointer;color:var(--accent);font-size:12px">&#9998;</span> ${r.active?'<span style="color:var(--accent2)">●</span>':'<span style="color:var(--muted)">○</span>'}${gMapMarkTag(gMapMark(r.name))}</div>`+
+      `<div style="flex:1"><div class="rn">${esc(r.name)} ${r.active?'<span style="color:var(--accent2)">●</span>':'<span style="color:var(--muted)">○</span>'}</div>`+
       `<div class="rmeta">B: ${esc(r.bullet||'-')}</div>${r.note?`<div class="rmeta" style="color:var(--warn)">🔔 ${esc(r.note)}</div>`:''}</div>`+
       `<div style="display:flex;gap:4px"><button class="iconbtn" data-e="${i}">Edit</button><button class="iconbtn" data-d="${i}">Del</button></div>`;
-    el.appendChild(d); enableSwipeDelete(d,()=>delRecipeAt(i,false)); });   // v08-17c: every delete warns, swipe included (his order)
+    el.appendChild(d); enableSwipeDelete(d,()=>delRecipeAt(i,true)); });
   el.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>moveRecipe(+b.dataset.up,-1));
   el.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>moveRecipe(+b.dataset.down,1));
   el.querySelectorAll('.grip').forEach(g=>{ const item=g.closest('.ritem');
@@ -1166,7 +1115,6 @@ function renderRecipes(){ const eb=document.getElementById('exportBtn'); if(eb) 
     item.addEventListener('dragover',e=>{ if(dragIdx==null)return; e.preventDefault(); item.classList.add('dropon'); });
     item.addEventListener('dragleave',()=>item.classList.remove('dropon'));
     item.addEventListener('drop',e=>{ e.preventDefault(); item.classList.remove('dropon'); const to=+item.dataset.idx; if(dragIdx==null||to===dragIdx)return; const moved=RECIPES.splice(dragIdx,1)[0]; RECIPES.splice(to,0,moved); ensureOrder(); renderRecipes(); buildBeans(); }); });
-  el.querySelectorAll('[data-grn]').forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); gInlineRename(+b.dataset.grn); });
   el.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>editRecipe(+b.dataset.e));
   el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>delRecipeAt(+b.dataset.d,false));
 }
@@ -1200,11 +1148,9 @@ function closeForm(){ document.getElementById('rform').classList.add('hide'); }
 async function saveRecipe(){ if(!canSave('roast')){ alert(enrollPrompt('recipes')); return; } const name=rfName.value.trim(); if(!name){alert('Name required');return;}
   const rec={name, match:rfMatch.value.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean), bullet:rfBullet.value.trim(), hsr:rfHsr.value.trim()||'-', note:rfNote.value.trim(), active:rfActive.checked};
   if(!rec.match.length) rec.match=[name.toLowerCase()];
-  const oldName9=(editIdx>=0&&RECIPES[editIdx])?RECIPES[editIdx].name:null;   // v08-17b: a rename must carry its map — silent renames were manufacturing name-drift
   if(editIdx>=0){ rec.id=RECIPES[editIdx].id; rec.sortOrder=RECIPES[editIdx].sortOrder; } else { rec.sortOrder=RECIPES.length; }
   const saved=await upsertRecipe(rec);
   if(editIdx>=0) RECIPES[editIdx]=saved||rec; else RECIPES.push(saved||rec);
-  if(oldName9&&oldName9.trim().toLowerCase()!==name.trim().toLowerCase()){ try{ gMapFollowRename(oldName9,name); }catch(e9){} }
   cacheRecipes(); await ensureOrder();
   if(!saved && sb) alert('Saved on this device only - sync failed (offline?). Re-save when back online.');
   closeForm(); renderRecipes(); buildBeans();

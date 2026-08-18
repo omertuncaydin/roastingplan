@@ -2045,13 +2045,14 @@ function rcNamesOpen(){ try{ gdPull(); }catch(e){}
   const L=gdRecipes().filter(r=>r&&r.active!==false).sort((a,b)=>((a.sortOrder==null?9e9:a.sortOrder)-(b.sortOrder==null?9e9:b.sortOrder)));
   // v08-17a UNIFORM LIST (his order): one well for every surface — recipe book first, then own mapped
   // coffees missing from the book (newest first, display name if saved), then account cloud names.
-  const seen9={}; L.forEach(r=>{ seen9[(r.name||'').trim().toLowerCase()]=1; });
+  const seen9={}; const see9=n9=>{ const kk=(n9||'').trim().toLowerCase(); if(!kk) return; seen9[kk]=1; const bb=(beanOf(kk)||'').trim().toLowerCase(); if(bb) seen9[bb]=1; };
+  L.forEach(r=>see9(r.name));
   const m9=calMap();
   const ext9=Object.keys(m9).filter(k9=>k9!=='__house'&&!seen9[k9]);
   ext9.sort((a,b)=>String((m9[b]||{}).date||'').localeCompare(String((m9[a]||{}).date||'')));
   const LX=ext9.map(k9=>({name:((m9[k9]&&m9[k9].disp)||k9), mx:k9}));   // mx = renameable map key (v08-17d)
   ext9.forEach(k9=>{ seen9[k9]=1; });
-  try{ (typeof CLOUDNAMES!=='undefined'?CLOUDNAMES:[]).slice().sort().forEach(n9=>{ const k9=(n9||'').trim().toLowerCase(); if(k9&&!seen9[k9]){ seen9[k9]=1; LX.push({name:n9}); } }); }catch(e9){}
+  try{ (typeof CLOUDNAMES!=='undefined'?CLOUDNAMES:[]).slice().sort().forEach(n9=>{ const k9=(n9||'').trim().toLowerCase(); if(k9&&!seen9[k9]){ see9(n9); LX.push({name:n9, cx:1}); } }); }catch(e9){}
   const LR=L.concat(LX);
   $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:17px">'+(tr?'Kahve seç':'Pick the coffee')+'</h1>'
    +'<div style="display:flex;gap:6px;margin-bottom:6px"><select id="rcOriginSel" style="width:34%;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px 6px;font-size:14px;background:#15100b;color:var(--ink)"><option value="">'+(tr?'ülke…':'origin…')+'</option>'+RCORIGINS.map(o=>'<option>'+o+'</option>').join('')+'</select>'
@@ -2060,7 +2061,8 @@ function rcNamesOpen(){ try{ gdPull(); }catch(e){}
    +(LR.length?(LR.map(r=>{ const mk=mapMark(r.name); const sec=mk.st==='own'?(String(mk.n||0)+' '+(tr?'öğrenilmiş':'learned')):(mk.st==='comm'?(tr?'ödünç ses':'borrowed sound'):'');
       const tools=r.mx
         ?(' <span data-mrn="'+escC(r.mx)+'" style="color:var(--accent);font-size:12px;cursor:pointer;padding:0 4px">&#9998;</span><span data-mdel="'+escC(r.mx)+'" style="color:var(--muted);font-size:12px;cursor:pointer;padding:0 4px">&#128465;</span>')
-        :(' <span data-rrn="'+escC(r.name)+'" style="color:var(--accent);font-size:12px;cursor:pointer;padding:0 4px">&#9998;</span><span data-rdel="'+escC(r.name)+'" style="color:var(--muted);font-size:12px;cursor:pointer;padding:0 4px">&#128465;</span>');
+        :(r.cx?(' <span data-cdel="'+escC(r.name)+'" style="color:var(--muted);font-size:12px;cursor:pointer;padding:0 4px">&#128465;</span>')
+        :(' <span data-rrn="'+escC(r.name)+'" style="color:var(--accent);font-size:12px;cursor:pointer;padding:0 4px">&#9998;</span><span data-rdel="'+escC(r.name)+'" style="color:var(--muted);font-size:12px;cursor:pointer;padding:0 4px">&#128465;</span>'));
       return '<div data-rn="'+escC(r.name)+'" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer;font-size:15px"><span>'+escC(r.name)+tools+'</span><span style="display:flex;align-items:baseline;gap:7px">'+(sec?('<span style="font-size:10.5px;color:var(--muted)">'+sec+'</span>'):'')+mapMarkTag(mk)+'</span></div>'; }).join('')
       +(function(){ let mo=0,mc=0; LR.forEach(r2=>{ const s9=mapMark(r2.name).st; if(s9==='own') mo++; else if(s9==='comm') mc++; });
         return '<div style="border-top:1px solid var(--line);margin-top:2px;padding-top:7px;font-size:11px;color:var(--muted);text-align:center">'+(tr?(LR.length+' kahveden '+mo+' eşli'+(mc?(' · '+mc+' ödünç'):'')):(mo+' of '+LR.length+' mapped'+(mc?(' · '+mc+' borrowed'):'')))+'</div>'; })()):('<div class="hint">'+(tr?'Reçete yok':'No recipes yet')+'</div>'))
@@ -2073,7 +2075,8 @@ function rcNamesOpen(){ try{ gdPull(); }catch(e){}
   $('modalBox').querySelectorAll('[data-mrn]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); mapRenameUI(x); }; });
   $('modalBox').querySelectorAll('[data-rrn]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); rcpRenameUI(x); }; });
   $('modalBox').querySelectorAll('[data-rdel]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); rcpDeleteGo(x); }; });
-  $('modalBox').querySelectorAll('[data-mdel]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); mapDeleteGo(x); }; }); }
+  $('modalBox').querySelectorAll('[data-mdel]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); mapDeleteGo(x); }; });
+  $('modalBox').querySelectorAll('[data-cdel]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); cloudNameDeleteGo(x); }; }); }
 function closeName(){ { let v9=(cName.value||'').trim();   // 'bean (bittersweet' -> auto ')' ; abandoned 'bean (' -> stripped
     if(/\([^)]+$/.test(v9)) cName.value=v9+')'; else if(/\($/.test(v9)) cName.value=v9.slice(0,-1).trim(); }
   $('nameEdit').style.display='none'; $('npWrap').style.display='block'; renderNameplate(); try{ renderRcRow(); }catch(e){} }
@@ -2092,12 +2095,16 @@ function fcAgSib(k){ try{ const m=calMap(), b=beanOf(k); if(!b) return null; let
     const e2=m[kk]; if(!e2||e2.communal) continue;   // a borrowed/community sibling never lends its number (doctrine guard, Opus P2)
     if(isFinite(e2.fc_ag)&&e2.fc_ag>=80&&e2.fc_ag<=140){ const u9=e2.up||0; if(!best||u9>best.u9) best={v:e2.fc_ag,u9:u9}; } }
   return best?best.v:null; }catch(e){ return null; } }   // fc_ag is a BEAN constant: the freshest sibling style lends it (his approval 2026-07-27); color MAPS stay per-style
-function calFor(){ const k=(cName.value||'').trim().toLowerCase(); return k?calMap()[k]:null; }
+function calFor(){ const k=(cName.value||'').trim().toLowerCase(); if(!k) return null;
+  const m=calMap(); if(m[k]) return m[k];
+  const b=(beanOf(k)||'').trim().toLowerCase(); return (b&&b!==k&&m[b])?m[b]:null; }   // v08-17h: styles drink from the bean's shared map
 // ---- v08-17a MAPPED-MARK + PACE-V2 (rebased onto 11l after the 08-15 working-tree clobber) ----
 // mark states: own map (his measured drop agtron, gold) · communal (dashed bell: the skeleton travels,
 // the number does not — cross-universe color doesn't travel, his law 08-15) · none (eşlenmemiş: an invitation)
 function mapMark(name){ try{ const k=(name||'').trim().toLowerCase(); if(!k) return {st:'none'};
-  const e=calMap()[k]; if(!e) return {st:'none'};
+  const m0=calMap(); let e=m0[k];
+  if(!e){ const b0=(beanOf(k)||'').trim().toLowerCase(); if(b0&&b0!==k) e=m0[b0]; }   // v08-17h: styles share the bean's mark
+  if(!e) return {st:'none'};
   if(e.communal) return {st:'comm'};
   if(isFinite(e.agtron)) return {st:'own', ag:Math.round(e.agtron), n:((e.hist||[]).length)||1};
   return {st:'none'}; }catch(e9){ return {st:'none'}; } }
@@ -2175,6 +2182,14 @@ function mapRenameGo(){ try{ const tr=(LANG==='tr'); if(!MRNKEY) return;
   if(r.ok) toast(r.merged?(tr?('Birleştirildi — '+r.n+' öğrenilmiş tek isimde.'):('Merged — '+r.n+' learned under one name.')):(tr?'İsim taşındı; öğrenilmişler yeni adında.':'Renamed; the lessons follow the name.'));
   rcNamesOpen();
 }catch(e9){} }
+async function cloudNameDeleteGo(el){ try{ const tr=(LANG==='tr'); const nm=el.dataset.cdel;
+  if(!confirm(tr?('«'+nm+'» bulut kaydı silinsin mi?\nBu cihazda haritası yok; hesap listesinden kaldırılır.'):('Delete the cloud record “'+nm+'”?\nNo local map here; it is removed from the account list.'))) return;
+  if(!SB){ toast(tr?'Çevrimdışı: silinemedi':'Offline: not deleted'); return; }
+  const u=await cloudStatus(); if(!u||!planActive()){ toast(tr?"Önce Guide'da giriş yap.":'Sign in via the Guide first.'); return; }
+  try{ await SB.from('coffees').delete().eq('owner',u.id).eq('name',(nm||'').trim().toLowerCase()); }catch(e9){}
+  try{ const i9=CLOUDNAMES.indexOf(nm); if(i9>=0) CLOUDNAMES.splice(i9,1); }catch(e9){}
+  toast(tr?'Bulut kaydı silindi.':'Cloud record deleted.'); rcNamesOpen();
+}catch(e9){} }
 async function cloudRenameOne(oldK,newK){ try{ if(!SB) return; const u=await cloudStatus(); if(!u||!planActive()) return;
   await cloudUpsertOne(newK);
   await SB.from('coffees').delete().eq('owner',u.id).eq('name',oldK);
@@ -2188,6 +2203,24 @@ async function cloudRenameOne(oldK,newK){ try{ if(!SB) return; const u=await clo
     localStorage.setItem('bsBadge',JSON.stringify(b)); }catch(e9){}
   try{ toast(LANG==='tr'?'Yirgacheffe birleşti: öğrenilmişler artık reçete adında.':'Yirgacheffe merged: the lessons now live under the recipe name.'); }catch(e9){}
 } }catch(e9){} })();
+// v08-17h HIS LAW: alternatives ("bean (style)" / legacy "bean: style") share ONE map under the bean.
+// Boot fold: styled map keys union into the bean key (lossless mapMerge); each style's recipe survives in rcs;
+// cloud rows follow (upsert bean, delete styled). Idempotent — runs only while styled keys exist.
+(function(){ try{ const m=calMap(); let moved=0;
+  Object.keys(m).filter(k9=>k9!=='__house').forEach(k9=>{
+    const b9=((beanOf(k9)||'').trim().toLowerCase()); if(!b9||b9===k9) return;
+    const e9=m[k9]; if(!e9) return;
+    const rcs9={...(e9.rcs||{})}; if(e9.rc) rcs9[k9]=e9.rc;
+    const bd9=e9.disp?beanOf(e9.disp):null;
+    if(m[b9]){ const g9=mapMerge(m[b9],e9); g9.rcs={...(m[b9].rcs||{}),...rcs9}; g9.disp=m[b9].disp||bd9||g9.disp; if(g9.src) g9.src=b9; m[b9]=g9; }
+    else { e9.rcs=rcs9; if(bd9) e9.disp=bd9; if(e9.src) e9.src=b9; m[b9]=e9; }
+    delete m[k9]; moved++;
+    (async()=>{ try{ if(!SB) return; const u9=await cloudStatus(); if(!u9||!planActive()) return;
+      await cloudUpsertOne(b9); await SB.from('coffees').delete().eq('owner',u9.id).eq('name',k9); }catch(e8){} })();
+  });
+  if(moved){ localStorage.setItem('bsCal',JSON.stringify(m));
+    try{ toast(LANG==='tr'?('Alternatifler çekirdekte birleşti ('+moved+').'):('Alternatives merged under their bean ('+moved+').')); }catch(e8){} }
+}catch(e9){} })();
 // ---- recipe rows: rename + delete, synced to the account's recipe book (the Guide's jar, same session) ----
 let RRNM=null;
 function gdCacheGet(){ try{ const a=JSON.parse(localStorage.getItem('cnRecipes_cache')||'null'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
@@ -2256,7 +2289,9 @@ function toast(msg){
 }
 let LESSONSIG='';
 function saveCalIfMapped(verbose){
-  const k=(cName.value||$('mCoffee').value||'').trim().toLowerCase();
+  const kRaw=(cName.value||$('mCoffee').value||'').trim();
+  const kFull=kRaw.toLowerCase();
+  const k=((beanOf(kRaw)||'').trim().toLowerCase())||kFull;   // v08-17h HIS LAW: maps live under the BEAN — alternatives share the learning; only the recipe differs
   let ag=parseFloat(String($('mAgG').value).replace(',','.')); if(isFinite(ag)){ ag=Math.round(ag); $('mAgG').value=ag; }
   const v=valid();
   if(!k||!isFinite(ag)||v.length<5){ if(verbose) toast(tt('Mapping needs: coffee name + Agtron ground + at least 5 cracks.')); return; }
@@ -2289,7 +2324,7 @@ function saveCalIfMapped(verbose){
     }
     return;
   }
-  const entry={disp:(cName.value||$('mCoffee').value||'').trim(), a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, gsd:Math.round(sd(v.map(c=>c.g))*10)/10, phDrop:+PHASE.toFixed(3)||null, moist:parseFloat($('mMoist').value)||null, aw:parseFloat($('mAw').value)||null, proc:(($('mProc').value||'').trim())||((m[k]&&m[k].proc)||null), date:new Date().toISOString().slice(0,10), src:k,
+  const entry={disp:(beanOf(kRaw)||kRaw).trim(), a0, devSpan:v[v.length-1].t-a0, agtron:ag, q25, tg, gsd:Math.round(sd(v.map(c=>c.g))*10)/10, phDrop:+PHASE.toFixed(3)||null, moist:parseFloat($('mMoist').value)||null, aw:parseFloat($('mAw').value)||null, proc:(($('mProc').value||'').trim())||((m[k]&&m[k].proc)||null), date:new Date().toISOString().slice(0,10), src:k,
     bgg:parseFloat($('mBatch').value)||null, hist:(m[k]&&m[k].hist)||[]};
   const lsig=k+'|'+(STOPT!=null?Math.round(STOPT):'x')+'|'+(v.length);
   if(LESSONSIG!==lsig){ entry.hist=entry.hist.concat([{devSpan:entry.devSpan, agtron:ag, tg, q25, ph:entry.phDrop, date:entry.date}]).slice(-8); LESSONSIG=lsig; }   // tap Map ten times, learn once
@@ -2304,7 +2339,8 @@ function saveCalIfMapped(verbose){
   }
   entry.grades=grades;
   entry.target=parseFloat($('mTarget').value)||((m[k]&&m[k].target)||null);
-  { const rcv=rcGetMan(k); if(rcv) entry.rc=rcv; }   // MANUAL recipe rides the map; the Guide's copy stays in its own jar
+  { const rcv=rcGetMan(kFull); const prevRcs=(m[k]&&m[k].rcs)||{};
+    entry.rcs={...prevRcs}; if(rcv){ entry.rc=rcv; entry.rcs[kFull]=rcv; } }   // v08-17h: MANUAL recipe rides the map PER STYLE (rcs); legacy .rc = last roasted style
   const anch=SAMPLES.filter(s=>s.ag&&s.t>a0).map(s=>({dt:+(s.t-a0).toFixed(1), ag:s.ag})).sort((x,y)=>x.dt-y.dt);
   if(anch.length) entry.anchors=anch;   // SampleInRoast anchors: Deep Calibration, free
   else if(m[k]&&m[k].anchors) entry.anchors=m[k].anchors;   // keep earlier anchors
@@ -2775,7 +2811,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17g';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17h';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -3069,7 +3105,7 @@ async function gdUpsertM(k,eq,man,retire){ try{ if(!SB) return false; const u=aw
   if(retire){ const m2=rcMap(); const cur9=m2[k];   // cloud accepted: local override retires (wn stays); the Guide row is the single voice again
     if(cur9){ const v9={}; if(cur9.wn) v9.wn=cur9.wn; if(v9.wn) m2[k]=v9; else delete m2[k];
       localStorage.setItem('bsRc',JSON.stringify(m2));
-      const cm9=calMap(); if(cm9[k]){ if(m2[k]) cm9[k].rc=m2[k]; else delete cm9[k].rc; cm9[k].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm9)); } } }
+      const cm9=calMap(); { const kk9=cm9[k]?k:((beanOf(k)||'').trim().toLowerCase()); if(kk9&&cm9[kk9]){ cm9[kk9].rcs=cm9[kk9].rcs||{}; if(m2[k]){ cm9[kk9].rc=m2[k]; cm9[kk9].rcs[k]=m2[k]; } else { delete cm9[kk9].rcs[k]; if(kk9===k) delete cm9[kk9].rc; } cm9[kk9].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm9)); } } } }
   try{ renderRcRow(); }catch(e2){}
   toast(LANG==='tr'?'Reçete buluta yazıldı (Guide ile ortak)':'Recipe saved to cloud (shared with Guide)');
   return true;
@@ -3117,7 +3153,7 @@ function rcSet(k,st,gas,gasAt,quiet){ if(!k) return; const cur=rcGet(k)||{st:'',
   const m2=rcMap();
   if(nst||ngas||nwn){ const v2={}; if(nst) v2.st=nst; if(ngas) v2.gas=ngas; if(nat) v2.gasAt=nat; if(nwn) v2.wn=nwn; m2[k]=v2; } else delete m2[k];
   localStorage.setItem('bsRc',JSON.stringify(m2));
-  const cm=calMap(); if(cm[k]){ if(m2[k]) cm[k].rc=m2[k]; else delete cm[k].rc; cm[k].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm)); }
+  const cm=calMap(); { const kk9=cm[k]?k:((beanOf(k)||'').trim().toLowerCase()); if(kk9&&cm[kk9]){ cm[kk9].rcs=cm[kk9].rcs||{}; if(m2[k]){ cm[kk9].rc=m2[k]; cm[kk9].rcs[k]=m2[k]; } else { delete cm[kk9].rcs[k]; if(kk9===k) delete cm[kk9].rc; } cm[kk9].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm)); } }
   if(quiet){ try{ rcLineUI(); }catch(e){} } else renderRcRow(); }
 function rcTog(s2){ const c3=rcGet(rcKey()); return (c3&&c3.st===s2)?'':s2; }
 function rcSetWn(k,wn){ if(!k) return; const cur=rcGetMan(k)||{}; const m2=rcMap();
@@ -3127,7 +3163,7 @@ function rcSetWn(k,wn){ if(!k) return; const cur=rcGetMan(k)||{}; const m2=rcMap
   const w9=w8; if(w9) v2.wn=w9;
   if(v2.st||v2.gas||v2.wn) m2[k]=v2; else delete m2[k];
   localStorage.setItem('bsRc',JSON.stringify(m2));
-  const cm=calMap(); if(cm[k]){ if(m2[k]) cm[k].rc=m2[k]; else delete cm[k].rc; cm[k].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm)); }
+  const cm=calMap(); { const kk9=cm[k]?k:((beanOf(k)||'').trim().toLowerCase()); if(kk9&&cm[kk9]){ cm[kk9].rcs=cm[kk9].rcs||{}; if(m2[k]){ cm[kk9].rc=m2[k]; cm[kk9].rcs[k]=m2[k]; } else { delete cm[kk9].rcs[k]; if(kk9===k) delete cm[kk9].rc; } cm[kk9].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm)); } }
   renderRcRow(); }
 function rcTableOpen(){ try{ gdPull(); }catch(e){}
   const tr=(LANG==='tr');
