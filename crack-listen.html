@@ -2058,7 +2058,10 @@ function rcNamesOpen(){ try{ gdPull(); }catch(e){}
    +'<input id="rcNameIn" value="'+String(cName.value||'').replace(/"/g,'&quot;')+'" placeholder="'+(tr?'ya da yeni isim yaz':'or type a new name')+'" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:15px;background:#15100b;color:var(--ink)">'
    +'<button class="pm" style="width:auto;padding:0 16px;font-size:14px;background:var(--accent2);color:#fff;border:none" onclick="rcNamesOK()">OK</button></div>'
    +(LR.length?(LR.map(r=>{ const mk=mapMark(r.name); const sec=mk.st==='own'?(String(mk.n||0)+' '+(tr?'öğrenilmiş':'learned')):(mk.st==='comm'?(tr?'ödünç ses':'borrowed sound'):'');
-      return '<div data-rn="'+escC(r.name)+'" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer;font-size:15px"><span>'+escC(r.name)+(r.mx?(' <span data-mrn="'+escC(r.mx)+'" style="color:var(--accent);font-size:12px;cursor:pointer;padding:0 4px">&#9998;</span>'):'')+'</span><span style="display:flex;align-items:baseline;gap:7px">'+(sec?('<span style="font-size:10.5px;color:var(--muted)">'+sec+'</span>'):'')+mapMarkTag(mk)+'</span></div>'; }).join('')
+      const tools=r.mx
+        ?(' <span data-mrn="'+escC(r.mx)+'" style="color:var(--accent);font-size:12px;cursor:pointer;padding:0 4px">&#9998;</span><span data-mdel="'+escC(r.mx)+'" style="color:var(--muted);font-size:12px;cursor:pointer;padding:0 4px">&#128465;</span>')
+        :(' <span data-rrn="'+escC(r.name)+'" style="color:var(--accent);font-size:12px;cursor:pointer;padding:0 4px">&#9998;</span><span data-rdel="'+escC(r.name)+'" style="color:var(--muted);font-size:12px;cursor:pointer;padding:0 4px">&#128465;</span>');
+      return '<div data-rn="'+escC(r.name)+'" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer;font-size:15px"><span>'+escC(r.name)+tools+'</span><span style="display:flex;align-items:baseline;gap:7px">'+(sec?('<span style="font-size:10.5px;color:var(--muted)">'+sec+'</span>'):'')+mapMarkTag(mk)+'</span></div>'; }).join('')
       +(function(){ let mo=0,mc=0; LR.forEach(r2=>{ const s9=mapMark(r2.name).st; if(s9==='own') mo++; else if(s9==='comm') mc++; });
         return '<div style="border-top:1px solid var(--line);margin-top:2px;padding-top:7px;font-size:11px;color:var(--muted);text-align:center">'+(tr?(LR.length+' kahveden '+mo+' eşli'+(mc?(' · '+mc+' ödünç'):'')):(mo+' of '+LR.length+' mapped'+(mc?(' · '+mc+' borrowed'):'')))+'</div>'; })()):('<div class="hint">'+(tr?'Reçete yok':'No recipes yet')+'</div>'))
    +'<button style="margin-top:10px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Kapat':'Close')+'</button>';
@@ -2067,7 +2070,10 @@ function rcNamesOpen(){ try{ gdPull(); }catch(e){}
     inp.addEventListener('input',()=>{ const q=inp.value.trim().toLowerCase();
       $('modalBox').querySelectorAll('[data-rn]').forEach(x=>{ x.style.display=(!q||x.dataset.rn.toLowerCase().includes(q))?'flex':'none'; }); }); }catch(e){}
   $('modalBox').querySelectorAll('[data-rn]').forEach(x=>x.onclick=()=>rcNamesSet(x.dataset.rn));
-  $('modalBox').querySelectorAll('[data-mrn]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); mapRenameUI(x); }; }); }
+  $('modalBox').querySelectorAll('[data-mrn]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); mapRenameUI(x); }; });
+  $('modalBox').querySelectorAll('[data-rrn]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); rcpRenameUI(x); }; });
+  $('modalBox').querySelectorAll('[data-rdel]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); rcpDeleteGo(x); }; });
+  $('modalBox').querySelectorAll('[data-mdel]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); mapDeleteGo(x); }; }); }
 function closeName(){ { let v9=(cName.value||'').trim();   // 'bean (bittersweet' -> auto ')' ; abandoned 'bean (' -> stripped
     if(/\([^)]+$/.test(v9)) cName.value=v9+')'; else if(/\($/.test(v9)) cName.value=v9.slice(0,-1).trim(); }
   $('nameEdit').style.display='none'; $('npWrap').style.display='block'; renderNameplate(); try{ renderRcRow(); }catch(e){} }
@@ -2119,34 +2125,99 @@ function pace2(cal,v,a0){ const hasB1=!!(LASTSTAGES&&LASTSTAGES.some(sg=>sg[0]==
   if(hasB1&&PACE2LOCK) return PACE2LOCK;
   const r=pace2At(cal,v,a0); if(!r) return hasB1?PACE2LOCK:null;
   if(hasB1) PACE2LOCK=r; return r; }
-// ---- v08-17d RENAME: the name section of a map-owned row is editable; the lessons follow the name.
-// No origin-law gate on renames (corrections/alignments, not new entries — products like Türk Kahvesi must stay reachable).
-// No silent merges: a taken target name refuses. Cloud follows: upsert new row, delete old row (single writer stays the human act).
+// ---- v08-17e RENAME/MERGE/DELETE: the name section is editable everywhere; the lessons follow the name.
+// Merge-on-collision (his 'not sure' 08-17): a rename onto a taken name UNIONS the two — nothing is ever destroyed.
+// Union rules: own beats communal wholesale; between owns the fuller reference wins the bell (C1 depth, then devSpan,
+// then date); histories union by signature (cap 8); grades union (cap 6, this-device ears); gaps filled from the loser.
+// No origin-law gate on renames (corrections, not new entries). Cloud follows every move: upsert new, delete old.
 let MRNKEY=null;
-function mapRenameUI(el){ try{ const oldK=el.dataset.mrn, m=calMap(), e=m[oldK]; if(!e) return; MRNKEY=oldK;
-  const row=el.closest('[data-rn]'); if(!row) return; row.onclick=null; row.style.cursor='default';
-  row.innerHTML='<input id="mrnIn" value="'+String(e.disp||oldK).replace(/"/g,'&quot;')+'" style="flex:1;min-width:0;border:1px solid var(--gold);border-radius:8px;padding:8px 10px;font-size:14px;background:#15100b;color:var(--ink)">'
-    +'<button class="pm" style="width:auto;padding:6px 12px;font-size:13px;background:var(--accent2);color:#fff;border:none;border-radius:8px" onclick="mapRenameGo()">OK</button>'
-    +'<button style="width:auto;padding:6px 10px;font-size:12px;background:var(--panel2);border:1px solid var(--line);border-radius:8px" onclick="MRNKEY=null;rcNamesOpen()">&times;</button>';
-  const i9=$('mrnIn'); i9.focus(); i9.addEventListener('keydown',ev=>{ if(ev.key==='Enter') mapRenameGo(); });
-}catch(e9){} }
-function mapRenameGo(){ try{ const tr=(LANG==='tr'); if(!MRNKEY) return;
-  const nv=($('mrnIn')&&$('mrnIn').value||'').trim(); const nk=nv.toLowerCase();
-  if(!nv||nk===MRNKEY){ MRNKEY=null; rcNamesOpen(); return; }
-  const m=calMap(); if(m[nk]){ toast(tr?'Bu isimde bir harita zaten var.':'A map with this name already exists.'); return; }
-  const e=m[MRNKEY]; if(!e){ MRNKEY=null; rcNamesOpen(); return; }
-  const oldK=MRNKEY; e.disp=nv; if(e.src) e.src=nk; m[nk]=e; delete m[oldK];
-  if(m['__house']&&m['__house'].src===oldK){ const h={...e}; m['__house']=h; }
+function mapMerge(dst,src){ try{
+  if(dst.communal&&!src.communal) return mapMerge(src,dst);   // own always beats communal
+  if(!dst.communal&&src.communal) { return {...dst}; }        // communal skeleton adds nothing an own map lacks
+  const fuller=(function(){ const db=Array.isArray(dst.bell), sb2=Array.isArray(src.bell);
+    if(db!==sb2) return db?dst:src;
+    if((dst.devSpan||0)!==(src.devSpan||0)) return (dst.devSpan||0)>(src.devSpan||0)?dst:src;
+    return String(dst.date||'')>=String(src.date||'')?dst:src; })();
+  const other=(fuller===dst)?src:dst;
+  const m9={...fuller};
+  ['fc_ag','rc','moist','aw','proc','bgg','anchors'].forEach(k=>{ if(m9[k]==null&&other[k]!=null) m9[k]=other[k]; });
+  const sig=h=>[h.date,h.devSpan,h.agtron,h.tg].join('|');
+  const hh={}; (dst.hist||[]).concat(src.hist||[]).forEach(h=>{ if(h) hh[sig(h)]=h; });
+  m9.hist=Object.values(hh).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))).slice(-8);
+  const gs={}; (dst.grades||[]).concat(src.grades||[]).forEach(g=>{ if(g) gs[[g.date,g.meas,g.proj].join('|')]=g; });
+  m9.grades=Object.values(gs).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))).slice(-6);
+  return m9;
+}catch(e9){ return dst; } }
+function renameMapKey(oldK,newRaw){ try{
+  const nv=(newRaw||'').trim(), nk=nv.toLowerCase(); if(!nv||!oldK||nk===oldK) return {ok:false};
+  const m=calMap(); const e=m[oldK]; if(!e) return {ok:false};
+  let merged=false;
+  if(m[nk]){ m[nk]=mapMerge(m[nk],e); m[nk].disp=nv; if(m[nk].src) m[nk].src=nk; merged=true; }
+  else { e.disp=nv; if(e.src) e.src=nk; m[nk]=e; }
+  delete m[oldK];
+  if(m['__house']&&m['__house'].src===oldK){ m['__house']={...m[nk]}; }
   localStorage.setItem('bsCal',JSON.stringify(m));
-  try{ const b=badgeMap(); if(b[oldK]){ b[nk]=b[oldK]; delete b[oldK]; localStorage.setItem('bsBadge',JSON.stringify(b)); } }catch(e9){}
+  try{ const b=badgeMap(); if(b[oldK]){ if(b[nk]){ for(const f in b[oldK]){ if(!b[nk][f]) b[nk][f]=b[oldK][f]; } } else b[nk]=b[oldK]; delete b[oldK]; localStorage.setItem('bsBadge',JSON.stringify(b)); } }catch(e9){}
   try{ if((localStorage.getItem('bsCoffee')||'').trim().toLowerCase()===oldK){ cName.value=nv; localStorage.setItem('bsCoffee',nv); renderNameplate(); } }catch(e9){}
   try{ cloudRenameOne(oldK,nk); }catch(e9){}
-  toast(tr?'İsim taşındı; öğrenilmişler yeni adında.':'Renamed; the lessons follow the name.');
-  MRNKEY=null; rcNamesOpen();
+  return {ok:true, merged, n:(m[nk].hist||[]).length};
+}catch(e9){ return {ok:false}; } }
+function rowSwapUI(el,cur,goFn){ try{ const row=el.closest('[data-rn]'); if(!row) return; row.onclick=null; row.style.cursor='default';
+  row.innerHTML='<input id="mrnIn" value="'+String(cur).replace(/"/g,'&quot;')+'" style="flex:1;min-width:0;border:1px solid var(--gold);border-radius:8px;padding:8px 10px;font-size:14px;background:#15100b;color:var(--ink)">'
+    +'<button class="pm" style="width:auto;padding:6px 12px;font-size:13px;background:var(--accent2);color:#fff;border:none;border-radius:8px" onclick="'+goFn+'">OK</button>'
+    +'<button style="width:auto;padding:6px 10px;font-size:12px;background:var(--panel2);border:1px solid var(--line);border-radius:8px" onclick="MRNKEY=null;RRNM=null;rcNamesOpen()">&times;</button>';
+  const i9=$('mrnIn'); i9.focus(); i9.addEventListener('keydown',ev=>{ if(ev.key==='Enter') eval(goFn); });
+}catch(e9){} }
+function mapRenameUI(el){ const oldK=el.dataset.mrn, e=calMap()[oldK]; if(!e) return; MRNKEY=oldK; rowSwapUI(el,e.disp||oldK,'mapRenameGo()'); }
+function mapRenameGo(){ try{ const tr=(LANG==='tr'); if(!MRNKEY) return;
+  const nv=($('mrnIn')&&$('mrnIn').value||'').trim();
+  const r=renameMapKey(MRNKEY,nv); MRNKEY=null;
+  if(r.ok) toast(r.merged?(tr?('Birleştirildi — '+r.n+' öğrenilmiş tek isimde.'):('Merged — '+r.n+' learned under one name.')):(tr?'İsim taşındı; öğrenilmişler yeni adında.':'Renamed; the lessons follow the name.'));
+  rcNamesOpen();
 }catch(e9){} }
 async function cloudRenameOne(oldK,newK){ try{ if(!SB) return; const u=await cloudStatus(); if(!u||!planActive()) return;
   await cloudUpsertOne(newK);
   await SB.from('coffees').delete().eq('owner',u.id).eq('name',oldK);
+}catch(e9){} }
+// ---- recipe rows: rename + delete, synced to the account's recipe book (the Guide's jar, same session) ----
+let RRNM=null;
+function gdCacheGet(){ try{ const a=JSON.parse(localStorage.getItem('cnRecipes_cache')||'null'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+function gdCacheSet(a){ try{ localStorage.setItem('cnRecipes_cache',JSON.stringify(a)); }catch(e){} }
+function rcpRenameUI(el){ RRNM=el.dataset.rrn; rowSwapUI(el,RRNM,'rcpRenameGo()'); }
+async function rcpRenameGo(){ try{ const tr=(LANG==='tr'); if(!RRNM) return;
+  const oldN=RRNM, nv=($('mrnIn')&&$('mrnIn').value||'').trim(); RRNM=null;
+  if(!nv||nv===oldN){ rcNamesOpen(); return; }
+  if(!SB||!planActive()){ toast(tr?'Reçete adı için Guide oturumu gerek.':'Recipe names need the Guide session.'); rcNamesOpen(); return; }
+  const u=await cloudStatus(); if(!u){ toast(tr?"Önce Guide'da giriş yap.":'Sign in via the Guide first.'); rcNamesOpen(); return; }
+  const cache=gdCacheGet(), row=cache.find(r9=>r9&&r9.name===oldN);
+  if(!row||!row.id){ toast(tr?'Bu reçete buradan adlandırılamıyor — Guide’da düzenle.':'This recipe can’t be renamed here — edit in the Guide.'); rcNamesOpen(); return; }
+  const {error}=await SB.from('recipes').update({name:nv}).eq('id',row.id);
+  if(error){ toast(tr?'Kaydedilemedi (çevrimdışı?).':'Save failed (offline?).'); rcNamesOpen(); return; }
+  row.name=nv; gdCacheSet(cache);
+  try{ if(calMap()[oldN.trim().toLowerCase()]) renameMapKey(oldN.trim().toLowerCase(),nv); }catch(e9){}
+  toast(tr?'Reçete adı değişti; öğrenilmişler takip etti.':'Recipe renamed; the lessons followed.');
+  rcNamesOpen();
+}catch(e9){ rcNamesOpen(); } }
+async function rcpDeleteGo(el){ try{ const tr=(LANG==='tr'); const nm=el.dataset.rdel;
+  if(!confirm(tr?('«'+nm+'» reçetesi silinsin mi?\nÖğrenilmişler SİLİNMEZ — listede haritalı satır olarak kalır.'):('Delete recipe “'+nm+'”?\nLessons are NOT deleted — they stay as a map-owned row.'))) return;
+  if(!SB||!planActive()){ toast(tr?'Silmek için Guide oturumu gerek.':'Deleting needs the Guide session.'); return; }
+  const u=await cloudStatus(); if(!u){ toast(tr?"Önce Guide'da giriş yap.":'Sign in via the Guide first.'); return; }
+  const cache=gdCacheGet(), row=cache.find(r9=>r9&&r9.name===nm);
+  if(!row||!row.id){ toast(tr?'Bu reçete buradan silinemiyor — Guide’da sil.':'This recipe can’t be deleted here — delete in the Guide.'); return; }
+  const {error}=await SB.from('recipes').delete().eq('id',row.id);
+  if(error){ toast(tr?'Silinemedi (çevrimdışı?).':'Delete failed (offline?).'); return; }
+  gdCacheSet(cache.filter(r9=>r9!==row));
+  toast(tr?'Reçete silindi.':'Recipe deleted.'); rcNamesOpen();
+}catch(e9){} }
+function mapDeleteGo(el){ try{ const tr=(LANG==='tr'); const k=el.dataset.mdel, m=calMap(), e=m[k]; if(!e) return;
+  const n9=(e.hist||[]).length;
+  if(!confirm(tr?('«'+(e.disp||k)+'» haritası silinsin mi?\n'+n9+' öğrenilmiş dahil her şey silinir. Geri alınamaz.'):('Delete the map for “'+(e.disp||k)+'”?\nEverything goes, including '+n9+' learned. Cannot be undone.'))) return;
+  delete m[k]; if(m['__house']&&m['__house'].src===k) delete m['__house'];
+  localStorage.setItem('bsCal',JSON.stringify(m));
+  try{ const b=badgeMap(); if(b[k]){ delete b[k]; localStorage.setItem('bsBadge',JSON.stringify(b)); } }catch(e9){}
+  (async()=>{ try{ if(!SB) return; const u=await cloudStatus(); if(!u||!planActive()) return;
+    await SB.from('coffees').delete().eq('owner',u.id).eq('name',k); }catch(e9){} })();
+  toast(tr?'Harita silindi.':'Map deleted.'); rcNamesOpen();
 }catch(e9){} }
 // confirmed A0: first crack that is followed by >=2 more within 30s (a lone clank cannot own the anchor)
 function effA0(v){ for(let i=0;i<v.length-2;i++){ if(v[i+2].t-v[i].t<=EP.FOLLOW) return v[i].t; } return v.length?v[0].t:0; }   // follower window: Ömer's field data, fast roasts 5-10s, slow 20-30s
@@ -2695,7 +2766,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17d';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17e';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
