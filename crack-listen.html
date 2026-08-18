@@ -2002,16 +2002,20 @@ const cName=$('coffeeName'); cName.value=localStorage.getItem('bsCoffee')||'';
 cName.oninput=()=>{ localStorage.setItem('bsCoffee',cName.value); updateGauge(); };
 // nameplate: the bean's name is an instrument headline, not a form field. Tap to edit, Guide-style well while editing.
 // v27d (mockup panel 1, his call 2026-07-27): sibling styles live ON the setup card as chips; tap = switch register.
+function beanNorm(k9){ try{ const b9=(beanOf((k9||'').trim())||'').trim(); const c9=codeName(b9)||b9; return c9.toLowerCase(); }catch(e9){ return (k9||'').toLowerCase(); } }
 function renderStyleChips(){ const el=$('styleChips'); if(!el) return;
-  const k=(cName.value||'').trim().toLowerCase();
+  const kc=(cName.value||'').trim(), k=kc.toLowerCase();
   if(!k||running){ el.style.display='none'; el.innerHTML=''; return; }   // live: the storm shows one name, no switching
-  let m={}; try{ m=JSON.parse(localStorage.getItem('bsCal'))||{}; }catch(e){}
-  const names=new Set(Object.keys(m).filter(x=>x!=='__house')); try{ CLOUDNAMES.forEach(n=>names.add(n)); }catch(e){}
-  names.add(k);
-  const b=beanOf(k), sibs=[...names].filter(n=>beanOf(n)===b).sort();
-  const only9=(sibs.length<2&&!styleOf(k));   // single-style bean: just the quiet dashed add-door (the ONE door now, editor duplicate removed)
+  // v08-17k FIX (his report: alternatives invisible): alternatives are BOOK entries now — bean-shared maps keep ONE
+  // bsCal key per bean, so the old bsCal-key sibling scan finds nothing. The chips read the RECIPE BOOK, matched by
+  // code-normalized bean ("Etiyopya X" and "ET X" count as one bean while renames land).
+  const bn=beanNorm(kc);
+  const names=new Set([kc]);
+  try{ gdRecipes().filter(r9=>r9&&r9.active!==false&&r9.name&&beanNorm(r9.name)===bn).forEach(r9=>names.add(r9.name)); }catch(e){}
+  const sibs=[...names].sort();
+  const only9=(sibs.length<2&&!styleOf(k));   // single-style bean: just the quiet dashed add-door
   el.style.display='flex';
-  el.innerHTML=(only9?'':sibs.map(n=>{ const s9=styleOf(n)||(LANG==='tr'?'düz':'plain'), on=(n===k);
+  el.innerHTML=(only9?'':sibs.map(n=>{ const s9=styleOf(n)||(LANG==='tr'?'düz':'plain'), on=(n.toLowerCase()===k);
     return '<span data-sc="'+escC(n)+'" style="cursor:pointer;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid '+(on?'var(--gold)':'var(--line)')+';color:'+(on?'var(--gold)':'var(--muted)')+';background:'+(on?'#241c0e':'none')+'">'+escC(s9)+'</span>'; }).join(''))
     +'<span data-scadd="1" style="cursor:pointer;font-size:11.5px;padding:4px 10px;border-radius:999px;border:1px dashed var(--line);color:var(--dim)">'+(LANG==='tr'?'+ alternatif':'+ alternative')+'</span>';
   el.querySelectorAll('[data-sc]').forEach(x=>x.onpointerdown=ev=>{ ev.preventDefault(); pickCoffee(x.dataset.sc); });
@@ -2902,7 +2906,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17j';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17k';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
