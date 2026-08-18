@@ -2103,7 +2103,7 @@ function mapMark(name){ try{ const k=(name||'').trim().toLowerCase(); if(!k) ret
   return {st:'none'}; }catch(e9){ return {st:'none'}; } }
 const MMBELL='<svg width="18" height="10" viewBox="0 0 22 12" style="vertical-align:-1px"><path d="M1 11 Q7 11 9 5 Q11 -1 13 5 Q15 11 21 11" fill="none" stroke="#e6c14b" stroke-width="2" stroke-linecap="round"/></svg>';
 function mapMarkTag(mk){
-  if(mk.st==='own') return '<span class="mmark" style="display:inline-block;font-size:11.5px;font-weight:800;color:#1a1410;background:var(--gold);border-radius:6px;padding:1.5px 7px;vertical-align:2px">'+mk.ag+'</span>';
+  if(mk.st==='own') return '<span class="mmark" style="display:inline-block;font-size:11.5px;font-weight:800;color:#1a1410;background:var(--gold);border-radius:6px;padding:1.5px 7px;vertical-align:2px">'+mk.ag+'A</span>';
   if(mk.st==='comm') return '<span class="mmark" style="display:inline-block;border:1.5px dashed var(--gold);border-radius:6px;padding:0.5px 6px;vertical-align:2px;opacity:.85">'+MMBELL+'</span>';
   return '<span class="mmark" style="display:inline-block;font-size:11px;font-weight:700;color:var(--muted);border:1px dashed var(--line);border-radius:6px;padding:1px 7px;vertical-align:2px">'+(LANG==='tr'?'eşlenmemiş':'unmapped')+'</span>'; }
 let PACE2LOCK=null;   // crown freeze: past B1 the rhythm belongs to descent physics, not the pace dial
@@ -2775,7 +2775,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17f';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17g';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){

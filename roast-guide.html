@@ -609,7 +609,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-17c</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-17d</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1108,7 +1108,7 @@ function gMapMark(name){ try{ const k=(name||'').trim().toLowerCase(); if(!k) re
   if(isFinite(e.agtron)) return {st:'own', ag:Math.round(e.agtron), n:((e.hist||[]).length)||1};
   return {st:'none'}; }catch(e9){ return {st:'none'}; } }
 function gMapMarkTag(mk){ const tr9=(typeof LANG!=='undefined'&&LANG==='tr');
-  if(mk.st==='own') return ' <span style="font-size:10px;color:var(--muted)">'+mk.n+' '+(tr9?'öğrenilmiş':'learned')+'</span> <span style="display:inline-block;font-size:11px;font-weight:800;color:#1a1410;background:var(--gold);border-radius:6px;padding:1px 6px;vertical-align:1px">'+mk.ag+'</span>';
+  if(mk.st==='own') return ' <span style="font-size:10px;color:var(--muted)">'+mk.n+' '+(tr9?'öğrenilmiş':'learned')+'</span> <span style="display:inline-block;font-size:11px;font-weight:800;color:#1a1410;background:var(--gold);border-radius:6px;padding:1px 6px;vertical-align:1px">'+mk.ag+'A</span>';
   if(mk.st==='comm') return ' <span style="display:inline-block;border:1.5px dashed var(--gold);border-radius:6px;padding:0 5px;vertical-align:1px;opacity:.85"><svg width="16" height="9" viewBox="0 0 22 12" style="vertical-align:-1px"><path d="M1 11 Q7 11 9 5 Q11 -1 13 5 Q15 11 21 11" fill="none" stroke="#e6c14b" stroke-width="2" stroke-linecap="round"/></svg></span>';
   return ' <span style="display:inline-block;font-size:10px;font-weight:700;color:var(--muted);border:1px dashed var(--line);border-radius:6px;padding:0 6px;vertical-align:1px">'+(tr9?'eşlenmemiş':'unmapped')+'</span>'; }
 async function gMapFollowRename(oldName,newName){ try{   // v08-17b: lessons follow the recipe's new name; cloud row moves too
