@@ -401,7 +401,7 @@ body.st-setup #btn{display:none}
   <button id="enrollBtn" onclick="enrollToggle()">Teach it your voice</button>
   <button id="sampleBtn" onclick="markSample()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><ellipse cx="7.4" cy="7.4" rx="4" ry="5.2" transform="rotate(-45 7.4 7.4)" fill="#e6c14b"/><line x1="10.6" y1="10.6" x2="20" y2="20" stroke="#e6c14b" stroke-width="2.6" stroke-linecap="round"/></svg><span id="sampLbl">Sample pulled</span><b id="sampN"></b></button>
   <button class="go" id="btn" onclick="toggle()">Start listening</button>
-  <div id="cfgLine"><span onclick="rcTableOpen()">reçeteler</span> · <span onclick="uniOpen(false)">evren</span> · <span onclick="cfgWatch()">watch</span> · <span onclick="cfgToggle()">ayarlar <span id="cfgCar">▾</span></span></div>
+  <div id="cfgLine"><span onclick="rcTableOpen()">reçeteler</span> · <span onclick="uniOpen(false)">evren</span> · <span onclick="resExport()">veri</span> · <span onclick="cfgWatch()">watch</span> · <span onclick="cfgToggle()">ayarlar <span id="cfgCar">▾</span></span></div>
   <div class="err" id="err"></div>
   <button id="labChip" onclick="labToggle()">lab mode</button>
   <div id="a0Banner" onclick="markSample()"></div>
@@ -2978,7 +2978,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17p';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17q';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -3386,6 +3386,34 @@ function rcTableOpen(){ try{ gdPull(); }catch(e){}
     if(!SB){ toast(tr?'Çevrimdışı':'Offline'); return; }
     try{ const {data,error}=await SB.from('recipes').insert({name:nm,match:[nm.toLowerCase()],bullet:'-',hsr:'-',note:'',active:true,sort_order:null}).select().single();
       if(error){ toast('hata: '+error.message); } else { gdCachePatch(data); rcTableOpen(); } }catch(e){ toast('hata'); } }; }
+// v08-17q RESEARCH EXPORT (scientist visit prep): one tap dumps this device's whole learning ledger
+// as CSV — references, lessons, self-grade pairs — plus an honest accuracy line (n, MAE, bias) computed
+// from the projected-vs-measured pairs the app already keeps. Grades are per-device by doctrine; the
+// header says so. Pure builder (resExportTxt) is separate so it stays testable.
+function rxCsv(v9){ const s9=String(v9==null?'':v9); return (s9.indexOf(',')>=0||s9.indexOf('"')>=0)?('"'+s9.replace(/"/g,'""')+'"'):s9; }
+function resExportTxt(){ const m=calMap(), u=UNI()||{}; const rows=[], grows=[], gs=[];
+  rows.push(['coffee','entry_type','date','devSpan_s','agtron','total_gain','q25_s','phi'].join(','));
+  grows.push(['coffee','date','projected','measured','residual'].join(','));
+  Object.keys(m).sort().forEach(k=>{ if(k==='__house') return; const e=m[k]; if(!e||e.communal) return;
+    rows.push([rxCsv(e.disp||k),'reference',e.date||'',e.devSpan!=null?e.devSpan:'',e.agtron!=null?e.agtron:'',e.tg!=null?e.tg:'',e.q25!=null?e.q25:'',(e.phDrop!=null?e.phDrop:'')].join(','));
+    (e.hist||[]).forEach(h=>{ if(!h) return; rows.push([rxCsv(e.disp||k),'lesson',h.date||'',h.devSpan!=null?h.devSpan:'',h.agtron!=null?h.agtron:'',h.tg!=null?h.tg:'',h.q25!=null?h.q25:'',(h.ph!=null?h.ph:'')].join(',')); });
+    (e.grades||[]).forEach(g=>{ if(!g||!isFinite(g.meas)||!isFinite(g.proj)) return; const r9=g.meas-g.proj;
+      grows.push([rxCsv(e.disp||k),g.date||'',g.proj,g.meas,r9.toFixed(1)].join(',')); gs.push(r9); });
+  });
+  const mae=gs.length?(gs.reduce((a9,b9)=>a9+Math.abs(b9),0)/gs.length):null;
+  const bias=gs.length?(gs.reduce((a9,b9)=>a9+b9,0)/gs.length):null;
+  const head='# CoffeeNutz Listener research export · '+APPVER
+    +'\n# universe: '+(u.name||u.meter||'-')+' · A0 '+(u.a0!=null?u.a0:'-')+(u.guessed?'~':'')+' · operator: '+(u.operator||'-')
+    +'\n# accuracy (projected vs measured, THIS device): n='+gs.length+(mae!=null?(' · MAE '+mae.toFixed(2)+' · bias '+(bias>=0?'+':'')+bias.toFixed(2)):'')
+    +'\n# phi: 0=A0 · 0.5=crown · 1=silence; censored (<=0.55 unwitnessed) values appear as logged\n';
+  return {txt:head+'\n[MAPS+LESSONS]\n'+rows.join('\n')+'\n\n[SELF-GRADES]\n'+grows.join('\n')+'\n', n:gs.length, mae:mae, bias:bias}; }
+function resExport(){ try{
+  const r9=resExportTxt();
+  const b9=new Blob([r9.txt],{type:'text/csv'});
+  const a9=document.createElement('a'); a9.href=URL.createObjectURL(b9);
+  a9.download='cn-research-'+new Date().toISOString().slice(0,10)+'.csv'; document.body.appendChild(a9); a9.click(); a9.remove();
+  toast((LANG==='tr'?'Araştırma dökümü indirildi':'Research export downloaded')+(r9.n?(' · n='+r9.n+' · MAE '+(r9.mae!=null?r9.mae.toFixed(2):'-')):''));
+}catch(e9){ toast('hata'); } }
 function rcWnGo(){ const c9=(($('rcWnC')||{}).value||''), n9=((($('rcWnN')||{}).value||'')+'').trim().toUpperCase().slice(0,5);
   if(!c9&&!n9) return; rcSetWn(rcKey(), (c9&&n9)?(c9+'-'+n9):(c9||n9));
   toast(LANG==='tr'?'Saat çipi adı kaydedildi':'Watch chip name saved'); }
