@@ -1898,7 +1898,7 @@ async function cloudUpsertOne(k){ try{   // v08-17a: every own map rides to the 
   const m=calMap(); let cal=m[k]; if(!cal||cal.communal) return;
   try{ const {data:ex9}=await SB.from('coffees').select('map').eq('owner',u.id).eq('name',k);
     const cm9=ex9&&ex9[0]&&ex9[0].map;
-    if(cm9&&typeof cm9==='object'&&!cm9.communal){
+    if(cm9&&typeof cm9==='object'&&!cm9.communal&&!cm9.tomb){
       const g9=mapMerge(cal,cm9); g9.rcs={...(cm9.rcs||{}),...(cal.rcs||{})}; if(cal.disp) g9.disp=cal.disp;
       m[k]=g9; cal=g9; localStorage.setItem('bsCal',JSON.stringify(m)); }
   }catch(e8){}
@@ -1926,8 +1926,9 @@ async function cloudSend(){
 async function cloudPull(){
   if(!planActive()){ showPaywall(LANG==='tr'?'Kahve bulutu':'Coffee cloud'); return; }
   const u=await cloudStatus(); if(!u){ toast(LANG==='tr'?"Önce Guide'da giriş yap.":'Sign in via the Guide first.'); return; }
-  const {data,error}=await SB.from('coffees').select('name,badge,map').eq('owner',u.id);
-  if(error||!data||!data.length){ toast(LANG==='tr'?'Bulutta kahve yok.':'No coffees in the cloud.'); return; }
+  const {data:dataR,error}=await SB.from('coffees').select('name,badge,map').eq('owner',u.id);
+  const data=(dataR||[]).filter(c9=>!(c9.map&&typeof c9.map==='object'&&c9.map.tomb));   // v08-17m: tombstones never ride back
+  if(error||!data.length){ toast(LANG==='tr'?'Bulutta kahve yok.':'No coffees in the cloud.'); return; }
   pickModal(LANG==='tr'?'Buluttan getir':'Bring from cloud',
     LANG==='tr'?'Seçilenler bu cihazdaki aynı isimli kayıtların üzerine yazılır.':'Selected entries overwrite same-named local records.',
     data.map(c=>c.name), LANG==='tr'?'Getir':'Bring', sel=>{
@@ -1961,19 +1962,49 @@ async function cloudAutoSync(){   // on open, signed in: pull ADDITIONS only (ze
   try{
     const {data,error}=await SB.from('coffees').select('name,badge,map').eq('owner',u.id);
     if(error||!Array.isArray(data)||!data.length) return;
-    CLOUDNAMES=data.map(c=>c.name);
-    const m=calMap(), b=badgeMap(); let added=0, differ=0;
-    data.forEach(c=>{ if(!c.map||typeof c.map!=='object') return;
+    const tombs=data.filter(c=>c.map&&typeof c.map==='object'&&c.map.tomb);
+    const live=data.filter(c=>!(c.map&&typeof c.map==='object'&&c.map.tomb));
+    CLOUDNAMES=live.map(c=>c.name);
+    let added=0, unioned=0, buried=0, changed=0; const needUp=[];
+    // v08-17m TOMBSTONES: a delete or rename on ANY device writes map:{tomb,ts,to} to the account;
+    // every other device applies it here — the list converges instead of resurrecting.
+    // Tombs first, each persisting its own write; the working snapshot is taken AFTER (a stale
+    // snapshot here would clobber renameMapKey's saved state — caught by test t4).
+    for(const t9 of tombs){ const m8=calMap(); const k9=t9.name, e9=m8[k9]; if(!e9) continue;
+      if(t9.map.to){ const lv9=live.find(c9=>c9.name===t9.map.to);
+        const nn9=(lv9&&lv9.map&&lv9.map.disp)||t9.map.to;
+        try{ const r8=renameMapKey(k9,nn9); if(r8&&r8.ok) buried++; }catch(e8){} }
+      else { const nd9=(e9.date||''); if(nd9&&t9.map.ts&&nd9>t9.map.ts) continue;   // roasted after the delete: the roast wins
+        delete m8[k9]; if(m8['__house']&&m8['__house'].src===k9) delete m8['__house'];
+        localStorage.setItem('bsCal',JSON.stringify(m8));
+        try{ const b8=badgeMap(); if(b8[k9]){ delete b8[k9]; localStorage.setItem('bsBadge',JSON.stringify(b8)); } }catch(e8){}
+        buried++; } }
+    const m=calMap(), b=badgeMap();
+    live.forEach(c=>{ if(!c.map||typeof c.map!=='object') return;
       if(!m[c.name]){ const mm={...c.map}; delete mm.grades;   // bias lessons stay per-device
         if(mm.bell&&!Array.isArray(mm.bell)) delete mm.bell;
         if(mm.hist&&!Array.isArray(mm.hist)) delete mm.hist;
-        m[c.name]=mm; if(c.badge&&typeof c.badge==='object'&&Object.keys(c.badge).length) b[c.name]=c.badge; added++; }
-      else if(JSON.stringify({...m[c.name],grades:0})!==JSON.stringify({...c.map,grades:0})) differ++; });
-    if(added){ localStorage.setItem('bsCal',JSON.stringify(m)); localStorage.setItem('bsBadge',JSON.stringify(b)); }
+        m[c.name]=mm; if(c.badge&&typeof c.badge==='object'&&Object.keys(c.badge).length) b[c.name]=c.badge; added++; changed=1; }
+      else if(JSON.stringify({...m[c.name],grades:0})!==JSON.stringify({...c.map,grades:0})){
+        // v08-17m AUTO-UNION (his order: the same list from any device): differing rows merge at boot — monotonic, grades stay local
+        try{ const loc=m[c.name]; const acc={...c.map}; delete acc.grades;
+          if(acc.bell&&!Array.isArray(acc.bell)) delete acc.bell;
+          if(acc.hist&&!Array.isArray(acc.hist)) delete acc.hist;
+          if(loc.communal&&!acc.communal){ const mm={...acc}; if(loc.grades) mm.grades=loc.grades; m[c.name]=mm; unioned++; changed=1; return; }
+          if(acc.communal) return;   // an own local map never bows to a skeleton
+          const g=mapMerge(loc,acc); g.rcs={...(acc.rcs||{}),...(loc.rcs||{})};
+          if(loc.grades) g.grades=loc.grades; else delete g.grades;
+          g.disp=loc.disp||acc.disp||g.disp;
+          if(JSON.stringify({...g,grades:0})!==JSON.stringify({...loc,grades:0})){ m[c.name]=g; unioned++; changed=1; }
+          if(JSON.stringify({...g,grades:0})!==JSON.stringify({...acc,grades:0})) needUp.push(c.name);
+        }catch(e8){} } });
+    if(changed){ localStorage.setItem('bsCal',JSON.stringify(m)); localStorage.setItem('bsBadge',JSON.stringify(b)); }
+    for(const k9 of needUp){ try{ await cloudUpsertOne(k9); }catch(e8){} }   // the account adopts the union too — both sides land identical
     const el=$('cloudStat');
-    if(el){ let t=(LANG==='tr'?'Bağlı: ':'Signed in: ')+u.email+' \u00b7 '+data.length+(LANG==='tr'?' kahve bulutta':' in cloud');
+    if(el){ let t=(LANG==='tr'?'Bağlı: ':'Signed in: ')+u.email+' \u00b7 '+live.length+(LANG==='tr'?' kahve bulutta':' in cloud');
       if(added) t+=' \u00b7 +'+added+(LANG==='tr'?' yeni alındı':' new pulled');
-      if(differ) t+=' \u00b7 '+differ+(LANG==='tr'?' farklı (Getir)':' differ (use Bring)');
+      if(unioned) t+=' \u00b7 '+unioned+(LANG==='tr'?' birleşti':' merged');
+      if(buried) t+=' \u00b7 '+buried+(LANG==='tr'?' silme uygulandı':' deletions applied');
       el.textContent=t; }
   }catch(e){}
 }
@@ -2254,13 +2285,13 @@ async function cloudNameDeleteGo(el){ try{ const tr=(LANG==='tr'); const nm=el.d
   if(!confirm(tr?('«'+nm+'» bulut kaydı silinsin mi?\nBu cihazda haritası yok; hesap listesinden kaldırılır.'):('Delete the cloud record “'+nm+'”?\nNo local map here; it is removed from the account list.'))) return;
   if(!SB){ toast(tr?'Çevrimdışı: silinemedi':'Offline: not deleted'); return; }
   const u=await cloudStatus(); if(!u||!planActive()){ toast(tr?"Önce Guide'da giriş yap.":'Sign in via the Guide first.'); return; }
-  try{ await SB.from('coffees').delete().eq('owner',u.id).eq('name',(nm||'').trim().toLowerCase()); }catch(e9){}
+  try{ await SB.from('coffees').upsert({owner:u.id,name:(nm||'').trim().toLowerCase(),badge:{},green:{moisture:null,aw:null,process:null},map:{tomb:true,ts:new Date().toISOString().slice(0,10),to:null}},{onConflict:'owner,name'}); }catch(e9){}   // v08-17m tombstone
   try{ const i9=CLOUDNAMES.indexOf(nm); if(i9>=0) CLOUDNAMES.splice(i9,1); }catch(e9){}
   toast(tr?'Bulut kaydı silindi.':'Cloud record deleted.'); rcNamesOpen();
 }catch(e9){} }
 async function cloudRenameOne(oldK,newK){ try{ if(!SB) return; const u=await cloudStatus(); if(!u||!planActive()) return;
   await cloudUpsertOne(newK);
-  await SB.from('coffees').delete().eq('owner',u.id).eq('name',oldK);
+  await SB.from('coffees').upsert({owner:u.id,name:oldK,badge:{},green:{moisture:null,aw:null,process:null},map:{tomb:true,ts:new Date().toISOString().slice(0,10),to:newK}},{onConflict:'owner,name'});   // v08-17m: forwarding tombstone — a stale device folds its old copy into the new name
 }catch(e9){} }
 // v08-17f ONE-TIME MIGRATION (his order 08-17): "ethiopia yirgacheffe gr.2" folds into "Etiyopya Yirgacheffe"
 // on every device it still exists — automatically, at boot, merge-safe (union on collision). Grade rides the badge.
@@ -2364,7 +2395,7 @@ function mapDeleteGo(el){ try{ const tr=(LANG==='tr'); const k=el.dataset.mdel, 
   localStorage.setItem('bsCal',JSON.stringify(m));
   try{ const b=badgeMap(); if(b[k]){ delete b[k]; localStorage.setItem('bsBadge',JSON.stringify(b)); } }catch(e9){}
   (async()=>{ try{ if(!SB) return; const u=await cloudStatus(); if(!u||!planActive()) return;
-    await SB.from('coffees').delete().eq('owner',u.id).eq('name',k); }catch(e9){} })();
+    await SB.from('coffees').upsert({owner:u.id,name:k,badge:{},green:{moisture:null,aw:null,process:null},map:{tomb:true,ts:new Date().toISOString().slice(0,10),to:null}},{onConflict:'owner,name'}); }catch(e9){} })();   // v08-17m: a tombstone, not a hole — other devices apply the delete at boot
   toast(tr?'Harita silindi.':'Map deleted.'); rcNamesOpen();
 }catch(e9){} }
 // confirmed A0: first crack that is followed by >=2 more within 30s (a lone clank cannot own the anchor)
@@ -2917,7 +2948,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17l';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17m';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
