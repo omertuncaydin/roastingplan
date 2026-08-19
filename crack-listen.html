@@ -2158,15 +2158,23 @@ function rcNamesOpen(){ try{ gdPull(); }catch(e){}
   ext9.forEach(k9=>{ seen9[k9]=1; });
   try{ (typeof CLOUDNAMES!=='undefined'?CLOUDNAMES:[]).slice().sort().forEach(n9=>{ const k9=(n9||'').trim().toLowerCase(); if(k9&&!seen9[k9]){ see9(n9); LX.push({name:n9, cx:1}); } }); }catch(e9){}
   const LR=L.concat(LX);
+  const M0=calMap();   // v08-17s: one parse for the move-glyph condition
+  const UMOV=(function(){ try{ const all9=JSON.parse(localStorage.getItem('bsUniverses')||'{}'); const c9=UNI(); return Object.keys(all9).some(id9=>!c9||id9!==c9.uid); }catch(e9){ return false; } })();
   $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:17px">'+(tr?'Kahve seç':'Pick the coffee')+'</h1>'
    +'<div style="display:flex;gap:6px;margin-bottom:6px"><select id="rcOriginSel" style="width:34%;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px 6px;font-size:14px;background:#15100b;color:var(--ink)"><option value="">'+(tr?'ülke…':'origin…')+'</option>'+RCORIGINS.map(o=>'<option>'+o+'</option>').join('')+'</select>'
    +'<input id="rcNameIn" value="'+String(cName.value||'').replace(/"/g,'&quot;')+'" placeholder="'+(tr?'ya da yeni isim yaz':'or type a new name')+'" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:15px;background:#15100b;color:var(--ink)">'
    +'<button class="pm" style="width:auto;padding:0 16px;font-size:14px;background:var(--accent2);color:#fff;border:none" onclick="rcNamesOK()">OK</button></div>'
    +(LR.length?(LR.map(r=>{ const mk=mapMark(r.name); const sec=mk.st==='own'?(String(mk.n||0)+' '+(tr?'öğrenilmiş':'learned')):(mk.st==='comm'?(tr?'ödünç ses':'borrowed sound'):'');
-      const tools=r.mx
+      const mvk9=(function(){ if(!UMOV) return null; const k1=(r.name||'').trim().toLowerCase();
+        if(M0[k1]&&!M0[k1].communal) return k1;
+        const b1=(beanOf(k1)||'').trim().toLowerCase(); if(b1&&M0[b1]&&!M0[b1].communal) return b1;
+        const c1=(codeName(b1||k1)||'').toLowerCase(); if(c1&&M0[c1]&&!M0[c1].communal) return c1;
+        return null; })();   // v08-17s: any row drinking from an own map can send that map to another universe
+      const tools=(r.mx
         ?(' <span data-mrn="'+escC(r.mx)+'" style="color:var(--accent);font-size:12px;cursor:pointer;padding:0 4px">&#9998;</span><span data-mdel="'+escC(r.mx)+'" style="color:var(--muted);font-size:12px;cursor:pointer;padding:0 4px">&#128465;</span>')
         :(r.cx?(' <span data-cdel="'+escC(r.name)+'" style="color:var(--muted);font-size:12px;cursor:pointer;padding:0 4px">&#128465;</span>')
-        :(' <span data-rrn="'+escC(r.name)+'" style="color:var(--accent);font-size:12px;cursor:pointer;padding:0 4px">&#9998;</span><span data-rdel="'+escC(r.name)+'" style="color:var(--muted);font-size:12px;cursor:pointer;padding:0 4px">&#128465;</span>'));
+        :(' <span data-rrn="'+escC(r.name)+'" style="color:var(--accent);font-size:12px;cursor:pointer;padding:0 4px">&#9998;</span><span data-rdel="'+escC(r.name)+'" style="color:var(--muted);font-size:12px;cursor:pointer;padding:0 4px">&#128465;</span>')))
+        +(mvk9?('<span data-umove="'+escC(mvk9)+'" title="'+(tr?'evrene taşı':'move to universe')+'" style="color:var(--muted);font-size:12px;cursor:pointer;padding:0 4px">&#8644;</span>'):'');
       return '<div data-rn="'+escC(r.name)+'" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer;font-size:15px"><span>'+escC(r.name)+tools+'</span><span style="display:flex;align-items:baseline;gap:7px">'+(sec?('<span style="font-size:10.5px;color:var(--muted)">'+sec+'</span>'):'')+mapMarkTag(mk)+'</span></div>'; }).join('')
       +(function(){ let mo=0,mc=0; LR.forEach(r2=>{ const s9=mapMark(r2.name).st; if(s9==='own') mo++; else if(s9==='comm') mc++; });
         return '<div style="border-top:1px solid var(--line);margin-top:2px;padding-top:7px;font-size:11px;color:var(--muted);text-align:center">'+(tr?(LR.length+' kahveden '+mo+' eşli'+(mc?(' · '+mc+' ödünç'):'')):(mo+' of '+LR.length+' mapped'+(mc?(' · '+mc+' borrowed'):'')))+'</div>'; })()):('<div class="hint">'+(tr?'Reçete yok':'No recipes yet')+'</div>'))
@@ -2180,6 +2188,7 @@ function rcNamesOpen(){ try{ gdPull(); }catch(e){}
   $('modalBox').querySelectorAll('[data-rrn]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); rcpRenameUI(x); }; });
   $('modalBox').querySelectorAll('[data-rdel]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); rcpDeleteGo(x); }; });
   $('modalBox').querySelectorAll('[data-mdel]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); mapDeleteGo(x); }; });
+  $('modalBox').querySelectorAll('[data-umove]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); mapMoveGo(x); }; });
   $('modalBox').querySelectorAll('[data-cdel]').forEach(x=>{ x.onclick=ev=>{ ev.stopPropagation(); cloudNameDeleteGo(x); }; }); }
 function closeName(){ { let v9=(cName.value||'').trim();   // 'bean (bittersweet' -> auto ')' ; abandoned 'bean (' -> stripped
     if(/\([^)]+$/.test(v9)) cName.value=v9+')'; else if(/\($/.test(v9)) cName.value=v9.slice(0,-1).trim(); }
@@ -2435,6 +2444,36 @@ async function rcpDeleteGo(el){ try{ const tr=(LANG==='tr'); const nm=el.dataset
   if(error){ toast(tr?'Silinemedi (çevrimdışı?).':'Delete failed (offline?).'); return; }
   gdCacheSet(cache.filter(r9=>r9!==row));
   toast(tr?'Reçete silindi.':'Recipe deleted.'); rcNamesOpen();
+}catch(e9){} }
+// v08-17s RECLASSIFY (his order: Peach was filed under the test universe): move ONE coffee's map to
+// another universe. One direction by design — from the universe that HOLDS the map (gold row visible)
+// into a parked one. If the target already holds the same coffee, they merge-union (fuller wins,
+// lessons add up) — nothing is overwritten. Local-first: the account row rides on the next save there.
+function mapMoveGo(el){ try{ const tr=(LANG==='tr'); const k=el.dataset.umove;
+  const m=calMap(); const e=m[k]; if(!e||e.communal) return;
+  let all={}; try{ all=JSON.parse(localStorage.getItem('bsUniverses')||'{}'); }catch(e9){}
+  const cur=UNI();
+  const others=Object.keys(all).filter(id9=>!cur||id9!==cur.uid);
+  if(!others.length){ toast(tr?'Taşınacak başka evren yok.':'No other universe to move to.'); return; }
+  pickModal((tr?'Haritayı taşı':'Move the map'),
+    (tr?('«'+(e.disp||k)+'» haritası işaretlediğin evrene taşınır; orada aynı kahve varsa birleşir (öğrenilmişler toplanır). TEK evren işaretli kalsın.'):('The map of “'+(e.disp||k)+'” moves to the ticked universe; if the coffee exists there they merge (lessons add up). Leave exactly ONE ticked.')),
+    others.map(id9=>{ const u9=all[id9]||{}; return (u9.name||u9.meter||id9)+' · A0 '+(u9.a0!=null?Math.round(u9.a0):'?'); }),
+    (tr?'Taşı':'Move'),
+    sel=>{ try{
+      if(!sel||sel.length!==1){ toast(tr?'Tam olarak TEK evren işaretle.':'Tick exactly ONE universe.'); return; }
+      const uid=others[sel[0]];
+      const m2=calMap(); const e2=m2[k]; if(!e2) return;
+      let verse={}; try{ verse=JSON.parse(localStorage.getItem('bsCalVerse')||'{}'); }catch(e9){}
+      const tv=verse[uid]||{};
+      if(tv[k]&&!tv[k].communal){ const g=mapMerge(tv[k],e2); g.rcs={...(tv[k].rcs||{}),...(e2.rcs||{})}; g.disp=e2.disp||tv[k].disp||g.disp; tv[k]=g; }
+      else tv[k]=e2;
+      try{ tv[k].universe=all[uid]; }catch(e9){}
+      verse[uid]=tv; localStorage.setItem('bsCalVerse',JSON.stringify(verse));
+      delete m2[k]; if(m2['__house']&&m2['__house'].src===k) delete m2['__house'];
+      localStorage.setItem('bsCal',JSON.stringify(m2));
+      toast((e2.disp||k)+' → '+((all[uid]||{}).name||(all[uid]||{}).meter||uid)+(tr?' · o evren açılınca görünür':' · visible when that universe is active'));
+      try{ updateGauge(); }catch(e9){} rcNamesOpen();
+    }catch(e9){} });
 }catch(e9){} }
 function mapDeleteGo(el){ try{ const tr=(LANG==='tr'); const k=el.dataset.mdel, m=calMap(), e=m[k]; if(!e) return;
   const n9=(e.hist||[]).length;
@@ -3019,7 +3058,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17r';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17s';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
