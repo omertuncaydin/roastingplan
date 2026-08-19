@@ -1752,14 +1752,53 @@ const SUPA_URL='https://efjvfggwnhqkunjvoyjb.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA';
 let SB=null; try{ if(typeof supabase!=='undefined') SB=supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
 try{ if(WCON) wcCmdSub(true); }catch(e){}   // boot-time cast restore runs before SB exists (TDZ); re-arm the command ear here, after the client is born
-try{ if(SB){ SB.auth.onAuthStateChange(()=>{ syncPlanFromAccount(); uniSync(true); wkSync(); umSync(true); }); setTimeout(syncPlanFromAccount, 1200); setTimeout(()=>uniSync(true), 1500); setTimeout(()=>wkSync(), 1600); setTimeout(()=>umSync(true), 1800); } }catch(e){}   // codes retired: the account IS the license
+async function acctChain(){ try{ if(!(await acctGuard())) return; syncPlanFromAccount(); setTimeout(()=>uniSync(true),300); setTimeout(()=>wkSync(),400); setTimeout(()=>umSync(true),600); }catch(e){} }
+try{ if(SB){ SB.auth.onAuthStateChange(()=>{ ACCTQ=null; acctChain(); }); setTimeout(acctChain, 1200); } }catch(e){}   // codes retired: the account IS the license; v08-17r: the switch guard fronts the chain
 try{ fetch(SUPA_URL+'/rest/v1/noise_lib?select=f,hf,w',{headers:{apikey:SUPA_KEY,authorization:'Bearer '+SUPA_KEY}}).then(r=>r.ok?r.json():[]).then(rows=>{ (rows||[]).forEach(e=>NLC.push({f:e.f,hf:e.hf,w:e.w,src:'global'})); }).catch(()=>{}); }catch(e){}
 try{ const eb=$('enrollBtn'); if(eb) eb.textContent=tt('Teach it your voice'); }catch(e){}
 async function cloudUser(){ if(!SB) return null; try{ const {data}=await SB.auth.getUser(); return (data&&data.user)||null; }catch(e){ return null; } }
 let UMSTAMP={}; try{ UMSTAMP=JSON.parse(localStorage.getItem('bsCalPushed')||'{}'); }catch(e){}
+// ---- v08-17r ACCOUNT SWITCH GUARD + PARKING ----
+const ACCTKEYS=['bsCal','bsBadge','bsRc','bsCoffee','bsUniverse','bsUniverses','bsCalVerse','bsCalPushedVerse','bsUniPushed','bsCalPushed','cnRecipes_cache','gCharge','gChargeTs','bsInputs','bsBatchByEq'];
+function acctUiRefresh(){ try{ USTAMP=JSON.parse(localStorage.getItem('bsUniPushed')||'{}'); }catch(e){ USTAMP={}; }
+  try{ UMSTAMP=JSON.parse(localStorage.getItem('bsCalPushed')||'{}'); }catch(e){ UMSTAMP={}; }
+  try{ GDPULLED=0; }catch(e){}
+  try{ setUniPill(); }catch(e){} try{ updateGauge(); }catch(e){} try{ renderNameplate(); }catch(e){}
+  try{ rcLineUI(); renderRcRow(); }catch(e){} try{ renderEquipSel(); }catch(e){} }
+function acctPark(id9){ try{ const b9=JSON.parse(localStorage.getItem('bsAcctPark')||'{}');
+  const sn9={}; ACCTKEYS.forEach(k9=>{ sn9[k9]=localStorage.getItem(k9); });
+  b9[id9]=sn9; localStorage.setItem('bsAcctPark',JSON.stringify(b9));
+  ACCTKEYS.forEach(k9=>localStorage.removeItem(k9)); }catch(e9){} }
+function acctRestore(id9){ try{ const b9=JSON.parse(localStorage.getItem('bsAcctPark')||'{}');
+  const sn9=b9[id9]; if(!sn9) return false;
+  ACCTKEYS.forEach(k9=>{ const v9=sn9[k9]; if(v9==null) localStorage.removeItem(k9); else localStorage.setItem(k9,v9); });
+  delete b9[id9]; localStorage.setItem('bsAcctPark',JSON.stringify(b9)); return true; }catch(e9){ return false; } }
+let ACCTQ=null;   // memoized decision for this signed-in session; reset on every auth change
+function acctGuard(){ if(ACCTQ) return ACCTQ;
+  ACCTQ=(async()=>{ try{
+    if(!SB){ ACCTQ=null; return true; }   // no client yet: decide nothing, re-evaluate when one exists
+    const u=await cloudUser(); if(!u||!u.id){ ACCTQ=null; return true; }   // signed out: plain device mode
+    let prev=null; try{ prev=JSON.parse(localStorage.getItem('bsAcct')||'null'); }catch(e){}
+    if(!prev||prev.id===u.id){ localStorage.setItem('bsAcct',JSON.stringify({id:u.id,email:u.email||''}));
+      if(acctRestore(u.id)){ acctUiRefresh(); try{ toast(LANG==='tr'?'Park edilmiş verilerin geri geldi.':'Your parked data is back.'); }catch(e){} }
+      return true; }
+    const tr=(LANG==='tr'); let n1=0; try{ n1=Object.keys(calMap()).filter(k9=>k9!=='__house').length; }catch(e){}
+    if(confirm(tr?('Bu cihaz «'+(prev.email||'?')+'» hesabının verisini taşıyor ('+n1+' kahve). PARK edilip «'+(u.email||'?')+'» için temiz başlansın mı?\nTamam = park (o hesap dönünce verisi geri gelir)\nVazgeç = veri görünür kalır ama eşitleme bu cihazda KAPANIR.')
+      :('This device carries data of “'+(prev.email||'?')+'” ('+n1+' coffees). PARK it and start fresh for “'+(u.email||'?')+'”?\nOK = park (it returns when that account signs back in)\nCancel = data stays visible but sync goes OFF on this device.'))){
+      acctPark(prev.id); localStorage.setItem('bsAcct',JSON.stringify({id:u.id,email:u.email||''}));
+      acctRestore(u.id); acctUiRefresh();
+      try{ toast(tr?'Cihaz verisi park edildi · temiz başlangıç.':'Device data parked · fresh start.'); }catch(e){}
+      return true;
+    } else {
+      try{ window.SB0=SB; }catch(e){}
+      SB=null;   // total blockade: every cloud path in the app dies on its own !SB check, reads and writes alike
+      try{ toast(tr?'Yabancı hesap: eşitleme bu cihazda duraklatıldı. Sahip hesapla girip sayfayı YENİLE.':'Foreign account: sync paused on this device. Sign in with the owner account and RELOAD.'); }catch(e){}
+      return false; }
+  }catch(e){ return true; } })();
+  return ACCTQ; }
 function umHash(e){ try{ const c=Object.assign({},e); delete c.up; return JSON.stringify(c); }catch(e2){ return ''; } }
 async function umSync(pull){ try{
-  if(!SB) return; if(!proPowers()) return;   // cloud maps are the Roaster promise: paid tiers and the owner only
+  if(!SB) return; if(!(await acctGuard())) return; if(!proPowers()) return;   // cloud maps are the Roaster promise: paid tiers and the owner only
   const u=await cloudUser(); if(!u||!u.email) return;
   const m=calMap(); let dirty=false;
   const uidNow=(UNI()&&UNI().uid)||'u0';
@@ -1783,7 +1822,7 @@ try{ document.addEventListener('visibilitychange',()=>{ if(document.hidden){ umS
 let USTAMP={}; try{ USTAMP=JSON.parse(localStorage.getItem('bsUniPushed')||'{}'); }catch(e){}
 function uniHash(x){ try{ const c=Object.assign({},x); delete c.up; return JSON.stringify(c); }catch(e2){ return ''; } }
 async function uniSync(pull){ try{
-  if(!SB) return; if(!proPowers()) return;   // the library is memory, and memory is the service
+  if(!SB) return; if(!(await acctGuard())) return; if(!proPowers()) return;   // the library is memory, and memory is the service
   const u=await cloudUser(); if(!u||!u.email) return;
   let all={}; try{ all=JSON.parse(localStorage.getItem('bsUniverses')||'{}'); }catch(e2){}
   const cur=UNI(); if(cur&&cur.uid&&!all[cur.uid]){ all[cur.uid]=cur; }   // old installs kept the current one outside the library
@@ -1810,7 +1849,7 @@ async function uniSync(pull){ try{
 // ---- watch key follows the account: pair the wrist ONCE, every signed-in phone speaks on the same channel.
 // Cloud key wins; a phone with no cloud key donates its own. watchOS has no paste, so the key must never need typing.
 async function wkSync(){ try{
-  if(!SB) return; if(!proPowers()) return;
+  if(!SB) return; if(!(await acctGuard())) return; if(!proPowers()) return;
   const u=await cloudUser(); if(!u) return;
   const {data}=await SB.from('user_settings').select('watch_key').eq('owner',u.id);
   const ck=data&&data[0]&&data[0].watch_key;
@@ -1863,6 +1902,7 @@ async function pushRoastUpdate(){ try{
     anchors:(SAMPLES&&SAMPLES.length)?SAMPLES.map(s2=>({dt:+((s2.t-a0v).toFixed(1)),ag:s2.ag})):null }).eq('id',LASTROASTROW);   // late-entered sample colors reach the cloud row too
 }catch(e){} }
 async function syncPlanFromAccount(){ try{
+  if(!(await acctGuard())) return;
   const u=await cloudUser(); CLOUDEMAIL=(u&&u.email)||null; refreshPlanUI(); if(!u||!u.email) return;
   const {data}=await SB.from('entitlements').select('access,plan_until').eq('email',u.email).maybeSingle();
   const plan=(data&&data.access&&data.access.plan)||null;
@@ -1951,10 +1991,10 @@ async function cloudPull(){
     toast((LANG==='tr'?'Buluttan alındı: ':'Brought: ')+n); updateGauge(); updateSD();
   });
 }
-async function chargePush(){ try{ if(!SB) return; const u=await cloudUser(); if(!u) return;
+async function chargePush(){ try{ if(!SB) return; if(!(await acctGuard())) return; const u=await cloudUser(); if(!u) return;
   await SB.from('user_settings').upsert({owner:u.id, charge:chgMap(), updated_at:new Date().toISOString()},{onConflict:'owner'}); }catch(e){} }
 let CHGEDIT=0;   // v05i: moment of the last LOCAL human edit — pull yields to it briefly instead of racing it
-async function chargePull(){ try{ if(!SB) return; const u=await cloudUser(); if(!u) return;
+async function chargePull(){ try{ if(!SB) return; if(!(await acctGuard())) return; const u=await cloudUser(); if(!u) return;
   const {data}=await SB.from('user_settings').select('charge,updated_at').eq('owner',u.id);
   const r=data&&data[0]; if(!r||!r.charge) return;
   if(Date.now()-CHGEDIT<15000) return;   // a just-saved table outranks an in-flight read
@@ -1964,6 +2004,7 @@ async function chargePull(){ try{ if(!SB) return; const u=await cloudUser(); if(
   renderEquipSel(); try{ btAim(); }catch(e){} try{ renderEqStrip(); renderSum(); }catch(e){}
 }catch(e){} }
 async function cloudAutoSync(){   // on open, signed in: pull ADDITIONS only (zero overwrite risk); differing coffees are counted, never touched
+  if(!(await acctGuard())) return;
   const u=await cloudStatus(); if(!u||!SB) return;
   if(!planActive()) return;   // cloud is Pro
   try{
@@ -2978,7 +3019,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17q';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17r';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -3230,7 +3271,7 @@ function gdParseDev(s){ const m=s&&s.match(/(\d+)\s*s\b/i); return m?parseInt(m[
 function gdParseAg(s){ const m=s&&s.match(/(\d+)\s*A\s*$/); return m?parseInt(m[1],10):null; }
 function gdRecipes(){ try{ const a=JSON.parse(localStorage.getItem('cnRecipes_cache')||'null'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
 let GDPULLED=0;
-async function gdPull(){ if(!SB) return; if(Date.now()-GDPULLED<60000) return; GDPULLED=Date.now();
+async function gdPull(){ if(!SB) return; if(!(await acctGuard())) return; if(Date.now()-GDPULLED<60000) return; GDPULLED=Date.now();
   try{ const u=await cloudUser(); if(!u) return;
     const {data,error}=await SB.from('recipes').select('*').order('sort_order',{ascending:true});
     if(error||!Array.isArray(data)) return;
