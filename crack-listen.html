@@ -305,7 +305,7 @@ body.st-setup #btn{display:none}
   </div>
   <div class="row" id="tmpRow" style="margin-top:10px">
     <div class="card" style="flex:1;min-width:0">
-      <div class="lbl">sıcaklık · S eğrisi <span class="info" onclick="showInfo('tmp')">&#9432;</span> <span id="tmpLast" style="color:var(--gold);font-weight:700;margin-left:6px"></span></div>
+      <div class="lbl">temperature · S curve <span class="info" onclick="showInfo('tmp')">&#9432;</span> <span id="tmpLast" style="color:var(--gold);font-weight:700;margin-left:6px"></span></div>
       <canvas id="tmpG" width="640" height="150" style="width:100%;height:auto;background:none;margin-top:4px"></canvas>
     </div>
   </div>
@@ -344,7 +344,7 @@ body.st-setup #btn{display:none}
     <div id="styleChips" style="display:none;flex-wrap:wrap;gap:5px;justify-content:center;margin:6px 0 2px"></div>
     <div id="nameEdit" style="display:none;text-align:left;margin:10px 0 8px">
       <div class="lbl" style="margin-bottom:5px">coffee · mapping key</div>
-      <input type="text" id="coffeeName" placeholder="chirripó yıkanmış" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:16px;background:#15100b;color:var(--ink)">
+      <input type="text" id="coffeeName" placeholder="chirripó washed" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:16px;background:#15100b;color:var(--ink)">
       <div id="nameChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
     </div>
     <div id="agWrap" style="position:relative;display:flex;justify-content:center">
@@ -364,7 +364,7 @@ body.st-setup #btn{display:none}
       <div class="lbl" style="color:var(--gold);margin:10px 0 5px">ground agtron · the number that teaches the app</div>
       <div style="display:flex;gap:6px;margin-bottom:6px">
         <input type="text" id="mAgG" placeholder="Agtron ground" inputmode="decimal" style="flex:1.4;min-width:0;border:2px solid var(--gold);border-radius:9px;padding:10px;font-size:22px;font-weight:800;text-align:center;background:#26200f;color:var(--ink);box-shadow:0 0 14px rgba(230,193,75,.25)">
-        <input type="text" id="mTarget" placeholder="Hedef Agtron" inputmode="decimal" title="Kupalar sonrası kararın: bu kahvenin hedef rengi" style="flex:1;min-width:0;border:2px solid rgba(230,193,75,.55);border-radius:9px;padding:10px;font-size:18px;font-weight:700;text-align:center;background:var(--panel2);color:var(--gold)">
+        <input type="text" id="mTarget" placeholder="Target Agtron" inputmode="decimal" title="Kupalar sonrası kararın: bu kahvenin hedef rengi · your call after cupping: this coffee's target color" style="flex:1;min-width:0;border:2px solid rgba(230,193,75,.55);border-radius:9px;padding:10px;font-size:18px;font-weight:700;text-align:center;background:var(--panel2);color:var(--gold)">
       </div>
       <div id="sampList"></div>
       <button class="go" id="mapBtn" onclick="saveCalIfMapped(true);updateGauge();pushRoastUpdate()" style="display:none;background:var(--accent2);margin-top:8px">Map this coffee (save color)</button>
@@ -401,7 +401,7 @@ body.st-setup #btn{display:none}
   <button id="enrollBtn" onclick="enrollToggle()">Teach it your voice</button>
   <button id="sampleBtn" onclick="markSample()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><ellipse cx="7.4" cy="7.4" rx="4" ry="5.2" transform="rotate(-45 7.4 7.4)" fill="#e6c14b"/><line x1="10.6" y1="10.6" x2="20" y2="20" stroke="#e6c14b" stroke-width="2.6" stroke-linecap="round"/></svg><span id="sampLbl">Sample pulled</span><b id="sampN"></b></button>
   <button class="go" id="btn" onclick="toggle()">Start listening</button>
-  <div id="cfgLine"><span onclick="rcTableOpen()">reçeteler</span> · <span onclick="uniOpen(false)">evren</span> · <span onclick="resExport()">veri</span> · <span onclick="cfgWatch()">watch</span> · <span onclick="cfgToggle()">ayarlar <span id="cfgCar">▾</span></span></div>
+  <div id="cfgLine"><span onclick="rcTableOpen()">recipes</span> · <span onclick="uniOpen(false)">universe</span> · <span onclick="resExport()">data</span> · <span onclick="cfgWatch()">watch</span> · <span onclick="cfgToggle()">settings <span id="cfgCar">▾</span></span></div>
   <div class="err" id="err"></div>
   <button id="labChip" onclick="labToggle()">lab mode</button>
   <div id="a0Banner" onclick="markSample()"></div>
@@ -423,7 +423,7 @@ body.st-setup #btn{display:none}
       <summary style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;cursor:pointer;padding:2px 0">roast record (travels inside the CSV)</summary>
       <input type="text" id="mCoffee" placeholder="Coffee" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink);margin-bottom:6px">
       <div style="display:flex;gap:6px;margin-bottom:6px">
-        <select id="mEquip" onchange="localStorage.setItem('bsEquip',this.value);renderBatchSel()" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)"></select>
+        <select id="mEquip" onchange="eqSelChange(this)" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)"></select>
         <select id="mBatchSel" onchange="pickBatch(this.value)" style="flex:1.4;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:16px;background:var(--panel2);color:var(--ink)"></select>
         <button type="button" id="chgTempBtn" onclick="chargeEditor()" style="flex:0.9;border:1.5px solid var(--gold);border-radius:999px;background:rgba(230,193,75,.1);color:var(--gold);font-size:13px;font-weight:600;cursor:pointer"><span>&#127777;</span> <span>Charge temps</span></button>
       </div>
@@ -502,7 +502,7 @@ body.st-setup #btn{display:none}
   <div class="card">
     <div class="ctl"><label>Watch cast <span class="info" onclick="event.stopPropagation();showInfo('wcast')">&#9432;</span></label><span class="v" id="wcV" style="margin-left:8px;font-size:12px;opacity:.85">off</span><label style="display:flex;align-items:center;margin-left:auto;cursor:pointer"><input type="checkbox" id="wcTog" onchange="wcToggle(this.checked)" style="width:19px;height:19px;accent-color:var(--accent2)"></label></div>
     <div class="ctl" id="wcRow" style="display:none;gap:8px"><label id="wcLink" style="font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8"></label><button class="pm" style="width:auto;padding:0 12px;font-size:13px" onclick="wcApp()" title="Anahtarı CoffeeNutz iPhone uygulamasına gönder — saat kendiliğinden bağlanır · sends the key to the CoffeeNutz iPhone app; the watch pairs itself">⌚ app</button><button class="pm" style="width:auto;padding:0 12px;font-size:13px" onclick="wcCopy()">copy</button><button class="pm" style="width:auto;padding:0 12px;font-size:13px" onclick="wcShare()">share</button></div>
-    <div class="hint" style="font-size:11.5px;margin-top:6px;color:var(--dim)">Tablet / iPad: tam ekran ikinci ekran &#183; <b style="color:var(--gold)">Apple Watch &#183; yakında / soon</b></div>
+    <div class="hint" style="font-size:11.5px;margin-top:6px;color:var(--dim)">Tablet / iPad: full-screen second display &#183; <b style="color:var(--gold)">Apple Watch &#183; soon</b></div>
   </div>
   </details>
 
@@ -773,7 +773,34 @@ function chgMap(){ try{ const v=JSON.parse(localStorage.getItem('gCharge')||'nul
   try{ localStorage.setItem('gCharge',JSON.stringify(d)); }catch(e){}
   return d; }
 function renderEquipSel(){ const el=$('mEquip'); if(!el) return; const ms=[...new Set([...Object.keys(chgMap()),'Bullet','HSR15'])];
-  const cur=localStorage.getItem('bsEquip')||ms[0]; el.innerHTML=ms.map(m=>'<option'+(m===cur?' selected':'')+'>'+m+'</option>').join(''); renderBatchSel(); }
+  const cur=localStorage.getItem('bsEquip')||ms[0]; el.innerHTML=ms.map(m=>'<option'+(m===cur?' selected':'')+'>'+m+'</option>').join('')
+    +'<option value="__add">'+(LANG==='tr'?'+ yeni makine…':'+ new machine…')+'</option>'; renderBatchSel(); }
+// v08-17t (his "a"): anyone can add a roaster — the name becomes a charge-table key, so it appears in
+// every selector and rides the account with the rest of the table. No code lists machines anymore.
+function eqSelChange(el){ if(el.value==='__add'){ try{ el.value=localStorage.getItem('bsEquip')||'Bullet'; }catch(e9){} eqAddOpen(); return; }
+  localStorage.setItem('bsEquip',el.value); renderBatchSel(); try{ renderEqStrip(); renderSum(); }catch(e9){} }
+function eqAddOpen(){ const tr=(LANG==='tr');
+  $('modalBox').innerHTML='<h1 style="margin:0 0 6px;font-size:17px">'+(tr?'Yeni makine':'New machine')+'</h1>'
+   +'<div class="hint" style="font-size:12px;margin-bottom:8px">'+(tr?'Adını yaz; şarj tablosunda yerini alır, her seçiciye girer ve hesabınla eşitlenir. Sonra gramaj → şarj sıcaklıklarını doldur.':'Name it; it takes a slot in the charge table, enters every selector and syncs with your account. Then fill its batch → charge temps.')+'</div>'
+   +'<input id="eqNewName" placeholder="'+(tr?'örn. Kaleido M10':'e.g. Kaleido M10')+'" style="width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:16px;background:#15100b;color:var(--ink)">'
+   +'<button style="margin-top:12px;background:var(--accent2)" onclick="eqAddGo()">'+(tr?'Ekle':'Add')+'</button>'
+   +'<button style="margin-top:8px;background:var(--panel2);border:1px solid var(--line)" onclick="document.getElementById(\'modal\').style.display=\'none\'">'+(tr?'Vazgeç':'Cancel')+'</button>';
+  $('modal').style.display='flex'; const i9=$('eqNewName'); if(i9) i9.focus(); }
+function eqAddGo(){ const tr=(LANG==='tr');
+  const nm=(($('eqNewName')||{}).value||'').trim().replace(/\s+/g,' ').slice(0,24);
+  if(!nm){ toast(tr?'Makine adı boş olamaz.':'The machine needs a name.'); return; }
+  const cm=chgMap();
+  const ms=[...new Set([...Object.keys(cm),'Bullet','HSR15'])];
+  if(ms.some(m9=>m9.toLowerCase()===nm.toLowerCase())){ toast(tr?'Bu makine zaten var.':'That machine already exists.'); return; }
+  CHGEDIT=Date.now(); cm[nm]={}; localStorage.setItem('gCharge',JSON.stringify(cm));
+  localStorage.setItem('gChargeTs',new Date().toISOString());
+  localStorage.setItem('bsEquip',nm);
+  try{ chargePush(); }catch(e9){}
+  try{ renderEquipSel(); renderEqStrip(); renderSum(); }catch(e9){}
+  $('modal').style.display='none';
+  toast(tr?(nm+' eklendi · şimdi şarj tablosunu doldur.'):(nm+' added · now fill its charge table.'));
+  try{ if($('mEquip')) $('mEquip').value=nm; }catch(e9){}
+  try{ chargeEditor(); }catch(e9){} }
 function renderBatchSel(){ const el=$('mBatchSel'); if(!el) return; const cm=chgMap()[$('mEquip').value]||{};
   const ks=Object.keys(cm).map(Number).sort((a,b)=>a-b);
   el.innerHTML='<option value="">'+(LANG==='tr'?'- şarj seç -':'- pick charge -')+'</option>'+ks.map(k=>'<option value="'+k+'">'+k+' g \u00b7 '+cm[k]+'\u00b0C</option>').join(''); }
@@ -1241,13 +1268,15 @@ function renderEqStrip(){ try{ const ep=$('eqPills'), bp=$('batchPills'); if(!ep
   const eq=localStorage.getItem('bsEquip')||'HSR15';
   const ms=[...new Set([...Object.keys(cmAll),'Bullet','HSR15'])].filter(Boolean);
   ep.innerHTML=ms.map(m=>'<span class="eqp'+(m===eq?' on':'')+'" data-m="'+m+'">'+m+'</span>').join('')
-    +'<span class="eqp" data-m="__edit" title="'+(tr?'şarj tablosunu düzenle':'edit charge table')+'">&#9881;</span>';
+    +'<span class="eqp" data-m="__edit" title="'+(tr?'şarj tablosunu düzenle':'edit charge table')+'">&#9881;</span>'
+    +'<span class="eqp" data-m="__add" title="'+(tr?'yeni makine ekle':'add a new machine')+'">+</span>';
   const cm=cmAll[eq]||{}; let byEq={}; try{ byEq=JSON.parse(localStorage.getItem('bsBatchByEq')||'{}'); }catch(e){}
   const cur=byEq[eq], ks=Object.keys(cm).sort((a,b)=>+a-+b);
   bp.innerHTML=ks.length?ks.map(g=>'<span class="bp'+(g===cur?' on':'')+'" data-g="'+g+'">'+g+'g \u00b7 '+cm[g]+'\u00b0</span>').join('')
     :('<span style="font-size:11px;color:var(--muted)">'+(tr?'şarj tablosu boş \u00b7 \u2699 ile doldur':'charge table empty \u00b7 fill via \u2699')+'</span>');
   ep.querySelectorAll('.eqp').forEach(x=>{ x.onclick=()=>{ const m=x.dataset.m;
     if(m==='__edit'){ try{ if($('mEquip')) $('mEquip').value=eq; }catch(e){} try{ chargeEditor(); }catch(e){} return; }
+    if(m==='__add'){ eqAddOpen(); return; }
     localStorage.setItem('bsEquip',m); btAim(); }; });
   bp.querySelectorAll('.bp').forEach(x=>{ x.onclick=()=>{ let b2={}; try{ b2=JSON.parse(localStorage.getItem('bsBatchByEq')||'{}'); }catch(e){}
     b2[eq]=x.dataset.g; localStorage.setItem('bsBatchByEq',JSON.stringify(b2));
@@ -3058,7 +3087,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17s';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17t';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -3691,6 +3720,7 @@ const EN2TR={
 'Start listening':'Dinlemeye başla','Teach it your voice':'Sesini öğret','Stop':'Durdur','Drop':'Drop','New session':'Yeni seans','Sample pulled':'Numune çekildi','Pull a sample':'Numune çek',
 'Save session (.zip)':'Seansı kaydet (.zip)','Batch card (PNG)':'Parti kartı (PNG)',
 'Load session (.zip / .csv)':'Seans yükle (.zip / .csv)','Export maps':'Haritaları dışa aktar','Import maps':'Haritaları içe aktar',
+'temperature · S curve':'sıcaklık · S eğrisi','chirripó washed':'chirripó yıkanmış','Target Agtron':'Hedef Agtron','recipes':'reçeteler','universe':'evren','data':'veri','settings':'ayarlar','Tablet / iPad: full-screen second display ·':'Tablet / iPad: tam ekran ikinci ekran ·','Apple Watch · soon':'Apple Watch · yakında',
 'Map this coffee (save color)':'Bu kahveyi eşle (rengi kaydet)','Bin':'Aralık','Trigger ×':'Tetik ×','High-pass':'Yüksek geçiren','Refresh':'Yenile',
 'how it works · 5 steps':'nasıl çalışır · 5 adım',
 'Name your coffee':'Kahveni adlandır',
