@@ -364,7 +364,6 @@ body.st-setup #btn{display:none}
       <div class="lbl" style="color:var(--gold);margin:10px 0 5px">ground agtron · the number that teaches the app</div>
       <div style="display:flex;gap:6px;margin-bottom:6px">
         <input type="text" id="mAgG" placeholder="Agtron ground" inputmode="decimal" style="flex:1.4;min-width:0;border:2px solid var(--gold);border-radius:9px;padding:10px;font-size:22px;font-weight:800;text-align:center;background:#26200f;color:var(--ink);box-shadow:0 0 14px rgba(230,193,75,.25)">
-        <button id="mAgCam" onclick="camOpen()" title="Kamerayla öğütülmüş renk · Ground color by camera" style="border:2px solid var(--gold);background:#26200f;color:var(--gold);border-radius:9px;padding:0 12px;font-size:20px;flex:0 0 auto">📷</button>
         <input type="text" id="mTarget" placeholder="Target Agtron" inputmode="decimal" title="Kupalar sonrası kararın: bu kahvenin hedef rengi · your call after cupping: this coffee's target color" style="flex:1;min-width:0;border:2px solid rgba(230,193,75,.55);border-radius:9px;padding:10px;font-size:18px;font-weight:700;text-align:center;background:var(--panel2);color:var(--gold)">
       </div>
       <div id="sampList"></div>
@@ -3088,132 +3087,7 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-// ===== v2026-08-21a CAM COLOR — two-reference ground color by phone camera (HIS ORDER 08-21) =====
-// Doctrine: the phone is NOT a meter; it is a TRANSFER instrument. Both references sit in the SAME
-// frame as the sample, so AWB/AE/tone-mapping cancel inside the two-point interpolation. The refs
-// are measured on the ACTIVE universe's meter, so the reading lands on that meter's scale.
-let CAMSTREAM=null,CAMRAF=0,CAMLAST=null,CAMBUSY=false,CAMTORCH=false;
-function srgbLin(c){ c/=255; return c<=0.04045? c/12.92 : Math.pow((c+0.055)/1.055,2.4); }
-function camPatchStat(data,w,cx,cy,r){
-  const ys=[]; let clip=0,n=0; const r2=r*r;
-  for(let y=Math.max(0,cy-r);y<cy+r;y++){ for(let x=Math.max(0,cx-r);x<cx+r;x++){
-    const dx=x-cx,dy=y-cy; if(dx*dx+dy*dy>r2) continue;
-    const i=(y*w+x)*4,R=data[i],G=data[i+1],B=data[i+2]; n++;
-    if(R>=250||G>=250||B>=250||(R<=4&&G<=4&&B<=4)) clip++;
-    ys.push(0.2126*srgbLin(R)+0.7152*srgbLin(G)+0.0722*srgbLin(B)); } }
-  ys.sort((a,b)=>a-b);
-  const core=ys.slice(Math.floor(ys.length*0.08),Math.ceil(ys.length*0.92));
-  const med=core[Math.floor(core.length/2)]||0;
-  const p16=ys[Math.floor(ys.length*0.16)]||0,p84=ys[Math.floor(ys.length*0.84)]||0;
-  return { y:med, spread: med>0?(p84-p16)/med:9, clip: n?clip/n:1 };
-}
-function camCalc(yL,yD,yS,aL,aD){
-  if(!(yL>0&&yD>0&&yS>0)) return {err:'no light'};
-  if(yL<=yD) return {err:'refs swapped'};
-  if((yL-yD)/yL<0.12) return {err:'low contrast'};
-  const t=(yS-yD)/(yL-yD);
-  return { ag: aD+t*(aL-aD), t };
-}
-function camRefs(){ try{ const u9=JSON.parse(localStorage.getItem('bsUniverse')||'null');
-  const k9=(u9&&u9.uid)||'__solo'; const all9=JSON.parse(localStorage.getItem('bsCamRefs')||'{}');
-  return {k:k9,r:all9[k9]||null,all:all9}; }catch(e9){ return {k:'__solo',r:null,all:{}}; } }
-function camRefSave(){ const o9=camRefs();
-  const aL=parseFloat(($('camAL')||{}).value),aD=parseFloat(($('camAD')||{}).value);
-  o9.all[o9.k]={aL:isFinite(aL)?aL:null,aD:isFinite(aD)?aD:null,ts:new Date().toISOString()};
-  localStorage.setItem('bsCamRefs',JSON.stringify(o9.all)); }
-function camClose(){ try{ if(CAMSTREAM) CAMSTREAM.getTracks().forEach(t9=>t9.stop()); }catch(e9){}
-  CAMSTREAM=null; try{ cancelAnimationFrame(CAMRAF); }catch(e9){}
-  const m9=$('camModal'); if(m9) m9.remove(); }
-function camGuides(cx9,w9,h9){ const r9=Math.min(w9,h9)*0.13,y9=h9*0.5;
-  const xs9=[0.20,0.50,0.80].map(f9=>w9*f9), lb9=[tt('light'),tt('sample'),tt('dark')];
-  cx9.lineWidth=3; cx9.font='bold '+Math.round(r9*0.38)+'px system-ui'; cx9.textAlign='center';
-  xs9.forEach((x9,i9)=>{ cx9.strokeStyle=i9===1?'#e6c14b':'#9ad'; cx9.beginPath(); cx9.arc(x9,y9,r9,0,7); cx9.stroke();
-    cx9.fillStyle=i9===1?'#e6c14b':'#9ad'; cx9.fillText(lb9[i9],x9,y9-r9-8); });
-}
-function camOpen(){
-  if($('camModal')) return;
-  const rf9=camRefs().r||{};
-  const d9=document.createElement('div'); d9.id='camModal';
-  d9.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(10,7,3,.97);display:flex;flex-direction:column;padding:14px;gap:10px;overflow:auto';
-  const bs9='border:1px solid rgba(230,193,75,.4);background:#1c160c;color:var(--ink);border-radius:10px;padding:10px 12px;font-size:15px';
-  d9.innerHTML=
-   '<div style="display:flex;align-items:center;gap:8px"><b style="font-size:16px;color:var(--gold)">'+tt('Ground color by camera')+'</b>'
-  +'<span style="flex:1"></span><button onclick="camClose()" style="'+bs9+'">✕</button></div>'
-  +'<div class="hint">'+tt("both refs in frame with the sample · refs = this universe's meter scale")+'</div>'
-  +'<div style="display:flex;gap:8px">'
-  +'<input id="camAL" inputmode="decimal" placeholder="'+tt('Light ref Agtron')+'" value="'+(rf9.aL!=null?rf9.aL:'')+'" onchange="camRefSave()" style="flex:1;min-width:0;'+bs9+'">'
-  +'<input id="camAD" inputmode="decimal" placeholder="'+tt('Dark ref Agtron')+'" value="'+(rf9.aD!=null?rf9.aD:'')+'" onchange="camRefSave()" style="flex:1;min-width:0;'+bs9+'"></div>'
-  +'<canvas id="camCv" style="width:100%;border-radius:12px;background:#111"></canvas>'
-  +'<div style="display:flex;gap:8px">'
-  +'<button id="camTorch" onclick="camTorchToggle()" style="display:none;opacity:.6;'+bs9+'">'+tt('Torch')+'</button>'
-  +'<button id="camGo" onclick="camShot()" style="flex:1;font-weight:800;border:2px solid var(--gold);background:#26200f;color:var(--gold);border-radius:10px;padding:12px;font-size:16px">'+tt('Capture')+'</button></div>'
-  +'<div id="camOut" style="min-height:56px"></div>';
-  document.body.appendChild(d9);
-  const md9=navigator.mediaDevices;
-  if(!(md9&&md9.getUserMedia)){ $('camOut').innerHTML='<div class="hint" style="color:#e77">'+tt('camera unavailable')+'</div>'; return; }
-  md9.getUserMedia({video:{facingMode:'environment',width:{ideal:1280}}}).then(st9=>{
-    if(!$('camModal')){ try{ st9.getTracks().forEach(t9=>t9.stop()); }catch(e9){} return; }
-    CAMSTREAM=st9;
-    try{ const tr9=st9.getVideoTracks()[0],cp9=tr9.getCapabilities&&tr9.getCapabilities();
-      if(cp9&&cp9.torch) $('camTorch').style.display=''; }catch(e9){}
-    const v9=document.createElement('video'); v9.muted=true; v9.playsInline=true; v9.srcObject=st9;
-    const p9=v9.play(); if(p9&&p9.catch) p9.catch(e9=>{});
-    window.__CAMV=v9;
-    const cv9=$('camCv'),ctx9=cv9.getContext('2d');
-    const loop9=()=>{ if(!$('camModal')) return;
-      if(v9.videoWidth){ const w9=Math.min(1280,v9.videoWidth),h9=Math.round(w9*v9.videoHeight/v9.videoWidth);
-        if(cv9.width!==w9){ cv9.width=w9; cv9.height=h9; }
-        try{ ctx9.drawImage(v9,0,0,w9,h9); camGuides(ctx9,w9,h9); }catch(e9){} }
-      CAMRAF=requestAnimationFrame(loop9); };
-    loop9();
-  }).catch(e9=>{ const o9=$('camOut'); if(o9) o9.innerHTML='<div class="hint" style="color:#e77">'+tt('camera unavailable')+' · '+((e9&&e9.name)||'')+'</div>'; });
-}
-function camTorchToggle(){ try{ const tr9=CAMSTREAM&&CAMSTREAM.getVideoTracks()[0]; if(!tr9) return;
-  CAMTORCH=!CAMTORCH; tr9.applyConstraints({advanced:[{torch:CAMTORCH}]});
-  $('camTorch').style.opacity=CAMTORCH?'1':'.6'; }catch(e9){} }
-async function camShot(){
-  if(CAMBUSY) return; const v9=window.__CAMV,o9=$('camOut');
-  const aL=parseFloat(($('camAL')||{}).value),aD=parseFloat(($('camAD')||{}).value);
-  if(!isFinite(aL)||!isFinite(aD)){ if(o9) o9.innerHTML='<div class="hint" style="color:#e77">'+tt('both references first')+'</div>'; return; }
-  if(!(v9&&v9.videoWidth)){ if(o9) o9.innerHTML='<div class="hint" style="color:#e77">'+tt('camera unavailable')+'</div>'; return; }
-  CAMBUSY=true; const g0=$('camGo'); if(g0) g0.disabled=true;
-  const sc9=document.createElement('canvas'),sx9=sc9.getContext('2d',{willReadFrequently:true});
-  const w9=Math.min(1280,v9.videoWidth),h9=Math.round(w9*v9.videoHeight/v9.videoWidth);
-  sc9.width=w9; sc9.height=h9;
-  const r9=Math.round(Math.min(w9,h9)*0.13*0.72),y9=Math.round(h9*0.5);
-  const xs9=[0.20,0.50,0.80].map(f9=>Math.round(w9*f9));
-  const ags=[],warns=new Set(); let hard=null;
-  for(let f9=0;f9<5;f9++){
-    try{ sx9.drawImage(v9,0,0,w9,h9); }catch(e9){}
-    let im9=null; try{ im9=sx9.getImageData(0,0,w9,h9).data; }catch(e9){}
-    if(!im9){ hard=tt('camera unavailable'); break; }
-    const pL=camPatchStat(im9,w9,xs9[0],y9,r9),pS=camPatchStat(im9,w9,xs9[1],y9,r9),pD=camPatchStat(im9,w9,xs9[2],y9,r9);
-    [pL,pS,pD].forEach(p9=>{ if(p9.clip>0.02) hard=tt('kill the glare · tilt or diffuse');
-      else if(p9.clip>0.005) warns.add(tt('kill the glare · tilt or diffuse'));
-      if(p9.spread>0.35) warns.add(tt('level the grounds')); });
-    if(hard) break;
-    const c9=camCalc(pL.y,pD.y,pS.y,aL,aD);
-    if(c9.err){ hard=tt(c9.err); break; }
-    if(c9.t<-0.06||c9.t>1.06) warns.add(tt('outside the reference bracket'));
-    ags.push(c9.ag);
-    await new Promise(r=>setTimeout(r,160));
-  }
-  CAMBUSY=false; if(g0) g0.disabled=false;
-  if(hard||!ags.length){ CAMLAST=null; if(o9) o9.innerHTML='<div class="hint" style="color:#e77">'+(hard||tt('camera unavailable'))+'</div>'; return; }
-  ags.sort((a,b)=>a-b); const med9=ags[Math.floor(ags.length/2)],sp9=ags[ags.length-1]-ags[0];
-  if(sp9>2.5) warns.add(tt('hold steady'));
-  CAMLAST={ag:med9,sp:sp9,warns:[...warns]};
-  if(o9) o9.innerHTML='<div style="display:flex;align-items:center;gap:10px">'
-    +'<b style="font-size:34px;color:var(--gold)">'+med9.toFixed(1)+'</b>'
-    +'<span class="hint">± '+(sp9/2).toFixed(1)+'</span><span style="flex:1"></span>'
-    +'<button onclick="camUse()" style="font-weight:800;border:2px solid var(--gold);background:#26200f;color:var(--gold);border-radius:10px;padding:12px 16px;font-size:16px">'+tt('Use value')+'</button></div>'
-    +(CAMLAST.warns.length?'<div class="hint" style="color:#db8">'+CAMLAST.warns.join(' · ')+'</div>':'');
-}
-function camUse(){ if(!CAMLAST||!isFinite(CAMLAST.ag)) return;
-  const f9=$('mAgG'); if(f9) f9.value=CAMLAST.ag.toFixed(1);
-  toast(tt('camera value placed')+': '+CAMLAST.ag.toFixed(1)); camClose(); }
-
-const APPVER='v2026-08-21a';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-17t';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -3831,16 +3705,6 @@ function doImport(){
 }
 // ---- i18n: EN-first, TR selectable from the top. Static text via tree walk, dynamic via tt(). ----
 const EN2TR={
-'Ground color by camera':'Kamerayla öğütülmüş renk',
-"both refs in frame with the sample · refs = this universe's meter scale":'iki referans da numuneyle aynı karede · referanslar = bu evrenin ölçer skalası',
-'Light ref Agtron':'Açık referans Agtron','Dark ref Agtron':'Koyu referans Agtron',
-'Capture':'Ölç','Use value':'Değeri kullan','Torch':'Fener',
-'light':'açık','sample':'numune','dark':'koyu',
-'camera unavailable':'kamera kullanılamıyor','both references first':'önce iki referans değeri',
-'refs swapped':'referanslar ters','low contrast':'kontrast düşük','no light':'ışık yok',
-'level the grounds':'zemini düzleyin','kill the glare · tilt or diffuse':'parlamayı önle · eğ veya ışığı yumuşat',
-'outside the reference bracket':'referans aralığının dışında','hold steady':'sabit tutun',
-'camera value placed':'kamera değeri yerleşti',
 'live gain':'canlı gain','projected color · Agtron scale':'öngörülen renk · Agtron skalası',
 'Target Agtron (recipe)':'Hedef Agtron (reçete)',
 "this bean's map · tap to rename":'bu çekirdeğin haritası · adını düzenle','UNIVERSE':'EVREN',
