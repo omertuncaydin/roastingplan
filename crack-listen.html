@@ -226,6 +226,10 @@ body.st-setup #eqStrip{display:block}
 body.st-setup #tmpRow{order:0}
 #sumStrip{display:none}
 body.st-setup #sumStrip{display:block;order:1}
+body.st-live #sumStrip{display:block;order:1}
+body.st-done #sumStrip{display:block;order:1}
+#stgArc{display:none}
+body.st-live #stgArc{display:flex;align-items:center;justify-content:center;margin-left:10px}
 #hdrTop{display:flex;flex-direction:column;align-items:center}
 #hdrTop,.tlogo,#hdr .logoName,.logoSub,.brandFull{transition:all .55s ease}
 body.hdrmini #hdrTop{flex-direction:row;justify-content:flex-start;align-items:center;gap:12px}
@@ -349,6 +353,7 @@ body.st-setup #btn{display:none}
     </div>
     <div id="agWrap" style="position:relative;display:flex;justify-content:center">
       <div id="ag" style="display:flex;justify-content:center"></div>
+      <div id="stgArc"></div>
       <button class="micBtn" onclick="toggle()" aria-label="Start listening"><svg viewBox="0 0 60 60" width="46" height="46" aria-hidden="true"><rect x="24" y="14" width="12" height="21" rx="6" fill="#fff"/><path d="M19 30 a11 11 0 0 0 22 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="41" x2="30" y2="47" stroke="#fff" stroke-width="3"/><line x1="23" y1="47" x2="37" y2="47" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg></button>
       <div class="micHint">tap to listen</div>
     </div>
@@ -1173,6 +1178,7 @@ let STAGENOWTXT=''; let STAGEGAS='';
 function rcGasCue(){ try{ const r9=rcGet((cName.value||'').trim().toLowerCase());
   if(r9&&r9.gas){ const L8=r9.gasAt&&RCLOC[r9.gasAt]; return r9.gas+(L8?(' '+L8[LANG==='tr'?0:1]):''); } }catch(e){} return ''; }
 function renderStageStrip(){ const el=$('stageStrip'); if(!el) return;
+  try{ stgArcDraw(); }catch(e9){}
   const sn=$('stageNow');   // v27c: the storm's crown line: current STAGE + DEV, biggest thing on the live screen (his mockup verdict)
   if(sn){ let txt='';
     const live9=running&&document.body.classList.contains('st-live');
@@ -1292,7 +1298,8 @@ function renderSum(){ try{ const el=$('sumStrip'); if(!el) return;
   const st=(rc&&rc.st)||'\u2014';
   const gas=(((rc&&rc.gas)||'').split('\n')[0])||'\u2014';
   const v=btVal();
-  el.textContent=eq+' \u00b7 '+b+'g \u00b7 '+(isFinite(v)?v:'\u2014')+'\u00b0 \u00b7 DROP '+st+' \u00b7 '+gas+'  \u270e';
+  let tail9=''; try{ if(running&&startT) tail9=' \u00b7 '+fmtT((performance.now()-startT)/1000); }catch(e9){}
+  el.textContent=eq+' \u00b7 '+b+'g \u00b7 '+(isFinite(v)?v:'\u2014')+'\u00b0 \u00b7 DROP '+st+' \u00b7 '+gas+tail9+'  \u270e';
 }catch(e){} }
 let MICARMED=false;
 function micArmCheck(){ try{ if(MICARMED||!CHGT0||running) return;
@@ -1398,7 +1405,7 @@ setInterval(function(){ try{
 }catch(e){} },5000);
 setInterval(function(){ try{ if((running||CHGT0||document.body.classList.contains('st-setup'))&&!document.body.classList.contains('notemps')) tmpDraw(); if(document.body.classList.contains('st-setup')) renderSum(); }catch(e){} },1000);   // v05e: setup draws too — tmpSeed only runs at start(), so a freshly opened page needs the tick to paint the empty-state hint
 function toggle(){ if(running){ stop(); return; }
-  if(!CHGT0){ btDue(true); toast(LANG==='tr'?'Önce şarj: çarkı ayarla, Charge\u0027a bas.':'Charge first: set the wheel, tap Charge.'); return; }
+  if(!CHGT0){ toast(tt('no charge · the clock starts at listen')); }   // v08-24a HIS ORDER: listening no longer requires a charge; start() already stamps startT=now when CHGT0 is null
   try{ const mb=document.querySelector('.micBtn'); if(mb) mb.classList.remove('due'); }catch(e){}
   start(); }
 try{ btBuild(); if(localStorage.getItem('bsTempsOn')==='0') document.body.classList.add('notemps'); }catch(e){}
@@ -2278,8 +2285,19 @@ async function altGo(){ try{ const tr=(LANG==='tr');
 // ---- v08-17a MAPPED-MARK + PACE-V2 (rebased onto 11l after the 08-15 working-tree clobber) ----
 // mark states: own map (his measured drop agtron, gold) · communal (dashed bell: the skeleton travels,
 // the number does not — cross-universe color doesn't travel, his law 08-15) · none (eşlenmemiş: an invitation)
+function mapTargetFor(k){ try{ const m0=calMap(),e=m0[k];
+  if(e&&isFinite(e.agtron)) return e.agtron;
+  if(e&&isFinite(parseFloat(e.target))) return parseFloat(e.target);
+  const r=rcGet(k); if(r&&isFinite(parseFloat(r.ag))) return parseFloat(r.ag);
+  let lm={}; try{ lm=JSON.parse(localStorage.getItem('bsLastMeta'))||{}; }catch(e9){}
+  if(lm[k]&&isFinite(parseFloat(lm[k].target))) return parseFloat(lm[k].target);
+  return null; }catch(e9){ return null; } }
 function mapMark(name){ try{ const k=(name||'').trim().toLowerCase(); if(!k) return {st:'none'};
   const m0=calMap(); let e=m0[k];
+  if(!e&&styleOf(k)){   // v08-24a HIS ORDER: a styled pick shows ITS target, never the base bean's learned number
+    const tg=mapTargetFor(k);
+    if(tg!=null) return {st:'tgt', ag:Math.round(tg)};
+    return {st:'none'}; }
   if(!e){ const b0=(beanOf(k)||'').trim().toLowerCase(); if(b0&&b0!==k) e=m0[b0];
     if(!e){ const c0=(codeName(b0||k)||'').toLowerCase(); if(c0) e=m0[c0]; } }   // v08-17h/i: bean, then its code form
   if(!e) return {st:'none'};
@@ -2289,6 +2307,7 @@ function mapMark(name){ try{ const k=(name||'').trim().toLowerCase(); if(!k) ret
 const MMBELL='<svg width="18" height="10" viewBox="0 0 22 12" style="vertical-align:-1px"><path d="M1 11 Q7 11 9 5 Q11 -1 13 5 Q15 11 21 11" fill="none" stroke="#e6c14b" stroke-width="2" stroke-linecap="round"/></svg>';
 function mapMarkTag(mk){
   if(mk.st==='own') return '<span class="mmark" style="display:inline-block;font-size:11.5px;font-weight:800;color:#1a1410;background:var(--gold);border-radius:6px;padding:1.5px 7px;vertical-align:2px">'+mk.ag+'A</span>';
+  if(mk.st==='tgt') return '<span class="mmark" title="reçete hedefi · recipe target" style="display:inline-block;font-size:11.5px;font-weight:800;color:var(--gold);border:1.5px solid var(--gold);border-radius:6px;padding:0.5px 6px;vertical-align:2px">'+mk.ag+'A</span>';
   if(mk.st==='comm') return '<span class="mmark" style="display:inline-block;border:1.5px dashed var(--gold);border-radius:6px;padding:0.5px 6px;vertical-align:2px;opacity:.85">'+MMBELL+'</span>';
   return '<span class="mmark" style="display:inline-block;font-size:11px;font-weight:700;color:var(--muted);border:1px dashed var(--line);border-radius:6px;padding:1px 7px;vertical-align:2px">'+(LANG==='tr'?'eşlenmemiş':'unmapped')+'</span>'; }
 let PACE2LOCK=null;   // crown freeze: past B1 the rhythm belongs to descent physics, not the pace dial
@@ -3087,7 +3106,34 @@ function drawQR(x, text, ox, oy, qs, opts){
 }
 
 // ===== GROWTH v2026-07-12f: per-coffee A0 color (fc_ag); v2026-07-12c: story card, Crack Game consent submission, community prior =====
-const APPVER='v2026-08-17t';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+// ===== v2026-08-24a STAGE ARC (mockup A, his re-order 08-24) + live strip ticker =====
+let STGARCSIG='';
+function stgArcDraw(){ try{ const el=$('stgArc'); if(!el) return;
+  const live9=running&&document.body.classList.contains('st-live');
+  if(!live9){ if(el.innerHTML){ el.innerHTML=''; STGARCSIG=''; } return; }
+  const cur=stgLabel()||'';
+  let drop=''; try{ const r9=rcGet(rcKey()); drop=((r9&&r9.st)||'').toUpperCase(); }catch(e9){}
+  const sig=cur+'|'+drop+'|'+LANG; if(sig===STGARCSIG) return; STGARCSIG=sig;
+  const L=RC_LADDER, ci=L.indexOf(cur), di=L.indexOf(drop);
+  const cx=70,cy=74,r=52,w9=13,gap=4,span=180-gap*(L.length-1),seg=span/L.length;
+  function pt(a9){ const rad=(180-a9)*Math.PI/180; return [cx+r*Math.cos(rad),cy-r*Math.sin(rad)]; }
+  function arc(a0,a1,col,sw){ const p0=pt(a0),p1=pt(a1);
+    return '<path d="M'+p0[0].toFixed(1)+' '+p0[1].toFixed(1)+' A'+r+' '+r+' 0 0 1 '+p1[0].toFixed(1)+' '+p1[1].toFixed(1)+'" fill="none" stroke="'+col+'" stroke-width="'+sw+'" stroke-linecap="round"/>'; }
+  let sv='<svg width="140" height="96" viewBox="0 0 140 96">';
+  for(let i=0;i<L.length;i++){ const a0=i*(seg+gap),a1=a0+seg;
+    const col=(i===ci)?'#e6c14b':(i<ci?'#8a6f3c':'#2c241a');
+    sv+=arc(a0,a1,col,w9);
+    if(i===di) sv+=arc(a0,a1,'#7fd7c4',3);   // the recipe's DROP stage wears the accent ring
+    const rad9=(180-(a0+a1)/2)*Math.PI/180, lx=70+(r-24)*Math.cos(rad9), ly=74-(r-24)*Math.sin(rad9);
+    sv+='<text x="'+lx.toFixed(1)+'" y="'+(ly+3).toFixed(1)+'" text-anchor="middle" font-size="9.5" font-weight="700" fill="'+(i===ci?'#e6c14b':'#6b5540')+'">'+L[i]+'</text>';
+  }
+  if(cur) sv+='<text x="70" y="70" text-anchor="middle" font-size="24" font-weight="900" fill="#e6c14b">'+cur+'</text>';
+  if(drop) sv+='<text x="70" y="90" text-anchor="middle" font-size="10" font-weight="700" fill="#7fd7c4">DROP '+drop+'</text>';
+  sv+='</svg>';
+  el.innerHTML=sv;
+}catch(e9){} }
+setInterval(function(){ try{ if(running){ renderSum(); stgArcDraw(); } }catch(e9){} },2000);
+const APPVER='v2026-08-24a';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -3705,6 +3751,7 @@ function doImport(){
 }
 // ---- i18n: EN-first, TR selectable from the top. Static text via tree walk, dynamic via tt(). ----
 const EN2TR={
+'no charge · the clock starts at listen':'şarjsız · sayaç dinlemeyle başlar','recipe target':'reçete hedefi',
 'live gain':'canlı gain','projected color · Agtron scale':'öngörülen renk · Agtron skalası',
 'Target Agtron (recipe)':'Hedef Agtron (reçete)',
 "this bean's map · tap to rename":'bu çekirdeğin haritası · adını düzenle','UNIVERSE':'EVREN',
