@@ -2105,7 +2105,7 @@ async function cloudAutoSync(){   // on open, signed in: pull ADDITIONS only (ze
 }
 setTimeout(cloudAutoSync,400); setTimeout(chargePull,700); renderEquipSel();
 window.addEventListener('storage',e=>{ if(e&&e.key==='gCharge'){ renderBatchSel(); try{ btAim(); }catch(e2){} } });
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ renderBatchSel(); try{ chargePull(); }catch(e){} } });   // v05g: a PWA resumes from memory, not from boot — edit the table on the iMac, lift the phone, the pull lands here
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ renderBatchSel(); try{ chargePull(); }catch(e){} try{ gdPull(); }catch(e){} } else { try{ GDPULLED=0; }catch(e){} } });   // v05g charge + v08-24f RECIPES: a PWA resumes from memory, not from boot — edit a recipe on the iMac, lift the phone, the pull lands here; hiding re-arms the 60s throttle
 // walkthrough: opens itself for a fresh app copy, then remembers being folded
 try{ const cw=$('cWalk');
   if(cw){ if(!localStorage.getItem('bsWalkSeen')&&!Object.keys(calMap()).length&&roastCount()===0) cw.open=true;
@@ -3146,7 +3146,7 @@ function stgArcDraw(){ try{ const el=$('stgArc'); if(!el) return;
   el.innerHTML=sv;
 }catch(e9){} }
 setInterval(function(){ try{ if(running){ renderSum(); stgArcDraw(); } }catch(e9){} },2000);
-const APPVER='v2026-08-24e';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-24f';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
