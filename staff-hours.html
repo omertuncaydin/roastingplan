@@ -60,7 +60,13 @@
 <body>
 
 <h1>Personel Saatleri · Employee Hours</h1>
-<div class="sub">Pick an employee, pick a brush, then click or drag across the calendar to mark. İşareti takvim dışına sürükle = sil · drag a mark off the calendar to delete it. <span id="syncStat" style="color:var(--dim)">yerel · local</span> · <span style="opacity:.55">v2026-08-24e</span></div>
+<div class="sub">Pick an employee, pick a brush, then click or drag across the calendar to mark. İşareti takvim dışına sürükle = sil · drag a mark off the calendar to delete it.</div>
+<div class="row" style="margin-bottom:12px">
+  <button id="saveBtn">Kaydet · Save</button>
+  <button class="ghost" id="refreshBtn">Yenile · Refresh</button>
+  <span class="sub" style="margin:0" id="syncStat">yerel · local</span>
+  <span class="sub" style="margin:0;opacity:.55">v2026-08-24f</span>
+</div>
 
 <div class="card">
   <div class="row" id="empRow"></div>
@@ -97,7 +103,7 @@
   <div class="muted" style="margin-top:6px;">Target = workdays in month (Mon-Sat minus Resmi Tatil marks) × default hours. Adjust per employee via Edit. Sunday counts only when marked.</div>
 </div>
 
-<footer>CoffeeNutz internal tool · v2026-08-24e · marks: click = apply · drag = paint · drag a mark off the calendar = delete · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
+<footer>CoffeeNutz internal tool · v2026-08-24f · marks: click = apply · drag = paint · drag a mark off the calendar = delete · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
 
 <script>
 "use strict";
@@ -338,7 +344,8 @@ const ADMIN_EMAIL="omer_aydin@coffeenutz.net";
 let SB=null; try{ if(typeof supabase!=="undefined") SB=supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
 let pushT=null;
 function setStat(m){ const el=document.getElementById("syncStat"); if(!el) return;
-  if(m==="bulut"){ el.textContent="bulut senkron · cloud synced"; el.style.color="var(--good)"; }
+  if(m==="bulut"){ el.textContent="bulut senkron "+new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})+" · cloud synced"; el.style.color="var(--good)"; }
+  else if(m==="..."){ el.textContent="..."; el.style.color="var(--dim)"; }
   else if(m==="hata"){ el.textContent="bulut hatası · yerelde güvende · cloud error, safe locally"; el.style.color="var(--warn)"; }
   else { el.textContent="yerel mod · Guide girişiyle buluta eşitlenir · local mode"; el.style.color="var(--dim)"; } }
 async function cloudUser(){ try{ if(!SB) return null; const u=await SB.auth.getUser(); return (u&&u.data&&u.data.user)||null; }catch(e){ return null; } }
@@ -349,13 +356,16 @@ async function cloudPull(){ try{
   if(data&&data.data&&((data.data.up||0)>(db.up||0))){ db=data.data; selEmp=db.emps[0]?db.emps[0].id:null; save(1); renderAll(); }
   setStat("bulut");
 }catch(e){ setStat("hata"); } }
-function cloudPush(){ clearTimeout(pushT); pushT=setTimeout(async()=>{ try{
+async function cloudPushRun(){ try{
   const u=await cloudUser(); if(!u||u.email!==ADMIN_EMAIL){ setStat("yerel"); return; }
   const {error}=await SB.from("staff_hours").upsert({id:1,data:db,updated_at:new Date().toISOString()});
   if(error) throw error; setStat("bulut");
-}catch(e){ setStat("hata"); } },1200); }
+}catch(e){ setStat("hata"); } }
+function cloudPush(){ clearTimeout(pushT); pushT=setTimeout(cloudPushRun,1200); }
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden) cloudPull(); });
 setTimeout(cloudPull,600);
+document.getElementById("saveBtn").addEventListener("click",()=>{ setStat("..."); save(1); db.up=Date.now(); clearTimeout(pushT); cloudPushRun(); });
+document.getElementById("refreshBtn").addEventListener("click",async()=>{ setStat("..."); await cloudPull(); renderAll(); });
 </script>
 </body>
 </html>
