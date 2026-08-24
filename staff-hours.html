@@ -42,6 +42,7 @@
   .dnum{font-size:11px; color:var(--dim); margin-bottom:3px;}
   .chip{display:flex; align-items:center; gap:4px; font-size:10.5px; line-height:1.35; border-radius:4px; padding:0 4px; margin-bottom:2px; background:var(--panel2);}
   .chip .dot{width:7px; height:7px; flex:none;}
+  .chip[data-dk]{cursor:grab; touch-action:none;}
   .chip b{font-weight:600;}
   .chip.t-izin{color:var(--izin);} .chip.t-rapor{color:var(--rapor);}
   .chip.t-tatil{color:var(--tatil);} .chip.t-yok{color:var(--bad);}
@@ -59,7 +60,7 @@
 <body>
 
 <h1>Personel Saatleri · Employee Hours</h1>
-<div class="sub">Pick an employee, pick a brush, then click or drag across the calendar to mark. Aynı güne tekrar tıkla = kaldır · click the same mark again to remove. <span id="syncStat" style="color:var(--dim)">yerel · local</span> · <span style="opacity:.55">v2026-08-24d</span></div>
+<div class="sub">Pick an employee, pick a brush, then click or drag across the calendar to mark. İşareti takvim dışına sürükle = sil · drag a mark off the calendar to delete it. <span id="syncStat" style="color:var(--dim)">yerel · local</span> · <span style="opacity:.55">v2026-08-24e</span></div>
 
 <div class="card">
   <div class="row" id="empRow"></div>
@@ -96,7 +97,7 @@
   <div class="muted" style="margin-top:6px;">Target = workdays in month (Mon-Sat minus Resmi Tatil marks) × default hours. Adjust per employee via Edit. Sunday counts only when marked.</div>
 </div>
 
-<footer>CoffeeNutz internal tool · v2026-08-24d · marks: click = apply · same click again = remove · drag = paint · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
+<footer>CoffeeNutz internal tool · v2026-08-24e · marks: click = apply · drag = paint · drag a mark off the calendar = delete · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
 
 <script>
 "use strict";
@@ -189,10 +190,8 @@ function applyBrush(dateKey, isClick){
   else if (brush==="half")  next = {t:"work", h:+(emp.hours/2).toFixed(2)};
   else if (brush==="custom")next = {t:"work", h:customH};
   else                      next = {t:brush, h:0};
-  // v24b (his ask): clicking a day that already holds this exact mark REMOVES it — no brush switch needed. Drag-paint never toggles.
-  // v24d: the removal click ENDS the stroke — renderCal rebuilds the DOM under the pressed cursor, and a 1px move
-  // fired mouseenter on the fresh cell, repainting what was just deleted ("it is not deleting with the same click").
-  if (isClick && next && prev && prev.t===next.t && prev.h===next.h){ next = null; painting = false; }
+  // v24e: removal gesture = DRAG THE MARK OFF THE CALENDAR (his call). The click-toggle is gone; clicks only paint.
+  void prev; void isClick;
   if (next) db.marks[dateKey][selEmp] = next;
   else { delete db.marks[dateKey][selEmp]; if (!Object.keys(db.marks[dateKey]).length) delete db.marks[dateKey]; }
   save(); renderCal(); renderTotals();
@@ -219,7 +218,7 @@ function renderCal(){
       const t = TYPES[mk.t] || null;
       const txt = mk.t==="work" ? `<b>${mk.h}h</b>` : (TYPES[mk.t]?TYPES[mk.t].label:mk.t);
       const cls = mk.t==="work" ? "" : (TYPES[mk.t]?TYPES[mk.t].cls:"");
-      return `<div class="chip ${cls}"><span class="dot" style="background:${e.color}"></span><small>${esc(e.name.split(" ")[0])}</small> ${txt}</div>`;
+      return `<div class="chip ${cls}" data-dk="${k}" data-emp="${e.id}" title="sürükleyip dışarı at = sil · drag off the calendar to delete"><span class="dot" style="background:${e.color}"></span><small>${esc(e.name.split(" ")[0])}</small> ${txt}</div>`;
     }).join("");
     html += `<div class="day ${we?"we":""} ${k===todayK?"today":""}" data-k="${k}"><div class="dnum">${d}</div>${chips}</div>`;
   }
@@ -229,8 +228,34 @@ function renderCal(){
     el.addEventListener("mouseenter",()=>{ if (painting) applyBrush(el.dataset.k, false); });
     el.addEventListener("touchstart",e=>{ e.preventDefault(); applyBrush(el.dataset.k, true); },{passive:false});
   });
+  document.querySelectorAll(".chip[data-dk]").forEach(ch=>{
+    ch.addEventListener("mousedown",e=>{ e.preventDefault(); e.stopPropagation(); dragStart(ch, e.clientX, e.clientY); });
+    ch.addEventListener("touchstart",e=>{ e.preventDefault(); e.stopPropagation(); const t=e.touches[0]; dragStart(ch, t.clientX, t.clientY); },{passive:false});
+  });
 }
 document.addEventListener("mouseup",()=>painting=false);
+
+/* ---------- v24e: drag a mark off the calendar to delete it ---------- */
+let DRAG=null, GHOST=null;
+function calRect(){ return document.getElementById("cal").getBoundingClientRect(); }
+function dragStart(ch,x,y){ DRAG={dk:ch.dataset.dk, emp:ch.dataset.emp};
+  GHOST=ch.cloneNode(true);
+  GHOST.style.cssText+=";position:fixed;pointer-events:none;z-index:99;opacity:.9;background:var(--panel2);border:1px solid var(--accent);padding:2px 8px;border-radius:6px;transform:translate(-50%,-130%);";
+  GHOST.style.left=x+"px"; GHOST.style.top=y+"px";
+  document.body.appendChild(GHOST); }
+function dragMove(x,y){ if(!GHOST) return; GHOST.style.left=x+"px"; GHOST.style.top=y+"px";
+  const r=calRect(); const out=(x<r.left||x>r.right||y<r.top||y>r.bottom);
+  GHOST.style.opacity=out?".45":".9"; GHOST.style.borderColor=out?"var(--bad)":"var(--accent)"; }
+function dragEnd(x,y){ if(!DRAG) return;
+  const r=calRect(); const out=(x<r.left||x>r.right||y<r.top||y>r.bottom);
+  if(out){ const m=db.marks[DRAG.dk];
+    if(m&&m[DRAG.emp]){ delete m[DRAG.emp]; if(!Object.keys(m).length) delete db.marks[DRAG.dk]; save(); } }
+  DRAG=null; if(GHOST){ GHOST.remove(); GHOST=null; }
+  renderCal(); renderTotals(); }
+document.addEventListener("mousemove",e=>{ if(DRAG) dragMove(e.clientX,e.clientY); });
+document.addEventListener("mouseup",e=>{ if(DRAG) dragEnd(e.clientX,e.clientY); });
+document.addEventListener("touchmove",e=>{ if(DRAG){ const t=e.touches[0]; dragMove(t.clientX,t.clientY); e.preventDefault(); } },{passive:false});
+document.addEventListener("touchend",e=>{ if(DRAG){ const t=e.changedTouches[0]; dragEnd(t.clientX,t.clientY); } });
 document.getElementById("prevM").addEventListener("click",()=>{ view.setMonth(view.getMonth()-1); renderCal(); renderTotals(); });
 document.getElementById("nextM").addEventListener("click",()=>{ view.setMonth(view.getMonth()+1); renderCal(); renderTotals(); });
 
