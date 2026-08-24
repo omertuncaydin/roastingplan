@@ -59,7 +59,7 @@
 <body>
 
 <h1>Personel Saatleri · Employee Hours</h1>
-<div class="sub">Pick an employee, pick a brush, then click or drag across the calendar to mark. <span id="syncStat" style="color:var(--dim)">yerel · local</span></div>
+<div class="sub">Pick an employee, pick a brush, then click or drag across the calendar to mark. Aynı güne tekrar tıkla = kaldır · click the same mark again to remove. <span id="syncStat" style="color:var(--dim)">yerel · local</span></div>
 
 <div class="card">
   <div class="row" id="empRow"></div>
@@ -96,7 +96,7 @@
   <div class="muted" style="margin-top:6px;">Target = workdays in month (Mon-Sat minus Resmi Tatil marks) × default hours. Adjust per employee via Edit. Sunday counts only when marked.</div>
 </div>
 
-<footer>CoffeeNutz internal tool · v2026-08-24a · marks: click = apply brush, drag = paint, Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
+<footer>CoffeeNutz internal tool · v2026-08-24b · marks: click = apply · same click again = remove · drag = paint · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
 
 <script>
 "use strict";
@@ -178,15 +178,21 @@ function renderBrushes(){
 }
 
 /* ---------- marking ---------- */
-function applyBrush(dateKey){
+function applyBrush(dateKey, isClick){
   if (!selEmp){ alert("Add/select an employee first."); return; }
   const emp = db.emps.find(e=>e.id===selEmp);
   if (!db.marks[dateKey]) db.marks[dateKey] = {};
-  if (brush==="sil"){ delete db.marks[dateKey][selEmp]; if (!Object.keys(db.marks[dateKey]).length) delete db.marks[dateKey]; }
-  else if (brush==="full")  db.marks[dateKey][selEmp] = {t:"work", h:emp.hours};
-  else if (brush==="half")  db.marks[dateKey][selEmp] = {t:"work", h:+(emp.hours/2).toFixed(2)};
-  else if (brush==="custom")db.marks[dateKey][selEmp] = {t:"work", h:customH};
-  else db.marks[dateKey][selEmp] = {t:brush, h:0};
+  const prev = db.marks[dateKey][selEmp];
+  let next = null;
+  if (brush==="sil")        next = null;
+  else if (brush==="full")  next = {t:"work", h:emp.hours};
+  else if (brush==="half")  next = {t:"work", h:+(emp.hours/2).toFixed(2)};
+  else if (brush==="custom")next = {t:"work", h:customH};
+  else                      next = {t:brush, h:0};
+  // v24b (his ask): clicking a day that already holds this exact mark REMOVES it — no brush switch needed. Drag-paint never toggles.
+  if (isClick && next && prev && prev.t===next.t && prev.h===next.h) next = null;
+  if (next) db.marks[dateKey][selEmp] = next;
+  else { delete db.marks[dateKey][selEmp]; if (!Object.keys(db.marks[dateKey]).length) delete db.marks[dateKey]; }
   save(); renderCal(); renderTotals();
 }
 
@@ -217,9 +223,9 @@ function renderCal(){
   }
   document.getElementById("cal").innerHTML = html;
   document.querySelectorAll(".day[data-k]").forEach(el=>{
-    el.addEventListener("mousedown",e=>{ e.preventDefault(); painting=true; applyBrush(el.dataset.k); });
-    el.addEventListener("mouseenter",()=>{ if (painting) applyBrush(el.dataset.k); });
-    el.addEventListener("touchstart",e=>{ e.preventDefault(); applyBrush(el.dataset.k); },{passive:false});
+    el.addEventListener("mousedown",e=>{ e.preventDefault(); painting=true; applyBrush(el.dataset.k, true); });
+    el.addEventListener("mouseenter",()=>{ if (painting) applyBrush(el.dataset.k, false); });
+    el.addEventListener("touchstart",e=>{ e.preventDefault(); applyBrush(el.dataset.k, true); },{passive:false});
   });
 }
 document.addEventListener("mouseup",()=>painting=false);
