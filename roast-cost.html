@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="robots" content="noindex">
+<title>Roast Cost · CoffeeNutz</title>
+<!-- v2026-08-24a -->
+<style>
+:root{ --bg:#141210; --panel:#1d1a16; --panel2:#262119; --line:#3a332a; --ink:#ece5da; --muted:#9c917f; --accent:#e8a33d; --green:#7fb069; --red:#D8453B; }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,'Segoe UI',Roboto,sans-serif;
+  padding:14px;padding-top:calc(12px + env(safe-area-inset-top));padding-bottom:calc(30px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
+.hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.brand{font-weight:800;letter-spacing:.3px;cursor:pointer}
+.brand .a{color:var(--accent)}
+.hsub{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11px}
+.iconbtn{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.f label{font-size:11px;color:var(--muted)}
+.f input,.f select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:10px;font-size:16px;color-scheme:dark}
+.f input:focus{outline:none;border-color:var(--accent)}
+.hint{font-size:11px;color:var(--muted);margin-top:6px}
+.res{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.res:last-child{border-bottom:none}
+.res .k{font-size:12.5px;color:var(--muted)}
+.res .v{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.res .v small{font-size:11px;color:var(--muted);font-weight:400}
+.res.big .v{font-size:24px;color:var(--accent)}
+.res .ok{color:var(--green)} .res .bad{color:var(--red)}
+.usebtn{background:var(--panel2);border:1px solid var(--line);color:var(--accent);border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;align-self:end}
+.scrow{display:flex;gap:8px;margin-bottom:8px}
+.scrow input{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:10px;font-size:15px}
+.scrow button{background:var(--accent);border:none;color:#1a1410;border-radius:9px;padding:10px 16px;font-weight:800;cursor:pointer}
+.sclist{display:flex;flex-wrap:wrap;gap:6px}
+.scchip{display:inline-flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);border-radius:99px;padding:7px 6px 7px 12px;font-size:12.5px;cursor:pointer}
+.scchip .x{color:var(--muted);padding:0 6px;font-size:14px;cursor:pointer}
+.scchip .x:active{color:var(--red)}
+footer{color:var(--muted);font-size:10.5px;text-align:center;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="brand" onclick="location.reload()" title="refresh"><span>CoffeeNutz</span> <span class="a">Roast Cost</span></div>
+  <div class="hsub"><span>v2026-08-24a</span><button class="iconbtn" onclick="location.reload()">&#8635;</button></div>
+</div>
+
+<div class="card">
+  <div class="lbl">Green (USD)</div>
+  <div class="grid3">
+    <div class="f"><label for="gPrice">Green $/kg</label><input id="gPrice" inputmode="decimal" value="6.00"></div>
+    <div class="f"><label for="gExtra">Logistics $/kg</label><input id="gExtra" inputmode="decimal" value="0.50"></div>
+    <div class="f"><label for="fx">USD/TRY rate</label><input id="fx" inputmode="decimal" value="48"></div>
+  </div>
+  <div class="hint">Rate is manual, you control it. Logistics = freight, customs, finance per green kg.</div>
+</div>
+
+<div class="card">
+  <div class="lbl">Roast loss</div>
+  <div class="grid3">
+    <div class="f"><label for="loss">Loss %</label><input id="loss" inputmode="decimal" value="15.5"></div>
+    <div class="f"><label for="bIn">Batch in kg</label><input id="bIn" inputmode="decimal" placeholder="green"></div>
+    <div class="f"><label for="bOut">Out kg</label><input id="bOut" inputmode="decimal" placeholder="roasted"></div>
+  </div>
+  <div class="grid2" style="margin-top:8px">
+    <div class="hint" id="bHint" style="margin-top:0;align-self:center">Enter a real batch to compute loss.</div>
+    <button class="usebtn" onclick="useBatch()">Use batch loss</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="lbl">Costs per roasted kg (TRY)</div>
+  <div class="grid2">
+    <div class="f"><label for="cEnergy">Energy / gas</label><input id="cEnergy" inputmode="decimal" value="0"></div>
+    <div class="f"><label for="cLabor">Labor</label><input id="cLabor" inputmode="decimal" value="0"></div>
+    <div class="f"><label for="cPack">Packaging</label><input id="cPack" inputmode="decimal" value="0"></div>
+    <div class="f"><label for="cOther">Other overhead</label><input id="cOther" inputmode="decimal" value="0"></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="lbl">Pricing</div>
+  <div class="grid3">
+    <div class="f"><label for="margin">Margin % of price</label><input id="margin" inputmode="decimal" value="35"></div>
+    <div class="f"><label for="vat">VAT %</label><input id="vat" inputmode="decimal" value="10"></div>
+    <div class="f"><label for="bag">Bag size</label>
+      <select id="bag"><option value="200">200 g</option><option value="250" selected>250 g</option><option value="500">500 g</option><option value="1000">1 kg</option></select></div>
+  </div>
+  <div class="hint">Margin is share of the ex-VAT sale price, not markup on cost. The multiplier below shows the markup view.</div>
+</div>
+
+<div class="card">
+  <div class="lbl">Result</div>
+  <div class="res big"><span class="k">Cost per roasted kg</span><span class="v" id="rCost">-</span></div>
+  <div class="res"><span class="k">of which green</span><span class="v" id="rShare" style="font-size:15px">-</span></div>
+  <div class="res"><span class="k">Wholesale, ex VAT</span><span class="v" id="rEx">-</span></div>
+  <div class="res"><span class="k">Retail, inc VAT per kg</span><span class="v" id="rInc">-</span></div>
+  <div class="res big"><span class="k">Per bag, inc VAT</span><span class="v" id="rBag">-</span></div>
+  <div class="res"><span class="k">Markup multiplier</span><span class="v" id="rMult" style="font-size:15px">-</span></div>
+</div>
+
+<div class="card">
+  <div class="lbl">Reverse check</div>
+  <div class="grid2">
+    <div class="f"><label for="mkt">Market price, inc VAT TRY/kg</label><input id="mkt" inputmode="decimal" placeholder="what the shelf says"></div>
+    <div class="f"><label>Margin you would make</label><div class="v" id="rRev" style="font-size:22px;font-weight:800;padding:8px 0">-</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="lbl">Coffees (saved on this device)</div>
+  <div class="scrow"><input id="scName" placeholder="Name, e.g. Yirgacheffe Gr.2"><button onclick="saveSc()">Save</button></div>
+  <div class="sclist" id="scList"></div>
+</div>
+
+<footer>CoffeeNutz internal tool · single file · numbers live on this device</footer>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const FIELDS=['gPrice','gExtra','fx','loss','bIn','bOut','cEnergy','cLabor','cPack','cOther','margin','vat','bag','mkt'];
+const num=id=>{ const x=parseFloat(String($(id).value).replace(',','.')); return isFinite(x)?x:0; };
+const fmtT=n=>isFinite(n)?new Intl.NumberFormat('tr-TR',{maximumFractionDigits:n<100?2:(n<10000?1:0)}).format(n)+' \u20BA':'-';
+const fmtU=n=>isFinite(n)?'$'+new Intl.NumberFormat('en-US',{maximumFractionDigits:2}).format(n):'-';
+
+function calc(){
+  const fx=num('fx'), loss=num('loss');
+  const landedU=num('gPrice')+num('gExtra');
+  const denom=1-loss/100;
+  const greenComp=(denom>0.01)?(landedU*fx)/denom:NaN;           // TRY per roasted kg, green share
+  const adds=num('cEnergy')+num('cLabor')+num('cPack')+num('cOther');
+  const cost=greenComp+adds;
+  const m=num('margin'), vat=num('vat');
+  const ex=(m<100)?cost/(1-m/100):NaN;
+  const inc=ex*(1+vat/100);
+  const bagKg=num('bag')/1000;
+  $('rCost').innerHTML=isFinite(cost)?fmtT(cost)+' <small>'+(fx>0?('\u2248 '+fmtU(cost/fx)):'')+'</small>':'-';
+  $('rShare').textContent=(isFinite(cost)&&cost>0)?(fmtT(greenComp)+' · '+Math.round(greenComp/cost*100)+'%'):'-';
+  $('rEx').textContent=fmtT(ex);
+  $('rInc').textContent=fmtT(inc);
+  $('rBag').textContent=isFinite(inc)?fmtT(inc*bagKg)+' / '+$('bag').options[$('bag').selectedIndex].text:'-';
+  $('rMult').textContent=(isFinite(ex)&&cost>0)?('\u00D7 '+(ex/cost).toFixed(2)+' on cost'):'-';
+  const bi=num('bIn'), bo=num('bOut');
+  $('bHint').textContent=(bi>0&&bo>0&&bo<bi)?('This batch: '+((1-bo/bi)*100).toFixed(1)+'% loss'):'Enter a real batch to compute loss.';
+  const mkt=num('mkt'), el=$('rRev');
+  if(mkt>0&&isFinite(cost)&&cost>0){ const mex=mkt/(1+vat/100); const rm=(mex-cost)/mex*100;
+    el.textContent=rm.toFixed(1)+'%'; el.className='v '+(rm>=m?'ok':(rm>0?'':'bad')); el.style.color=rm<=0?'var(--red)':(rm>=m?'var(--green)':'var(--ink)');
+  } else { el.textContent='-'; el.style.color='var(--muted)'; }
+  saveState();
+}
+function useBatch(){ const bi=num('bIn'), bo=num('bOut'); if(bi>0&&bo>0&&bo<bi){ $('loss').value=((1-bo/bi)*100).toFixed(1); calc(); } }
+
+function stateObj(){ const o={}; FIELDS.forEach(f=>o[f]=$(f).value); return o; }
+function applyState(o){ if(!o) return; FIELDS.forEach(f=>{ if(o[f]!=null) $(f).value=o[f]; }); }
+function saveState(){ try{ localStorage.setItem('rcState',JSON.stringify(stateObj())); }catch(e){} }
+function loadState(){ try{ applyState(JSON.parse(localStorage.getItem('rcState')||'null')); }catch(e){} }
+
+function getScs(){ try{ return JSON.parse(localStorage.getItem('rcScenarios')||'{}'); }catch(e){ return {}; } }
+function setScs(s){ localStorage.setItem('rcScenarios',JSON.stringify(s)); }
+function saveSc(){ const n=$('scName').value.trim(); if(!n) return; const s=getScs(); s[n]=stateObj(); setScs(s); $('scName').value=''; renderScs(); }
+function loadSc(n){ const s=getScs(); if(s[n]){ applyState(s[n]); calc(); } }
+function delSc(ev,n){ ev.stopPropagation(); if(!confirm('Delete "'+n+'"?')) return; const s=getScs(); delete s[n]; setScs(s); renderScs(); }
+function esc(x){ const d=document.createElement('div'); d.textContent=x; return d.innerHTML; }
+function renderScs(){ const s=getScs(), keys=Object.keys(s).sort(); $('scList').innerHTML=keys.length?keys.map(n=>'<span class="scchip" onclick="loadSc(\''+esc(n).replace(/'/g,"\\'")+'\')">'+esc(n)+'<span class="x" onclick="delSc(event,\''+esc(n).replace(/'/g,"\\'")+'\')">&times;</span></span>').join(''):'<span class="hint" style="margin:0">None saved yet.</span>';
+}
+
+FIELDS.forEach(f=>$(f).addEventListener('input',calc));
+$('bag').addEventListener('change',calc);
+loadState(); renderScs(); calc();
+</script>
+</body>
+</html>

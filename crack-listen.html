@@ -2297,11 +2297,13 @@ async function altGo(){ try{ const tr=(LANG==='tr');
 // mark states: own map (his measured drop agtron, gold) · communal (dashed bell: the skeleton travels,
 // the number does not — cross-universe color doesn't travel, his law 08-15) · none (eşlenmemiş: an invitation)
 function mapTargetFor(k){ try{ const m0=calMap(),e=m0[k];
-  if(e&&isFinite(e.agtron)) return e.agtron;
+  // v08-24d HIS RULE, correct order: the AIM is the explicit target; learned speaks only when nothing else does
   if(e&&isFinite(parseFloat(e.target))) return parseFloat(e.target);
   const r=rcGet(k); if(r&&isFinite(parseFloat(r.ag))) return parseFloat(r.ag);
+  try{ const g=gdRc(k); if(g&&isFinite(parseFloat(g.ag))) return parseFloat(g.ag); }catch(e9){}   // a manual st/gas recipe must not mask the Guide goal
   let lm={}; try{ lm=JSON.parse(localStorage.getItem('bsLastMeta'))||{}; }catch(e9){}
   if(lm[k]&&isFinite(parseFloat(lm[k].target))) return parseFloat(lm[k].target);
+  if(e&&isFinite(e.agtron)) return e.agtron;
   return null; }catch(e9){ return null; } }
 function mapMark(name){ try{ const k=(name||'').trim().toLowerCase(); if(!k) return {st:'none'};
   const m0=calMap(); let e=m0[k];
@@ -3145,7 +3147,7 @@ function stgArcDraw(){ try{ const el=$('stgArc'); if(!el) return;
   el.innerHTML=sv;
 }catch(e9){} }
 setInterval(function(){ try{ if(running){ renderSum(); stgArcDraw(); } }catch(e9){} },2000);
-const APPVER='v2026-08-24c';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-24d';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
