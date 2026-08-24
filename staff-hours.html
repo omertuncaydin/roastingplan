@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personel Saatleri · CoffeeNutz</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#12100e; --panel:#1c1917; --panel2:#242019; --line:#3a332a;
+    --text:#ece5da; --dim:#9c917f; --accent:#e8a33d; --good:#7fb069;
+    --warn:#d98f6a; --bad:#c9564a; --izin:#7fa8c9; --rapor:#c96f9a; --tatil:#8a8f98;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--text); font:14px/1.5 -apple-system,'Segoe UI',Roboto,sans-serif; padding:18px; max-width:1150px; margin:0 auto; user-select:none;}
+  h1{font-size:19px; margin-bottom:2px;}
+  .sub{color:var(--dim); font-size:12px; margin-bottom:14px;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:12px;}
+  button{background:var(--accent); color:#1a1408; border:0; border-radius:8px; padding:7px 13px; font-size:13px; font-weight:600; cursor:pointer;}
+  button.ghost{background:transparent; color:var(--dim); border:1px solid var(--line); font-weight:400;}
+  button.ghost.on{border-color:var(--accent); color:var(--accent);}
+  .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  input[type=text],input[type=number]{background:var(--panel2); border:1px solid var(--line); border-radius:8px; color:var(--text); padding:7px 10px; font-size:13px;}
+  input[type=number]{width:70px;}
+  /* employees */
+  .emp{display:inline-flex; align-items:center; gap:7px; padding:6px 12px; border-radius:20px; border:2px solid var(--line); cursor:pointer; margin:3px 4px 3px 0; font-size:13px; background:var(--panel2);}
+  .emp.sel{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
+  .dot{width:11px; height:11px; border-radius:50%;}
+  .emp small{color:var(--dim);}
+  /* brushes */
+  .brush{padding:6px 12px; border-radius:8px; border:2px solid var(--line); cursor:pointer; font-size:12.5px; background:var(--panel2); color:var(--text);}
+  .brush.sel{border-color:var(--accent); color:var(--accent); font-weight:700;}
+  /* calendar */
+  .monthbar{display:flex; align-items:center; gap:12px; margin-bottom:8px;}
+  .monthbar h2{font-size:16px; min-width:170px; text-align:center;}
+  .cal{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+  .dow{font-size:10.5px; text-transform:uppercase; letter-spacing:1px; color:var(--dim); text-align:center; padding:4px 0;}
+  .day{background:var(--panel); border:1px solid var(--line); border-radius:8px; min-height:74px; padding:4px 5px; cursor:pointer; position:relative;}
+  .day.we{background:#17140f;}
+  .day.out{opacity:.25; cursor:default;}
+  .day.today{border-color:var(--accent);}
+  .dnum{font-size:11px; color:var(--dim); margin-bottom:3px;}
+  .chip{display:flex; align-items:center; gap:4px; font-size:10.5px; line-height:1.35; border-radius:4px; padding:0 4px; margin-bottom:2px; background:var(--panel2);}
+  .chip .dot{width:7px; height:7px; flex:none;}
+  .chip b{font-weight:600;}
+  .chip.t-izin{color:var(--izin);} .chip.t-rapor{color:var(--rapor);}
+  .chip.t-tatil{color:var(--tatil);} .chip.t-yok{color:var(--bad);}
+  /* totals */
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{font-size:10.5px; text-transform:uppercase; letter-spacing:.8px; color:var(--dim); text-align:left; padding:7px 9px; border-bottom:1px solid var(--line);}
+  td{padding:7px 9px; border-bottom:1px solid var(--line);}
+  .pos{color:var(--good);} .neg{color:var(--warn);}
+  .muted{color:var(--dim); font-size:12px;}
+  .flexspace{flex:1;}
+  footer{color:var(--dim); font-size:11px; margin-top:14px; text-align:center;}
+  @media (max-width:700px){ .day{min-height:58px;} .chip small{display:none;} }
+</style>
+</head>
+<body>
+
+<h1>Personel Saatleri · Employee Hours</h1>
+<div class="sub">Pick an employee, pick a brush, then click or drag across the calendar to mark. <span id="syncStat" style="color:var(--dim)">yerel · local</span></div>
+
+<div class="card">
+  <div class="row" id="empRow"></div>
+  <div class="row" style="margin-top:8px;">
+    <input type="text" id="newName" placeholder="Employee name">
+    <input type="number" id="newHours" value="9" min="1" max="16" step="0.5" title="default daily hours">
+    <button class="ghost" id="addEmp">+ Add employee</button>
+    <span class="flexspace"></span>
+    <button class="ghost" id="editEmp">Edit selected</button>
+    <button class="ghost" id="delEmp">Remove selected</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="row" id="brushRow"></div>
+</div>
+
+<div class="card">
+  <div class="monthbar">
+    <button class="ghost" id="prevM">←</button>
+    <h2 id="mTitle"></h2>
+    <button class="ghost" id="nextM">→</button>
+    <span class="flexspace"></span>
+    <button class="ghost" id="csvBtn">Export month CSV</button>
+    <button class="ghost" id="expBtn">Backup JSON</button>
+    <button class="ghost" id="impBtn">Import</button>
+    <input type="file" id="impFile" accept=".json" style="display:none">
+  </div>
+  <div class="cal" id="cal"></div>
+</div>
+
+<div class="card">
+  <table id="totals"></table>
+  <div class="muted" style="margin-top:6px;">Target = workdays in month (Mon-Sat minus Resmi Tatil marks) × default hours. Adjust per employee via Edit. Sunday counts only when marked.</div>
+</div>
+
+<footer>CoffeeNutz internal tool · v2026-08-24a · marks: click = apply brush, drag = paint, Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
+
+<script>
+"use strict";
+const LS = "emphours_v1";
+const TYPES = {
+  full:  {label:"Full day",  cls:""},
+  half:  {label:"½ day",     cls:""},
+  custom:{label:"Custom h",  cls:""},
+  izin:  {label:"Yıllık İzin", cls:"t-izin"},
+  rapor: {label:"Rapor",       cls:"t-rapor"},
+  tatil: {label:"Resmi Tatil", cls:"t-tatil"},
+  yok:   {label:"Devamsız",    cls:"t-yok"},
+  sil:   {label:"Sil (erase)", cls:""},
+};
+const COLORS = ["#e8a33d","#7fb069","#7fa8c9","#c96f9a","#c96f4a","#b8b06a","#8fd0c2","#a98fd0"];
+
+let db = load(); // {emps:[{id,name,hours,color}], marks:{ "yyyy-mm-dd":{empId:{t,h}} }}
+let selEmp = db.emps[0] ? db.emps[0].id : null;
+let brush = "full";
+let customH = 4;
+let view = new Date(); view.setDate(1);
+let painting = false;
+
+function load(){
+  try{ const r = localStorage.getItem(LS); if (r) return JSON.parse(r); }catch(e){}
+  return {emps:[], marks:{}};
+}
+function save(localOnly){ db.up=db.up||0; if(!localOnly) db.up=Date.now(); try{ localStorage.setItem(LS, JSON.stringify(db)); }catch(e){ console.warn(e); } if(!localOnly) cloudPush(); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+function ymd(d){ return d.toISOString().slice(0,10); }
+function pad(n){ return String(n).padStart(2,"0"); }
+function key(y,m,d){ return `${y}-${pad(m+1)}-${pad(d)}`; }
+function esc(x){ return String(x??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ---------- employees ---------- */
+function renderEmps(){
+  const row = document.getElementById("empRow");
+  if (!db.emps.length){ row.innerHTML = '<span class="muted">No employees yet. Add the first one below.</span>'; return; }
+  row.innerHTML = db.emps.map(e=>`
+    <span class="emp ${e.id===selEmp?"sel":""}" data-id="${e.id}">
+      <span class="dot" style="background:${e.color}"></span>${esc(e.name)} <small>${e.hours}h</small>
+    </span>`).join("");
+  row.querySelectorAll(".emp").forEach(el=>el.addEventListener("click",()=>{ selEmp = el.dataset.id; renderEmps(); }));
+}
+document.getElementById("addEmp").addEventListener("click",()=>{
+  const name = document.getElementById("newName").value.trim();
+  const hours = parseFloat(document.getElementById("newHours").value) || 9;
+  if (!name) return alert("Name?");
+  const e = {id:uid(), name, hours, color: COLORS[db.emps.length % COLORS.length]};
+  db.emps.push(e); selEmp = e.id;
+  document.getElementById("newName").value = "";
+  save(); renderAll();
+});
+document.getElementById("delEmp").addEventListener("click",()=>{
+  const e = db.emps.find(x=>x.id===selEmp); if (!e) return;
+  if (!confirm(`Remove ${e.name} and ALL their marks?`)) return;
+  db.emps = db.emps.filter(x=>x.id!==selEmp);
+  for (const k in db.marks){ delete db.marks[k][e.id]; if (!Object.keys(db.marks[k]).length) delete db.marks[k]; }
+  selEmp = db.emps[0] ? db.emps[0].id : null;
+  save(); renderAll();
+});
+document.getElementById("editEmp").addEventListener("click",()=>{
+  const e = db.emps.find(x=>x.id===selEmp); if (!e) return;
+  const name = prompt("Name:", e.name); if (name===null) return;
+  const h = parseFloat(prompt("Default daily hours:", e.hours));
+  if (name.trim()) e.name = name.trim();
+  if (h>0) e.hours = h;
+  save(); renderAll();
+});
+
+/* ---------- brushes ---------- */
+function renderBrushes(){
+  const row = document.getElementById("brushRow");
+  row.innerHTML = Object.entries(TYPES).map(([k,t])=>
+    `<button class="brush ${k===brush?"sel":""}" data-b="${k}">${t.label}${k==="custom"?` (${customH})`:""}</button>`).join("")
+    + `<input type="number" id="chVal" value="${customH}" min="0.5" max="16" step="0.5" style="width:64px;" title="custom hours">`;
+  row.querySelectorAll(".brush").forEach(b=>b.addEventListener("click",()=>{ brush = b.dataset.b; renderBrushes(); }));
+  row.querySelector("#chVal").addEventListener("input",e=>{ customH = parseFloat(e.target.value)||4; if (brush==="custom") renderBrushes(); });
+}
+
+/* ---------- marking ---------- */
+function applyBrush(dateKey){
+  if (!selEmp){ alert("Add/select an employee first."); return; }
+  const emp = db.emps.find(e=>e.id===selEmp);
+  if (!db.marks[dateKey]) db.marks[dateKey] = {};
+  if (brush==="sil"){ delete db.marks[dateKey][selEmp]; if (!Object.keys(db.marks[dateKey]).length) delete db.marks[dateKey]; }
+  else if (brush==="full")  db.marks[dateKey][selEmp] = {t:"work", h:emp.hours};
+  else if (brush==="half")  db.marks[dateKey][selEmp] = {t:"work", h:+(emp.hours/2).toFixed(2)};
+  else if (brush==="custom")db.marks[dateKey][selEmp] = {t:"work", h:customH};
+  else db.marks[dateKey][selEmp] = {t:brush, h:0};
+  save(); renderCal(); renderTotals();
+}
+
+/* ---------- calendar ---------- */
+const DOWS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+function renderCal(){
+  const y = view.getFullYear(), m = view.getMonth();
+  document.getElementById("mTitle").textContent = view.toLocaleString("en-GB",{month:"long", year:"numeric"});
+  const first = new Date(y,m,1);
+  const startIdx = (first.getDay()+6)%7; // Monday=0
+  const dim = new Date(y,m+1,0).getDate();
+  const todayK = key(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+  let html = DOWS.map(d=>`<div class="dow">${d}</div>`).join("");
+  for (let i=0;i<startIdx;i++) html += `<div class="day out"></div>`;
+  for (let d=1; d<=dim; d++){
+    const k = key(y,m,d);
+    const dow = (startIdx + d - 1) % 7;
+    const we = dow>=5;
+    const marks = db.marks[k]||{};
+    const chips = db.emps.filter(e=>marks[e.id]).map(e=>{
+      const mk = marks[e.id];
+      const t = TYPES[mk.t] || null;
+      const txt = mk.t==="work" ? `<b>${mk.h}h</b>` : (TYPES[mk.t]?TYPES[mk.t].label:mk.t);
+      const cls = mk.t==="work" ? "" : (TYPES[mk.t]?TYPES[mk.t].cls:"");
+      return `<div class="chip ${cls}"><span class="dot" style="background:${e.color}"></span><small>${esc(e.name.split(" ")[0])}</small> ${txt}</div>`;
+    }).join("");
+    html += `<div class="day ${we?"we":""} ${k===todayK?"today":""}" data-k="${k}"><div class="dnum">${d}</div>${chips}</div>`;
+  }
+  document.getElementById("cal").innerHTML = html;
+  document.querySelectorAll(".day[data-k]").forEach(el=>{
+    el.addEventListener("mousedown",e=>{ e.preventDefault(); painting=true; applyBrush(el.dataset.k); });
+    el.addEventListener("mouseenter",()=>{ if (painting) applyBrush(el.dataset.k); });
+    el.addEventListener("touchstart",e=>{ e.preventDefault(); applyBrush(el.dataset.k); },{passive:false});
+  });
+}
+document.addEventListener("mouseup",()=>painting=false);
+document.getElementById("prevM").addEventListener("click",()=>{ view.setMonth(view.getMonth()-1); renderCal(); renderTotals(); });
+document.getElementById("nextM").addEventListener("click",()=>{ view.setMonth(view.getMonth()+1); renderCal(); renderTotals(); });
+
+/* ---------- totals ---------- */
+function monthStats(){
+  const y = view.getFullYear(), m = view.getMonth();
+  const dim = new Date(y,m+1,0).getDate();
+  return db.emps.map(e=>{
+    let hours=0, workD=0, izin=0, rapor=0, tatil=0, yok=0, targetDays=0;
+    for (let d=1; d<=dim; d++){
+      const k = key(y,m,d);
+      const dow = new Date(y,m,d).getDay(); // 0 Sun
+      const mk = (db.marks[k]||{})[e.id];
+      const isTatil = mk && mk.t==="tatil";
+      if (dow!==0 && !isTatil) targetDays++;
+      if (!mk) continue;
+      if (mk.t==="work"){ hours+=mk.h; workD++; }
+      else if (mk.t==="izin") izin++;
+      else if (mk.t==="rapor") rapor++;
+      else if (mk.t==="tatil") tatil++;
+      else if (mk.t==="yok") yok++;
+    }
+    return {e, hours, workD, izin, rapor, tatil, yok, target: targetDays*e.hours};
+  });
+}
+function renderTotals(){
+  const rows = monthStats();
+  const t = document.getElementById("totals");
+  if (!rows.length){ t.innerHTML = ""; return; }
+  t.innerHTML = `<tr><th>Employee</th><th>Hours</th><th>Target</th><th>Diff</th><th>Days</th><th>İzin</th><th>Rapor</th><th>R.Tatil</th><th>Devamsız</th></tr>` +
+    rows.map(r=>{
+      const diff = r.hours - r.target;
+      return `<tr><td><span class="dot" style="display:inline-block;background:${r.e.color}"></span> ${esc(r.e.name)}</td>
+        <td><b>${r.hours.toFixed(1)}</b></td><td class="muted">${r.target.toFixed(0)}</td>
+        <td class="${diff>=0?"pos":"neg"}">${diff>=0?"+":""}${diff.toFixed(1)}</td>
+        <td>${r.workD}</td><td>${r.izin||""}</td><td>${r.rapor||""}</td><td>${r.tatil||""}</td><td>${r.yok||""}</td></tr>`;
+    }).join("") +
+    `<tr><td><b>Total</b></td><td><b>${rows.reduce((a,r)=>a+r.hours,0).toFixed(1)}</b></td><td colspan="7"></td></tr>`;
+}
+
+/* ---------- export / import ---------- */
+document.getElementById("csvBtn").addEventListener("click",()=>{
+  const y = view.getFullYear(), m = view.getMonth();
+  const dim = new Date(y,m+1,0).getDate();
+  let csv = "Employee;" + Array.from({length:dim},(_,i)=>i+1).join(";") + ";TotalHours;Target\n";
+  monthStats().forEach(r=>{
+    const cells = [];
+    for (let d=1; d<=dim; d++){
+      const mk = (db.marks[key(y,m,d)]||{})[r.e.id];
+      cells.push(!mk ? "" : mk.t==="work" ? String(mk.h).replace(".",",") : TYPES[mk.t].label);
+    }
+    csv += `${r.e.name};${cells.join(";")};${String(r.hours.toFixed(1)).replace(".",",")};${r.target}\n`;
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8"}));
+  a.download = `hours-${y}-${pad(m+1)}.csv`; a.click();
+});
+document.getElementById("expBtn").addEventListener("click",()=>{
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(db)],{type:"application/json"}));
+  a.download = "employee-hours-backup-"+ymd(new Date())+".json"; a.click();
+});
+document.getElementById("impBtn").addEventListener("click",()=>document.getElementById("impFile").click());
+document.getElementById("impFile").addEventListener("change",e=>{
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{ try{ db = JSON.parse(r.result); selEmp = db.emps[0]?db.emps[0].id:null; save(); renderAll(); }catch(err){ alert("Invalid JSON"); } };
+  r.readAsText(f);
+});
+
+function renderAll(){ renderEmps(); renderBrushes(); renderCal(); renderTotals(); }
+renderAll();
+
+/* ---------- cloud (v2026-08-24a): one jar in Supabase, admin account only, newest wins ----------
+   Table: staff_hours (id=1, data jsonb, updated_at) · RLS: admin email only.
+   RESUME-PULL LAW: a PWA resumes from memory, not from boot — pull on every return to the tab. */
+const SUPA_URL="https://efjvfggwnhqkunjvoyjb.supabase.co";
+const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA";
+const ADMIN_EMAIL="omer_aydin@coffeenutz.net";
+let SB=null; try{ if(typeof supabase!=="undefined") SB=supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
+let pushT=null;
+function setStat(m){ const el=document.getElementById("syncStat"); if(!el) return;
+  if(m==="bulut"){ el.textContent="bulut senkron · cloud synced"; el.style.color="var(--good)"; }
+  else if(m==="hata"){ el.textContent="bulut hatası · yerelde güvende · cloud error, safe locally"; el.style.color="var(--warn)"; }
+  else { el.textContent="yerel mod · Guide girişiyle buluta eşitlenir · local mode"; el.style.color="var(--dim)"; } }
+async function cloudUser(){ try{ if(!SB) return null; const u=await SB.auth.getUser(); return (u&&u.data&&u.data.user)||null; }catch(e){ return null; } }
+async function cloudPull(){ try{
+  const u=await cloudUser(); if(!u||u.email!==ADMIN_EMAIL){ setStat("yerel"); return; }
+  const {data,error}=await SB.from("staff_hours").select("data,updated_at").eq("id",1).maybeSingle();
+  if(error) throw error;
+  if(data&&data.data&&((data.data.up||0)>(db.up||0))){ db=data.data; selEmp=db.emps[0]?db.emps[0].id:null; save(1); renderAll(); }
+  setStat("bulut");
+}catch(e){ setStat("hata"); } }
+function cloudPush(){ clearTimeout(pushT); pushT=setTimeout(async()=>{ try{
+  const u=await cloudUser(); if(!u||u.email!==ADMIN_EMAIL){ setStat("yerel"); return; }
+  const {error}=await SB.from("staff_hours").upsert({id:1,data:db,updated_at:new Date().toISOString()});
+  if(error) throw error; setStat("bulut");
+}catch(e){ setStat("hata"); } },1200); }
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden) cloudPull(); });
+setTimeout(cloudPull,600);
+</script>
+</body>
+</html>
