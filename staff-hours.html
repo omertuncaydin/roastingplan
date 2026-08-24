@@ -59,7 +59,7 @@
 <body>
 
 <h1>Personel Saatleri · Employee Hours</h1>
-<div class="sub">Pick an employee, pick a brush, then click or drag across the calendar to mark. Aynı güne tekrar tıkla = kaldır · click the same mark again to remove. <span id="syncStat" style="color:var(--dim)">yerel · local</span> · <span style="opacity:.55">v2026-08-24c</span></div>
+<div class="sub">Pick an employee, pick a brush, then click or drag across the calendar to mark. Aynı güne tekrar tıkla = kaldır · click the same mark again to remove. <span id="syncStat" style="color:var(--dim)">yerel · local</span> · <span style="opacity:.55">v2026-08-24d</span></div>
 
 <div class="card">
   <div class="row" id="empRow"></div>
@@ -96,7 +96,7 @@
   <div class="muted" style="margin-top:6px;">Target = workdays in month (Mon-Sat minus Resmi Tatil marks) × default hours. Adjust per employee via Edit. Sunday counts only when marked.</div>
 </div>
 
-<footer>CoffeeNutz internal tool · v2026-08-24c · marks: click = apply · same click again = remove · drag = paint · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
+<footer>CoffeeNutz internal tool · v2026-08-24d · marks: click = apply · same click again = remove · drag = paint · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
 
 <script>
 "use strict";
@@ -190,7 +190,9 @@ function applyBrush(dateKey, isClick){
   else if (brush==="custom")next = {t:"work", h:customH};
   else                      next = {t:brush, h:0};
   // v24b (his ask): clicking a day that already holds this exact mark REMOVES it — no brush switch needed. Drag-paint never toggles.
-  if (isClick && next && prev && prev.t===next.t && prev.h===next.h) next = null;
+  // v24d: the removal click ENDS the stroke — renderCal rebuilds the DOM under the pressed cursor, and a 1px move
+  // fired mouseenter on the fresh cell, repainting what was just deleted ("it is not deleting with the same click").
+  if (isClick && next && prev && prev.t===next.t && prev.h===next.h){ next = null; painting = false; }
   if (next) db.marks[dateKey][selEmp] = next;
   else { delete db.marks[dateKey][selEmp]; if (!Object.keys(db.marks[dateKey]).length) delete db.marks[dateKey]; }
   save(); renderCal(); renderTotals();
