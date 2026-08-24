@@ -1789,6 +1789,15 @@ refreshPlanUI();
 const SUPA_URL='https://efjvfggwnhqkunjvoyjb.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA';
 let SB=null; try{ if(typeof supabase!=='undefined') SB=supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
+// v08-24c VISIT BEACON (his order: see who enters, from anywhere): one anon row per device per 6h —
+// timezone answers the country question (Europe/Zurich = the Swiss tester) with no IP handling.
+// Fails silent until the `visits` table exists; RLS = anon INSERT only, nobody reads it but the dashboard.
+setTimeout(function(){ try{ if(!SB) return;
+  const vp9=+(localStorage.getItem('bsVisitPing')||0); if(Date.now()-vp9<216e5) return;
+  localStorage.setItem('bsVisitPing',String(Date.now()));
+  SB.from('visits').insert({ tz:((Intl.DateTimeFormat().resolvedOptions()||{}).timeZone||''),
+    lang:(navigator.language||''), appver:(typeof APPVER!=='undefined'?APPVER:''),
+    ua:(navigator.userAgent||'').slice(0,180) }).then(function(){},function(){}); }catch(e9){} },2500);
 try{ if(WCON) wcCmdSub(true); }catch(e){}   // boot-time cast restore runs before SB exists (TDZ); re-arm the command ear here, after the client is born
 async function acctChain(){ try{ if(!(await acctGuard())) return; syncPlanFromAccount(); setTimeout(()=>uniSync(true),300); setTimeout(()=>wkSync(),400); setTimeout(()=>umSync(true),600); }catch(e){} }
 try{ if(SB){ SB.auth.onAuthStateChange(()=>{ ACCTQ=null; acctChain(); }); setTimeout(acctChain, 1200); } }catch(e){}   // codes retired: the account IS the license; v08-17r: the switch guard fronts the chain
@@ -3136,7 +3145,7 @@ function stgArcDraw(){ try{ const el=$('stgArc'); if(!el) return;
   el.innerHTML=sv;
 }catch(e9){} }
 setInterval(function(){ try{ if(running){ renderSum(); stgArcDraw(); } }catch(e9){} },2000);
-const APPVER='v2026-08-24b';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-24c';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
