@@ -11,7 +11,13 @@
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
 <meta name="description" content="Grup-Al: yeterli katılımcı toplanırsa kampanya başlar. Hedefe ulaşılmazsa kimseden ücret alınmaz.">
-<!-- grupal.html · v2026-07-23a -->
+<link rel="manifest" href="manifest-grupal.json">
+<meta name="theme-color" content="#16130f">
+<link rel="apple-touch-icon" href="grupal-icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Grup-Al">
+<!-- grupal.html · v2026-08-24a -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -153,13 +159,14 @@ button:active{transform:scale(.99)}
   </div>
 
   <div class="hint" style="text-align:center;margin:18px 0 8px">Grup-Al bir CoffeeNutz projesidir · sorular: iletişim sayfası</div>
+  <button id="pwaAdd" style="display:none;width:auto;margin:0 auto 14px;padding:9px 16px;font-size:13px;font-weight:700;background:var(--panel2);color:var(--accent);border:1px solid var(--accent);border-radius:20px" onclick="pwaInstall()">Grup-Al'ı uygulama olarak ekle</button>
 </div>
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-07-23a';
+const VERSION='v2026-08-24a';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -406,6 +413,11 @@ function restoreMine(){
   $('shareLink').textContent=location.origin+location.pathname+'?k='+SLUG+'&ref='+rc;
 }
 ['fName','fEmail','fPhone'].forEach(id=>$(id).addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); pledge(); } }));
+let PWAEV=null;
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); PWAEV=e; const b=$('pwaAdd'); if(b) b.style.display='inline-block'; });
+window.addEventListener('appinstalled',()=>{ PWAEV=null; const b=$('pwaAdd'); if(b) b.style.display='none'; });
+function pwaInstall(){ if(!PWAEV) return; const ev=PWAEV; PWAEV=null; $('pwaAdd').style.display='none'; try{ ev.prompt(); }catch(e){} }
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('/grupal-sw.js',{scope:'/grupal'}).catch(()=>{}); }); }
 function startCampaign(){
   restoreMine();
   load(); setInterval(load, 30000);
