@@ -2105,7 +2105,7 @@ async function cloudAutoSync(){   // on open, signed in: pull ADDITIONS only (ze
 }
 setTimeout(cloudAutoSync,400); setTimeout(chargePull,700); renderEquipSel();
 window.addEventListener('storage',e=>{ if(e&&e.key==='gCharge'){ renderBatchSel(); try{ btAim(); }catch(e2){} } });
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ renderBatchSel(); try{ chargePull(); }catch(e){} try{ gdPull(); }catch(e){} } else { try{ GDPULLED=0; }catch(e){} } });   // v05g charge + v08-24f RECIPES: a PWA resumes from memory, not from boot — edit a recipe on the iMac, lift the phone, the pull lands here; hiding re-arms the 60s throttle
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ renderBatchSel(); try{ chargePull(); }catch(e){} try{ gdPull(); }catch(e){} try{ umSync(true); }catch(e){} } else { try{ GDPULLED=0; }catch(e){} } });   // v05g charge + v08-24f recipes + v08-24g maps: a PWA resumes from memory, not from boot — the pulls land here; hiding re-arms the 60s throttle
 // walkthrough: opens itself for a fresh app copy, then remembers being folded
 try{ const cw=$('cWalk');
   if(cw){ if(!localStorage.getItem('bsWalkSeen')&&!Object.keys(calMap()).length&&roastCount()===0) cw.open=true;
@@ -3146,7 +3146,7 @@ function stgArcDraw(){ try{ const el=$('stgArc'); if(!el) return;
   el.innerHTML=sv;
 }catch(e9){} }
 setInterval(function(){ try{ if(running){ renderSum(); stgArcDraw(); } }catch(e9){} },2000);
-const APPVER='v2026-08-24f';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-24g';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -3404,8 +3404,9 @@ async function gdPull(){ if(!SB) return; if(!(await acctGuard())) return; if(Dat
   try{ const u=await cloudUser(); if(!u) return;
     const {data,error}=await SB.from('recipes').select('*').order('sort_order',{ascending:true});
     if(error||!Array.isArray(data)) return;
-    const a=data.map(d=>({id:d.id,name:d.name,match:d.match||[],bullet:d.bullet||'',hsr:d.hsr||'-',note:d.note||'',active:!!d.active,sortOrder:(d.sort_order==null?null:d.sort_order)}));
+    const a=data.map(d=>({id:d.id,name:d.name,match:d.match||[],bullet:d.bullet||'',hsr:d.hsr||'-',note:d.note||'',active:!!d.active,sortOrder:(d.sort_order==null?null:d.sort_order),up9:d.updated_at||null}));
     localStorage.setItem('cnRecipes_cache',JSON.stringify(a));   // same shape the Guide caches: one jar, two apps
+    try{ rcReconcile(); }catch(e2){}   // v08-24g: a fresher row retires the stale local override — the Guide row is the single voice again
     try{ rcLineUI(); renderRcRow(); }catch(e2){} }catch(e){} }
 function gdMatch(k){ if(!k) return null; const L=gdRecipes().filter(r=>r&&r.active!==false);
   let r=L.find(x=>(x.name||'').toLowerCase()===k); if(r) return r;
@@ -3416,7 +3417,7 @@ function gdCompose(s2,st,gas){ s2=(s2&&s2!=='-')?(s2+''):'';   // in-place token
   if(gas){ s2=/[+-]?P\d+/i.test(s2)?s2.replace(/[+-]?P\d+/i,gas):(gas+(s2?(' / '+s2):'')); }
   return s2; }
 function gdCachePatch(d){ try{ if(!d) return; const a=gdRecipes(); const i=a.findIndex(x=>x.id===d.id);
-  const row={id:d.id,name:d.name,match:d.match||[],bullet:d.bullet||'',hsr:d.hsr||'-',note:d.note||'',active:!!d.active,sortOrder:(d.sort_order==null?null:d.sort_order)};
+  const row={id:d.id,name:d.name,match:d.match||[],bullet:d.bullet||'',hsr:d.hsr||'-',note:d.note||'',active:!!d.active,sortOrder:(d.sort_order==null?null:d.sort_order),up9:d.updated_at||null};
   if(i>=0) a[i]=row; else a.push(row);
   localStorage.setItem('cnRecipes_cache',JSON.stringify(a)); GDPULLED=Date.now(); }catch(e){} }   // patched jar + pull suppressed = no sync loop
 async function gdUpsert(k){ const eq=localStorage.getItem('bsEquip')||'Bullet';
@@ -3431,10 +3432,14 @@ async function gdUpsertM(k,eq,man,retire){ try{ if(!SB) return false; const u=aw
   const s2=gdCompose(r?((field==='bullet'?r.bullet:r.hsr)||''):'', man.st, man.gas);
   if(!s2) return;
   let res;
-  if(r&&r.id){ const payload={}; payload[field]=s2;   // ONLY the current machine's string; note/match/active/sort/other machine untouched
-    res=await SB.from('recipes').update(payload).eq('id',r.id).select().single(); }
+  const ua9=new Date().toISOString();   // v08-24g: the row carries its edit time; other devices retire older local overrides against it
+  if(r&&r.id){ const payload={updated_at:ua9}; payload[field]=s2;   // ONLY the current machine's string; note/match/active/sort/other machine untouched
+    res=await SB.from('recipes').update(payload).eq('id',r.id).select().single();
+    if(res.error&&/updated_at/.test(res.error.message||'')){ const p2={}; p2[field]=s2; res=await SB.from('recipes').update(p2).eq('id',r.id).select().single(); } }   // column not added yet: the save must never fail for it
   else { const nm=(cName.value||'').trim()||k;
-    res=await SB.from('recipes').insert({name:nm,match:[k],bullet:(field==='bullet')?s2:'-',hsr:(field==='hsr')?s2:'-',note:'',active:true,sort_order:null}).select().single(); }
+    const ins9={name:nm,match:[k],bullet:(field==='bullet')?s2:'-',hsr:(field==='hsr')?s2:'-',note:'',active:true,sort_order:null,updated_at:ua9};
+    res=await SB.from('recipes').insert(ins9).select().single();
+    if(res.error&&/updated_at/.test(res.error.message||'')){ delete ins9.updated_at; res=await SB.from('recipes').insert(ins9).select().single(); } }
   if(res.error) throw res.error;
   gdCachePatch(res.data);
   if(retire){ const m2=rcMap(); const cur9=m2[k];   // cloud accepted: local override retires (wn stays); the Guide row is the single voice again
@@ -3458,6 +3463,27 @@ function gdRc(k){ const eq=localStorage.getItem('bsEquip')||'Bullet';
   let x=gdRcFor(k,eq); if(!x&&eq!=='Bullet') x=gdRcFor(k,'Bullet');
   if(!x||(!x.st&&!x.gas)) return null;
   x.wn=''; x.src='guide'; return x; }
+// v08-24g RECONCILER — his report: "when i change the recipe on a device other is not showing that updated data".
+// A local override born BEFORE the row's last edit is stale: it retires (wn survives). Lawful locals stay:
+// styled picks that don't own their row, and non-cinnamon gas cuts — the Guide grammar has no slot for them.
+function rcReconcile(){ try{
+  const m2=rcMap(), cm9=calMap(); const keys={}; let ch8=false, ch9=false;
+  for(const k in m2) keys[k]=1; for(const k in cm9){ if(cm9[k]&&cm9[k].rc) keys[k]=1; }
+  for(const k in keys){
+    const raw=(cm9[k]&&cm9[k].rc)||m2[k]||{}; if(!raw.st&&!raw.gas) continue;
+    if(raw.gasAt&&raw.gasAt!=='ci') continue;
+    const r=gdMatch(k); if(!r||!r.up9) continue;
+    if(styleOf(k)&&((r.name||'').toLowerCase()!==k)) continue;
+    const rt=Date.parse(r.up9); if(!isFinite(rt)||rt<=(raw.t||0)) continue;
+    const v9={}; if((m2[k]||{}).wn||raw.wn) v9.wn=(m2[k]||{}).wn||raw.wn;
+    if(v9.wn) m2[k]=v9; else delete m2[k]; ch8=true;
+    const kk9=cm9[k]?k:((beanOf(k)||'').trim().toLowerCase());
+    if(kk9&&cm9[kk9]){ cm9[kk9].rcs=cm9[kk9].rcs||{}; delete cm9[kk9].rcs[k];
+      if(m2[k]){ cm9[kk9].rc=m2[k]; cm9[kk9].rcs[k]=m2[k]; } else if(kk9===k){ delete cm9[kk9].rc; }
+      cm9[kk9].up=Date.now(); ch9=true; } }
+  if(ch8) localStorage.setItem('bsRc',JSON.stringify(m2));
+  if(ch9) localStorage.setItem('bsCal',JSON.stringify(cm9));
+}catch(e){} }
 function rcEqSwitch(m9){ if(m9===RCEQ) return; RCEQ=m9; const act9=localStorage.getItem('bsEquip')||'Bullet';
   RCVAR=(m9===act9)?null:(gdRcFor(rcKey(),m9)||{st:'',gas:'',gasAt:'ci'});
   renderRcRow(); }
@@ -3491,7 +3517,7 @@ function rcSet(k,st,gas,gasAt,quiet){ if(!k) return; const cur=rcGet(k)||{st:'',
   const nat=(gasAt===undefined)?(cur.gasAt||''):((gasAt||'')+'');
   const nwn=(rcGetMan(k)||{}).wn||'';   // watch chip name is identity, not recipe: survives edits and clears
   const m2=rcMap();
-  if(nst||ngas||nwn){ const v2={}; if(nst) v2.st=nst; if(ngas) v2.gas=ngas; if(nat) v2.gasAt=nat; if(nwn) v2.wn=nwn; m2[k]=v2; } else delete m2[k];
+  if(nst||ngas||nwn){ const v2={}; if(nst) v2.st=nst; if(ngas) v2.gas=ngas; if(nat) v2.gasAt=nat; if(nwn) v2.wn=nwn; v2.t=Date.now(); m2[k]=v2; } else delete m2[k];   // v08-24g: the override carries its birth time — the reconciler compares it to the row's updated_at
   localStorage.setItem('bsRc',JSON.stringify(m2));
   const cm=calMap(); { const kk9=cm[k]?k:((beanOf(k)||'').trim().toLowerCase()); if(kk9&&cm[kk9]){ cm[kk9].rcs=cm[kk9].rcs||{}; if(m2[k]){ cm[kk9].rc=m2[k]; cm[kk9].rcs[k]=m2[k]; } else { delete cm[kk9].rcs[k]; if(kk9===k) delete cm[kk9].rc; } cm[kk9].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm)); } }
   if(quiet){ try{ rcLineUI(); }catch(e){} } else renderRcRow(); }
@@ -3501,7 +3527,7 @@ function rcSetWn(k,wn){ if(!k) return; const cur=rcGetMan(k)||{}; const m2=rcMap
   let w8=(wn||'').trim().toUpperCase(); const i8=w8.indexOf('-');
   w8=(i8>0)?(w8.slice(0,i8)+'-'+w8.slice(i8+1).replace(/-/g,'').slice(0,5)):w8.slice(0,5);   // name part hard-capped at 5 on EVERY path; legacy self-heals on next save
   const w9=w8; if(w9) v2.wn=w9;
-  if(v2.st||v2.gas||v2.wn) m2[k]=v2; else delete m2[k];
+  if(v2.st||v2.gas||v2.wn){ v2.t=(cur.t||Date.now()); m2[k]=v2; } else delete m2[k];   // wn edit keeps the recipe's own age
   localStorage.setItem('bsRc',JSON.stringify(m2));
   const cm=calMap(); { const kk9=cm[k]?k:((beanOf(k)||'').trim().toLowerCase()); if(kk9&&cm[kk9]){ cm[kk9].rcs=cm[kk9].rcs||{}; if(m2[k]){ cm[kk9].rc=m2[k]; cm[kk9].rcs[k]=m2[k]; } else { delete cm[kk9].rcs[k]; if(kk9===k) delete cm[kk9].rc; } cm[kk9].up=Date.now(); localStorage.setItem('bsCal',JSON.stringify(cm)); } }
   renderRcRow(); }
@@ -3536,9 +3562,10 @@ function rcTableOpen(){ try{ gdPull(); }catch(e){}
             const hasC9=(RCCODES.indexOf((ws9[0]||'').toUpperCase())>=0)||!!RCCODE[(ws9[0]||'').toLowerCase()];
             nm9=code9+' '+(hasC9?ws9.slice(1).join(' '):nm9); }
           else if(nm9){ const cv9=codeName(nm9); if(cv9) nm9=cv9; } }
-        const p={bullet:row.querySelector('.rcTb').value.trim()||'-', hsr:row.querySelector('.rcTh').value.trim()||'-', note:row.querySelector('.rcTn').value.trim(), active:row.querySelector('.rcTa').checked};
+        const p={bullet:row.querySelector('.rcTb').value.trim()||'-', hsr:row.querySelector('.rcTh').value.trim()||'-', note:row.querySelector('.rcTn').value.trim(), active:row.querySelector('.rcTa').checked, updated_at:new Date().toISOString()};
         if(nm9&&nm9!==r.name) p.name=nm9;
-        const {data,error}=await SB.from('recipes').update(p).eq('id',r.id).select().single();
+        let {data,error}=await SB.from('recipes').update(p).eq('id',r.id).select().single();
+        if(error&&/updated_at/.test(error.message||'')){ delete p.updated_at; const r8=await SB.from('recipes').update(p).eq('id',r.id).select().single(); data=r8.data; error=r8.error; }
         if(error){ toast('hata: '+error.message); } else { gdCachePatch(data);
           if(p.name){ try{ const ok9=r.name.trim().toLowerCase(); if(calMap()[ok9]) renameMapKey(ok9,p.name); }catch(e2){} }
           try{ rcLineUI(); renderRcRow(); }catch(e2){} toast(tr?((p.name||r.name)+' kaydedildi'):((p.name||r.name)+' saved')); if(p.name) rcTableOpen(); }

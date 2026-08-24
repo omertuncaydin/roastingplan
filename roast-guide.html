@@ -609,7 +609,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-24h</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-24i</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -731,7 +731,7 @@ let sb=null, RECIPES=[];
 function getRecipes(){ return RECIPES; }
 function cacheRecipes(){ try{localStorage.setItem(CACHE_KEY, JSON.stringify(RECIPES));}catch(e){} }
 function loadCache(){ try{const a=JSON.parse(localStorage.getItem(CACHE_KEY)||'null'); if(Array.isArray(a)&&a.length) return a;}catch(e){} return DEFAULT_RECIPES.slice(); }
-function rowToRecipe(d){ return {id:d.id, name:d.name, match:d.match||[], bullet:d.bullet||'', hsr:d.hsr||'-', note:d.note||'', active:!!d.active, sortOrder:(d.sort_order==null?null:d.sort_order)}; }
+function rowToRecipe(d){ return {id:d.id, name:d.name, match:d.match||[], bullet:d.bullet||'', hsr:d.hsr||'-', note:d.note||'', active:!!d.active, sortOrder:(d.sort_order==null?null:d.sort_order), up9:d.updated_at||null}; }   // v08-24i: the cache carries the row's edit clock for the Listener's override reconciler
 function saveRecipes(a){ RECIPES=a; cacheRecipes(); }   // local-cache writer (used by import)
 
 function rstr(r,eq){ return eq==='Bullet'?r.bullet:r.hsr; }
@@ -1209,9 +1209,12 @@ function enableSwipeDelete(item, onDelete){ if(item.dataset.swipe) return; item.
   del.addEventListener('click',()=>onDelete()); }
 async function upsertRecipe(rec){
   if(!sb) return null;
-  const payload={ name:rec.name, match:rec.match, bullet:rec.bullet, hsr:rec.hsr, note:rec.note, active:rec.active, sort_order:(rec.sortOrder==null?null:rec.sortOrder) };
+  const payload={ name:rec.name, match:rec.match, bullet:rec.bullet, hsr:rec.hsr, note:rec.note, active:rec.active, sort_order:(rec.sortOrder==null?null:rec.sortOrder), updated_at:new Date().toISOString() };   // v08-24i: every edit stamps the row; devices retire older local overrides against it
   let res = rec.id ? await sb.from('recipes').update(payload).eq('id',rec.id).select().single()
                    : await sb.from('recipes').insert(payload).select().single();
+  if(res.error&&/updated_at/.test(res.error.message||'')){ delete payload.updated_at;
+    res = rec.id ? await sb.from('recipes').update(payload).eq('id',rec.id).select().single()
+                 : await sb.from('recipes').insert(payload).select().single(); }   // column not added yet: the save must never fail for it
   if(res.error){ console.warn('upsert',res.error); return null; }
   return rowToRecipe(res.data);
 }
