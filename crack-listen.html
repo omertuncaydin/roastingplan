@@ -2297,10 +2297,9 @@ async function altGo(){ try{ const tr=(LANG==='tr');
 // mark states: own map (his measured drop agtron, gold) · communal (dashed bell: the skeleton travels,
 // the number does not — cross-universe color doesn't travel, his law 08-15) · none (eşlenmemiş: an invitation)
 function mapTargetFor(k){ try{ const m0=calMap(),e=m0[k];
-  // v08-24d HIS RULE, correct order: the AIM is the explicit target; learned speaks only when nothing else does
+  // v08-24e HIS RULE: the recipe list is the aim's home — it is consulted first (bittersweet fix); learned speaks only when nothing else does
+  try{ const g=gdAgFor(k); if(g!=null) return g; }catch(e9){}
   if(e&&isFinite(parseFloat(e.target))) return parseFloat(e.target);
-  const r=rcGet(k); if(r&&isFinite(parseFloat(r.ag))) return parseFloat(r.ag);
-  try{ const g=gdRc(k); if(g&&isFinite(parseFloat(g.ag))) return parseFloat(g.ag); }catch(e9){}   // a manual st/gas recipe must not mask the Guide goal
   let lm={}; try{ lm=JSON.parse(localStorage.getItem('bsLastMeta'))||{}; }catch(e9){}
   if(lm[k]&&isFinite(parseFloat(lm[k].target))) return parseFloat(lm[k].target);
   if(e&&isFinite(e.agtron)) return e.agtron;
@@ -3147,7 +3146,7 @@ function stgArcDraw(){ try{ const el=$('stgArc'); if(!el) return;
   el.innerHTML=sv;
 }catch(e9){} }
 setInterval(function(){ try{ if(running){ renderSum(); stgArcDraw(); } }catch(e9){} },2000);
-const APPVER='v2026-08-24d';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-24e';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -3396,7 +3395,9 @@ let RCEDIT=false; let RCEQ='', RCVAR=null;   // editor machine + other-machine d
 function gdParseStage(s){ const m=s&&s.match(/\b([ABC][0-2])\b/); return m?m[1]:''; }
 function gdParseP(s){ const m=s&&s.match(/(?:^|\s)([+-]?)P(\d+)/i); return m?((m[1]==='+'?'+':'-')+'P'+m[2]):''; }
 function gdParseDev(s){ const m=s&&s.match(/(\d+)\s*s\b/i); return m?parseInt(m[1],10):null; }
-function gdParseAg(s){ const m=s&&s.match(/(\d+)\s*A\s*$/); return m?parseInt(m[1],10):null; }
+function gdParseAg(s){ if(!s) return null; let m,re=/(\d{2,3})\s*A\b/gi,last=null;   // v08-24e: not just at line end — his bittersweet row proved the aim can sit mid-string
+  while((m=re.exec(s))) last=parseInt(m[1],10);
+  return last; }
 function gdRecipes(){ try{ const a=JSON.parse(localStorage.getItem('cnRecipes_cache')||'null'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
 let GDPULLED=0;
 async function gdPull(){ if(!SB) return; if(!(await acctGuard())) return; if(Date.now()-GDPULLED<60000) return; GDPULLED=Date.now();
@@ -3448,6 +3449,11 @@ function gdRcFor(k,eq){ const r=gdMatch(k); if(!r) return null;
   const s2=(((eq==='Bullet')?r.bullet:r.hsr)||''); if(!s2||s2==='-') return null;
   const st=gdParseStage(s2), gas=gdParseP(s2);
   return {st:st,gas:gas,gasAt:(gas?'ci':''),dev:gdParseDev(s2),ag:gdParseAg(s2)}; }
+function gdAgFor(k){ const r=gdMatch(k); if(!r) return null;   // v08-24e: the aim is machine-free — own string first, then the other; a row with only an agtron still speaks
+  const eq=localStorage.getItem('bsEquip')||'Bullet';
+  const p9=(eq==='Bullet')?['bullet','hsr']:['hsr','bullet'];
+  for(const f9 of p9){ const s9=r[f9]; if(!s9||s9==='-') continue; const a9=gdParseAg(s9); if(a9!=null) return a9; }
+  return null; }
 function gdRc(k){ const eq=localStorage.getItem('bsEquip')||'Bullet';
   let x=gdRcFor(k,eq); if(!x&&eq!=='Bullet') x=gdRcFor(k,'Bullet');
   if(!x||(!x.st&&!x.gas)) return null;

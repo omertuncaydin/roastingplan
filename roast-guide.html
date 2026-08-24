@@ -609,7 +609,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-17g</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-24g</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -700,6 +700,15 @@
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><button class="iconbtn" onclick="loadSubmissions()">Refresh &middot; Yenile</button><span class="small" id="gsCount" style="color:var(--accent2);font-weight:700"></span></div>
       <div id="gsList"></div>
       <div class="small" id="gsMsg" style="margin-top:8px"></div>
+      </details>
+    </div>
+    <div class="card hide" id="visitsCard">
+      <details class="adminfold">
+      <summary class="cgrplbl" style="cursor:pointer;list-style:none"><span>Ziyaretler &middot; Visits</span></summary>
+      <div class="small" style="margin:6px 0 8px;color:var(--muted)">Listener ziyaret sinyali &middot; cihaz ba&#351;&#305;na 6 saatte bir &middot; one ping per device per 6h</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><button class="iconbtn" onclick="loadVisits()">Refresh &middot; Yenile</button><span class="small" id="vzCount" style="color:var(--accent2);font-weight:700"></span></div>
+      <div id="vzList"></div>
+      <div class="small" id="vzMsg" style="margin-top:8px"></div>
       </details>
     </div>
     <div class="small" style="margin-top:10px">Your recipes, roast history, cuppings and gradings are private to this account. Nobody else can see them.</div>
@@ -2211,6 +2220,34 @@ async function renderAccount(){
   const mc=document.getElementById('memberCard'); if(mc){ mc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadEntitlements(); }
   const tc=document.getElementById('trCard'); if(tc){ tc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) renderTranslations(); }
   const gc=document.getElementById('submitCard'); if(gc){ gc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadSubmissions(); }
+  const vc=document.getElementById('visitsCard'); if(vc){ vc.classList.toggle('hide',!IS_ADMIN); if(IS_ADMIN) loadVisits(); }
+}
+// ---- v2026-08-24g Ziyaretler: the visits beacon lands HERE, not in a dashboard (his order: an in-app section, admin only; RLS enforces the same server-side) ----
+async function loadVisits(){ const L=document.getElementById('vzList'), C=document.getElementById('vzCount'), M=document.getElementById('vzMsg'); if(!L) return;
+  if(!sb||!IS_ADMIN) return;
+  if(M){ M.style.color='var(--muted)'; M.textContent='...'; }
+  try{
+    const r=await sb.from('visits').select('ts,tz,lang,appver').order('ts',{ascending:false}).limit(200);
+    if(r.error) throw r.error;
+    const a=r.data||[];
+    const now=Date.now(), d1=now-864e5, d7=now-7*864e5;
+    let c1=0,c7=0; const byTz={};
+    for(const v of a){ const t=Date.parse(v.ts); if(t>=d1)c1++; if(t>=d7)c7++; const z=v.tz||'?'; byTz[z]=(byTz[z]||0)+1; }
+    if(C) C.textContent=c1+' bugün · '+c7+' son 7 gün · '+a.length+' kayıt';
+    const tzTop=Object.entries(byTz).sort((x,y)=>y[1]-x[1]).slice(0,6);
+    let h='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">'+tzTop.map(function(e2){ var z=e2[0],n=e2[1];
+      var hot=(z==='Europe/Zurich'), home=(z==='Europe/Istanbul');
+      return '<span class="small" style="padding:2px 8px;border-radius:10px;border:1px solid '+(hot?'var(--gold)':'var(--line)')+';'+(hot?'color:var(--gold);font-weight:700':(home?'color:var(--muted)':'font-weight:600'))+'">'+esc(z)+' · '+n+'</span>'; }).join('')+'</div>';
+    h+=a.slice(0,50).map(function(v){ var t=new Date(v.ts); var z=v.tz||'?';
+      var hot=(z==='Europe/Zurich'), away=(z&&z!=='Europe/Istanbul');
+      return '<div class="small" style="display:flex;gap:10px;padding:3px 0;border-bottom:1px solid var(--line)">'
+        +'<span style="min-width:96px;color:var(--muted)">'+t.toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</span>'
+        +'<span style="flex:1;'+(hot?'color:var(--gold);font-weight:700':(away?'font-weight:600':''))+'">'+esc(z)+'</span>'
+        +'<span style="color:var(--muted)">'+esc(v.lang||'')+'</span>'
+        +'<span style="color:var(--muted)">'+esc((v.appver||'').replace('v2026-',''))+'</span></div>'; }).join('');
+    L.innerHTML=h||'<div class="small" style="color:var(--muted)">Henüz ziyaret yok · no visits yet</div>';
+    if(M) M.textContent='';
+  }catch(e){ if(M){ M.style.color='var(--warn)'; M.textContent='Yüklenemedi · could not load'; } }
 }
 async function changePassword(){ const p1=acPass1.value, p2=acPass2.value;
   if((p1||'').length<6){ acPassMsg.style.color='var(--warn)'; acPassMsg.textContent='Use at least 6 characters.'; return; }
