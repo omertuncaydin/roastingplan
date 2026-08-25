@@ -871,6 +871,13 @@ function queueSamples(){ try{ if(!SAMPLES.length) return;
   q.push(entry); localStorage.setItem('cnCupQueue',JSON.stringify(q.slice(-10)));
   toast((LANG==='tr'?'Örnekler Guide Cup bölümüne gönderildi: ':'Samples sent to Guide Cup: ')+entry.samples.length);
 }catch(e){} }
+// v08-25e HIS CATCH ("Yaye Fruity is 105 but it shows 95"): the done-card Target prefill still ran the pre-24e order
+// (map target -> last save -> recipe LAST). The recipe list is the aim's home — it speaks FIRST here too.
+function aimPrefill(k){
+  try{ const g9=gdAgFor(k); if(g9!=null) return Math.round(g9); }catch(e9){}
+  try{ const c9=calFor(); if(c9&&isFinite(parseFloat(c9.target))) return Math.round(parseFloat(c9.target)); }catch(e9){}
+  try{ const lm9=(JSON.parse(localStorage.getItem('bsLastMeta'))||{})[k]||{}; if(isFinite(parseFloat(lm9.target))) return Math.round(parseFloat(lm9.target)); }catch(e9){}
+  return null; }
 function renderStopLine(){ try{ $('finalCall').textContent=STOPPROJ?(LANG==='tr'?('Durdurma anındaki öngörü: ~'+STOPPROJ+" Agtron. Ölç, aşağıya öğütülmüş Agtron'u gir; gösterge kendini notlar."):('Projected at stop: ~'+STOPPROJ+' Agtron. Measure, fill Agtron ground below, and the gauge grades itself.')):''; }catch(e){} }   // one renderer, every path: stale text has nowhere to hide
 function stop(){
   running=false; if(raf) cancelAnimationFrame(raf);
@@ -916,14 +923,13 @@ function stop(){
       if(!$('mMoist').value&&calP.moist) $('mMoist').value=calP.moist;
       if(!$('mAw').value&&calP.aw) $('mAw').value=calP.aw;
       if(!$('mA0Ag').value){ if(isFinite(calP.fc_ag)) $('mA0Ag').value=calP.fc_ag; else { const sib9=fcAgSib((cName.value||'').trim().toLowerCase()); if(sib9!=null) $('mA0Ag').value=sib9; } }   // A0 color is a bean constant: own map, else sibling style
-      if(!$('mTarget').value&&calP.target) $('mTarget').value=calP.target; }
+      }
     let lmAll={}; try{ lmAll=JSON.parse(localStorage.getItem('bsLastMeta'))||{}; }catch(e){}
     const lm=lmAll[(cName.value||'').trim().toLowerCase()]||{};   // last save fills what the map does not
     if(!$('mProc').value&&lm.proc) $('mProc').value=lm.proc;
     if(!$('mMoist').value&&lm.moist) $('mMoist').value=lm.moist;
     if(!$('mAw').value&&lm.aw) $('mAw').value=lm.aw;
-    if(!$('mTarget').value&&lm.target) $('mTarget').value=lm.target;
-    if(!$('mTarget').value){ const rr9=rcGet((cName.value||'').trim().toLowerCase()); if(rr9&&rr9.ag) $('mTarget').value=rr9.ag; } }   // v28f: the recipe's goal Agtron never needs retyping
+    if(!$('mTarget').value){ const t9=aimPrefill((cName.value||'').trim().toLowerCase()); if(t9!=null) $('mTarget').value=t9; } }   // v08-25e: recipe -> map target -> last save; the goal never needs retyping and never lies
   queueSamples();   // sample pulls ride to the Guide's Cup section (deduped)
   // TWO-PULL CALIBRATION: an unmapped bean must not leave this screen without seeing why mapping matters
   try{ const tpk=(cName.value||'').trim().toLowerCase(), tp=$('twoPull');
@@ -3231,7 +3237,7 @@ function kokpitDraw(){ try{
   $('kkMeta').textContent=nAll?((tr?'\u00e7atlak ':'cracks ')+nAll+(ph?(' \u00b7 '+ph):'')):(tr?'ilk \u00e7\u0131t\u0131rt\u0131 bekleniyor':'waiting for first crack');
 }catch(e9){} }
 setInterval(function(){ try{ if(running){ renderSum(); stgArcDraw(); kokpitDraw(); } }catch(e9){} },2000);
-const APPVER='v2026-08-25d';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-25e';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
