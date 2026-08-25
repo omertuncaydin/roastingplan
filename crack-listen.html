@@ -43,8 +43,6 @@ body.st-live #kokpit{display:block}
 body.st-live #kkSub{display:block}
 body.st-live #kkPill{display:inline-block}
 body.st-live:not(.lab) #ag{display:none !important}   /* #ag carries an inline display:flex — only !important outranks it */
-body.st-live #stgArc{display:none}
-body.st-live:not(.lab) #stageNow{display:none}
 .kkTile{flex:1;background:#161210;border:1px solid var(--line);border-radius:12px;padding:8px 6px;text-align:center}
 .kkV{font-size:22px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
 .kkK{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
@@ -241,8 +239,7 @@ body.st-setup #tmpRow{order:0}
 body.st-setup #sumStrip{display:block;order:1}
 body.st-live #sumStrip{display:block;order:1}
 body.st-done #sumStrip{display:block;order:1}
-#stgArc{display:none}
-body.st-live #stgArc{display:flex;align-items:center;justify-content:center;margin-left:10px}
+#stgArc{display:none}   /* v08-25b: the kokpit arc replaced the 24a mini arc; it stays hidden in every state (drawn but never shown, tests read its innerHTML) */
 #hdrTop{display:flex;flex-direction:column;align-items:center}
 #hdrTop,.tlogo,#hdr .logoName,.logoSub,.brandFull{transition:all .55s ease}
 body.hdrmini #hdrTop{flex-direction:row;justify-content:flex-start;align-items:center;gap:12px}
@@ -1211,10 +1208,8 @@ function renderStageStrip(){ const el=$('stageStrip'); if(!el) return;
   const sn=$('stageNow');   // v27c: the storm's crown line: current STAGE + DEV, biggest thing on the live screen (his mockup verdict)
   if(sn){ let txt='';
     const live9=running&&document.body.classList.contains('st-live');
-    if(live9&&LASTSTAGES&&LASTSTAGES.length){
-      const a0s=LASTSTAGES[0][1], dev=Math.max(0,(performance.now()-startT)/1000-a0s);
-      txt=((RCPHASE==='alarm'&&RCALSTG)?RCALSTG:stgLabel())+'|DEV '+fmtT(dev); }
-    else if(live9&&STAGEGAS){ txt='GAZ|'+STAGEGAS; }   // stays until it stops making sense: A0's arrival retires every pre-A0 milestone reminder (his rule 2026-07-28)
+    // v08-25c: the kokpit carries stage + DEV now — the v27c crown line kept them alive via INLINE display (the trap's third strike: "there are two stage gauges why?").
+    if(live9&&STAGEGAS&&!(LASTSTAGES&&LASTSTAGES.length)){ txt='GAZ|'+STAGEGAS; }   // pre-A0 gas reminder only; the storm's arrival retires it (his rule 2026-07-28)
     if(txt!==STAGENOWTXT){ STAGENOWTXT=txt;   // cache: RAF cadence, but the DOM only moves when the second ticks
       if(!txt){ sn.style.display='none'; sn.innerHTML=''; }
       else{ const pp=txt.split('|');
@@ -3229,7 +3224,7 @@ function kokpitDraw(){ try{
   $('kkMeta').textContent=nAll?((tr?'\u00e7atlak ':'cracks ')+nAll+(ph?(' \u00b7 '+ph):'')):(tr?'ilk \u00e7\u0131t\u0131rt\u0131 bekleniyor':'waiting for first crack');
 }catch(e9){} }
 setInterval(function(){ try{ if(running){ renderSum(); stgArcDraw(); kokpitDraw(); } }catch(e9){} },2000);
-const APPVER='v2026-08-25a';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-25c';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
