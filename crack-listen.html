@@ -60,8 +60,7 @@ body.st-live #stageNow{text-align:right;flex:1;min-width:0}
 #stageNow{display:none;margin:4px 0 2px;line-height:1.05}
 /* v28a (his 4 orders, 2026-07-28): minimal storm is DEFAULT; every instrument stays alive behind the lab mode chip */
 @media (max-width:899px){ body.st-live:not(.lab) #hdr,body.st-live:not(.lab) #cGain,body.st-live:not(.lab) #cTimeline,body.st-live:not(.lab) #styleChips{display:none} }
-body.st-live:not(.lab) #cStats{justify-content:center}
-body.st-live:not(.lab) #cStats>.card{flex:0 1 220px}
+body.st-live:not(.lab) #cStats{display:none}   /* v08-25g his note: the kokpit tile counts the storm — the old counted-cracks card stands down in live (lab keeps it) */
 #labChip{display:none}
 body.st-live #labChip,body.st-done #labChip{display:flex;position:fixed;right:12px;bottom:14px;z-index:10;width:auto;padding:7px 12px;font-size:11px;font-weight:700;border-radius:999px;background:var(--panel);color:var(--muted);border:1px solid var(--line);cursor:pointer}
 @media (min-width:900px){ #labChip{display:none!important} }
@@ -3238,7 +3237,7 @@ function kokpitDraw(){ try{
   $('kkMeta').textContent=ph;
 }catch(e9){} }
 setInterval(function(){ try{ if(running){ renderSum(); stgArcDraw(); kokpitDraw(); } }catch(e9){} },2000);
-const APPVER='v2026-08-25f';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-25g';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
