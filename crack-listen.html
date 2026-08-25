@@ -2204,7 +2204,26 @@ function renderNameplate(){ const nv=(cName.value||'').trim(), n=$('npName');
 function editName(){ rcNamesOpen(); }
 function rcNamesSet(n){ try{ cName.value=n; localStorage.setItem('bsCoffee',n); }catch(e){}
   $('modal').style.display='none'; RCEDIT=true;
-  try{ renderNameplate(); }catch(e){} try{ renderRcRow(); }catch(e){} try{ btAim(); }catch(e){} }
+  try{ renderNameplate(); }catch(e){} try{ renderRcRow(); }catch(e){} try{ btAim(); }catch(e){}
+  try{ gdEnsureRow(n); }catch(e){} }   // v08-25i HIS RULE: naming a coffee opens its line in the recipe list
+// v08-25i: the book never lags the nameplate. A styled pick never opens its own row — the BEAN owns it (his law).
+// Existence check is STRICT (exact name or exact alias) — gdMatch's substring rule would let 'Yaye' swallow 'Yaye Fruity'.
+async function gdEnsureRow(nm){ try{
+  nm=(nm||'').trim(); if(!nm||!SB) return;
+  const rowNm=styleOf(nm)?((beanOf(nm)||nm).trim()):nm;
+  const kk=rowNm.toLowerCase();
+  const L9=gdRecipes().filter(function(r){ return r&&r.active!==false; });
+  const exists=L9.some(function(r){ return ((r.name||'').toLowerCase()===kk)||((r.match||[]).some(function(a2){ return (a2||'').toLowerCase()===kk; })); });
+  if(exists) return;
+  const u=await cloudUser(); if(!u) return;
+  const ins9={name:rowNm,match:[kk],bullet:'-',hsr:'-',note:'',active:true,sort_order:null,updated_at:new Date().toISOString()};
+  let res=await SB.from('recipes').insert(ins9).select().single();
+  if(res.error&&/updated_at/.test(res.error.message||'')){ delete ins9.updated_at; res=await SB.from('recipes').insert(ins9).select().single(); }
+  if(res.error||!res.data) return;
+  gdCachePatch(res.data);
+  try{ rcLineUI(); renderRcRow(); }catch(e9){}
+  toast(LANG==='tr'?(rowNm+' re\u00e7ete listesinde sat\u0131r a\u00e7t\u0131'):(rowNm+' opened its line in the recipe list'));
+}catch(e){} }
 // v08-10i: a coffee enters the book with its ORIGIN or not at all (his law) —
 // the wrist folds the origin word into a country code, so the word must exist.
 const RCORIGINS=['Etiyopya','Kenya','Kolombiya','Brezilya','Guatemala','Kostarika','Honduras','Peru','Ruanda','Burundi','Yemen','Hindistan','Endonezya','Sumatra','Java','Panama','Nikaragua','Salvador','Meksika','Tanzanya','Uganda','Papua','Vietnam','Ekvador','Bolivya','China'];
@@ -3237,7 +3256,7 @@ function kokpitDraw(){ try{
   $('kkMeta').textContent=ph;
 }catch(e9){} }
 setInterval(function(){ try{ if(running){ renderSum(); stgArcDraw(); kokpitDraw(); } }catch(e9){} },2000);
-const APPVER='v2026-08-25h';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-25i';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
