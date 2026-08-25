@@ -202,6 +202,9 @@ body.st-done #tmpRow{order:99}
 #nameChips{display:none!important}
 body.st-live .mmark{display:none !important}   /* v08-25a: mmark spans carry inline display — the 17a hide never actually won until !important */
 body.notemps #btStrip,body.notemps #tmpRow{display:none!important}
+body.notemps #tmpFold{display:none!important}   /* v08-25d: the whole temp group folds as one; no empty shell in notemps */
+body.st-setup #tmpFold{order:0}
+body.st-live #tmpFold{order:0}
 .btrow{display:flex;align-items:center;gap:10px}
 .btwheelWrap{position:relative;flex:1;height:44px;min-width:0}
 .btwheel{width:100%;height:44px;overflow-x:scroll;overflow-y:hidden;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;background:#15100b;border:1px solid var(--line);border-radius:12px;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,transparent,#000 25%,#000 75%,transparent);mask-image:linear-gradient(90deg,transparent,#000 25%,#000 75%,transparent);white-space:nowrap}
@@ -304,6 +307,8 @@ body.st-setup #btn{display:none}
     </div>
   </div>
 
+  <details class="fold" id="tmpFold" open>
+  <summary>temperature &#183; charge &amp; S curve <span id="tmpFoldLast" style="color:var(--gold);font-weight:700;margin-left:6px"></span></summary>
   <div id="chargeBox">
   <div id="eqStrip" style="margin:12px 0 2px;text-align:center">
     <div id="eqPills" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap"></div>
@@ -323,6 +328,7 @@ body.st-setup #btn{display:none}
       <canvas id="tmpG" width="640" height="150" style="width:100%;height:auto;background:none;margin-top:4px"></canvas>
     </div>
   </div>
+  </details>
 
   <details class="fold" id="cWalk">
   <summary>how it works · 5 steps</summary>
@@ -1373,7 +1379,7 @@ function tmpDraw(){ try{ const cv=$('tmpG'); if(!cv) return; const x=cv.getConte
   const ARR=(!running&&PREROLL&&PREROLL.length)?PREROLL:TEMPS;
   let tShow=null; if(running){ tShow=(performance.now()-startT)/1000; } else if(CHGT0){ tShow=(performance.now()-CHGT0)/1000; }
   if(ARR.length<1){ x.fillStyle='#7a6a5a'; x.font='13px sans-serif'; x.fillText(LANG==='tr'?'çarkı çevir, Charge ile süre başlasın; S eğrisi kendini çizer':'spin the wheel, Charge starts the clock; the S curve draws itself',10,H/2);
-    if(lastEl) lastEl.textContent=''; if(rorEl) rorEl.innerHTML='&nbsp;';
+    if(lastEl) lastEl.textContent=''; if(rorEl) rorEl.innerHTML='&nbsp;'; try{ const f9=$('tmpFoldLast'); if(f9) f9.textContent=''; }catch(e9){}
     if(tShow!=null){ x.fillStyle='#e6c14b'; x.font='800 20px ui-monospace,Menlo,monospace'; x.textAlign='right'; x.fillText(fmtT(tShow),W-10,24); x.textAlign='left'; }
     return; }
   // v08-10g: turnaround index — the descent gets physics, and RoR only exists past TP
@@ -1418,6 +1424,7 @@ function tmpDraw(){ try{ const cv=$('tmpG'); if(!cv) return; const x=cv.getConte
   if(tShow!=null){ x.fillStyle='#e6c14b'; x.font='800 20px ui-monospace,Menlo,monospace'; x.textAlign='right'; x.fillText(fmtT(tShow),W-10,24); x.textAlign='left'; }
   const lr=ror.length?ror[ror.length-1].v:null;
   if(lastEl) lastEl.textContent=Math.round(last.c)+'°C';
+  try{ const f9=$('tmpFoldLast'); if(f9) f9.textContent=Math.round(last.c)+'°C'; }catch(e9){}
   if(rorEl) rorEl.textContent=(lr!=null)?((lr>=0?'+':'')+lr.toFixed(1)+'°/dk'):'RoR · --';
 }catch(e){} }
 setInterval(function(){ try{
@@ -3224,7 +3231,7 @@ function kokpitDraw(){ try{
   $('kkMeta').textContent=nAll?((tr?'\u00e7atlak ':'cracks ')+nAll+(ph?(' \u00b7 '+ph):'')):(tr?'ilk \u00e7\u0131t\u0131rt\u0131 bekleniyor':'waiting for first crack');
 }catch(e9){} }
 setInterval(function(){ try{ if(running){ renderSum(); stgArcDraw(); kokpitDraw(); } }catch(e9){} },2000);
-const APPVER='v2026-08-25c';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-25d';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -3575,6 +3582,9 @@ function cfgToggle(){ document.body.classList.toggle('cfg'); const c9=$('cfgCar'
 function cfgWatch(){ if(!document.body.classList.contains('cfg')) cfgToggle(); const wf=$('wcFold'); if(wf){ wf.open=true; try{ wf.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){} } }
 function labChipUI(){ const lc=$('labChip'); if(lc) lc.textContent=document.body.classList.contains('lab')?'basic mode':'lab mode'; }   // the chip names the mode you would switch TO (his order 2026-07-28)
 function labToggle(){ document.body.classList.toggle('lab'); try{ localStorage.setItem('bsLab',document.body.classList.contains('lab')?'1':'0'); }catch(e){} labChipUI(); }
+try{ const tf9=$('tmpFold'); if(tf9){ if(localStorage.getItem('bsTmpFold')==='0') tf9.removeAttribute('open');
+  tf9.addEventListener('toggle',function(){ try{ localStorage.setItem('bsTmpFold',tf9.open?'1':'0');
+    if(tf9.open){ try{ btBuild(); btAim(); tmpDraw(); }catch(e8){} } }catch(e9){} }); } }catch(e){}   // v08-25d: fold state remembered; reopening re-aims the wheel (scrollLeft dies while hidden)
 try{ if(localStorage.getItem('bsLab')==='1') document.body.classList.add('lab'); }catch(e){} try{ labChipUI(); }catch(e){} try{ setTimeout(()=>{ try{ gdPull(); }catch(e2){} },1500); }catch(e){}
 function rcKey(){ return (cName.value||'').trim().toLowerCase(); }
 function rcMap(){ try{ return JSON.parse(localStorage.getItem('bsRc')||'{}'); }catch(e){ return {}; } }
@@ -3877,7 +3887,8 @@ function doImport(){
 // ---- i18n: EN-first, TR selectable from the top. Static text via tree walk, dynamic via tt(). ----
 const EN2TR={
 'no charge · the clock starts at listen':'şarjsız · sayaç dinlemeyle başlar',
-'FORECAST':'ÖNGÖRÜ','TARGET':'HEDEF','recipe target':'reçete hedefi',
+'FORECAST':'ÖNGÖRÜ','TARGET':'HEDEF',
+'temperature · charge & S curve':'sıcaklık · şarj ve S eğrisi','recipe target':'reçete hedefi',
 'live gain':'canlı gain','projected color · Agtron scale':'öngörülen renk · Agtron skalası',
 'Target Agtron (recipe)':'Hedef Agtron (reçete)',
 "this bean's map · tap to rename":'bu çekirdeğin haritası · adını düzenle','UNIVERSE':'EVREN',
