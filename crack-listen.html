@@ -3237,7 +3237,7 @@ function kokpitDraw(){ try{
   $('kkMeta').textContent=ph;
 }catch(e9){} }
 setInterval(function(){ try{ if(running){ renderSum(); stgArcDraw(); kokpitDraw(); } }catch(e9){} },2000);
-const APPVER='v2026-08-25g';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-25h';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -4097,8 +4097,14 @@ function drawTimeline(){
     // independent witnesses must now agree before a LIVE flip. The vetoes gate on `running` only, so the
     // retrospective record (B1/C1 censoring, already correct) is left exactly as it was.
     const baseSub=peakInterior && nowBin>peakI && sm[nowBin]<0.7*peak;
-    let pastPeak=baseSub;
-    if(running && baseSub){
+    // v08-25h HIS DOCTRINE ("A0 is the period after no cracks whereas C0 is the period after many cracks"):
+    // the C side of the ladder is UNREACHABLE until the bell has PROVEN a storm. A couple of early pops
+    // followed by a normal lull must never read as decline. Storm proof: >=12 valid cracks AND at least
+    // one bin at true chatter rate (>=3 cracks/sec, bin-width adjusted).
+    let stormSeen=false;
+    if(v.length>=12){ const chat=Math.max(2,Math.ceil(3*bin)); for(let i9=0;i9<nb;i9++){ if((counts[i9]||0)>=chat){ stormSeen=true; break; } } }
+    let pastPeak=baseSub&&stormSeen;
+    if(running && pastPeak){
       // W1 TREND: a bell still climbing has no witnessed peak. Mean smoothed slope over the last 3 bins <= 0.
       const bk=Math.max(0,nowBin-3), wTrend=(sm[nowBin]-sm[bk])<=0;
       // W3 PERSISTENCE: the decline must hold across the existing `run` window (not a one-bin dip), with the
@@ -4171,14 +4177,14 @@ function drawTimeline(){
     const rg=v.slice(-11).map(c=>c.t); let medGap=2;
     if(rg.length>3){ const dif=[]; for(let i=1;i<rg.length;i++) dif.push(rg[i]-rg[i-1]); dif.sort((a,b)=>a-b); medGap=dif[Math.floor(dif.length/2)]; }
     const silThr=Math.max(5,3*medGap);   // 5s floor (Omer 2026-07-07), scaled up for slow roasts by the recent gap
-    if(peakInterior&&quiet>=silThr){ const tC1=v[v.length-1].t;
+    if(stormSeen&&peakInterior&&quiet>=silThr){ const tC1=v[v.length-1].t;   // v08-25h: silence earns C1 only after a witnessed storm
       if(!(peakKnown&&PPFLIPT!=null)) stages.push(['C0',(tB1+tC1)/2]);   // C0 fallback only when the decline was never witnessed
       stages.push(['C1',tC1]); }
     else{ if(!running&&STOPT!=null) stages.push(['DROP',Math.min(STOPT,t0+span-0.5)]); }   // the cut, marked honestly; the 20% C0 estimate retired (C0 = PPFLIPT now)
     // hard monotonic clamp: the sequence A0<=A1<=B0<=B1<=C0<=C1 is a law, not a suggestion
     for(let i=1;i<stages.length;i++) if(stages[i][1]<stages[i-1][1]) stages[i][1]=stages[i-1][1];
     LASTSTAGES=stages.map(sg=>[sg[0],sg[1]]);
-    try{ const li9=RC_LADDER.indexOf(stages[stages.length-1][0]); if(li9>=0&&running) STGFLOOR=Math.max(STGFLOOR,Math.min(li9,4)); }catch(e){}   // v08-10j: the ratchet climbs, never descends
+    try{ const li9=RC_LADDER.indexOf(stages[stages.length-1][0]); if(li9>=0&&running) STGFLOOR=Math.max(STGFLOOR,Math.min(li9,stormSeen?4:2)); }catch(e){}   // v08-10j ratchet + v08-25h: pre-storm the floor cannot climb past B0
     renderStageStrip(); a0Nudge(); rcNudge();
     // stage pins: simultaneous stages MERGE into one chip (a late-opened session collapses A0·A1·B0
     // onto the same instant; painting them separately buried A0 under the others). Staggered when crowded.
