@@ -200,7 +200,8 @@ body.st-live #tmpRow{order:0}
 body.st-done .wrap{display:flex;flex-direction:column}
 body.st-done #tmpRow{order:99}
 #nameChips{display:none!important}
-body.st-live .mmark{display:none !important}   /* v08-25a: mmark spans carry inline display — the 17a hide never actually won until !important */
+body.st-live .mmark{display:none !important}
+body.st-live #rcLine{display:none !important}   /* v08-25f his note: the arc shows where to drop; rcLineUI writes inline display, hence !important */   /* v08-25a: mmark spans carry inline display — the 17a hide never actually won until !important */
 body.notemps #btStrip,body.notemps #tmpRow{display:none!important}
 body.notemps #tmpFold{display:none!important}   /* v08-25d: the whole temp group folds as one; no empty shell in notemps */
 body.st-setup #tmpFold{order:0}
@@ -379,7 +380,7 @@ body.st-setup #btn{display:none}
       <div id="kkArc" style="display:flex;justify-content:center"></div>
       <div style="display:flex;gap:8px;margin:10px 0 0">
         <div class="kkTile"><div class="kkV" id="kkF">&#8212;</div><div class="kkK">FORECAST</div></div>
-        <div class="kkTile"><div class="kkV kkHollow" id="kkT">&#8212;</div><div class="kkK">TARGET</div></div>
+        <div class="kkTile"><div class="kkV kkHollow" id="kkC">&#8212;</div><div class="kkK">CRACKS</div></div>
         <div class="kkTile" style="display:flex;flex-direction:column;justify-content:flex-end"><div id="kkBars" style="display:flex;gap:3px;align-items:flex-end;height:28px;justify-content:center;margin-bottom:3px"></div><div class="kkK" id="kkRate">tempo &#183; &#8212;</div></div>
       </div>
       <div style="margin:9px 2px 4px">
@@ -3197,7 +3198,7 @@ function kokpitDraw(){ try{
   const n10=v.filter(function(c){ return nowS-c.t<=10; }).length;
   let dv=null; try{ const m9=calMap(); let e9=m9[k]; if(!e9){ const b9=(beanOf(k)||'').toLowerCase(); e9=m9[b9]||m9[(codeName(b9)||'').toLowerCase()]; } if(e9&&isFinite(e9.devSpan)) dv=e9.devSpan; }catch(e9){}
   let devCur=null; try{ if(v.length>=1){ const a0=effA0(v); if(isFinite(a0)) devCur=Math.max(0,nowS-a0); } }catch(e9){}
-  const sig=[cur,drop,aim,LASTPROJ,bins.join(','),n10,dv,devCur==null?'':Math.floor(devCur),LANG,PASTPEAK?1:0].join('|');
+  const sig=[cur,drop,aim,LASTPROJ,v.length,bins.join(','),n10,dv,devCur==null?'':Math.floor(devCur),LANG,PASTPEAK?1:0].join('|');
   if(sig===KKSIG) return; KKSIG=sig;
   const pill=$('kkPill'); if(pill){ pill.textContent=(aim!=null)?((tr?'HEDEF ':'AIM ')+Math.round(aim)+'A'):''; pill.style.display=(aim!=null)?'':'none'; }
   const sub=$('kkSub'); if(sub){ const eq=localStorage.getItem('bsEquip')||'\u2014';
@@ -3218,12 +3219,12 @@ function kokpitDraw(){ try{
       const pm=pt2((a0+a1)/2,r+27); sv+='<text x="'+pm[0].toFixed(1)+'" y="'+pm[1].toFixed(1)+'" text-anchor="middle" font-size="10" font-weight="700" fill="#7fd7c4">DROP</text>'; }
     const pl=pt2((a0+a1)/2,r-24);
     sv+='<text x="'+pl[0].toFixed(1)+'" y="'+(pl[1]+4).toFixed(1)+'" text-anchor="middle" font-size="12" font-weight="'+(i===ci?'700':'400')+'" fill="'+(i===ci?'#e6c14b':(i<ci?'#8a6f3c':'#4a3f30'))+'">'+L[i]+'</text>'; }
-  if(cur) sv+='<text x="170" y="152" text-anchor="middle" font-size="46" font-weight="800" fill="#e6c14b">'+cur+'</text>';
-  sv+='<text x="170" y="176" text-anchor="middle" font-size="10.5" letter-spacing="2" fill="#8f8474">'+(cur?(tr?'\u015e\u0130MD\u0130':'NOW'):(tr?'ISINMA':'WARMING'))+'</text>';
+  if(cur){ sv+='<text x="170" y="152" text-anchor="middle" font-size="46" font-weight="800" fill="#e6c14b">'+cur+'</text>';
+    sv+='<text x="170" y="176" text-anchor="middle" font-size="10.5" letter-spacing="2" fill="#8f8474">'+(tr?'\u015e\u0130MD\u0130':'NOW')+'</text>'; }   // v08-25f: before the first stage the center stays EMPTY
   sv+='</svg>';
   $('kkArc').innerHTML=sv;
   $('kkF').textContent=(LASTPROJ!=null)?('\u2248'+LASTPROJ+'A'):'\u2014';
-  $('kkT').textContent=(aim!=null)?(Math.round(aim)+'A'):'\u2014';
+  $('kkC').textContent=String(v.length);   // v08-25f: the aim lives in the pill; the middle tile counts the storm
   const mx=Math.max.apply(null,bins.concat([1]));
   $('kkBars').innerHTML=bins.map(function(n){ const h=4+Math.round(24*n/mx);
     return '<i style="width:5px;border-radius:2px;background:'+((n===mx&&n>0)?'#e6c14b':'#8a6f3c')+';height:'+h+'px"></i>'; }).join('');
@@ -3233,11 +3234,11 @@ function kokpitDraw(){ try{
   if(db) db.style.width=(devCur!=null&&dv)?(Math.min(100,Math.round(100*devCur/dv))+'%'):'0%';
   if(dpi){ if(devCur!=null&&dv&&dv-devCur>0){ const s9=fmtT(dv-devCur); dpi.textContent=tr?("DROP'a ~"+s9):('~'+s9+' to DROP'); } else dpi.textContent=''; }
   const nAll=v.length;
-  let ph=''; if(nAll){ ph=PASTPEAK?(tr?'tempo zirveyi ge\u00e7ti':'tempo past its peak'):(n10>0?(tr?'tempo t\u0131rman\u0131yor':'tempo climbing'):(tr?'sessiz':'quiet')); }
-  $('kkMeta').textContent=nAll?((tr?'\u00e7atlak ':'cracks ')+nAll+(ph?(' \u00b7 '+ph):'')):(tr?'ilk \u00e7\u0131t\u0131rt\u0131 bekleniyor':'waiting for first crack');
+  const ph=nAll?(PASTPEAK?(tr?'tempo zirveyi ge\u00e7ti':'tempo past its peak'):(n10>0?(tr?'tempo t\u0131rman\u0131yor':'tempo climbing'):(tr?'sessiz':'quiet'))):(tr?'ilk \u00e7\u0131t\u0131rt\u0131 bekleniyor':'waiting for first crack');
+  $('kkMeta').textContent=ph;
 }catch(e9){} }
 setInterval(function(){ try{ if(running){ renderSum(); stgArcDraw(); kokpitDraw(); } }catch(e9){} },2000);
-const APPVER='v2026-08-25e';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
+const APPVER='v2026-08-25f';   // the chip derives from this (BETA · <tail>), so a bump touches ONE constant; the machine string stays clean for telemetry
 try{ const vt9=document.querySelector('.vtag'); if(vt9){ vt9.textContent='BETA · '+APPVER.slice(6); vt9.title=APPVER; } }catch(e){}
 // ---- 1080x1920 dark-branded roast story card (Instagram story size) ----
 function makeStoryCard(){
@@ -3893,7 +3894,7 @@ function doImport(){
 // ---- i18n: EN-first, TR selectable from the top. Static text via tree walk, dynamic via tt(). ----
 const EN2TR={
 'no charge · the clock starts at listen':'şarjsız · sayaç dinlemeyle başlar',
-'FORECAST':'ÖNGÖRÜ','TARGET':'HEDEF',
+'FORECAST':'ÖNGÖRÜ','CRACKS':'ÇATLAK',
 'temperature · charge & S curve':'sıcaklık · şarj ve S eğrisi','recipe target':'reçete hedefi',
 'live gain':'canlı gain','projected color · Agtron scale':'öngörülen renk · Agtron skalası',
 'Target Agtron (recipe)':'Hedef Agtron (reçete)',
