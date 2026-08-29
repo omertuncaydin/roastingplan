@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Grup-Al · birlikte kavur, birlikte kazan</title>
+<title>Grup-Al · kolektif kavurma günü</title>
   <meta property="og:title" content="Grup-Al · Kolektif kavurma günü">
-  <meta property="og:description" content="Birlikte kavur, birlikte kutla: kolektif kavurma günü partileri. Masa kurulur, söz sözdür.">
+  <meta property="og:description" content="Kolektif kavurma günü partileri. Masa kurulur, söz sözdür.">
   <meta property="og:image" content="https://guide.coffeenutz.net/og-cover.png">
   <meta property="og:url" content="https://guide.coffeenutz.net/grupal.html">
   <meta property="og:type" content="website">
@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-29n TAVAN/GAME -->
+<!-- grupal.html · v2026-08-29r TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
@@ -108,7 +108,16 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
   box-shadow:0 14px 40px rgba(201,138,60,.16),0 4px 14px rgba(0,0,0,.5);position:relative}
 .hero img{width:100%;display:block;aspect-ratio:4/3;object-fit:cover}
 .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(22,19,15,0) 55%,rgba(22,19,15,.55) 100%);pointer-events:none}
-.deadline{text-align:center;font-weight:800;font-size:15px;color:var(--gold);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:4px 0 14px;font-variant-numeric:tabular-nums}
+.deadline{text-align:center;border:1px solid var(--line);border-radius:14px;padding:10px 12px 12px;margin:10px 0 14px}
+.tlbl{font-size:10px;letter-spacing:2.5px;color:var(--muted);font-weight:800;margin-bottom:7px}
+.tgrid{display:flex;gap:8px;justify-content:center}
+.tbox{background:var(--panel2);border:1px solid var(--line);border-radius:9px;min-width:48px;padding:8px 4px;font-size:21px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
+.tlab{font-size:9.5px;color:var(--muted);margin-top:4px;font-weight:700}
+.deadline.urgent .tbox{color:var(--warn);border-color:var(--warn)}
+.tended{font-weight:800;font-size:15px;color:var(--muted)}
+.dealline{text-align:center;font-size:13.5px;margin:2px 0 12px;color:var(--ink)}
+.dealline b{color:var(--gold)}
+.dealline a{color:var(--accent);cursor:pointer;text-decoration:underline}
 .shipline{text-align:center;color:var(--muted);font-size:12.5px;margin:2px 0 8px;line-height:1.45}
 .refund{text-align:center;color:var(--ink);font-size:12.5px;margin:0 0 6px;line-height:1.45}
 .ranks .lbl{margin-bottom:8px}
@@ -128,11 +137,12 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
   </svg>
   <div class="brand">GRUP-AL</div>
   <div class="tchips" id="themeChips"></div>
+  <div class="deadline" id="deadline" style="display:none"></div>
   <div class="hero" id="heroBox"><img id="heroImg" alt="Kavurma günü lotu"></div>
   <div id="portal" style="display:none"></div>
   <h1 id="title">yükleniyor...</h1>
   <div class="sub" id="lot"></div>
-  <div class="deadline" id="deadline" style="display:none"></div>
+  <div class="dealline" id="dealLine" style="display:none"></div>
 
   <div class="card" id="attCard" style="display:none">
     <div class="lbl" data-i18n="masaLbl">masa</div>
@@ -160,7 +170,7 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
     <div class="hint" id="ranksReward">İlk seçim: en çok davet edenin.</div>
   </div>
 
-  <div class="guarantee" id="guaranteeTxt"><div class="grow"><span>✓</span><i data-i18n="g1" style="font-style:normal">Herkese aynı fiyat</i></div><div class="grow"><span>✓</span><i data-i18n="g2" style="font-style:normal">Fark → Grup-Al kredin</i></div><div class="grow"><span>✓</span><i data-i18n="g3" style="font-style:normal">Vazgeçersen tamamı geri</i></div></div>
+  <div class="guarantee" id="guaranteeTxt"><div class="grow"><span>✓</span><i data-i18n="g1" style="font-style:normal">Herkese aynı fiyat</i></div><div class="grow"><span>✓</span><i data-i18n="g2" style="font-style:normal">Fark → Grup-Al kredin</i></div></div>
 
   <div class="card" id="joinCard">
     <div class="lbl" data-i18n="joinLbl">masaya otur</div>
@@ -226,8 +236,21 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-29n';
+const VERSION='v2026-08-29r';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
+let ENDAT=null, TICKT=null;
+function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
+  if(left<=0){ el.innerHTML='<div class="tlbl">'+t('timeLeft')+'</div><div class="tended">'+t('ended')+'</div>';
+    el.classList.remove('urgent'); delete el.dataset.built; if(TICKT){ clearInterval(TICKT); TICKT=null; } return; }
+  if(!el.dataset.built){ el.innerHTML='<div class="tlbl" id="tkLbl"></div><div class="tgrid">'
+    +['d','h','m','s'].map(k=>'<div><div class="tbox" id="tb_'+k+'">00</div><div class="tlab" id="tl_'+k+'"></div></div>').join('')
+    +'</div>'; el.dataset.built='1'; }
+  el.classList.toggle('urgent', left<86400000);
+  const sTot=Math.floor(left/1000);
+  const vals={d:Math.floor(sTot/86400), h:Math.floor((sTot%86400)/3600), m:Math.floor((sTot%3600)/60), s:sTot%60};
+  const labs={d:t('uDay'), h:t('uHour'), m:t('uMin'), s:t('uSec')};
+  $('tkLbl').textContent=t('timeLeft');
+  for(const k of ['d','h','m','s']){ $('tb_'+k).textContent=String(vals[k]).padStart(2,'0'); $('tl_'+k).textContent=labs[k]; } }
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
 let CLOSED=false, PENDTIMER=null, SEATN=null, NEXTC=null, NEXTT=0;
@@ -265,7 +288,7 @@ clRed:['Kavurma günü yapıldı.','Roast day is done.'], clRedH:['Paketler yold
 clFail:['Alınan ödemelerin tamamı geri döner. Açık ve net.','Every payment comes back in full. Plain and simple.'],
 clDone:['Bu parti tamamlandı.','This party is complete.'], clDoneH:['Kavurma günü yapıldı. Sıradaki parti burada duyurulacak.','Roast day is done. The next party will be announced here.'],
 clExp:['Bu partinin süresi doldu.','This party has ended.'], clExpH:['Yeni katılım alınmıyor. Sıradaki parti burada duyurulacak.','No new entries. The next party will be announced here.'],
-pack:[' paket',' pack'], ekleOpt:[' paket daha',' more'], ekleBtn:['Ekle','Add'],
+pack:[' paket',' pack'], flagSeat:['sandalyede','th seat'], timeLeft:['KALAN SÜRE','TIME LEFT'], uDay:['gün','days'], uHour:['saat','hours'], uMin:['dakika','minutes'], uSec:['saniye','seconds'], dealTavan:['tavan','ceiling'], dealTaban:['taban','floor'], ekleOpt:[' paket daha',' more'], ekleBtn:['Ekle','Add'],
 ekleShip:['Ödeme sayfasında "Teslim alım"ı seç — kargon ilk paketinle zaten ödendi, hepsi tek kutuda gelir.','Choose "Pickup" on the payment page — shipping was already paid with your first pack; everything arrives in one box.'], nextParty:['Sıradaki parti: ','Next party: '], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
 };
 function t(k){ const e=STR[k]; return e?(LANG==='en'?e[1]:e[0]):k; }
@@ -417,6 +440,7 @@ function buildEkle(left){
   const upd=()=>{ const n=parseInt(sel.value)||1; btn.textContent=t('ekleBtn')+(tv?(' · '+(tv*n)+' TL'):''); };
   sel.onchange=upd; upd();
 }
+function openHow(){ const h=$('howBox'); if(h){ h.open=true; try{ h.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){} } }
 function goEkle(){
   const s=STATE; if(!s||!s.deposit_url) return;
   const myRef=localStorage.getItem('grupal_'+SLUG); if(!myRef) return;
@@ -472,12 +496,11 @@ async function load(){
     const myRef=localStorage.getItem('grupal_'+SLUG);
     if(s.deposit_url&&myRef) DEPLINK=mkDep(myRef);
     if(myRef) checkMine(myRef);
-    if(s.end_at){
-      const end=new Date(s.end_at), msLeft=end-Date.now(), days=Math.max(0,Math.ceil(msLeft/864e5));
-      if(msLeft<=0){ $('deadline').textContent=t('lastDay')+fmtDate(s.end_at)+' ('+t('ended')+')'; }
-      else { $('deadline').textContent=t('lastDay')+fmtDate(s.end_at)+' ('+days+t('daysLeft')+')'; }
-      $('deadline').style.display='block';
-    } else { $('deadline').style.display='none'; }
+    {const dl=$('dealLine'); const ladx=s.ladder||[];
+     if(dl){ if(ladx.length>1){ dl.innerHTML='<b>'+escZ(ladx[0].price)+'</b> '+t('dealTavan')+' → <b>'+escZ(ladx[ladx.length-1].price)+'</b> '+t('dealTaban')+' · <a onclick="openHow()">'+t('howSum')+'</a>'; dl.style.display='block'; }
+       else dl.style.display='none'; }}
+    if(s.end_at){ ENDAT=new Date(s.end_at).getTime(); $('deadline').style.display='block'; tick(); if(!TICKT) TICKT=setInterval(tick,1000); }
+    else { ENDAT=null; $('deadline').style.display='none'; }
     renderRanks(s.ref_ranks||s.referral_ranks);
     renderAttendees(s);
     renderLevels(s);
@@ -609,9 +632,23 @@ function renderAttendees(s){
   shownChips.forEach(c=>addSeat('named',c.nm,c.q));
   for(let i=0;i<shownAnon;i++) addSeat('anon','',1);
   for(let i=0;i<ghostN;i++) addSeat('ghost','',1);
+  // tek tabela: sıradaki basamak, son boş sandalyenin üstünde — "şu kapı dolunca fiyat şuraya iner"
+  const pnum=tx=>{ const mm=String(tx||'').match(/\d[\d.]*/); return mm?mm[0]:''; };
+  const nxtRung=lad.find(r=>r.at>locked);
+  if(nxtRung&&nxtRung.at<=CAPALL&&ghostN>0){
+    const p=seatPos(Math.min(filled+ghostN,nxtRung.at)-1);
+    if(p){ const fg=mk('g',{class:'rungflag'});
+      const label=pnum(nxtRung.price); const w=Math.max(26, label.length*7+10);
+      const fx=p.x, fy=p.y-(p.s+11);
+      fg.appendChild(mk('rect',{x:fx-w/2,y:fy-8,width:w,height:14,rx:7,style:'fill:var(--gold)'}));
+      const ft=mk('text',{x:fx,y:fy+3,'text-anchor':'middle','font-size':9.5,'font-weight':800,'font-family':'-apple-system,sans-serif',style:'fill:var(--panel)'});
+      ft.textContent=label; fg.appendChild(ft);
+      g.appendChild(fg); }
+  }
   SEATN=popIx;
   const kal=total-locked;
-  $('attHint').textContent=(locked&&kal>0)?(kal+t('empty')):(locked&&parseInt(s.cap)&&kal<=0?t('full'):'');
+    {const nx=lad.find(r=>r.at>locked); const pn=tx=>{ const mm=String(tx||'').match(/\d[\d.]*/); return mm?mm[0]:''; };
+  $('attHint').textContent=(locked&&kal>0)?(kal+t('empty')+(nx?(' → '+pn(nx.price)+' TL'):'')):(locked&&parseInt(s.cap)&&kal<=0?t('full'):'');}
   $('attCard').style.display='block';
 }
 function renderRanks(ranks){
@@ -664,7 +701,7 @@ function buildCardCanvas(){
   if(link){ g.fillStyle='#a8998a'; g.font='500 30px -apple-system,Segoe UI,Roboto,sans-serif'; g.fillText('Davet bağlantın', cx, 1620);
     g.fillStyle='#e6c14b'; g.font='600 26px -apple-system,Segoe UI,Roboto,sans-serif'; wrap(g, link, cx, 1670, W-200, 36); }
   g.fillStyle='#a8998a'; g.font='600 30px -apple-system,Segoe UI,Roboto,sans-serif';
-  g.fillText('CoffeeNutz · Grup-Al · birlikte kavur', cx, 1820);
+  g.fillText('CoffeeNutz · Grup-Al', cx, 1820);
   return cv;
 }
 function downloadCard(){
@@ -699,7 +736,7 @@ async function doShare(){
       }
     }catch(e){ if(e && e.name==='AbortError') return; }
   }
-  if(navigator.share){ try{ await navigator.share({title:'Grup-Al',text:'Birlikte kavuralım: masa büyüdükçe fiyat herkes için düşer.',url:link}); }catch(e){} }
+  if(navigator.share){ try{ await navigator.share({title:'Grup-Al',text:'Masada yerini al: masa büyüdükçe fiyat herkes için düşer.',url:link}); }catch(e){} }
   else { navigator.clipboard&&navigator.clipboard.writeText(link); alert('Bağlantı kopyalandı.'); }
 }
 function restoreMine(){
@@ -731,7 +768,7 @@ function renderPortal(list){
   const escP=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   $('title').textContent=t('portalT');
   $('lot').textContent=t('portalS');
-  ['heroBox','deadline','attCard','ranksCard','joinCard','payBlock','shareBox','guaranteeTxt'].forEach(id=>{const el=$(id); if(el) el.style.display='none';});
+  ['heroBox','deadline','dealLine','attCard','ranksCard','joinCard','payBlock','shareBox','guaranteeTxt'].forEach(id=>{const el=$(id); if(el) el.style.display='none';});
   document.querySelectorAll('.wrap > .card, .wrap > .refund, .wrap > .shipline').forEach(el=>{ if(el.id!=='portal') el.style.display='none'; });
   const host=$('portal'); host.style.display='block';
   host.innerHTML=list.map(c=>{
