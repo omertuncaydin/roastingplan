@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-29k TAVAN/GAME -->
+<!-- grupal.html · v2026-08-29l TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
@@ -26,6 +26,8 @@ body.th-krema{--bg:#f7f1e7;--panel:#ffffff;--panel2:#f2ebde;--accent:#b3742a;--g
 body.th-night{background-image:radial-gradient(900px 480px at 50% -8%,rgba(201,138,60,.16),rgba(201,138,60,0) 60%),radial-gradient(700px 500px at 50% 108%,rgba(230,193,75,.07),rgba(230,193,75,0) 55%);background-attachment:fixed}
 body.th-red{--bg:#8F0101;--panel:#f6efe1;--panel2:#efe5d2;--accent:#8F0101;--gold:#a2801a;--green:#2e6a4c;--ink:#2a1410;--muted:#8a6a5c;--line:#e0d0b8;--warn:#7c2d12;--btnink:#fff;background-image:radial-gradient(800px 500px at 50% -10%,rgba(0,0,0,.25),rgba(0,0,0,0) 60%);background-attachment:fixed}
 body.th-red .brand{color:#f6efe1}
+body.th-red #liveLogo path{stroke:#f6efe1!important}
+body.th-red #liveLogo text{fill:#f6efe1!important}
 body.th-red .sub{color:#f0dcc8}
 body.th-red .deadline{color:#e6c14b;background:rgba(0,0,0,.25);border-color:rgba(0,0,0,.2)}
 body.th-red .refund{color:#f6efe1}
@@ -118,7 +120,12 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 </head>
 <body>
 <div class="wrap">
-  <img src="https://guide.coffeenutz.net/grupal-icon-192.png" alt="Grup-Al" style="display:block;width:64px;height:64px;margin:6px auto 2px;border-radius:16px;border:1px solid var(--line)">
+  <svg id="liveLogo" width="64" height="64" viewBox="0 0 100 100" style="display:block;margin:6px auto 2px" aria-label="Grup-Al">
+    <circle cx="50" cy="50" r="36" fill="none" style="stroke:var(--line)" stroke-width="7" opacity=".45"/>
+    <path id="logoArc" fill="none" style="stroke:var(--accent)" stroke-width="7" stroke-linecap="round"/>
+    <circle id="logoDot" cx="50" cy="14" r="7" style="fill:var(--gold)"/>
+    <text x="50" y="59" text-anchor="middle" font-weight="800" font-size="26" style="fill:var(--accent)" font-family="-apple-system,sans-serif">G-A</text>
+  </svg>
   <div class="brand">GRUP-AL</div>
   <div class="tchips" id="themeChips"></div>
   <div class="hero" id="heroBox"><img id="heroImg" alt="Kavurma günü lotu"></div>
@@ -215,7 +222,7 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-29k';
+const VERSION='v2026-08-29l';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -261,7 +268,7 @@ function applyLang(){
   document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')); });
   document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph'))); });
 }
-function setLang(l){ LANG=l; try{ localStorage.setItem('grupal_lang',l); }catch(e){} applyLang(); renderThemeChips(document.body.classList.contains('th-red')); if(typeof load==='function'&&SLUG&&STATE) load(); else if(typeof boot==='function'&&!SLUG) boot(); }
+function setLang(l){ LANG=l; try{ localStorage.setItem('grupal_lang',l); }catch(e){} applyLang(); const lc=document.getElementById('langChip'); if(lc) lc.textContent=(LANG==='en'?'TR':'EN'); if(typeof load==='function'&&SLUG&&STATE) load(); else if(typeof boot==='function'&&!SLUG) boot(); }
 let THEMEPREF='auto'; try{ THEMEPREF=localStorage.getItem('grupal_theme')||'auto'; }catch(e){}
 const THEMES=[['auto','oto'],['gece','Gece'],['isik','Gece Işık'],['kraft','Kraft'],['krema','Krema'],['red','CoffeeNutz Red']];
 function applyTheme(){ try{
@@ -283,10 +290,9 @@ function setThemePref(p){ THEMEPREF=p; try{ localStorage.setItem('grupal_theme',
 function renderThemeChips(redWin){ const el=document.getElementById('themeChips'); if(!el) return;
   if(redWin){ el.innerHTML=''; return; }   // kargo günlerinde masa üniforması: CoffeeNutz Red, çipler susar
   el.innerHTML=THEMES.map(function(o){
-    return '<span class="tchip'+(THEMEPREF===o[0]?' on':'')+'" onclick="setThemePref(\''+o[0]+'\')">'+o[1]+'</span>'; }).join('')
-    +'<span class="tchip'+(LANG==='en'?' on':'')+'" onclick="setLang(LANG===\'en\'?\'tr\':\'en\')">EN</span>';
+    return '<span class="tchip'+(THEMEPREF===o[0]?' on':'')+'" onclick="setThemePref(\''+o[0]+'\')">'+o[1]+'</span>'; }).join('');
 }
-applyTheme(); applyLang();
+applyTheme(); applyLang(); renderLogo(null);
 document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') applyTheme(); });
 function escZ(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 async function loadNext(){
@@ -450,7 +456,7 @@ async function load(){
     renderAttendees(s);
     renderLevels(s);
     CLOSED=(s.status==='failed'||s.status==='fulfilled'||s.status==='expired'||s.status==='closed')||(s.status==='open'&&!!s.end_at&&(new Date(s.end_at).getTime()<Date.now()));
-    renderClosed(s); renderPay(); renderChips(); renderYou(); updJoinBtn(); loadNext(); applyTheme();
+    renderClosed(s); renderPay(); renderChips(); renderYou(); updJoinBtn(); renderLogo(s); loadNext(); applyTheme();
   }catch(e){ $('title').textContent=t('netErr'); }
 }
 async function pledge(){
@@ -498,6 +504,25 @@ async function checkMine(ref){
     renderPay(); renderChips(); renderYou();
   }catch(e){}
 }
+function renderLogo(s){
+  const arcEl=document.getElementById('logoArc'), dotEl=document.getElementById('logoDot');
+  if(!arcEl||!dotEl) return;
+  let pct=75;
+  if(s){
+    const locked=s.locked||0, lad=s.ladder||[];
+    const goal=parseInt(s.cap)||((lad.length&&lad[lad.length-1].at)||0);
+    const done=(typeof CLOSED!=='undefined'&&CLOSED&&(s.status==='fulfilled'))||((typeof redWindow==='function')&&redWindow());
+    if(done) pct=100;
+    else if(goal>0) pct=75+25*Math.min(0.999, locked/goal);
+  }
+  const a0=-90, sweep=3.6*pct, a1=a0+Math.min(359.9,sweep), r=36, cx=50, cy=50;
+  const rad=d=>d*Math.PI/180;
+  const x0=cx+r*Math.cos(rad(a0)), y0=cy+r*Math.sin(rad(a0));
+  const x1=cx+r*Math.cos(rad(a1)), y1=cy+r*Math.sin(rad(a1));
+  arcEl.setAttribute('d','M '+x0+' '+y0+' A '+r+' '+r+' 0 '+(sweep>180?1:0)+' 1 '+x1+' '+y1);
+  if(pct>=100){ dotEl.setAttribute('cx',50); dotEl.setAttribute('cy',14); }
+  else { dotEl.setAttribute('cx',x1); dotEl.setAttribute('cy',y1); }
+}
 function renderAttendees(s){
   const svg=$('masaSvg'); if(!svg) return;
   const named=Array.isArray(s.attendees)?s.attendees:[];
@@ -520,25 +545,35 @@ function renderAttendees(s){
   const chips=named.map(a=>({nm:(typeof a==='string')?a:(a.name||''), q:(typeof a==='object'&&a.qty)?a.qty:1}));
   const namedSeats=chips.reduce((t,c)=>t+c.q,0);
   const anonSeats=Math.max(0, shownLocked-namedSeats);
-  const MAXRING=20;
-  const shownChips=chips.slice(0,MAXRING);
-  const shownAnon=Math.min(anonSeats, Math.max(0,MAXRING-shownChips.length));
-  const ghostN=Math.max(0, Math.min(total-locked, MAXRING-(shownChips.length+shownAnon)));
-  const ringN=Math.max(1, shownChips.length+shownAnon+ghostN);
+  // BASAMAK HALKALARI: iç halka dolunca yeni halka dışa açılır, sandalyeler küçülür (Ömer kararı 2026-08-29)
+  const RINGS=[{cap:12,r:76,s:11},{cap:17,r:96,s:9},{cap:26,r:112,s:6.5}];
+  const CAPALL=RINGS.reduce((a,g)=>a+g.cap,0);
+  const seatPos=ix=>{ let acc=0, ri=0;
+    for(const ring of RINGS){ if(ix<acc+ring.cap){ const k=ix-acc;
+      const a2=-Math.PI/2+(k+(ri%2?0.5:0))*(2*Math.PI/ring.cap);   // halkalar yarım adım kaydırılır: üst üste binme yok
+      return {x:120+ring.r*Math.cos(a2), y:120+ring.r*Math.sin(a2), s:ring.s}; } acc+=ring.cap; ri++; }
+    return null; };
+  const shownChips=chips.slice(0,CAPALL);
+  const shownAnon=Math.min(anonSeats, Math.max(0,CAPALL-shownChips.length));
+  const filled=shownChips.length+shownAnon;
+  let ringEnd=0; for(const ring of RINGS){ ringEnd+=ring.cap; if(filled<=ringEnd) break; }
+  const ghostN=Math.max(0, Math.min(total-locked, Math.min(ringEnd,CAPALL)-filled));
   const prev=SEATN;
   const g=mk('g',{}); svg.appendChild(g);
   let seatIx=0, popIx=0;
   const addSeat=(kind,label,q)=>{
-    const a2=-Math.PI/2+seatIx*(2*Math.PI/ringN);
-    const x=120+92*Math.cos(a2), y=120+92*Math.sin(a2);
+    const p=seatPos(seatIx); if(!p){ seatIx++; return; }
+    const x=p.x, y=p.y, sr=p.s;
     const grp=mk('g',{class:'boardseat'});
-    if(kind==='ghost'){ grp.appendChild(mk('circle',{cx:x,cy:y,r:15,fill:'none',style:'stroke:var(--line)','stroke-dasharray':'4 4'})); }
+    if(kind==='ghost'){ grp.appendChild(mk('circle',{cx:x,cy:y,r:sr,fill:'none',style:'stroke:var(--line)','stroke-dasharray':'4 4'})); }
     else{
       const anon=kind==='anon';
-      grp.appendChild(mk('circle',{cx:x,cy:y,r:15,style:anon?'fill:var(--panel2);stroke:var(--line)':('fill:'+pal[(String(label).length+seatIx)%pal.length])}));
-      const tt=mk('text',{x:x,y:y+4,'text-anchor':'middle','font-size':10.5,'font-weight':800,'font-family':'-apple-system,sans-serif',style:anon?'fill:var(--muted)':'fill:#fff'});
-      tt.textContent=anon?'✓':ini(label); grp.appendChild(tt);
-      if(q>1){ const tq=mk('text',{x:x+13,y:y-11,'text-anchor':'middle','font-size':9,'font-weight':800,style:'fill:var(--gold)','font-family':'-apple-system,sans-serif'}); tq.textContent='×'+q; grp.appendChild(tq); }
+      grp.appendChild(mk('circle',{cx:x,cy:y,r:sr,style:anon?'fill:var(--panel2);stroke:var(--line)':('fill:'+pal[(String(label).length+seatIx)%pal.length])}));
+      if(sr>=9){
+        const tt=mk('text',{x:x,y:y+sr*0.3,'text-anchor':'middle','font-size':Math.round(sr*0.75),'font-weight':800,'font-family':'-apple-system,sans-serif',style:anon?'fill:var(--muted)':'fill:#fff'});
+        tt.textContent=anon?'✓':ini(label); grp.appendChild(tt);
+        if(q>1&&sr>=10){ const tq=mk('text',{x:x+sr-1,y:y-sr+3,'text-anchor':'middle','font-size':9,'font-weight':800,style:'fill:var(--gold)','font-family':'-apple-system,sans-serif'}); tq.textContent='×'+q; grp.appendChild(tq); }
+      }
       if(prev===null){ grp.classList.add('pop'); grp.style.animationDelay=Math.min(popIx*70,1400)+'ms'; }
       else if(popIx>=prev){ grp.classList.add('pop'); grp.style.animationDelay=((popIx-prev)*90)+'ms'; }
       popIx++;
@@ -695,7 +730,8 @@ boot();
 </script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "cc241b05cd704f42a333be3d552415e9"}'></script><!-- End Cloudflare Web Analytics -->
 <!-- cn-refresh --><button onclick="var u=new window.URL(location.href);u.searchParams.set('v',Date.now());location.href=u.href" title="Refresh" aria-label="Refresh" style="position:fixed;top:10px;right:10px;left:auto;bottom:auto;width:auto;min-width:0;margin:0;display:inline-block;box-sizing:border-box;line-height:1.3;z-index:2147483000;border:1px solid rgba(201,138,60,.65);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;letter-spacing:.02em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:rgba(26,20,16,.78);color:#c98a3c;cursor:pointer;-webkit-tap-highlight-color:transparent">Refresh</button>
+<span id="langChip" onclick="setLang(LANG==='en'?'tr':'en')" style="position:fixed;top:10px;right:196px;z-index:2147483000;border:1px solid rgba(58,47,38,.9);border-radius:20px;padding:5px 10px;font-size:10px;font-weight:700;letter-spacing:.04em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:rgba(26,20,16,.78);color:#e6c14b;cursor:pointer">EN</span>
 <span id="verChip" style="position:fixed;top:10px;right:95px;z-index:2147483000;border:1px solid rgba(58,47,38,.9);border-radius:20px;padding:5px 10px;font-size:10px;font-weight:600;letter-spacing:.02em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:rgba(26,20,16,.78);color:#a8998a"></span>
-<script>try{ document.getElementById('verChip').textContent=VERSION; }catch(e){}</script>
+<script>try{ document.getElementById('verChip').textContent=VERSION; const lc=document.getElementById('langChip'); if(lc) lc.textContent=(LANG==='en'?'TR':'EN'); }catch(e){}</script>
 </body>
 </html>
