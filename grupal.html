@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-29b TAVAN/GAME (staged) -->
+<!-- grupal.html · v2026-08-29c TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
@@ -150,10 +150,10 @@ button:active{transform:scale(.99)}
   <div class="guarantee" id="guaranteeTxt">Erken katılan ile son katılan aynı fiyatı öder. Masa hangi basamağa inerse insin, ödediğin tavan ile aradaki fark kapanışta Grup-Al kredin olarak döner. Son günden önce vazgeçersen ödemenin tamamı geri döner.</div>
 
   <div class="card" id="joinCard">
-    <div class="lbl">söz ver · yerini ayır</div>
+    <div class="lbl">masaya otur</div>
     <input type="text" id="fName" placeholder="Ad Soyad" autocomplete="name">
     <input type="email" id="fEmail" placeholder="E-posta" autocomplete="email" inputmode="email">
-    <input type="tel" id="fPhone" placeholder="Telefon (ödeme penceresi SMS'i için)" autocomplete="tel" inputmode="tel">
+    <input type="tel" id="fPhone" placeholder="Telefon (kargo bildirimi için)" autocomplete="tel" inputmode="tel">
     <select id="fQty">
       <option value="1">1 paket</option>
     </select>
@@ -161,11 +161,11 @@ button:active{transform:scale(.99)}
       <input type="checkbox" id="fShow" checked style="width:auto;margin-top:2px">
       <span>Adım katılımcı listesinde kısaltılmış olarak görünsün ("Ayşe K." gibi)</span>
     </label>
-    <button onclick="pledge()" id="joinBtn">Söz veriyorum</button>
+    <button onclick="pledge()" id="joinBtn">Yerini kilitle</button>
     <div class="hint" id="fmMsg" style="display:none;margin-top:10px;color:var(--warn);font-weight:600"></div>
     <div class="hint" style="margin-top:10px" id="unitTxt"></div>
     <div class="hint" id="shipTxt"></div>
-    <div class="hint" style="margin-top:10px;font-size:11.5px;line-height:1.45">Bilgilerin (ad, e-posta, telefon) yalnızca bu kampanyanın yürütülmesi, ödeme penceresi bildirimi ve teslimat için kullanılır; üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin (KVKK).</div>
+    <div class="hint" style="margin-top:10px;font-size:11.5px;line-height:1.45">Bilgilerin (ad, e-posta, telefon) yalnızca bu kampanyanın yürütülmesi, kargo bildirimi ve teslimat için kullanılır; üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin (KVKK).</div>
   </div>
 
   <div class="card" id="payBlock" style="display:none"></div>
@@ -186,7 +186,7 @@ button:active{transform:scale(.99)}
 
   <div class="share" id="shareBox">
     <div id="lockRow" style="display:none;margin-bottom:10px">
-      <div style="font-size:14px;margin-bottom:8px">Sözün alındı. Şimdi masada yerini kilitle:</div>
+      <div style="font-size:14px;margin-bottom:8px">Kaydın var ama ödemen tamamlanmadı. Masaya oturmak için:</div>
       <button style="background:var(--accent);color:var(--btnink)" onclick="goDeposit()" id="depBtn">Yerini kilitle</button>
       <div class="hint" id="depTxt" style="margin-top:6px"></div>
       <div class="hint" id="pendTxt" style="display:none;margin-top:6px;color:var(--gold)"></div>
@@ -211,7 +211,7 @@ button:active{transform:scale(.99)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-29b';
+const VERSION='v2026-08-29c';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -277,6 +277,8 @@ function ladInfo(){
   return { lad, ix, pIx, bonus, tavan:lad[0].price, table:lad[ix].price, personal:lad[pIx].price,
     tavanN:num(lad[0].price), personalN:num(lad[pIx].price) };
 }
+function updJoinBtn(){ const b=$('joinBtn'); if(!b) return; const li=ladInfo(); const q=parseInt($('fQty').value)||1;
+  b.textContent=(li&&isFinite(li.tavanN))?('Yerini kilitle · '+(li.tavanN*q)+' TL'):'Yerini kilitle'; }
 function renderYou(){
   const card=$('youCard'); if(!card) return;
   const li=ladInfo();
@@ -325,6 +327,10 @@ function setMsg(t){ const el=$('fmMsg'); if(!el) return; if(!t){ el.style.displa
 function pendUI(on){ const btn=$('depBtn'), pt=$('pendTxt'); if(!btn||!pt) return;
   if(on){ btn.disabled=true; btn.textContent='Ödemen kontrol ediliyor...'; pt.style.display='block'; pt.textContent='Ödemen kontrol ediliyor. Onay genellikle 1-2 dakika içinde burada görünür.'; }
   else { btn.disabled=false; btn.textContent='Yerini kilitle'; pt.style.display='none'; pt.textContent=''; } }
+function mkDep(ref){ const s=STATE; if(!s||!s.deposit_url||!ref) return null;
+  const q=clampQty(localStorage.getItem('grupal_qty_'+SLUG));
+  const du=s.deposit_url.replace(/:(\d+)(\?|$)/, ':'+q+'$2');
+  return du+(du.includes('?')?'&':'?')+'attributes[ref]='+encodeURIComponent(ref)+'&attributes[k]='+encodeURIComponent(SLUG); }
 function goDeposit(){ if(!DEPLINK) return; try{ localStorage.setItem('grupal_pend_'+SLUG, String(Date.now())); }catch(e){} location.href=DEPLINK; }
 function pendCheck(ref){
   const t0=parseInt(localStorage.getItem('grupal_pend_'+SLUG))||0;
@@ -345,7 +351,7 @@ function renderClosed(s){
   if(redWindow()){ t='Kavurma günü yapıldı.'; h='Paketler yolda. Kargo bilgin e-posta ile sende.'; }
   else if(s.status==='failed'){ t='Bu parti kapandı.'; h='Alınan ödemelerin tamamı geri döner. Açık ve net.'; }
   else if(s.status==='fulfilled'){ t='Bu parti tamamlandı.'; h='Kavurma günü yapıldı. Sıradaki parti burada duyurulacak.'; }
-  else if(s.status==='open'){ t='Bu partinin süresi doldu.'; h='Yeni söz alınmıyor. Sıradaki parti burada duyurulacak.'; }
+  else if(s.status==='open'){ t='Bu partinin süresi doldu.'; h='Yeni katılım alınmıyor. Sıradaki parti burada duyurulacak.'; }
   cc.innerHTML='<div style="font-weight:800;font-size:17px;margin-bottom:6px">'+t+'</div><div class="hint">'+h+'</div>';
   cc.style.display='block';
   $('joinCard').style.display='none'; $('guaranteeTxt').style.display='none';
@@ -369,11 +375,7 @@ async function load(){
     // TAVAN/GAME: target texts and the progress bar are retired; the board and the levels carry the state
     if(s.deposit_txt) $('depTxt').textContent=s.deposit_txt;
     const myRef=localStorage.getItem('grupal_'+SLUG);
-    if(s.deposit_url&&myRef){
-      const q=clampQty(localStorage.getItem('grupal_qty_'+SLUG));
-      const du=s.deposit_url.replace(/:(\d+)(\?|$)/, ':'+q+'$2');
-      DEPLINK=du+(du.includes('?')?'&':'?')+'attributes[ref]='+encodeURIComponent(myRef)+'&attributes[k]='+encodeURIComponent(SLUG);
-    }
+    if(s.deposit_url&&myRef) DEPLINK=mkDep(myRef);
     if(myRef) checkMine(myRef);
     if(s.end_at){
       const end=new Date(s.end_at), msLeft=end-Date.now(), days=Math.max(0,Math.ceil(msLeft/864e5));
@@ -385,7 +387,7 @@ async function load(){
     renderAttendees(s);
     renderLevels(s);
     CLOSED=(s.status==='failed'||s.status==='fulfilled'||s.status==='expired'||s.status==='closed')||(s.status==='open'&&!!s.end_at&&(new Date(s.end_at).getTime()<Date.now()));
-    renderClosed(s); renderPay(); renderChips(); renderYou(); loadNext(); applyTheme();
+    renderClosed(s); renderPay(); renderChips(); renderYou(); updJoinBtn(); loadNext(); applyTheme();
   }catch(e){ $('title').textContent='Bağlantı hatası, tekrar deneyin'; }
 }
 async function pledge(){
@@ -393,7 +395,7 @@ async function pledge(){
   setMsg('');
   if(!name){ setMsg('Ad Soyad gerekli.'); return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ setMsg('Geçerli bir e-posta adresi gir.'); return; }
-  if(phone&&phone.replace(/\D/g,'').length<10){ setMsg('Telefon numarası eksik görünüyor. Ödeme penceresi SMS ile bildirildiği için doğru numara önemli.'); return; }
+  if(phone&&phone.replace(/\D/g,'').length<10){ setMsg('Telefon numarası eksik görünüyor. Kargo bildirimi SMS ile gidebildiği için doğru numara önemli.'); return; }
   $('joinBtn').disabled=true; $('joinBtn').textContent='Kaydediliyor...';
   try{
     const r=await fetch(API+'/pledge',{method:'POST',headers:{'content-type':'application/json'},
@@ -405,10 +407,13 @@ async function pledge(){
       $('shareBox').style.display='block'; $('joinCard').style.display='none';
       localStorage.setItem('grupal_'+SLUG, j.ref_code);
       localStorage.setItem('grupal_qty_'+SLUG, String(parseInt($('fQty').value)||1));
+      // TEK HAMLE: kayıt düştü, doğruca tavandan ödemeye. Dönüşte webhook masaya oturtur.
+      const dl=mkDep(j.ref_code);
+      if(dl){ DEPLINK=dl; $('joinBtn').textContent='Ödemeye gidiliyor...'; goDeposit(); return; }
       load();
-    } else setMsg(j.error==='this email already pledged'?'Bu e-posta ile zaten söz verilmiş. Aynı e-posta ikinci kez söz veremez.':(j.error||'Hata'));
+    } else setMsg(j.error==='this email already pledged'?'Bu e-posta zaten masada kayıtlı. Aynı e-posta ile ikinci kayıt olmaz.':(j.error||'Hata'));
   }catch(e){ setMsg('Bağlantı hatası, tekrar deneyin.'); }
-  $('joinBtn').disabled=false; $('joinBtn').textContent='Söz veriyorum';
+  $('joinBtn').disabled=false; updJoinBtn();
 }
 async function checkMine(ref){
   try{
@@ -421,10 +426,7 @@ async function checkMine(ref){
       renderPay(); return; }
     MINE=j;
     if(j.qty) localStorage.setItem('grupal_qty_'+SLUG, String(j.qty));
-    if(j.qty&&STATE&&STATE.deposit_url){
-      const du=STATE.deposit_url.replace(/:(\d+)(\?|$)/, ':'+clampQty(j.qty)+'$2');
-      DEPLINK=du+(du.includes('?')?'&':'?')+'attributes[ref]='+encodeURIComponent(ref)+'&attributes[k]='+encodeURIComponent(SLUG);
-    }
+    if(j.qty) DEPLINK=mkDep(ref)||DEPLINK; // qty just synced from server; mkDep reads it
     const lockedish=j.status==='locked'||j.status==='paid';
     $('lockedBadge').style.display=lockedish?'block':'none';
     $('lockRow').style.display=(!lockedish&&DEPLINK&&!CLOSED)?'block':'none';
