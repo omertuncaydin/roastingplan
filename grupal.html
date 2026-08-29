@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-29h TAVAN/GAME -->
+<!-- grupal.html · v2026-08-29i TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
@@ -71,6 +71,9 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 .boardseat{animation:none}
 .boardseat.pop{animation:seatIn .45s both}
 .you{display:flex;align-items:baseline;gap:12px;justify-content:center;margin-top:6px}
+.tchips{display:flex;gap:6px;justify-content:center;margin:6px 0 2px}
+.tchip{border:1px solid var(--line);border-radius:14px;padding:3px 10px;font-size:10.5px;font-weight:700;color:var(--muted);cursor:pointer;background:var(--panel)}
+.tchip.on{border-color:var(--accent);color:var(--accent)}
 .you .big{font-size:46px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
 .lvl{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin-top:6px;overflow:hidden}
 .lvl .n{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);flex:none}
@@ -116,6 +119,7 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 <div class="wrap">
   <img src="https://guide.coffeenutz.net/grupal-icon-192.png" alt="Grup-Al" style="display:block;width:64px;height:64px;margin:6px auto 2px;border-radius:16px;border:1px solid var(--line)">
   <div class="brand">GRUP-AL</div>
+  <div class="tchips" id="themeChips"></div>
   <div class="hero" id="heroBox"><img id="heroImg" alt="Kavurma günü lotu"></div>
   <div id="portal" style="display:none"></div>
   <h1 id="title">yükleniyor...</h1>
@@ -210,19 +214,28 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-29h';
+const VERSION='v2026-08-29i';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
 let CLOSED=false, PENDTIMER=null, SEATN=null, NEXTC=null, NEXTT=0;
+let THEMEPREF='auto'; try{ THEMEPREF=localStorage.getItem('grupal_theme')||'auto'; }catch(e){}
 function applyTheme(){ try{
-  const red=(typeof redWindow==='function')&&redWindow();
-  const h=new Date().getHours(); const day=h>=7&&h<19;
+  const red=(typeof redWindow==='function')&&redWindow();   // kargo penceresi: sistem karar verir, çip ezemez
+  const h=new Date().getHours();
+  const day=THEMEPREF==='day'?true:(THEMEPREF==='night'?false:(h>=7&&h<19));
   document.body.classList.toggle('th-red',!!red);
   document.body.classList.toggle('th-day',!red&&day);
   document.body.classList.toggle('th-night',!red&&!day);
   const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content', red?'#8F0101':(day?'#e7d9c3':'#16130f'));
+  renderThemeChips(!!red);
 }catch(e){} }
+function setThemePref(p){ THEMEPREF=p; try{ localStorage.setItem('grupal_theme',p); }catch(e){} applyTheme(); }
+function renderThemeChips(red){ const el=document.getElementById('themeChips'); if(!el) return;
+  if(red){ el.innerHTML=''; return; }   // kırmızı pencerede çipler susar
+  el.innerHTML=[['auto','oto'],['day','gündüz'],['night','gece']].map(function(o){
+    return '<span class="tchip'+(THEMEPREF===o[0]?' on':'')+'" onclick="setThemePref(\''+o[0]+'\')">'+o[1]+'</span>'; }).join('');
+}
 applyTheme();
 document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') applyTheme(); });
 function escZ(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
