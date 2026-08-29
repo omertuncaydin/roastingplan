@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-29d TAVAN/GAME -->
+<!-- grupal.html · v2026-08-29e TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
@@ -211,7 +211,7 @@ button:active{transform:scale(.99)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-29d';
+const VERSION='v2026-08-29e';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -325,7 +325,7 @@ function maxQty(){ return Math.max(1,Math.min(20,parseInt(STATE&&STATE.max_qty)|
 function clampQty(q){ return Math.max(1,Math.min(maxQty(),parseInt(q)||1)); }
 function setMsg(t){ const el=$('fmMsg'); if(!el) return; if(!t){ el.style.display='none'; el.textContent=''; return; } el.textContent=t; el.style.display='block'; }
 function pendUI(on){ const btn=$('depBtn'), pt=$('pendTxt'); if(!btn||!pt) return;
-  if(on){ btn.disabled=true; btn.textContent='Ödemen kontrol ediliyor...'; pt.style.display='block'; pt.textContent='Ödemen kontrol ediliyor. Onay genellikle 1-2 dakika içinde burada görünür.'; }
+  if(on){ btn.disabled=false; btn.textContent='Ödeme sayfasına geri dön'; pt.style.display='block'; pt.textContent='Ödemen kontrol ediliyor. Onay genellikle 1-2 dakika içinde burada görünür. Ödeme sayfasını yanlışlıkla kapattıysan üstteki butonla aynı sayfaya dönersin.'; }
   else { btn.disabled=false; btn.textContent='Yerini kilitle'; pt.style.display='none'; pt.textContent=''; } }
 function mkDep(ref){ const s=STATE; if(!s||!s.deposit_url||!ref) return null;
   const q=clampQty(localStorage.getItem('grupal_qty_'+SLUG));
