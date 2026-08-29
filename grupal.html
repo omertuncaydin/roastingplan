@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-29g TAVAN/GAME -->
+<!-- grupal.html · v2026-08-29h TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
@@ -210,7 +210,7 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-29g';
+const VERSION='v2026-08-29h';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -342,7 +342,7 @@ function renderPay(){
   if(lockedish&&MINE.credited&&(MINE.credit||0)>0){
     // kapanış sonrası: Shopify kredi maili göndermez, oyuncunun rakamı burada
     $('paidTitle').textContent='Grup-Al kredin: '+MINE.credit+' TL · hesabında ✓';
-    $('paidKredi').textContent="coffeenutz.net'te aynı e-postayla giriş yap; ödeme adımında kredin görünür, tek dokunuşla uygulanır.";
+    $('paidKredi').textContent='Kredin girişte görünür: coffeenutz.net · aynı e-posta.';
     $('paidCard').style.display='block';
   } else $('paidCard').style.display=(!CLOSED&&lockedish)?'block':'none'; }
 function renderClosed(s){
