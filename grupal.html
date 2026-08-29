@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-29m TAVAN/GAME -->
+<!-- grupal.html · v2026-08-29n TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
@@ -188,6 +188,7 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
     <div class="hint" id="paidKredi" data-i18n="paidK">Fark kapanışta Grup-Al kredin olarak döner.</div>
     <div id="ekleRow" style="display:none;margin-top:12px">
       <div class="row"><select id="ekleQty" style="flex:1"></select><button id="ekleBtn" onclick="goEkle()" style="flex:1.6;margin-top:0;padding:12px;font-size:14px"></button></div>
+      <div class="hint" style="margin-top:6px" data-i18n="ekleShip">Ödeme sayfasında "Teslim alım"ı seç — kargon ilk paketinle zaten ödendi, hepsi tek kutuda gelir.</div>
     </div>
   </div>
 
@@ -225,7 +226,7 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-29m';
+const VERSION='v2026-08-29n';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -264,7 +265,8 @@ clRed:['Kavurma günü yapıldı.','Roast day is done.'], clRedH:['Paketler yold
 clFail:['Alınan ödemelerin tamamı geri döner. Açık ve net.','Every payment comes back in full. Plain and simple.'],
 clDone:['Bu parti tamamlandı.','This party is complete.'], clDoneH:['Kavurma günü yapıldı. Sıradaki parti burada duyurulacak.','Roast day is done. The next party will be announced here.'],
 clExp:['Bu partinin süresi doldu.','This party has ended.'], clExpH:['Yeni katılım alınmıyor. Sıradaki parti burada duyurulacak.','No new entries. The next party will be announced here.'],
-pack:[' paket',' pack'], ekleOpt:[' paket daha',' more'], ekleBtn:['Ekle','Add'], nextParty:['Sıradaki parti: ','Next party: '], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
+pack:[' paket',' pack'], ekleOpt:[' paket daha',' more'], ekleBtn:['Ekle','Add'],
+ekleShip:['Ödeme sayfasında "Teslim alım"ı seç — kargon ilk paketinle zaten ödendi, hepsi tek kutuda gelir.','Choose "Pickup" on the payment page — shipping was already paid with your first pack; everything arrives in one box.'], nextParty:['Sıradaki parti: ','Next party: '], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
 };
 function t(k){ const e=STR[k]; return e?(LANG==='en'?e[1]:e[0]):k; }
 function applyLang(){
