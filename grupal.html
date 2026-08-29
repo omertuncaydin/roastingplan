@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-29c TAVAN/GAME -->
+<!-- grupal.html · v2026-08-29d TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
@@ -211,7 +211,7 @@ button:active{transform:scale(.99)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-29c';
+const VERSION='v2026-08-29d';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -440,7 +440,7 @@ function renderAttendees(s){
   const svg=$('masaSvg'); if(!svg) return;
   const named=Array.isArray(s.attendees)?s.attendees:[];
   const locked=s.locked||0;
-  if(!locked){ $('attCard').style.display='none'; SEATN=null; return; }
+  // Boş masa da masadır: kurulan masa ilk konuğunu bekler (boş sandalye + davet metni).
   const lad=s.ladder||[];
   let total=parseInt(s.cap)||0;
   if(!total){ const nxt=lad.find(r=>r.at>locked); total=nxt?nxt.at:locked; }
@@ -452,8 +452,8 @@ function renderAttendees(s){
   svg.innerHTML='';
   svg.appendChild(mk('circle',{cx:120,cy:120,r:64,fill:'none',style:'stroke:var(--line)','stroke-width':2}));
   svg.appendChild(mk('circle',{cx:120,cy:120,r:46,style:'fill:var(--panel2);stroke:var(--line)'}));
-  const t1=mk('text',{x:120,y:114,'text-anchor':'middle','font-weight':800,'font-size':22,style:'fill:var(--ink)','font-family':'-apple-system,sans-serif'}); t1.textContent=String(locked); svg.appendChild(t1);
-  const t2=mk('text',{x:120,y:134,'text-anchor':'middle','font-size':11,style:'fill:var(--muted)','font-family':'-apple-system,sans-serif'}); t2.textContent='sandalye dolu'; svg.appendChild(t2);
+  const t1=mk('text',{x:120,y:114,'text-anchor':'middle','font-weight':800,'font-size':(locked?22:15),style:'fill:var(--ink)','font-family':'-apple-system,sans-serif'}); t1.textContent=locked?String(locked):'Masa hazır'; svg.appendChild(t1);
+  const t2=mk('text',{x:120,y:134,'text-anchor':'middle','font-size':11,style:'fill:var(--muted)','font-family':'-apple-system,sans-serif'}); t2.textContent=locked?'sandalye dolu':'ilk sandalye senin'; svg.appendChild(t2);
   const pal=['#c98a3c','#b9742f','#9a8a4b','#a97142','#8a6d2a','#7d5a32'];
   const chips=named.map(a=>({nm:(typeof a==='string')?a:(a.name||''), q:(typeof a==='object'&&a.qty)?a.qty:1}));
   const namedSeats=chips.reduce((t,c)=>t+c.q,0);
