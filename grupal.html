@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-29j TAVAN/GAME -->
+<!-- grupal.html · v2026-08-29k TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
@@ -128,82 +128,82 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
   <div class="deadline" id="deadline" style="display:none"></div>
 
   <div class="card" id="attCard" style="display:none">
-    <div class="lbl">masa</div>
+    <div class="lbl" data-i18n="masaLbl">masa</div>
     <div class="tablewrap"><svg width="240" height="240" viewBox="0 0 240 240" id="masaSvg"></svg></div>
     <div class="hint" style="text-align:center" id="attHint"></div>
     <div class="attgrid" id="attList" style="display:none"></div>
   </div>
 
   <div class="card" id="youCard" style="display:none">
-    <div class="lbl">senin fiyatın</div>
-    <div class="you"><span class="big" id="youPrice"></span><span class="hint">/ paket · KDV dahil</span></div>
+    <div class="lbl" data-i18n="youLbl">senin fiyatın</div>
+    <div class="you"><span class="big" id="youPrice"></span><span class="hint" data-i18n="perPack">/ paket · KDV dahil</span></div>
     <div id="chipRow" style="display:none;text-align:center;margin-top:4px"></div>
     <div class="hint" id="youKredi" style="text-align:center;margin-top:8px;display:none"></div>
   </div>
 
   <div class="card" id="lvlCard" style="display:none">
-    <div class="lbl">basamaklar</div>
+    <div class="lbl" data-i18n="lvlLbl">basamaklar</div>
     <div id="lvlList"></div>
   </div>
 
 
   <div class="card ranks" id="ranksCard" style="display:none">
-    <div class="lbl">Davet sıralaması</div>
+    <div class="lbl" data-i18n="ranksLbl">Davet sıralaması</div>
     <div id="ranksList"></div>
     <div class="hint" id="ranksReward">İlk seçim: en çok davet edenin.</div>
   </div>
 
-  <div class="guarantee" id="guaranteeTxt"><div class="grow"><span>✓</span>Herkese aynı fiyat</div><div class="grow"><span>✓</span>Fark → Grup-Al kredin</div><div class="grow"><span>✓</span>Vazgeçersen tamamı geri</div></div>
+  <div class="guarantee" id="guaranteeTxt"><div class="grow"><span>✓</span><i data-i18n="g1" style="font-style:normal">Herkese aynı fiyat</i></div><div class="grow"><span>✓</span><i data-i18n="g2" style="font-style:normal">Fark → Grup-Al kredin</i></div><div class="grow"><span>✓</span><i data-i18n="g3" style="font-style:normal">Vazgeçersen tamamı geri</i></div></div>
 
   <div class="card" id="joinCard">
-    <div class="lbl">masaya otur</div>
-    <input type="text" id="fName" placeholder="Ad Soyad" autocomplete="name">
-    <input type="email" id="fEmail" placeholder="E-posta" autocomplete="email" inputmode="email">
-    <input type="tel" id="fPhone" placeholder="Telefon (kargo bildirimi için)" autocomplete="tel" inputmode="tel">
+    <div class="lbl" data-i18n="joinLbl">masaya otur</div>
+    <input type="text" id="fName" data-i18n-ph="phName" placeholder="Ad Soyad" autocomplete="name">
+    <input type="email" id="fEmail" data-i18n-ph="phMail" placeholder="E-posta" autocomplete="email" inputmode="email">
+    <input type="tel" id="fPhone" data-i18n-ph="phTel" placeholder="Telefon (kargo bildirimi için)" autocomplete="tel" inputmode="tel">
     <select id="fQty">
       <option value="1">1 paket</option>
     </select>
     <label class="hint" style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;cursor:pointer;text-align:left">
       <input type="checkbox" id="fShow" checked style="width:auto;margin-top:2px">
-      <span>Adım masada görünsün ("Ayşe K." gibi)</span>
+      <span data-i18n="showName">Adım masada görünsün ("Ayşe K." gibi)</span>
     </label>
     <button onclick="pledge()" id="joinBtn">Yerini kilitle</button>
     <div class="hint" id="fmMsg" style="display:none;margin-top:10px;color:var(--warn);font-weight:600"></div>
     <div class="hint" style="margin-top:10px" id="unitTxt"></div>
     <div class="hint" id="shipTxt"></div>
-    <details class="kvkk"><summary>Kişisel veriler (KVKK)</summary><div class="hint" style="font-size:11.5px;line-height:1.5;text-align:left">Bilgilerin (ad, e-posta, telefon) yalnızca bu kampanyanın yürütülmesi, kargo bildirimi ve teslimat için kullanılır; üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin.</div></details>
+    <details class="kvkk"><summary data-i18n="kvkkSum">Kişisel veriler (KVKK)</summary><div class="hint" style="font-size:11.5px;line-height:1.5;text-align:left">Bilgilerin (ad, e-posta, telefon) yalnızca bu kampanyanın yürütülmesi, kargo bildirimi ve teslimat için kullanılır; üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin.</div></details>
   </div>
 
   <div class="card" id="payBlock" style="display:none"></div>
 
   <div class="card" id="paidCard" style="display:none;text-align:center">
-    <div style="font-weight:800;font-size:17px;color:var(--green);margin-bottom:6px" id="paidTitle">Ödemen alındı, yerin masada ✓</div>
-    <div class="hint" id="paidKredi">Fark kapanışta Grup-Al kredin olarak döner.</div>
+    <div style="font-weight:800;font-size:17px;color:var(--green);margin-bottom:6px" id="paidTitle" data-i18n="paidT">Ödemen alındı, yerin masada ✓</div>
+    <div class="hint" id="paidKredi" data-i18n="paidK">Fark kapanışta Grup-Al kredin olarak döner.</div>
   </div>
 
   <div class="card" id="closedCard" style="display:none;text-align:center"></div>
 
-  <details class="how" id="howBox"><summary>Nasıl çalışır?</summary><div class="hint" style="text-align:left;line-height:1.65;margin-top:8px">Bu kavurma günü kesin yapılacak; masa kurulur, söz sözdür. Türkiye'nin her yerine kargoyla.<br>Ödemen tavan fiyattan alınır. Masa hangi basamağa inerse insin herkes aynı fiyatı öder; tavan ile aradaki fark kapanışta Grup-Al kredin olarak hesabına döner. Son günden önce vazgeçersen ödemenin tamamı geri döner.<br>Kredi kullanımı: kapanışta hesabına yazılır; coffeenutz.net'te aynı e-postayla giriş yaptığında ödeme adımında görünür, tek dokunuşla uygulanır.<br>Davet: masaya oturttuğun her konuk (en çok 2) senin fiyatını bir basamak indirir.<br>Zincir sandalye: sıradaki masada yerini şimdiden ayır; o masa nereye inerse insin sen bir basamak daha derindesin.</div></details>
+  <details class="how" id="howBox"><summary data-i18n="howSum">Nasıl çalışır?</summary><div class="hint" style="text-align:left;line-height:1.65;margin-top:8px">Bu kavurma günü kesin yapılacak; masa kurulur, söz sözdür. Türkiye'nin her yerine kargoyla.<br>Ödemen tavan fiyattan alınır. Masa hangi basamağa inerse insin herkes aynı fiyatı öder; tavan ile aradaki fark kapanışta Grup-Al kredin olarak hesabına döner. Son günden önce vazgeçersen ödemenin tamamı geri döner.<br>Kredi kullanımı: kapanışta hesabına yazılır; coffeenutz.net'te aynı e-postayla giriş yaptığında ödeme adımında görünür, tek dokunuşla uygulanır.<br>Davet: masaya oturttuğun her konuk (en çok 2) senin fiyatını bir basamak indirir.<br>Zincir sandalye: sıradaki masada yerini şimdiden ayır; o masa nereye inerse insin sen bir basamak daha derindesin.</div></details>
 
   <div class="card" id="zincirCard" style="display:none;border-color:var(--gold)">
-    <div class="lbl" style="color:var(--gold)">zincir sandalye</div>
+    <div class="lbl" style="color:var(--gold)" data-i18n="zLbl">zincir sandalye</div>
     <div style="font-size:15px;margin:8px 0" id="zcTitle"></div>
-    <button id="zcBtn" style="margin-top:10px">Sıradaki masada yerimi ayır</button>
+    <button id="zcBtn" style="margin-top:10px" data-i18n="zBtn">Sıradaki masada yerimi ayır</button>
   </div>
 
   <div class="share" id="shareBox">
     <div id="lockRow" style="display:none;margin-bottom:10px">
-      <div style="font-size:14px;margin-bottom:8px">Kaydın var ama ödemen tamamlanmadı. Masaya oturmak için:</div>
+      <div style="font-size:14px;margin-bottom:8px" data-i18n="unpaid">Kaydın var ama ödemen tamamlanmadı. Masaya oturmak için:</div>
       <button style="background:var(--accent);color:var(--btnink)" onclick="goDeposit()" id="depBtn">Yerini kilitle</button>
       <div class="hint" id="depTxt" style="margin-top:6px"></div>
       <div class="hint" id="pendTxt" style="display:none;margin-top:6px;color:var(--gold)"></div>
     </div>
-    <button id="cardBtn" style="display:none;background:var(--panel2);color:var(--ink);border:1px solid var(--accent);margin-bottom:10px" onclick="downloadCard()">Kartını indir</button>
-    <div class="lbl" style="margin-bottom:4px">davet</div>
+    <button id="cardBtn" style="display:none;background:var(--panel2);color:var(--ink);border:1px solid var(--accent);margin-bottom:10px" onclick="downloadCard()" data-i18n="cardBtn">Kartını indir</button>
+    <div class="lbl" style="margin-bottom:4px" data-i18n="davLbl">davet</div>
     <div class="slots" id="davSlots"></div>
     <div class="hint" id="davTxt" style="margin-bottom:8px"></div>
     <code id="shareLink" style="display:none"></code>
-    <button style="margin-top:10px;background:var(--green);color:#fff" onclick="doShare()">Bağlantıyı paylaş</button>
+    <button style="margin-top:10px;background:var(--green);color:#fff" onclick="doShare()" data-i18n="shareBtn">Bağlantıyı paylaş</button>
   </div>
 
   <div class="hint" style="text-align:center;margin:18px 0 8px">Grup-Al bir CoffeeNutz projesidir · sorular: iletişim sayfası</div>
@@ -215,11 +215,53 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-29j';
+const VERSION='v2026-08-29k';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
 let CLOSED=false, PENDTIMER=null, SEATN=null, NEXTC=null, NEXTT=0;
+let LANG='tr'; try{ LANG=localStorage.getItem('grupal_lang')||'tr'; }catch(e){}
+const STR={
+masaLbl:['masa','the table'], youLbl:['senin fiyatın','your price'], perPack:['/ paket · KDV dahil','/ pack · VAT incl.'],
+lvlLbl:['basamaklar','rungs'], g1:['Herkese aynı fiyat','Same price for everyone'], g2:['Fark → Grup-Al kredin','Difference → your Grup-Al credit'], g3:['Vazgeçersen tamamı geri','Change your mind → full refund'],
+joinLbl:['masaya otur','take a seat'], phName:['Ad Soyad','Full name'], phMail:['E-posta','Email'], phTel:['Telefon (kargo bildirimi için)','Phone (for shipping updates)'],
+showName:['Adım masada görünsün ("Ayşe K." gibi)','Show my name at the table ("Ayşe K.")'],
+kvkkSum:['Kişisel veriler (KVKK)','Personal data (KVKK)'], howSum:['Nasıl çalışır?','How it works'],
+paidT:['Ödemen alındı, yerin masada ✓','Payment received — your seat is locked ✓'],
+paidK:['Fark kapanışta Grup-Al kredin olarak döner.','The difference returns as Grup-Al credit at close.'],
+zLbl:['zincir sandalye','chain seat'], zBtn:['Sıradaki masada yerimi ayır','Reserve my seat at the next table'],
+unpaid:['Kaydın var ama ödemen tamamlanmadı. Masaya oturmak için:','Your seat is saved but payment is incomplete. To sit down:'],
+ranksLbl:['Davet sıralaması','Invite leaderboard'], cardBtn:['Kartını indir','Download your card'], davLbl:['davet','invite'], shareBtn:['Bağlantıyı paylaş','Share your invite link'],
+lock:['Yerini kilitle','Lock your seat'], saving:['Kaydediliyor...','Saving...'], toPay:['Ödemeye gidiliyor...','Heading to payment...'],
+needName:['Ad Soyad gerekli.','Full name is required.'], needMail:['Geçerli bir e-posta adresi gir.','Enter a valid email address.'],
+needTel:['Telefon numarası eksik görünüyor. Kargo bildirimi SMS ile gidebildiği için doğru numara önemli.','That phone number looks incomplete. Shipping updates may arrive by SMS, so the right number matters.'],
+dup:['Bu e-posta zaten masada kayıtlı. Aynı e-posta ile ikinci kayıt olmaz.','This email is already at the table. One entry per email.'],
+netErr:['Bağlantı hatası, tekrar deneyin.','Connection error, try again.'],
+backPay:['Ödeme sayfasına geri dön','Return to the payment page'],
+pendTxt:['Ödemen kontrol ediliyor. Onay genellikle 1-2 dakika içinde burada görünür. Ödeme sayfasını yanlışlıkla kapattıysan üstteki butonla aynı sayfaya dönersin.','Checking your payment. Confirmation usually lands here within 1-2 minutes. Closed the payment page by mistake? The button above takes you back to the same page.'],
+pendLate:['Onay henüz düşmedi. Ödemeni yaptıysan birkaç dakika içinde kendiliğinden görünür. Ödemeyi tamamlamadıysan yukarıdaki butonu tekrar kullanabilirsin.','No confirmation yet. If you paid, it will appear on its own within minutes. If you did not finish, use the button above.'],
+seats:['sandalye dolu','seats taken'], ready:['Masa hazır','Table is set'], first:['ilk sandalye senin','the first chair is yours'],
+empty:[' boş sandalye',' empty chairs'], full:['Masa doldu','Table is full'],
+founded:['Masa kuruldu','Table founded'], seatsW:[' sandalye',' seats'], toGo:[' sonra',' to go'],
+chTable:['masa: ','table: '], chInv:[' basamak · davet',' rung · invites'], chCred:['kredin: ','your credit: '], chPaid:['tavandan ödendi','paid at ceiling'],
+credT:['Grup-Al kredin: ',"Your Grup-Al credit: "], credT2:[' TL · hesabında ✓',' TL · on your account ✓'],
+credHow:['Kredin girişte görünür: coffeenutz.net · aynı e-posta.','Sign in at coffeenutz.net (same email) to see your credit.'],
+slots:[' / 2 davet kilitli',' / 2 invites locked'],
+lastDay:['Son gün: ','Last day: '], daysLeft:[' gün kaldı',' days left'], ended:['sona erdi','ended'],
+loading:['yükleniyor...','loading...'], notFound:['Kampanya bulunamadı','Campaign not found'],
+cl1:['Bu parti kapandı.','This party has closed.'], cl1h:['Sıradaki kavurma günü partisi burada duyurulacak.','The next roast-day party will be announced here.'],
+clRed:['Kavurma günü yapıldı.','Roast day is done.'], clRedH:['Paketler yolda. Kargo bilgin e-posta ile sende.','Packages are on their way. Shipping info is in your email.'],
+clFail:['Alınan ödemelerin tamamı geri döner. Açık ve net.','Every payment comes back in full. Plain and simple.'],
+clDone:['Bu parti tamamlandı.','This party is complete.'], clDoneH:['Kavurma günü yapıldı. Sıradaki parti burada duyurulacak.','Roast day is done. The next party will be announced here.'],
+clExp:['Bu partinin süresi doldu.','This party has ended.'], clExpH:['Yeni katılım alınmıyor. Sıradaki parti burada duyurulacak.','No new entries. The next party will be announced here.'],
+pack:[' paket',' pack'], nextParty:['Sıradaki parti: ','Next party: '], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
+};
+function t(k){ const e=STR[k]; return e?(LANG==='en'?e[1]:e[0]):k; }
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph'))); });
+}
+function setLang(l){ LANG=l; try{ localStorage.setItem('grupal_lang',l); }catch(e){} applyLang(); renderThemeChips(document.body.classList.contains('th-red')); if(typeof load==='function'&&SLUG&&STATE) load(); else if(typeof boot==='function'&&!SLUG) boot(); }
 let THEMEPREF='auto'; try{ THEMEPREF=localStorage.getItem('grupal_theme')||'auto'; }catch(e){}
 const THEMES=[['auto','oto'],['gece','Gece'],['isik','Gece Işık'],['kraft','Kraft'],['krema','Krema'],['red','CoffeeNutz Red']];
 function applyTheme(){ try{
@@ -241,9 +283,10 @@ function setThemePref(p){ THEMEPREF=p; try{ localStorage.setItem('grupal_theme',
 function renderThemeChips(redWin){ const el=document.getElementById('themeChips'); if(!el) return;
   if(redWin){ el.innerHTML=''; return; }   // kargo günlerinde masa üniforması: CoffeeNutz Red, çipler susar
   el.innerHTML=THEMES.map(function(o){
-    return '<span class="tchip'+(THEMEPREF===o[0]?' on':'')+'" onclick="setThemePref(\''+o[0]+'\')">'+o[1]+'</span>'; }).join('');
+    return '<span class="tchip'+(THEMEPREF===o[0]?' on':'')+'" onclick="setThemePref(\''+o[0]+'\')">'+o[1]+'</span>'; }).join('')
+    +'<span class="tchip'+(LANG==='en'?' on':'')+'" onclick="setLang(LANG===\'en\'?\'tr\':\'en\')">EN</span>';
 }
-applyTheme();
+applyTheme(); applyLang();
 document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') applyTheme(); });
 function escZ(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 async function loadNext(){
@@ -260,7 +303,7 @@ async function loadNext(){
 function renderZincir(){
   const el=$('zincirCard'); if(!el) return;
   if(!NEXTC){ el.style.display='none'; return; }
-  $('zcTitle').innerHTML='<b>Sıradaki parti: '+escZ(NEXTC.title)+(NEXTC.end_at?(' · son gün '+fmtDate(NEXTC.end_at)):'')+'</b>';
+  $('zcTitle').innerHTML='<b>'+t('nextParty')+escZ(NEXTC.title)+(NEXTC.end_at?(t('lastDayS')+fmtDate(NEXTC.end_at)):'')+'</b>';
   $('zcBtn').onclick=function(){ location.href='?k='+encodeURIComponent(NEXTC.slug); };
   el.style.display='block';
 }
@@ -275,11 +318,11 @@ function renderLevels(s){
     const done=locked>=r.at&&i<curIx, now=i===curIx, fut=locked<r.at;
     const cls=now?'lvl now':(done||locked>=r.at?'lvl done':'lvl lockd');
     const n=now?String(locked):(locked>=r.at?'✓':String(r.at));
-    let t='';
-    if(i===0){ t='Masa kuruldu'; }
-    else if(locked>=r.at){ t=r.at+' sandalye'; }
-    else { t=(r.at-locked)+' sonra'; }
-    h+='<div class="'+cls+'" data-ix="'+i+'"><div class="n">'+n+'</div><div class="t"><b>'+escZ(t)+'</b></div><div class="p">'+escZ(r.price)+'</div></div>';
+    let tt='';
+    if(i===0){ tt=t('founded'); }
+    else if(locked>=r.at){ tt=r.at+t('seatsW'); }
+    else { tt=(r.at-locked)+t('toGo'); }
+    h+='<div class="'+cls+'" data-ix="'+i+'"><div class="n">'+n+'</div><div class="t"><b>'+escZ(tt)+'</b></div><div class="p">'+escZ(r.price)+'</div></div>';
   });
   el.innerHTML=h; card.style.display='block';
   try{ if(LVLN!==null&&curIx>LVLN){ const now=el.querySelector('.lvl.now'); if(now){ now.classList.add('unlockAnim'); setTimeout(()=>now.classList.remove('unlockAnim'),1000); } } LVLN=curIx; }catch(e){}
@@ -296,7 +339,7 @@ function ladInfo(){
     tavanN:num(lad[0].price), personalN:num(lad[pIx].price) };
 }
 function updJoinBtn(){ const b=$('joinBtn'); if(!b) return; const li=ladInfo(); const q=parseInt($('fQty').value)||1;
-  b.textContent=(li&&isFinite(li.tavanN))?('Yerini kilitle · '+(li.tavanN*q)+' TL'):'Yerini kilitle'; }
+  b.textContent=(li&&isFinite(li.tavanN))?(t('lock')+' · '+(li.tavanN*q)+' TL'):t('lock'); }
 function renderYou(){
   const card=$('youCard'); if(!card) return;
   const li=ladInfo();
@@ -310,7 +353,7 @@ function renderSlots(){
   const sl=$('davSlots'), dt=$('davTxt'); if(!sl||!dt) return;
   const b=(MINE&&parseInt(MINE.bonus))||0;
   sl.innerHTML=[1,2].map(i=>'<div class="slot'+(b>=i?' full':'')+'">'+i+'</div>').join('');
-  dt.textContent=b+' / 2 davet kilitli';
+  dt.textContent=b+t('slots');
 }
 function redWindow(){
   try{
@@ -328,19 +371,19 @@ function renderChips(){
   const el=$('chipRow'); if(!el||!STATE) return;
   const li=ladInfo();
   let chips='';
-  if(li){ chips+='<span class="chip">masa: '+escZ(li.table)+'</span>';
-    if(li.bonus>0) chips+='<span class="chip g">+'+li.bonus+' basamak · davet</span>';
+  if(li){ chips+='<span class="chip">'+t('chTable')+escZ(li.table)+'</span>';
+    if(li.bonus>0) chips+='<span class="chip g">+'+li.bonus+t('chInv')+'</span>';
     const lockedish=MINE&&(MINE.status==='locked'||MINE.status==='paid');
     if(lockedish&&isFinite(li.tavanN)&&isFinite(li.personalN)){ const d=(li.tavanN-li.personalN)*((MINE&&parseInt(MINE.qty))||1);
-      chips+='<span class="chip g">'+(d>0?('kredin: '+d+' TL'):'tavandan ödendi')+'</span>'; } }
+      chips+='<span class="chip g">'+(d>0?(t('chCred')+d+' TL'):t('chPaid'))+'</span>'; } }
   el.innerHTML=chips; el.style.display=chips?'block':'none';
 }
 function maxQty(){ return Math.max(1,Math.min(20,parseInt(STATE&&STATE.max_qty)||5)); }
 function clampQty(q){ return Math.max(1,Math.min(maxQty(),parseInt(q)||1)); }
 function setMsg(t){ const el=$('fmMsg'); if(!el) return; if(!t){ el.style.display='none'; el.textContent=''; return; } el.textContent=t; el.style.display='block'; }
 function pendUI(on){ const btn=$('depBtn'), pt=$('pendTxt'); if(!btn||!pt) return;
-  if(on){ btn.disabled=false; btn.textContent='Ödeme sayfasına geri dön'; pt.style.display='block'; pt.textContent='Ödemen kontrol ediliyor. Onay genellikle 1-2 dakika içinde burada görünür. Ödeme sayfasını yanlışlıkla kapattıysan üstteki butonla aynı sayfaya dönersin.'; }
-  else { btn.disabled=false; btn.textContent='Yerini kilitle'; pt.style.display='none'; pt.textContent=''; } }
+  if(on){ btn.disabled=false; btn.textContent=t('backPay'); pt.style.display='block'; pt.textContent=t('pendTxt'); }
+  else { btn.disabled=false; btn.textContent=t('lock'); pt.style.display='none'; pt.textContent=''; } }
 function mkDep(ref){ const s=STATE; if(!s||!s.deposit_url||!ref) return null;
   const q=clampQty(localStorage.getItem('grupal_qty_'+SLUG));
   const du=s.deposit_url.replace(/:(\d+)(\?|$)/, ':'+q+'$2');
@@ -352,7 +395,7 @@ function pendCheck(ref){
   const age=Date.now()-t0;
   if(age<3*60*1000){ pendUI(true); if(!PENDTIMER) PENDTIMER=setInterval(function(){ checkMine(ref); }, 5000); }
   else { if(PENDTIMER){ clearInterval(PENDTIMER); PENDTIMER=null; } pendUI(false);
-    if(age<30*60*1000){ $('pendTxt').style.display='block'; $('pendTxt').textContent='Onay henüz düşmedi. Ödemeni yaptıysan birkaç dakika içinde kendiliğinden görünür. Ödemeyi tamamlamadıysan yukarıdaki butonu tekrar kullanabilirsin.'; }
+    if(age<30*60*1000){ $('pendTxt').style.display='block'; $('pendTxt').textContent=t('pendLate'); }
     else { try{ localStorage.removeItem('grupal_pend_'+SLUG); }catch(e){} } } }
 function renderPay(){
   const s=STATE; if(!s) return;
@@ -361,18 +404,18 @@ function renderPay(){
   const lockedish=(st==='locked'||st==='paid');
   if(lockedish&&MINE.credited&&(MINE.credit||0)>0){
     // kapanış sonrası: Shopify kredi maili göndermez, oyuncunun rakamı burada
-    $('paidTitle').textContent='Grup-Al kredin: '+MINE.credit+' TL · hesabında ✓';
-    $('paidKredi').textContent='Kredin girişte görünür: coffeenutz.net · aynı e-posta.';
+    $('paidTitle').textContent=t('credT')+MINE.credit+t('credT2');
+    $('paidKredi').textContent=t('credHow');
     $('paidCard').style.display='block';
   } else $('paidCard').style.display=(!CLOSED&&lockedish)?'block':'none'; }
 function renderClosed(s){
   const cc=$('closedCard'); if(!CLOSED){ cc.style.display='none'; return; }
-  let t='Bu parti kapandı.', h='Sıradaki kavurma günü partisi burada duyurulacak.';
-  if(redWindow()){ t='Kavurma günü yapıldı.'; h='Paketler yolda. Kargo bilgin e-posta ile sende.'; }
-  else if(s.status==='failed'){ t='Bu parti kapandı.'; h='Alınan ödemelerin tamamı geri döner. Açık ve net.'; }
-  else if(s.status==='fulfilled'){ t='Bu parti tamamlandı.'; h='Kavurma günü yapıldı. Sıradaki parti burada duyurulacak.'; }
-  else if(s.status==='open'){ t='Bu partinin süresi doldu.'; h='Yeni katılım alınmıyor. Sıradaki parti burada duyurulacak.'; }
-  cc.innerHTML='<div style="font-weight:800;font-size:17px;margin-bottom:6px">'+t+'</div><div class="hint">'+h+'</div>';
+  let tt2=t('cl1'), h=t('cl1h');
+  if(redWindow()){ tt2=t('clRed'); h=t('clRedH'); }
+  else if(s.status==='failed'){ tt2=t('cl1'); h=t('clFail'); }
+  else if(s.status==='fulfilled'){ tt2=t('clDone'); h=t('clDoneH'); }
+  else if(s.status==='open'){ tt2=t('clExp'); h=t('clExpH'); }
+  cc.innerHTML='<div style="font-weight:800;font-size:17px;margin-bottom:6px">'+tt2+'</div><div class="hint">'+h+'</div>';
   cc.style.display='block';
   $('joinCard').style.display='none'; $('guaranteeTxt').style.display='none';
   $('lockRow').style.display='none'; $('shareBox').style.display='none'; $('payBlock').style.display='none'; }
@@ -381,12 +424,12 @@ async function load(){
   try{
     const r=await fetch(API+'/state?slug='+encodeURIComponent(SLUG));
     const s=await r.json();
-    if(s.error){ $('title').textContent='Kampanya bulunamadı'; return; }
+    if(s.error){ $('title').textContent=t('notFound'); return; }
     STATE=s; PAYURL=s.pay_url;
     if(s.img_url){ $('heroImg').src=s.img_url; $('heroBox').style.display='block'; } else $('heroBox').style.display='none';
     const mq=maxQty();
     if($('fQty').options.length!==mq){ const cur=parseInt($('fQty').value)||1;
-      $('fQty').innerHTML=Array.from({length:mq},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+' paket</option>').join('');
+      $('fQty').innerHTML=Array.from({length:mq},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+t('pack')+(LANG==='en'&&i>0?'s':'')+'</option>').join('');
       $('fQty').value=String(Math.min(cur,mq)); }
     $('title').textContent=s.title;
     $('lot').textContent=s.lot||'';
@@ -399,8 +442,8 @@ async function load(){
     if(myRef) checkMine(myRef);
     if(s.end_at){
       const end=new Date(s.end_at), msLeft=end-Date.now(), days=Math.max(0,Math.ceil(msLeft/864e5));
-      if(msLeft<=0){ $('deadline').textContent='Son gün: '+fmtDate(s.end_at)+' (sona erdi)'; }
-      else { $('deadline').textContent='Son gün: '+fmtDate(s.end_at)+' ('+days+' gün kaldı)'; }
+      if(msLeft<=0){ $('deadline').textContent=t('lastDay')+fmtDate(s.end_at)+' ('+t('ended')+')'; }
+      else { $('deadline').textContent=t('lastDay')+fmtDate(s.end_at)+' ('+days+t('daysLeft')+')'; }
       $('deadline').style.display='block';
     } else { $('deadline').style.display='none'; }
     renderRanks(s.ref_ranks||s.referral_ranks);
@@ -408,15 +451,15 @@ async function load(){
     renderLevels(s);
     CLOSED=(s.status==='failed'||s.status==='fulfilled'||s.status==='expired'||s.status==='closed')||(s.status==='open'&&!!s.end_at&&(new Date(s.end_at).getTime()<Date.now()));
     renderClosed(s); renderPay(); renderChips(); renderYou(); updJoinBtn(); loadNext(); applyTheme();
-  }catch(e){ $('title').textContent='Bağlantı hatası, tekrar deneyin'; }
+  }catch(e){ $('title').textContent=t('netErr'); }
 }
 async function pledge(){
   const name=$('fName').value.trim(), email=$('fEmail').value.trim(), phone=$('fPhone').value.trim();
   setMsg('');
-  if(!name){ setMsg('Ad Soyad gerekli.'); return; }
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ setMsg('Geçerli bir e-posta adresi gir.'); return; }
-  if(phone&&phone.replace(/\D/g,'').length<10){ setMsg('Telefon numarası eksik görünüyor. Kargo bildirimi SMS ile gidebildiği için doğru numara önemli.'); return; }
-  $('joinBtn').disabled=true; $('joinBtn').textContent='Kaydediliyor...';
+  if(!name){ setMsg(t('needName')); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ setMsg(t('needMail')); return; }
+  if(phone&&phone.replace(/\D/g,'').length<10){ setMsg(t('needTel')); return; }
+  $('joinBtn').disabled=true; $('joinBtn').textContent=t('saving');
   try{
     const r=await fetch(API+'/pledge',{method:'POST',headers:{'content-type':'application/json'},
       body:JSON.stringify({slug:SLUG,name,email,phone,qty:parseInt($('fQty').value)||1,referred_by:REF,show_name:$('fShow').checked})});
@@ -429,10 +472,10 @@ async function pledge(){
       localStorage.setItem('grupal_qty_'+SLUG, String(parseInt($('fQty').value)||1));
       // TEK HAMLE: kayıt düştü, doğruca tavandan ödemeye. Dönüşte webhook masaya oturtur.
       const dl=mkDep(j.ref_code);
-      if(dl){ DEPLINK=dl; $('joinBtn').textContent='Ödemeye gidiliyor...'; goDeposit(); return; }
+      if(dl){ DEPLINK=dl; $('joinBtn').textContent=t('toPay'); goDeposit(); return; }
       load();
-    } else setMsg(j.error==='this email already pledged'?'Bu e-posta zaten masada kayıtlı. Aynı e-posta ile ikinci kayıt olmaz.':(j.error||'Hata'));
-  }catch(e){ setMsg('Bağlantı hatası, tekrar deneyin.'); }
+    } else setMsg(j.error==='this email already pledged'?t('dup'):(j.error||'Hata'));
+  }catch(e){ setMsg(t('netErr')); }
   $('joinBtn').disabled=false; updJoinBtn();
 }
 async function checkMine(ref){
@@ -471,8 +514,8 @@ function renderAttendees(s){
   svg.innerHTML='';
   svg.appendChild(mk('circle',{cx:120,cy:120,r:64,fill:'none',style:'stroke:var(--line)','stroke-width':2}));
   svg.appendChild(mk('circle',{cx:120,cy:120,r:46,style:'fill:var(--panel2);stroke:var(--line)'}));
-  const t1=mk('text',{x:120,y:114,'text-anchor':'middle','font-weight':800,'font-size':(locked?22:15),style:'fill:var(--ink)','font-family':'-apple-system,sans-serif'}); t1.textContent=locked?String(locked):'Masa hazır'; svg.appendChild(t1);
-  const t2=mk('text',{x:120,y:134,'text-anchor':'middle','font-size':11,style:'fill:var(--muted)','font-family':'-apple-system,sans-serif'}); t2.textContent=locked?'sandalye dolu':'ilk sandalye senin'; svg.appendChild(t2);
+  const t1=mk('text',{x:120,y:114,'text-anchor':'middle','font-weight':800,'font-size':(locked?22:15),style:'fill:var(--ink)','font-family':'-apple-system,sans-serif'}); t1.textContent=locked?String(locked):t('ready'); svg.appendChild(t1);
+  const t2=mk('text',{x:120,y:134,'text-anchor':'middle','font-size':11,style:'fill:var(--muted)','font-family':'-apple-system,sans-serif'}); t2.textContent=locked?t('seats'):t('first'); svg.appendChild(t2);
   const pal=['#c98a3c','#b9742f','#9a8a4b','#a97142','#8a6d2a','#7d5a32'];
   const chips=named.map(a=>({nm:(typeof a==='string')?a:(a.name||''), q:(typeof a==='object'&&a.qty)?a.qty:1}));
   const namedSeats=chips.reduce((t,c)=>t+c.q,0);
@@ -507,7 +550,7 @@ function renderAttendees(s){
   for(let i=0;i<ghostN;i++) addSeat('ghost','',1);
   SEATN=popIx;
   const kal=total-locked;
-  $('attHint').textContent=(locked&&kal>0)?(kal+' boş sandalye'):(locked&&parseInt(s.cap)&&kal<=0?'Masa doldu':'');
+  $('attHint').textContent=(locked&&kal>0)?(kal+t('empty')):(locked&&parseInt(s.cap)&&kal<=0?t('full'):'');
   $('attCard').style.display='block';
 }
 function renderRanks(ranks){
@@ -625,8 +668,8 @@ function startCampaign(){
 }
 function renderPortal(list){
   const escP=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  $('title').textContent='Kavurma Günü Partileri';
-  $('lot').textContent='Bir parti seç, masaya otur.';
+  $('title').textContent=t('portalT');
+  $('lot').textContent=t('portalS');
   ['heroBox','deadline','attCard','ranksCard','joinCard','payBlock','shareBox','guaranteeTxt'].forEach(id=>{const el=$(id); if(el) el.style.display='none';});
   document.querySelectorAll('.wrap > .card, .wrap > .refund, .wrap > .shipline').forEach(el=>{ if(el.id!=='portal') el.style.display='none'; });
   const host=$('portal'); host.style.display='block';
@@ -634,7 +677,7 @@ function renderPortal(list){
     return '<a class="pcard" href="?k='+encodeURIComponent(c.slug)+'">'
       +(c.img_url?'<img src="'+escP(c.img_url)+'" alt="">':'')
       +'<div class="pbody"><div class="pt">'+escP(c.title)+'</div>'
-      +'<div class="pm">'+(c.locked||0)+' sandalye dolu · son gün '+fmtDate(c.end_at)+'</div></div></a>';
+      +'<div class="pm">'+(c.locked||0)+' '+t('seats')+t('lastDayS')+fmtDate(c.end_at)+'</div></div></a>';
   }).join('');
 }
 async function boot(){
@@ -646,7 +689,7 @@ async function boot(){
     if(openish.length===1){ SLUG=openish[0].slug; startCampaign(); return; }
     if(!openish.length){ $('title').textContent='Yakında yeni parti'; $('lot').textContent='Sıradaki kavurma günü burada duyurulacak.'; return; }
     renderPortal(openish);
-  }catch(e){ $('title').textContent='Bağlantı hatası, tekrar deneyin'; }
+  }catch(e){ $('title').textContent=t('netErr'); }
 }
 boot();
 </script>
