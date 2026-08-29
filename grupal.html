@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-29l TAVAN/GAME -->
+<!-- grupal.html · v2026-08-29m TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
@@ -186,6 +186,9 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
   <div class="card" id="paidCard" style="display:none;text-align:center">
     <div style="font-weight:800;font-size:17px;color:var(--green);margin-bottom:6px" id="paidTitle" data-i18n="paidT">Ödemen alındı, yerin masada ✓</div>
     <div class="hint" id="paidKredi" data-i18n="paidK">Fark kapanışta Grup-Al kredin olarak döner.</div>
+    <div id="ekleRow" style="display:none;margin-top:12px">
+      <div class="row"><select id="ekleQty" style="flex:1"></select><button id="ekleBtn" onclick="goEkle()" style="flex:1.6;margin-top:0;padding:12px;font-size:14px"></button></div>
+    </div>
   </div>
 
   <div class="card" id="closedCard" style="display:none;text-align:center"></div>
@@ -222,7 +225,7 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-29l';
+const VERSION='v2026-08-29m';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -261,7 +264,7 @@ clRed:['Kavurma günü yapıldı.','Roast day is done.'], clRedH:['Paketler yold
 clFail:['Alınan ödemelerin tamamı geri döner. Açık ve net.','Every payment comes back in full. Plain and simple.'],
 clDone:['Bu parti tamamlandı.','This party is complete.'], clDoneH:['Kavurma günü yapıldı. Sıradaki parti burada duyurulacak.','Roast day is done. The next party will be announced here.'],
 clExp:['Bu partinin süresi doldu.','This party has ended.'], clExpH:['Yeni katılım alınmıyor. Sıradaki parti burada duyurulacak.','No new entries. The next party will be announced here.'],
-pack:[' paket',' pack'], nextParty:['Sıradaki parti: ','Next party: '], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
+pack:[' paket',' pack'], ekleOpt:[' paket daha',' more'], ekleBtn:['Ekle','Add'], nextParty:['Sıradaki parti: ','Next party: '], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
 };
 function t(k){ const e=STR[k]; return e?(LANG==='en'?e[1]:e[0]):k; }
 function applyLang(){
@@ -403,11 +406,32 @@ function pendCheck(ref){
   else { if(PENDTIMER){ clearInterval(PENDTIMER); PENDTIMER=null; } pendUI(false);
     if(age<30*60*1000){ $('pendTxt').style.display='block'; $('pendTxt').textContent=t('pendLate'); }
     else { try{ localStorage.removeItem('grupal_pend_'+SLUG); }catch(e){} } } }
+function buildEkle(left){
+  const sel=$('ekleQty'), btn=$('ekleBtn'); if(!sel||!btn) return;
+  const li=ladInfo(); const tv=li&&isFinite(li.tavanN)?li.tavanN:0;
+  const cur=parseInt(sel.value)||1;
+  sel.innerHTML=Array.from({length:left},(_,i)=>'<option value="'+(i+1)+'">+'+(i+1)+t('ekleOpt')+'</option>').join('');
+  sel.value=String(Math.min(cur,left));
+  const upd=()=>{ const n=parseInt(sel.value)||1; btn.textContent=t('ekleBtn')+(tv?(' · '+(tv*n)+' TL'):''); };
+  sel.onchange=upd; upd();
+}
+function goEkle(){
+  const s=STATE; if(!s||!s.deposit_url) return;
+  const myRef=localStorage.getItem('grupal_'+SLUG); if(!myRef) return;
+  const n=Math.max(1,parseInt($('ekleQty').value)||1);
+  let du=s.deposit_url.replace(/:(\d+)(\?|$)/, ':'+n+'$2');
+  du+=(du.includes('?')?'&':'?')+'attributes[ref]='+encodeURIComponent(myRef)+'&attributes[k]='+encodeURIComponent(SLUG);
+  try{ localStorage.setItem('grupal_pend_'+SLUG, String(Date.now())); }catch(e){}
+  location.href=du;
+}
 function renderPay(){
   const s=STATE; if(!s) return;
   const st=MINE&&MINE.status;
   $('payBlock').style.display='none';
   const lockedish=(st==='locked'||st==='paid');
+  const left=maxQty()-((MINE&&parseInt(MINE.qty))||1);
+  const er=$('ekleRow');
+  if(er){ if(!CLOSED&&lockedish&&left>0&&s.deposit_url){ er.style.display='block'; buildEkle(left); } else er.style.display='none'; }
   if(lockedish&&MINE.credited&&(MINE.credit||0)>0){
     // kapanış sonrası: Shopify kredi maili göndermez, oyuncunun rakamı burada
     $('paidTitle').textContent=t('credT')+MINE.credit+t('credT2');
