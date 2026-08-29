@@ -18,10 +18,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-29i TAVAN/GAME -->
+<!-- grupal.html · v2026-08-29j TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
+body.th-krema{--bg:#f7f1e7;--panel:#ffffff;--panel2:#f2ebde;--accent:#b3742a;--gold:#93761a;--green:#2e6a4c;--ink:#241c13;--muted:#8b7a64;--line:#e5dac6;--warn:#b34a26;--btnink:#fff}
 body.th-night{background-image:radial-gradient(900px 480px at 50% -8%,rgba(201,138,60,.16),rgba(201,138,60,0) 60%),radial-gradient(700px 500px at 50% 108%,rgba(230,193,75,.07),rgba(230,193,75,0) 55%);background-attachment:fixed}
 body.th-red{--bg:#8F0101;--panel:#f6efe1;--panel2:#efe5d2;--accent:#8F0101;--gold:#a2801a;--green:#2e6a4c;--ink:#2a1410;--muted:#8a6a5c;--line:#e0d0b8;--warn:#7c2d12;--btnink:#fff;background-image:radial-gradient(800px 500px at 50% -10%,rgba(0,0,0,.25),rgba(0,0,0,0) 60%);background-attachment:fixed}
 body.th-red .brand{color:#f6efe1}
@@ -71,7 +72,7 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 .boardseat{animation:none}
 .boardseat.pop{animation:seatIn .45s both}
 .you{display:flex;align-items:baseline;gap:12px;justify-content:center;margin-top:6px}
-.tchips{display:flex;gap:6px;justify-content:center;margin:6px 0 2px}
+.tchips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0 2px}
 .tchip{border:1px solid var(--line);border-radius:14px;padding:3px 10px;font-size:10.5px;font-weight:700;color:var(--muted);cursor:pointer;background:var(--panel)}
 .tchip.on{border-color:var(--accent);color:var(--accent)}
 .you .big{font-size:46px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
@@ -214,26 +215,32 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-29i';
+const VERSION='v2026-08-29j';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
 let CLOSED=false, PENDTIMER=null, SEATN=null, NEXTC=null, NEXTT=0;
 let THEMEPREF='auto'; try{ THEMEPREF=localStorage.getItem('grupal_theme')||'auto'; }catch(e){}
+const THEMES=[['auto','oto'],['gece','Gece'],['isik','Gece Işık'],['kraft','Kraft'],['krema','Krema'],['red','CoffeeNutz Red']];
 function applyTheme(){ try{
-  const red=(typeof redWindow==='function')&&redWindow();   // kargo penceresi: sistem karar verir, çip ezemez
+  const redWin=(typeof redWindow==='function')&&redWindow();   // kargo penceresi: sistem karar verir, çip ezemez
   const h=new Date().getHours();
-  const day=THEMEPREF==='day'?true:(THEMEPREF==='night'?false:(h>=7&&h<19));
-  document.body.classList.toggle('th-red',!!red);
-  document.body.classList.toggle('th-day',!red&&day);
-  document.body.classList.toggle('th-night',!red&&!day);
-  const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content', red?'#8F0101':(day?'#e7d9c3':'#16130f'));
-  renderThemeChips(!!red);
+  let mode=THEMEPREF;
+  if(redWin) mode='red';
+  else if(mode==='auto') mode=(h>=7&&h<19)?'kraft':'isik';
+  document.body.classList.toggle('th-red',mode==='red');
+  document.body.classList.toggle('th-day',mode==='kraft');
+  document.body.classList.toggle('th-krema',mode==='krema');
+  document.body.classList.toggle('th-night',mode==='isik');   // Gece Işık = parıltılı gece; 'gece' = sınıfsız saf karanlık
+  if(mode==='gece'){ document.body.classList.remove('th-red','th-day','th-krema','th-night'); }
+  const mc={red:'#8F0101',kraft:'#e7d9c3',krema:'#f7f1e7',isik:'#16130f',gece:'#16130f'};
+  const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content', mc[mode]||'#16130f');
+  renderThemeChips(!!redWin);
 }catch(e){} }
 function setThemePref(p){ THEMEPREF=p; try{ localStorage.setItem('grupal_theme',p); }catch(e){} applyTheme(); }
-function renderThemeChips(red){ const el=document.getElementById('themeChips'); if(!el) return;
-  if(red){ el.innerHTML=''; return; }   // kırmızı pencerede çipler susar
-  el.innerHTML=[['auto','oto'],['day','gündüz'],['night','gece']].map(function(o){
+function renderThemeChips(redWin){ const el=document.getElementById('themeChips'); if(!el) return;
+  if(redWin){ el.innerHTML=''; return; }   // kargo günlerinde masa üniforması: CoffeeNutz Red, çipler susar
+  el.innerHTML=THEMES.map(function(o){
     return '<span class="tchip'+(THEMEPREF===o[0]?' on':'')+'" onclick="setThemePref(\''+o[0]+'\')">'+o[1]+'</span>'; }).join('');
 }
 applyTheme();
