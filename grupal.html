@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-29u TAVAN/GAME -->
+<!-- grupal.html · v2026-08-29v TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
@@ -132,7 +132,7 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 </head>
 <body>
 <div class="wrap">
-  <svg id="liveLogo" width="64" height="64" viewBox="0 0 100 100" style="display:block;margin:6px auto 2px" aria-label="Grup-Al">
+  <svg id="liveLogo" width="64" height="64" viewBox="0 0 100 100" style="display:block;margin:6px auto 2px;cursor:pointer" aria-label="Grup-Al ana ekran" onclick="location.href=location.pathname">
     <circle cx="50" cy="50" r="36" fill="none" style="stroke:var(--line)" stroke-width="7" opacity=".45"/>
     <path id="logoArc" fill="none" style="stroke:var(--accent)" stroke-width="7" stroke-linecap="round"/>
     <circle id="logoDot" cx="50" cy="14" r="7" style="fill:var(--gold)"/>
@@ -173,9 +173,7 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
     <div class="hint" id="ranksReward">İlk seçim: en çok davet edenin.</div>
   </div>
 
-  <div class="guarantee" id="guaranteeTxt"><div class="grow"><span>✓</span><i data-i18n="g1" style="font-style:normal">Herkese aynı fiyat</i></div><div class="grow"><span>✓</span><i data-i18n="g2" style="font-style:normal">Fark → Grup-Al kredin</i></div></div>
-
-  <div class="card" id="joinCard">
+    <div class="card" id="joinCard">
     <div class="lbl" data-i18n="joinLbl">masaya otur</div>
     <select id="fQty">
       <option value="1">1 paket</option>
@@ -243,7 +241,7 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-29u';
+const VERSION='v2026-08-29v';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -480,7 +478,7 @@ function renderClosed(s){
   else if(s.status==='open'){ tt2=t('clExp'); h=t('clExpH'); }
   cc.innerHTML='<div style="font-weight:800;font-size:17px;margin-bottom:6px">'+tt2+'</div><div class="hint">'+h+'</div>';
   cc.style.display='block';
-  $('joinCard').style.display='none'; $('guaranteeTxt').style.display='none';
+  $('joinCard').style.display='none';
   $('lockRow').style.display='none'; $('shareBox').style.display='none'; $('payBlock').style.display='none'; }
 
 async function load(){
@@ -785,7 +783,7 @@ function renderPortal(list){
   const escP=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   $('title').textContent=t('portalT');
   $('lot').textContent=t('portalS');
-  ['heroBox','deadline','dealLine','attCard','ranksCard','joinCard','payBlock','shareBox','guaranteeTxt'].forEach(id=>{const el=$(id); if(el) el.style.display='none';});
+  ['heroBox','deadline','dealLine','attCard','ranksCard','joinCard','payBlock','shareBox'].forEach(id=>{const el=$(id); if(el) el.style.display='none';});
   document.querySelectorAll('.wrap > .card, .wrap > .refund, .wrap > .shipline').forEach(el=>{ if(el.id!=='portal') el.style.display='none'; });
   const host=$('portal'); host.style.display='block';
   host.innerHTML=list.map(c=>{
