@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-29r TAVAN/GAME -->
+<!-- grupal.html · v2026-08-29s TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
@@ -174,9 +174,6 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 
   <div class="card" id="joinCard">
     <div class="lbl" data-i18n="joinLbl">masaya otur</div>
-    <input type="text" id="fName" data-i18n-ph="phName" placeholder="Ad Soyad" autocomplete="name">
-    <input type="email" id="fEmail" data-i18n-ph="phMail" placeholder="E-posta" autocomplete="email" inputmode="email">
-    <input type="tel" id="fPhone" data-i18n-ph="phTel" placeholder="Telefon (kargo bildirimi için)" autocomplete="tel" inputmode="tel">
     <select id="fQty">
       <option value="1">1 paket</option>
     </select>
@@ -184,11 +181,11 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
       <input type="checkbox" id="fShow" checked style="width:auto;margin-top:2px">
       <span data-i18n="showName">Adım masada görünsün ("Ayşe K." gibi)</span>
     </label>
-    <button onclick="pledge()" id="joinBtn">Yerini kilitle</button>
+    <button onclick="lockNow()" id="joinBtn">Yerini kilitle</button>
     <div class="hint" id="fmMsg" style="display:none;margin-top:10px;color:var(--warn);font-weight:600"></div>
     <div class="hint" style="margin-top:10px" id="unitTxt"></div>
     <div class="hint" id="shipTxt"></div>
-    <details class="kvkk"><summary data-i18n="kvkkSum">Kişisel veriler (KVKK)</summary><div class="hint" style="font-size:11.5px;line-height:1.5;text-align:left">Bilgilerin (ad, e-posta, telefon) yalnızca bu kampanyanın yürütülmesi, kargo bildirimi ve teslimat için kullanılır; üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin.</div></details>
+    <details class="kvkk"><summary data-i18n="kvkkSum">Kişisel veriler (KVKK)</summary><div class="hint" style="font-size:11.5px;line-height:1.5;text-align:left" data-i18n="kvkkBody">Ad, e-posta ve telefon yalnızca ödeme sayfasında alınır; kampanyanın yürütülmesi, kargo ve teslimat için kullanılır, üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin.</div></details>
   </div>
 
   <div class="card" id="payBlock" style="display:none"></div>
@@ -236,7 +233,7 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-29r';
+const VERSION='v2026-08-29s';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -508,30 +505,24 @@ async function load(){
     renderClosed(s); renderPay(); renderChips(); renderYou(); updJoinBtn(); renderLogo(s); loadNext(); applyTheme();
   }catch(e){ $('title').textContent=t('netErr'); }
 }
-async function pledge(){
-  const name=$('fName').value.trim(), email=$('fEmail').value.trim(), phone=$('fPhone').value.trim();
-  setMsg('');
-  if(!name){ setMsg(t('needName')); return; }
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ setMsg(t('needMail')); return; }
-  if(phone&&phone.replace(/\D/g,'').length<10){ setMsg(t('needTel')); return; }
-  $('joinBtn').disabled=true; $('joinBtn').textContent=t('saving');
-  try{
-    const r=await fetch(API+'/pledge',{method:'POST',headers:{'content-type':'application/json'},
-      body:JSON.stringify({slug:SLUG,name,email,phone,qty:parseInt($('fQty').value)||1,referred_by:REF,show_name:$('fShow').checked})});
-    const j=await r.json();
-    if(j.ok){
-      const link=location.origin+location.pathname+'?k='+SLUG+'&ref='+j.ref_code;
-      $('shareLink').textContent=link;
-      $('shareBox').style.display='block'; $('joinCard').style.display='none';
-      localStorage.setItem('grupal_'+SLUG, j.ref_code);
-      localStorage.setItem('grupal_qty_'+SLUG, String(parseInt($('fQty').value)||1));
-      // TEK HAMLE: kayıt düştü, doğruca tavandan ödemeye. Dönüşte webhook masaya oturtur.
-      const dl=mkDep(j.ref_code);
-      if(dl){ DEPLINK=dl; $('joinBtn').textContent=t('toPay'); goDeposit(); return; }
-      load();
-    } else setMsg(j.error==='this email already pledged'?t('dup'):(j.error||'Hata'));
-  }catch(e){ setMsg(t('netErr')); }
-  $('joinBtn').disabled=false; updJoinBtn();
+function lockNow(){
+  // FORM YOK: ad/e-posta/telefonu ödeme sayfası alır; satırı webhook siparişten yaratır.
+  const s=STATE; if(!s||!s.deposit_url){ setMsg(t('netErr')); return; }
+  const q=parseInt($('fQty').value)||1;
+  let ref='';
+  try{ ref=localStorage.getItem('grupal_'+SLUG)||''; }catch(e){}
+  if(!/^[A-Z0-9]{4,12}$/.test(ref)){ ref=''; for(let i=0;i<6;i++) ref+='ABCDEFGHJKLMNPRSTUVYZ0123456789'[Math.floor(Math.random()*31)]; }
+  try{ localStorage.setItem('grupal_'+SLUG, ref); localStorage.setItem('grupal_qty_'+SLUG, String(q)); }catch(e){}
+  const link=location.origin+location.pathname+'?k='+SLUG+'&ref='+ref;
+  $('shareLink').textContent=link;
+  let du=s.deposit_url.replace(/:(\d+)(\?|$)/, ':'+q+'$2');
+  du+=(du.includes('?')?'&':'?')+'attributes[ref]='+encodeURIComponent(ref)
+    +'&attributes[k]='+encodeURIComponent(SLUG)
+    +'&attributes[sn]='+($('fShow').checked?'1':'0')
+    +(REF?('&attributes[via]='+encodeURIComponent(REF)):'');
+  $('joinBtn').disabled=true; $('joinBtn').textContent=t('toPay');
+  try{ localStorage.setItem('grupal_pend_'+SLUG, String(Date.now())); }catch(e){}
+  location.href=du;
 }
 async function checkMine(ref){
   try{
@@ -745,7 +736,6 @@ function restoreMine(){
   $('shareBox').style.display='block';
   $('shareLink').textContent=location.origin+location.pathname+'?k='+SLUG+'&ref='+rc;
 }
-['fName','fEmail','fPhone'].forEach(id=>$(id).addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); pledge(); } }));
 let PWAEV=null;
 window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); PWAEV=e; const b=$('pwaAdd'); if(b) b.style.display='inline-block'; });
 window.addEventListener('appinstalled',()=>{ PWAEV=null; const b=$('pwaAdd'); if(b) b.style.display='none'; });
