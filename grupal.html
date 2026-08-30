@@ -261,7 +261,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-30r';
+const VERSION='v2026-08-30s';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -319,7 +319,7 @@ pack:[' paket',' pack'], flagSeat:['sandalyede','th seat'], thAuto:['oto','auto'
 kvkkBody:["Ad, e-posta ve telefon yalnızca ödeme sayfasında alınır; kampanyanın yürütülmesi, kargo ve teslimat için kullanılır, üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin.","Name, email and phone are collected only at checkout; used solely to run the campaign, ship and deliver, never shared with third parties. You can ask for your record to be deleted at any time."],
 footerTxt:['Grup-Al bir CoffeeNutz projesidir · sorular: <a href="https://www.coffeenutz.net/pages/iletisim" target="_blank" rel="noopener">iletişim sayfası</a>','Grup-Al is a CoffeeNutz project · questions: <a href="https://www.coffeenutz.net/pages/iletisim" target="_blank" rel="noopener">contact page</a>'],
 howBody:["Bu kavurma günü kesin yapılacak; masa kurulur, söz sözdür. Türkiye'nin her yerine kargoyla.<br>Ödemen tavan fiyattan alınır. Masa hangi basamağa inerse insin herkes aynı fiyatı öder; tavan ile aradaki fark kapanışta Grup-Al kredin olarak hesabına döner. Son günden önce vazgeçersen ödemenin tamamı geri döner.<br>Kredi kullanımı: kapanışta hesabına yazılır; coffeenutz.net'te aynı e-postayla giriş yaptığında ödeme adımında görünür, tek dokunuşla uygulanır.<br>Davet: masaya oturttuğun her konuk (en çok 2) senin fiyatını bir basamak indirir.<br>Zincir sandalye: sıradaki masada yerini şimdiden ayır; o masa nereye inerse insin sen bir basamak daha derindesin.","This roast day will happen — the table is set, our word is our word. Shipping everywhere in Türkiye.<br>You pay the ceiling price. Whichever rung the table reaches, everyone pays the same; the difference between ceiling and final price returns as your Grup-Al credit at close. Change your mind before the last day and your full payment comes back.<br>Using credit: written to your account at close; sign in at coffeenutz.net with the same email and it appears at the payment step, applied in one tap.<br>Invite: every guest you seat (up to 2) lowers your price by one rung.<br>Chain seat: reserve your place at the next table now; wherever that table lands, you sit one rung deeper."],
-ekleShip:['Ödeme sayfasında "Teslim alım"ı seç — kargon ilk paketinle zaten ödendi, hepsi tek kutuda gelir.','Choose "Pickup" on the payment page — shipping was already paid with your first pack; everything arrives in one box.'], nextParty:['Sıradaki parti: ','Next party: '], annT:['KAYIT AÇILIŞINA','OPENS IN'], annT2:['Kayıt yakında açılıyor','Registration opens soon'], annOpen:['Kayıt açılışı:','Registration opens:'], annP:['yakında · kayıt: ','soon · opens: '], dreamL:['masa dolarsa: ','full table: '], nudgeL:['+1 davet → ','+1 invite → '], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
+ekleShip:['Ödeme sayfasında "Teslim alım"ı seç — kargon ilk paketinle zaten ödendi, hepsi tek kutuda gelir.','Choose "Pickup" on the payment page — shipping was already paid with your first pack; everything arrives in one box.'], nextParty:['Sıradaki parti: ','Next party: '], annT:['KAYIT AÇILIŞINA','OPENS IN'], annT2:['Kayıt yakında açılıyor','Registration opens soon'], annOpen:['Kayıt açılışı:','Registration opens:'], annP:['yakında · kayıt: ','soon · opens: '], dreamL:['masa dolarsa: ','full table: '], nudgeL:['+1 davet → ','+1 invite → '], nudge2L:['+2 davet → ','+2 invites → '], nudgeV:['davet, konuğun ödemesiyle sayılır','an invite counts when your guest pays'], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
 };
 function t(k){ const e=STR[k]; return e?(LANG==='en'?e[1]:e[0]):k; }
 function applyLang(){
@@ -428,7 +428,13 @@ function renderYou(){
    if(yn){ const lockedish=MINE&&(MINE.status==='locked'||MINE.status==='paid');
      const pn=tx=>{ const mm=String(tx||'').match(/\d[\d.]*/); return mm?mm[0]:''; };
      if(lockedish&&li.bonus<2&&li.pIx<li.lad.length-1){
-       yn.innerHTML=t('nudgeL')+'<b style="color:var(--accent)">'+pn(li.lad[li.pIx+1].price)+' TL</b>';
+       // her boş davet slotu kendi ödülüyle: "+1 davet → 600 · +2 davet → 450". Geçerlilik: konuk ÖDEYİNCE
+       // (sunucu gerçeği: bonusFor yalnız locked/paid satırları sayar; satır zaten ödemeyle doğar).
+       let hh=t('nudgeL')+'<b style="color:var(--accent)">'+pn(li.lad[li.pIx+1].price)+' TL</b>';
+       if(li.bonus===0&&li.pIx+2<=li.lad.length-1)
+         hh+=' · '+t('nudge2L')+'<b style="color:var(--accent)">'+pn(li.lad[li.pIx+2].price)+' TL</b>';
+       hh+='<div style="opacity:.6;font-size:11px;margin-top:2px">'+t('nudgeV')+'</div>';
+       yn.innerHTML=hh;
        yn.style.display='block';
      } else yn.style.display='none'; }}
   card.style.display='block';
