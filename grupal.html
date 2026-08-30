@@ -20,7 +20,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-30a TAVAN/GAME -->
+<!-- grupal.html · v2026-08-30b TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
@@ -139,7 +139,7 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
     <path id="logoArc" d="M 80.6 29.3 A 36 36 0 1 0 85.65 55.01" fill="none" style="stroke:var(--accent)" stroke-width="7" stroke-linecap="round"/>
     <path d="M 34 72 L 50 26 L 66 72" fill="none" style="stroke:var(--accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
     <line id="logoBar" x1="59.5" y1="55" x2="59.5" y2="55" style="stroke:var(--gold);display:none" stroke-width="6" stroke-linecap="round"/>
-    <circle id="logoDot" cx="80.6" cy="29.3" r="6.5" style="fill:var(--gold)"/>
+    <circle id="logoDot" cx="85.65" cy="55.01" r="6.5" style="fill:var(--gold)"/>
   </svg>
   <div class="brand">GRUP-AL</div>
   <div class="tchips" id="themeChips"></div>
@@ -244,7 +244,7 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-30a';
+const VERSION='v2026-08-30b';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -563,8 +563,10 @@ function renderLogo(s){
   // çizgisini ALTINLA yazar; kampanya tamamlanınca çizginin SOL UCUNDA durur = statik marka (I).
   const dot=document.getElementById('logoDot'), bar=document.getElementById('logoBar');
   if(!dot||!bar) return;
+  if(!s){ // marka duruşu (portal/boot): çekirdek G'nin ucunda, çizgi yok
+    bar.style.display='none'; dot.setAttribute('cx','85.65'); dot.setAttribute('cy','55.01'); return; }
   let p=0, done=false;
-  if(s){
+  {
     const locked=s.locked||0, lad=s.ladder||[];
     const goal=parseInt(s.cap)||((lad.length&&lad[lad.length-1].at)||0);
     done=(typeof CLOSED!=='undefined'&&CLOSED&&(s.status==='fulfilled'))||((typeof redWindow==='function')&&redWindow());
