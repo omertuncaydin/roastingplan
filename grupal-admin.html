@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · kampanya kokpiti</title>
 <meta name="robots" content="noindex">
-<!-- grupal-admin.html · v2026-08-29e -->
+<!-- grupal-admin.html · v2026-08-30a -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -42,7 +42,6 @@ a{color:var(--gold)}
       <span class="lbl">kampanyalar</span>
       <div id="campList"></div>
       <button style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)" onclick="blank()">+ Yeni kampanya</button>
-      <div class="hint" style="margin-top:12px">Davet sıralaması (referral ranks) herkese açık sayfada ancak <b>/state</b> yanıtı <code>ref_ranks</code> (ya da <code>referral_ranks</code>) alanını taşırsa görünür. Beklenen biçim: <code>[{name, count}]</code>, davet sayısına göre azalan. Alan yoksa bölüm gizli kalır. Bunu göstermek için grupal-proxy /state çıktısına bu diziyi eklemek gerekir (proxy bu araçtan değiştirilmez).</div>
     </div>
 
     <div class="card">
@@ -54,10 +53,8 @@ a{color:var(--gold)}
       <input id="f_lot" placeholder="Yıkanmış Ethiopia, kavurma günü lotu">
       <span class="lbl">kavurmacı (usta adı · sayfada görünür)</span>
       <input id="f_roaster" placeholder="ör. Burak Şenol">
-      <div class="row">
-        <div><span class="lbl">eski hedef alanı (kullanılmıyor · boş bırak)</span><input id="f_target" inputmode="numeric" placeholder="boş = 0"></div>
-        <div><span class="lbl">masa sandalyesi / kapasite (ops.)</span><input id="f_cap" inputmode="numeric" placeholder="140"></div>
-      </div>
+      <span class="lbl">masa sandalyesi / kapasite (ops. · halkalar ve logo buna göre nefes alır)</span>
+      <input id="f_cap" inputmode="numeric" placeholder="140">
       <span class="lbl">birim</span>
       <input id="f_unit" placeholder="2 x 500g çekirdek">
       <span class="lbl">teslimat taahhüdü (iş günü sayısı)</span>
@@ -71,26 +68,21 @@ a{color:var(--gold)}
       <div class="row"><input id="l1a" inputmode="numeric" placeholder="60"><input id="l1p" placeholder="950 TL"></div>
       <div class="row" style="margin-top:6px"><input id="l2a" inputmode="numeric" placeholder="100"><input id="l2p" placeholder="875 TL"></div>
       <div class="row" style="margin-top:6px"><input id="l3a" inputmode="numeric" placeholder=""><input id="l3p" placeholder=""></div>
-      <span class="lbl">kilit linki (LOT ürünü · tavan fiyatlı · Shopify)</span>
+      <span class="lbl">LOT ürün linki (Shopify · tavan fiyatlı) — "Yerini kilitle" bu sepeti açar</span>
       <input id="f_dep" placeholder="ürün VEYA sepet linki yapıştır; kaydette çevrilir">
-      <span class="lbl">kilit tutarı (₺)</span>
+      <span class="lbl">tavan (₺) — ürün fiyatının aynısı; sayfadaki tavan cümlesinde görünür</span>
       <input id="f_depamt" inputmode="numeric" placeholder="700">
-      <label class="hint" style="display:flex;gap:8px;align-items:center;margin-top:6px;cursor:pointer"><input type="checkbox" id="f_tavanmode" style="width:16px;height:16px"> tavan modeli cümlesi (fark kapanışta Grup-Al kredisi olur · yeni kampanyada hep açık)</label>
       <div class="hint" id="depPrev"></div>
-      <span class="lbl">ödeme linki (eski model alanı · tavan modelinde boş bırak)</span>
-      <input id="f_pay" placeholder="tavan modelinde kullanılmıyor; boş bırak">
-      <div class="hint">Tavan modelinde tek ödeme kilit linkiyle tavandan alınır; fark kapanışta Grup-Al kredisi olarak döner. Bu alan eski modelden kaldı, boş kalabilir.</div>
       <span class="lbl">paket üst sınırı (kişi başına)</span>
       <input id="f_maxq" inputmode="numeric" placeholder="5">
       <span class="lbl">görsel (ürün linki yapıştır, kaydette resme çevrilir)</span>
       <input id="f_img" placeholder="https://www.coffeenutz.net/products/... ya da resim linki">
-      <span class="lbl">sıradaki parti (slug · ops.)</span>
-      <input id="f_next" placeholder="ör. ekim-kenya · boşsa zincir kartı görünmez">
+      <span class="lbl">sıradaki parti (lobi · boşsa zincir kartı görünmez)</span>
+      <select id="f_next"><option value="">— yok —</option></select>
       <span class="lbl">durum</span>
       <select id="f_status">
         <option value="open">open · masa açık, kayıt alıyor</option>
         <option value="funded">funded · masa doldu (kayıt kapalı, parti kesin)</option>
-        <option value="paying">paying · eski model (tavan modelinde kullanma)</option>
         <option value="fulfilled">fulfilled · kavurma yapıldı, paketler yolda</option>
         <option value="failed">failed · iptal (mücbir sebep · arşiv)</option>
       </select>
@@ -117,7 +109,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-08-29e';
+const VERSION='v2026-08-30a';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
@@ -201,15 +193,18 @@ async function plDel(id){
   loadPledges();
 }
 const SHIP_TPL=n=>n?('kavurma gününden sonra '+n+' iş günü içinde kargoda'):'';
-const DEP_TPL=n=>{ if(!n) return '';
-  if($('f_tavanmode')&&$('f_tavanmode').checked) return 'Tavan fiyat '+n+' ₺. Masa hangi basamağa inerse insin, fark kapanışta Grup-Al kredin olarak döner.';
-  return n+' ₺ ile yerini kilitle. (Eski model cümlesi — yeni kampanyada tavan modelini açık tut.)'; };
+const DEP_TPL=n=>n?('Tavan fiyat '+n+' ₺. Masa hangi basamağa inerse insin, fark kapanışta Grup-Al kredin olarak döner.'):'';
 const numFrom=t=>{ const m=String(t||'').match(/\d[\d.]*/); return m?m[0].replace(/\.$/,''):''; };
 function updatePrev(){ $('shipPrev').textContent=SHIP_TPL($('f_shipdays').value.trim())||'sayı gir, cümle burada belirir';
   $('depPrev').textContent=DEP_TPL($('f_depamt').value.trim())||'sayı gir, cümle burada belirir'; }
+function fillNext(excl){
+  const sel=$('f_next'); if(!sel) return; const cur=sel.value;
+  sel.innerHTML='<option value="">— yok —</option>'+CAMPS.filter(c=>c.slug!==excl).map(c=>'<option value="'+esc(c.slug)+'">'+esc(c.slug)+' · '+esc(c.status)+'</option>').join('');
+  sel.value=cur||'';
+}
 let KEY=localStorage.getItem('grupalKey')||'';
 let CAMPS=[];
-$('f_shipdays').addEventListener('input',updatePrev); $('f_depamt').addEventListener('input',updatePrev); $('f_tavanmode').addEventListener('change',updatePrev); updatePrev();
+$('f_shipdays').addEventListener('input',updatePrev); $('f_depamt').addEventListener('input',updatePrev); updatePrev();
 if(KEY){ $('ccKey').value=KEY; unlock(); }
 async function unlock(){
   KEY=$('ccKey').value.trim(); if(!KEY) return;
@@ -226,15 +221,18 @@ async function renderList(){
   $('campList').innerHTML=CAMPS.map((c,i)=>{ const p=by[c.slug]; const extra=p?(' · '+(p.locked||0)+' kilitli'):''; return '<span class="pill" onclick="pick('+i+')">'+esc(c.slug)+' · '+esc(c.status)+extra+'</span>'; }).join('')||'<div class="hint">Henüz kampanya yok.</div>';
 }
 function blank(){
-  ['f_slug','f_title','f_lot','f_target','f_cap','f_unit','f_shipdays','f_dep','f_depamt','f_pay','f_img','f_maxq','l1a','l1p','l2a','l2p','l3a','l3p'].forEach(i=>$(i).value=''); updatePrev();
-  $('f_status').value='open'; $('f_end').value=''; $('f_roast').value=''; $('f_dep').value=''; $('f_next').value=''; $('f_roaster').value=''; $('f_tavanmode').checked=true; $('msg').textContent='Yeni kampanya formu (tavan modeli): kilit linki = LOT ürününün linki, tavan fiyatlı.'; $('linkOut').textContent=''; CURSLUG=''; $('plCard').style.display='none'; $('kapCard').style.display='none';
+  ['f_slug','f_title','f_lot','f_cap','f_unit','f_shipdays','f_dep','f_depamt','f_img','f_maxq','l1a','l1p','l2a','l2p','l3a','l3p'].forEach(i=>$(i).value=''); updatePrev();
+  $('f_status').value='open'; $('f_end').value=''; $('f_roast').value=''; $('f_dep').value=''; fillNext(''); $('f_next').value=''; $('f_roaster').value=''; $('msg').textContent='Yeni kampanya: LOT ürün linkini yapıştır (tavan fiyatlı), merdiveni kur, tarihleri ver.'; $('linkOut').textContent=''; CURSLUG=''; $('plCard').style.display='none'; $('kapCard').style.display='none';
 }
 function pick(i){
   const c=CAMPS[i];
   $('f_slug').value=c.slug; $('f_title').value=c.title||''; $('f_lot').value=c.lot||'';
-  $('f_target').value=c.target||''; $('f_cap').value=c.cap||''; $('f_unit').value=c.unit||'';
-  $('f_shipdays').value=numFrom(c.ships_by); $('f_dep').value=c.deposit_url||''; $('f_depamt').value=numFrom(c.deposit_txt); $('f_tavanmode').checked=/^Tavan/i.test(String(c.deposit_txt||'')); updatePrev();
-  $('f_pay').value=c.pay_url||''; $('f_img').value=c.img_url||''; $('f_next').value=c.next_slug||''; $('f_roaster').value=c.roaster||''; $('f_maxq').value=c.max_qty||5; $('f_status').value=c.status||'open';
+  $('f_cap').value=c.cap||''; $('f_unit').value=c.unit||'';
+  $('f_shipdays').value=numFrom(c.ships_by); $('f_dep').value=c.deposit_url||''; $('f_depamt').value=numFrom(c.deposit_txt); updatePrev();
+  $('f_img').value=c.img_url||''; fillNext(c.slug); $('f_next').value=c.next_slug||''; $('f_roaster').value=c.roaster||''; $('f_maxq').value=c.max_qty||5;
+  { const st=c.status||'open'; const sel=$('f_status');
+    if(![...sel.options].some(o=>o.value===st)) sel.insertAdjacentHTML('beforeend','<option value="'+st+'">'+st+' · (eski kayıt)</option>');
+    sel.value=st; }
   $('f_end').value=(c.end_at||'').slice(0,10);
   $('f_roast').value=(c.roast_date||'').slice(0,10);
   const L=c.ladder||[];
@@ -256,19 +254,18 @@ async function resolveImage(field){
 }
 async function save(){
   if(!(await resolveIfProduct('f_dep'))) return;
-  if(!(await resolveIfProduct('f_pay'))) return;
   if(!(await resolveImage('f_img'))) return;
   const ladder=[]; let ladWarn=false;
   [['l1a','l1p'],['l2a','l2p'],['l3a','l3p']].forEach(([a,p])=>{ const aRaw=$(a).value.trim(), pRaw=$(p).value.trim(), at=parseInt(aRaw);
     if(at&&pRaw) ladder.push({at, price:pRaw}); else if(aRaw||pRaw) ladWarn=true; });
   if(ladWarn&&!confirm('Fiyat merdiveninde eksik satır var: katılımcı sayısı ve fiyat birlikte dolu olmalı. Eksik satır KAYDEDİLMEZ. Devam edilsin mi?')) return;
   const body={ slug:$('f_slug').value, title:$('f_title').value, lot:$('f_lot').value,
-    target:parseInt($('f_target').value)||0, cap:parseInt($('f_cap').value)||null,
+    target:0, cap:parseInt($('f_cap').value)||null,
     unit:$('f_unit').value, ships_by:SHIP_TPL($('f_shipdays').value.trim()),
     end_at:$('f_end').value?($('f_end').value+'T23:59:59+03:00'):null,
     roast_date:$('f_roast').value?($('f_roast').value+'T09:00:00+03:00'):null,
     ladder, deposit_url:$('f_dep').value, deposit_txt:DEP_TPL($('f_depamt').value.trim()),
-    pay_url:$('f_pay').value, img_url:$('f_img').value.trim()||null, max_qty:parseInt($('f_maxq').value)||5, status:$('f_status').value, next_slug:$('f_next').value.trim()||null, roaster:$('f_roaster').value.trim()||null };
+    pay_url:null, img_url:$('f_img').value.trim()||null, max_qty:parseInt($('f_maxq').value)||5, status:$('f_status').value, next_slug:$('f_next').value.trim()||null, roaster:$('f_roaster').value.trim()||null };
   if(!body.slug||!body.title||!body.end_at){ $('msg').textContent='Slug, başlık ve bitiş tarihi zorunlu.'; return; }
   if(CURSLUG&&body.slug&&body.slug!==CURSLUG&&!confirm('Slug değişti: '+CURSLUG+' → '+body.slug+'. Bu YENİ bir kampanya oluşturur; eski kampanya aynen kalır. Devam edilsin mi?')) return;
   const r=await fetch(API+'/admin/upsert',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify(body)});
