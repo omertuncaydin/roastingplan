@@ -129,6 +129,12 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 body.th-red .dealline a,body.th-red #footLine a{color:#e6c14b}
 body.th-red details.how summary,body.th-red details.kvkk summary{color:#f0dcc8}
 body.th-red details.how[open] summary,body.th-red details.kvkk[open] summary{color:#f6efe1}
+/* KIRMIZI SÜPÜRGE: zeminde (panelde değil) accent kullanan her şey — accent==bg olduğundan altın/kreme döner.
+   !important: inline style'ı ancak o kırar. Panel içindekiler (annCard, pcard) kırmızı kalır, krem panelde okunur. */
+body.th-red #roasterLine b{color:#e6c14b!important}
+body.th-red .dealline{color:#f6efe1}
+body.th-red #a2hsX{color:#e6c14b!important}
+body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 .shrow{display:flex;gap:10px;justify-content:center;margin-top:12px}
 .shbtn{width:44px;height:44px;min-width:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--panel2);color:var(--ink);cursor:pointer;padding:0;margin:0}
 .shbtn svg{width:20px;height:20px}
@@ -254,7 +260,7 @@ body.th-red details.how[open] summary,body.th-red details.kvkk[open] summary{col
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-30o';
+const VERSION='v2026-08-30p';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
