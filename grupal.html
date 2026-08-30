@@ -185,6 +185,7 @@ body.th-red details.how[open] summary,body.th-red details.kvkk[open] summary{col
     <div class="hint" id="ranksReward">İlk seçim: en çok davet edenin.</div>
   </div>
 
+    <div class="card" id="annCard" style="display:none"></div>
     <div class="card" id="joinCard">
     <div class="lbl" data-i18n="joinLbl">masaya otur</div>
     <select id="fQty">
@@ -253,11 +254,12 @@ body.th-red details.how[open] summary,body.th-red details.kvkk[open] summary{col
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-30n';
+const VERSION='v2026-08-30o';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
-  if(left<=0){ el.innerHTML='<div class="tlbl">'+t('timeLeft')+'</div><div class="tended">'+t('ended')+'</div>';
+  if(left<=0){ if(ANN){ ANN=false; delete el.dataset.built; if(TICKT){ clearInterval(TICKT); TICKT=null; } load(); return; } // açılış saati: sayfa kendini canlıya çevirir
+    el.innerHTML='<div class="tlbl">'+t('timeLeft')+'</div><div class="tended">'+t('ended')+'</div>';
     el.classList.remove('urgent'); delete el.dataset.built; if(TICKT){ clearInterval(TICKT); TICKT=null; } return; }
   if(!el.dataset.built){ el.innerHTML='<div class="tlbl" id="tkLbl"></div><div class="tgrid">'
     +['d','h','m','s'].map(k=>'<div><div class="tbox" id="tb_'+k+'">00</div><div class="tlab" id="tl_'+k+'"></div></div>').join('')
@@ -266,11 +268,12 @@ function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDA
   const sTot=Math.floor(left/1000);
   const vals={d:Math.floor(sTot/86400), h:Math.floor((sTot%86400)/3600), m:Math.floor((sTot%3600)/60), s:sTot%60};
   const labs={d:t('uDay'), h:t('uHour'), m:t('uMin'), s:t('uSec')};
-  $('tkLbl').textContent=t('timeLeft');
+  $('tkLbl').textContent=t(ANN?'annT':'timeLeft');
   for(const k of ['d','h','m','s']){ $('tb_'+k).textContent=String(vals[k]).padStart(2,'0'); $('tl_'+k).textContent=labs[k]; } }
 const $=id=>document.getElementById(id);
 function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(); }
-let CLOSED=false, PENDTIMER=null, SEATN=null, NEXTC=null, NEXTT=0;
+function fmtDT(iso){ if(!iso) return ''; try{ const z=new Date(iso).toLocaleString('sv',{timeZone:'Europe/Istanbul'}); return z.slice(8,10)+'.'+z.slice(5,7)+'.'+z.slice(0,4)+' '+z.slice(11,16); }catch(e){ return fmtDate(iso); } }
+let CLOSED=false, PENDTIMER=null, SEATN=null, NEXTC=null, NEXTT=0, ANN=false;
 let LANG='tr'; try{ LANG=localStorage.getItem('grupal_lang')||'tr'; }catch(e){}
 const STR={
 masaLbl:['masa','the table'], youLbl:['senin fiyatın','your price'], perPack:['/ paket · KDV dahil','/ pack · VAT incl.'],
@@ -309,7 +312,7 @@ pack:[' paket',' pack'], flagSeat:['sandalyede','th seat'], thAuto:['oto','auto'
 kvkkBody:["Ad, e-posta ve telefon yalnızca ödeme sayfasında alınır; kampanyanın yürütülmesi, kargo ve teslimat için kullanılır, üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin.","Name, email and phone are collected only at checkout; used solely to run the campaign, ship and deliver, never shared with third parties. You can ask for your record to be deleted at any time."],
 footerTxt:['Grup-Al bir CoffeeNutz projesidir · sorular: <a href="https://www.coffeenutz.net/pages/iletisim" target="_blank" rel="noopener">iletişim sayfası</a>','Grup-Al is a CoffeeNutz project · questions: <a href="https://www.coffeenutz.net/pages/iletisim" target="_blank" rel="noopener">contact page</a>'],
 howBody:["Bu kavurma günü kesin yapılacak; masa kurulur, söz sözdür. Türkiye'nin her yerine kargoyla.<br>Ödemen tavan fiyattan alınır. Masa hangi basamağa inerse insin herkes aynı fiyatı öder; tavan ile aradaki fark kapanışta Grup-Al kredin olarak hesabına döner. Son günden önce vazgeçersen ödemenin tamamı geri döner.<br>Kredi kullanımı: kapanışta hesabına yazılır; coffeenutz.net'te aynı e-postayla giriş yaptığında ödeme adımında görünür, tek dokunuşla uygulanır.<br>Davet: masaya oturttuğun her konuk (en çok 2) senin fiyatını bir basamak indirir.<br>Zincir sandalye: sıradaki masada yerini şimdiden ayır; o masa nereye inerse insin sen bir basamak daha derindesin.","This roast day will happen — the table is set, our word is our word. Shipping everywhere in Türkiye.<br>You pay the ceiling price. Whichever rung the table reaches, everyone pays the same; the difference between ceiling and final price returns as your Grup-Al credit at close. Change your mind before the last day and your full payment comes back.<br>Using credit: written to your account at close; sign in at coffeenutz.net with the same email and it appears at the payment step, applied in one tap.<br>Invite: every guest you seat (up to 2) lowers your price by one rung.<br>Chain seat: reserve your place at the next table now; wherever that table lands, you sit one rung deeper."],
-ekleShip:['Ödeme sayfasında "Teslim alım"ı seç — kargon ilk paketinle zaten ödendi, hepsi tek kutuda gelir.','Choose "Pickup" on the payment page — shipping was already paid with your first pack; everything arrives in one box.'], nextParty:['Sıradaki parti: ','Next party: '], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
+ekleShip:['Ödeme sayfasında "Teslim alım"ı seç — kargon ilk paketinle zaten ödendi, hepsi tek kutuda gelir.','Choose "Pickup" on the payment page — shipping was already paid with your first pack; everything arrives in one box.'], nextParty:['Sıradaki parti: ','Next party: '], annT:['KAYIT AÇILIŞINA','OPENS IN'], annT2:['Kayıt yakında açılıyor','Registration opens soon'], annOpen:['Kayıt açılışı:','Registration opens:'], annP:['yakında · kayıt: ','soon · opens: '], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
 };
 function t(k){ const e=STR[k]; return e?(LANG==='en'?e[1]:e[0]):k; }
 function applyLang(){
@@ -508,6 +511,15 @@ function renderClosed(s){
   cc.style.display='block';
   $('joinCard').style.display='none';
   $('lockRow').style.display='none'; $('shareBox').style.display='none'; $('payBlock').style.display='none'; }
+function renderAnnounce(s){
+  // DUYURU MODU: opens_at gelecekte → masa görünür, sandalyeye oturmak kapalı; sayaç açılışa iner.
+  const el=$('annCard'); if(!el) return;
+  if(!ANN||CLOSED){ if(el.dataset.on==='1'){ el.dataset.on='0'; let hasRef=false; try{ hasRef=!!localStorage.getItem('grupal_'+SLUG); }catch(e){} if(!CLOSED&&!hasRef) $('joinCard').style.display='block'; } el.style.display='none'; return; }
+  el.dataset.on='1';
+  el.innerHTML='<div style="font-weight:800;font-size:17px;margin-bottom:6px">'+t('annT2')+'</div><div class="hint">'+t('annOpen')+' <b style="color:var(--accent)">'+fmtDT(s.opens_at)+'</b></div>';
+  el.style.display='block';
+  $('joinCard').style.display='none';
+}
 
 async function load(){
   try{
@@ -535,13 +547,16 @@ async function load(){
     {const dl=$('dealLine'); const ladx=s.ladder||[];
      if(dl){ if(ladx.length>1){ dl.innerHTML='<b>'+escZ(ladx[0].price)+'</b> '+t('dealTavan')+' → <b>'+escZ(ladx[ladx.length-1].price)+'</b> '+t('dealTaban')+' · <a onclick="openHow()">'+t('howSum')+'</a>'; dl.style.display='block'; }
        else dl.style.display='none'; }}
-    if(s.end_at){ ENDAT=new Date(s.end_at).getTime(); $('deadline').style.display='block'; tick(); if(!TICKT) TICKT=setInterval(tick,1000); }
+    ANN=(s.status==='open')&&!!s.opens_at&&(new Date(s.opens_at).getTime()>Date.now()); // DUYURU: saat bir kilittir, durum değil
+    const tgt=ANN?s.opens_at:s.end_at;
+    {const dle=$('deadline'); const md=ANN?'a':'e'; if(dle.dataset.mode!==md){ delete dle.dataset.built; dle.dataset.mode=md; }}
+    if(tgt){ ENDAT=new Date(tgt).getTime(); $('deadline').style.display='block'; tick(); if(!TICKT) TICKT=setInterval(tick,1000); }
     else { ENDAT=null; $('deadline').style.display='none'; }
     renderRanks(s.ref_ranks||s.referral_ranks);
     renderAttendees(s);
     renderLevels(s);
     CLOSED=(s.status==='failed'||s.status==='fulfilled'||s.status==='expired'||s.status==='closed')||(s.status==='open'&&!!s.end_at&&(new Date(s.end_at).getTime()<Date.now()));
-    renderClosed(s); renderPay(); renderChips(); renderYou(); updJoinBtn(); renderLogo(s); if(!CLOSED&&(s.locked||0)===0) logoDemo(); loadNext(); applyTheme();
+    renderClosed(s); renderAnnounce(s); renderPay(); renderChips(); renderYou(); updJoinBtn(); renderLogo(s); if(!CLOSED&&(s.locked||0)===0) logoDemo(); loadNext(); applyTheme();
   }catch(e){ $('title').textContent=t('netErr'); }
 }
 function lockNow(){
@@ -865,7 +880,7 @@ function renderPortal(list){
     return '<a class="pcard" href="?k='+encodeURIComponent(c.slug)+'">'
       +(c.img_url?'<img src="'+escP(c.img_url)+'" alt="">':'')
       +'<div class="pbody"><div class="pt">'+escP(c.title)+'</div>'
-      +'<div class="pm">'+(c.locked||0)+' '+t('seats')+t('lastDayS')+fmtDate(c.end_at)+'</div></div></a>';
+      +'<div class="pm">'+((c.opens_at&&new Date(c.opens_at).getTime()>Date.now())?(t('annP')+'<b style="color:var(--accent)">'+fmtDT(c.opens_at)+'</b>'):((c.locked||0)+' '+t('seats')+t('lastDayS')+fmtDate(c.end_at)))+'</div></div></a>';
   }).join('');
 }
 async function boot(){
