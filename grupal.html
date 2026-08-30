@@ -20,7 +20,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-30m TAVAN/GAME -->
+<!-- grupal.html · v2026-08-30n TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
@@ -156,6 +156,7 @@ body.th-red details.how[open] summary,body.th-red details.kvkk[open] summary{col
   <div id="portal" style="display:none"></div>
   <h1 id="title">yükleniyor...</h1>
   <div class="sub" id="lot"></div>
+  <div class="sub" id="roasterLine" style="display:none;margin-top:2px"></div>
   <div class="dealline" id="dealLine" style="display:none"></div>
 
   <div class="card" id="attCard" style="display:none">
@@ -252,7 +253,7 @@ body.th-red details.how[open] summary,body.th-red details.kvkk[open] summary{col
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-30m';
+const VERSION='v2026-08-30n';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -304,7 +305,7 @@ clRed:['Kavurma günü yapıldı.','Roast day is done.'], clRedH:['Paketler yold
 clFail:['Alınan ödemelerin tamamı geri döner. Açık ve net.','Every payment comes back in full. Plain and simple.'],
 clDone:['Bu parti tamamlandı.','This party is complete.'], clDoneH:['Kavurma günü yapıldı. Sıradaki parti burada duyurulacak.','Roast day is done. The next party will be announced here.'],
 clExp:['Bu partinin süresi doldu.','This party has ended.'], clExpH:['Yeni katılım alınmıyor. Sıradaki parti burada duyurulacak.','No new entries. The next party will be announced here.'],
-pack:[' paket',' pack'], flagSeat:['sandalyede','th seat'], thAuto:['oto','auto'], thGece:['Gece','Night'], thIsik:['Gece Işık','Night Glow'], thKraft:['Kraft','Kraft'], thKrema:['Krema','Cream'], thRed:['CoffeeNutz Kırmızısı','CoffeeNutz Red'], timeLeft:['KALAN SÜRE','TIME LEFT'], uDay:['gün','days'], uHour:['saat','hours'], uMin:['dakika','minutes'], uSec:['saniye','seconds'], dealTavan:['tavan','ceiling'], dealTaban:['taban','floor'], ekleOpt:[' paket daha',' more'], ekleBtn:['Ekle','Add'],
+pack:[' paket',' pack'], flagSeat:['sandalyede','th seat'], thAuto:['oto','auto'], thGece:['Gece','Night'], thIsik:['Gece Işık','Night Glow'], thKraft:['Kraft','Kraft'], thKrema:['Krema','Cream'], thRed:['CoffeeNutz Kırmızısı','CoffeeNutz Red'], timeLeft:['KALAN SÜRE','TIME LEFT'], uDay:['gün','days'], uHour:['saat','hours'], uMin:['dakika','minutes'], uSec:['saniye','seconds'], dealTavan:['tavan','ceiling'], dealTaban:['taban','floor'], roasterL:['Kavurmacı:','Roaster:'], ekleOpt:[' paket daha',' more'], ekleBtn:['Ekle','Add'],
 kvkkBody:["Ad, e-posta ve telefon yalnızca ödeme sayfasında alınır; kampanyanın yürütülmesi, kargo ve teslimat için kullanılır, üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin.","Name, email and phone are collected only at checkout; used solely to run the campaign, ship and deliver, never shared with third parties. You can ask for your record to be deleted at any time."],
 footerTxt:['Grup-Al bir CoffeeNutz projesidir · sorular: <a href="https://www.coffeenutz.net/pages/iletisim" target="_blank" rel="noopener">iletişim sayfası</a>','Grup-Al is a CoffeeNutz project · questions: <a href="https://www.coffeenutz.net/pages/iletisim" target="_blank" rel="noopener">contact page</a>'],
 howBody:["Bu kavurma günü kesin yapılacak; masa kurulur, söz sözdür. Türkiye'nin her yerine kargoyla.<br>Ödemen tavan fiyattan alınır. Masa hangi basamağa inerse insin herkes aynı fiyatı öder; tavan ile aradaki fark kapanışta Grup-Al kredin olarak hesabına döner. Son günden önce vazgeçersen ödemenin tamamı geri döner.<br>Kredi kullanımı: kapanışta hesabına yazılır; coffeenutz.net'te aynı e-postayla giriş yaptığında ödeme adımında görünür, tek dokunuşla uygulanır.<br>Davet: masaya oturttuğun her konuk (en çok 2) senin fiyatını bir basamak indirir.<br>Zincir sandalye: sıradaki masada yerini şimdiden ayır; o masa nereye inerse insin sen bir basamak daha derindesin.","This roast day will happen — the table is set, our word is our word. Shipping everywhere in Türkiye.<br>You pay the ceiling price. Whichever rung the table reaches, everyone pays the same; the difference between ceiling and final price returns as your Grup-Al credit at close. Change your mind before the last day and your full payment comes back.<br>Using credit: written to your account at close; sign in at coffeenutz.net with the same email and it appears at the payment step, applied in one tap.<br>Invite: every guest you seat (up to 2) lowers your price by one rung.<br>Chain seat: reserve your place at the next table now; wherever that table lands, you sit one rung deeper."],
@@ -521,6 +522,9 @@ async function load(){
       $('fQty').value=String(Math.min(cur,mq)); }
     $('title').textContent=s.title;
     $('lot').textContent=s.lot||'';
+    {const rl=$('roasterLine');
+     if(rl){ if(s.roaster){ rl.innerHTML=t('roasterL')+' <b style="color:var(--accent)">'+escZ(s.roaster)+'</b>'; rl.style.display='block'; }
+       else rl.style.display='none'; }}
     $('unitTxt').textContent=[s.unit,s.ships_by].filter(Boolean).join(' · ');
     $('shipTxt').textContent='';
     // TAVAN/GAME: target texts and the progress bar are retired; the board and the levels carry the state
@@ -853,7 +857,7 @@ function renderPortal(list){
   const escP=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   $('title').textContent=t('portalT');
   $('lot').textContent=t('portalS');
-  ['heroBox','deadline','dealLine','attCard','ranksCard','joinCard','payBlock','shareBox'].forEach(id=>{const el=$(id); if(el) el.style.display='none';});
+  ['heroBox','deadline','dealLine','roasterLine','attCard','ranksCard','joinCard','payBlock','shareBox'].forEach(id=>{const el=$(id); if(el) el.style.display='none';});
   document.querySelectorAll('.wrap > .card, .wrap > .refund, .wrap > .shipline').forEach(el=>{ if(el.id!=='portal') el.style.display='none'; });
   const host=$('portal'); host.style.display='block';
   logoDemo(0.8); // portal: kalem yalnız ÇEVREDE kayar, A'ya girmez; terminalde (marka duruşu) durur
@@ -870,7 +874,7 @@ async function boot(){
     const r=await fetch(API+'/campaigns');
     const list=await r.json();
     const openish=(Array.isArray(list)?list:[]).filter(c=>c.status==='open'||c.status==='funded'||c.status==='paying');
-    if(openish.length===1){ SLUG=openish[0].slug; startCampaign(); return; }
+    // Ömer 2026-08-30: tek kampanyada da PORTAL görünür (otomatik dalış yok) — vitrin her zaman vitrin.
     if(!openish.length){ $('title').textContent='Yakında yeni parti'; $('lot').textContent='Sıradaki kavurma günü burada duyurulacak.'; return; }
     renderPortal(openish);
   }catch(e){ $('title').textContent=t('netErr'); }
