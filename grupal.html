@@ -20,7 +20,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup-Al">
-<!-- grupal.html · v2026-08-30c TAVAN/GAME -->
+<!-- grupal.html · v2026-08-30d TAVAN/GAME -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f;--btnink:#16130f}
 body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26;--btnink:#fff}
@@ -244,7 +244,7 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-30c';
+const VERSION='v2026-08-30d';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -514,7 +514,7 @@ async function load(){
     renderAttendees(s);
     renderLevels(s);
     CLOSED=(s.status==='failed'||s.status==='fulfilled'||s.status==='expired'||s.status==='closed')||(s.status==='open'&&!!s.end_at&&(new Date(s.end_at).getTime()<Date.now()));
-    renderClosed(s); renderPay(); renderChips(); renderYou(); updJoinBtn(); renderLogo(s); loadNext(); applyTheme();
+    renderClosed(s); renderPay(); renderChips(); renderYou(); updJoinBtn(); renderLogo(s); if(!CLOSED&&(s.locked||0)===0) logoDemo(); loadNext(); applyTheme();
   }catch(e){ $('title').textContent=t('netErr'); }
 }
 function lockNow(){
@@ -556,11 +556,53 @@ async function checkMine(ref){
     renderPay(); renderChips(); renderYou();
   }catch(e){}
 }
+function poseLogo(p){
+  // Kalemin yolculuğunda tek kare: p 0..1 (1 = çizgi tam, kalem ucunda durur)
+  const dot=document.getElementById('logoDot'), bar=document.getElementById('logoBar');
+  if(!dot||!bar) return;
+  const rad=d=>d*Math.PI/180, R=36, LIP=-31.75, END=8;
+  const BR={x1:40.5, x2:59.5, y:55};
+  const tx=50+R*Math.cos(rad(END)), ty=50+R*Math.sin(rad(END));
+  let bx, by;
+  if(p>=1){
+    bar.style.display=''; bar.setAttribute('x1',BR.x1); bar.setAttribute('x2',BR.x2);
+    bx=BR.x1; by=BR.y;
+  } else if(p<=0.8){
+    const t=p/0.8, a=LIP-(360-(END-LIP))*t;
+    bx=50+R*Math.cos(rad(a)); by=50+R*Math.sin(rad(a));
+    bar.style.display='none';
+  } else if(p<=0.86){
+    const t=(p-0.8)/0.06;
+    bx=tx+(BR.x2-tx)*t; by=ty+(BR.y-ty)*t;
+    bar.style.display='none';
+  } else {
+    const t=(p-0.86)/0.14;
+    const x=BR.x2-(BR.x2-BR.x1)*Math.min(1,t);
+    bar.style.display=''; bar.setAttribute('x2',BR.x2); bar.setAttribute('x1',x);
+    bx=x; by=BR.y;
+  }
+  dot.setAttribute('cx',bx.toFixed(1)); dot.setAttribute('cy',by.toFixed(1));
+}
+var LOGO_DEMO=false, LOGO_DEMO_PLAYED=false; // var: boot'taki erken renderLogo(null) çağrısı TDZ'ye düşmesin
+function logoDemo(){
+  // MASA BOŞKEN her sayfa girişi/yenilemede yolculuğun tamamı bir kez oynar (Ömer, 2026-08-30),
+  // sonra gerçek duruma (p=0, kalem üst dudakta) döner. Hareket azaltma tercihine saygı duyar.
+  if(LOGO_DEMO_PLAYED||LOGO_DEMO) return;
+  try{ if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches) return; }catch(e){}
+  LOGO_DEMO=true; LOGO_DEMO_PLAYED=true;
+  const T=4200, t0=(window.performance&&performance.now)?performance.now():Date.now();
+  const ease=t=>t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+  function fr(){
+    const now=(window.performance&&performance.now)?performance.now():Date.now();
+    const u=Math.min(1,(now-t0)/T);
+    poseLogo(ease(u));
+    if(u<1) requestAnimationFrame(fr);
+    else setTimeout(function(){ LOGO_DEMO=false; renderLogo(STATE); }, 900);
+  }
+  requestAnimationFrame(fr);
+}
 function renderLogo(s){
-  // KALEMİN YOLCULUĞU v3 (Ömer, 2026-08-30 — kırmızı ok düzeltmesiyle):
-  // Halka statik bir G: üst dudaktan (siyah ok) başlar, alt-sağ TERMİNALDE (kırmızı ok, +8°) biter.
-  // Kalem-çekirdek G'nin üzerinde kayar (çizmez), terminalden harfe iner ve A'nın yatay
-  // çizgisini ALTINLA yazar; kampanya tamamlanınca çizginin SOL UCUNDA durur = statik marka (I).
+  if(LOGO_DEMO) return;
   const dot=document.getElementById('logoDot'), bar=document.getElementById('logoBar');
   if(!dot||!bar) return;
   if(!s){ // marka duruşu (portal/boot): çekirdek G'nin ucunda, çizgi yok
@@ -570,30 +612,9 @@ function renderLogo(s){
     const locked=s.locked||0, lad=s.ladder||[];
     const goal=parseInt(s.cap)||((lad.length&&lad[lad.length-1].at)||0);
     done=(typeof CLOSED!=='undefined'&&CLOSED&&(s.status==='fulfilled'))||((typeof redWindow==='function')&&redWindow());
-    if(done) p=1; else if(goal>0) p=Math.min(0.96, locked/goal);  // son vuruş kapanışındır: masa açıkken çizgi bitmez
+    if(done) p=1; else if(goal>0) p=Math.min(0.96, locked/goal);  // son vuruş kapanışındır
   }
-  const rad=d=>d*Math.PI/180, R=36, LIP=-31.75, END=8;
-  const BR={x1:40.5, x2:59.5, y:55};
-  const tx=50+R*Math.cos(rad(END)), ty=50+R*Math.sin(rad(END));   // terminal (kırmızı ok)
-  let bx, by;
-  if(done||p>=1){
-    bar.style.display=''; bar.setAttribute('x1',BR.x1); bar.setAttribute('x2',BR.x2);
-    bx=BR.x1; by=BR.y;                                            // kalem yazdığı yerde durur
-  } else if(p<=0.8){
-    const t=p/0.8, a=LIP-(360-(END-LIP))*t;                       // G üzerinde kayış (CCW)
-    bx=50+R*Math.cos(rad(a)); by=50+R*Math.sin(rad(a));
-    bar.style.display='none';
-  } else if(p<=0.86){
-    const t=(p-0.8)/0.06;                                         // terminalden harfe iniş
-    bx=tx+(BR.x2-tx)*t; by=ty+(BR.y-ty)*t;
-    bar.style.display='none';
-  } else {
-    const t=(p-0.86)/0.14;                                        // altın çizgi sağdan sola
-    const x=BR.x2-(BR.x2-BR.x1)*Math.min(1,t);
-    bar.style.display=''; bar.setAttribute('x2',BR.x2); bar.setAttribute('x1',x);
-    bx=x; by=BR.y;
-  }
-  dot.setAttribute('cx',bx.toFixed(1)); dot.setAttribute('cy',by.toFixed(1));
+  poseLogo(done?1:p);
 }
 function renderAttendees(s){
   const svg=$('masaSvg'); if(!svg) return;
