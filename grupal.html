@@ -260,7 +260,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-30p';
+const VERSION='v2026-08-30q';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -741,8 +741,10 @@ function renderAttendees(s){
   }
   SEATN=popIx;
   const kal=total-locked;
-    {const nx=lad.find(r=>r.at>locked); const pn=tx=>{ const mm=String(tx||'').match(/\d[\d.]*/); return mm?mm[0]:''; };
-  $('attHint').textContent=(locked&&kal>0)?(kal+t('empty')+(nx?(' → '+pn(nx.price)+' TL'):'')):(locked&&parseInt(s.cap)&&kal<=0?t('full'):'');}
+    // SON TEKLİF (Ömer 2026-08-30): "99 boş sandalye → 600" motive etmiyor; alttaki satır hep VARIŞ NOKTASI.
+    // Sıradaki adımı tabela bayrağı söylüyor; bu satır rüyayı söylüyor: "100 sandalye → 450 TL".
+    {const last=lad.length?lad[lad.length-1]:null; const pn=tx=>{ const mm=String(tx||'').match(/\d[\d.]*/); return mm?mm[0]:''; };
+  $('attHint').textContent=(locked&&kal>0)?(last?(last.at>locked?(last.at+t('seatsW')+' → '+pn(last.price)+' TL'):(pn(last.price)+' TL '+t('dealTaban'))):''):(locked&&parseInt(s.cap)&&kal<=0?t('full'):'');}
   $('attCard').style.display='block';
 }
 function renderRanks(ranks){
