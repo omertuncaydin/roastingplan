@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · kampanya kokpiti</title>
 <meta name="robots" content="noindex">
-<!-- grupal-admin.html · v2026-08-31b -->
+<!-- grupal-admin.html · v2026-08-31c -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -75,7 +75,7 @@ a{color:var(--gold)}
       <span class="lbl">tavan (₺) — ürün fiyatının aynısı; sayfadaki tavan cümlesinde görünür</span>
       <input id="f_depamt" inputmode="numeric" placeholder="700">
       <div class="hint" id="depPrev"></div>
-      <span class="lbl">paket üst sınırı (kişi başına)</span>
+      <span class="lbl">kutu üst sınırı (kişi başına)</span>
       <input id="f_maxq" inputmode="numeric" placeholder="5">
       <span class="lbl">görsel (ürün linki yapıştır, kaydette resme çevrilir)</span>
       <input id="f_img" placeholder="https://www.coffeenutz.net/products/... ya da resim linki">
@@ -85,7 +85,7 @@ a{color:var(--gold)}
       <select id="f_status">
         <option value="open">open · masa açık, kayıt alıyor</option>
         <option value="funded">funded · masa doldu (kayıt kapalı, parti kesin)</option>
-        <option value="fulfilled">fulfilled · kavurma yapıldı, paketler yolda</option>
+        <option value="fulfilled">fulfilled · kavurma yapıldı, kutular yolda</option>
         <option value="failed">failed · iptal (mücbir sebep · arşiv)</option>
       </select>
       <button onclick="save()">Kaydet / Yayınla</button>
@@ -111,7 +111,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-08-31b';
+const VERSION='v2026-08-31c';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
@@ -123,7 +123,7 @@ async function kapPreview(){
   const d=await r.json();
   const rows=Array.isArray(d.rows)?d.rows:[];
   if(!rows.length){ $('kapList').innerHTML='<div class="hint">Kilitli katılımcı yok.</div>'; $('kapGo').style.display='none'; $('kapMsg').textContent=''; return; }
-  $('kapList').innerHTML=rows.map(x=>'<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;font-size:13px"><b>'+esc(x.name)+'</b> · '+x.qty+' paket · davet +'+x.bonus
+  $('kapList').innerHTML=rows.map(x=>'<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;font-size:13px"><b>'+esc(x.name)+'</b> · '+x.qty+' kutu · davet +'+x.bonus
     +'<div class="hint">tavan '+esc(x.tavan)+' · masa '+esc(x.table)+' · kişisel '+esc(x.personal)+' · <b>kredi '+x.credit+' TL</b>'+(x.already_credited?' · <span style="color:var(--green)">dağıtıldı ✓</span>':'')+'</div></div>').join('')
     +'<div style="font-weight:800;margin-top:8px">Toplam kredi: '+d.total_credit+' TL · '+rows.length+' kişi</div>';
   $('kapGo').style.display='block'; $('kapMsg').textContent='';
@@ -152,13 +152,13 @@ async function loadPledges(){
   const qOf=p=>Math.max(1,parseInt(p.qty)||1);
   const totQ=arr.reduce((t,p)=>t+qOf(p),0);
   const lockedQ=arr.filter(p=>p.status==='locked'||p.status==='paid').reduce((t,p)=>t+qOf(p),0);
-  const head=arr.length?('<div class="hint" style="margin-bottom:4px"><b>'+lockedQ+'</b> kilitli paket · '+arr.length+' kişi'+(totQ>lockedQ?(' · <b>'+(totQ-lockedQ)+'</b> paket beklemede (eski kayıt)'):'')+'</div>'):'';
+  const head=arr.length?('<div class="hint" style="margin-bottom:4px"><b>'+lockedQ+'</b> kilitli kutu · '+arr.length+' kişi'+(totQ>lockedQ?(' · <b>'+(totQ-lockedQ)+'</b> kutu beklemede (eski kayıt)'):'')+'</div>'):'';
   $('plList').innerHTML=head+((arr.length)?arr.map(p=>{
     const locked=(p.status==='locked'||p.status==='paid');
     return '<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0">'
       +'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>'+esc(p.name)+'</b>'
       +'<span class="hint">'+esc(p.status)+(p.show_name?' · isim açık':' · isim gizli')+'</span></div>'
-      +'<div class="hint">'+esc(p.email)+' · '+esc(p.phone)+' · '+qOf(p)+' paket · ref '+esc(p.ref_code)+(p.referred_by?(' · davet: '+esc(p.referred_by)):'')+'</div>'
+      +'<div class="hint">'+esc(p.email)+' · '+esc(p.phone)+' · '+qOf(p)+' kutu · ref '+esc(p.ref_code)+(p.referred_by?(' · davet: '+esc(p.referred_by)):'')+'</div>'
       +'<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'
       +'<button class="mini" title="'+(locked?'Koltuğu masadan kaldırır, kaydı SİLMEZ. Yalnız Shopify iadesinden SONRA kullan.':'Bekleyen kaydı masaya oturtur.')+'" onclick="plStatus(\''+p.id+'\',\''+(locked?'pledged':'locked')+'\',\''+esc(p.status)+'\')">'+(locked?'Koltuğu düşür (iade)':'Koltuğa oturt')+'</button>'
       +'<button class="mini" onclick="plShow(\''+p.id+'\','+(!p.show_name)+')">'+(p.show_name?'İsmi gizle':'İsmi göster')+'</button>'
