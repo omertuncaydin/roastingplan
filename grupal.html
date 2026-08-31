@@ -109,9 +109,17 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 .pcard .pbody{padding:12px 14px}
 .pcard .pt{font-weight:800;font-size:17px;line-height:1.25}
 .pcard .pm{color:var(--muted);font-size:12.5px;margin-top:4px;font-variant-numeric:tabular-nums}
+/* SIRADAKİ KAMPANYA: bekleyen kart gri durur, görselde bant. Tema-güvenli: panel2 + desatüre görsel. */
+.pcard.pnext{background:var(--panel2);border-style:dashed}
+.pcard.pnext img{filter:grayscale(.85) opacity(.8)}
+.pcard.pnext .pt{color:var(--muted)}
+.pimgw{position:relative}
+.pnextov{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#e6c14b;letter-spacing:2.5px;font-weight:800;font-size:11.5px;text-align:center;padding:7px 4px}
+.pnextov.bare{position:static;border-radius:0}
+.heroNext{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#e6c14b;letter-spacing:2.5px;font-weight:800;font-size:12px;text-align:center;padding:8px 4px;display:none}
 
 
-.hero{display:none;margin:14px 0 6px;border-radius:18px;overflow:hidden;border:1px solid var(--line);
+.hero{position:relative;display:none;margin:14px 0 6px;border-radius:18px;overflow:hidden;border:1px solid var(--line);
   box-shadow:0 14px 40px rgba(201,138,60,.16),0 4px 14px rgba(0,0,0,.5);position:relative}
 .hero img{width:100%;display:block;aspect-ratio:4/3;object-fit:cover}
 .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(22,19,15,0) 55%,rgba(22,19,15,.55) 100%);pointer-events:none}
@@ -158,7 +166,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
   <div class="brand">GRUP-AL</div>
   <div class="tchips" id="themeChips"></div>
   <div class="deadline" id="deadline" style="display:none"></div>
-  <div class="hero" id="heroBox"><img id="heroImg" alt="Kavurma günü lotu"></div>
+  <div class="hero" id="heroBox"><img id="heroImg" alt="Kavurma günü lotu"><div class="heroNext" id="heroNext"></div></div>
   <div id="portal" style="display:none"></div>
   <h1 id="title">yükleniyor...</h1>
   <div class="sub" id="lot"></div>
@@ -262,7 +270,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-30t';
+const VERSION='v2026-08-30u';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -320,7 +328,7 @@ pack:[' paket',' pack'], flagSeat:['sandalyede','th seat'], thAuto:['oto','auto'
 kvkkBody:["Ad, e-posta ve telefon yalnızca ödeme sayfasında alınır; kampanyanın yürütülmesi, kargo ve teslimat için kullanılır, üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin.","Name, email and phone are collected only at checkout; used solely to run the campaign, ship and deliver, never shared with third parties. You can ask for your record to be deleted at any time."],
 footerTxt:['Grup-Al bir CoffeeNutz projesidir · sorular: <a href="https://www.coffeenutz.net/pages/iletisim" target="_blank" rel="noopener">iletişim sayfası</a>','Grup-Al is a CoffeeNutz project · questions: <a href="https://www.coffeenutz.net/pages/iletisim" target="_blank" rel="noopener">contact page</a>'],
 howBody:["Bu kavurma günü kesin yapılacak; masa kurulur, söz sözdür. Türkiye'nin her yerine kargoyla.<br>Ödemen tavan fiyattan alınır. Masa hangi basamağa inerse insin herkes aynı fiyatı öder; tavan ile aradaki fark kapanışta Grup-Al kredin olarak hesabına döner. Son günden önce vazgeçersen ödemenin tamamı geri döner.<br>Kredi kullanımı: kapanışta hesabına yazılır; coffeenutz.net'te aynı e-postayla giriş yaptığında ödeme adımında görünür, tek dokunuşla uygulanır.<br>Davet: masaya oturttuğun her konuk (en çok 2) senin fiyatını bir basamak indirir.<br>Zincir sandalye: sıradaki masada yerini şimdiden ayır; o masa nereye inerse insin sen bir basamak daha derindesin.","This roast day will happen — the table is set, our word is our word. Shipping everywhere in Türkiye.<br>You pay the ceiling price. Whichever rung the table reaches, everyone pays the same; the difference between ceiling and final price returns as your Grup-Al credit at close. Change your mind before the last day and your full payment comes back.<br>Using credit: written to your account at close; sign in at coffeenutz.net with the same email and it appears at the payment step, applied in one tap.<br>Invite: every guest you seat (up to 2) lowers your price by one rung.<br>Chain seat: reserve your place at the next table now; wherever that table lands, you sit one rung deeper."],
-ekleShip:['Ödeme sayfasında "Teslim alım"ı seç — kargon ilk paketinle zaten ödendi, hepsi tek kutuda gelir.','Choose "Pickup" on the payment page — shipping was already paid with your first pack; everything arrives in one box.'], nextParty:['Sıradaki parti: ','Next party: '], annT:['KAYIT AÇILIŞINA','OPENS IN'], annT2:['Kayıt yakında açılıyor','Registration opens soon'], annOpen:['Kayıt açılışı:','Registration opens:'], annP:['yakında · kayıt: ','soon · opens: '], dreamL:['masa dolarsa: ','full table: '], nudgeL:['+1 davet → ','+1 invite → '], nudge2L:['+2 davet → ','+2 invites → '], nudgeV:['davet, konuğun ödemesiyle sayılır','an invite counts when your guest pays'], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
+ekleShip:['Ödeme sayfasında "Teslim alım"ı seç — kargon ilk paketinle zaten ödendi, hepsi tek kutuda gelir.','Choose "Pickup" on the payment page — shipping was already paid with your first pack; everything arrives in one box.'], nextParty:['Sıradaki parti: ','Next party: '], annT:['KAYIT AÇILIŞINA','OPENS IN'], annT2:['Kayıt yakında açılıyor','Registration opens soon'], annOpen:['Kayıt açılışı:','Registration opens:'], annP:['yakında · kayıt: ','soon · opens: '], dreamL:['masa dolarsa: ','full table: '], nudgeL:['+1 davet → ','+1 invite → '], nudge2L:['+2 davet → ','+2 invites → '], nextOv:['SIRADAKİ KAMPANYA','NEXT CAMPAIGN'], nudgeV:['davet, konuğun ödemesiyle sayılır','an invite counts when your guest pays'], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
 };
 function t(k){ const e=STR[k]; return e?(LANG==='en'?e[1]:e[0]):k; }
 function applyLang(){
@@ -550,6 +558,10 @@ async function load(){
     if(s.error){ $('title').textContent=t('notFound'); return; }
     STATE=s; PAYURL=s.pay_url;
     if(s.img_url){ $('heroImg').src=s.img_url; $('heroBox').style.display='block'; } else $('heroBox').style.display='none';
+    // duyuru: kapak griye çalar, üstünde bant — kart daha okunmadan 'bekliyor' desin
+    {const hn=$('heroNext'); const annV=(s.status==='open')&&!!s.opens_at&&(new Date(s.opens_at).getTime()>Date.now());
+     if(hn){ hn.textContent=t('nextOv'); hn.style.display=annV?'block':'none'; }
+     $('heroImg').style.filter=annV?'grayscale(.85) opacity(.85)':''; }
     const mq=maxQty();
     if($('fQty').options.length!==mq){ const cur=parseInt($('fQty').value)||1;
       $('fQty').innerHTML=Array.from({length:mq},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+t('pack')+(LANG==='en'&&i>0?'s':'')+'</option>').join('');
@@ -924,10 +936,12 @@ function renderPortal(list){
   const host=$('portal'); host.style.display='block';
   logoDemo(0.8); // portal: kalem yalnız ÇEVREDE kayar, A'ya girmez; terminalde (marka duruşu) durur
   host.innerHTML=list.map(c=>{
-    return '<a class="pcard" href="?k='+encodeURIComponent(c.slug)+'">'
-      +(c.img_url?'<img src="'+escP(c.img_url)+'" alt="">':'')
+    const annP=c.opens_at&&new Date(c.opens_at).getTime()>Date.now();
+    const ov='<div class="pnextov'+(c.img_url?'':' bare')+'">'+t('nextOv')+'</div>';
+    return '<a class="pcard'+(annP?' pnext':'')+'" href="?k='+encodeURIComponent(c.slug)+'">'
+      +(c.img_url?('<div class="pimgw"><img src="'+escP(c.img_url)+'" alt="">'+(annP?ov:'')+'</div>'):(annP?ov:''))
       +'<div class="pbody"><div class="pt">'+escP(c.title)+'</div>'
-      +'<div class="pm">'+((c.opens_at&&new Date(c.opens_at).getTime()>Date.now())?(t('annP')+'<b style="color:var(--accent)">'+fmtDT(c.opens_at)+'</b>'):((c.locked||0)+' '+t('seats')+t('lastDayS')+fmtDate(c.end_at)))+'</div></div></a>';
+      +'<div class="pm">'+(annP?(t('annP')+'<b style="color:var(--accent)">'+fmtDT(c.opens_at)+'</b>'):((c.locked||0)+' '+t('seats')+t('lastDayS')+fmtDate(c.end_at)))+'</div></div></a>';
   }).join('');
 }
 async function boot(){
