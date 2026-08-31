@@ -216,6 +216,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
     <div class="hint" id="fmMsg" style="display:none;margin-top:10px;color:var(--warn);font-weight:600"></div>
     <div class="hint" style="margin-top:10px" id="unitTxt"></div>
     <div class="hint" id="shipTxt"></div>
+    <div class="hint" style="text-align:center;margin:8px 0 2px"><a onclick="adoptSeat()" style="color:var(--muted);cursor:pointer;text-decoration:underline" data-i18n="adoptL">Koltuğun var mı? Koltuk kodunu gir</a></div>
     <details class="kvkk"><summary data-i18n="kvkkSum">Kişisel veriler (KVKK)</summary><div class="hint" style="font-size:11.5px;line-height:1.5;text-align:left" data-i18n="kvkkBody">Ad, e-posta ve telefon yalnızca ödeme sayfasında alınır; kampanyanın yürütülmesi, kargo ve teslimat için kullanılır, üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin.</div></details>
   </div>
 
@@ -232,7 +233,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 
   <div class="card" id="closedCard" style="display:none;text-align:center"></div>
 
-  <details class="how" id="howBox"><summary data-i18n="howSum">Nasıl çalışır?</summary><div class="hint" style="text-align:left;line-height:1.65;margin-top:8px" data-i18n-html="howBody">Bu kavurma günü kesin yapılacak; masa kurulur, söz sözdür. Türkiye'nin her yerine kargoyla.<br>Ödemen tavan fiyattan alınır. Masa hangi basamağa inerse insin herkes aynı fiyatı öder; tavan ile aradaki fark kapanışta Grup-Al kredin olarak hesabına döner. Son günden önce vazgeçersen ödemenin tamamı geri döner.<br>Kredi kullanımı: kapanışta hesabına yazılır; coffeenutz.net'te aynı e-postayla giriş yaptığında ödeme adımında görünür, tek dokunuşla uygulanır.<br>Davet: masaya oturttuğun her konuk (en çok 2) senin fiyatını bir basamak indirir.<br>Zincir: sıradaki masa duyurulur duyurulmaz erken sandalye çekebilirsin; resmi açılışı bekleyenle aynı fiyatı ödersin.</div><img id="howGif" alt="Masa 1'den 100'e" data-src="/grupal-masa-100-yolculugu.gif" style="width:100%;border-radius:12px;margin-top:10px;display:block"></details>
+  <details class="how" id="howBox"><summary data-i18n="howSum">Nasıl çalışır?</summary><div class="hint" style="text-align:left;line-height:1.65;margin-top:8px" data-i18n-html="howBody">Bu kavurma günü kesin yapılacak; masa kurulur, söz sözdür. Türkiye'nin her yerine kargoyla.<br>Ödemen tavan fiyattan alınır. Masa hangi basamağa inerse insin herkes aynı fiyatı öder; tavan ile aradaki fark kapanışta Grup-Al kredin olarak hesabına döner. Son günden önce vazgeçersen ödemenin tamamı geri döner.<br>Kredi kullanımı: kapanışta hesabına yazılır; coffeenutz.net'te aynı e-postayla giriş yaptığında ödeme adımında görünür, tek dokunuşla uygulanır.<br>Davet: masaya oturttuğun her konuk (en çok 2) senin fiyatını bir basamak indirir.<br>Zincir: sıradaki masa duyurulunca erken sandalye YALNIZ buradaki zincir kartından çekilir; resmi açılışta herkese açılır.</div><img id="howGif" alt="Masa 1'den 100'e" data-src="/grupal-masa-100-yolculugu.gif" style="width:100%;border-radius:12px;margin-top:10px;display:block"></details>
 
   <div class="card" id="zincirCard" style="display:none;border-color:var(--gold)">
     <div class="lbl" style="color:var(--gold)" data-i18n="zLbl">zincir sandalye</div>
@@ -271,7 +272,13 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-31k';
+// ZİNCİR ERKEN GİRİŞ (Ömer 2026-08-31 net spec): erken kayıt yalnız SÜREN masadaki zincir kartından gelenlere.
+// Kart ?z=1 ile getirir; bir kez gelen cihaz hatırlanır (yenilemede kaybolmasın).
+const ZEARLY=(function(){ try{
+  if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
+  return localStorage.getItem('grupal_early_'+SLUG)==='1';
+}catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
+const VERSION='v2026-08-31m';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -308,7 +315,7 @@ needName:['Ad Soyad gerekli.','Full name is required.'], needMail:['Geçerli bir
 needTel:['Telefon numarası eksik görünüyor. Kargo bildirimi SMS ile gidebildiği için doğru numara önemli.','That phone number looks incomplete. Shipping updates may arrive by SMS, so the right number matters.'],
 dup:['Bu e-posta zaten masada kayıtlı. Aynı e-posta ile ikinci kayıt olmaz.','This email is already at the table. One entry per email.'],
 netErr:['Bağlantı hatası, tekrar deneyin.','Connection error, try again.'],
-backPay:['Ödeme sayfasına geri dön','Return to the payment page'],
+backPay:['Ödeme sayfasına geri dön','Return to the payment page'], resetL:['Baştan başla','Start over'], adoptL:['Koltuğun var mı? Koltuk kodunu gir','Already seated? Enter your seat code'], adoptQ:['Koltuk kodun (6 haneli, ör. 5BJV9S):','Your seat code (6 characters):'], adoptBad:['Bu kodla koltuk bulunamadı.','No seat found for that code.'],
 pendTxt:['Ödemen kontrol ediliyor. Onay genellikle 1-2 dakika içinde burada görünür. Ödeme sayfasını yanlışlıkla kapattıysan üstteki butonla aynı sayfaya dönersin.','Checking your payment. Confirmation usually lands here within 1-2 minutes. Closed the payment page by mistake? The button above takes you back to the same page.'],
 pendLate:['Onay henüz düşmedi. Ödemeni yaptıysan birkaç dakika içinde kendiliğinden görünür. Ödemeyi tamamlamadıysan yukarıdaki butonu tekrar kullanabilirsin.','No confirmation yet. If you paid, it will appear on its own within minutes. If you did not finish, use the button above.'],
 seats:['sandalye dolu','seats taken'], ready:['Masa hazır','Table is set'], first:['ilk sandalye senin','the first chair is yours'],
@@ -328,8 +335,8 @@ clExp:['Bu partinin süresi doldu.','This party has ended.'], clExpH:['Yeni kat�
 pack:[' kutu',' box'], packPl:[' kutu',' boxes'], flagSeat:['sandalyede','th seat'], thAuto:['oto','auto'], thIsik:['Gece Işık','Night Glow'], thKraft:['Kraft','Kraft'], thRed:['CoffeeNutz Kırmızısı','CoffeeNutz Red'], timeLeft:['KALAN SÜRE','TIME LEFT'], uDay:['gün','days'], uHour:['saat','hours'], uMin:['dakika','minutes'], uSec:['saniye','seconds'], dealTavan:['tavan','ceiling'], dealTaban:['taban','floor'], roasterL:['Kavurmacı:','Roaster:'], ekleOpt:[' kutu daha',' more'], ekleBtn:['Ekle','Add'],
 kvkkBody:["Ad, e-posta ve telefon yalnızca ödeme sayfasında alınır; kampanyanın yürütülmesi, kargo ve teslimat için kullanılır, üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin.","Name, email and phone are collected only at checkout; used solely to run the campaign, ship and deliver, never shared with third parties. You can ask for your record to be deleted at any time."],
 footerTxt:['Grup-Al® bir CoffeeNutz projesidir · sorular: <a href="https://www.coffeenutz.net/pages/iletisim" target="_blank" rel="noopener">iletişim sayfası</a>','Grup-Al® is a CoffeeNutz project · questions: <a href="https://www.coffeenutz.net/pages/iletisim" target="_blank" rel="noopener">contact page</a>'],
-howBody:["Bu kavurma günü kesin yapılacak; masa kurulur, söz sözdür. Türkiye'nin her yerine kargoyla.<br>Ödemen tavan fiyattan alınır. Masa hangi basamağa inerse insin herkes aynı fiyatı öder; tavan ile aradaki fark kapanışta Grup-Al kredin olarak hesabına döner. Son günden önce vazgeçersen ödemenin tamamı geri döner.<br>Kredi kullanımı: kapanışta hesabına yazılır; coffeenutz.net'te aynı e-postayla giriş yaptığında ödeme adımında görünür, tek dokunuşla uygulanır.<br>Davet: masaya oturttuğun her konuk (en çok 2) senin fiyatını bir basamak indirir.<br>Zincir: sıradaki masa duyurulur duyurulmaz erken sandalye çekebilirsin; resmi açılışı bekleyenle aynı fiyatı ödersin.","This roast day will happen — the table is set, our word is our word. Shipping everywhere in Türkiye.<br>You pay the ceiling price. Whichever rung the table reaches, everyone pays the same; the difference between ceiling and final price returns as your Grup-Al credit at close. Change your mind before the last day and your full payment comes back.<br>Using credit: written to your account at close; sign in at coffeenutz.net with the same email and it appears at the payment step, applied in one tap.<br>Invite: every guest you seat (up to 2) lowers your price by one rung.<br>Chain: pull an early chair the moment the next table is announced; you pay the same price as those who wait for the official start."],
-ekleShip:['Ödeme sayfasında "Teslim alım"ı seç — kargon ilk kutunla zaten ödendi, hepsi tek gönderide gelir.','Choose "Pickup" on the payment page — shipping was already paid with your first box; everything arrives in one shipment.'], nextParty:['Sıradaki parti: ','Next party: '], annT:['RESMİ AÇILIŞA','OFFICIAL START IN'], annT2:['Erken kayıt açık','Early seats are open'], annOpen:['Resmi açılış:','Official start:'], annP:['erken kayıt · resmi açılış: ','early seats · official start: '], dreamL:['masa dolarsa: ','full table: '], nudgeL:['+1 davet → ','+1 invite → '], nudge2L:['+2 davet → ','+2 invites → '], nextOv:['SIRADAKİ KAMPANYA','NEXT CAMPAIGN'], prevCred:['geçen masadan kredin: ','credit from your last table: '], nudgeV:['davet, konuğun ödemesiyle sayılır','an invite counts when your guest pays'], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
+howBody:["Bu kavurma günü kesin yapılacak; masa kurulur, söz sözdür. Türkiye'nin her yerine kargoyla.<br>Ödemen tavan fiyattan alınır. Masa hangi basamağa inerse insin herkes aynı fiyatı öder; tavan ile aradaki fark kapanışta Grup-Al kredin olarak hesabına döner. Son günden önce vazgeçersen ödemenin tamamı geri döner.<br>Kredi kullanımı: kapanışta hesabına yazılır; coffeenutz.net'te aynı e-postayla giriş yaptığında ödeme adımında görünür, tek dokunuşla uygulanır.<br>Davet: masaya oturttuğun her konuk (en çok 2) senin fiyatını bir basamak indirir.<br>Zincir: sıradaki masa duyurulunca erken sandalye YALNIZ buradaki zincir kartından çekilir; resmi açılışta herkese açılır.","This roast day will happen — the table is set, our word is our word. Shipping everywhere in Türkiye.<br>You pay the ceiling price. Whichever rung the table reaches, everyone pays the same; the difference between ceiling and final price returns as your Grup-Al credit at close. Change your mind before the last day and your full payment comes back.<br>Using credit: written to your account at close; sign in at coffeenutz.net with the same email and it appears at the payment step, applied in one tap.<br>Invite: every guest you seat (up to 2) lowers your price by one rung.<br>Chain: while the next table is announced, early chairs are pulled only through the chain card here; it opens to everyone at the official start."],
+ekleShip:['Ödeme sayfasında "Teslim alım"ı seç — kargon ilk kutunla zaten ödendi, hepsi tek gönderide gelir.','Choose "Pickup" on the payment page — shipping was already paid with your first box; everything arrives in one shipment.'], nextParty:['Sıradaki parti: ','Next party: '], annT:['RESMİ AÇILIŞA','OFFICIAL START IN'], annT2:['Erken kayıt açık','Early seats are open'], annOpen:['Resmi açılış:','Official start:'], annP:['resmi açılış: ','official start: '], annLock:['Erken sandalye, süren masadaki zincir kartından çekilir.','Early chairs are pulled from the chain card at the current table.'], annT3:['Kayıt yakında açılıyor','Registration opens soon'], dreamL:['masa dolarsa: ','full table: '], nudgeL:['+1 davet → ','+1 invite → '], nudge2L:['+2 davet → ','+2 invites → '], nextOv:['SIRADAKİ KAMPANYA','NEXT CAMPAIGN'], prevCred:['geçen masadan kredin: ','credit from your last table: '], nudgeV:['davet, konuğun ödemesiyle sayılır','an invite counts when your guest pays'], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
 };
 function t(k){ const e=STR[k]; return e?(LANG==='en'?e[1]:e[0]):k; }
 function applyLang(){
@@ -396,7 +403,7 @@ function renderZincir(){
     +(soon?('<div class="hint" style="margin-top:4px">'+t('annOpen')+' <b style="color:var(--gold)">'+fmtDT(NEXTC.opens_at)+'</b></div>')
           :(NEXTC.end_at?('<span>'+t('lastDayS')+fmtDate(NEXTC.end_at)+'</span>'):''));
   $('zcBtn').textContent=t('zBtn');
-  $('zcBtn').onclick=function(){ location.href='?k='+encodeURIComponent(NEXTC.slug); };
+  $('zcBtn').onclick=function(){ location.href='?k='+encodeURIComponent(NEXTC.slug)+'&z=1'; }; // zincir erken-giriş bileti
   el.style.display='block';
 }
 let LVLN=null;
@@ -519,10 +526,23 @@ function pendCheck(ref){
   const t0=parseInt(localStorage.getItem('grupal_pend_'+SLUG))||0;
   if(!t0){ pendUI(false); return; }
   const age=Date.now()-t0;
-  if(age<3*60*1000){ pendUI(true); if(!PENDTIMER) PENDTIMER=setInterval(function(){ checkMine(ref); }, 5000); }
-  else { if(PENDTIMER){ clearInterval(PENDTIMER); PENDTIMER=null; } pendUI(false);
-    if(age<30*60*1000){ $('pendTxt').style.display='block'; $('pendTxt').textContent=t('pendLate'); }
-    else { try{ localStorage.removeItem('grupal_pend_'+SLUG); }catch(e){} } } }
+  pendUI(true); // dönüş kapısı hep açık: havale onayı saatler/günler sürebilir, bayrak KENDİLİĞİNDEN SİLİNMEZ
+  if(age<3*60*1000){ if(!PENDTIMER) PENDTIMER=setInterval(function(){ checkMine(ref); }, 5000); }
+  else { if(PENDTIMER){ clearInterval(PENDTIMER); PENDTIMER=null; }
+    $('pendTxt').style.display='block';
+    $('pendTxt').innerHTML=escZ(t('pendLate'))+' <a onclick="resetSeat()" style="color:var(--accent);cursor:pointer;text-decoration:underline">'+t('resetL')+'</a>'; } }
+function resetSeat(){ try{ localStorage.removeItem('grupal_'+SLUG); localStorage.removeItem('grupal_pend_'+SLUG); localStorage.removeItem('grupal_qty_'+SLUG); }catch(e){} location.href=location.pathname+'?k='+encodeURIComponent(SLUG); }
+async function adoptSeat(){
+  // KOLTUK KODU: koltuk cihaza bağlıdır; başka cihazda fişini görmek isteyen ref kodunu girer (admin söyler ya da ilk cihazdaki paylaşım linkindedir).
+  let c=''; try{ c=prompt(t('adoptQ'))||''; }catch(e){ return; }
+  c=c.trim().toUpperCase(); if(!/^[A-Z0-9]{4,12}$/.test(c)){ if(c) alert(t('adoptBad')); return; }
+  try{
+    const r=await fetch(API+'/mine?slug='+encodeURIComponent(SLUG)+'&ref='+encodeURIComponent(c));
+    const j=await r.json();
+    if(j&&!j.error){ try{ localStorage.setItem('grupal_'+SLUG,c); }catch(e){} location.href=location.pathname+'?k='+encodeURIComponent(SLUG); }
+    else alert(t('adoptBad'));
+  }catch(e){ alert(t('netErr')); }
+}
 function buildEkle(left){
   const sel=$('ekleQty'), btn=$('ekleBtn'); if(!sel||!btn) return;
   const li=ladInfo(); const tv=li&&isFinite(li.tavanN)?li.tavanN:0;
@@ -572,11 +592,17 @@ function renderClosed(s){
   $('joinCard').style.display='none';
   $('lockRow').style.display='none'; $('shareBox').style.display='none'; $('payBlock').style.display='none'; }
 function renderAnnounce(s){
-  // ERKEN KAYIT (Ömer 2026-08-31): opens_at KİLİT DEĞİL, RESMİ AÇILIŞ saatidir. Duyuru kostümü kalır
-  // (gri kart, bant, sayaç) ama sandalye çekmek HEP açık — "para peşin gelsin" ilkesi.
+  // YÖNLENDİRİLMİŞ ERKEN KAYIT (Ömer 2026-08-31 son spec): duyurudaki masa KENDİ linkinden katılıma kapalı;
+  // erken sandalye YALNIZ süren masadaki zincir kartından (?z=1) gelenlere açılır. Resmi açılışta herkese.
   const el=$('annCard'); if(!el) return;
-  if(!ANN||CLOSED){ el.style.display='none'; return; }
-  el.innerHTML='<div style="font-weight:800;font-size:17px;margin-bottom:6px">'+t('annT2')+'</div><div class="hint">'+t('annOpen')+' <b style="color:var(--accent)">'+fmtDT(s.opens_at)+'</b></div>';
+  if(!ANN||CLOSED){ if(el.dataset.on==='1'){ el.dataset.on='0'; let hasRef=false; try{ hasRef=!!localStorage.getItem('grupal_'+SLUG); }catch(e){} if(!CLOSED&&!hasRef) $('joinCard').style.display='block'; } el.style.display='none'; return; }
+  el.dataset.on='1';
+  if(ZEARLY){
+    el.innerHTML='<div style="font-weight:800;font-size:17px;margin-bottom:6px">'+t('annT2')+'</div><div class="hint">'+t('annOpen')+' <b style="color:var(--accent)">'+fmtDT(s.opens_at)+'</b></div>';
+  } else {
+    el.innerHTML='<div style="font-weight:800;font-size:17px;margin-bottom:6px">'+t('annT3')+'</div><div class="hint">'+t('annOpen')+' <b style="color:var(--accent)">'+fmtDT(s.opens_at)+'</b></div><div class="hint" style="margin-top:4px;opacity:.75">'+t('annLock')+'</div>';
+    $('joinCard').style.display='none';
+  }
   el.style.display='block';
 }
 
@@ -651,7 +677,17 @@ async function checkMine(ref){
   try{
     const r=await fetch(API+'/mine?slug='+encodeURIComponent(SLUG)+'&ref='+encodeURIComponent(ref));
     const j=await r.json();
-    if(j&&j.error){ localStorage.removeItem('grupal_'+SLUG); MINE=null;
+    if(j&&j.error){
+      // HAVALE LİMBOSU (canlı testte yakalandı 2026-08-31): sipariş var ama satır ÖDENENE KADAR doğmaz.
+      // /mine 404'ü "hiç oturmadı" sanıp ref'i silmek, ödeyen adamın fişini yakmaktır. Bekleme bayrağı
+      // varsa ref KORUNUR, bekleme ekranı gösterilir; satır doğunca (mark as paid) fiş kendiliğinden gelir.
+      let pend=0; try{ pend=parseInt(localStorage.getItem('grupal_pend_'+SLUG))||0; }catch(e){}
+      if(pend){ MINE=null;
+        $('joinCard').style.display='none';
+        if(!DEPLINK) DEPLINK=mkDep(ref);
+        $('lockRow').style.display=(DEPLINK&&!CLOSED)?'block':'none';
+        pendCheck(ref); renderPay(); return; }
+      localStorage.removeItem('grupal_'+SLUG); MINE=null;
       $('cardBtn').style.display='none';
       $('shareBox').style.display='none';
       if(!CLOSED) $('joinCard').style.display='block';
