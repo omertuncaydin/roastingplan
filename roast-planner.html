@@ -117,7 +117,7 @@
   </div>
   <div id="planApp" style="display:none">
   <h1>Roast Planner</h1>
-  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-08-08b</span></div>
+  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-08-24a</span></div>
 
   <div class="err" id="err"></div>
 
@@ -349,22 +349,22 @@ function equipOptions(v){ return `<option value=""${v===''?' selected':''}>—</
 // ---- roast recipes (keyword-matched to the coffee name) ----
 // match: all tokens must appear in the normalized item name. First match wins (most specific first).
 const RECIPES=[
-  {match:["yaye","cocoa"],  bullet:"-P2 / B1 / 45s / 95A",  hsr:"-P2 / B1 / 70s / 95A"},
-  {match:["yaye","fruity"], bullet:"-P3 / A2 / 35s / 105A", hsr:"-P3 / A2 / 55s / 105A"},
+  {match:["yaye","cocoa"],  bullet:"-P2 / B1 / 40s / 95A",  hsr:"-P2 / B1 / 60s / 95A"},
+  {match:["yaye","fruity"], bullet:"-P3 / B0 / 35s / 105A", hsr:"-P3 / B0 / 55s / 105A"},
   {match:["turk"],          bullet:"-P2 / A1 / 45s / 105A", hsr:"-P2 / A1 / 60s / 105A"},  // Türk Kahvesi (single origin, not a blend)
   {match:["harman"],        bullet:"-P2 / B0 / 60s / 95A",  hsr:"-P2 / B0 / 100s / 95A"},  // Ofis Kahvesi No.1: Harman
-  {match:["bittersweet"],   bullet:"-P3 / C2 / 120s / 78A", hsr:"-P3 / C2 / 162s / 78A", note:"MAKE IT LIKE ITALIANS"},  // Ofis Kahvesi No.2: BitterSweet
+  {match:["bittersweet"],   bullet:"-P3 / B0 / 90s / 85A",  hsr:"-P3 / B0 / 130s / 85A", note:"MAKE IT LIKE ITALIANS"},  // Ofis Kahvesi No.2: BitterSweet
   {match:["bochesa"],       bullet:"-P3 / A1 / 25s / 105A", hsr:"-P3 / A1 / 35s / 105A"},
-  {match:["rumudamo"],      bullet:"-P1 / A2 / 30s / 110A", hsr:"-P1 / A2 / 60s / 110A", note:"HARD TO CRACK, PLAY HARD"},
+  {match:["rumudamo"],      bullet:"-P1 / B0 / 30s / 110A", hsr:"-P1 / B0 / 60s / 110A", note:"HARD TO CRACK, PLAY HARD"},
   {match:["chirripo"],      bullet:"-P1 / B0 / 40s / 105A", hsr:"-P1 / B0 / 70s / 105A", note:"TOO MANY QUAKERS, UNEVEN ROAST PARAMETERS, STICK TO SOUND GAIN!"},
   {match:["peach"],         bullet:"-P2 / A1 / 30s / 110A", hsr:"-P2 / A1 / 30s / 110A"},
   {match:["coocentral"],    bullet:"-P2 / B1 / 70s / 100A", hsr:"-P2 / B1 / 90s / 100A", note:"IT'S OK TO BE A LITTLE DARKER!"},
   {match:["dukamo"],        bullet:"-P3 / B1 / 60s / 100A", hsr:"-P3 / B1 / 85s / 100A", note:"YOU DON'T HAVE TO PLAY SAFE ROAST A FEW AGTRONS DARKER"},
-  {match:["wanrich"],       bullet:"-P3 / A2 / 50s / 105A", hsr:"-P3 / A2 / 80s / 105A"},
+  {match:["wanrich"],       bullet:"-P3 / B0 / 50s / 105A", hsr:"-P3 / B0 / 80s / 105A"},
   {match:["killenso"],      bullet:"-P1 / B0 / 45s / 105A", hsr:"-P1 / B0 / 75s / 105A"},
   {match:["uraga"],         bullet:"-P1 / B0 / 40s / 95A",  hsr:"-P1 / B0 / 60s / 95A", note:"HARD TO CRACK"},
-  {match:["past crop"],     bullet:"-P1 / A2 / 40s / 96A",  hsr:"-P1 / A2 / 60s / 96A"},
-  {match:["jaguar"],        bullet:"-P1 / A2 / 40s / 96A",  hsr:"-P1 / A2 / 60s / 96A"},
+  {match:["past crop"],     bullet:"-P1 / B0 / 40s / 96A",  hsr:"-P1 / B0 / 60s / 96A"},
+  {match:["jaguar"],        bullet:"-P1 / B0 / 40s / 96A",  hsr:"-P1 / B0 / 60s / 96A"},
   {match:["rio minas"],     bullet:"-P1 / B0 / 35s / 108A", hsr:"-P1 / B0 / 55s / 108A"},
   {match:["robusta"],       bullet:"-P1 / B0 / 60s / 96A",  hsr:"-P1 / B0 / 80s / 96A"},
   {match:["cielo"],         bullet:"45s / 95A",             hsr:"-"},                       // Cielo Geisha

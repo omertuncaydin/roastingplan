@@ -270,7 +270,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-31b';
+const VERSION='v2026-08-31c';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -754,8 +754,11 @@ function renderAttendees(s){
   const shownChips=chips.slice(0,CAPALL);
   const shownAnon=Math.min(anonSeats, Math.max(0,CAPALL-shownChips.length));
   const filled=shownChips.length+shownAnon;
-  let ringEnd=0; for(const ring of RINGS){ ringEnd+=ring.cap; if(filled<=ringEnd) break; }
-  const ghostN=Math.max(0, Math.min(total-locked, Math.min(ringEnd,CAPALL)-filled));
+  // HAYALETLER BASAMAĞA KADAR (Ömer 2026-08-31): tahta 40'lık ölçeği ÇİZSİN — boş sandalyeler sıradaki
+  // basamağın sandalyesine kadar açılır (halkalara taşarak); bayrak da O sandalyeye asılır. Yalan biter.
+  const nxtRung=lad.find(r=>r.at>locked);
+  const ghostTarget=nxtRung?Math.min(nxtRung.at,total):total;
+  const ghostN=Math.max(0, Math.min(ghostTarget-locked, CAPALL-filled));
   const prev=SEATN;
   const g=mk('g',{}); svg.appendChild(g);
   let seatIx=0, popIx=0;
@@ -790,9 +793,8 @@ function renderAttendees(s){
   for(let i=0;i<ghostN;i++) addSeat('ghost','',1);
   // tek tabela: sıradaki basamak, son boş sandalyenin üstünde — "şu kapı dolunca fiyat şuraya iner"
   const pnum=tx=>{ const mm=String(tx||'').match(/\d[\d.]*/); return mm?mm[0]:''; };
-  const nxtRung=lad.find(r=>r.at>locked);
-  if(nxtRung&&nxtRung.at<=CAPALL&&ghostN>0){
-    const p=seatPos(Math.min(filled+ghostN,nxtRung.at)-1);
+  if(nxtRung&&ghostN>0){
+    const p=seatPos(filled+ghostN-1); // bayrak basamağı TAMAMLAYAN sandalyede — tahta ne çiziyorsa o söz
     if(p){ const fg=mk('g',{class:'rungflag'});
       const label=pnum(nxtRung.price); const w=Math.max(26, label.length*7+10);
       const fx=p.x, fy=p.y-(p.s+11);
@@ -803,7 +805,7 @@ function renderAttendees(s){
   }
   SEATN=popIx;
   const kal=total-locked;
-    // ULAŞILABİLİR HEDEF (Ömer 2026-08-30 "make the next goal possible"): üst satır SIRADAKİ basamağa
+    // ULAŞILABİLİR BASAMAK (Ömer 2026-08-30 "make the next goal possible"): üst satır SIRADAKİ basamağa
     // kalan sandalye → fiyat (yakın kapı), soluk alt satır rüya (masa dolarsa taban). Bayrak+ikili: adım ve varış.
     {const nx=lad.find(r=>r.at>locked); const last=lad.length?lad[lad.length-1]:null;
      const pn=tx=>{ const mm=String(tx||'').match(/\d[\d.]*/); return mm?mm[0]:''; };
