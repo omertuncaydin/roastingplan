@@ -211,7 +211,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
       <input type="checkbox" id="fShow" checked style="width:auto;margin-top:2px">
       <span data-i18n="showName">Adım masada görünsün ("Ayşe K." gibi)</span>
     </label>
-    <button onclick="lockNow()" id="joinBtn">Yerini kilitle</button>
+    <button onclick="lockNow()" id="joinBtn">Sandalye çek</button>
     <div class="hint" id="fmMsg" style="display:none;margin-top:10px;color:var(--warn);font-weight:600"></div>
     <div class="hint" style="margin-top:10px" id="unitTxt"></div>
     <div class="hint" id="shipTxt"></div>
@@ -242,7 +242,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
   <div class="share" id="shareBox">
     <div id="lockRow" style="display:none;margin-bottom:10px">
       <div style="font-size:14px;margin-bottom:8px" data-i18n="unpaid">Kaydın var ama ödemen tamamlanmadı. Masaya oturmak için:</div>
-      <button style="background:var(--accent);color:var(--btnink)" onclick="goDeposit()" id="depBtn">Yerini kilitle</button>
+      <button style="background:var(--accent);color:var(--btnink)" onclick="goDeposit()" id="depBtn">Sandalye çek</button>
       <div class="hint" id="depTxt" style="margin-top:6px"></div>
       <div class="hint" id="pendTxt" style="display:none;margin-top:6px;color:var(--gold)"></div>
     </div>
@@ -270,7 +270,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-31g';
+const VERSION='v2026-08-31h';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -302,7 +302,7 @@ paidK:['Fark kapanışta Grup-Al kredin olarak döner.','The difference returns 
 zLbl:['zincir sandalye','chain seat'], zBtn:['Sıradaki masada yerimi ayır','Reserve my seat at the next table'], zSee:['Sıradaki masayı gör','See the next table'],
 unpaid:['Kaydın var ama ödemen tamamlanmadı. Masaya oturmak için:','Your seat is saved but payment is incomplete. To sit down:'],
 ranksLbl:['Davet sıralaması','Invite leaderboard'], cardBtn:['Kartını indir','Download your card'], davLbl:['davet','invite'], shareBtn:['Bağlantıyı paylaş','Share your invite link'],
-lock:['Yerini kilitle','Lock your seat'], saving:['Kaydediliyor...','Saving...'], toPay:['Ödemeye gidiliyor...','Heading to payment...'],
+lock:['Sandalye çek','Pull up a chair'], lockN:['{n} sandalye çek','Pull up {n} chairs'], saving:['Kaydediliyor...','Saving...'], toPay:['Ödemeye gidiliyor...','Heading to payment...'],
 needName:['Ad Soyad gerekli.','Full name is required.'], needMail:['Geçerli bir e-posta adresi gir.','Enter a valid email address.'],
 needTel:['Telefon numarası eksik görünüyor. Kargo bildirimi SMS ile gidebildiği için doğru numara önemli.','That phone number looks incomplete. Shipping updates may arrive by SMS, so the right number matters.'],
 dup:['Bu e-posta zaten masada kayıtlı. Aynı e-posta ile ikinci kayıt olmaz.','This email is already at the table. One entry per email.'],
@@ -431,7 +431,9 @@ function ladInfo(){
     tavanN:num(lad[0].price), personalN:num(lad[pIx].price) };
 }
 function updJoinBtn(){ const b=$('joinBtn'); if(!b) return; const li=ladInfo(); const q=parseInt($('fQty').value)||1;
-  b.textContent=(li&&isFinite(li.tavanN))?(t('lock')+' · '+(li.tavanN*q)+' TL'):t('lock'); }
+  // SANDALYE ÇEK (Ömer 2026-08-31): düğme adet konuşur — 1 kutu 'Sandalye çek', N kutu 'N sandalye çek'
+  const verb=q>1?t('lockN').replace('{n}',q):t('lock');
+  b.textContent=(li&&isFinite(li.tavanN))?(verb+' · '+(li.tavanN*q)+' TL'):verb; }
 function renderYou(){
   const card=$('youCard'); if(!card) return;
   const li=ladInfo();

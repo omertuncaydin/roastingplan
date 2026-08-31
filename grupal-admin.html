@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · kampanya kokpiti</title>
 <meta name="robots" content="noindex">
-<!-- grupal-admin.html · v2026-08-31c -->
+<!-- grupal-admin.html · v2026-08-31d -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -70,7 +70,7 @@ a{color:var(--gold)}
       <div class="row"><input id="l1a" inputmode="numeric" placeholder="60"><input id="l1p" placeholder="950 TL"></div>
       <div class="row" style="margin-top:6px"><input id="l2a" inputmode="numeric" placeholder="100"><input id="l2p" placeholder="875 TL"></div>
       <div class="row" style="margin-top:6px"><input id="l3a" inputmode="numeric" placeholder=""><input id="l3p" placeholder=""></div>
-      <span class="lbl">LOT ürün linki (Shopify · tavan fiyatlı) — "Yerini kilitle" bu sepeti açar</span>
+      <span class="lbl">LOT ürün linki (Shopify · tavan fiyatlı) — "Sandalye çek" bu sepeti açar</span>
       <input id="f_dep" placeholder="ürün VEYA sepet linki yapıştır; kaydette çevrilir">
       <span class="lbl">tavan (₺) — ürün fiyatının aynısı; sayfadaki tavan cümlesinde görünür</span>
       <input id="f_depamt" inputmode="numeric" placeholder="700">
@@ -111,7 +111,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-08-31c';
+const VERSION='v2026-08-31d';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
