@@ -270,7 +270,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-31a';
+const VERSION='v2026-08-31b';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -328,7 +328,7 @@ pack:[' paket',' pack'], flagSeat:['sandalyede','th seat'], thAuto:['oto','auto'
 kvkkBody:["Ad, e-posta ve telefon yalnızca ödeme sayfasında alınır; kampanyanın yürütülmesi, kargo ve teslimat için kullanılır, üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin.","Name, email and phone are collected only at checkout; used solely to run the campaign, ship and deliver, never shared with third parties. You can ask for your record to be deleted at any time."],
 footerTxt:['Grup-Al bir CoffeeNutz projesidir · sorular: <a href="https://www.coffeenutz.net/pages/iletisim" target="_blank" rel="noopener">iletişim sayfası</a>','Grup-Al is a CoffeeNutz project · questions: <a href="https://www.coffeenutz.net/pages/iletisim" target="_blank" rel="noopener">contact page</a>'],
 howBody:["Bu kavurma günü kesin yapılacak; masa kurulur, söz sözdür. Türkiye'nin her yerine kargoyla.<br>Ödemen tavan fiyattan alınır. Masa hangi basamağa inerse insin herkes aynı fiyatı öder; tavan ile aradaki fark kapanışta Grup-Al kredin olarak hesabına döner. Son günden önce vazgeçersen ödemenin tamamı geri döner.<br>Kredi kullanımı: kapanışta hesabına yazılır; coffeenutz.net'te aynı e-postayla giriş yaptığında ödeme adımında görünür, tek dokunuşla uygulanır.<br>Davet: masaya oturttuğun her konuk (en çok 2) senin fiyatını bir basamak indirir.<br>Zincir sandalye: sıradaki masada yerini şimdiden ayır; o masa nereye inerse insin sen bir basamak daha derindesin.","This roast day will happen — the table is set, our word is our word. Shipping everywhere in Türkiye.<br>You pay the ceiling price. Whichever rung the table reaches, everyone pays the same; the difference between ceiling and final price returns as your Grup-Al credit at close. Change your mind before the last day and your full payment comes back.<br>Using credit: written to your account at close; sign in at coffeenutz.net with the same email and it appears at the payment step, applied in one tap.<br>Invite: every guest you seat (up to 2) lowers your price by one rung.<br>Chain seat: reserve your place at the next table now; wherever that table lands, you sit one rung deeper."],
-ekleShip:['Ödeme sayfasında "Teslim alım"ı seç — kargon ilk paketinle zaten ödendi, hepsi tek kutuda gelir.','Choose "Pickup" on the payment page — shipping was already paid with your first pack; everything arrives in one box.'], nextParty:['Sıradaki parti: ','Next party: '], annT:['KAYIT AÇILIŞINA','OPENS IN'], annT2:['Kayıt yakında açılıyor','Registration opens soon'], annOpen:['Kayıt açılışı:','Registration opens:'], annP:['yakında · kayıt: ','soon · opens: '], dreamL:['masa dolarsa: ','full table: '], nudgeL:['+1 davet → ','+1 invite → '], nudge2L:['+2 davet → ','+2 invites → '], nextOv:['SIRADAKİ KAMPANYA','NEXT CAMPAIGN'], nudgeV:['davet, konuğun ödemesiyle sayılır','an invite counts when your guest pays'], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
+ekleShip:['Ödeme sayfasında "Teslim alım"ı seç — kargon ilk paketinle zaten ödendi, hepsi tek kutuda gelir.','Choose "Pickup" on the payment page — shipping was already paid with your first pack; everything arrives in one box.'], nextParty:['Sıradaki parti: ','Next party: '], annT:['KAYIT AÇILIŞINA','OPENS IN'], annT2:['Kayıt yakında açılıyor','Registration opens soon'], annOpen:['Kayıt açılışı:','Registration opens:'], annP:['yakında · kayıt: ','soon · opens: '], dreamL:['masa dolarsa: ','full table: '], nudgeL:['+1 davet → ','+1 invite → '], nudge2L:['+2 davet → ','+2 invites → '], nextOv:['SIRADAKİ KAMPANYA','NEXT CAMPAIGN'], prevCred:['geçen masadan kredin: ','credit from your last table: '], nudgeV:['davet, konuğun ödemesiyle sayılır','an invite counts when your guest pays'], portalT:['Kavurma Günü Partileri','Roast Day Parties'], portalS:['Bir parti seç, masaya otur.','Pick a party, take a seat.'], lastDayS:[' · son gün ',' · last day ']
 };
 function t(k){ const e=STR[k]; return e?(LANG==='en'?e[1]:e[0]):k; }
 function applyLang(){
@@ -455,6 +455,23 @@ function renderSlots(){
   sl.innerHTML=[1,2].map(i=>'<div class="slot'+(b>=i?' full':'')+'">'+i+'</div>').join('');
   dt.textContent=b+t('slots');
 }
+let CREDPREV=0, CREDSCANNED=false;
+async function credScan(){
+  // ZİNCİR HATIRLATICI: önceki masalardan yazılmış Grup-Al kredisi bu sayfada da görünsün (Ömer 2026-08-31).
+  // localStorage'daki eski kampanya ref'leri taranır; kredisi yazılmış olanların toplamı chip olarak eklenir.
+  if(CREDSCANNED) return; CREDSCANNED=true;
+  const pairs=[];
+  try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i);
+    const m=k&&k.match(/^grupal_([a-z0-9-]+)$/i);
+    if(m&&m[1]!=='lang'&&k!=='grupal_a2hs_ok'&&m[1].toLowerCase()!==String(SLUG).toLowerCase()) pairs.push([m[1],localStorage.getItem(k)]); } }catch(e){}
+  let sum=0;
+  for(const [sl,rf] of pairs.slice(0,4)){
+    if(!/^[A-Z0-9]{4,12}$/i.test(String(rf||''))) continue;
+    try{ const r=await fetch(API+'/mine?slug='+encodeURIComponent(sl)+'&ref='+encodeURIComponent(rf));
+      const j=await r.json(); if(j&&j.credited&&(parseInt(j.credit)||0)>0) sum+=parseInt(j.credit); }catch(e){}
+  }
+  if(sum>0){ CREDPREV=sum; renderChips(); }
+}
 function redWindow(){
   try{
     const s=STATE; if(!s||!s.roast_date) return false;
@@ -476,6 +493,7 @@ function renderChips(){
     const lockedish=MINE&&(MINE.status==='locked'||MINE.status==='paid');
     if(lockedish&&isFinite(li.tavanN)&&isFinite(li.personalN)){ const d=(li.tavanN-li.personalN)*((MINE&&parseInt(MINE.qty))||1);
       chips+='<span class="chip g">'+(d>0?(t('chCred')+d+' TL'):t('chPaid'))+'</span>'; } }
+  if(CREDPREV>0) chips+='<span class="chip g">'+t('prevCred')+CREDPREV+' TL</span>';
   el.innerHTML=chips; el.style.display=chips?'block':'none';
 }
 function maxQty(){ return Math.max(1,Math.min(20,parseInt(STATE&&STATE.max_qty)||5)); }
@@ -590,7 +608,7 @@ async function load(){
     renderAttendees(s);
     renderLevels(s);
     CLOSED=(s.status==='failed'||s.status==='fulfilled'||s.status==='expired'||s.status==='closed')||(s.status==='open'&&!!s.end_at&&(new Date(s.end_at).getTime()<Date.now()));
-    renderClosed(s); renderAnnounce(s); renderPay(); renderChips(); renderYou(); updJoinBtn(); renderLogo(s); if(!CLOSED&&(s.locked||0)===0) logoDemo(); loadNext(); applyTheme();
+    renderClosed(s); renderAnnounce(s); renderPay(); renderChips(); credScan(); renderYou(); updJoinBtn(); renderLogo(s); if(!CLOSED&&(s.locked||0)===0) logoDemo(); loadNext(); applyTheme();
   }catch(e){ $('title').textContent=t('netErr'); }
 }
 function lockNow(){
@@ -722,7 +740,7 @@ function renderAttendees(s){
   const t1=mk('text',{x:120,y:114,'text-anchor':'middle','font-weight':800,'font-size':(locked?22:15),style:'fill:var(--ink)','font-family':'-apple-system,sans-serif'}); t1.textContent=locked?String(locked):t('ready'); svg.appendChild(t1);
   const t2=mk('text',{x:120,y:134,'text-anchor':'middle','font-size':11,style:'fill:var(--muted)','font-family':'-apple-system,sans-serif'}); t2.textContent=locked?t('seats'):t('first'); svg.appendChild(t2);
   const pal=['#c98a3c','#b9742f','#9a8a4b','#a97142','#8a6d2a','#7d5a32'];
-  const chips=named.map(a=>({nm:(typeof a==='string')?a:(a.name||''), q:(typeof a==='object'&&a.qty)?a.qty:1}));
+  const chips=named.map(a=>({nm:(typeof a==='string')?a:(a.name||''), an:!!(a&&a.anon), q:(typeof a==='object'&&a.qty)?a.qty:1}));
   const namedSeats=chips.reduce((t,c)=>t+c.q,0);
   const anonSeats=Math.max(0, shownLocked-namedSeats);
   // BASAMAK HALKALARI: iç halka dolunca yeni halka dışa açılır, sandalyeler küçülür (Ömer kararı 2026-08-29)
@@ -767,7 +785,7 @@ function renderAttendees(s){
     }
     g.appendChild(grp); seatIx++;
   };
-  shownChips.forEach(c=>addSeat('named',c.nm,c.q));
+  shownChips.forEach(c=>addSeat(c.an?'anon':'named',c.nm,c.q)); // v3.9: gizli oyuncu da TEK baloncuk ×q (✓)
   for(let i=0;i<shownAnon;i++) addSeat('anon','',1);
   for(let i=0;i<ghostN;i++) addSeat('ghost','',1);
   // tek tabela: sıradaki basamak, son boş sandalyenin üstünde — "şu kapı dolunca fiyat şuraya iner"
