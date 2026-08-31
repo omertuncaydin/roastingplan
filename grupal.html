@@ -270,7 +270,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-31h';
+const VERSION='v2026-08-31i';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1042,6 +1042,7 @@ async function boot(){
     renderPortal(openish);
   }catch(e){ $('title').textContent=t('netErr'); }
 }
+{const fq=$('fQty'); if(fq) fq.addEventListener('change',updJoinBtn);} // adet değişince düğme yeniden hesaplar (31h bug'ı: tel hiç çekilmemişti)
 boot();
 </script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "cc241b05cd704f42a333be3d552415e9"}'></script><!-- End Cloudflare Web Analytics -->
