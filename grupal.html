@@ -270,7 +270,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
 const REF=new URLSearchParams(location.search).get('ref')||'';
-const VERSION='v2026-08-31c';
+const VERSION='v2026-08-31d';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -797,12 +797,28 @@ function renderAttendees(s){
     const p=seatPos(filled+ghostN-1); // bayrak basamağı TAMAMLAYAN sandalyede — tahta ne çiziyorsa o söz
     if(p){ const fg=mk('g',{class:'rungflag'});
       const label=pnum(nxtRung.price); const w=Math.max(26, label.length*7+10);
-      const fx=p.x, fy=p.y-(p.s+11);
+      const fx=p.x, fy=(p.y-(p.s+11)-8<2)?(p.y+p.s+11):(p.y-(p.s+11)); // tepe kırpılırsa bayrak alta iner
       fg.appendChild(mk('rect',{x:fx-w/2,y:fy-8,width:w,height:14,rx:7,style:'fill:var(--gold)'}));
       const ft=mk('text',{x:fx,y:fy+3,'text-anchor':'middle','font-size':9.5,'font-weight':800,'font-family':'-apple-system,sans-serif',style:'fill:var(--panel)'});
       ft.textContent=label; fg.appendChild(ft);
       g.appendChild(fg); }
   }
+  // TABAN SANDALYESİ (Ömer 2026-08-31): son basamağın sandalyesi hep görünür — altın kesikli çember +
+  // KÜÇÜK soluk fiyat etiketi. Ana bayrak yakın kapıyı, bu etiket uzak rüyayı söyler; ikisi aynıysa yalnız bayrak.
+  {const lastR=lad.length?lad[lad.length-1]:null;
+   if(lastR&&lastR.at>locked&&(!nxtRung||lastR.at>nxtRung.at)){
+     const ix2=Math.min(lastR.at,CAPALL)-1, p2=seatPos(ix2);
+     if(p2){
+       if(ix2>=filled+ghostN) g.appendChild(mk('circle',{cx:p2.x,cy:p2.y,r:p2.s,fill:'none',style:'stroke:var(--gold)','stroke-dasharray':'3 3','stroke-width':1.4,opacity:'.75'}));
+       const lb2=pnum(lastR.price), w2=Math.max(20,lb2.length*5.5+8);
+       const ty=(p2.y-(p2.s+9)-6<2)?(p2.y+p2.s+9):(p2.y-(p2.s+9));
+       const fg2=mk('g',{class:'tabanflag',opacity:'.8'});
+       fg2.appendChild(mk('rect',{x:p2.x-w2/2,y:ty-6,width:w2,height:11,rx:5.5,style:'fill:var(--panel2);stroke:var(--gold)','stroke-width':1}));
+       const ft2=mk('text',{x:p2.x,y:ty+2.5,'text-anchor':'middle','font-size':7.5,'font-weight':800,style:'fill:var(--gold)','font-family':'-apple-system,sans-serif'});
+       ft2.textContent=lb2; fg2.appendChild(ft2);
+       g.appendChild(fg2);
+     }
+   }}
   SEATN=popIx;
   const kal=total-locked;
     // ULAŞILABİLİR BASAMAK (Ömer 2026-08-30 "make the next goal possible"): üst satır SIRADAKİ basamağa
