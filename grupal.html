@@ -280,7 +280,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-08-31n';
+const VERSION='v2026-08-31o';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -627,7 +627,7 @@ async function load(){
     $('lot').textContent=s.lot||'';
     {const rl=$('roasterLine');
      // Ömer 2026-08-31: tek format, TR ve EN aynı — "Grup-Al by CoffeeNutz® - Roasted by: <usta>"
-     if(rl){ if(s.roaster){ rl.innerHTML='Grup-Al by CoffeeNutz® - Roasted by: <b style="color:var(--accent)">'+escZ(s.roaster)+'</b>'; rl.style.display='block'; }
+     if(rl){ if(s.roaster){ rl.innerHTML='Grup-Al by <b style="color:var(--accent)">CoffeeNutz®</b> · Roasted by: <b style="color:var(--accent)">'+escZ(s.roaster)+'</b>'; rl.style.display='block'; }
        else rl.style.display='none'; }}
     $('unitTxt').textContent=[s.unit,s.ships_by].filter(Boolean).join(' · ');
     $('shipTxt').textContent='';
