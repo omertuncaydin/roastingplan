@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CoffeeNutz · Training Calendar / Eğitim Takvimi</title>
+<meta name="description" content="Upcoming CoffeeNutz SCA trainings on one calendar. CoffeeNutz SCA eğitim takvimi: yaklaşan tüm sınıflar.">
+<meta property="og:title" content="CoffeeNutz · Training Calendar">
+<meta property="og:description" content="Upcoming SCA trainings on one calendar · Yaklaşan SCA eğitimleri tek takvimde.">
+<meta property="og:url" content="https://guide.coffeenutz.net/egitim-takvimi">
+<meta property="og:type" content="website">
+<link rel="apple-touch-icon" href="coffeenutz-turtle.png">
+<style>
+:root{--bg:#1a1410;--panel:#241c16;--panel2:#201a15;--accent:#c98a3c;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--red:#D8453B;--ok:#3c7a5a;
+  --c-roast:#e07b39;--c-bar:#c9a23c;--c-sens:#3c7a5a;--c-q:#D8453B;--c-other:#8a7263}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:18px;padding-top:calc(18px + env(safe-area-inset-top,0px))}
+.wrap{max-width:860px;margin:0 auto}
+.brand{font-family:'Arial Black',Helvetica,sans-serif;font-size:20px;white-space:nowrap}
+.brand .lr{color:var(--red)}.brand .lg{color:var(--ink)}
+.hdr{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.hdr .sp{flex:1}
+.sub{color:var(--muted);font-size:12.5px;margin:2px 0 14px}
+button{font:inherit;cursor:pointer}
+.pill{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600}
+.pill.on{border-color:var(--accent);color:var(--accent)}
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.mtitle{font-size:17px;font-weight:800;flex:1;text-align:center}
+.legend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.lg2{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:3px 9px}
+.lg2 i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.cal{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.dows{display:grid;grid-template-columns:repeat(7,1fr);background:var(--panel2);font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.dows div{padding:7px 4px;text-align:center}
+.days{display:grid;grid-template-columns:repeat(7,1fr)}
+.day{min-height:72px;border-top:1px solid var(--line);border-left:1px solid var(--line);padding:3px;overflow:hidden}
+.day:nth-child(7n+1){border-left:none}
+.day.blank{background:var(--bg)}
+.day .dn{font-size:11px;font-weight:600;color:var(--muted);padding:1px 3px;display:inline-block}
+.day.today{background:#2a2016}
+.day.today .dn{background:var(--accent);color:#1a1410;border-radius:6px}
+.tbar{display:block;font-size:10px;font-weight:700;color:#1a1410;border-radius:4px;padding:2px 4px;margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;min-height:14px}
+.sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;font-weight:700}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.card:hover{border-color:var(--accent)}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;color:var(--muted)}
+.chip.open{color:#7fb069;border-color:#3c7a5a}
+.chip.conf{color:var(--accent);border-color:var(--accent)}
+.meta{font-size:12px;color:var(--muted)}
+.dotc{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
+.cta{display:inline-block;background:var(--accent);color:#1a1410;border:none;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:700;text-decoration:none}
+.cta.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+.foot{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+#modalWrap{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60;display:flex;align-items:flex-end;justify-content:center}
+#modalWrap .modal{background:var(--panel);border:1px solid var(--line);border-radius:16px 16px 0 0;padding:18px 18px 24px;width:100%;max-width:520px;max-height:85vh;overflow:auto}
+@media(min-width:640px){#modalWrap{align-items:center;padding:20px}#modalWrap .modal{border-radius:16px}}
+.modal h3{margin:0 0 8px}
+.hidden{display:none!important}
+.note{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">🐢</span></div>
+    <span class="sp"></span>
+    <span class="meta" id="ver" style="opacity:.6"></span>
+    <button class="pill" id="langBtn" onclick="toggleLang()">TR</button>
+  </div>
+  <div class="sub" id="tagline"></div>
+
+  <div class="toolbar">
+    <button class="pill" id="btnPrev" onclick="moveMonth(-1)">‹</button>
+    <div class="mtitle" id="mtitle"></div>
+    <button class="pill" id="btnNext" onclick="moveMonth(1)">›</button>
+    <button class="pill on" id="btnToday" onclick="goToday()"></button>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="cal">
+    <div class="dows" id="dows"></div>
+    <div class="days" id="days"></div>
+  </div>
+  <div class="sec" id="monListTitle"></div>
+  <div id="monList"></div>
+  <div class="note" id="noteLine"></div>
+</div>
+<div id="modalWrap" class="hidden" onclick="if(event.target===this) closeModal()"><div class="modal" id="modalBox"></div></div>
+
+<script>
+const FEED = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/public-trainings";
+const APP_VERSION = "v2026-09-01a";
+const SITE = "https://www.coffeenutz.net";
+const IG = "https://instagram.com/coffeenutznet";
+
+let LANG = "en";
+try{ LANG = localStorage.getItem("cn_pub_lang") || "en"; }catch(_){}
+const STR = {
+  tagline:["SCA eğitim takvimi · yaklaşan tüm sınıflar tek yerde","SCA training calendar · every upcoming class in one place"],
+  bugun:["Bugün","Today"],
+  listTitle:["eğitimleri","trainings"],
+  empty:["Bu ay planlı eğitim yok. Sonraki aylara bakın veya bize yazın.","No classes scheduled this month. Check the next months or message us."],
+  loadErr:["Takvim şu an yüklenemedi. Birazdan tekrar deneyin.","The calendar could not load right now. Please try again shortly."],
+  retry:["Tekrar dene","Try again"],
+  open:["Kayıt açık","Registration open"],
+  conf:["Kesinleşti","Confirmed"],
+  register:["Kayıt / Bilgi","Register / Info"],
+  dm:["Instagram'dan yazın","DM us on Instagram"],
+  close:["Kapat","Close"],
+  note:["Kontenjan ve fiyat bilgisi için coffeenutz.net'i ziyaret edin veya Instagram'dan yazın. Tarihler değişebilir.","For seats and pricing visit coffeenutz.net or DM us on Instagram. Dates may change."],
+  days_tr:["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"],
+  days_en:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+  legRoast:["Roasting","Roasting"], legBar:["Barista","Barista"], legSens:["Sensory","Sensory"], legQ:["Q Grader","Q Grader"], legOther:["Diğer","Other"],
+};
+function t(k){ const v = STR[k]; return v ? v[LANG==="en"?1:0] : k; }
+const AYLAR = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+function monthName(m){ return (LANG==="en" ? MONTHS : AYLAR)[m]; }
+function langName(l){ if (LANG==="tr") return l==="Turkish" ? "Türkçe" : (l==="English" ? "İngilizce" : l); return l; }
+
+let DATA = [], curY = 0, curM = 0;
+
+function esc(s){ return String(s??"").replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+function pad2(n){ return String(n).padStart(2,"0"); }
+function dstr(y,m,d){ return `${y}-${pad2(m+1)}-${pad2(d)}`; }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function typeOf(name){
+  const n = String(name).toLowerCase();
+  if (n.includes("roasting")) return "roast";
+  if (n.includes("barista")) return "bar";
+  if (n.includes("sensory")) return "sens";
+  if (n.includes("q grader")) return "q";
+  return "other";
+}
+function shortName(name){ return String(name).replace(/^SCA\s+/i,""); }
+function toggleLang(){
+  LANG = (LANG==="en" ? "tr" : "en");
+  try{ localStorage.setItem("cn_pub_lang", LANG); }catch(_){}
+  render();
+}
+function openModal(html){ document.getElementById("modalBox").innerHTML = html; document.getElementById("modalWrap").classList.remove("hidden"); }
+function closeModal(){ document.getElementById("modalWrap").classList.add("hidden"); }
+function moveMonth(d){ curM += d; if (curM < 0){ curM = 11; curY--; } if (curM > 11){ curM = 0; curY++; } render(); }
+function goToday(){ const now = new Date(); curY = now.getFullYear(); curM = now.getMonth(); render(); }
+
+async function load(){
+  try{
+    const r = await fetch(FEED);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    DATA = j.trainings || [];
+    render();
+  }catch(e){
+    document.getElementById("days").innerHTML = "";
+    document.getElementById("monList").innerHTML =
+      `<div class="card" style="cursor:default"><p class="meta" style="margin:0">${t("loadErr")}</p>
+       <div class="foot"><button class="cta" onclick="load()">${t("retry")}</button></div></div>`;
+  }
+}
+
+function render(){
+  document.getElementById("ver").textContent = APP_VERSION;
+  document.getElementById("langBtn").textContent = LANG==="en" ? "TR" : "EN";
+  document.getElementById("tagline").textContent = t("tagline");
+  document.getElementById("btnToday").textContent = t("bugun");
+  document.getElementById("noteLine").textContent = t("note");
+  document.getElementById("mtitle").textContent = `${monthName(curM)} ${curY}`;
+  document.getElementById("dows").innerHTML = (LANG==="en" ? STR.days_en : STR.days_tr).map(d=>`<div>${d}</div>`).join("");
+  document.getElementById("legend").innerHTML = [
+    ["--c-roast", t("legRoast")], ["--c-bar", t("legBar")], ["--c-sens", t("legSens")], ["--c-q", t("legQ")], ["--c-other", t("legOther")]
+  ].map(([v,lbl]) => `<span class="lg2"><i style="background:var(${v})"></i>${lbl}</span>`).join("");
+
+  const first = new Date(curY, curM, 1);
+  const dim = new Date(curY, curM + 1, 0).getDate();
+  const lead = (first.getDay() + 6) % 7;
+  const tNow = todayStr();
+  const monStart = dstr(curY, curM, 1), monEnd = dstr(curY, curM, dim);
+
+  let html = "";
+  for (let i = 0; i < lead; i++) html += `<div class="day blank"></div>`;
+  for (let d = 1; d <= dim; d++){
+    const ds = dstr(curY, curM, d);
+    let bars = "";
+    DATA.forEach((x, i) => {
+      if (x.start <= ds && ds <= x.end){
+        const label = (ds === x.start || d === 1) ? esc(shortName(x.name)) : "&nbsp;";
+        bars += `<span class="tbar" style="background:var(--c-${typeOf(x.name)})" onclick="openTr(${i})" title="${esc(x.name)}">${label}</span>`;
+      }
+    });
+    html += `<div class="day${ds === tNow ? " today" : ""}"><span class="dn">${d}</span>${bars}</div>`;
+  }
+  document.getElementById("days").innerHTML = html;
+
+  const inMonth = DATA.map((x,i)=>({x,i})).filter(({x}) => x.start <= monEnd && x.end >= monStart);
+  document.getElementById("monListTitle").textContent = `${monthName(curM)} ${t("listTitle")} (${inMonth.length})`;
+  document.getElementById("monList").innerHTML = inMonth.map(({x,i}) => `
+    <div class="card" onclick="openTr(${i})">
+      <div class="row"><span class="dotc" style="background:var(--c-${typeOf(x.name)})"></span>
+        <b>${esc(shortName(x.name))}</b>
+        <span class="chip">${esc(langName(x.lang))}</span>
+        <span class="chip ${x.status==="Registration open"?"open":"conf"}">${x.status==="Registration open" ? t("open") : t("conf")}</span></div>
+      <p class="meta" style="margin:6px 0 0">${esc(x.start)} → ${esc(x.end)}</p>
+    </div>`).join("") || `<div class="card" style="cursor:default"><p class="meta" style="margin:0">${t("empty")}</p></div>`;
+}
+
+function openTr(i){
+  const x = DATA[i]; if (!x) return;
+  openModal(`
+    <h3>${esc(x.name)}</h3>
+    <div class="row" style="margin-bottom:8px">
+      <span class="chip">${esc(langName(x.lang))}</span>
+      <span class="chip ${x.status==="Registration open"?"open":"conf"}">${x.status==="Registration open" ? t("open") : t("conf")}</span>
+    </div>
+    <p class="meta">${esc(x.start)} → ${esc(x.end)}</p>
+    <div class="foot">
+      <a class="cta" href="${SITE}" target="_blank" rel="noopener">${t("register")}</a>
+      <a class="cta ghost" href="${IG}" target="_blank" rel="noopener">${t("dm")}</a>
+      <button class="cta ghost" onclick="closeModal()">${t("close")}</button>
+    </div>`);
+}
+
+const now = new Date(); curY = now.getFullYear(); curM = now.getMonth();
+render();
+load();
+</script>
+</body>
+</html>
