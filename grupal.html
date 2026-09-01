@@ -111,6 +111,17 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 .pcard .pbody{padding:12px 14px}
 .pcard .pt{font-weight:800;font-size:17px;line-height:1.25}
 .pcard .pm{color:var(--muted);font-size:12.5px;margin-top:4px;font-variant-numeric:tabular-nums}
+/* VİTRİN IZGARASI (Ömer 2026-08-31): masaüstünde 2/3/4 sütun; kampanya sayfası dar kalır — genişlik yalnız
+   portal modunda (body.portalWide) açılır. Mobil tek sütun aynen. */
+body.portalWide .wrap{max-width:560px}
+body.portalWide #portal{display:block}
+@media(min-width:900px){
+  body.portalWide .wrap{max-width:1180px}
+  body.portalWide #portal{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;align-items:start}
+  body.portalWide .pcard{margin:0}
+}
+@media(min-width:1280px){ body.portalWide #portal{grid-template-columns:repeat(3,1fr)} }
+@media(min-width:1680px){ body.portalWide #portal{grid-template-columns:repeat(4,1fr)} }
 /* SIRADAKİ KAMPANYA: bekleyen kart gri durur, görselde bant. Tema-güvenli: panel2 + desatüre görsel. */
 .pcard.pnext{background:var(--panel2);border-style:dashed}
 .pcard.pnext img{filter:grayscale(.85) opacity(.8)}
@@ -281,7 +292,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-08-31p';
+const VERSION='v2026-08-31q';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1063,7 +1074,8 @@ function renderPortal(list){
   $('lot').textContent=t('portalS');
   ['heroBox','deadline','dealLine','roasterLine','attCard','ranksCard','joinCard','payBlock','shareBox'].forEach(id=>{const el=$(id); if(el) el.style.display='none';});
   document.querySelectorAll('.wrap > .card, .wrap > .refund, .wrap > .shipline').forEach(el=>{ if(el.id!=='portal') el.style.display='none'; });
-  const host=$('portal'); host.style.display='block';
+  const host=$('portal'); host.style.display=''; // inline display CSS ızgarasını ezmesin — düzen stylesheet'in
+  document.body.classList.add('portalWide'); // vitrin genişler; kampanyaya girince sınıf yüklenmez (tam sayfa geçiş)
   logoDemo(0.8); // portal: kalem yalnız ÇEVREDE kayar, A'ya girmez; terminalde (marka duruşu) durur
   host.innerHTML=list.map(c=>{
     const annP=c.opens_at&&new Date(c.opens_at).getTime()>Date.now();

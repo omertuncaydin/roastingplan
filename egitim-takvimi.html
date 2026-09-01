@@ -71,7 +71,7 @@ button{font:inherit;cursor:pointer}
     <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">🐢</span></div>
     <span class="sp"></span>
     <span class="meta" id="ver" style="opacity:.6"></span>
-    <button class="pill" id="btnRefresh" onclick="load()"></button>
+    <button class="pill" id="btnRefresh" onclick="load(true)"></button>
     <button class="pill" id="langTR" onclick="setLangTo('tr')">TR</button>
     <button class="pill" id="langEN" onclick="setLangTo('en')">EN</button>
   </div>
@@ -104,7 +104,7 @@ const FEED = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/public-train
 const OFFER = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/date-offer";
 const WA = "905333321414"; // offer pings land on Ömer's WhatsApp, sent from the visitor's own number
 const OFFER_TRAININGS = ["SCA Barista F+I","SCA Barista Pro","SCA Roasting F+I","SCA Roasting Pro","SCA Sensory F+I","SCA Sensory Pro","Q Grader Sertifikasyon"];
-const APP_VERSION = "v2026-09-01e";
+const APP_VERSION = "v2026-09-01f";
 const SITE = "https://www.coffeenutz.net";
 const IG = "https://ig.me/m/coffeenutznet"; // opens the DM thread directly, not the profile
 
@@ -121,6 +121,7 @@ const STR = {
   conf:["Kesinleşti","Confirmed"],
   ongoing:["Devam ediyor","In progress"],
   yenile:["Yenile","Refresh"],
+  guncellendi:["Güncellendi","Updated"],
   offerHint:["📅 Tarih öner","📅 Offer a date"],
   offerLead:["Takvimdeki günler uymuyor mu? Boş bir güne dokun ya da buradan bir tarih öner; değerlendirip dönüş yapalım.","Listed dates don't fit? Tap an empty day or offer a date here; we will consider it and get back to you."],
   offerTitle:["Tarih öner","Offer a date"],
@@ -131,9 +132,9 @@ const STR = {
   offerNote:["Not (opsiyonel)","Note (optional)"],
   offerSend:["Öneriyi gönder","Send the offer"],
   offerThanks:["Teşekkürler! Önerin ulaştı, en kısa sürede dönüş yapacağız.","Thanks! Your offer landed, we will get back to you soon."],
-  offerWaTitle:["Önerin kaydedildi ✅","Your offer is saved ✅"],
-  offerWaLead:["Anında görmemiz için bir de WhatsApp'tan iletin; sohbet doğrudan başlasın:","Send it on WhatsApp too so we see it instantly and the conversation starts directly:"],
-  offerWaBtn:["WhatsApp'tan gönder","Send on WhatsApp"],
+  offerWaTitle:["Önerin bize ulaştı ✅","Your offer reached us ✅"],
+  offerWaLead:["Değerlendirip dönüş yapacağız. İstersen sohbeti hemen WhatsApp'tan başlat; önerin mesajda hazır, sadece gönder'e bas:","We will consider it and get back to you. If you like, start the chat on WhatsApp right away; your offer is pre-filled, just hit send:"],
+  offerWaBtn:["WhatsApp'tan devam et","Continue on WhatsApp"],
   offerErr:["Gönderilemedi, lütfen tekrar deneyin.","Could not send, please try again."],
   offerMissing:["Eksik: ","Missing: "],
   register:["Kayıt / Bilgi","Register / Info"],
@@ -182,18 +183,27 @@ function closeModal(){ document.getElementById("modalWrap").classList.add("hidde
 function moveMonth(d){ curM += d; if (curM < 0){ curM = 11; curY--; } if (curM > 11){ curM = 0; curY++; } render(); }
 function goToday(){ const now = new Date(); curY = now.getFullYear(); curM = now.getMonth(); render(); }
 
-async function load(){
+async function load(fresh){
+  const chip = document.getElementById("btnRefresh");
+  if (fresh && chip){ chip.disabled = true; chip.textContent = "…"; }
   try{
-    const r = await fetch(FEED + "?t=" + Date.now());
+    // fresh=1 tells the feed to skip its server-side cache (the chip's whole point)
+    const r = await fetch(FEED + (fresh ? "?fresh=1&t=" : "?t=") + Date.now());
     if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json();
     DATA = j.trainings || [];
     render();
+    if (fresh){
+      const d2 = new Date();
+      toast(t("guncellendi") + " " + pad2(d2.getHours()) + ":" + pad2(d2.getMinutes()));
+    }
   }catch(e){
     document.getElementById("days").innerHTML = "";
     document.getElementById("monList").innerHTML =
       `<div class="card" style="cursor:default"><p class="meta" style="margin:0">${t("loadErr")}</p>
        <div class="foot"><button class="cta" onclick="load()">${t("retry")}</button></div></div>`;
+  }finally{
+    if (chip){ chip.disabled = false; chip.textContent = t("yenile"); }
   }
 }
 
@@ -290,7 +300,7 @@ function openOffer(dateStr){
 }
 async function submitOffer(){
   const g = id => document.getElementById(id).value.trim();
-  const payload = { name: g("ofName"), contact: g("ofContact"), training: g("ofTraining"), date: g("ofDate"), note: g("ofNote"), website: g("ofWebsite") };
+  const payload = { name: g("ofName"), contact: g("ofContact"), training: g("ofTraining"), date: g("ofDate"), note: g("ofNote"), lang: LANG, website: g("ofWebsite") };
   const missing = [];
   if (!payload.date) missing.push(t("offerDate"));
   if (!payload.training) missing.push(t("offerTraining"));
