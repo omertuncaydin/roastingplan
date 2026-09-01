@@ -218,6 +218,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
     <div class="hint" id="fmMsg" style="display:none;margin-top:10px;color:var(--warn);font-weight:600"></div>
     <div class="hint" style="margin-top:10px" id="unitTxt"></div>
     <div class="hint" id="shipTxt"></div>
+    <div class="hint" id="shipNudge" style="text-align:center;margin:7px 0 2px;display:none"></div>
     <div class="hint" style="text-align:center;margin:8px 0 2px"><a onclick="adoptSeat()" style="color:var(--muted);cursor:pointer;text-decoration:underline" data-i18n="adoptL">Koltuğun var mı? Koltuk kodunu gir</a></div>
     <details class="kvkk"><summary data-i18n="kvkkSum">Kişisel veriler (KVKK)</summary><div class="hint" style="font-size:11.5px;line-height:1.5;text-align:left" data-i18n="kvkkBody">Ad, e-posta ve telefon yalnızca ödeme sayfasında alınır; kampanyanın yürütülmesi, kargo ve teslimat için kullanılır, üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin.</div></details>
   </div>
@@ -280,7 +281,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-08-31o';
+const VERSION='v2026-08-31p';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -317,7 +318,7 @@ needName:['Ad Soyad gerekli.','Full name is required.'], needMail:['Geçerli bir
 needTel:['Telefon numarası eksik görünüyor. Kargo bildirimi SMS ile gidebildiği için doğru numara önemli.','That phone number looks incomplete. Shipping updates may arrive by SMS, so the right number matters.'],
 dup:['Bu e-posta zaten masada kayıtlı. Aynı e-posta ile ikinci kayıt olmaz.','This email is already at the table. One entry per email.'],
 netErr:['Bağlantı hatası, tekrar deneyin.','Connection error, try again.'],
-backPay:['Ödeme sayfasına geri dön','Return to the payment page'], resetL:['Baştan başla','Start over'], adoptL:['Koltuğun var mı? Koltuk kodunu gir','Already seated? Enter your seat code'], adoptQ:['Koltuk kodun (6 haneli, ör. 5BJV9S):','Your seat code (6 characters):'], adoptBad:['Bu kodla koltuk bulunamadı.','No seat found for that code.'],
+backPay:['Ödeme sayfasına geri dön','Return to the payment page'], resetL:['Baştan başla','Start over'], adoptL:['Koltuğun var mı? Koltuk kodunu gir','Already seated? Enter your seat code'], adoptQ:['Koltuk kodun (6 haneli, ör. 5BJV9S):','Your seat code (6 characters):'], adoptBad:['Bu kodla koltuk bulunamadı.','No seat found for that code.'], shipFeeL:['Kargo: ','Shipping: '], shipAtL:[' kutuda bedava',' boxes = free'], shipFreeL:['Kargo bedava','Free shipping'],
 pendTxt:['Ödemen kontrol ediliyor. Onay genellikle 1-2 dakika içinde burada görünür. Ödeme sayfasını yanlışlıkla kapattıysan üstteki butonla aynı sayfaya dönersin.','Checking your payment. Confirmation usually lands here within 1-2 minutes. Closed the payment page by mistake? The button above takes you back to the same page.'],
 pendLate:['Onay henüz düşmedi. Ödemeni yaptıysan birkaç dakika içinde kendiliğinden görünür. Ödemeyi tamamlamadıysan yukarıdaki butonu tekrar kullanabilirsin.','No confirmation yet. If you paid, it will appear on its own within minutes. If you did not finish, use the button above.'],
 seats:['sandalye dolu','seats taken'], ready:['Masa hazır','Table is set'], first:['ilk sandalye senin','the first chair is yours'],
@@ -438,6 +439,17 @@ function ladInfo(){
   const pIx=Math.min(lad.length-1, ix+bonus);
   return { lad, ix, pIx, bonus, tavan:lad[0].price, table:lad[ix].price, personal:lad[pIx].price,
     tavanN:num(lad[0].price), personalN:num(lad[pIx].price) };
+}
+function renderShipNudge(){
+  // OYUNLU KARGO SATIRI (Ömer 2026-08-31, seçenek B): eşik altı "Kargo: 89 TL · 3 kutuda bedava",
+  // eşikte yeşil "✓ Kargo bedava". Alanlar boşsa satır hiç yok. Söz sayfada, kural Shopify'da (tavan×N TL).
+  const el=$('shipNudge'), s=STATE; if(!el) return;
+  const n=s&&parseInt(s.ship_free_at);
+  if(!n||n<2){ el.style.display='none'; return; }
+  const q=parseInt($('fQty').value)||1;
+  if(q>=n) el.innerHTML='<b style="color:var(--green)">\u2713 '+t('shipFreeL')+'</b>';
+  else el.innerHTML=(s.ship_fee?(t('shipFeeL')+escZ(s.ship_fee)+' \u00b7 '):'')+'<b style="color:var(--gold)">'+n+t('shipAtL')+'</b>';
+  el.style.display='block';
 }
 function updJoinBtn(){ const b=$('joinBtn'); if(!b) return; const li=ladInfo(); const q=parseInt($('fQty').value)||1;
   // SANDALYE ÇEK (Ömer 2026-08-31): düğme adet konuşur — 1 kutu 'Sandalye çek', N kutu 'N sandalye çek'
@@ -654,7 +666,7 @@ async function load(){
       const rk='grupal_rung_'+SLUG, pv=localStorage.getItem(rk);
       if(pv===null) localStorage.setItem(rk,String(li.ix));
       else if(li.ix>parseInt(pv)){ localStorage.setItem(rk,String(li.ix)); fireworks(li.ix>=li.lad.length-1?2:1); }
-    }}catch(e){} renderYou(); updJoinBtn(); renderLogo(s); if(!CLOSED&&(s.locked||0)===0) logoDemo(); loadNext(); applyTheme();
+    }}catch(e){} renderYou(); updJoinBtn(); renderShipNudge(); renderLogo(s); if(!CLOSED&&(s.locked||0)===0) logoDemo(); loadNext(); applyTheme();
   }catch(e){ $('title').textContent=t('netErr'); }
 }
 function lockNow(){
@@ -1080,7 +1092,7 @@ async function boot(){
     renderPortal(openish);
   }catch(e){ $('title').textContent=t('netErr'); }
 }
-{const fq=$('fQty'); if(fq) fq.addEventListener('change',updJoinBtn);} // adet değişince düğme yeniden hesaplar (31h bug'ı: tel hiç çekilmemişti)
+{const fq=$('fQty'); if(fq) fq.addEventListener('change',function(){ updJoinBtn(); renderShipNudge(); });} // adet değişince düğme yeniden hesaplar (31h bug'ı: tel hiç çekilmemişti)
 boot();
 </script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "cc241b05cd704f42a333be3d552415e9"}'></script><!-- End Cloudflare Web Analytics -->

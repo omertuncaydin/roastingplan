@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · kampanya kokpiti</title>
 <meta name="robots" content="noindex">
-<!-- grupal-admin.html · v2026-08-31d -->
+<!-- grupal-admin.html · v2026-08-31e -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -75,6 +75,10 @@ a{color:var(--gold)}
       <span class="lbl">tavan (₺) — ürün fiyatının aynısı; sayfadaki tavan cümlesinde görünür</span>
       <input id="f_depamt" inputmode="numeric" placeholder="700">
       <div class="hint" id="depPrev"></div>
+      <span class="lbl">kargo bedava eşiği (kutu · ops. — Shopify kargo kuralını tavan×bu sayı TL olarak AYNI anda kur; söz sayfada, makine Shopify'da)</span>
+      <input id="f_shipfree" inputmode="numeric" placeholder="3">
+      <span class="lbl">kargo ücreti (görünüm metni · ops. · ör. 89 TL)</span>
+      <input id="f_shipfee" placeholder="89 TL">
       <span class="lbl">kutu üst sınırı (kişi başına)</span>
       <input id="f_maxq" inputmode="numeric" placeholder="5">
       <span class="lbl">görsel (ürün linki yapıştır, kaydette resme çevrilir)</span>
@@ -111,7 +115,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-08-31d';
+const VERSION='v2026-08-31e';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
@@ -224,14 +228,14 @@ async function renderList(){
 }
 function blank(){
   ['f_slug','f_title','f_lot','f_cap','f_unit','f_shipdays','f_dep','f_depamt','f_img','f_maxq','l1a','l1p','l2a','l2p','l3a','l3p'].forEach(i=>$(i).value=''); updatePrev();
-  $('f_status').value='open'; $('f_opens').value=''; $('f_end').value=''; $('f_roast').value=''; $('f_dep').value=''; fillNext(''); $('f_next').value=''; $('f_roaster').value=''; $('msg').textContent='Yeni kampanya: LOT ürün linkini yapıştır (tavan fiyatlı), merdiveni kur, tarihleri ver.'; $('linkOut').textContent=''; CURSLUG=''; $('plCard').style.display='none'; $('kapCard').style.display='none';
+  $('f_status').value='open'; $('f_opens').value=''; $('f_shipfree').value=''; $('f_shipfee').value=''; $('f_end').value=''; $('f_roast').value=''; $('f_dep').value=''; fillNext(''); $('f_next').value=''; $('f_roaster').value=''; $('msg').textContent='Yeni kampanya: LOT ürün linkini yapıştır (tavan fiyatlı), merdiveni kur, tarihleri ver.'; $('linkOut').textContent=''; CURSLUG=''; $('plCard').style.display='none'; $('kapCard').style.display='none';
 }
 function pick(i){
   const c=CAMPS[i];
   $('f_slug').value=c.slug; $('f_title').value=c.title||''; $('f_lot').value=c.lot||'';
   $('f_cap').value=c.cap||''; $('f_unit').value=c.unit||'';
   $('f_shipdays').value=numFrom(c.ships_by); $('f_dep').value=c.deposit_url||''; $('f_depamt').value=numFrom(c.deposit_txt); updatePrev();
-  $('f_img').value=c.img_url||''; fillNext(c.slug); $('f_next').value=c.next_slug||''; $('f_roaster').value=c.roaster||''; $('f_maxq').value=c.max_qty||5;
+  $('f_img').value=c.img_url||''; $('f_shipfree').value=c.ship_free_at||''; $('f_shipfee').value=c.ship_fee||''; fillNext(c.slug); $('f_next').value=c.next_slug||''; $('f_roaster').value=c.roaster||''; $('f_maxq').value=c.max_qty||5;
   { const st=c.status||'open'; const sel=$('f_status');
     if(![...sel.options].some(o=>o.value===st)) sel.insertAdjacentHTML('beforeend','<option value="'+st+'">'+st+' · (eski kayıt)</option>');
     sel.value=st; }
@@ -268,7 +272,7 @@ async function save(){
     end_at:$('f_end').value?($('f_end').value+'T23:59:59+03:00'):null,
     roast_date:$('f_roast').value?($('f_roast').value+'T09:00:00+03:00'):null,
     ladder, deposit_url:$('f_dep').value, deposit_txt:DEP_TPL($('f_depamt').value.trim()),
-    pay_url:null, img_url:$('f_img').value.trim()||null, max_qty:parseInt($('f_maxq').value)||5, status:$('f_status').value, next_slug:$('f_next').value.trim()||null, roaster:$('f_roaster').value.trim()||null, opens_at:$('f_opens').value?($('f_opens').value+':00+03:00'):null };
+    pay_url:null, img_url:$('f_img').value.trim()||null, max_qty:parseInt($('f_maxq').value)||5, status:$('f_status').value, next_slug:$('f_next').value.trim()||null, roaster:$('f_roaster').value.trim()||null, opens_at:$('f_opens').value?($('f_opens').value+':00+03:00'):null, ship_free_at:parseInt($('f_shipfree').value)||null, ship_fee:$('f_shipfee').value.trim()||null };
   if(!body.slug||!body.title||!body.end_at){ $('msg').textContent='Slug, başlık ve bitiş tarihi zorunlu.'; return; }
   if(CURSLUG&&body.slug&&body.slug!==CURSLUG&&!confirm('Slug değişti: '+CURSLUG+' → '+body.slug+'. Bu YENİ bir kampanya oluşturur; eski kampanya aynen kalır. Devam edilsin mi?')) return;
   const r=await fetch(API+'/admin/upsert',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify(body)});
