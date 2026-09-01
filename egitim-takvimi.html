@@ -27,8 +27,9 @@ button{font:inherit;cursor:pointer}
 .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .mtitle{font-size:17px;font-weight:800;flex:1;text-align:center}
 .legend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.lg2{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:3px 9px}
+.lg2{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:4px 10px;cursor:pointer;font-family:inherit}
 .lg2 i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.lg2.on{border-color:var(--accent);color:var(--ink);background:var(--panel2)}
 .cal{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .dows{display:grid;grid-template-columns:repeat(7,1fr);background:var(--panel2);font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .dows div{padding:7px 4px;text-align:center}
@@ -66,7 +67,8 @@ button{font:inherit;cursor:pointer}
     <div class="brand"><span class="lr">CoffeeNutz</span> <span class="lg">🐢</span></div>
     <span class="sp"></span>
     <span class="meta" id="ver" style="opacity:.6"></span>
-    <button class="pill" id="langBtn" onclick="toggleLang()">TR</button>
+    <button class="pill" id="langTR" onclick="setLangTo('tr')">TR</button>
+    <button class="pill" id="langEN" onclick="setLangTo('en')">EN</button>
   </div>
   <div class="sub" id="tagline"></div>
 
@@ -89,9 +91,9 @@ button{font:inherit;cursor:pointer}
 
 <script>
 const FEED = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/public-trainings";
-const APP_VERSION = "v2026-09-01a";
+const APP_VERSION = "v2026-09-01b";
 const SITE = "https://www.coffeenutz.net";
-const IG = "https://instagram.com/coffeenutznet";
+const IG = "https://ig.me/m/coffeenutznet"; // opens the DM thread directly, not the profile
 
 let LANG = "en";
 try{ LANG = localStorage.getItem("cn_pub_lang") || "en"; }catch(_){}
@@ -133,11 +135,14 @@ function typeOf(name){
   return "other";
 }
 function shortName(name){ return String(name).replace(/^SCA\s+/i,""); }
-function toggleLang(){
-  LANG = (LANG==="en" ? "tr" : "en");
+function setLangTo(l){
+  LANG = (l === "tr" ? "tr" : "en");
   try{ localStorage.setItem("cn_pub_lang", LANG); }catch(_){}
   render();
 }
+let typeFilter = new Set();
+function toggleType(tp){ if (typeFilter.has(tp)) typeFilter.delete(tp); else typeFilter.add(tp); render(); }
+function passType(x){ return !typeFilter.size || typeFilter.has(typeOf(x.name)); }
 function openModal(html){ document.getElementById("modalBox").innerHTML = html; document.getElementById("modalWrap").classList.remove("hidden"); }
 function closeModal(){ document.getElementById("modalWrap").classList.add("hidden"); }
 function moveMonth(d){ curM += d; if (curM < 0){ curM = 11; curY--; } if (curM > 11){ curM = 0; curY++; } render(); }
@@ -160,15 +165,16 @@ async function load(){
 
 function render(){
   document.getElementById("ver").textContent = APP_VERSION;
-  document.getElementById("langBtn").textContent = LANG==="en" ? "TR" : "EN";
+  document.getElementById("langTR").classList.toggle("on", LANG === "tr");
+  document.getElementById("langEN").classList.toggle("on", LANG === "en");
   document.getElementById("tagline").textContent = t("tagline");
   document.getElementById("btnToday").textContent = t("bugun");
   document.getElementById("noteLine").textContent = t("note");
   document.getElementById("mtitle").textContent = `${monthName(curM)} ${curY}`;
   document.getElementById("dows").innerHTML = (LANG==="en" ? STR.days_en : STR.days_tr).map(d=>`<div>${d}</div>`).join("");
   document.getElementById("legend").innerHTML = [
-    ["--c-roast", t("legRoast")], ["--c-bar", t("legBar")], ["--c-sens", t("legSens")], ["--c-q", t("legQ")], ["--c-other", t("legOther")]
-  ].map(([v,lbl]) => `<span class="lg2"><i style="background:var(${v})"></i>${lbl}</span>`).join("");
+    ["roast", t("legRoast")], ["bar", t("legBar")], ["sens", t("legSens")], ["q", t("legQ")], ["other", t("legOther")]
+  ].map(([tp,lbl]) => `<button class="lg2${typeFilter.has(tp) ? " on" : ""}" data-tp="${tp}" onclick="toggleType('${tp}')"><i style="background:var(--c-${tp})"></i>${lbl}</button>`).join("");
 
   const first = new Date(curY, curM, 1);
   const dim = new Date(curY, curM + 1, 0).getDate();
@@ -182,6 +188,7 @@ function render(){
     const ds = dstr(curY, curM, d);
     let bars = "";
     DATA.forEach((x, i) => {
+      if (!passType(x)) return;
       if (x.start <= ds && ds <= x.end){
         const label = (ds === x.start || d === 1) ? esc(shortName(x.name)) : "&nbsp;";
         bars += `<span class="tbar" style="background:var(--c-${typeOf(x.name)})" onclick="openTr(${i})" title="${esc(x.name)}">${label}</span>`;
@@ -191,7 +198,7 @@ function render(){
   }
   document.getElementById("days").innerHTML = html;
 
-  const inMonth = DATA.map((x,i)=>({x,i})).filter(({x}) => x.start <= monEnd && x.end >= monStart);
+  const inMonth = DATA.map((x,i)=>({x,i})).filter(({x}) => passType(x) && x.start <= monEnd && x.end >= monStart);
   document.getElementById("monListTitle").textContent = `${monthName(curM)} ${t("listTitle")} (${inMonth.length})`;
   document.getElementById("monList").innerHTML = inMonth.map(({x,i}) => `
     <div class="card" onclick="openTr(${i})">
@@ -213,7 +220,7 @@ function openTr(i){
     </div>
     <p class="meta">${esc(x.start)} → ${esc(x.end)}</p>
     <div class="foot">
-      <a class="cta" href="${SITE}" target="_blank" rel="noopener">${t("register")}</a>
+      <a class="cta" href="${esc((x.url && /^https:\/\//.test(x.url)) ? x.url : SITE)}" target="_blank" rel="noopener">${t("register")}</a>
       <a class="cta ghost" href="${IG}" target="_blank" rel="noopener">${t("dm")}</a>
       <button class="cta ghost" onclick="closeModal()">${t("close")}</button>
     </div>`);
