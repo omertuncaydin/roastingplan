@@ -45,7 +45,7 @@ a.back{color:var(--accent);text-decoration:none;font-size:13px;font-weight:600}
 <body>
 <div class="wrap">
   <h1><span class="lr">CoffeeNutz</span> Apps Yöneticisi</h1>
-  <div class="pills"><span class="hpill" id="ver">v2026-08-08a</span><span class="hpill">apps.coffeenutz.net</span><span class="hpill" style="border-color:var(--accent);color:var(--accent);cursor:pointer" onclick="location.href=location.pathname+'?v='+Date.now()">Yenile</span></div>
+  <div class="pills"><span class="hpill" id="ver">v2026-09-01a</span><span class="hpill">apps.coffeenutz.net</span><span class="hpill" style="border-color:var(--accent);color:var(--accent);cursor:pointer" onclick="location.href=location.pathname+'?v='+Date.now()">Yenile</span></div>
   <p class="sub">Ön kapıdaki kart sırası ve görünürlük. Oklarla sırala, gözle gizle, Kaydet ile yayınla; ziyaretçiler anında yeni düzeni görür.</p>
   <div id="auth">Yazmak için Guide hesabınla giriş gerekli. <a href="/roast-guide" target="_blank">Guide'ı aç, giriş yap</a>, sonra bu sayfayı yenile.</div>
   <div id="list"></div>
@@ -80,16 +80,17 @@ const APPS=[
  {id:'scurve-jumper',nm:'SCurve Jumper', d:'gelişim eğrisi oyunu', b:'SJ', c:'#b9742f'},
  {id:'cupping-watch',nm:'CoffeeNutz Watch', d:'bilekten tadım · yakında', b:'W', c:'#7d9b82'},
  {id:'zine',         nm:'CoffeeNutz Zine', d:'dergi rafı', b:'Z', c:'#9a5b8f'},
- {id:'grupal',       nm:'Grup-Al', d:'yakında', b:'GA', c:'#b9742f'}
+ {id:'grupal',       nm:'Grup-Al', d:'yakında', b:'GA', c:'#b9742f'},
+ {id:'egitim-takvimi', nm:'Eğitim Takvimi', d:'sınıf takvimi (public)', b:'ET', c:'#7fb069'}
 ];
 const BLOCKS=[
  {id:'announce', nm:'Duyuru Bandı', d:'Crack Listener BETA duyurusu (kartların üstündeki çerçeve)', b:'!', c:'#D8453B'}
 ];
 let ORDER=APPS.map(a=>a.id), HIDDEN=[];
 const FACEDEF={
-  roa:['crack-listen','roast-guide','cupping-watch','scurve-jumper','crack-game','roasttale','grupal','zine'],
-  cup:['roast-guide','cupping-watch','crack-listen','crack-game','zine','roasttale','scurve-jumper','grupal'],
-  ent:['zine','crack-game','roasttale','scurve-jumper','crack-listen','roast-guide','cupping-watch','grupal']
+  roa:['crack-listen','roast-guide','cupping-watch','scurve-jumper','crack-game','roasttale','egitim-takvimi','grupal','zine'],
+  cup:['roast-guide','cupping-watch','crack-listen','egitim-takvimi','crack-game','zine','roasttale','scurve-jumper','grupal'],
+  ent:['zine','crack-game','roasttale','scurve-jumper','crack-listen','roast-guide','cupping-watch','egitim-takvimi','grupal']
 };
 const FACENM={roa:'Kavurucu · Roaster',cup:'Tadımcı · Cupper',ent:'Meraklı · Enthusiast'};
 let FACES=JSON.parse(JSON.stringify(FACEDEF));
