@@ -337,7 +337,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-02e';
+const VERSION='v2026-09-02f';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -432,6 +432,7 @@ hFunky:['Uçlarda deneysel: uzun fermantasyon, sürpriz aromalar — herkese gö
 hAny:['Kavurucu seçsin.','Let the roaster choose.'],
 // İLETİŞİM RAYLARI (G) — 2026-09-02d
 chanL:['Grup-Al kanalı','Grup-Al channel'], chanH:['masa açılınca · basamak geçilince · kutular yola çıkınca — yalnız bu üçü','table opens · rung passes · boxes ship — only these three'],
+voteL:['oy ver','vote'], voteMine:['✓ oyun','✓ your vote'], voteH:['Bir satıra dokun: oyun o kahveye geçer.','Tap a row: your vote moves to that coffee.'],
 chatL:['masanın grubu','the table\'s group'], chatH:['Yalnız masadakiler. Kavurma günü fotoğrafları, ilk çatlak, "kutum geldi".','Seated guests only. Roast-day photos, first crack, "my box arrived".'], chatB:['Gruba katıl','Join the group']
 };
 function t(k){ const e=STR[k]; return e?(LANG==='en'?e[1]:e[0]):k; }
@@ -721,14 +722,19 @@ function renderWishes(s){
   if(!w||!w.n){ el.innerHTML='<div class="hint">'+t('wishNone')+'</div>'; }
   else {
     let h='<div class="lbl" style="margin-bottom:6px">'+t('wishTallyL')+' · '+w.n+(w.seated?('<span style="text-transform:none;letter-spacing:0">'+t('wishFrom')+w.seated+'</span>'):'')+'</div>';
-    const mx=Math.max(1,...(w.top||[]).map(x=>x.n));
+    const mx=Math.max(1,...(w.top||[]).map(x=>x.n)); const m=wishMine();
+    // OY MEKANİZMASI (Ömer 2026-09-02): her satır bir oy düğmesi — dokununca cihazın dileği o çifte geçer (1 cihaz = 1 oy)
     for(const x of (w.top||[]).slice(0,6)){
-      h+='<div style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0"><span style="flex:1">'+escZ(wCountryName(x.c))+' · '+escZ(wProcName(x.p))+'</span>'
-        +'<span style="width:34%;height:8px;border-radius:4px;background:var(--panel2);overflow:hidden"><i style="display:block;height:100%;width:'+Math.round(100*x.n/mx)+'%;background:var(--gold)"></i></span><b style="min-width:26px;text-align:right">×'+x.n+'</b></div>'; }
+      const mine=!!(m&&m.c===x.c&&m.p===x.p);
+      h+='<div class="wrow'+(mine?' mine':'')+'" onclick="wishVote(\''+escZ(x.c)+'\',\''+escZ(x.p)+'\')" style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0;cursor:pointer;padding:6px 8px;border-radius:10px;border:1px solid '+(mine?'var(--gold)':'var(--line)')+'"><span style="flex:1">'+escZ(wCountryName(x.c))+' · '+escZ(wProcName(x.p))+'</span>'
+        +'<span style="width:28%;height:8px;border-radius:4px;background:var(--panel2);overflow:hidden"><i style="display:block;height:100%;width:'+Math.round(100*x.n/mx)+'%;background:var(--gold)"></i></span><b style="min-width:26px;text-align:right">×'+x.n+'</b>'
+        +'<span style="min-width:54px;text-align:right;font-size:11px;font-weight:700;color:'+(mine?'var(--gold)':'var(--accent)')+'">'+(mine?t('voteMine'):t('voteL'))+'</span></div>'; }
+    h+='<div class="hint" style="margin-top:4px;font-size:11px;opacity:.75">'+t('voteH')+'</div>';
     el.innerHTML=h;
   }
   card.style.display='block';
 }
+function wishVote(c,p){ const cs=$('wCountry'), ps=$('wProc'); if(!cs||!ps) return; cs.value=c; ps.value=p; wishHint(); wishSend(); }
 async function wishSend(){
   const c=$('wCountry').value, p=$('wProc').value, n=String($('wNote').value||'').trim().replace(/[\u0000-\u001f<>]/g,'').slice(0,60);
   if(!c||!p){ $('wMine').style.display='block'; $('wMine').style.color='var(--warn)'; $('wMine').textContent=!c?t('wishCountryP'):t('wishProcP'); return; }
