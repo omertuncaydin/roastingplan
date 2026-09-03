@@ -234,6 +234,8 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
     </div>
   </div>
 
+  <!-- MASA GRUBU (G, 2026-09-02d): yalnız oturanlara — kavurma günü fotoğrafları, ilk çatlak, "kutum geldi". Kapanışta da kalır. -->
+  <div class="card" id="chatCard" style="display:none;border-color:#25D366"></div>
   <!-- HEDİYE FİŞİ: bu cihazdan çekilen hediye sandalyeler — ödeme düşünce "masada ✓" + hediye linkini gönder -->
   <div class="card" id="giftCard" style="display:none"></div>
     <div class="card" id="joinCard">
@@ -313,6 +315,8 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
     </div>
   </div>
 
+  <!-- KANAL SATIRI (G, 2026-09-02d): WhatsApp Kanalı — herkese, tek yönlü; masa açıldı / basamak geçildi / kutular yolda -->
+  <div class="hint" id="chanLine" style="display:none;text-align:center;margin:14px 0 0"></div>
   <div class="hint" id="footLine" style="text-align:center;margin:18px 0 8px" data-i18n-html="footerTxt">Grup-Al® bir CoffeeNutz projesidir · sorular: <a href="https://www.coffeenutz.net/pages/iletisim" target="_blank" rel="noopener">iletişim sayfası</a></div>
   <button id="pwaAdd" style="display:none;width:auto;margin:0 auto 14px;padding:9px 16px;font-size:13px;font-weight:700;background:var(--panel2);color:var(--accent);border:1px solid var(--accent);border-radius:20px" onclick="pwaInstall()">Grup-Al'ı uygulama olarak ekle</button>
   <div class="hint" id="a2hs" style="display:none;text-align:center;margin:0 0 14px;line-height:1.5">Grup-Al'ı telefonuna ekle: tarayıcının Paylaş menüsünden "Ana Ekrana Ekle". <span id="a2hsX" style="color:var(--accent);cursor:pointer;font-weight:700;margin-left:6px">Tamam</span></div>
@@ -332,7 +336,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-02c';
+const VERSION='v2026-09-02d';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -424,7 +428,10 @@ hHoney:['Meyve eti alınır, yapışkan bal katmanı kalır — tatlı ve yumuş
 hAnaerobic:['Oksijensiz tankta fermantasyon — yoğun, şarabımsı, baharatlı.','Fermented in a sealed, oxygen-free tank — intense, winey, spiced.'],
 hInfused:['Fermantasyona meyve, baharat ya da maya eklenir — aroma dışarıdan gelir, etiketi bunu söyler.','Fruit, spice or yeast added during fermentation — the aroma comes from outside; the label says so.'],
 hFunky:['Uçlarda deneysel: uzun fermantasyon, sürpriz aromalar — herkese göre değil.','Experimental at the edges: long ferments, surprise aromas — not for everyone.'],
-hAny:['Kavurucu seçsin.','Let the roaster choose.']
+hAny:['Kavurucu seçsin.','Let the roaster choose.'],
+// İLETİŞİM RAYLARI (G) — 2026-09-02d
+chanL:['Grup-Al kanalı','Grup-Al channel'], chanH:['masa açılınca · basamak geçilince · kutular yola çıkınca — yalnız bu üçü','table opens · rung passes · boxes ship — only these three'],
+chatL:['masanın grubu','the table\'s group'], chatH:['Yalnız masadakiler. Kavurma günü fotoğrafları, ilk çatlak, "kutum geldi".','Seated guests only. Roast-day photos, first crack, "my box arrived".'], chatB:['Gruba katıl','Join the group']
 };
 function t(k){ const e=STR[k]; return e?(LANG==='en'?e[1]:e[0]):k; }
 function applyLang(){
@@ -736,6 +743,23 @@ async function wishSend(){
   }catch(e){ $('wMine').style.display='block'; $('wMine').style.color='var(--warn)'; $('wMine').textContent=t('netErr'); }
   b.disabled=false;
 }
+// İLETİŞİM RAYLARI (G): kanal satırı herkese (alt), masa grubu yalnız oturanlara (fişin altında, kapanışta da)
+function renderChan(){
+  const el=$('chanLine'); if(!el) return;
+  const u=(STATE&&STATE.channel_url)||CHANURL||'';
+  if(!u){ el.style.display='none'; return; }
+  el.innerHTML='📣 <a href="'+escZ(u)+'" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700">'+t('chanL')+'</a><div style="opacity:.7;font-size:11px;margin-top:2px">'+t('chanH')+'</div>';
+  el.style.display='block';
+}
+function renderChat(){
+  const el=$('chatCard'); if(!el) return;
+  const u=STATE&&STATE.chat_url; const seated=MINE&&(MINE.status==='locked'||MINE.status==='paid');
+  if(!u||!seated){ el.style.display='none'; return; }
+  el.innerHTML='<div class="lbl" style="color:#25D366">💬 '+t('chatL')+'</div><div class="hint" style="margin-top:4px">'+t('chatH')+'</div>'
+    +'<a href="'+escZ(u)+'" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:10px;padding:12px;border-radius:12px;background:#25D366;color:#fff;font-weight:800;text-decoration:none">'+t('chatB')+'</a>';
+  el.style.display='block';
+}
+let CHANURL='';
 function openHow(){ const h=$('howBox'); if(h){ h.open=true; try{ h.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){} } }
 // Nasıl çalışır GIF'i yalnız kutu İLK açıldığında yüklenir (sayfa ağırlığına binmez)
 (function(){ const h=document.getElementById('howBox'); if(!h) return;
@@ -845,7 +869,7 @@ async function load(){
       const rk='grupal_rung_'+SLUG, pv=localStorage.getItem(rk);
       if(pv===null) localStorage.setItem(rk,String(li.ix));
       else if(li.ix>parseInt(pv)){ localStorage.setItem(rk,String(li.ix)); fireworks(li.ix>=li.lad.length-1?2:1); }
-    }}catch(e){} renderYou(); updJoinBtn(); renderShipNudge(); renderGifts(); renderEcon(s); renderWishes(s); renderLogo(s); if(!CLOSED&&(s.locked||0)===0) logoDemo(); loadNext(); applyTheme();
+    }}catch(e){} renderYou(); updJoinBtn(); renderShipNudge(); renderGifts(); renderEcon(s); renderWishes(s); renderChan(); renderChat(); renderLogo(s); if(!CLOSED&&(s.locked||0)===0) logoDemo(); loadNext(); applyTheme();
   }catch(e){ $('title').textContent=t('netErr'); }
 }
 function newRef(){ let r=''; for(let i=0;i<6;i++) r+='ABCDEFGHJKLMNPRSTUVYZ0123456789'[Math.floor(Math.random()*31)]; return r; }
@@ -972,7 +996,7 @@ async function checkMine(ref){
     $('cardBtn').style.display=lockedish?'block':'none';
     if(lockedish){ try{ localStorage.removeItem('grupal_pend_'+SLUG); }catch(e){} if(PENDTIMER){ clearInterval(PENDTIMER); PENDTIMER=null; } pendUI(false); }
     else pendCheck(ref);
-    renderPay(); renderChips(); renderYou();
+    renderPay(); renderChips(); renderYou(); renderChat();
   }catch(e){}
 }
 function poseLogo(p){
@@ -1382,6 +1406,7 @@ async function boot(){
     // Ömer 2026-08-30: tek kampanyada da PORTAL görünür (otomatik dalış yok) — vitrin her zaman vitrin.
     if(!openish.length){ $('title').textContent='Yakında yeni parti'; $('lot').textContent='Sıradaki kavurma günü burada duyurulacak.'; return; }
     renderPortal(openish);
+    {const cu=openish.map(c=>c.channel_url).find(Boolean); if(cu){ CHANURL=cu; renderChan(); }}   // vitrinde de kanal satırı
   }catch(e){ $('title').textContent=t('netErr'); }
 }
 {const fq=$('fQty'); if(fq) fq.addEventListener('change',function(){ updJoinBtn(); renderShipNudge(); });} // adet değişince düğme yeniden hesaplar (31h bug'ı: tel hiç çekilmemişti)
