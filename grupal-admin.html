@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · kampanya kokpiti</title>
 <meta name="robots" content="noindex">
-<!-- grupal-admin.html · v2026-09-02b · ev sandalyesi · etiket CSV · kutu ekonomisi -->
+<!-- grupal-admin.html · v2026-09-02c · dilekler (sıradaki kahve) · CoffeeNutz sandalyesi -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -118,6 +118,21 @@ a{color:var(--gold)}
       <div id="plList"></div>
       <!-- ETİKET CSV (B, 2026-09-02): DYMO Connect veri birleştirme — kutu başına bir satır -->
       <button class="mini" style="margin-top:10px" onclick="labelCsv()" title="Kutu başına bir satır: 'Ayşe K. için kavruldu' · lot/kavurucu · masa/koltuk · QR linki. DYMO Connect → İçe aktar → bu dosya.">🏷 Etiket CSV (adına kavrulmuş kutu)</button>
+      <!-- CoffeeNutz SANDALYESİ (F, 2026-09-02c): Shopify siparişi olmadan masaya kutu koy — sayımda var, kredide yok -->
+      <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:12px">
+        <span class="lbl">🐢 CoffeeNutz sandalyesi (siparişsiz · sayımda var · kredide yok)</span>
+        <div class="row" style="display:flex;gap:8px;align-items:center;margin-top:6px">
+          <input id="houseQty" inputmode="numeric" placeholder="0" style="margin:0;max-width:110px">
+          <button class="mini" onclick="houseSet()" title="Tahtada 🐢 ×N sandalye + 'CoffeeNutz masaya N sandalye koydu' satırı. 0 = kaldır.">Masaya koy</button>
+          <span class="hint" id="houseMsg"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DİLEKLER (E, 2026-09-02c): sıradaki masa için ülke·işlem·not — sıradaki lotu seçerken bak -->
+    <div class="card" id="wishCard" style="display:none">
+      <span class="lbl">dilekler · sıradaki masa hangi kahve?</span>
+      <div id="wishList" class="hint" style="margin-top:6px"></div>
     </div>
 
     <div class="card" id="kapCard" style="display:none">
@@ -133,7 +148,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-02b';
+const VERSION='v2026-09-02c';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
@@ -171,6 +186,7 @@ async function loadPledges(){
   const rows=await r.json();
   $('plCard').style.display='block';
   const arr=Array.isArray(rows)?rows:[]; PLROWS=arr;
+  {const hq=$('houseQty'); const hr=arr.find(p=>p.house&&p.name==='CoffeeNutz'); if(hq&&document.activeElement!==hq) hq.value=hr?String(hr.qty||0):''; }
   const qOf=p=>Math.max(1,parseInt(p.qty)||1);
   const totQ=arr.reduce((t,p)=>t+qOf(p),0);
   const lockedQ=arr.filter(p=>p.status==='locked'||p.status==='paid').reduce((t,p)=>t+qOf(p),0);
@@ -206,6 +222,29 @@ async function plHouse(id,house){
   const j=await r.json().catch(()=>({})); if(!j.ok) alert('Olmadı: '+(j.error||r.status)); loadPledges();
 }
 let PLROWS=[];
+async function houseSet(){
+  const qty=Math.max(0,parseInt($('houseQty').value)||0);
+  const r=await fetch(API+'/admin/house-set',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({slug:CURSLUG,qty})});
+  const j=await r.json().catch(()=>({}));
+  $('houseMsg').textContent=j.ok?('masada: '+j.qty+' kutu · kilitli toplam '+j.locked):('Olmadı: '+(j.error||r.status));
+  loadPledges();
+}
+const WNAME={ET:'Etiyopya',KE:'Kenya',RW:'Ruanda',BI:'Burundi',TZ:'Tanzanya',UG:'Uganda',CD:'Kongo DC',MW:'Malavi',ZM:'Zambiya',ZW:'Zimbabve',CM:'Kamerun',CI:'Fildişi Sahili',MG:'Madagaskar',MZ:'Mozambik',TG:'Togo',GN:'Gine',AO:'Angola',ST:'São Tomé',LR:'Liberya',SL:'Sierra Leone',NG:'Nijerya',GA:'Gabon',CF:'Orta Afrika Cum.',BR:'Brezilya',CO:'Kolombiya',PE:'Peru',EC:'Ekvador',BO:'Bolivya',VE:'Venezuela',GT:'Guatemala',CR:'Kosta Rika',HN:'Honduras',SV:'El Salvador',NI:'Nikaragua',PA:'Panama',MX:'Meksika',JM:'Jamaika',DO:'Dominik Cum.',CU:'Küba',HT:'Haiti',PR:'Porto Riko','US-HI':'Hawaii',PY:'Paraguay','ID-SUM':'Sumatra','ID-JAV':'Java','ID-SUL':'Sulawesi','ID-BAL':'Bali','ID-FLO':'Flores','ID-PAP':'Papua (Endonezya)',PG:'Papua Yeni Gine',VN:'Vietnam',TH:'Tayland',LA:'Laos',MM:'Myanmar',IN:'Hindistan',NP:'Nepal',CN:'Çin · Yunnan',PH:'Filipinler',TL:'Doğu Timor',YE:'Yemen',TW:'Tayvan',LK:'Sri Lanka',MY:'Malezya',KH:'Kamboçya',AU:'Avustralya',VU:'Vanuatu',ANY:'Fark etmez'};
+const WPROCN={washed:'Yıkanmış',natural:'Doğal',honey:'Honey',anaerobic:'Anaerobik',infused:'Infused',funky:'En cafcaflısı',any:'Fark etmez'};
+async function loadWishes(){
+  const card=$('wishCard'); if(!card) return;
+  if(!CURSLUG){ card.style.display='none'; return; }
+  const r=await fetch(API+'/admin/wishes?slug='+encodeURIComponent(CURSLUG),{headers:{'x-cc-key':KEY}});
+  const j=await r.json().catch(()=>null);
+  if(!r.ok||!j||!j.tally){ card.style.display='none'; return; }
+  card.style.display='block';
+  const tl=j.tally; let h='<div><b>'+tl.n+'</b> dilek · masadakilerden <b>'+tl.seated+'</b></div>';
+  if(!tl.n){ $('wishList').innerHTML=h+'<div>Henüz dilek yok.</div>'; return; }
+  h+=(tl.top||[]).map(x=>'<div>'+esc(WNAME[x.c]||x.c)+' · '+esc(WPROCN[x.p]||x.p)+' <b>×'+x.n+'</b></div>').join('');
+  const notes=(j.rows||[]).filter(x=>x.note);
+  if(notes.length) h+='<div style="margin-top:6px">notlar: '+notes.slice(0,30).map(x=>'“'+esc(x.note)+'”'+(x.seated?' ✓':'')).join(' · ')+'</div>';
+  $('wishList').innerHTML=h;
+}
 function labelCsv(){
   // ETİKET CSV (B): kutu başına bir satır — DYMO Connect'te veri birleştirme. UTF-8 BOM (Türkçe karakterler Excel/DYMO'da düzgün).
   const c=CAMPS.find(x=>x.slug===CURSLUG)||{}; const rows=PLROWS.filter(p=>p.status==='locked'||p.status==='paid');
@@ -288,7 +327,7 @@ async function renderList(){
 }
 function blank(){
   ['f_slug','f_title','f_lot','f_cap','f_unit','f_shipdays','f_dep','f_depamt','f_img','f_maxq','l1a','l1p','l2a','l2p','l3a','l3p'].forEach(i=>$(i).value=''); updatePrev();
-  $('f_status').value='open'; $('f_opens').value=''; $('f_shipfree').value=''; $('f_shipfee').value=''; $('f_end').value=''; $('f_roast').value=''; $('f_dep').value=''; fillNext(''); $('f_next').value=''; $('f_roaster').value=''; econFill(null); $('msg').textContent='Yeni kampanya: LOT ürün linkini yapıştır (tavan fiyatlı), merdiveni kur, tarihleri ver.'; $('linkOut').textContent=''; CURSLUG=''; $('plCard').style.display='none'; $('kapCard').style.display='none';
+  $('f_status').value='open'; $('f_opens').value=''; $('f_shipfree').value=''; $('f_shipfee').value=''; $('f_end').value=''; $('f_roast').value=''; $('f_dep').value=''; fillNext(''); $('f_next').value=''; $('f_roaster').value=''; econFill(null); $('msg').textContent='Yeni kampanya: LOT ürün linkini yapıştır (tavan fiyatlı), merdiveni kur, tarihleri ver.'; $('linkOut').textContent=''; CURSLUG=''; $('plCard').style.display='none'; $('kapCard').style.display='none'; $('wishCard').style.display='none';
 }
 function pick(i){
   const c=CAMPS[i];
@@ -306,7 +345,7 @@ function pick(i){
   econFill(c.econ||null);
   [['l1a','l1p',0],['l2a','l2p',1],['l3a','l3p',2]].forEach(([a,p,ix])=>{ $(a).value=L[ix]?L[ix].at:''; $(p).value=L[ix]?L[ix].price:''; });
   econSum();
-  $('msg').textContent='Yüklendi: '+c.slug; showLink(c.slug); CURSLUG=c.slug; loadPledges(); $('kapCard').style.display='block'; $('kapList').innerHTML=''; $('kapGo').style.display='none'; $('kapMsg').textContent='';
+  $('msg').textContent='Yüklendi: '+c.slug; showLink(c.slug); CURSLUG=c.slug; loadPledges(); loadWishes(); $('kapCard').style.display='block'; $('kapList').innerHTML=''; $('kapGo').style.display='none'; $('kapMsg').textContent='';
 }
 function showLink(slug){
   const u='https://guide.coffeenutz.net/grupal.html?k='+slug;

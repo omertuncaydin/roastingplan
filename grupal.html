@@ -278,6 +278,19 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
     <button id="zcBtn" style="margin-top:10px" data-i18n="zBtn">Sıradaki masada yerimi ayır</button>
   </div>
 
+  <!-- DİLEK KARTI (bir müşteri istedi, 2026-09-02): sıradaki kavurma günü için ülke + işlem + not. Cihaz başına tek dilek, değiştirilebilir. -->
+  <div class="card" id="wishCard" style="display:none;border-color:var(--gold)">
+    <div class="lbl" style="color:var(--gold)" data-i18n="wishLbl">sıradaki masa: hangi kahve?</div>
+    <div class="hint" style="margin-top:4px" data-i18n="wishH">Sıradaki kavurma günü için ülke ve işlem seç, bir dilek bırak. Tek dilek; istersen değiştir.</div>
+    <select id="wCountry"></select>
+    <select id="wProc"></select>
+    <div class="hint" id="wProcHint" style="margin-top:4px;text-align:left"></div>
+    <input id="wNote" maxlength="60" autocomplete="off" data-i18n-ph="wishNoteP" placeholder="not (isteğe bağlı): 'Gesha olsun'">
+    <button id="wBtn" onclick="wishSend()" data-i18n="wishBtn">Dileğimi bırak</button>
+    <div class="hint" id="wMine" style="display:none;margin-top:8px;color:var(--green);font-weight:700"></div>
+    <div id="wTally" style="margin-top:10px"></div>
+  </div>
+
   <div class="share" id="shareBox">
     <div id="lockRow" style="display:none;margin-bottom:10px">
       <div style="font-size:14px;margin-bottom:8px" data-i18n="unpaid">Kaydın var ama ödemen tamamlanmadı. Masaya oturmak için:</div>
@@ -319,7 +332,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-02b';
+const VERSION='v2026-09-02c';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -397,7 +410,21 @@ houseChip:['ev sandalyesi 🐢','house chair 🐢'], houseT:['🐢 Ev sandalyesi
 labelL:['🏷 Her kutu adına kavrulur: "Ayşe için kavruldu"','🏷 Every box is roasted in your name: "Roasted for Ayşe"'],
 econT:['kutu fiyatı nereden geliyor?','where does the box price come from?'], econA:[' · 1 kutuluk kavurma günü',' · a one-box roast day'], econB:[' · masa dolu',' · full table'],
 econS:['Masa büyüdükçe fiyat neden iner: kavurma gününün sabit maliyeti daha çok kutuya bölünür, kargo tek gönderide birleşir. Paylar yukarıda, kutu başına.','Why the price falls as the table grows: the roast day\'s fixed cost is split across more boxes and shipping merges into one dispatch. The shares are above, per box.'],
-ecYesil:['Yeşil kahve','Green coffee'], ecSabit:['Kavurma günü sabitleri','Roast-day fixed costs'], ecAmbalaj:['Ambalaj','Packaging'], ecKargo:['Kargo','Shipping'], ecKdv:['KDV','VAT'], ecCn:['CoffeeNutz','CoffeeNutz']
+ecYesil:['Yeşil kahve','Green coffee'], ecSabit:['Kavurma günü sabitleri','Roast-day fixed costs'], ecAmbalaj:['Ambalaj','Packaging'], ecKargo:['Kargo','Shipping'], ecKdv:['KDV','VAT'], ecCn:['CoffeeNutz','CoffeeNutz'],
+// DİLEK (sıradaki kahve) — 2026-09-02c
+wishLbl:['sıradaki masa: hangi kahve?','next table: which coffee?'], wishH:['Sıradaki kavurma günü için ülke ve işlem seç, bir dilek bırak. Tek dilek; istersen değiştir.','Pick a country and a process for the next roast day and leave a wish. One wish; change it any time.'],
+wishNoteP:["not (isteğe bağlı): 'Gesha olsun'","note (optional): 'make it a Gesha'"], wishBtn:['Dileğimi bırak','Leave my wish'], wishUpd:['Dileğimi güncelle','Update my wish'],
+wishMine:['Dileğin masada: ','Your wish is on the table: '], wishSent:['Dileğin alındı ✓','Wish received ✓'], wishTallyL:['dilekler','wishes'], wishFrom:[' · masadakilerden ',' · from seated guests '],
+wishNone:['İlk dilek senin olsun.','Be the first to wish.'], wishSeated:['masadan','seated'], wishCountryP:['Ülke seç','Pick a country'], wishProcP:['İşlem seç','Pick a process'],
+rgAfrica:['Afrika','Africa'], rgAmerica:['Amerika','Americas'], rgAsia:['Asya-Pasifik','Asia-Pacific'], rgAny:['Sürpriz','Surprise'],
+prWashed:['Yıkanmış (Washed)','Washed'], prNatural:['Doğal (Natural)','Natural'], prHoney:['Honey','Honey'], prAnaerobic:['Anaerobik','Anaerobic'], prInfused:['Infused (katkılı fermantasyon)','Infused (co-fermented)'], prFunky:['En cafcaflısından olsun','Funky as it can be'], prAny:['Fark etmez','Any'],
+hWashed:['Meyve eti soyulur, çekirdek yıkanıp kurutulur — temiz, parlak asidite.','Pulp removed, seeds washed then dried — clean, bright acidity.'],
+hNatural:['Meyvesiyle birlikte kurutulur — tatlı, meyvemsi, dolgun gövde.','Dried inside the fruit — sweet, fruity, full body.'],
+hHoney:['Meyve eti alınır, yapışkan bal katmanı kalır — tatlı ve yumuşak.','Pulp removed, the sticky mucilage stays — sweet and soft.'],
+hAnaerobic:['Oksijensiz tankta fermantasyon — yoğun, şarabımsı, baharatlı.','Fermented in a sealed, oxygen-free tank — intense, winey, spiced.'],
+hInfused:['Fermantasyona meyve, baharat ya da maya eklenir — aroma dışarıdan gelir, etiketi bunu söyler.','Fruit, spice or yeast added during fermentation — the aroma comes from outside; the label says so.'],
+hFunky:['Uçlarda deneysel: uzun fermantasyon, sürpriz aromalar — herkese göre değil.','Experimental at the edges: long ferments, surprise aromas — not for everyone.'],
+hAny:['Kavurucu seçsin.','Let the roaster choose.']
 };
 function t(k){ const e=STR[k]; return e?(LANG==='en'?e[1]:e[0]):k; }
 function applyLang(){
@@ -652,6 +679,63 @@ function renderEcon(s){
   h+='<div class="hint" style="margin-top:8px;line-height:1.5">'+t('econS')+'</div>';
   el.innerHTML=h; el.style.display='block';
 }
+// ---- DİLEK: sıradaki masa için ülke + işlem (bir müşteri istedi, Ömer 2026-09-02) ---------------------------
+// Ülke kodları ISO-2 (+ ada/bölge eki). Ada/bölge: Endonezya adaları ve Hawaii ayrı satır — kahvede ada, ülke kadar kimliktir.
+const WCOUNTRIES=[
+ ['rgAfrica',[['ET','Etiyopya','Ethiopia'],['KE','Kenya','Kenya'],['RW','Ruanda','Rwanda'],['BI','Burundi','Burundi'],['TZ','Tanzanya','Tanzania'],['UG','Uganda','Uganda'],['CD','Kongo DC','DR Congo'],['MW','Malavi','Malawi'],['ZM','Zambiya','Zambia'],['ZW','Zimbabve','Zimbabwe'],['CM','Kamerun','Cameroon'],['CI','Fildişi Sahili',"Côte d'Ivoire"],['MG','Madagaskar','Madagascar'],['MZ','Mozambik','Mozambique'],['TG','Togo','Togo'],['GN','Gine','Guinea'],['AO','Angola','Angola'],['ST','São Tomé','São Tomé'],['LR','Liberya','Liberia'],['SL','Sierra Leone','Sierra Leone'],['NG','Nijerya','Nigeria'],['GA','Gabon','Gabon'],['CF','Orta Afrika Cum.','Central African Rep.']]],
+ ['rgAmerica',[['BR','Brezilya','Brazil'],['CO','Kolombiya','Colombia'],['PE','Peru','Peru'],['EC','Ekvador','Ecuador'],['BO','Bolivya','Bolivia'],['VE','Venezuela','Venezuela'],['GT','Guatemala','Guatemala'],['CR','Kosta Rika','Costa Rica'],['HN','Honduras','Honduras'],['SV','El Salvador','El Salvador'],['NI','Nikaragua','Nicaragua'],['PA','Panama','Panama'],['MX','Meksika','Mexico'],['JM','Jamaika','Jamaica'],['DO','Dominik Cum.','Dominican Rep.'],['CU','Küba','Cuba'],['HT','Haiti','Haiti'],['PR','Porto Riko','Puerto Rico'],['US-HI','Hawaii (ABD)','Hawaii (USA)'],['PY','Paraguay','Paraguay']]],
+ ['rgAsia',[['ID-SUM','Endonezya · Sumatra','Indonesia · Sumatra'],['ID-JAV','Endonezya · Java','Indonesia · Java'],['ID-SUL','Endonezya · Sulawesi','Indonesia · Sulawesi'],['ID-BAL','Endonezya · Bali','Indonesia · Bali'],['ID-FLO','Endonezya · Flores','Indonesia · Flores'],['ID-PAP','Endonezya · Papua','Indonesia · Papua'],['PG','Papua Yeni Gine','Papua New Guinea'],['VN','Vietnam','Vietnam'],['TH','Tayland','Thailand'],['LA','Laos','Laos'],['MM','Myanmar','Myanmar'],['IN','Hindistan','India'],['NP','Nepal','Nepal'],['CN','Çin · Yunnan','China · Yunnan'],['PH','Filipinler','Philippines'],['TL','Doğu Timor','Timor-Leste'],['YE','Yemen','Yemen'],['TW','Tayvan','Taiwan'],['LK','Sri Lanka','Sri Lanka'],['MY','Malezya','Malaysia'],['KH','Kamboçya','Cambodia'],['AU','Avustralya','Australia'],['VU','Vanuatu','Vanuatu']]],
+ ['rgAny',[['ANY','Fark etmez · kavurucu seçsin','Any · let the roaster choose']]]
+];
+const WPROCS=[['washed','prWashed','hWashed'],['natural','prNatural','hNatural'],['honey','prHoney','hHoney'],['anaerobic','prAnaerobic','hAnaerobic'],['infused','prInfused','hInfused'],['funky','prFunky','hFunky'],['any','prAny','hAny']];
+function wCountryName(code){ for(const g of WCOUNTRIES) for(const c of g[1]) if(c[0]===code) return LANG==='en'?c[2]:c[1]; return code; }
+function wProcName(key){ const p=WPROCS.find(x=>x[0]===key); return p?t(p[1]):key; }
+function devId(){ let d=''; try{ d=localStorage.getItem('grupal_dev')||''; if(!/^[A-Z0-9]{8,16}$/.test(d)){ d=''; for(let i=0;i<10;i++) d+='ABCDEFGHJKLMNPRSTUVYZ0123456789'[Math.floor(Math.random()*31)]; localStorage.setItem('grupal_dev',d); } }catch(e){ d='NOSTORAGE0'; } return d; }
+function wishMine(){ try{ return JSON.parse(localStorage.getItem('grupal_wish_'+SLUG)||'null'); }catch(e){ return null; } }
+function buildWish(){
+  const cs=$('wCountry'), ps=$('wProc'); if(!cs||!ps) return;
+  const curC=cs.value, curP=ps.value;
+  cs.innerHTML='<option value="">'+t('wishCountryP')+'</option>'+WCOUNTRIES.map(g=>'<optgroup label="'+t(g[0])+'">'+g[1].map(c=>'<option value="'+c[0]+'">'+escZ(LANG==='en'?c[2]:c[1])+'</option>').join('')+'</optgroup>').join('');
+  ps.innerHTML='<option value="">'+t('wishProcP')+'</option>'+WPROCS.map(p=>'<option value="'+p[0]+'">'+t(p[1])+'</option>').join('');
+  const m=wishMine();
+  cs.value=curC||(m&&m.c)||''; ps.value=curP||(m&&m.p)||'';
+  if(m&&!$('wNote').value) $('wNote').value=m.n||'';
+  wishHint(); wishMineRow();
+}
+function wishHint(){ const ps=$('wProc'), h=$('wProcHint'); if(!ps||!h) return; const p=WPROCS.find(x=>x[0]===ps.value); h.textContent=p?t(p[2]):''; h.style.display=p?'block':'none'; }
+function wishMineRow(){ const m=wishMine(), el=$('wMine'), b=$('wBtn'); if(!el||!b) return;
+  if(m&&m.c&&m.p){ el.textContent=t('wishMine')+wCountryName(m.c)+' · '+wProcName(m.p)+(m.n?(' · "'+m.n+'"'):''); el.style.display='block'; b.textContent=t('wishUpd'); }
+  else { el.style.display='none'; b.textContent=t('wishBtn'); } }
+function renderWishes(s){
+  const card=$('wishCard'); if(!card) return;
+  if(!$('wCountry').options.length||$('wCountry').dataset.lang!==LANG){ buildWish(); $('wCountry').dataset.lang=LANG; }
+  const w=s&&s.wishes; const el=$('wTally');
+  if(!w||!w.n){ el.innerHTML='<div class="hint">'+t('wishNone')+'</div>'; }
+  else {
+    let h='<div class="lbl" style="margin-bottom:6px">'+t('wishTallyL')+' · '+w.n+(w.seated?('<span style="text-transform:none;letter-spacing:0">'+t('wishFrom')+w.seated+'</span>'):'')+'</div>';
+    const mx=Math.max(1,...(w.top||[]).map(x=>x.n));
+    for(const x of (w.top||[]).slice(0,6)){
+      h+='<div style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0"><span style="flex:1">'+escZ(wCountryName(x.c))+' · '+escZ(wProcName(x.p))+'</span>'
+        +'<span style="width:34%;height:8px;border-radius:4px;background:var(--panel2);overflow:hidden"><i style="display:block;height:100%;width:'+Math.round(100*x.n/mx)+'%;background:var(--gold)"></i></span><b style="min-width:26px;text-align:right">×'+x.n+'</b></div>'; }
+    el.innerHTML=h;
+  }
+  card.style.display='block';
+}
+async function wishSend(){
+  const c=$('wCountry').value, p=$('wProc').value, n=String($('wNote').value||'').trim().replace(/[\u0000-\u001f<>]/g,'').slice(0,60);
+  if(!c||!p){ $('wMine').style.display='block'; $('wMine').style.color='var(--warn)'; $('wMine').textContent=!c?t('wishCountryP'):t('wishProcP'); return; }
+  let ref=''; try{ ref=localStorage.getItem('grupal_'+SLUG)||''; }catch(e){}
+  const b=$('wBtn'); b.disabled=true;
+  try{
+    const r=await fetch(API+'/wish',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:SLUG,dev:devId(),country:c,process:p,note:n,ref:(/^[A-Z0-9]{4,12}$/.test(ref)?ref:'')})});
+    const j=await r.json();
+    if(j&&j.ok){ try{ localStorage.setItem('grupal_wish_'+SLUG, JSON.stringify({c:c,p:p,n:n})); }catch(e){}
+      $('wMine').style.color='var(--green)'; wishMineRow(); $('wMine').textContent=t('wishSent')+' · '+wCountryName(c)+' · '+wProcName(p);
+      if(j.wishes){ STATE=STATE||{}; STATE.wishes=j.wishes; renderWishes(STATE); } }
+    else { $('wMine').style.display='block'; $('wMine').style.color='var(--warn)'; $('wMine').textContent=t('netErr'); }
+  }catch(e){ $('wMine').style.display='block'; $('wMine').style.color='var(--warn)'; $('wMine').textContent=t('netErr'); }
+  b.disabled=false;
+}
 function openHow(){ const h=$('howBox'); if(h){ h.open=true; try{ h.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){} } }
 // Nasıl çalışır GIF'i yalnız kutu İLK açıldığında yüklenir (sayfa ağırlığına binmez)
 (function(){ const h=document.getElementById('howBox'); if(!h) return;
@@ -761,7 +845,7 @@ async function load(){
       const rk='grupal_rung_'+SLUG, pv=localStorage.getItem(rk);
       if(pv===null) localStorage.setItem(rk,String(li.ix));
       else if(li.ix>parseInt(pv)){ localStorage.setItem(rk,String(li.ix)); fireworks(li.ix>=li.lad.length-1?2:1); }
-    }}catch(e){} renderYou(); updJoinBtn(); renderShipNudge(); renderGifts(); renderEcon(s); renderLogo(s); if(!CLOSED&&(s.locked||0)===0) logoDemo(); loadNext(); applyTheme();
+    }}catch(e){} renderYou(); updJoinBtn(); renderShipNudge(); renderGifts(); renderEcon(s); renderWishes(s); renderLogo(s); if(!CLOSED&&(s.locked||0)===0) logoDemo(); loadNext(); applyTheme();
   }catch(e){ $('title').textContent=t('netErr'); }
 }
 function newRef(){ let r=''; for(let i=0;i<6;i++) r+='ABCDEFGHJKLMNPRSTUVYZ0123456789'[Math.floor(Math.random()*31)]; return r; }
@@ -1301,6 +1385,7 @@ async function boot(){
   }catch(e){ $('title').textContent=t('netErr'); }
 }
 {const fq=$('fQty'); if(fq) fq.addEventListener('change',function(){ updJoinBtn(); renderShipNudge(); });} // adet değişince düğme yeniden hesaplar (31h bug'ı: tel hiç çekilmemişti)
+{const wp=$('wProc'); if(wp) wp.addEventListener('change',wishHint); }   // işlem seçilince tek satır açıklama
 {const fg=$('fGift'); if(fg) fg.addEventListener('change',giftToggle);   // hediye anahtarı: isim kutusu + düğme metni
  const fn=$('fGiftName'); if(fn) fn.addEventListener('input',function(){ setMsg(''); }); }
 boot();
