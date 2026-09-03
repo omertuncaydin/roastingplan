@@ -337,7 +337,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-02f';
+const VERSION='v2026-09-02g';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -432,7 +432,7 @@ hFunky:['Uçlarda deneysel: uzun fermantasyon, sürpriz aromalar — herkese gö
 hAny:['Kavurucu seçsin.','Let the roaster choose.'],
 // İLETİŞİM RAYLARI (G) — 2026-09-02d
 chanL:['Grup-Al kanalı','Grup-Al channel'], chanH:['masa açılınca · basamak geçilince · kutular yola çıkınca — yalnız bu üçü','table opens · rung passes · boxes ship — only these three'],
-voteL:['oy ver','vote'], voteMine:['✓ oyun','✓ your vote'], voteH:['Bir satıra dokun: oyun o kahveye geçer.','Tap a row: your vote moves to that coffee.'],
+voteL:['oy ver','vote'], voteMine:['✓ oyun','✓ your vote'], voteUndo:['oyu geri al','withdraw vote'], voteGone:['Oyun geri alındı.','Your vote is withdrawn.'], voteH:['Bir satıra dokun: oyun o kahveye geçer.','Tap a row: your vote moves to that coffee.'],
 chatL:['masanın grubu','the table\'s group'], chatH:['Yalnız masadakiler. Kavurma günü fotoğrafları, ilk çatlak, "kutum geldi".','Seated guests only. Roast-day photos, first crack, "my box arrived".'], chatB:['Gruba katıl','Join the group']
 };
 function t(k){ const e=STR[k]; return e?(LANG==='en'?e[1]:e[0]):k; }
@@ -713,7 +713,7 @@ function buildWish(){
 }
 function wishHint(){ const ps=$('wProc'), h=$('wProcHint'); if(!ps||!h) return; const p=WPROCS.find(x=>x[0]===ps.value); h.textContent=p?t(p[2]):''; h.style.display=p?'block':'none'; }
 function wishMineRow(){ const m=wishMine(), el=$('wMine'), b=$('wBtn'); if(!el||!b) return;
-  if(m&&m.c&&m.p){ el.textContent=t('wishMine')+wCountryName(m.c)+' · '+wProcName(m.p)+(m.n?(' · "'+m.n+'"'):''); el.style.display='block'; b.textContent=t('wishUpd'); }
+  if(m&&m.c&&m.p){ el.innerHTML=escZ(t('wishMine')+wCountryName(m.c)+' · '+wProcName(m.p)+(m.n?(' · "'+m.n+'"'):''))+' <a onclick="wishUndo()" style="color:var(--muted);font-weight:400;cursor:pointer;text-decoration:underline;margin-left:6px">'+t('voteUndo')+'</a>'; el.style.display='block'; b.textContent=t('wishUpd'); }
   else { el.style.display='none'; b.textContent=t('wishBtn'); } }
 function renderWishes(s){
   const card=$('wishCard'); if(!card) return;
@@ -733,6 +733,20 @@ function renderWishes(s){
     el.innerHTML=h;
   }
   card.style.display='block';
+}
+async function wishUndo(){
+  // OY GERİ ALMA (Ömer 2026-09-03): cihazın dileği silinir; seçimler temizlenir; sayaç sunucudan yenilenir
+  const b=$('wBtn'); if(b) b.disabled=true;
+  try{
+    const r=await fetch(API+'/wish',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:SLUG,dev:devId(),withdraw:true})});
+    const j=await r.json();
+    if(j&&j.ok){ try{ localStorage.removeItem('grupal_wish_'+SLUG); }catch(e){}
+      $('wCountry').value=''; $('wProc').value=''; $('wNote').value=''; wishHint(); wishMineRow();
+      $('wMine').style.display='block'; $('wMine').style.color='var(--muted)'; $('wMine').textContent=t('voteGone');
+      if(j.wishes){ STATE=STATE||{}; STATE.wishes=j.wishes; renderWishes(STATE); $('wMine').style.display='block'; $('wMine').textContent=t('voteGone'); } }
+    else { $('wMine').style.display='block'; $('wMine').style.color='var(--warn)'; $('wMine').textContent=t('netErr'); }
+  }catch(e){ $('wMine').style.display='block'; $('wMine').style.color='var(--warn)'; $('wMine').textContent=t('netErr'); }
+  if(b) b.disabled=false;
 }
 function wishVote(c,p){ const cs=$('wCountry'), ps=$('wProc'); if(!cs||!ps) return; cs.value=c; ps.value=p; wishHint(); wishSend(); }
 async function wishSend(){
