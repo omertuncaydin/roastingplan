@@ -153,7 +153,8 @@ body.portalWide #portal{display:block}
 .dealline b{color:var(--gold)}
 .dealline a{color:var(--accent);cursor:pointer;text-decoration:underline}
 #footLine a{color:var(--accent);text-decoration:underline}
-body.th-red .dealline a,body.th-red #footLine a{color:#e6c14b}
+#chanLine a{color:var(--accent);font-weight:700}
+body.th-red .dealline a,body.th-red #footLine a,body.th-red #chanLine a{color:#e6c14b}   /* kırmızıda --accent = zemin rengi: kanal linki altın */
 body.th-red details.how summary,body.th-red details.kvkk summary{color:#f0dcc8}
 body.th-red details.how[open] summary,body.th-red details.kvkk[open] summary{color:#f6efe1}
 /* KIRMIZI SÜPÜRGE: zeminde (panelde değil) accent kullanan her şey — accent==bg olduğundan altın/kreme döner.
@@ -336,7 +337,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-02d';
+const VERSION='v2026-09-02e';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -748,7 +749,7 @@ function renderChan(){
   const el=$('chanLine'); if(!el) return;
   const u=(STATE&&STATE.channel_url)||CHANURL||'';
   if(!u){ el.style.display='none'; return; }
-  el.innerHTML='📣 <a href="'+escZ(u)+'" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700">'+t('chanL')+'</a><div style="opacity:.7;font-size:11px;margin-top:2px">'+t('chanH')+'</div>';
+  el.innerHTML='📣 <a href="'+escZ(u)+'" target="_blank" rel="noopener">'+t('chanL')+'</a><div style="opacity:.7;font-size:11px;margin-top:2px">'+t('chanH')+'</div>';
   el.style.display='block';
 }
 function renderChat(){
