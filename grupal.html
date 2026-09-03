@@ -337,7 +337,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-02m';
+const VERSION='v2026-09-02n';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -413,7 +413,7 @@ giftCred:['Fark, hediye edenin Grup-Al kredisi olarak yazıldı.',"The differenc
 houseLine:['CoffeeNutz masaya {n} sandalye koydu','CoffeeNutz put {n} chairs at the table'], houseTip:['CoffeeNutz · masaya katkı','CoffeeNutz · table contribution'],
 houseChip:['ev sandalyesi 🐢','house chair 🐢'], houseT:['🐢 Ev sandalyesi ✓','🐢 House chair ✓'], houseK:['Bu koltuk CoffeeNutz katkısı; kapanış kredisinden hariç.','This chair is a CoffeeNutz contribution; excluded from the close-out credit.'],
 labelL:['🏷 Her kutu adına kavrulur: "Ayşe için kavruldu"','🏷 Every box is roasted in your name: "Roasted for Ayşe"'],
-econT:['kutu fiyatı nereden geliyor?','where does the box price come from?'], econA:[' · liste fiyatı · CoffeeNutz kendi kavurur',' · list price · CoffeeNutz roasts in-house'], econB:[' · masa dolu · {roaster} kavurur',' · full table · roasted by {roaster}'],
+econT:['kutu fiyatı nereden geliyor?','where does the box price come from?'], econA:[' · liste fiyatı · CoffeeNutz kendi kavurur',' · list price · CoffeeNutz roasts in-house'], econB:[' · masa dolu · CoffeeNutz® Crack Listener® uygulaması ile {roaster} kavurur',' · full table · roasted by {roaster} with the CoffeeNutz® Crack Listener® app'],
 econS:['Sol: liste fiyatı — CoffeeNutz kendi kavurur. Sağ: masa dolu — kavurma günü konuk kavurucuya emanet; sabit maliyet kutulara bölünür, kargo tek gönderide birleşir. Paylar kutu başına.','Left: list price — CoffeeNutz roasts in-house. Right: full table — roast day in the guest roaster\'s hands; fixed cost is split across the boxes and shipping merges into one dispatch. Shares per box.'],
 ecYesil:['Yeşil kahve','Green coffee'], ecSabit:['Kavurma günü sabitleri','Roast-day fixed costs'], ecAmbalaj:['Ambalaj','Packaging'], ecKargo:['Kargo','Shipping'], ecKdv:['KDV','VAT'], ecCn:['CoffeeNutz','CoffeeNutz'],
 // DİLEK (sıradaki kahve) — 2026-09-02c
