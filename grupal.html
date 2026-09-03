@@ -337,7 +337,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-02k';
+const VERSION='v2026-09-02l';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -433,7 +433,7 @@ hAny:['Kavurucu seçsin.','Let the roaster choose.'],
 // İLETİŞİM RAYLARI (G) — 2026-09-02d
 chanL:['Grup-Al WhatsApp kanalı','Grup-Al WhatsApp channel'], chanH:['masa açılınca · basamak geçilince · kutular yola çıkınca — yalnız bu üçü','table opens · rung passes · boxes ship — only these three'],
 voteL:['oy ver','vote'], voteMine:['✓ oyun','✓ your vote'], voteUndo:['oyu geri al','withdraw vote'], voteGone:['Oyun geri alındı.','Your vote is withdrawn.'], voteH:['Bir satıra dokun: oyun o kahveye geçer. Kendi satırına tekrar dokun: oyun geri alınır.','Tap a row: your vote moves to that coffee. Tap your own row again: your vote is withdrawn.'],
-chatL:['masanın WhatsApp grubu','the table\'s WhatsApp group'], chatH:['Yalnız masadakiler. Deneme lotları önce burada · sıradaki masa önce burada duyulur · kavurma günü canlı, ilk çatlak · masanın tarifi ve kavurma verisi.','Seated guests only. Trial lots come here first · the next table is announced here first · roast day live, first crack · the table\'s recipe and roast data.'], chatB:['Gruba katıl','Join the group']
+chatL:['Grup-Al® WhatsApp grubu','Grup-Al® WhatsApp group'], chatH:['Deneme lotları ve sıradaki masa için tadım numuneleri · kavurma günü canlı · reçete yardımı · kavurma verisi · yalnız gerektiğinde mesaj.','Trial lots and tasting packs for the next table · roast day live · recipe help · roast data · messages only when needed.'], chatB:['Gruba katıl','Join the group']
 };
 function t(k){ const e=STR[k]; return e?(LANG==='en'?e[1]:e[0]):k; }
 function applyLang(){
