@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · kampanya kokpiti</title>
 <meta name="robots" content="noindex">
-<!-- grupal-admin.html · v2026-09-02m · kutu ekonomisi: kalan kavurucu ile CoffeeNutz arasında eşit bölünür -->
+<!-- grupal-admin.html · v2026-09-02n · kutu ekonomisi: sol LİSTE FİYATI (kavurucu yok), sağ masa dolu (kalan eşit) -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -88,17 +88,17 @@ a{color:var(--gold)}
       <!-- KUTU EKONOMİSİ (C, 2026-09-02): "Nasıl çalışır?" içindeki iki çubuğun kaynağı. Kutu başına TL. Boş = grafik yok. -->
       <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:12px">
         <span class="lbl">kutu ekonomisi (Nasıl çalışır? grafiği · kutu başına TL · boş bırakırsan grafik çıkmaz)</span>
-        <div class="hint" style="margin:4px 0 6px">Sol sütun 1 kutuluk kavurma günü (tavan), sağ sütun masa dolu (taban). Önce KUTU FİYATI'nı yaz (merdivenden gelir, değiştirilebilir); maliyet kalemlerini gir; <b>kalan, kavurucu ile CoffeeNutz arasında eşit bölünür</b> (kendiliğinden). Kavurucu satırı yukarıdaki kavurucu adıyla görünür.</div>
+        <div class="hint" style="margin:4px 0 6px">İki senaryo (Ömer 2026-09-03): <b>sol = LİSTE FİYATI, kavurucu yok</b> (CoffeeNutz kendi kavurur; kalanın tamamı CoffeeNutz) · <b>sağ = masa dolu, konuk kavurucu</b> (kalan kavurucu ile CoffeeNutz arasında eşit). Liste fiyatını elle yaz (ör. 750); sağ toplam merdivenin son basamağından gelir, değiştirilebilir.</div>
         <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px 8px;align-items:center;font-size:13px">
-          <div class="hint">kalem</div><div class="hint">1 kutu (tavan)</div><div class="hint">masa dolu (taban)</div>
-          <div><b>Kutu fiyatı (toplam)</b></div><input id="e_total_a" inputmode="numeric" placeholder="tavan" style="margin:0;border-color:var(--gold)"><input id="e_total_b" inputmode="numeric" placeholder="taban" style="margin:0;border-color:var(--gold)">
+          <div class="hint">kalem</div><div class="hint">liste fiyatı · kavurucu yok</div><div class="hint">masa dolu · konuk kavurucu</div>
+          <div><b>Kutu fiyatı (toplam)</b></div><input id="e_total_a" inputmode="numeric" placeholder="750" style="margin:0;border-color:var(--gold)"><input id="e_total_b" inputmode="numeric" placeholder="taban" style="margin:0;border-color:var(--gold)">
           <div>Yeşil kahve</div><input id="e_yesil_a" inputmode="numeric" placeholder="0" style="margin:0"><input id="e_yesil_b" inputmode="numeric" placeholder="0" style="margin:0">
           <div>Kavurma günü sabitleri</div><input id="e_sabit_a" inputmode="numeric" placeholder="0" style="margin:0"><input id="e_sabit_b" inputmode="numeric" placeholder="0" style="margin:0">
           <div>Ambalaj</div><input id="e_ambalaj_a" inputmode="numeric" placeholder="0" style="margin:0"><input id="e_ambalaj_b" inputmode="numeric" placeholder="0" style="margin:0">
           <div>Kargo</div><input id="e_kargo_a" inputmode="numeric" placeholder="0" style="margin:0"><input id="e_kargo_b" inputmode="numeric" placeholder="0" style="margin:0">
           <div>KDV</div><input id="e_kdv_a" inputmode="numeric" placeholder="0" style="margin:0"><input id="e_kdv_b" inputmode="numeric" placeholder="0" style="margin:0">
-          <div id="e_roaster_lbl">Kavurucu payı <span class="hint">= kalanın yarısı</span></div><input id="e_roaster_a" readonly tabindex="-1" placeholder="0" style="margin:0;opacity:.8"><input id="e_roaster_b" readonly tabindex="-1" placeholder="0" style="margin:0;opacity:.8">
-          <div>CoffeeNutz payı <span class="hint">= kalanın yarısı</span></div><input id="e_cn_a" readonly tabindex="-1" placeholder="0" style="margin:0;opacity:.8"><input id="e_cn_b" readonly tabindex="-1" placeholder="0" style="margin:0;opacity:.8">
+          <div id="e_roaster_lbl">Kavurucu payı <span class="hint">sol 0 · sağ kalanın yarısı</span></div><input id="e_roaster_a" readonly tabindex="-1" placeholder="0" style="margin:0;opacity:.8"><input id="e_roaster_b" readonly tabindex="-1" placeholder="0" style="margin:0;opacity:.8">
+          <div>CoffeeNutz payı <span class="hint">sol kalan · sağ kalanın yarısı</span></div><input id="e_cn_a" readonly tabindex="-1" placeholder="0" style="margin:0;opacity:.8"><input id="e_cn_b" readonly tabindex="-1" placeholder="0" style="margin:0;opacity:.8">
         </div>
         <div class="hint" id="econSum" style="margin-top:8px"></div>
       </div>
@@ -153,7 +153,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-02m';
+const VERSION='v2026-09-02n';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
@@ -272,13 +272,15 @@ function labelCsv(){
 const ECON_KEYS=['yesil','sabit','ambalaj','kargo','kdv','roaster','cn'];
 const ECON_IN=ECON_KEYS.filter(k=>k!=='cn'&&k!=='roaster');   // elle girilen maliyetler; kalan kavurucu+CoffeeNutz'a EŞİT bölünür (Ömer 2026-09-03)
 const ladderPrice=(col)=>{ const num=v=>{ const m=String(v||'').match(/\d[\d.]*/); return m?parseInt(m[0].replace(/\./g,'')):0; };
-  return col==='a'?num($('l1p').value):(num($('l3p').value)||num($('l2p').value)); };
+  return col==='a'?0:(num($('l3p').value)||num($('l2p').value)); };   // sol sütun LİSTE fiyatı: merdivende yok, elle yazılır
 function econTotal(col){ const v=parseInt($('e_total_'+col).value); return isFinite(v)&&v>0?v:0; }
 function econRecalc(){ // kalan = toplam − girilen kalemler; toplam boşsa merdivenden gelir
   for(const col of ['a','b']){ if(!$('e_total_'+col).value.trim()){ const lp=ladderPrice(col); if(lp) $('e_total_'+col).value=String(lp); }
     const tot=econTotal(col); const sum=ECON_IN.reduce((t,k)=>t+(parseInt($('e_'+k+'_'+col).value)||0),0);
     if(!sum){ $('e_roaster_'+col).value=''; $('e_cn_'+col).value=''; continue; }   // kalem yoksa pay da yok (boş form = grafik yok)
-    const rem=tot-sum, half=Math.floor(rem/2);   // tek liraysa CoffeeNutz alır
+    const rem=tot-sum;
+    if(col==='a'){ $('e_roaster_'+col).value='0'; $('e_cn_'+col).value=String(rem); continue; }   // liste fiyatı: kavurucu yok, kalan CoffeeNutz
+    const half=Math.floor(rem/2);   // masa dolu: eşit; tek liraysa CoffeeNutz alır
     $('e_roaster_'+col).value=String(half); $('e_cn_'+col).value=String(rem-half); } }
 function econRead(){ econRecalc(); const e={}; let any=false; for(const k of ECON_KEYS){ const a=parseInt($('e_'+k+'_a').value)||0, b=parseInt($('e_'+k+'_b').value)||0; if(ECON_IN.includes(k)&&(a||b)) any=true; e[k]=[a,b]; } return any?e:null; }
 function econFill(e){ // kayıttan gelen: toplam = tüm kalemlerin toplamı (cn dahil); cn yeniden kalan olur
@@ -287,14 +289,14 @@ function econFill(e){ // kayıttan gelen: toplam = tüm kalemlerin toplamı (cn 
   econSum(); }
 function econSum(){
   const el=$('econSum'); if(!el) return; econRecalc(); const e=econRead();
-  const rl=$('e_roaster_lbl'); if(rl) rl.innerHTML=esc(($('f_roaster').value.trim()||'Kavurucu')+' payı')+' <span class="hint">= kalanın yarısı</span>';
+  const rl=$('e_roaster_lbl'); if(rl) rl.innerHTML=esc(($('f_roaster').value.trim()||'Kavurucu')+' payı')+' <span class="hint">sol 0 · sağ kalanın yarısı</span>';
   if(!e){ el.textContent='Boş: grafik yayınlanmaz.'; return; }
-  const tavan=ladderPrice('a'), taban=ladderPrice('b');
+  const taban=ladderPrice('b');
   const line=(col,lbl,ref)=>{ const i=col==='a'?0:1, tot=econTotal(col), rem=e.roaster[i]+e.cn[i];
-    let h=lbl+': kutu fiyatı <b>'+tot+' TL</b>'+(ref?(tot===ref?' ✓ merdivenle eşit':' — <span style="color:#e0705a">merdiven '+ref+' TL</span>'):'');
-    h+=' · kalan <b'+(rem<0?' style="color:#e0705a"':'')+'>'+rem+' TL</b> → '+esc($('f_roaster').value.trim()||'kavurucu')+' <b>'+e.roaster[i]+'</b> · CoffeeNutz <b>'+e.cn[i]+'</b>'+(rem<0?' — <span style="color:#e0705a">kalemler fiyatı aşıyor</span>':'');
+    let h=lbl+': kutu fiyatı <b>'+tot+' TL</b>'+(col==='a'&&!tot?' — <span style="color:#e0705a">liste fiyatını yaz</span>':'')+(ref?(tot===ref?' ✓ merdivenle eşit':' — <span style="color:#e0705a">merdiven '+ref+' TL</span>'):'');
+    h+=' · kalan <b'+(rem<0?' style="color:#e0705a"':'')+'>'+rem+' TL</b> → '+(col==='a'?('CoffeeNutz <b>'+e.cn[i]+'</b> (kavurucu yok)'):(esc($('f_roaster').value.trim()||'kavurucu')+' <b>'+e.roaster[i]+'</b> · CoffeeNutz <b>'+e.cn[i]+'</b>'))+(rem<0?' — <span style="color:#e0705a">kalemler fiyatı aşıyor</span>':'');
     return h; };
-  el.innerHTML=line('a','1 kutu',tavan)+'<br>'+line('b','masa dolu',taban);
+  el.innerHTML=line('a','liste fiyatı',0)+'<br>'+line('b','masa dolu',taban);
 }
 document.addEventListener('input',function(ev){ if(ev.target&&(/^e_/.test(ev.target.id)||ev.target.id==='f_roaster'||/^l[123]p$/.test(ev.target.id))) econSum(); });
 async function plShow(id,show){
