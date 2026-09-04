@@ -8,6 +8,7 @@
 <meta property="og:title" content="CoffeeNutz · Training Calendar">
 <meta property="og:description" content="Upcoming SCA trainings on one calendar · Yaklaşan SCA eğitimleri tek takvimde.">
 <meta property="og:url" content="https://guide.coffeenutz.net/egitim-takvimi">
+<link rel="canonical" href="https://www.coffeenutz.net/pages/sca-egitim-takvimi">
 <meta property="og:type" content="website">
 <link rel="apple-touch-icon" href="coffeenutz-turtle.png">
 <style>
@@ -104,7 +105,7 @@ const FEED = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/public-train
 const OFFER = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/date-offer";
 const WA = "905333321414"; // offer pings land on Ömer's WhatsApp, sent from the visitor's own number
 const OFFER_TRAININGS = ["SCA Barista F+I","SCA Barista Pro","SCA Roasting F+I","SCA Roasting Pro","SCA Sensory F+I","SCA Sensory Pro","Q Grader Sertifikasyon"];
-const APP_VERSION = "v2026-09-03a";
+const APP_VERSION = "v2026-09-04a";
 const SITE = "https://www.coffeenutz.net";
 const IG = "https://ig.me/m/coffeenutznet"; // opens the DM thread directly, not the profile
 
@@ -336,6 +337,11 @@ async function submitOffer(){
 const now = new Date(); curY = now.getFullYear(); curM = now.getMonth();
 render();
 load();
+// storefront deep link: ?offer=1 opens the offer form at once. Deliberately NO course preselect:
+// the visitor picks from the full list and sees the whole range of classes (Ömer, 2026-09-04).
+try{
+  if (new URLSearchParams(location.search).get("offer") === "1") openOffer("");
+}catch(_){}
 </script>
 </body>
 </html>
