@@ -1,7 +1,10 @@
-// CoffeeNutz egitim-takvimi-schema.js  v2026-09-04a
-// Sync-free Course + CourseInstance JSON-LD for coffeenutz.net. Two modes, decided by the URL:
+// CoffeeNutz egitim-takvimi-schema.js  v2026-09-04b
+// Sync-free Course + CourseInstance JSON-LD for coffeenutz.net. Three modes, decided by the URL:
 //   /pages/sca-egitim-takvimi      -> ItemList of all 7 SCA courses with their live cohorts
 //   /products/<course handle>      -> that single Course with its live cohorts
+//   /pages/<landing handle>        -> language-specific landing page: fills the live next-cohort
+//                                     dates and prices into [data-cn] placeholders, then injects
+//                                     the Course + EducationEvent JSON-LD for that language
 // Anything else (coffee products, other pages) -> does nothing.
 //
 // Instances come from the public-trainings feed (the Trainings sheet), prices from Shopify's
@@ -9,7 +12,7 @@
 // Replaces: the May-2026 ItemList block and the per-product Course blocks in theme.liquid.
 //
 // Include from theme.liquid:
-//   {% if page.handle == 'sca-egitim-takvimi' or template.name == 'product' %}
+//   {% if page.handle == 'sca-egitim-takvimi' or page.handle == 'sca-roasting-course-in-english-izmir' or template.name == 'product' %}
 //     <script src="https://guide.coffeenutz.net/egitim-takvimi-schema.js" charset="utf-8" defer></script>
 //   {% endif %}
 (async function () {
@@ -76,6 +79,17 @@
   };
   const ORDER = ["Q Grader Sertifikasyon", "SCA Barista F+I", "SCA Barista Pro", "SCA Sensory F+I", "SCA Sensory Pro", "SCA Roasting F+I", "SCA Roasting Pro"];
 
+  // Language-specific landing pages. Placeholders in the page HTML carry data-cn="..." and get filled live:
+  //   next-fi / next-pro (EN date range), next-fi-ru / next-pro-ru (RU), price-fi / price-pro (TRY from Shopify),
+  //   price-fi-eur / price-pro-eur (EUR via ECB rate, omitted if unavailable), cal (link text stays, href set)
+  const LANDINGS = {
+    "sca-roasting-course-in-english-izmir": {
+      course: "SCA Roasting F+I", pro: "SCA Roasting Pro", lang: "en",
+      name: "SCA Roasting Certification, Foundation + Intermediate (in English)",
+      description: "Official SCA Roasting Foundation and Intermediate certification in 4 days, taught in English at a working roastery in İzmir. Exam fees, certificates, meals and lab time included.",
+    },
+  };
+
   const PROVIDER = { "@type": "Organization", "name": "CoffeeNutz", "url": SITE, "sameAs": ["https://www.instagram.com/coffeenutznet"] };
   const LOCATION = { "@type": "Place", "name": "CoffeeNutz İzmir Atölye", "address": { "@type": "PostalAddress", "streetAddress": "Barbaros Mah. 333 Sk. No: 11", "addressLocality": "İzmir", "addressCountry": "TR" } };
   const INSTRUCTOR = { "@type": "Person", "name": "Ömer Aydın", "jobTitle": "SCA Authorised Trainer (AST) ve Türkçe Q Instructor", "url": SITE + "/pages/about-omer" };
@@ -85,7 +99,10 @@
   const isCalendar = /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?pages\/sca-egitim-takvimi\/?$/i.test(path);
   const pm = path.match(/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?products\/([a-z0-9-]+)/i);
   const productKey = pm ? ORDER.find((k) => COURSES[k].handle === pm[1].toLowerCase()) : null;
-  if (!isCalendar && !productKey) return;
+  const lm = path.match(/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?pages\/([a-z0-9-]+)\/?$/i);
+  const landing = lm && LANDINGS[lm[1].toLowerCase()] ? LANDINGS[lm[1].toLowerCase()] : null;
+  const landingUrl = landing ? SITE + "/pages/" + lm[1].toLowerCase() : "";
+  if (!isCalendar && !productKey && !landing) return;
 
   let trainings = [];
   try {
@@ -106,11 +123,12 @@
 
   const TR_M = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
   const EN_M = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const RU_M = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
   const langCode = (l) => (String(l).toLowerCase().startsWith("en") ? "en" : "tr");
   function range(s, e, lang) {
     const a = new Date(s + "T00:00:00Z"), b = new Date(e + "T00:00:00Z");
     if (isNaN(a) || isNaN(b)) return s + " / " + e;
-    const M = lang === "en" ? EN_M : TR_M;
+    const M = lang === "en" ? EN_M : (lang === "ru" ? RU_M : TR_M);
     const y = b.getUTCFullYear();
     if (a.getUTCMonth() === b.getUTCMonth()) return `${a.getUTCDate()}-${b.getUTCDate()} ${M[a.getUTCMonth()]} ${y}`;
     return `${a.getUTCDate()} ${M[a.getUTCMonth()]}-${b.getUTCDate()} ${M[b.getUTCMonth()]} ${y}`;
@@ -161,8 +179,71 @@
     return out;
   }
 
+  // ---- landing page helpers ----
+  function fill(key, html) {
+    document.querySelectorAll('[data-cn="' + key + '"]').forEach((el) => { el.innerHTML = html; });
+  }
+  function fmtTry(price) { return new Intl.NumberFormat("en-US").format(Number(price)) + " ₺"; }
+  async function eurRate() {
+    try {
+      const r = await fetch("https://api.frankfurter.app/latest?from=TRY&to=EUR");
+      if (!r.ok) return null;
+      const j = await r.json();
+      return j && j.rates && typeof j.rates.EUR === "number" ? j.rates.EUR : null;
+    } catch (_) { return null; }
+  }
+
   let ld;
-  if (productKey) {
+  if (landing) {
+    const c = COURSES[landing.course];
+    const upcoming = (key) => trainings
+      .filter((x) => x.name === key && langCode(x.lang) === landing.lang && x.start && x.end)
+      .sort((a, b) => a.start.localeCompare(b.start));
+    const fi = upcoming(landing.course), pro = landing.pro ? upcoming(landing.pro) : [];
+    const [priceFi, pricePro, rate] = await Promise.all([
+      priceOf(c.handle), landing.pro ? priceOf(COURSES[landing.pro].handle) : null, eurRate(),
+    ]);
+    const calEn = "https://guide.coffeenutz.net/egitim-takvimi?lang=" + landing.lang;
+    const noDate = '<a href="' + calEn + '" target="_blank" rel="noopener">see the live calendar</a>';
+    const noDateRu = '<a href="' + calEn + '" target="_blank" rel="noopener">смотрите календарь</a>';
+    fill("next-fi", fi.length ? range(fi[0].start, fi[0].end, "en") : noDate);
+    fill("next-fi-ru", fi.length ? range(fi[0].start, fi[0].end, "ru") : noDateRu);
+    fill("next-pro", pro.length ? range(pro[0].start, pro[0].end, "en") : noDate);
+    fill("next-pro-ru", pro.length ? range(pro[0].start, pro[0].end, "ru") : noDateRu);
+    if (fi.length > 1) fill("more-fi", "Also " + fi.slice(1).map((x) => range(x.start, x.end, "en")).join(", ") + ".");
+    if (priceFi) { fill("price-fi", fmtTry(priceFi)); if (rate) fill("price-fi-eur", "≈ €" + new Intl.NumberFormat("en-US").format(Math.round(priceFi * rate))); }
+    if (pricePro) { fill("price-pro", fmtTry(pricePro)); if (rate) fill("price-pro-eur", "≈ €" + new Intl.NumberFormat("en-US").format(Math.round(pricePro * rate))); }
+    document.querySelectorAll('[data-cn="cal"]').forEach((el) => { el.setAttribute("href", calEn); });
+
+    const courseLd = {
+      "@type": "Course",
+      "@id": landingUrl,
+      "name": landing.name,
+      "description": landing.description,
+      "url": landingUrl,
+      "provider": PROVIDER,
+      "educationalCredentialAwarded": c.credential,
+      "courseCode": c.code,
+      "inLanguage": landing.lang,
+      "offers": Object.assign({ "@type": "Offer", "category": "Paid", "priceCurrency": "TRY", "availability": "https://schema.org/InStock", "url": landingUrl }, priceFi ? { price: priceFi } : {}),
+    };
+    if (fi.length) {
+      courseLd.hasCourseInstance = fi.map((x) => { const i = instance(x, c, priceFi); i.offers.url = landingUrl; return i; });
+    }
+    const events = fi.map((x) => ({
+      "@type": "EducationEvent",
+      "name": landing.name + ", " + range(x.start, x.end, "en"),
+      "startDate": x.start, "endDate": x.end,
+      "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+      "eventStatus": "https://schema.org/EventScheduled",
+      "inLanguage": landing.lang,
+      "location": LOCATION,
+      "organizer": PROVIDER,
+      "performer": INSTRUCTOR,
+      "offers": Object.assign({ "@type": "Offer", "category": "Paid", "priceCurrency": "TRY", "availability": "https://schema.org/InStock", "url": landingUrl }, priceFi ? { price: priceFi } : {}),
+    }));
+    ld = { "@context": "https://schema.org", "@graph": [courseLd].concat(events) };
+  } else if (productKey) {
     const price = await priceOf(COURSES[productKey].handle);
     ld = Object.assign({ "@context": "https://schema.org" }, course(productKey, price, { tr: true }));
   } else {
