@@ -345,7 +345,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-02t';
+const VERSION='v2026-09-02u';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -440,11 +440,11 @@ hFunky:['Uçlarda deneysel: uzun fermantasyon, sürpriz aromalar — herkese gö
 hAny:['Kavurucu seçsin.','Let the roaster choose.'],
 // İLETİŞİM RAYLARI (G) — 2026-09-02d
 chanL:['Grup-Al WhatsApp kanalı','Grup-Al WhatsApp channel'], chanH:['masa açılınca · basamak geçilince · kutular yola çıkınca — yalnız bu üçü','table opens · rung passes · boxes ship — only these three'],
-offLbl:['Meydan: sıradaki masa senin olsun','Meydan: the next table is yours'], offH:['Tedarikçilerle konuşuldu; bu kahveler alınabilir. {g} oy toplayan kahve için masa kurulur ({g} ve 200 basamaklı). Bir kahveye dokun: oyun orada; tekrar dokun: geri al. En çok 3 oy.','Suppliers confirmed; these coffees can be bought. A coffee that gathers {g} votes gets its own table (rungs at {g} and 200). Tap a coffee to vote, tap again to withdraw. Up to 3 votes.'],
-offHD:['Tedarikçilerle konuşuldu; bu kahveler alınabilir. {g} kapora toplayan kahve için masa kurulur ({g} ve 200 basamaklı). Dokun = ilgi oyu (en çok 3); kapora = yer.','Suppliers confirmed; these coffees can be bought. A coffee that gathers {g} deposits gets its own table (rungs at {g} and 200). Tap = interest vote (up to 3); a deposit = a reserved place.'],
-offVote:['oy ver','vote'], offMine:['✓ oyun','✓ your vote'], offN:[' oy',' votes'], offSeated:['masadan ','seated '], offGoal:['{g} oyda masa kurulur','{g} votes open a table'], offHit:['{g} oya ulaştı — masa kuruluyor 🎉','{g} votes — a table is being set 🎉'], offMax:['En çok 3 oy: önce birini geri al.','Up to 3 votes: withdraw one first.'],
+offLbl:['Meydan: sıradaki masa senin olsun','Meydan: the next table is yours'], offH:['Tedarikçilerle konuşuldu; bu kahveler alınabilir. {g} oy toplayan her kahve masaya oturur; masa tek kahve değil — eşiği geçenler aynı kavurma gününde birlikte kavrulur ({g} ve 200 basamaklı). Bir kahveye dokun: oyun orada; tekrar dokun: geri al. En çok 3 oy.','Suppliers confirmed; these coffees can be bought. Every coffee that gathers {g} votes takes a seat at the table; the table is not one coffee — all that clear the bar roast together on the same day (rungs at {g} and 200). Tap a coffee to vote, tap again to withdraw. Up to 3 votes.'],
+offHD:['Tedarikçilerle konuşuldu; bu kahveler alınabilir. {g} kapora toplayan her kahve masaya oturur; masa tek kahve değil — eşiği geçenler aynı kavurma gününde birlikte kavrulur ({g} ve 200 basamaklı). Dokun = ilgi oyu (en çok 3); kapora = yer.','Suppliers confirmed; these coffees can be bought. Every coffee that gathers {g} deposits takes a seat at the table; the table is not one coffee — all that clear the bar roast together on the same day (rungs at {g} and 200). Tap = interest vote (up to 3); a deposit = a reserved place.'],
+offVote:['oy ver','vote'], offMine:['✓ oyun','✓ your vote'], offN:[' oy',' votes'], offSeated:['masadan ','seated '], offGoal:['{g} oyda kahve masaya oturur','{g} votes seat a coffee at the table'], offHit:['{g} oya ulaştı — masada 🎉','{g} votes — seated at the table 🎉'], offAtTable:['Masada ({n}): {list}','At the table ({n}): {list}'], offDayGoal:[' · kavurma günü: {sum}/{dg} kutu',' · roast day: {sum}/{dg} boxes'], offDayHit:[' · kavurma günü doluyor 🎉',' · roast day is on 🎉'], offMax:['En çok 3 oy: önce birini geri al.','Up to 3 votes: withdraw one first.'],
 offDep:['Kapora ile yer ayır · {amt} TL','Reserve with a deposit · {amt} TL'], offListP:['liste','list'], offCampP:['/ kutu · masa kurulunca','/ box · when the table is set'], off200P:['200 kutuda ','at 200 boxes '], offDepN:[' kapora',' deposits'], offInt:['ilgi ','interest '], offDepMine:['✓ kaporan var','✓ deposit placed'], offDepPend:['kapora kontrol ediliyor…','checking deposit…'],
-offMore:['{n} kahve daha · tümünü gör','{n} more coffees · see all'], offEarly:['Kapora şimdilik Grup-Al® WhatsApp grubundakilere açık · herkese: {d}','Deposits are open to the Grup-Al® WhatsApp group for now · everyone from {d}'], offEarlyH:['Kod grupta paylaşılıyor. Masadaysan grup linki aşağıda.','The code is shared in the group. If you have a seat, the group link is below.'], offCodeL:['grup kodu','group code'], offCodeB:['Gir','Enter'], offCodeOk:['✓ grup kodu geçerli — kapora sana açık','✓ group code accepted — deposits are open for you'], offCodeBad:['Kod tanınmadı.','Code not recognised.'], offEarlyRow:['kapora: grup koduyla şimdi · herkese {d}','deposit: now with the group code · everyone from {d}'], offGoalD:['{g} kaporada masa kurulur · kaporan masa kurulunca fiyattan düşer, kurulmazsa geri döner','{g} deposits open a table · your deposit counts toward the price when the table is set, and comes back if it is not'], offHitD:['{g} kaporaya ulaştı — masa kuruluyor 🎉','{g} deposits — a table is being set 🎉'],
+offMore:['{n} kahve daha · tümünü gör','{n} more coffees · see all'], offEarly:['Kapora şimdilik Grup-Al® WhatsApp grubundakilere açık · herkese: {d}','Deposits are open to the Grup-Al® WhatsApp group for now · everyone from {d}'], offEarlyH:['Kod grupta paylaşılıyor. Masadaysan grup linki aşağıda.','The code is shared in the group. If you have a seat, the group link is below.'], offCodeL:['grup kodu','group code'], offCodeB:['Gir','Enter'], offCodeOk:['✓ grup kodu geçerli — kapora sana açık','✓ group code accepted — deposits are open for you'], offCodeBad:['Kod tanınmadı.','Code not recognised.'], offEarlyRow:['kapora: grup koduyla şimdi · herkese {d}','deposit: now with the group code · everyone from {d}'], offGoalD:['{g} kaporada kahve masaya oturur · kaporan masa kurulunca fiyattan düşer, kurulmazsa geri döner','{g} deposits seat a coffee at the table · your deposit counts toward the price when the table is set, and comes back if it is not'], offHitD:['{g} kaporaya ulaştı — masada 🎉','{g} deposits — seated at the table 🎉'],
 wishAlt:['Listede yok mu? Dilek bırak:','Not on the list? Leave a wish:'],
 voteL:['oy ver','vote'], voteMine:['✓ oyun','✓ your vote'], voteUndo:['oyu geri al','withdraw vote'], voteGone:['Oyun geri alındı.','Your vote is withdrawn.'], voteH:['Bir satıra dokun: oyun o kahveye geçer. Kendi satırına tekrar dokun: oyun geri alınır.','Tap a row: your vote moves to that coffee. Tap your own row again: your vote is withdrawn.'],
 chatL:['Grup-Al® WhatsApp grubu','Grup-Al® WhatsApp group'], chatH:['Deneme lotları ve sıradaki masa için tadım numuneleri · kavurma günü canlı · reçete yardımı · kavurma verisi · yalnız gerektiğinde mesaj.','Trial lots and tasting packs for the next table · roast day live · recipe help · roast data · messages only when needed.'], chatB:['Gruba katıl','Join the group']
@@ -784,6 +784,10 @@ function renderOffers(s){
   if(depMode&&early) h+=codeOk?('<div style="margin:0 0 8px;font-size:12px;font-weight:700;color:var(--green)">'+t('offCodeOk')+'</div>')
     :('<div style="margin:0 0 8px;padding:9px 10px;border-radius:10px;border:1px dashed var(--gold)"><div style="font-size:12px;font-weight:700;color:var(--gold)">'+t('offEarly').replace('{d}',fmtOpen(cfg.dep_open_at))+'</div><div class="hint" style="margin-top:2px">'+t('offEarlyH')+'</div>'
       +'<div style="display:flex;gap:6px;margin-top:6px" onclick="event.stopPropagation()"><input id="gcodeIn" placeholder="'+t('offCodeL')+'" style="flex:1;min-width:0;margin:0;padding:8px 10px;font-size:14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink)" onkeydown="if(event.key===\'Enter\'){gcodeSend();}"><button onclick="gcodeSend()" style="width:auto;margin:0;padding:8px 14px;font-size:13px">'+t('offCodeB')+'</button></div><div class="hint" id="gcodeMsg" style="margin-top:4px;color:#e0705a"></div></div>');
+  // v02u (Ömer): masa tek kahve değil — eşiği geçen her kahve masaya oturur; özet satırı + (ayarlıysa) kavurma günü toplam kutu eşiği
+  const hits=list.filter(o=>(depMode?(o.dep||0):(o.n||0))>=G);
+  if(hits.length){ const sum=hits.reduce((a,o)=>a+(depMode?(o.dep||0):(o.n||0)),0), dg=parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.day_goal)||0)||0;
+    h+='<div style="margin:0 0 8px;padding:8px 10px;border-radius:10px;background:var(--panel2);font-size:12px"><b style="color:var(--green)">'+t('offAtTable').replace('{n}',hits.length).replace('{list}',hits.map(o=>escZ(o.name)).join(', '))+'</b>'+(dg?('<span class="hint">'+(sum>=dg?t('offDayHit'):t('offDayGoal').replace('{sum}',sum).replace('{dg}',dg))+'</span>'):'')+'</div>'; }
   const fold=!OFFALL&&list.length>OFFFOLD+2;   // 9–10 satırı katlamaya değmez
   const shown=fold?list.filter((o,i)=>i<OFFFOLD||(o.dep||0)>0||mine.includes(o.id)||(OFFMINE||[]).some(v=>v.id===o.id&&v.paid)||pend.includes(o.id)):list;   // benim satırım ve kaporalı satır katlanmaz (v02t: pahalı üstte → ivme görünür kalsın)
   for(const o of shown){
@@ -817,11 +821,15 @@ async function offLoadMine(s){
       const paidIds=j.votes.filter(v=>v.paid).map(v=>v.id); if(paidIds.length){ try{ localStorage.setItem('grupal_odep', JSON.stringify(offPend().filter(id=>!paidIds.includes(id)))); }catch(e){} }
       renderOffers(s); } }catch(e){}
 }
-function offDeposit(id){
+function offDepUrl(id){
   // KAPORA (Ömer 2026-09-04 "deposit logic"): sepet linki + attributes[offer]/[dev]/[ref]; webhook kapora satırını yazar
-  const cfg=offCfg(); if(!cfg.dep_url) return;
+  const cfg=offCfg(); if(!cfg.dep_url) return '';
   let ref=''; try{ ref=localStorage.getItem('grupal_'+SLUG)||''; }catch(e){}
-  let du=cfg.dep_url; du+=(du.includes('?')?'&':'?')+'attributes[offer]='+encodeURIComponent(id)+'&attributes[dev]='+encodeURIComponent(devId())+(/^[A-Z0-9]{4,12}$/.test(ref)?('&attributes[ref]='+encodeURIComponent(ref)):'');
+  let du=cfg.dep_url; du+=(du.includes('?')?'&':'?')+'attributes[offer]='+encodeURIComponent(id)+'&attributes[dev]='+encodeURIComponent(devId())+(/^[A-Z0-9]{4,12}$/.test(ref)?('&attributes[ref]='+encodeURIComponent(ref)):'')+((depEarly(cfg)&&gcodeOk())?'&attributes[early]=1':'');   // v02u: grup koduyla erken kapora işareti
+  return du;
+}
+function offDeposit(id){
+  const du=offDepUrl(id); if(!du) return;
   try{ const a=offPend(); if(!a.includes(id)) a.push(id); localStorage.setItem('grupal_odep', JSON.stringify(a.slice(-10))); }catch(e){}
   location.href=du;
 }
