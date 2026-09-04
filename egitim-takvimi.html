@@ -104,12 +104,17 @@ const FEED = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/public-train
 const OFFER = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/date-offer";
 const WA = "905333321414"; // offer pings land on Ömer's WhatsApp, sent from the visitor's own number
 const OFFER_TRAININGS = ["SCA Barista F+I","SCA Barista Pro","SCA Roasting F+I","SCA Roasting Pro","SCA Sensory F+I","SCA Sensory Pro","Q Grader Sertifikasyon"];
-const APP_VERSION = "v2026-09-01f";
+const APP_VERSION = "v2026-09-03a";
 const SITE = "https://www.coffeenutz.net";
 const IG = "https://ig.me/m/coffeenutznet"; // opens the DM thread directly, not the profile
 
 let LANG = "en";
 try{ LANG = localStorage.getItem("cn_pub_lang") || "en"; }catch(_){}
+// ?lang=tr / ?lang=en from the storefront wins over the remembered choice (TR product page → TR calendar)
+try{
+  const qpLang = new URLSearchParams(location.search).get("lang");
+  if (qpLang === "tr" || qpLang === "en"){ LANG = qpLang; localStorage.setItem("cn_pub_lang", LANG); }
+}catch(_){}
 const STR = {
   tagline:["SCA eğitim takvimi · yaklaşan tüm sınıflar tek yerde","SCA training calendar · every upcoming class in one place"],
   bugun:["Bugün","Today"],
