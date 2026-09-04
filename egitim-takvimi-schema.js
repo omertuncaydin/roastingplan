@@ -1,4 +1,4 @@
-// CoffeeNutz egitim-takvimi-schema.js  v2026-09-04b
+// CoffeeNutz egitim-takvimi-schema.js  v2026-09-04c
 // Sync-free Course + CourseInstance JSON-LD for coffeenutz.net. Three modes, decided by the URL:
 //   /pages/sca-egitim-takvimi      -> ItemList of all 7 SCA courses with their live cohorts
 //   /products/<course handle>      -> that single Course with its live cohorts
@@ -196,8 +196,10 @@
   let ld;
   if (landing) {
     const c = COURSES[landing.course];
+    const todayIso = new Date().toISOString().slice(0, 10);
+    // "next cohort" = not started yet; a class running today is not something a visitor can still join
     const upcoming = (key) => trainings
-      .filter((x) => x.name === key && langCode(x.lang) === landing.lang && x.start && x.end)
+      .filter((x) => x.name === key && langCode(x.lang) === landing.lang && x.start && x.end && x.start > todayIso)
       .sort((a, b) => a.start.localeCompare(b.start));
     const fi = upcoming(landing.course), pro = landing.pro ? upcoming(landing.pro) : [];
     const [priceFi, pricePro, rate] = await Promise.all([
