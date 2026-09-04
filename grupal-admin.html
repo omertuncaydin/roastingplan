@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · kampanya kokpiti</title>
 <meta name="robots" content="noindex">
-<!-- grupal-admin.html · v2026-09-02n · kutu ekonomisi: sol LİSTE FİYATI (kavurucu yok), sağ masa dolu (kalan eşit) -->
+<!-- grupal-admin.html · v2026-09-02p · Yeşil Masa: taslak/UYGULA · kapora ayarları · satır düzenleme -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -134,6 +134,29 @@ a{color:var(--gold)}
       </div>
     </div>
 
+    <!-- TEKLİFLER (I, 2026-09-04): somut yeşil kahveler (global) — 40 oy = masa (karar senin) -->
+    <div class="card" id="offCard">
+      <span class="lbl">teklifler · tedarikçi listeleri (global) · TASLAK → UYGULA</span>
+      <div class="hint" style="margin:4px 0 8px">Sayfa yalnız <b>UYGULA</b> ile yayınladığın hâli görür; ekleme, düzenleme, pasife alma taslakta kalır. Toplu ekle: <code>## Tedarikçi</code> başlık satırı, altına <code>Ülke · Lot adı · İşlem</code> satırları (4. parça tedarikçiyi ezer). İşlem: washed/natural/honey/anaerobic/infused/funky/any (Türkçesi de olur).</div>
+      <textarea id="offBulk" rows="5" placeholder="## Nordic Approach&#10;Etiyopya · Guji Hambela · natural&#10;Kolombiya · Huila Pink Bourbon · washed&#10;## Bonsai&#10;Panama · Finca Deborah Geisha · anaerobic" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;background:var(--panel2);color:var(--ink)"></textarea>
+      <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;align-items:center"><button class="mini" onclick="offBulk()">Taslağa ekle</button><span class="hint" id="offMsg"></span></div>
+      <!-- KAPORA AYARLARI (Ömer 2026-09-04 "deposit logic"): kapora ürünü sepet linki + tutar + eşik -->
+      <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px">
+        <span class="lbl">kapora ayarları (boşsa serbest oy sayılır)</span>
+        <span class="lbl" style="margin-top:6px;display:block">kapora ürünü (ürün linki yapıştır → sepet linkine çevrilir)</span>
+        <input id="s_depurl" placeholder="https://www.coffeenutz.net/products/grup-al-kapora">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><span class="lbl">kapora tutarı (TL · görünüm)</span><input id="s_depamt" inputmode="numeric" placeholder="100"></div>
+          <div><span class="lbl">eşik (kapora ya da oy)</span><input id="s_goal" inputmode="numeric" placeholder="40"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center"><button class="mini" onclick="offSettingsSave()">Ayarları kaydet</button><span class="hint" id="offSetMsg"></span></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap">
+        <button class="mini" style="background:var(--gold);color:var(--panel);border-color:var(--gold);font-weight:800" onclick="offApply()">UYGULA — taslağı yayınla</button>
+        <span class="hint" id="offApplyMsg"></span>
+      </div>
+      <div id="offList" style="margin-top:8px"></div>
+    </div>
     <!-- DİLEKLER (E, 2026-09-02c): sıradaki masa için ülke·işlem·not — sıradaki lotu seçerken bak -->
     <div class="card" id="wishCard" style="display:none">
       <span class="lbl">dilekler · sıradaki masa hangi kahve?</span>
@@ -153,7 +176,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-02n';
+const VERSION='v2026-09-02p';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
@@ -236,6 +259,87 @@ async function houseSet(){
 }
 const WNAME={ET:'Etiyopya',KE:'Kenya',RW:'Ruanda',BI:'Burundi',TZ:'Tanzanya',UG:'Uganda',CD:'Kongo DC',MW:'Malavi',ZM:'Zambiya',ZW:'Zimbabve',CM:'Kamerun',CI:'Fildişi Sahili',MG:'Madagaskar',MZ:'Mozambik',TG:'Togo',GN:'Gine',AO:'Angola',ST:'São Tomé',LR:'Liberya',SL:'Sierra Leone',NG:'Nijerya',GA:'Gabon',CF:'Orta Afrika Cum.',BR:'Brezilya',CO:'Kolombiya',PE:'Peru',EC:'Ekvador',BO:'Bolivya',VE:'Venezuela',GT:'Guatemala',CR:'Kosta Rika',HN:'Honduras',SV:'El Salvador',NI:'Nikaragua',PA:'Panama',MX:'Meksika',JM:'Jamaika',DO:'Dominik Cum.',CU:'Küba',HT:'Haiti',PR:'Porto Riko','US-HI':'Hawaii',PY:'Paraguay','ID-SUM':'Sumatra','ID-JAV':'Java','ID-SUL':'Sulawesi','ID-BAL':'Bali','ID-FLO':'Flores','ID-PAP':'Papua (Endonezya)',PG:'Papua Yeni Gine',VN:'Vietnam',TH:'Tayland',LA:'Laos',MM:'Myanmar',IN:'Hindistan',NP:'Nepal',CN:'Çin · Yunnan',PH:'Filipinler',TL:'Doğu Timor',YE:'Yemen',TW:'Tayvan',LK:'Sri Lanka',MY:'Malezya',KH:'Kamboçya',AU:'Avustralya',VU:'Vanuatu',ANY:'Fark etmez'};
 const WPROCN={washed:'Yıkanmış',natural:'Doğal',honey:'Honey',anaerobic:'Anaerobik',infused:'Infused',funky:'En cafcaflısı',any:'Fark etmez'};
+// TEKLİFLER (I/J/K): taslak liste · satır düzenleme · toplu ekle (tedarikçi başlıkları) · UYGULA · kapora ayarları
+let OFFERS=[], OFFEDIT=null, OFFCFG=null;
+async function loadOffers(){
+  const el=$('offList'); if(!el) return;
+  const r=await fetch(API+'/admin/offers',{headers:{'x-cc-key':KEY}});
+  const j=await r.json().catch(()=>null);
+  if(!r.ok||!Array.isArray(j)){ el.innerHTML='<div class="hint">Teklif tablosu yok (v3.18 SQL) ya da okunamadı.</div>'; return; }
+  OFFERS=j; renderOffersAdmin(); loadOfferSettings();
+}
+async function loadOfferSettings(){
+  try{ const r=await fetch(API+'/admin/settings',{headers:{'x-cc-key':KEY}}); const j=await r.json();
+    if(j&&j.settings){ $('s_depurl').value=j.settings.offer_dep_url||''; $('s_depamt').value=j.settings.offer_dep_amt||''; $('s_goal').value=j.settings.offer_goal||''; OFFCFG=j.cfg||null; renderOffersAdmin(); } }catch(e){}
+}
+async function offSettingsSave(){
+  if(!(await resolveIfProduct('s_depurl'))) return;
+  const body={offer_dep_url:$('s_depurl').value.trim(),offer_dep_amt:$('s_depamt').value.trim(),offer_goal:$('s_goal').value.trim()};
+  const r=await fetch(API+'/admin/settings',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  $('offSetMsg').textContent=j.ok?('kaydedildi · eşik '+(j.cfg&&j.cfg.goal)+(j.cfg&&j.cfg.dep_url?(' · kapora '+(j.cfg.dep_amt||'?')+' TL'):' · kapora yok (serbest oy)')):('Olmadı: '+(j.error||r.status));
+  if(j.ok){ OFFCFG=j.cfg||null; renderOffersAdmin(); }
+}
+function offState(o){ return o.published?(o.dirty?['taslak değişiklik — UYGULA bekliyor','var(--gold)']:(o.active?['yayında','var(--green)']:['pasife alındı — UYGULA ile kalkar','var(--gold)'])):(o.active?['taslak — UYGULA ile yayınlanır','var(--gold)']:['yayında değil','var(--muted)']); }
+function renderOffersAdmin(){
+  const el=$('offList'); if(!el) return;
+  if(!OFFERS.length){ el.innerHTML='<div class="hint">Henüz teklif yok.</div>'; return; }
+  const G=(OFFCFG&&OFFCFG.goal)||40, dep=!!(OFFCFG&&OFFCFG.dep_url);
+  const pend=OFFERS.filter(o=>!o.published&&o.active||o.dirty||(o.published&&!o.active)).length;
+  $('offApplyMsg').textContent=pend?(pend+' satır UYGULA bekliyor'):'taslak = yayın';
+  el.innerHTML=OFFERS.map(o=>{
+    if(OFFEDIT===o.id) return '<div style="border:1px solid var(--gold);border-radius:10px;padding:8px 10px;margin:6px 0">'
+      +'<input id="oe_name" value="'+esc(o.name)+'" placeholder="Lot adı" style="margin:0 0 6px">'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><input id="oe_origin" value="'+esc(o.origin||'')+'" placeholder="Ülke" style="margin:0">'
+      +'<select id="oe_proc" style="margin:0">'+['','washed','natural','honey','anaerobic','infused','funky','any'].map(k=>'<option value="'+k+'"'+(k===(o.process||'')?' selected':'')+'>'+(k?(WPROCN[k]||k):'— işlem —')+'</option>').join('')+'</select>'
+      +'<input id="oe_vendor" value="'+esc(o.vendor||'')+'" placeholder="Tedarikçi" style="margin:0"><input id="oe_note" value="'+esc(o.note||'')+'" placeholder="Not (ör. 20 kutu sınırlı)" style="margin:0"></div>'
+      +'<div style="display:flex;gap:6px;margin-top:8px"><button class="mini" onclick="offEditSave(\''+o.id+'\')">Taslağa kaydet</button><button class="mini" onclick="offEdit(null)">Vazgeç</button></div></div>';
+    const st=offState(o);
+    return '<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;'+(o.active?'':'opacity:.6')+'">'
+      +'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>'+esc(o.name)+'</b><span class="hint">'+(dep?('<b'+(o.dep>=G?' style="color:var(--gold)"':'')+'>'+o.dep+'/'+G+' kapora</b> · ilgi '+o.n):('<b'+(o.n>=G?' style="color:var(--gold)"':'')+'>'+o.n+'/'+G+' oy</b>'))+' · masadan '+o.seated+'</span></div>'
+      +'<div class="hint">'+[o.origin,WPROCN[o.process]||o.process,o.vendor,o.note].filter(Boolean).map(esc).join(' · ')+'</div>'
+      +'<div class="hint" style="color:'+st[1]+';font-weight:700;margin-top:2px">'+st[0]+'</div>'
+      +'<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="mini" onclick="offEdit(\''+o.id+'\')">Düzenle</button>'
+      +'<button class="mini" onclick="offSet(\''+o.id+'\',{active:'+(!o.active)+'})">'+(o.active?'Pasife al':'Aktif et')+'</button>'
+      +'<button class="mini" style="color:#e0705a" onclick="offDel(\''+o.id+'\')">Sil</button></div></div>'; }).join('');
+}
+async function offSet(id,patch){
+  const o=OFFERS.find(x=>x.id===id); if(!o) return;
+  const body={id:id,name:o.name,origin:o.origin,process:o.process,vendor:o.vendor,note:o.note,active:o.active,sort:o.sort,...patch};
+  const r=await fetch(API+'/admin/offer-upsert',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({})); if(j.ok&&Array.isArray(j.offers)){ OFFERS=j.offers; OFFEDIT=null; renderOffersAdmin(); } else alert('Olmadı: '+(j.error||r.status));
+}
+function offEdit(id){ OFFEDIT=id; renderOffersAdmin(); }
+async function offEditSave(id){ await offSet(id,{name:$('oe_name').value.trim(),origin:$('oe_origin').value.trim()||null,process:$('oe_proc').value||null,vendor:$('oe_vendor').value.trim()||null,note:$('oe_note').value.trim()||null}); }
+async function offDel(id){
+  const o=OFFERS.find(x=>x.id===id); if(!o) return;
+  if(!confirm('"'+o.name+'" silinsin mi? Oyları ve kaporaları da silinir. (Yalnız listeden kaldırmak için "Pasife al" + UYGULA.)')) return;
+  const r=await fetch(API+'/admin/offer-delete',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({id})});
+  const j=await r.json().catch(()=>({})); if(j.ok&&Array.isArray(j.offers)){ OFFERS=j.offers; renderOffersAdmin(); } else alert('Olmadı: '+(j.error||r.status));
+}
+async function offApply(){
+  if(!confirm('Taslak yayınlansın mı? Aktif satırlar sayfada görünür, pasifler kalkar.')) return;
+  const r=await fetch(API+'/admin/offers-apply',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:'{}'});
+  const j=await r.json().catch(()=>({}));
+  if(j.ok){ OFFERS=Array.isArray(j.offers)?j.offers:OFFERS; renderOffersAdmin(); $('offApplyMsg').textContent='yayınlandı: '+j.published+' teklif'; }
+  else alert('Olmadı: '+(j.error||r.status));
+}
+const PROC_ALIAS={washed:'washed',yıkanmış:'washed',yikanmis:'washed',natural:'natural',doğal:'natural',dogal:'natural',honey:'honey',bal:'honey',anaerobic:'anaerobic',anaerobik:'anaerobic',infused:'infused',funky:'funky',cafcaflı:'funky',cafcafli:'funky',any:'any','fark etmez':'any'};
+async function offBulk(){
+  const lines=$('offBulk').value.split('\n').map(l=>l.trim()).filter(Boolean); if(!lines.length) return;
+  let okN=0, bad=[], vendorH='';
+  for(const line of lines){
+    if(/^##\s*/.test(line)){ vendorH=line.replace(/^##\s*/,'').trim(); continue; }   // tedarikçi başlığı
+    const parts=line.split(/\s*[·|;]\s*/).map(x=>x.trim());
+    if(parts.length<2){ bad.push(line); continue; }
+    const [origin,name,procRaw]=[parts[0],parts[1],parts[2]||'']; const vendor=parts[3]||vendorH||'';
+    const process=PROC_ALIAS[String(procRaw).toLowerCase()]||null;
+    const r=await fetch(API+'/admin/offer-upsert',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({name,origin,process,vendor,active:true,sort:OFFERS.length+okN})});
+    const j=await r.json().catch(()=>({})); if(j.ok){ okN++; if(Array.isArray(j.offers)) OFFERS=j.offers; } else bad.push(line);
+  }
+  $('offMsg').textContent=okN+' teklif taslağa eklendi — yayın için UYGULA'+(bad.length?(' · olmadı: '+bad.join(' / ')):''); if(okN) $('offBulk').value='';
+  renderOffersAdmin();
+}
 async function loadWishes(){
   const card=$('wishCard'); if(!card) return;
   if(!CURSLUG){ card.style.display='none'; return; }
@@ -340,7 +444,7 @@ async function unlock(){
   CAMPS=await r.json();
   localStorage.setItem('grupalKey',KEY);
   $('keyCard').style.display='none'; $('panel').style.display='block';
-  renderList();
+  renderList(); loadOffers();   // teklifler global: anahtar açılınca yüklenir
 }
 async function renderList(){
   let by={};
