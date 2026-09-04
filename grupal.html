@@ -284,7 +284,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
   <!-- TEKLİFLER (Ömer 2026-09-04): tedarikçilerle konuşulmuş somut yeşil kahveler; dokun = oy, tekrar dokun = geri al; cihaz başına en çok 3;
        40 oy toplayan kahve için masa kurulur (karar Ömer'in). Teklif yoksa kart görünmez. -->
   <div class="card" id="offerCard" style="display:none;border-color:var(--gold)">
-    <div class="lbl" style="color:var(--gold)" data-i18n="offLbl">teklifler: sıradaki masa senin olsun</div>
+    <div class="lbl" style="color:var(--gold)" data-i18n="offLbl">Meydan: sıradaki masa senin olsun</div>
     <div class="hint" style="margin-top:4px" id="offHint" data-i18n="offH">Tedarikçilerle konuşuldu; bu kahveler alınabilir. 40 oy toplayan kahve için masa kurulur (40 ve 200 basamaklı). Bir kahveye dokun: oyun orada; tekrar dokun: geri al. En çok 3 oy.</div>
     <div id="offList" style="margin-top:10px"></div>
     <div class="hint" id="offMsg" style="display:none;margin-top:6px"></div>
@@ -345,7 +345,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-02q';
+const VERSION='v2026-09-02s';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -440,11 +440,11 @@ hFunky:['Uçlarda deneysel: uzun fermantasyon, sürpriz aromalar — herkese gö
 hAny:['Kavurucu seçsin.','Let the roaster choose.'],
 // İLETİŞİM RAYLARI (G) — 2026-09-02d
 chanL:['Grup-Al WhatsApp kanalı','Grup-Al WhatsApp channel'], chanH:['masa açılınca · basamak geçilince · kutular yola çıkınca — yalnız bu üçü','table opens · rung passes · boxes ship — only these three'],
-offLbl:['teklifler: sıradaki masa senin olsun','offers: make the next table yours'], offH:['Tedarikçilerle konuşuldu; bu kahveler alınabilir. {g} oy toplayan kahve için masa kurulur ({g} ve 200 basamaklı). Bir kahveye dokun: oyun orada; tekrar dokun: geri al. En çok 3 oy.','Suppliers confirmed; these coffees can be bought. A coffee that gathers {g} votes gets its own table (rungs at {g} and 200). Tap a coffee to vote, tap again to withdraw. Up to 3 votes.'],
+offLbl:['Meydan: sıradaki masa senin olsun','Meydan: the next table is yours'], offH:['Tedarikçilerle konuşuldu; bu kahveler alınabilir. {g} oy toplayan kahve için masa kurulur ({g} ve 200 basamaklı). Bir kahveye dokun: oyun orada; tekrar dokun: geri al. En çok 3 oy.','Suppliers confirmed; these coffees can be bought. A coffee that gathers {g} votes gets its own table (rungs at {g} and 200). Tap a coffee to vote, tap again to withdraw. Up to 3 votes.'],
 offHD:['Tedarikçilerle konuşuldu; bu kahveler alınabilir. {g} kapora toplayan kahve için masa kurulur ({g} ve 200 basamaklı). Dokun = ilgi oyu (en çok 3); kapora = yer.','Suppliers confirmed; these coffees can be bought. A coffee that gathers {g} deposits gets its own table (rungs at {g} and 200). Tap = interest vote (up to 3); a deposit = a reserved place.'],
 offVote:['oy ver','vote'], offMine:['✓ oyun','✓ your vote'], offN:[' oy',' votes'], offSeated:['masadan ','seated '], offGoal:['{g} oyda masa kurulur','{g} votes open a table'], offHit:['{g} oya ulaştı — masa kuruluyor 🎉','{g} votes — a table is being set 🎉'], offMax:['En çok 3 oy: önce birini geri al.','Up to 3 votes: withdraw one first.'],
-offDep:['Kapora ile yer ayır · {amt} TL','Reserve with a deposit · {amt} TL'], offListP:['liste','list'], offCampP:['/ kutu · masa kurulunca','/ box · when the table is set'], off200P:['200 kutuda ','at 200 boxes '], offGreen:[' $/kg yeşil',' $/kg green'], offDepN:[' kapora',' deposits'], offInt:['ilgi ','interest '], offDepMine:['✓ kaporan var','✓ deposit placed'], offDepPend:['kapora kontrol ediliyor…','checking deposit…'],
-offGoalD:['{g} kaporada masa kurulur · kaporan masa kurulunca fiyattan düşer, kurulmazsa geri döner','{g} deposits open a table · your deposit counts toward the price when the table is set, and comes back if it is not'], offHitD:['{g} kaporaya ulaştı — masa kuruluyor 🎉','{g} deposits — a table is being set 🎉'],
+offDep:['Kapora ile yer ayır · {amt} TL','Reserve with a deposit · {amt} TL'], offListP:['liste','list'], offCampP:['/ kutu · masa kurulunca','/ box · when the table is set'], off200P:['200 kutuda ','at 200 boxes '], offDepN:[' kapora',' deposits'], offInt:['ilgi ','interest '], offDepMine:['✓ kaporan var','✓ deposit placed'], offDepPend:['kapora kontrol ediliyor…','checking deposit…'],
+offMore:['{n} kahve daha · tümünü gör','{n} more coffees · see all'], offGoalD:['{g} kaporada masa kurulur · kaporan masa kurulunca fiyattan düşer, kurulmazsa geri döner','{g} deposits open a table · your deposit counts toward the price when the table is set, and comes back if it is not'], offHitD:['{g} kaporaya ulaştı — masa kuruluyor 🎉','{g} deposits — a table is being set 🎉'],
 wishAlt:['Listede yok mu? Dilek bırak:','Not on the list? Leave a wish:'],
 voteL:['oy ver','vote'], voteMine:['✓ oyun','✓ your vote'], voteUndo:['oyu geri al','withdraw vote'], voteGone:['Oyun geri alındı.','Your vote is withdrawn.'], voteH:['Bir satıra dokun: oyun o kahveye geçer. Kendi satırına tekrar dokun: oyun geri alınır.','Tap a row: your vote moves to that coffee. Tap your own row again: your vote is withdrawn.'],
 chatL:['Grup-Al® WhatsApp grubu','Grup-Al® WhatsApp group'], chatH:['Deneme lotları ve sıradaki masa için tadım numuneleri · kavurma günü canlı · reçete yardımı · kavurma verisi · yalnız gerektiğinde mesaj.','Trial lots and tasting packs for the next table · roast day live · recipe help · roast data · messages only when needed.'], chatB:['Gruba katıl','Join the group']
@@ -751,6 +751,8 @@ function renderWishes(s){
 }
 // ---- TEKLİFLER (I): somut kahveler, oy = aç/kapa, cihaz başına ≤3; 40 oy çubuğu (masadan gelen oy ayrı) ----
 let OFFMINE=null;   // /offer-mine cevabı: [{id,paid,qty}]
+let OFFALL=false; const OFFFOLD=8;   // v02s: iki tedarikçi = ~50 satır; ilk 8 (kapora·oy sırası) + "tümünü gör"
+function offShowAll(){ OFFALL=true; renderOffers(STATE); }
 function fmtTL(n){ return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }   // 1015 → 1.015
 function offCfg(){ const c=(STATE&&STATE.offer_cfg)||{}; return { goal:Math.max(5,parseInt(c.goal)||40), dep_url:c.dep_url||'', dep_amt:parseInt(c.dep_amt)||0 }; }
 function offMine(){ try{ const a=JSON.parse(localStorage.getItem('grupal_ovotes')||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
@@ -763,14 +765,16 @@ function renderOffers(s){
   const cfg=offCfg(), G=cfg.goal, depMode=!!cfg.dep_url;
   const hint=$('offHint'); if(hint) hint.textContent=t(depMode?'offHD':'offH').split('{g}').join(G);
   const mine=offMine(), pend=offPend(); let h='';
-  for(const o of list){
+  const fold=!OFFALL&&list.length>OFFFOLD+2;   // 9–10 satırı katlamaya değmez
+  const shown=fold?list.filter((o,i)=>i<OFFFOLD||mine.includes(o.id)||(OFFMINE||[]).some(v=>v.id===o.id&&v.paid)||pend.includes(o.id)):list;   // benim satırım katlanmaz
+  for(const o of shown){
     const isMine=mine.includes(o.id), paid=(OFFMINE||[]).find(v=>v.id===o.id&&v.paid), pendD=!paid&&pend.includes(o.id);
     const cnt=depMode?(o.dep||0):(o.n||0), pct=Math.min(100,Math.round(100*cnt/G)), hit=cnt>=G;
-    const meta=[o.origin,o.process?wProcName(o.process):'',o.vendor].filter(Boolean).map(escZ).join(' · ');
+    const meta=[o.origin,o.process?wProcName(o.process):''].filter(Boolean).map(escZ).join(' · ');   // v02r: tedarikçi adı sayfada YOK (Ömer 04.09)
     h+='<div class="orow'+(isMine||paid?' mine':'')+'" onclick="offToggle(\''+escZ(o.id)+'\')" style="cursor:pointer;padding:9px 10px;border-radius:10px;border:1px solid '+((isMine||paid)?'var(--gold)':'var(--line)')+';margin:6px 0">'
       +'<div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:14px;font-weight:700">'+escZ(o.name)+'</span>'
       +'<span style="font-size:11px;font-weight:700;color:'+((isMine||paid)?'var(--gold)':'var(--accent)')+'">'+(paid?(t('offDepMine')+(paid.qty>1?' ×'+paid.qty:'')):(pendD?t('offDepPend'):(isMine?t('offMine'):t('offVote'))))+'</span></div>'
-      +(meta?('<div class="hint" style="margin-top:2px">'+meta+(o.note?(' · '+escZ(o.note)):'')+(o.usd_kg?(' · '+String(o.usd_kg).replace('.',',')+t('offGreen')):'')+'</div>'):'')
+      +(meta?('<div class="hint" style="margin-top:2px">'+meta+(o.note?(' · '+escZ(o.note)):'')+'</div>'):'')
       +((o.list_tl&&o.camp_tl)?('<div style="margin-top:5px;font-size:14px;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px;row-gap:1px"><span style="white-space:nowrap"><s style="opacity:.55">'+fmtTL(o.list_tl)+' TL</s> <b style="color:var(--gold);font-size:16px">'+fmtTL(o.camp_tl)+' TL</b></span><span class="hint" style="white-space:nowrap">'+t('offCampP')+'</span>'+(o.camp200_tl&&o.camp200_tl<o.camp_tl?('<span class="hint" style="opacity:.75;white-space:nowrap">· '+t('off200P')+fmtTL(o.camp200_tl)+' TL</span>'):'')+'</div>'):'')
       +'<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="flex:1;height:8px;border-radius:4px;background:var(--panel2);overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:'+(hit?'var(--green)':'var(--gold)')+'"></i></span>'
       +'<b style="font-size:12px">'+cnt+'/'+G+t(depMode?'offDepN':'offN')+'</b>'
@@ -780,6 +784,7 @@ function renderOffers(s){
       +((depMode&&!paid)?('<button onclick="event.stopPropagation();offDeposit(\''+escZ(o.id)+'\')" style="margin-top:8px;padding:10px;font-size:13px;background:var(--panel2);color:var(--gold);border:1px solid var(--gold)">'+t('offDep').replace('{amt}',cfg.dep_amt||'')+'</button>'):'')
       +'</div>';
   }
+  if(fold) h+='<button onclick="offShowAll()" style="margin-top:6px;padding:9px;font-size:13px;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">'+t('offMore').replace('{n}',list.length-shown.length)+'</button>';
   h+='<div class="hint" style="margin-top:4px;font-size:11px;opacity:.75">'+t(depMode?'offGoalD':'offGoal').split('{g}').join(G)+'</div>';
   el.innerHTML=h; card.style.display='block';
   const wl=$('wishCard')&&$('wishCard').querySelector('.lbl'); if(wl) wl.textContent=t('wishAlt');   // teklif varken dilek kartı "listede yok mu?" olur

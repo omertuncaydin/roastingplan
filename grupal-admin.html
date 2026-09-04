@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · kampanya kokpiti</title>
 <meta name="robots" content="noindex">
-<!-- grupal-admin.html · v2026-09-02s · Yeşil Masa: fiyat ölçeği taban + oran (iki referans kahve) + sayfa göster/gizle -->
+<!-- grupal-admin.html · v2026-09-02u · MEYDAN: tedarikçi bazında toplu aç/kapa · admin sıralama · liste fiyatı varsayılan açık -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -136,7 +136,7 @@ a{color:var(--gold)}
 
     <!-- TEKLİFLER (I, 2026-09-04): somut yeşil kahveler (global) — 40 oy = masa (karar senin) -->
     <div class="card" id="offCard">
-      <span class="lbl">teklifler · tedarikçi listeleri (global) · TASLAK → UYGULA</span>
+      <span class="lbl">MEYDAN · teklifler · tedarikçi listeleri (global) · TASLAK → UYGULA</span>
       <div class="hint" style="margin:4px 0 8px">Sayfa yalnız <b>UYGULA</b> ile yayınladığın hâli görür; ekleme, düzenleme, pasife alma taslakta kalır. İki yapıştırma biçimi: (1) <code>## Tedarikçi</code> başlığı + <code>Ülke · Lot adı · İşlem · Tedarikçi · not… · {meta}</code> satırları; (2) Excel/Sheets'ten kopyalanan <b>sekmeli tablo</b> (başlık satırı: name/farm, process, region, score, price, descriptors, lot no, bags, quantity, variety, farmer, crop, altitude — ülke satırları tek hücre olabilir). İşlem otomatik eşlenir (anaerob→anaerobic, ferm→funky, washed/decaf→washed, natural, honey). Fiyat/çuval/kg yalnız admin'de kalır.</div>
       <textarea id="offBulk" rows="5" placeholder="## Nordic Approach&#10;Etiyopya · Guji Hambela · natural&#10;Kolombiya · Huila Pink Bourbon · washed&#10;## Bonsai&#10;Panama · Finca Deborah Geisha · anaerobic" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;background:var(--panel2);color:var(--ink)"></textarea>
       <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;align-items:center"><button class="mini" onclick="offBulk()">Taslağa ekle</button><span class="hint" id="offMsg"></span></div>
@@ -165,8 +165,8 @@ a{color:var(--gold)}
         </div>
         <div class="hint" id="scaleLine" style="margin-top:6px;color:var(--gold);font-weight:700"></div>
         <div style="display:flex;gap:14px;margin-top:8px;flex-wrap:wrap">
-          <label class="hint" style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="s_showp" style="width:auto;margin:0"> sayfada fiyat göster (çizgili liste + masa fiyatı)</label>
-          <label class="hint" style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="s_showg" style="width:auto;margin:0"> sayfada yeşil $/kg göster</label>
+          <label class="hint" style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="s_showp" style="width:auto;margin:0" checked> sayfada liste fiyatı göster (çizgili liste + masa fiyatı · varsayılan açık)</label>
+          <span class="hint" style="opacity:.75">yeşil $/kg ve tedarikçi adı sayfaya hiçbir ayarla çıkmaz.</span>
         </div>
         <div style="display:flex;gap:8px;margin-top:8px;align-items:center"><button class="mini" onclick="offSettingsSave()">Ölçeği kaydet</button><span class="hint" id="offScaleMsg"></span></div>
       </div>
@@ -174,6 +174,11 @@ a{color:var(--gold)}
         <button class="mini" style="background:var(--gold);color:var(--panel);border-color:var(--gold);font-weight:800" onclick="offApply()">UYGULA — taslağı yayınla</button>
         <span class="hint" id="offApplyMsg"></span>
       </div>
+      <div id="offVendors" style="margin-top:10px"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap"><span class="lbl" style="margin:0">sırala</span>
+        <select id="offSort" onchange="offSortSave()" style="margin:0;width:auto">
+          <option value="page">sayfa sırası (kapora · oy)</option><option value="vendor">tedarikçi</option><option value="origin">ülke</option><option value="usd">$/kg ↑</option><option value="usd_d">$/kg ↓</option><option value="list">liste ₺ ↑</option><option value="score">puan ↓</option><option value="name">ad</option><option value="state">durum (taslak önce)</option>
+        </select><span class="hint" id="offSortMsg"></span></div>
       <div id="offList" style="margin-top:8px"></div>
     </div>
     <!-- DİLEKLER (E, 2026-09-02c): sıradaki masa için ülke·işlem·not — sıradaki lotu seçerken bak -->
@@ -195,7 +200,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-02s';
+const VERSION='v2026-09-02u';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
@@ -291,17 +296,17 @@ async function loadOfferSettings(){
   try{ const r=await fetch(API+'/admin/settings',{headers:{'x-cc-key':KEY}}); const j=await r.json();
     if(j&&j.settings){ const st=j.settings; $('s_depurl').value=st.offer_dep_url||''; $('s_depamt').value=st.offer_dep_amt||''; $('s_goal').value=st.offer_goal||'';
       $('s_refusd').value=st.offer_ref_usd||''; $('s_reflist').value=st.offer_ref_list||''; $('s_ref2usd').value=st.offer_ref2_usd||''; $('s_ref2list').value=st.offer_ref2_list||''; $('s_r40').value=st.offer_ratio_40||''; $('s_r200').value=st.offer_ratio_200||'';
-      $('s_showp').checked=st.offer_show_prices==='1'; $('s_showg').checked=st.offer_show_green==='1';
+      $('s_showp').checked=st.offer_show_prices!=='0';   // v02t: varsayılan AÇIK
       OFFCFG=j.cfg||null; scalePreview(); renderOffersAdmin(); } }catch(e){}
 }
 async function offSettingsSave(){
   if(!(await resolveIfProduct('s_depurl'))) return;
   const body={offer_dep_url:$('s_depurl').value.trim(),offer_dep_amt:$('s_depamt').value.trim(),offer_goal:$('s_goal').value.trim(),
     offer_ref_usd:$('s_refusd').value.trim().replace(',','.'),offer_ref_list:$('s_reflist').value.trim(),offer_ref2_usd:$('s_ref2usd').value.trim().replace(',','.'),offer_ref2_list:$('s_ref2list').value.trim(),offer_ratio_40:$('s_r40').value.trim().replace(',','.'),offer_ratio_200:$('s_r200').value.trim().replace(',','.'),
-    offer_show_prices:$('s_showp').checked?'1':'0',offer_show_green:$('s_showg').checked?'1':'0'};
+    offer_show_prices:$('s_showp').checked?'1':'0'};
   const r=await fetch(API+'/admin/settings',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify(body)});
   const j=await r.json().catch(()=>({}));
-  const msg=j.ok?('kaydedildi · eşik '+(j.cfg&&j.cfg.goal)+(j.cfg&&j.cfg.dep_url?(' · kapora '+(j.cfg.dep_amt||'?')+' TL'):' · kapora yok (serbest oy)')+' · '+scaleText(j.cfg)+' · oranlar '+(j.cfg&&j.cfg.ratio40)+' / '+(j.cfg&&j.cfg.ratio200)+(j.cfg&&j.cfg.show_prices?' · fiyat sayfada':' · fiyat gizli')+(j.cfg&&j.cfg.scale_warn?(' · ⚠ '+j.cfg.scale_warn):'')):('Olmadı: '+(j.error||r.status));
+  const msg=j.ok?('kaydedildi · eşik '+(j.cfg&&j.cfg.goal)+(j.cfg&&j.cfg.dep_url?(' · kapora '+(j.cfg.dep_amt||'?')+' TL'):' · kapora yok (serbest oy)')+' · '+scaleText(j.cfg)+' · oranlar '+(j.cfg&&j.cfg.ratio40)+' / '+(j.cfg&&j.cfg.ratio200)+(j.cfg&&j.cfg.show_prices?' · liste fiyatı sayfada':' · liste fiyatı gizli')+(j.cfg&&j.cfg.scale_warn?(' · ⚠ '+j.cfg.scale_warn):'')):('Olmadı: '+(j.error||r.status));
   $('offSetMsg').textContent=msg; $('offScaleMsg').textContent=msg;
   if(j.ok){ OFFCFG=j.cfg||null; scalePreview(); await loadOffers(); }
 }
@@ -323,6 +328,41 @@ function scalePreview(){
   const r5=x=>Math.round(x/5)*5, ex=[['11,9',11.9],['15,35',15.35],['16,55',16.55]].map(([t,u])=>t+' $ → '+r5(c.F+c.k*u)+' ₺').join(' · ');
   el.textContent=scaleText(c)+' · örnek: '+ex+(c.warn?(' · ⚠ '+c.warn):'');
 }
+// v02u: tedarikçi satırları — "hepsini pasife al / aktif et" (taslak; sayfadan kalkması için UYGULA)
+function renderVendors(){
+  const el=$('offVendors'); if(!el) return;
+  const g={}; for(const o of OFFERS){ const v=o.vendor||''; (g[v]=g[v]||{n:0,a:0,pub:0}); g[v].n++; if(o.active) g[v].a++; if(o.published) g[v].pub++; }
+  const keys=Object.keys(g).sort((x,y)=>x.toLocaleLowerCase('tr').localeCompare(y.toLocaleLowerCase('tr'),'tr'));
+  if(keys.length<2&&!(keys.length===1&&keys[0])){ el.innerHTML=''; return; }
+  el.innerHTML='<span class="lbl">tedarikçiler · toplu aç/kapa (taslak → UYGULA)</span>'+keys.map(v=>{ const x=g[v]; const off=x.a===0;
+    return '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--line)"><b style="flex:1;min-width:140px'+(off?';opacity:.55':'')+'">'+(v?esc(v):'(tedarikçisiz)')+'</b><span class="hint">'+x.n+' satır · '+x.a+' aktif · '+x.pub+' yayında</span>'
+      +'<button class="mini" onclick="offVendorSet('+JSON.stringify(v).replace(/"/g,'&quot;')+',false)"'+(off?' disabled':'')+'>hepsini pasife al</button>'
+      +'<button class="mini" onclick="offVendorSet('+JSON.stringify(v).replace(/"/g,'&quot;')+',true)"'+(x.a===x.n?' disabled':'')+'>hepsini aktif et</button></div>'; }).join('')
+    +'<div class="hint" id="offVendorMsg" style="margin-top:4px"></div>';
+}
+async function offVendorSet(vendor,active){
+  const r=await fetch(API+'/admin/offers-vendor',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({vendor,active})});
+  const j=await r.json().catch(()=>({}));
+  if(j.ok&&Array.isArray(j.offers)){ OFFERS=j.offers; OFFEDIT=null; renderOffersAdmin(); const m=$('offVendorMsg'); if(m) m.textContent=(vendor||'(tedarikçisiz)')+': '+j.n+' satır '+(active?'aktif':'pasif')+' — sayfa için UYGULA'; }
+  else alert('Olmadı: '+(j.error||r.status));
+}
+// v02t: admin sıralama — yalnız görünüm; sayfa sırası sunucudan (kapora · oy) gelir
+function offSortKey(){ try{ return localStorage.getItem('grupal_admin_offsort')||'page'; }catch(e){ return 'page'; } }
+function offSortSave(){ const v=$('offSort')?$('offSort').value:'page'; try{ localStorage.setItem('grupal_admin_offsort',v); }catch(e){} renderOffersAdmin(); }
+function offSorted(){
+  const k=offSortKey(); if($('offSort')) $('offSort').value=k;
+  const a=OFFERS.slice(); const tr=s=>String(s||'').toLocaleLowerCase('tr'); const num=(o,f)=>{ const v=(o.meta&&o.meta[f]!=null)?o.meta[f]:(o[f]!=null?o[f]:null); const n=parseFloat(v); return isFinite(n)?n:null; };
+  const cmpNum=(x,y,desc)=>{ if(x==null&&y==null) return 0; if(x==null) return 1; if(y==null) return -1; return desc?(y-x):(x-y); };
+  const st=o=>(!o.published&&o.active)?0:(o.dirty?1:((o.published&&!o.active)?2:(o.active?3:4)));
+  const by={ vendor:(x,y)=>tr(x.vendor).localeCompare(tr(y.vendor),'tr')||tr(x.origin).localeCompare(tr(y.origin),'tr')||tr(x.name).localeCompare(tr(y.name),'tr'),
+    origin:(x,y)=>tr(x.origin).localeCompare(tr(y.origin),'tr')||tr(x.name).localeCompare(tr(y.name),'tr'),
+    usd:(x,y)=>cmpNum(num(x,'usd_kg'),num(y,'usd_kg'),false), usd_d:(x,y)=>cmpNum(num(x,'usd_kg'),num(y,'usd_kg'),true),
+    list:(x,y)=>cmpNum(x.list_tl,y.list_tl,false), score:(x,y)=>cmpNum(num(x,'score'),num(y,'score'),true),
+    name:(x,y)=>tr(x.name).localeCompare(tr(y.name),'tr'), state:(x,y)=>(st(x)-st(y))||tr(x.name).localeCompare(tr(y.name),'tr') };
+  if(by[k]) a.sort(by[k]);
+  const m=$('offSortMsg'); if(m) m.textContent=(k==='page')?'':(a.length+' satır · '+({vendor:'tedarikçiye',origin:'ülkeye',usd:'$/kg artan',usd_d:'$/kg azalan',list:'liste ₺ artan',score:'puana',name:'ada',state:'duruma'}[k]||k)+' göre');
+  return a;
+}
 function offState(o){ return o.published?(o.dirty?['taslak değişiklik — UYGULA bekliyor','var(--gold)']:(o.active?['yayında','var(--green)']:['pasife alındı — UYGULA ile kalkar','var(--gold)'])):(o.active?['taslak — UYGULA ile yayınlanır','var(--gold)']:['yayında değil','var(--muted)']); }
 function renderOffersAdmin(){
   const el=$('offList'); if(!el) return;
@@ -330,7 +370,9 @@ function renderOffersAdmin(){
   const G=(OFFCFG&&OFFCFG.goal)||40, dep=!!(OFFCFG&&OFFCFG.dep_url);
   const pend=OFFERS.filter(o=>!o.published&&o.active||o.dirty||(o.published&&!o.active)).length;
   $('offApplyMsg').textContent=pend?(pend+' satır UYGULA bekliyor'):'taslak = yayın';
-  el.innerHTML=OFFERS.map(o=>{
+  renderVendors();   // v02u: tedarikçi bazında toplu aktif/pasif
+  const rows=offSorted();   // v02t: admin'de sıralama (sayfa sırasını değiştirmez)
+  el.innerHTML=rows.map(o=>{
     if(OFFEDIT===o.id) return '<div style="border:1px solid var(--gold);border-radius:10px;padding:8px 10px;margin:6px 0">'
       +'<input id="oe_name" value="'+esc(o.name)+'" placeholder="Lot adı" style="margin:0 0 6px">'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><input id="oe_origin" value="'+esc(o.origin||'')+'" placeholder="Ülke" style="margin:0">'
