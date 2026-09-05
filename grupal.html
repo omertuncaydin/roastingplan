@@ -149,6 +149,32 @@ body.th-red #doorOr,body.th-red #doorJoin,body.th-red #lobbyTables{color:#f0dcc8
 body.th-red #doorJoin a{color:#e6c14b}
 body.portalWide #themeChips{margin-top:16px}
 #howLobby{text-align:left;line-height:1.65;margin-top:8px}
+/* v05h YALIN MEYDAN SATIRI (Ömer: eski "oy ver" kartı daha yalın — tek çubuk + tek eylem): ad + Jüri fiyatı · köken/işlem/not (tek satır) · çubuk + sayı + [+] · detay dokununca */
+.orow{padding:9px 10px;border-radius:10px;border:1px solid var(--line);margin:6px 0;cursor:pointer}
+.orow.mine{border-color:var(--gold)}
+.orow .ol1{display:flex;align-items:baseline;gap:8px}
+.orow .on{flex:1;min-width:0;font-size:14px;font-weight:700}
+.orow .ochip{font-size:11px;font-weight:700;color:var(--gold);white-space:nowrap}
+.orow .op{white-space:nowrap;font-size:12px}
+.orow .op s{opacity:.5}
+.orow .op b{color:var(--gold);font-size:16px;font-weight:800}
+.orow .om{margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.orow.open .om{white-space:normal}
+.orow .ol3{display:flex;align-items:center;gap:8px;margin-top:7px}
+.orow .obar{flex:1;height:8px;border-radius:4px;background:var(--panel2);overflow:hidden}
+.orow .obar i{display:block;height:100%;background:var(--gold)}
+.orow .obar i.hit{background:var(--green)}
+.orow .ocnt{font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.orow .ocnt.hit{color:var(--green)}
+.orow button.oc{width:38px;height:34px;margin:0;padding:0;font-size:18px;line-height:1;border-radius:9px;background:var(--panel2);color:var(--gold);border:1px solid var(--gold);font-weight:800}
+.orow button.oc.txt{width:auto;padding:0 10px;font-size:12px}
+.orow button.oc.lock{color:var(--muted);border-color:var(--line);font-size:12px;width:auto;padding:0 10px}
+.orow .oq{display:flex;align-items:center;gap:6px}
+.orow .oq b{min-width:16px;text-align:center;font-size:14px;color:var(--gold)}
+.orow .oq button.oc.minus{color:var(--ink);border-color:var(--line)}
+.orow .od{margin-top:7px;padding-top:7px;border-top:1px dashed var(--line);font-size:12px;line-height:1.5}
+#offerCard a[href]{color:var(--gold);font-weight:700}
+#mdLink{display:block;border:2px solid var(--gold);text-decoration:none;color:inherit;border-radius:12px;padding:10px 12px;margin-top:8px}
 .pcard.pnext{background:var(--panel2);border-style:dashed}
 .pcard.pnext img{filter:grayscale(.85) opacity(.8)}
 .pcard.pnext .pt{color:var(--muted)}
@@ -366,7 +392,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-05g';
+const VERSION='v2026-09-05h';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -462,7 +488,7 @@ hAny:['Kavurucu seçsin.','Let the roaster choose.'],
 // İLETİŞİM RAYLARI (G) — 2026-09-02d
 chanL:['Grup-Al WhatsApp kanalı','Grup-Al WhatsApp channel'], chanH:['masa açılınca · basamak geçilince · kutular yola çıkınca — yalnız bu üçü','table opens · rung passes · boxes ship — only these three'],
 offLbl:['Meydan: sıradaki masa senin olsun','Meydan: the next table is yours'], offH:['Tedarikçilerle konuşuldu; bu kahveler alınabilir. Sayımda {g} oyu geçen kahvelerden en çok oy alan iki kahve Grup-Al® Roasters\'ın sonraki kavurma planına girer. Bir kahveye dokun: oyun orada; tekrar dokun: geri al. En çok 3 oy.','Suppliers confirmed; these coffees can be bought. At the count, the two most-voted coffees over {g} go into Grup-Al® Roasters\' next roast plan. Tap a coffee to vote, tap again to withdraw. Up to 3 votes.'],
-offHD:['Kapora = oy. Sayımda {g} kaporayı geçen kahvelerden en çok kaporalı iki kahve Grup-Al® Roasters\'ın sonraki kavurma planına girer; kaporası olan Jüri fiyatından tamamlar. Kaporanı sayıma kadar başka kahveye taşıyabilirsin. Dokun = ilgi oyu (en çok 3).','A deposit is a vote. At the count, the two most-deposited coffees over {g} go into Grup-Al® Roasters\' next roast plan; depositors complete at the Jury price. You can move your deposit to another coffee until the count. Tap = interest vote (up to 3).'],
+offHD:['Kapora = oy. Sayımda {g} kaporayı geçen kahvelerden en çok kaporalı iki kahve Grup-Al® Roasters\'ın sonraki kavurma planına girer; kaporası olan Jüri fiyatından tamamlar. Kaporanı sayıma kadar başka kahveye taşıyabilirsin. Satıra dokun: detay.','A deposit is a vote. At the count, the two most-deposited coffees over {g} go into Grup-Al® Roasters\' next roast plan; depositors complete at the Jury price. You can move your deposit to another coffee until the count. Tap a row for details.'],
 offVote:['oy ver','vote'], offMine:['✓ oyun','✓ your vote'], offN:[' oy',' votes'], offSeated:['masadan ','seated '], offGoal:['{g} oyu geçen kahveler sayımda yarışır','coffees over {g} votes compete at the count'], offHit:['{g} oyu geçti — sayımda yarışıyor 🎉','over {g} votes — in the count 🎉'], offAtTable:['Sayımda yarışanlar ({n}): {list}','In the count ({n}): {list}'], offDayGoal:[' · kavurma günü: {sum}/{dg} kutu',' · roast day: {sum}/{dg} boxes'], offDayHit:[' · kavurma günü doluyor 🎉',' · roast day is on 🎉'], offMax:['En çok 3 oy: önce birini geri al.','Up to 3 votes: withdraw one first.'],
 offDep:['Kapora sepetine ekle · {amt} TL','Add to deposit basket · {amt} TL'], offListP:['liste','list'], offCampP:['/ kutu · masa kurulunca','/ box · when the table is set'], off200P:['200 kutuda ','at 200 boxes '], offDepN:[' kapora',' deposits'], offInt:['ilgi ','interest '], offDepMine:['✓ kaporan var','✓ deposit placed'], offDepPend:['kapora kontrol ediliyor…','checking deposit…'],
 offMore:['{n} kahve daha · tümünü gör','{n} more coffees · see all'], offJuryP:['Jüri fiyatı · kaporayla','Jury price · with a deposit'], offBasketP:['Sepet ','Basket '], offFrozen:['fiyat kilitli','price locked'], offDepMore:['Bir kutu daha sepete · {amt} TL','One more box to the basket · {amt} TL'],
@@ -472,7 +498,7 @@ offWonChip:['🏆 kazandı','🏆 won'], offWonMine:['Kaporan kazandı ×{n} —
 cyNext:['Sayım: {d}','Count: {d}'], cyLeft:['{dd} gün {hh} saat','{dd}d {hh}h'], cyWon:['{d} sayımı:','{d} count:'], cyNone:['{d} sayımı: eşiği geçen kahve yok — CoffeeNutz seçer','{d} count: no coffee cleared the bar — CoffeeNutz picks'], cyJury:['Jüri','Jury'],
 cy_topla:['sepet · tamamlama · yeşil alım','basket · completion · green bought'], cy_yol:['numune · reçete · kavurucuya','samples · recipe · to the roaster'],
 cySepetBy:['Sepet {d}\'e kadar','Basket until {d}'], cySepetClosed:['Bu sayımın sepeti kapandı · sonraki sayım {d}','This count\'s basket has closed · next count {d}'], cy_kavur:['kavurma','roasting'], cy_kargo:['kutulama · kargo','boxing · shipping'],
-noTableT:['Şu an açık masa yok','No open table right now'], noTableS:['Sıradaki kahveyi Meydan\'da Grup-Al® Jüri seçiyor; kazananlar iki haftada bir kavrulur.','The Grup-Al® Jury picks the next coffee at Meydan; winners roast every other week.'], mdTitle:['Meydan','Meydan'], mdCount:['{n} kahve','{n} coffees'], lobbyT:['Jüri seçer · herkes alır.','The Jury picks · everyone buys.'], lobbyTables:['Açık masalar','Open tables'], mdCardT:['Grup-Al® Jüri · Meydan','Grup-Al® Jury · Meydan'], mdCardS:['Sıradaki kahveyi sen seç','You choose the next coffee'], mdCardN:['Meydan\'da {n} kahve','{n} coffees at Meydan'], doorOr:['ya da','or'], spCardT:['Herkese · Jüri Sepeti','Everyone · Jury Basket'], spCardS:['Jüri\'nin seçtiği kahveyi al','Buy the coffee the Jury picked'], spOpenM:['{list} · Sepet fiyatından · {d}\'e kadar','{list} · at the Basket price · until {d}'], spClosedM:['İki kahve · Sepet fiyatından · sayımdan sonra açılır: {d}','Two coffees · at the Basket price · opens after the count: {d}'], spNotify:['açılınca haber ver →','tell me when it opens →'], spClosed:['Şu an kapalı','Closed now'], spTables:['{n} açık masa aşağıda ↓','{n} open table(s) below ↓'], mdJoin:['Jüri olmak ister misin? {a}','Want to be on the Jury? {a}'], mdJoinA:['WhatsApp kanalı →','WhatsApp channel →'], mdCardMd:['Meydan: Grup-Al® Jüri yeşil kahve listesinden seçer; iki haftada bir Pazar gecesi sayılır, en çok seçilen iki kahve kavrulur.','Meydan: the Grup-Al® Jury picks from the green-coffee list; counted every other Sunday night, the top two get roasted.'], mdCardJs:['Jüri Sepeti: Jüri\'nin seçtiği iki kahve — herkese açık, Sepet fiyatından.','Jury Basket: the two coffees the Jury picked — open to everyone, at the Basket price.'], mdCardNext:['Sayım: {d}','Count: {d}'], mdCardWon:['{d} sayımı: {list}','{d} count: {list}'], mdCardSepet:['Jüri Sepeti açık →','Jury Basket open →'], mdGo:['Meydan\'a git →','Go to Meydan →'], mdFull:['Meydan · tam sayfa →','Meydan · full page →'], clMeydan:['Sıradaki kahveyi Meydan\'da sen seç →','Choose the next coffee at Meydan →'], mdTables:['Açık masalar','Open tables'], mdTableEnd:['son gün','last day'], mdShareL:['Meydan\'ı paylaş','Share Meydan'], mdShareTxt:['Sıradaki kahveyi Grup-Al® Jüri seçiyor — Meydan\'da yerini al: ','The Grup-Al® Jury picks the next coffee — take your place at Meydan: '], mdSub:['Grup-Al® Jüri: sıradaki kahveyi sen seç · kapora = oy · sayım iki haftada bir Pazar gecesi','Grup-Al® Jury: you choose the next coffee · deposit = vote · count every other Sunday night'],
+noTableT:['Şu an açık masa yok','No open table right now'], noTableS:['Sıradaki kahveyi Meydan\'da Grup-Al® Jüri seçiyor; kazananlar iki haftada bir kavrulur.','The Grup-Al® Jury picks the next coffee at Meydan; winners roast every other week.'], mdTitle:['Meydan','Meydan'], mdCount:['{n} kahve','{n} coffees'], offLockC:['kod','code'], offListP:['Liste ','List '], offMineSum:['Kaporan: {list}','Your deposits: {list}'], offDetail:['detay ▾','details ▾'], offDetailX:['kapat ▴','close ▴'], lobbyT:['Jüri seçer · herkes alır.','The Jury picks · everyone buys.'], lobbyTables:['Açık masalar','Open tables'], mdCardT:['Grup-Al® Jüri · Meydan','Grup-Al® Jury · Meydan'], mdCardS:['Sıradaki kahveyi sen seç','You choose the next coffee'], mdCardN:['Meydan\'da {n} kahve','{n} coffees at Meydan'], doorOr:['ya da','or'], spCardT:['Herkese · Jüri Sepeti','Everyone · Jury Basket'], spCardS:['Jüri\'nin seçtiği kahveyi al','Buy the coffee the Jury picked'], spOpenM:['{list} · Sepet fiyatından · {d}\'e kadar','{list} · at the Basket price · until {d}'], spClosedM:['İki kahve · Sepet fiyatından · sayımdan sonra açılır: {d}','Two coffees · at the Basket price · opens after the count: {d}'], spNotify:['açılınca haber ver →','tell me when it opens →'], spClosed:['Şu an kapalı','Closed now'], spTables:['{n} açık masa aşağıda ↓','{n} open table(s) below ↓'], mdJoin:['Jüri olmak ister misin? {a}','Want to be on the Jury? {a}'], mdJoinA:['WhatsApp kanalı →','WhatsApp channel →'], mdCardMd:['Meydan: Grup-Al® Jüri yeşil kahve listesinden seçer; iki haftada bir Pazar gecesi sayılır, en çok seçilen iki kahve kavrulur.','Meydan: the Grup-Al® Jury picks from the green-coffee list; counted every other Sunday night, the top two get roasted.'], mdCardJs:['Jüri Sepeti: Jüri\'nin seçtiği iki kahve — herkese açık, Sepet fiyatından.','Jury Basket: the two coffees the Jury picked — open to everyone, at the Basket price.'], mdCardNext:['Sayım: {d}','Count: {d}'], mdCardWon:['{d} sayımı: {list}','{d} count: {list}'], mdCardSepet:['Jüri Sepeti açık →','Jury Basket open →'], mdGo:['Meydan\'a git →','Go to Meydan →'], mdFull:['Meydan · tam sayfa →','Meydan · full page →'], clMeydan:['Sıradaki kahveyi Meydan\'da sen seç →','Choose the next coffee at Meydan →'], mdTables:['Açık masalar','Open tables'], mdTableEnd:['son gün','last day'], mdShareL:['Meydan\'ı paylaş','Share Meydan'], mdShareTxt:['Sıradaki kahveyi Grup-Al® Jüri seçiyor — Meydan\'da yerini al: ','The Grup-Al® Jury picks the next coffee — take your place at Meydan: '], mdSub:['Grup-Al® Jüri: sıradaki kahveyi sen seç · kapora = oy · sayım iki haftada bir Pazar gecesi','Grup-Al® Jury: you choose the next coffee · deposit = vote · count every other Sunday night'],
 cyDoneBy:['Tamamlama: {d}\'e kadar','Complete by {d}'], cyForfeit:['süresi geçen kapora yanar','a deposit not completed in time is forfeited'], cyCredit:['süresi geçen kapora krediye döner','a deposit not completed in time becomes credit'],
 offForfeited:['kaporan yandı — süresinde tamamlanmadı','your deposit was forfeited — not completed in time'], offCredited:['kaporan Grup-Al kredine döndü — süresinde tamamlanmadı','your deposit became Grup-Al credit — not completed in time'],
 offBanned:['Jüri askıda: {d}\'e kadar kapora koyamazsın (tamamlanmayan kapora)','Jury suspended: no deposits until {d} (an uncompleted deposit)'],
@@ -493,7 +519,7 @@ function setLang(l){ LANG=l; try{ localStorage.setItem('grupal_lang',l); }catch(
   // Çip susması yalnız KARGO PENCERESİ gerçeğine bakar: elle seçilen kırmızı tema çipleri asla silmez.
   renderThemeChips((typeof redWindow==='function')&&redWindow());
   const lc=document.getElementById('langChip'); if(lc) lc.textContent=(LANG==='en'?'TR':'EN');
-  if(typeof load==='function'&&SLUG&&STATE) load(); else if(typeof boot==='function'&&!SLUG) boot(); }
+  if(MEYDAN){ if(typeof loadMeydan==='function') loadMeydan(); } else if(typeof load==='function'&&SLUG&&STATE) load(); else if(typeof boot==='function'&&!SLUG) boot(); }   // v05h: Meydan'da dil değişince /state değil /meydan
 let THEMEPREF='auto'; try{ THEMEPREF=localStorage.getItem('grupal_theme')||'auto'; }catch(e){}
 if(THEMEPREF==='gece') THEMEPREF='isik'; if(THEMEPREF==='krema') THEMEPREF='kraft'; // emekli temalardan göç
 const THEMES=[['auto','thAuto'],['isik','thIsik'],['kraft','thKraft'],['red','thRed']]; // Gece+Krema emekli (Ömer 2026-08-31)
@@ -791,7 +817,22 @@ function renderWishes(s){
 // ---- TEKLİFLER (I): somut kahveler, oy = aç/kapa, cihaz başına ≤3; 40 oy çubuğu (masadan gelen oy ayrı) ----
 let OFFMINE=null;   // /offer-mine cevabı: [{id,paid,qty,conv,done,forfeited,credited}]
 let BANNED=null;    // v02w: Jüri askısı (tamamlanmayan kapora) — sayfa düğmeyi saklar
-let OFFALL=false; const OFFFOLD=8;   // v02s: iki tedarikçi = ~50 satır; ilk 8 (kapora·oy sırası) + "tümünü gör"
+let OFFALL=false; const OFFFOLD=8;
+const OFFOPEN=new Set();   // v05h: detayı açık satırlar
+function offDetail(id){ if(OFFOPEN.has(id)) OFFOPEN.delete(id); else OFFOPEN.add(id); renderOffers(STATE); }
+function gcodeFocus(){ const i=$('gcodeIn'); if(i){ try{ i.scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){} i.focus(); } }
+// v05h (Ömer: "kampanyada liste değil link"): kampanya sayfasında Meydan = tek link kartı (sayım · kahve sayısı · kaporan)
+function renderMeydanLink(card, el, list, cfg, s){
+  const lb=card.querySelector('.lbl'); if(lb) lb.textContent=t('mdCardT');
+  const hint=$('offHint'); if(hint) hint.style.display='none';
+  const c=s&&s.cycle, mine=(OFFMINE||[]).filter(v=>v.paid).map(v=>{ const o=list.find(x=>x.id===v.id); return o?(escZ(o.name)+(v.qty>1?' ×'+v.qty:'')):''; }).filter(Boolean);
+  el.innerHTML='<a id="mdLink" href="?k=meydan"><div style="font-size:16px;font-weight:800">'+t('mdCardS')+'</div>'
+    +'<div class="hint" style="margin-top:3px">'+(c&&c.next_close?(t('mdCardNext').replace('{d}',cyDT(c.next_close))+' · '):'')+t('mdCount').replace('{n}',list.length)+'</div>'
+    +(mine.length?('<div style="margin-top:3px;font-size:12px;font-weight:700;color:var(--gold)">'+t('offMineSum').replace('{list}',mine.join(', '))+'</div>'):'')
+    +'<div style="margin-top:6px;font-size:13px;font-weight:800;color:var(--accent)">'+t('mdGo')+'</div></a>';
+  card.style.display='block'; const b=$('dbBar'); if(b) b.style.display='none'; document.body.style.paddingBottom='';
+  const wl=$('wishCard')&&$('wishCard').querySelector('.lbl'); if(wl) wl.textContent=t('wishAlt');
+}   // v02s: iki tedarikçi = ~50 satır; ilk 8 (kapora·oy sırası) + "tümünü gör"
 function offShowAll(){ OFFALL=true; renderOffers(STATE); }
 function fmtTL(n){ return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }   // 1015 → 1.015
 function offCfg(){ const c=(STATE&&STATE.offer_cfg)||{}; const oa=c.dep_open_at?new Date(c.dep_open_at):null; return { goal:Math.max(5,parseInt(c.goal)||40), dep_url:c.dep_url||'', dep_amt:parseInt(c.dep_amt)||0, dep_open_at:(oa&&!isNaN(oa.getTime()))?oa:null, code_always:!!c.code_always }; }
@@ -815,8 +856,9 @@ function renderOffers(s){
   const list=s&&Array.isArray(s.offers)?s.offers.filter(o=>o&&o.active!==false):[];
   if(!list.length){ card.style.display='none'; return; }
   const cfg=offCfg(), G=cfg.goal, depMode=!!cfg.dep_url;
-  const hint=$('offHint'); if(hint) hint.textContent=t(depMode?'offHD':'offH').split('{g}').join(G);
-  { const lb=card.querySelector('.lbl'); if(lb) lb.textContent=t('offLbl')+(MEYDAN?'':(' · '+t('mdCount').replace('{n}',list.length))); }   // v05g: kampanyadaki Meydan listesinde kahve sayısı (Meydan sayfasında h1'de)
+  if(!MEYDAN){ renderMeydanLink(card, el, list, cfg, s); return; }   // v05h: kampanyada liste yok, link kartı
+  const hint=$('offHint'); if(hint){ hint.style.display=''; hint.textContent=t(depMode?'offHD':'offH').split('{g}').join(G); }
+  { const lb=card.querySelector('.lbl'); if(lb) lb.textContent=t('offLbl'); }   // v05g: kahve sayısı Meydan h1'inde
   const mine=offMine(), pend=offPend(); let h='';
   const early=depEarly(cfg), codeOk=gcodeOk(), gate=depMode&&depGate(cfg);
   h+=renderCycle(s);   // v02v: döngü çubuğu + son sayımın kahveleri (varsa)
@@ -830,32 +872,44 @@ function renderOffers(s){
     h+='<div style="margin:0 0 8px;padding:8px 10px;border-radius:10px;background:var(--panel2);font-size:12px"><b style="color:var(--green)">'+t('offAtTable').replace('{n}',hits.length).replace('{list}',hits.map(o=>escZ(o.name)).join(', '))+'</b>'+(dg?('<span class="hint">'+(sum>=dg?t('offDayHit'):t('offDayGoal').replace('{sum}',sum).replace('{dg}',dg))+'</span>'):'')+'</div>'; }
   const fold=!OFFALL&&list.length>OFFFOLD+2;   // 9–10 satırı katlamaya değmez
   const shown=fold?list.filter((o,i)=>i<OFFFOLD||(o.dep||0)>0||mine.includes(o.id)||(OFFMINE||[]).some(v=>v.id===o.id&&v.paid)||pend.includes(o.id)):list;   // benim satırım ve kaporalı satır katlanmaz (v02t: pahalı üstte → ivme görünür kalsın)
-  let dbQ=0;
+  const banned=!!(BANNED&&BANNED.getTime()>Date.now());
   for(const o of shown){
     const isMine=mine.includes(o.id), paid=(OFFMINE||[]).find(v=>v.id===o.id&&v.paid), pendD=!paid&&pend.includes(o.id);
-    const cnt=depMode?(o.dep||0):(o.n||0), pct=Math.min(100,Math.round(100*cnt/G)), hit=cnt>=G;
-    const meta=[o.origin,o.process?wProcName(o.process):''].filter(Boolean).map(escZ).join(' · ');   // v02r: tedarikçi adı sayfada YOK (Ömer 04.09)
-    h+='<div class="orow'+((depMode?!!paid:(isMine||paid))?' mine':'')+'"'+(depMode?'':(' onclick="offToggle(\''+escZ(o.id)+'\')"'))+' style="'+(depMode?'':'cursor:pointer;')+'padding:9px 10px;border-radius:10px;border:1px solid '+((depMode?!!paid:(isMine||paid))?'var(--gold)':'var(--line)')+';margin:6px 0">'   // v05b: kapora modunda dokunma-oy YOK (ilgi gitti)
-      +'<div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:14px;font-weight:700">'+escZ(o.name)+'</span>'
-      +'<span style="font-size:11px;font-weight:700;color:'+((isMine||paid)?'var(--gold)':'var(--accent)')+'">'+(paid?((paid.conv?t('offWonChip'):t('offDepMine'))+(paid.qty>1?' ×'+paid.qty:'')):(pendD?t('offDepPend'):(depMode?'':(isMine?t('offMine'):t('offVote')))))+'</span></div>'
-      +(meta?('<div class="hint" style="margin-top:2px">'+meta+(o.note?(' · '+escZ(trNote(o.note))):'')+'</div>'):'')
-      +(((o.list_tl)&&(o.jury_tl||o.camp200_tl))?('<div style="margin-top:5px;font-size:14px;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px;row-gap:1px"><span style="white-space:nowrap"><s style="opacity:.55">'+fmtTL(o.list_tl)+' TL</s> <b style="color:var(--gold);font-size:16px">'+fmtTL(o.jury_tl||o.camp200_tl)+' TL</b></span><span class="hint" style="white-space:nowrap">'+t('offJuryP')+'</span>'+((o.basket_tl||o.camp_tl)?('<span class="hint" style="opacity:.75;white-space:nowrap">· '+t('offBasketP')+fmtTL(o.basket_tl||o.camp_tl)+' TL</span>'):'')+(o.frozen?'<span class="hint" style="opacity:.6;white-space:nowrap">· '+t('offFrozen')+'</span>':'')+'</div>'):'')
-      +'<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="flex:1;height:8px;border-radius:4px;background:var(--panel2);overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:'+(hit?'var(--green)':'var(--gold)')+'"></i></span>'
-      +'<b style="font-size:12px">'+cnt+'/'+G+t(depMode?'offDepN':'offN')+'</b>'
-      +''   // v05b: "ilgi" sayfada yok (admin'de kalır)
-      +((o.seated||0)?('<span class="hint" style="font-size:11px">· '+t('offSeated')+(o.seated||0)+'</span>'):'')+'</div>'
+    const cnt=depMode?(o.dep||0):(o.n||0), pct=Math.min(100,Math.round(100*cnt/G)), hit=cnt>=G, open=OFFOPEN.has(o.id);
+    const meta=[o.origin,o.process?wProcName(o.process):''].filter(Boolean).map(escZ).join(' · ')+(o.note?(' · '+escZ(trNote(o.note))):'');   // v02r: tedarikçi adı sayfada YOK (Ömer 04.09)
+    const rowMine=depMode?!!paid:(isMine||paid);
+    const chip=paid?((paid.conv?t('offWonChip'):t('offDepMine'))+(paid.qty>1?' ×'+paid.qty:'')):(pendD?t('offDepPend'):(depMode?'':(isMine?t('offMine'):'')));
+    const jury=o.jury_tl||o.camp200_tl, basket=o.basket_tl||o.camp_tl;
+    const price=(o.list_tl&&jury)?('<span class="op">'+(o.list_tl>jury?('<s>'+fmtTL(o.list_tl)+'</s> '):'')+'<b>'+fmtTL(jury)+' TL</b></span>'):'';
+    // TEK EYLEM (çubuğun ucunda): + · [− n +] · kod · oy ver
+    let ctl='';
+    if(depMode){
+      if(!(paid&&paid.conv)&&!banned){
+        if(gate) ctl='<button class="oc lock" onclick="event.stopPropagation();gcodeFocus()" title="'+t('offCodeRow')+'">🔒 '+t('offLockC')+'</button>';
+        else { const q=dbGet()[o.id]||0;
+          ctl=q?('<span class="oq" onclick="event.stopPropagation()"><button class="oc minus" onclick="dbAdd(\''+escZ(o.id)+'\',-1)" aria-label="−">−</button><b>'+q+'</b><button class="oc" onclick="dbAdd(\''+escZ(o.id)+'\',1)" aria-label="+">+</button></span>')
+                :('<button class="oc" onclick="event.stopPropagation();dbAdd(\''+escZ(o.id)+'\',1)" title="'+t(paid?'offDepMore':'offDep').replace('{amt}',cfg.dep_amt||'')+'" aria-label="+">+</button>'); }
+      }
+    } else ctl='<button class="oc txt" onclick="event.stopPropagation();offToggle(\''+escZ(o.id)+'\')">'+(isMine?t('offMine'):t('offVote'))+'</button>';
+    // DETAY (dokununca): liste · Sepet · kilit · masadan · taşı
+    const det=[];
+    if(o.list_tl&&jury) det.push(t('offListP')+fmtTL(o.list_tl)+' TL'+(basket?(' · '+t('offBasketP')+fmtTL(basket)+' TL'):'')+' · '+t('offJuryP')+(o.frozen?(' · '+t('offFrozen')):''));
+    if(o.seated) det.push(t('offSeated')+o.seated);
+    if(depMode&&gate&&!(paid&&paid.conv)) det.push(cfg.code_always?t('offCodeRow'):t('offEarlyRow').replace('{d}',fmtOpen(cfg.dep_open_at)));
+    const mv=(paid&&!paid.conv&&list.length>1)?('<div onclick="event.stopPropagation()"><a onclick="offMoveUI(\''+escZ(o.id)+'\')">'+t('offMove')+'</a><span id="mv_'+escZ(o.id)+'"></span></div>'):'';
+    h+='<div class="orow'+(rowMine?' mine':'')+(open?' open':'')+'" onclick="offDetail(\''+escZ(o.id)+'\')">'
+      +'<div class="ol1"><span class="on">'+escZ(o.name)+'</span>'+(chip?('<span class="ochip">'+chip+'</span>'):'')+price+'</div>'
+      +(meta?('<div class="hint om">'+meta+'</div>'):'')
+      +'<div class="ol3"><span class="obar"><i class="'+(hit?'hit':'')+'" style="width:'+pct+'%"></i></span><b class="ocnt'+(hit?' hit':'')+'">'+cnt+'/'+G+t(depMode?'offDepN':'offN')+'</b>'+ctl+'</div>'
       +(hit?('<div style="margin-top:4px;font-size:12px;font-weight:700;color:var(--green)">'+t(depMode?'offHitD':'offHit').replace('{g}',G)+'</div>'):'')
-      +((depMode&&!(paid&&paid.conv))?((BANNED&&BANNED.getTime()>Date.now())?'':(gate?('<div class="hint" style="margin-top:6px;font-size:11px">'+(cfg.code_always?t('offCodeRow'):t('offEarlyRow').replace('{d}',fmtOpen(cfg.dep_open_at)))+'</div>'):((dbQ=dbGet()[o.id]||0)?('<div style="display:flex;align-items:center;gap:8px;margin-top:8px" onclick="event.stopPropagation()"><span style="flex:1;font-size:13px;font-weight:700;color:var(--gold)">'+t('dbIn').replace('{n}',dbQ)+'</span><button onclick="dbAdd(\''+escZ(o.id)+'\',-1)" style="width:38px;margin:0;padding:8px 0;font-size:16px;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">−</button><button onclick="dbAdd(\''+escZ(o.id)+'\',1)" style="width:38px;margin:0;padding:8px 0;font-size:16px;background:var(--panel2);color:var(--gold);border:1px solid var(--gold)">+</button></div>')
-      :('<button onclick="event.stopPropagation();dbAdd(\''+escZ(o.id)+'\',1)" style="margin-top:8px;padding:10px;font-size:13px;background:var(--panel2);color:var(--gold);border:1px solid var(--gold)">'+t(paid?'offDepMore':'offDep').replace('{amt}',cfg.dep_amt||'')+'</button>')))):'')
-      +((paid&&!paid.conv&&list.length>1)?('<div class="hint" style="margin-top:6px;font-size:12px" onclick="event.stopPropagation()"><a onclick="offMoveUI(\''+escZ(o.id)+'\')">'+t('offMove')+'</a><span id="mv_'+escZ(o.id)+'"></span></div>'):'')
-      +((paid&&paid.conv)?((paid.forfeited||paid.credited)?('<div style="margin-top:6px;font-size:12px;font-weight:700;color:#e0705a">'+t(paid.credited?'offCredited':'offForfeited')+'</div>'):('<div style="margin-top:6px;font-size:12px;font-weight:700;color:var(--green)">'+(paid.done?t('offDone'):t('offWonMine').replace('{n}',paid.qty))+'</div>'+((!paid.done&&o.done_url)?('<button onclick="event.stopPropagation();offComplete(\''+escZ(o.id)+'\')" style="margin-top:6px;padding:10px;font-size:13px;background:var(--gold);color:var(--panel);border:1px solid var(--gold);font-weight:800">'+t('offCompleteB').replace('{p}',fmtTL(Math.max(0,(o.jury_tl||o.camp200_tl||0)-(cfg.dep_amt||0))))+'</button>'):((!paid.done)?('<div class="hint" style="font-size:11px">'+t('offCompleteSoon')+'</div>'):'')))):'')
+      +(open?('<div class="od hint">'+det.map(x=>'<div>'+x+'</div>').join('')+mv+'</div>'):'')
+      +((paid&&paid.conv)?((paid.forfeited||paid.credited)?('<div style="margin-top:6px;font-size:12px;font-weight:700;color:#e0705a">'+t(paid.credited?'offCredited':'offForfeited')+'</div>'):('<div style="margin-top:6px;font-size:12px;font-weight:700;color:var(--green)">'+(paid.done?t('offDone'):t('offWonMine').replace('{n}',paid.qty))+'</div>'+((!paid.done&&o.done_url)?('<button onclick="event.stopPropagation();offComplete(\''+escZ(o.id)+'\')" style="margin-top:6px;padding:10px;font-size:13px;background:var(--gold);color:var(--panel);border:1px solid var(--gold);font-weight:800">'+t('offCompleteB').replace('{p}',fmtTL(Math.max(0,(jury||0)-(cfg.dep_amt||0))))+'</button>'):((!paid.done)?('<div class="hint" style="font-size:11px">'+t('offCompleteSoon')+'</div>'):'')))):'')
       +'</div>';
   }
   if(fold) h+='<button onclick="offShowAll()" style="margin-top:6px;padding:9px;font-size:13px;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">'+t('offMore').replace('{n}',list.length-shown.length)+'</button>';
   h+='<div class="hint" style="margin-top:4px;font-size:11px;opacity:.75">'+t(depMode?'offGoalD':'offGoal').split('{g}').join(G)+'</div>';
   // v02x (Ömer 05.09 "kapora öncesi uyarı"): kapora şartları — kapalı bir <details>; arayüz hafif kalır, metin sayfada durur (ön bilgilendirme)
   if(depMode) h+='<details style="margin-top:6px"><summary class="hint" style="cursor:pointer;font-size:11px">'+t('offTermsL')+'</summary><div class="hint" style="margin-top:4px;font-size:11px;line-height:1.5">'+t('offTerms').split('{amt}').join(cfg.dep_amt||'').split('{g}').join(G).split('{dd}').join(String((STATE&&STATE.offer_cfg&&parseInt(STATE.offer_cfg.done_days))||2))+'</div></details>';
-  if(!MEYDAN) h+='<div class="hint" style="margin-top:6px;text-align:right"><a href="?k=meydan" style="font-weight:700">'+t('mdFull')+'</a></div>';   // v05c: kampanya sayfasından Meydan'ın tam sayfasına
   el.innerHTML=h; card.style.display='block'; renderBasketBar();
   const wl=$('wishCard')&&$('wishCard').querySelector('.lbl'); if(wl) wl.textContent=t('wishAlt');   // teklif varken dilek kartı "listede yok mu?" olur
 }
@@ -900,7 +954,7 @@ function openPayTab(du){ let w=null; try{ w=window.open(du,'_blank','noopener');
 async function offLoadMine(s){
   // cihazın kaporaları/oyları (yalnız bu cihazda bir iz varsa sorulur)
   if(!s||!Array.isArray(s.offers)||!s.offers.length) return;
-  if(!MEYDAN&&!offMine().length&&!offPend().length) return;   // v02v: Meydan'da her zaman sor (kaporalar cihaza bağlı)
+  // v02v: Meydan'da her zaman sor (kaporalar cihaza bağlı) · v05h: kampanyada da sor — link kartı "Kaporan: …" satırını gösterir
   try{ const r=await fetch(API+'/offer-mine?dev='+encodeURIComponent(devId())); const j=await r.json();
     if(j&&Array.isArray(j.votes)){ OFFMINE=j.votes; BANNED=j.banned_until?new Date(j.banned_until):null; if(BANNED&&isNaN(BANNED.getTime())) BANNED=null;
       const paidIds=j.votes.filter(v=>v.paid).map(v=>v.id); if(paidIds.length){ try{ localStorage.setItem('grupal_odep', JSON.stringify(offPend().filter(id=>!paidIds.includes(id)))); }catch(e){} }
