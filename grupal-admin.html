@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grup-Al · kampanya kokpiti</title>
 <meta name="robots" content="noindex">
-<!-- grupal-admin.html · v2026-09-02w · MEYDAN: 3. referans (parçalı doğru) · kavurma günü toplam kutu eşiği · erken kapora sayısı · tekliften kampanya taslağı -->
+<!-- grupal-admin.html · v2026-09-02x · MEYDAN: Jüri/Sepet oranları · döngü başlangıcı + sayım · kilitli fiyat · dönüşen/tamamlanan kapora · tamamlama linki -->
 <style>
 :root{--bg:#16130f;--panel:#221c15;--panel2:#1c1712;--accent:#c98a3c;--gold:#e6c14b;--green:#3c7a5a;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--warn:#d9663f}
 *{box-sizing:border-box}
@@ -163,16 +163,20 @@ a{color:var(--gold)}
           <div><span class="lbl">eşik (kapora ya da oy)</span><input id="s_goal" inputmode="numeric" placeholder="40"></div>
           <div><span class="lbl">kavurma günü toplam kutu eşiği (0 = kapalı)</span><input id="s_daygoal" inputmode="numeric" placeholder="100"></div>
           <div class="hint" style="align-self:end;padding-bottom:10px">masa tek kahve değil: eşiği geçen her kahve masaya oturur; bu sayı sayfada "kavurma günü: toplam/eşik" olarak görünür</div>
-          <div><span class="lbl">grup kodu (Grup-Al® WhatsApp grubunda paylaş)</span><input id="s_depcode" placeholder="ör. meydan2026" autocapitalize="off"></div>
+          <div><span class="lbl">döngü başlangıcı · ilk sayım (Pazar 20:00, İstanbul)</span><input id="s_cycle" type="datetime-local"></div>
+          <div class="hint" style="align-self:end;padding-bottom:10px">sayım her 14 günde bir, otomatik (kapanıştan sonraki ilk ziyarette). Kazanan: eşiği geçenlerden en çok kaporalı 2 kahve.</div>
+          <div><span class="lbl">Jüri kodu (WhatsApp KANALINDA paylaş · açılış saati boşsa kapora HER ZAMAN kod ister)</span><input id="s_depcode" placeholder="ör. juri2026" autocapitalize="off"></div>
           <div><span class="lbl">kapora herkese açılış (İstanbul saati)</span><input id="s_depopen" type="datetime-local"></div>
         </div>
-        <div class="hint" style="margin-top:4px">Açılış saati gelecekteyse sayfa kapora düğmesini yalnız grup kodunu girmiş cihaza gösterir; saat gelince herkese. Kod sayfaya hiç gitmez. Boş = kısıt yok.</div>
+        <div class="hint" style="margin-top:4px">Kod dolu + açılış boş = Jüri olmak için kod şart (kanal teşviki). Kod dolu + açılış gelecekte = o saate kadar kodlular, sonra herkes. Kod boş = kısıt yok. Kod sayfaya hiç gitmez.</div>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap"><button class="mini" onclick="cycleCloseNow()">Sayımı ŞİMDİ yap</button><button class="mini" onclick="loadCycles()">Sayım kayıtları</button><span class="hint" id="cycleMsg"></span></div>
+        <div id="cycleList" class="hint" style="margin-top:4px"></div>
         <div style="display:flex;gap:8px;margin-top:8px;align-items:center"><button class="mini" onclick="offSettingsSave()">Ayarları kaydet</button><span class="hint" id="offSetMsg"></span></div>
       </div>
       <!-- FİYAT ÖLÇEĞİ (Ömer 2026-09-04): iki referans kahve → taban + oran (v02s); referans 1 Rumanda 20,8 $/kg = 1275 ₺, referans 2 Killenso 13,55 $/kg = 900 ₺ (rakip fiyatları) -->
       <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px">
         <span class="lbl">fiyat ölçeği · yeşil $/kg → kutu liste fiyatı (₺) · taban + oran · masa fiyatları oranla</span>
-        <div class="hint" style="margin:4px 0 6px">Referans kahvelerden eğri: 1 referans = orantı; 2–3 referans = $/kg'a göre sıralı parçalı doğru (her referanstan tam geçer, uçlarda komşu parçanın eğimiyle uzar). Masa kurulunca = liste × oran(40); 200 kutuda = liste × oran(200). Satır bazında elle ezmek için düzenlemede "liste ₺ / masa ₺".</div>
+        <div class="hint" style="margin:4px 0 6px">Referans kahvelerden eğri: 1 referans = orantı; 2–3 referans = $/kg'a göre sıralı parçalı doğru (her referanstan tam geçer, uçlarda komşu parçanın eğimiyle uzar). Jüri fiyatı = liste × oran(Jüri); Sepet fiyatı = liste × oran(Sepet). Bir kahveye ilk kapora düşünce fiyatları DONAR (🔒 kilitli) — ölçek değişse de o kahve değişmez. Satır bazında elle ezmek için düzenlemede "liste / Jüri / Sepet ₺".</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div><span class="lbl">referans 1 · $/kg</span><input id="s_refusd" inputmode="decimal" placeholder="20,8" oninput="scalePreview()"></div>
           <div><span class="lbl">referans 1 · liste ₺ (250 g)</span><input id="s_reflist" inputmode="numeric" placeholder="1275" oninput="scalePreview()"></div>
@@ -180,8 +184,8 @@ a{color:var(--gold)}
           <div><span class="lbl">referans 2 · liste ₺ (250 g)</span><input id="s_ref2list" inputmode="numeric" placeholder="900" oninput="scalePreview()"></div>
           <div><span class="lbl">referans 3 · $/kg (üst uç)</span><input id="s_ref3usd" inputmode="decimal" placeholder="32,87" oninput="scalePreview()"></div>
           <div><span class="lbl">referans 3 · liste ₺ (250 g)</span><input id="s_ref3list" inputmode="numeric" placeholder="2200" oninput="scalePreview()"></div>
-          <div><span class="lbl">oran · masa kurulunca (40)</span><input id="s_r40" inputmode="decimal" placeholder="0,80"></div>
-          <div><span class="lbl">oran · 200 kutuda</span><input id="s_r200" inputmode="decimal" placeholder="0,60"></div>
+          <div><span class="lbl">oran · JÜRİ fiyatı (kaporalı)</span><input id="s_rjury" inputmode="decimal" placeholder="0,65"></div>
+          <div><span class="lbl">oran · SEPET fiyatı (Jüri Sepeti)</span><input id="s_rbasket" inputmode="decimal" placeholder="0,80"></div>
         </div>
         <div class="hint" id="scaleLine" style="margin-top:6px;color:var(--gold);font-weight:700"></div>
         <div style="display:flex;gap:14px;margin-top:8px;flex-wrap:wrap">
@@ -220,7 +224,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-02w';
+const VERSION='v2026-09-02x';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
@@ -316,7 +320,7 @@ async function loadOfferSettings(){
   try{ const r=await fetch(API+'/admin/settings',{headers:{'x-cc-key':KEY}}); const j=await r.json();
     if(j&&j.settings){ const st=j.settings; $('s_depurl').value=st.offer_dep_url||''; $('s_depamt').value=st.offer_dep_amt||''; $('s_goal').value=st.offer_goal||'';
       $('s_depcode').value=st.offer_dep_code||''; $('s_depopen').value=st.offer_dep_open_at?new Date(st.offer_dep_open_at).toLocaleString('sv',{timeZone:'Europe/Istanbul'}).slice(0,16).replace(' ','T'):'';   // v02v
-      $('s_refusd').value=st.offer_ref_usd||''; $('s_reflist').value=st.offer_ref_list||''; $('s_ref2usd').value=st.offer_ref2_usd||''; $('s_ref2list').value=st.offer_ref2_list||''; $('s_ref3usd').value=st.offer_ref3_usd||''; $('s_ref3list').value=st.offer_ref3_list||''; $('s_daygoal').value=st.offer_day_goal||''; $('s_r40').value=st.offer_ratio_40||''; $('s_r200').value=st.offer_ratio_200||'';
+      $('s_refusd').value=st.offer_ref_usd||''; $('s_reflist').value=st.offer_ref_list||''; $('s_ref2usd').value=st.offer_ref2_usd||''; $('s_ref2list').value=st.offer_ref2_list||''; $('s_ref3usd').value=st.offer_ref3_usd||''; $('s_ref3list').value=st.offer_ref3_list||''; $('s_daygoal').value=st.offer_day_goal||''; $('s_rjury').value=st.offer_ratio_jury||st.offer_ratio_200||''; $('s_rbasket').value=st.offer_ratio_basket||st.offer_ratio_40||''; $('s_cycle').value=st.meydan_cycle_start?new Date(st.meydan_cycle_start).toLocaleString('sv',{timeZone:'Europe/Istanbul'}).slice(0,16).replace(' ','T'):'';
       $('s_showp').checked=st.offer_show_prices!=='0';   // v02t: varsayılan AÇIK
       OFFCFG=j.cfg||null; scalePreview(); renderOffersAdmin(); } }catch(e){}
 }
@@ -325,11 +329,11 @@ async function offSettingsSave(){
   const body={offer_dep_url:$('s_depurl').value.trim(),offer_dep_amt:$('s_depamt').value.trim(),offer_goal:$('s_goal').value.trim(),
     offer_dep_code:$('s_depcode').value.trim(),offer_dep_open_at:$('s_depopen').value?($('s_depopen').value+':00+03:00'):'',offer_day_goal:$('s_daygoal').value.trim(),
     offer_ref3_usd:$('s_ref3usd').value.trim().replace(',','.'),offer_ref3_list:$('s_ref3list').value.trim(),
-    offer_ref_usd:$('s_refusd').value.trim().replace(',','.'),offer_ref_list:$('s_reflist').value.trim(),offer_ref2_usd:$('s_ref2usd').value.trim().replace(',','.'),offer_ref2_list:$('s_ref2list').value.trim(),offer_ratio_40:$('s_r40').value.trim().replace(',','.'),offer_ratio_200:$('s_r200').value.trim().replace(',','.'),
+    offer_ref_usd:$('s_refusd').value.trim().replace(',','.'),offer_ref_list:$('s_reflist').value.trim(),offer_ref2_usd:$('s_ref2usd').value.trim().replace(',','.'),offer_ref2_list:$('s_ref2list').value.trim(),offer_ratio_jury:$('s_rjury').value.trim().replace(',','.'),offer_ratio_basket:$('s_rbasket').value.trim().replace(',','.'),meydan_cycle_start:$('s_cycle').value?($('s_cycle').value+':00+03:00'):'',
     offer_show_prices:$('s_showp').checked?'1':'0'};
   const r=await fetch(API+'/admin/settings',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify(body)});
   const j=await r.json().catch(()=>({}));
-  const msg=j.ok?('kaydedildi · eşik '+(j.cfg&&j.cfg.goal)+(j.cfg&&j.cfg.dep_url?(' · kapora '+(j.cfg.dep_amt||'?')+' TL'):' · kapora yok (serbest oy)')+(j.cfg&&j.cfg.dep_code?(' · grup kodu '+j.cfg.dep_code):'')+(j.cfg&&j.cfg.dep_open_at?(' · herkese '+new Date(j.cfg.dep_open_at).toLocaleString('tr-TR',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'})):'')+' · '+scaleText(j.cfg)+' · oranlar '+(j.cfg&&j.cfg.ratio40)+' / '+(j.cfg&&j.cfg.ratio200)+(j.cfg&&j.cfg.show_prices?' · liste fiyatı sayfada':' · liste fiyatı gizli')+(j.cfg&&j.cfg.scale_warn?(' · ⚠ '+j.cfg.scale_warn):'')):('Olmadı: '+(j.error||r.status));
+  const msg=j.ok?('kaydedildi · eşik '+(j.cfg&&j.cfg.goal)+(j.cfg&&j.cfg.dep_url?(' · kapora '+(j.cfg.dep_amt||'?')+' TL'):' · kapora yok (serbest oy)')+(j.cfg&&j.cfg.dep_code?(' · grup kodu '+j.cfg.dep_code):'')+(j.cfg&&j.cfg.dep_open_at?(' · herkese '+new Date(j.cfg.dep_open_at).toLocaleString('tr-TR',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'})):'')+' · '+scaleText(j.cfg)+' · Jüri '+(j.cfg&&(j.cfg.ratio_jury!=null?j.cfg.ratio_jury:j.cfg.ratio200))+' / Sepet '+(j.cfg&&(j.cfg.ratio_basket!=null?j.cfg.ratio_basket:j.cfg.ratio40))+(j.cfg&&j.cfg.show_prices?' · liste fiyatı sayfada':' · liste fiyatı gizli')+(j.cfg&&j.cfg.scale_warn?(' · ⚠ '+j.cfg.scale_warn):'')):('Olmadı: '+(j.error||r.status));
   $('offSetMsg').textContent=msg; $('offScaleMsg').textContent=msg;
   if(j.ok){ OFFCFG=j.cfg||null; scalePreview(); await loadOffers(); }
 }
@@ -379,6 +383,22 @@ async function offVendorSet(vendor,active){
   if(j.ok&&Array.isArray(j.offers)){ OFFERS=j.offers; OFFEDIT=null; renderOffersAdmin(); const m=$('offVendorMsg'); if(m) m.textContent=(vendor||'(tedarikçisiz)')+': '+j.n+' satır '+(active?'aktif':'pasif')+' — sayfa için UYGULA'; }
   else alert('Olmadı: '+(j.error||r.status));
 }
+// v02x: sayım — şimdi yap / kayıtlar
+async function cycleCloseNow(){
+  if(!confirm('Sayım ŞİMDİ yapılsın mı? Eşiği geçenlerden en çok kaporalı 2 kahve kazanır; kaporaları dönüşür (taşınamaz, tamamlanır). Bu döngünün kaydı varsa ÜZERİNE yazılır.')) return;
+  const r=await fetch(API+'/admin/cycle-close',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({force:true})});
+  const j=await r.json().catch(()=>({}));
+  $('cycleMsg').textContent=j.ok?('sayım yapıldı · kazanan: '+((j.record.winners||[]).map(w=>w.name+' ('+w.dep+')').join(' + ')||'yok — CoffeeNutz seçer')):('Olmadı: '+(j.error||r.status));
+  if(j.ok){ await loadOffers(); loadCycles(); }
+}
+async function loadCycles(){
+  const el=$('cycleList'); if(!el) return;
+  const r=await fetch(API+'/admin/cycles',{headers:{'x-cc-key':KEY}}); const j=await r.json().catch(()=>null);
+  if(!r.ok||!j){ el.textContent='okunamadı'; return; }
+  const c=j.cycle; const f=iso=>iso?new Date(iso).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'}):'—';
+  el.innerHTML=(c?('<div>sıradaki sayım: <b>'+f(c.next_close)+'</b>'+(c.last_close?(' · son sayım '+f(c.last_close)):'')+'</div>'):'<div>döngü başlangıcı girilmemiş</div>')
+    +(j.records||[]).map(rec=>'<div>#'+rec.n+' · '+f(rec.closed_at)+' · eşik '+rec.goal+' · '+((rec.winners||[]).map(w=>esc(w.name)+' '+w.dep+' kapora'+(w.jury_tl?(' · Jüri '+w.jury_tl+' ₺'):'')).join(' + ')||'kazanan yok')+'</div>').join('');
+}
 // v02t: admin sıralama — yalnız görünüm; sayfa sırası sunucudan (kapora · oy) gelir
 function offSortKey(){ try{ return localStorage.getItem('grupal_admin_offsort')||'page'; }catch(e){ return 'page'; } }
 function offSortSave(){ const v=$('offSort')?$('offSort').value:'page'; try{ localStorage.setItem('grupal_admin_offsort',v); }catch(e){} renderOffersAdmin(); }
@@ -411,14 +431,15 @@ function renderOffersAdmin(){
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><input id="oe_origin" value="'+esc(o.origin||'')+'" placeholder="Ülke" style="margin:0">'
       +'<select id="oe_proc" style="margin:0">'+['','washed','natural','honey','anaerobic','infused','funky','any'].map(k=>'<option value="'+k+'"'+(k===(o.process||'')?' selected':'')+'>'+(k?(WPROCN[k]||k):'— işlem —')+'</option>').join('')+'</select>'
       +'<input id="oe_vendor" value="'+esc(o.vendor||'')+'" placeholder="Tedarikçi" style="margin:0"><input id="oe_note" value="'+esc(o.note||'')+'" placeholder="Not (ör. 20 kutu sınırlı)" style="margin:0">'
-      +'<input id="oe_usd" value="'+esc((o.meta&&o.meta.usd_kg!=null)?String(o.meta.usd_kg):'')+'" placeholder="yeşil $/kg (ör. 16,55)" style="margin:0"><input id="oe_list" value="'+esc((o.meta&&o.meta.list_tl)?String(o.meta.list_tl):'')+'" placeholder="liste ₺ (boş = ölçekten)" style="margin:0"><input id="oe_camp" value="'+esc((o.meta&&o.meta.camp_tl)?String(o.meta.camp_tl):'')+'" placeholder="masa ₺ (boş = oranla)" style="margin:0"></div>'
+      +'<input id="oe_usd" value="'+esc((o.meta&&o.meta.usd_kg!=null)?String(o.meta.usd_kg):'')+'" placeholder="yeşil $/kg (ör. 16,55)" style="margin:0"><input id="oe_list" value="'+esc((o.meta&&o.meta.list_tl)?String(o.meta.list_tl):'')+'" placeholder="liste ₺ (boş = ölçekten)" style="margin:0"><input id="oe_jury" value="'+esc((o.meta&&o.meta.jury_tl)?String(o.meta.jury_tl):'')+'" placeholder="Jüri ₺ (boş = oranla)" style="margin:0"><input id="oe_basket" value="'+esc((o.meta&&(o.meta.basket_tl||o.meta.camp_tl))?String(o.meta.basket_tl||o.meta.camp_tl):'')+'" placeholder="Sepet ₺ (boş = oranla)" style="margin:0"><input id="oe_done" value="'+esc((o.meta&&o.meta.done_url)?String(o.meta.done_url):'')+'" placeholder="tamamlama ürün/sepet linki (kazanınca · Jüri ₺ − kapora)" style="margin:0;grid-column:1/-1"></div>'
       +'<div style="display:flex;gap:6px;margin-top:8px"><button class="mini" onclick="offEditSave(\''+o.id+'\')">Taslağa kaydet</button><button class="mini" onclick="offEdit(null)">Vazgeç</button></div></div>';
     const st=offState(o);
     return '<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;'+(o.active?'':'opacity:.6')+'">'
       +'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>'+esc(o.name)+'</b><span class="hint">'+(dep?('<b'+(o.dep>=G?' style="color:var(--gold)"':'')+'>'+o.dep+'/'+G+' kapora</b>'+(o.early?(' · erken '+o.early):'')+' · ilgi '+o.n):('<b'+(o.n>=G?' style="color:var(--gold)"':'')+'>'+o.n+'/'+G+' oy</b>'))+' · masadan '+o.seated+'</span></div>'
       +'<div class="hint">'+[o.origin,WPROCN[o.process]||o.process,o.vendor,o.note].filter(Boolean).map(esc).join(' · ')+'</div>'
       +(metaLine(o.meta)?('<div class="hint" style="color:var(--gold);margin-top:2px">🔒 '+metaLine(o.meta)+'</div>'):'')
-      +((o.list_tl&&o.camp_tl)?('<div class="hint" style="margin-top:2px"><s>'+o.list_tl+' ₺</s> <b style="color:var(--ink)">'+o.camp_tl+' ₺</b> masa kurulunca · 200 kutuda '+o.camp200_tl+' ₺'+((o.meta&&(o.meta.list_tl||o.meta.camp_tl))?' · <span style="color:var(--gold)">elle ezildi</span>':'')+'</div>'):(o.meta&&o.meta.usd_kg?'':'<div class="hint" style="margin-top:2px;opacity:.7">fiyat yok ($/kg girilmemiş)</div>'))
+      +((o.list_tl&&(o.jury_tl||o.camp200_tl))?('<div class="hint" style="margin-top:2px"><s>'+o.list_tl+' ₺</s> <b style="color:var(--ink)">Jüri '+(o.jury_tl||o.camp200_tl)+' ₺</b> · Sepet '+(o.basket_tl||o.camp_tl)+' ₺'+(o.frozen?' · <span style="color:var(--gold)">🔒 kilitli</span>':((o.meta&&(o.meta.list_tl||o.meta.jury_tl||o.meta.basket_tl||o.meta.camp_tl))?' · <span style="color:var(--gold)">elle ezildi</span>':''))+'</div>'):(o.meta&&o.meta.usd_kg?'':'<div class="hint" style="margin-top:2px;opacity:.7">fiyat yok ($/kg girilmemiş)</div>'))
+      +((o.conv||o.won_at)?('<div class="hint" style="margin-top:2px;color:var(--green)">🏆 kazandı '+(o.won_at?new Date(o.won_at).toLocaleDateString('tr-TR',{day:'numeric',month:'short',timeZone:'Europe/Istanbul'}):'')+' · dönüşen kapora '+(o.conv||0)+' · tamamlanan '+(o.done||0)+(o.done_url?'':' · <span style="color:#e0705a">tamamlama linki yok (Düzenle)</span>')+'</div>'):'')
       +'<div class="hint" style="color:'+st[1]+';font-weight:700;margin-top:2px">'+st[0]+'</div>'
       +'<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="mini" onclick="offEdit(\''+o.id+'\')">Düzenle</button>'
       +'<button class="mini" onclick="offSet(\''+o.id+'\',{active:'+(!o.active)+'})">'+(o.active?'Pasife al':'Aktif et')+'</button>'
@@ -439,17 +460,19 @@ function campFromOffer(id){
   const slug=(String(o.name||'').toLocaleLowerCase('tr').replace(/[çÇ]/g,'c').replace(/[ğĞ]/g,'g').replace(/[ıİ]/g,'i').replace(/[öÖ]/g,'o').replace(/[şŞ]/g,'s').replace(/[üÜ]/g,'u').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'meydan')+'-meydan';
   $('f_slug').value=slug; $('f_title').value='Grup-Al · '+o.name; $('f_lot').value=[o.origin,o.name,WPROCN[o.process]||o.process].filter(Boolean).join(' · ');
   const tl=v=>v?String(Math.round(v))+' TL':'';
-  $('l1a').value='1'; $('l1p').value=tl(o.camp_tl); $('l2a').value='200'; $('l2p').value=tl(o.camp200_tl); $('l3a').value=''; $('l3p').value='';
-  $('f_depamt').value=o.camp_tl?String(Math.round(o.camp_tl)):'';
-  if($('e_total_a')&&o.list_tl){ $('e_total_a').value=String(Math.round(o.list_tl)); $('e_total_b').value=String(Math.round(o.camp_tl||0)); }
-  $('msg').textContent='Meydan\'dan taslak: '+o.name+' · tavan '+tl(o.camp_tl)+' · 200 kutuda '+tl(o.camp200_tl)+'. Shopify\'da tavan fiyatlı LOT ürünü aç, linkini yapıştır; bitiş + kavurma tarihi ver; Kaydet / Yayınla. Aynı kavurma gününe oturan diğer kahveler için tekrarla.';
+  const bsk=o.basket_tl||o.camp_tl, jry=o.jury_tl||o.camp200_tl;
+  $('l1a').value='1'; $('l1p').value=tl(bsk); $('l2a').value=''; $('l2p').value=''; $('l3a').value=''; $('l3p').value='';
+  $('f_depamt').value=bsk?String(Math.round(bsk)):'';
+  if($('e_total_a')&&o.list_tl){ $('e_total_a').value=String(Math.round(o.list_tl)); $('e_total_b').value=String(Math.round(bsk||0)); }
+  $('msg').textContent='Meydan\'dan taslak: '+o.name+' · Sepet fiyatı '+tl(bsk)+' (kampanya tavanı) · Jüri fiyatı '+tl(jry)+' (kaporalılar tamamlama ürünüyle öder). Shopify\'da Sepet fiyatlı LOT ürünü aç, linkini yapıştır; bitiş + kavurma tarihi ver; Kaydet / Yayınla.';
   try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){}
 }
 async function offEditSave(id){
   const o=OFFERS.find(x=>x.id===id); const meta=Object.assign({},(o&&o.meta)||{});
   const num=v=>{ const n=parseFloat(String(v||'').replace(',','.')); return isFinite(n)&&n>0?n:null; };
-  const usd=num($('oe_usd').value), lst=num($('oe_list').value), cmp=num($('oe_camp').value);
-  if(usd) meta.usd_kg=usd; else delete meta.usd_kg; if(lst) meta.list_tl=Math.round(lst); else delete meta.list_tl; if(cmp) meta.camp_tl=Math.round(cmp); else delete meta.camp_tl;
+  const usd=num($('oe_usd').value), lst=num($('oe_list').value), jry=num($('oe_jury').value), bsk=num($('oe_basket').value), dn=$('oe_done').value.trim();
+  if(usd) meta.usd_kg=usd; else delete meta.usd_kg; if(lst) meta.list_tl=Math.round(lst); else delete meta.list_tl; if(jry) meta.jury_tl=Math.round(jry); else delete meta.jury_tl; if(bsk) meta.basket_tl=Math.round(bsk); else delete meta.basket_tl; delete meta.camp_tl;
+  if(/^https:\/\/(www\.)?coffeenutz\.net\//.test(dn)) meta.done_url=dn; else delete meta.done_url;
   await offSet(id,{name:$('oe_name').value.trim(),origin:$('oe_origin').value.trim()||null,process:$('oe_proc').value||null,vendor:$('oe_vendor').value.trim()||null,note:$('oe_note').value.trim()||null,meta:meta}); }
 async function offDel(id){
   const o=OFFERS.find(x=>x.id===id); if(!o) return;

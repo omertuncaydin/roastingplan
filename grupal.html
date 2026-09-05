@@ -334,6 +334,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
 let SLUG=new URLSearchParams(location.search).get('k')||'';
+const MEYDAN=(SLUG==='meydan');   // v02v: kampanyasız Meydan sayfası (?k=meydan) — Jüri seçer, sayım 2 haftada bir
 const REF=new URLSearchParams(location.search).get('ref')||'';
 // HEDİYE LİNKİ: ?g=GREF — hediye alan kişi koltuğu bu cihaza alır (adoptGift)
 const GREF=String(new URLSearchParams(location.search).get('g')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12);
@@ -345,7 +346,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-02u';
+const VERSION='v2026-09-02v';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -440,11 +441,17 @@ hFunky:['Uçlarda deneysel: uzun fermantasyon, sürpriz aromalar — herkese gö
 hAny:['Kavurucu seçsin.','Let the roaster choose.'],
 // İLETİŞİM RAYLARI (G) — 2026-09-02d
 chanL:['Grup-Al WhatsApp kanalı','Grup-Al WhatsApp channel'], chanH:['masa açılınca · basamak geçilince · kutular yola çıkınca — yalnız bu üçü','table opens · rung passes · boxes ship — only these three'],
-offLbl:['Meydan: sıradaki masa senin olsun','Meydan: the next table is yours'], offH:['Tedarikçilerle konuşuldu; bu kahveler alınabilir. {g} oy toplayan her kahve masaya oturur; masa tek kahve değil — eşiği geçenler aynı kavurma gününde birlikte kavrulur ({g} ve 200 basamaklı). Bir kahveye dokun: oyun orada; tekrar dokun: geri al. En çok 3 oy.','Suppliers confirmed; these coffees can be bought. Every coffee that gathers {g} votes takes a seat at the table; the table is not one coffee — all that clear the bar roast together on the same day (rungs at {g} and 200). Tap a coffee to vote, tap again to withdraw. Up to 3 votes.'],
-offHD:['Tedarikçilerle konuşuldu; bu kahveler alınabilir. {g} kapora toplayan her kahve masaya oturur; masa tek kahve değil — eşiği geçenler aynı kavurma gününde birlikte kavrulur ({g} ve 200 basamaklı). Dokun = ilgi oyu (en çok 3); kapora = yer.','Suppliers confirmed; these coffees can be bought. Every coffee that gathers {g} deposits takes a seat at the table; the table is not one coffee — all that clear the bar roast together on the same day (rungs at {g} and 200). Tap = interest vote (up to 3); a deposit = a reserved place.'],
-offVote:['oy ver','vote'], offMine:['✓ oyun','✓ your vote'], offN:[' oy',' votes'], offSeated:['masadan ','seated '], offGoal:['{g} oyda kahve masaya oturur','{g} votes seat a coffee at the table'], offHit:['{g} oya ulaştı — masada 🎉','{g} votes — seated at the table 🎉'], offAtTable:['Masada ({n}): {list}','At the table ({n}): {list}'], offDayGoal:[' · kavurma günü: {sum}/{dg} kutu',' · roast day: {sum}/{dg} boxes'], offDayHit:[' · kavurma günü doluyor 🎉',' · roast day is on 🎉'], offMax:['En çok 3 oy: önce birini geri al.','Up to 3 votes: withdraw one first.'],
+offLbl:['Meydan: sıradaki masa senin olsun','Meydan: the next table is yours'], offH:['Tedarikçilerle konuşuldu; bu kahveler alınabilir. Sayımda {g} oyu geçen kahvelerden en çok oy alan iki kahve Grup-Al® Roasters\'ın sonraki kavurma planına girer. Bir kahveye dokun: oyun orada; tekrar dokun: geri al. En çok 3 oy.','Suppliers confirmed; these coffees can be bought. At the count, the two most-voted coffees over {g} go into Grup-Al® Roasters\' next roast plan. Tap a coffee to vote, tap again to withdraw. Up to 3 votes.'],
+offHD:['Kapora = oy. Sayımda {g} kaporayı geçen kahvelerden en çok kaporalı iki kahve Grup-Al® Roasters\'ın sonraki kavurma planına girer; kaporası olan Jüri fiyatından tamamlar. Kaporanı sayıma kadar başka kahveye taşıyabilirsin. Dokun = ilgi oyu (en çok 3).','A deposit is a vote. At the count, the two most-deposited coffees over {g} go into Grup-Al® Roasters\' next roast plan; depositors complete at the Jury price. You can move your deposit to another coffee until the count. Tap = interest vote (up to 3).'],
+offVote:['oy ver','vote'], offMine:['✓ oyun','✓ your vote'], offN:[' oy',' votes'], offSeated:['masadan ','seated '], offGoal:['{g} oyu geçen kahveler sayımda yarışır','coffees over {g} votes compete at the count'], offHit:['{g} oyu geçti — sayımda yarışıyor 🎉','over {g} votes — in the count 🎉'], offAtTable:['Sayımda yarışanlar ({n}): {list}','In the count ({n}): {list}'], offDayGoal:[' · kavurma günü: {sum}/{dg} kutu',' · roast day: {sum}/{dg} boxes'], offDayHit:[' · kavurma günü doluyor 🎉',' · roast day is on 🎉'], offMax:['En çok 3 oy: önce birini geri al.','Up to 3 votes: withdraw one first.'],
 offDep:['Kapora ile yer ayır · {amt} TL','Reserve with a deposit · {amt} TL'], offListP:['liste','list'], offCampP:['/ kutu · masa kurulunca','/ box · when the table is set'], off200P:['200 kutuda ','at 200 boxes '], offDepN:[' kapora',' deposits'], offInt:['ilgi ','interest '], offDepMine:['✓ kaporan var','✓ deposit placed'], offDepPend:['kapora kontrol ediliyor…','checking deposit…'],
-offMore:['{n} kahve daha · tümünü gör','{n} more coffees · see all'], offEarly:['Kapora şimdilik Grup-Al® WhatsApp grubundakilere açık · herkese: {d}','Deposits are open to the Grup-Al® WhatsApp group for now · everyone from {d}'], offEarlyH:['Kod grupta paylaşılıyor. Masadaysan grup linki aşağıda.','The code is shared in the group. If you have a seat, the group link is below.'], offCodeL:['grup kodu','group code'], offCodeB:['Gir','Enter'], offCodeOk:['✓ grup kodu geçerli — kapora sana açık','✓ group code accepted — deposits are open for you'], offCodeBad:['Kod tanınmadı.','Code not recognised.'], offEarlyRow:['kapora: grup koduyla şimdi · herkese {d}','deposit: now with the group code · everyone from {d}'], offGoalD:['{g} kaporada kahve masaya oturur · kaporan masa kurulunca fiyattan düşer, kurulmazsa geri döner','{g} deposits seat a coffee at the table · your deposit counts toward the price when the table is set, and comes back if it is not'], offHitD:['{g} kaporaya ulaştı — masada 🎉','{g} deposits — seated at the table 🎉'],
+offMore:['{n} kahve daha · tümünü gör','{n} more coffees · see all'], offJuryP:['Jüri fiyatı · kaporayla','Jury price · with a deposit'], offBasketP:['Sepet ','Basket '], offFrozen:['fiyat kilitli','price locked'], offDepMore:['Bir kutu daha · {amt} TL kapora','One more box · {amt} TL deposit'],
+offCodeAlw:['Kapora için Jüri kodu gerekir','A Jury code is needed to place a deposit'], offCodeAlwH:['Kod {ch} içinde paylaşılıyor — katıl, kodu al, Jüri ol.','The code is shared in the {ch} — join, get the code, become Jury.'], offCodeRow:['kapora: Jüri koduyla','deposit: with the Jury code'],
+offMove:['kaporamı taşı →','move my deposit →'], offMoveB:['Taşı','Move'], offMoved:['Kaporan taşındı.','Your deposit moved.'], offMoveConv:['Bu kapora kazandı — taşınamaz, tamamlanır.','This deposit won — it completes, it does not move.'],
+offWonChip:['🏆 kazandı','🏆 won'], offWonMine:['Kaporan kazandı ×{n} — Jüri fiyatından tamamla','Your deposit won ×{n} — complete at the Jury price'], offDone:['✓ tamamlandı — kutun kavurma planında','✓ completed — your box is in the roast plan'], offCompleteB:['Kutunu tamamla · {p} TL','Complete your box · {p} TL'], offCompleteSoon:['tamamlama linki sayımdan sonra buraya gelir','the completion link appears here after the count'],
+cyNext:['Sayım: {d}','Count: {d}'], cyLeft:['{dd} gün {hh} saat','{dd}d {hh}h'], cyWon:['{d} sayımı:','{d} count:'], cyNone:['{d} sayımı: eşiği geçen kahve yok — CoffeeNutz seçer','{d} count: no coffee cleared the bar — CoffeeNutz picks'], cyJury:['Jüri','Jury'],
+cy_topla:['yeşil toplama · numune · reçete','green in · samples · recipe'], cy_yol:['kavurucuya','to the roaster'], cy_kavur:['kavurma','roasting'], cy_kargo:['kutulama · kargo','boxing · shipping'],
+mdTitle:['Meydan','Meydan'], mdSub:['Grup-Al® Jüri: sıradaki kahveyi sen seç · kapora = oy · sayım iki haftada bir Pazar 20:00','Grup-Al® Jury: you choose the next coffee · deposit = vote · count every other Sunday 20:00'], offEarly:['Kapora şimdilik Grup-Al® WhatsApp grubundakilere açık · herkese: {d}','Deposits are open to the Grup-Al® WhatsApp group for now · everyone from {d}'], offEarlyH:['Kod grupta paylaşılıyor. Masadaysan grup linki aşağıda.','The code is shared in the group. If you have a seat, the group link is below.'], offCodeL:['grup kodu','group code'], offCodeB:['Gir','Enter'], offCodeOk:['✓ grup kodu geçerli — kapora sana açık','✓ group code accepted — deposits are open for you'], offCodeBad:['Kod tanınmadı.','Code not recognised.'], offEarlyRow:['kapora: grup koduyla şimdi · herkese {d}','deposit: now with the group code · everyone from {d}'], offGoalD:['{g} kaporayı geçen kahveler sayımda yarışır · kaporan kazanınca fiyattan düşer, kazanmazsa taşınır ya da geri döner','coffees over {g} deposits compete at the count · your deposit counts toward the price when it wins, and moves or comes back if it does not'], offHitD:['{g} kaporayı geçti — sayımda yarışıyor 🎉','over {g} deposits — in the count 🎉'],
 wishAlt:['Listede yok mu? Dilek bırak:','Not on the list? Leave a wish:'],
 voteL:['oy ver','vote'], voteMine:['✓ oyun','✓ your vote'], voteUndo:['oyu geri al','withdraw vote'], voteGone:['Oyun geri alındı.','Your vote is withdrawn.'], voteH:['Bir satıra dokun: oyun o kahveye geçer. Kendi satırına tekrar dokun: oyun geri alınır.','Tap a row: your vote moves to that coffee. Tap your own row again: your vote is withdrawn.'],
 chatL:['Grup-Al® WhatsApp grubu','Grup-Al® WhatsApp group'], chatH:['Deneme lotları ve sıradaki masa için tadım numuneleri · kavurma günü canlı · reçete yardımı · kavurma verisi · yalnız gerektiğinde mesaj.','Trial lots and tasting packs for the next table · roast day live · recipe help · roast data · messages only when needed.'], chatB:['Gruba katıl','Join the group']
@@ -759,7 +766,9 @@ let OFFMINE=null;   // /offer-mine cevabı: [{id,paid,qty}]
 let OFFALL=false; const OFFFOLD=8;   // v02s: iki tedarikçi = ~50 satır; ilk 8 (kapora·oy sırası) + "tümünü gör"
 function offShowAll(){ OFFALL=true; renderOffers(STATE); }
 function fmtTL(n){ return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }   // 1015 → 1.015
-function offCfg(){ const c=(STATE&&STATE.offer_cfg)||{}; const oa=c.dep_open_at?new Date(c.dep_open_at):null; return { goal:Math.max(5,parseInt(c.goal)||40), dep_url:c.dep_url||'', dep_amt:parseInt(c.dep_amt)||0, dep_open_at:(oa&&!isNaN(oa.getTime()))?oa:null }; }
+function offCfg(){ const c=(STATE&&STATE.offer_cfg)||{}; const oa=c.dep_open_at?new Date(c.dep_open_at):null; return { goal:Math.max(5,parseInt(c.goal)||40), dep_url:c.dep_url||'', dep_amt:parseInt(c.dep_amt)||0, dep_open_at:(oa&&!isNaN(oa.getTime()))?oa:null, code_always:!!c.code_always }; }
+// v02v: kapora kapısı — kod her zaman (Jüri kodu kanalda) ya da erken pencere; ikisinde de kodu girmiş cihaz geçer
+function depGate(cfg){ cfg=cfg||offCfg(); if(!cfg.dep_url) return false; if(gcodeOk()) return false; return cfg.code_always||depEarly(cfg); }
 // v02t (Ömer: gruba katılma teşviki): kapora herkese açılmadan önce yalnız Grup-Al® WhatsApp grubunda paylaşılan kodu girmiş cihaz kapora koyabilir
 function gcodeOk(){ try{ return localStorage.getItem('grupal_gcode_ok')==='1'; }catch(e){ return false; } }
 function depEarly(cfg){ cfg=cfg||offCfg(); return !!cfg.dep_url&&!!cfg.dep_open_at&&cfg.dep_open_at.getTime()>Date.now(); }
@@ -767,7 +776,7 @@ function fmtOpen(d){ try{ return d.toLocaleString(LANG==='en'?'en-GB':'tr-TR',{d
 async function gcodeSend(){
   const inp=$('gcodeIn'), msg=$('gcodeMsg'); if(!inp) return; const code=(inp.value||'').trim(); if(code.length<3){ if(msg) msg.textContent=t('offCodeBad'); return; }
   try{ const r=await fetch(API+'/gcode',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code})}); const j=await r.json().catch(()=>({}));
-    if(r.ok&&j.ok){ try{ localStorage.setItem('grupal_gcode_ok','1'); localStorage.setItem('grupal_gcode',code); }catch(e){} renderOffers(STATE); }
+    if(r.ok&&j.ok){ try{ localStorage.setItem('grupal_gcode_ok','1'); localStorage.setItem('grupal_gcode',code); }catch(e){} renderOffers(STATE); renderChat(); }   // v02v: kod = Jüri üyeliği → grup kartı da açılır
     else if(msg) msg.textContent=t('offCodeBad'); }catch(e){ if(msg) msg.textContent=t('offCodeBad'); }
 }
 function offMine(){ try{ const a=JSON.parse(localStorage.getItem('grupal_ovotes')||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
@@ -780,9 +789,10 @@ function renderOffers(s){
   const cfg=offCfg(), G=cfg.goal, depMode=!!cfg.dep_url;
   const hint=$('offHint'); if(hint) hint.textContent=t(depMode?'offHD':'offH').split('{g}').join(G);
   const mine=offMine(), pend=offPend(); let h='';
-  const early=depEarly(cfg), codeOk=gcodeOk();
-  if(depMode&&early) h+=codeOk?('<div style="margin:0 0 8px;font-size:12px;font-weight:700;color:var(--green)">'+t('offCodeOk')+'</div>')
-    :('<div style="margin:0 0 8px;padding:9px 10px;border-radius:10px;border:1px dashed var(--gold)"><div style="font-size:12px;font-weight:700;color:var(--gold)">'+t('offEarly').replace('{d}',fmtOpen(cfg.dep_open_at))+'</div><div class="hint" style="margin-top:2px">'+t('offEarlyH')+'</div>'
+  const early=depEarly(cfg), codeOk=gcodeOk(), gate=depMode&&depGate(cfg);
+  h+=renderCycle(s);   // v02v: döngü çubuğu + son sayımın kahveleri (varsa)
+  if(depMode&&(early||cfg.code_always)) h+=codeOk?('<div style="margin:0 0 8px;font-size:12px;font-weight:700;color:var(--green)">'+t('offCodeOk')+'</div>')
+    :('<div style="margin:0 0 8px;padding:9px 10px;border-radius:10px;border:1px dashed var(--gold)"><div style="font-size:12px;font-weight:700;color:var(--gold)">'+(cfg.code_always?t('offCodeAlw'):t('offEarly').replace('{d}',fmtOpen(cfg.dep_open_at)))+'</div><div class="hint" style="margin-top:2px">'+(cfg.code_always?t('offCodeAlwH').replace('{ch}',(STATE&&STATE.channel_url)?('<a href="'+escZ(STATE.channel_url)+'" target="_blank" rel="noopener">'+t('chanL')+'</a>'):t('chanL')):t('offEarlyH'))+'</div>'
       +'<div style="display:flex;gap:6px;margin-top:6px" onclick="event.stopPropagation()"><input id="gcodeIn" placeholder="'+t('offCodeL')+'" style="flex:1;min-width:0;margin:0;padding:8px 10px;font-size:14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink)" onkeydown="if(event.key===\'Enter\'){gcodeSend();}"><button onclick="gcodeSend()" style="width:auto;margin:0;padding:8px 14px;font-size:13px">'+t('offCodeB')+'</button></div><div class="hint" id="gcodeMsg" style="margin-top:4px;color:#e0705a"></div></div>');
   // v02u (Ömer): masa tek kahve değil — eşiği geçen her kahve masaya oturur; özet satırı + (ayarlıysa) kavurma günü toplam kutu eşiği
   const hits=list.filter(o=>(depMode?(o.dep||0):(o.n||0))>=G);
@@ -796,15 +806,17 @@ function renderOffers(s){
     const meta=[o.origin,o.process?wProcName(o.process):''].filter(Boolean).map(escZ).join(' · ');   // v02r: tedarikçi adı sayfada YOK (Ömer 04.09)
     h+='<div class="orow'+(isMine||paid?' mine':'')+'" onclick="offToggle(\''+escZ(o.id)+'\')" style="cursor:pointer;padding:9px 10px;border-radius:10px;border:1px solid '+((isMine||paid)?'var(--gold)':'var(--line)')+';margin:6px 0">'
       +'<div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:14px;font-weight:700">'+escZ(o.name)+'</span>'
-      +'<span style="font-size:11px;font-weight:700;color:'+((isMine||paid)?'var(--gold)':'var(--accent)')+'">'+(paid?(t('offDepMine')+(paid.qty>1?' ×'+paid.qty:'')):(pendD?t('offDepPend'):(isMine?t('offMine'):t('offVote'))))+'</span></div>'
+      +'<span style="font-size:11px;font-weight:700;color:'+((isMine||paid)?'var(--gold)':'var(--accent)')+'">'+(paid?((paid.conv?t('offWonChip'):t('offDepMine'))+(paid.qty>1?' ×'+paid.qty:'')):(pendD?t('offDepPend'):(isMine?t('offMine'):t('offVote'))))+'</span></div>'
       +(meta?('<div class="hint" style="margin-top:2px">'+meta+(o.note?(' · '+escZ(trNote(o.note))):'')+'</div>'):'')
-      +((o.list_tl&&o.camp_tl)?('<div style="margin-top:5px;font-size:14px;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px;row-gap:1px"><span style="white-space:nowrap"><s style="opacity:.55">'+fmtTL(o.list_tl)+' TL</s> <b style="color:var(--gold);font-size:16px">'+fmtTL(o.camp_tl)+' TL</b></span><span class="hint" style="white-space:nowrap">'+t('offCampP')+'</span>'+(o.camp200_tl&&o.camp200_tl<o.camp_tl?('<span class="hint" style="opacity:.75;white-space:nowrap">· '+t('off200P')+fmtTL(o.camp200_tl)+' TL</span>'):'')+'</div>'):'')
+      +(((o.list_tl)&&(o.jury_tl||o.camp200_tl))?('<div style="margin-top:5px;font-size:14px;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px;row-gap:1px"><span style="white-space:nowrap"><s style="opacity:.55">'+fmtTL(o.list_tl)+' TL</s> <b style="color:var(--gold);font-size:16px">'+fmtTL(o.jury_tl||o.camp200_tl)+' TL</b></span><span class="hint" style="white-space:nowrap">'+t('offJuryP')+'</span>'+((o.basket_tl||o.camp_tl)?('<span class="hint" style="opacity:.75;white-space:nowrap">· '+t('offBasketP')+fmtTL(o.basket_tl||o.camp_tl)+' TL</span>'):'')+(o.frozen?'<span class="hint" style="opacity:.6;white-space:nowrap">· '+t('offFrozen')+'</span>':'')+'</div>'):'')
       +'<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="flex:1;height:8px;border-radius:4px;background:var(--panel2);overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:'+(hit?'var(--green)':'var(--gold)')+'"></i></span>'
       +'<b style="font-size:12px">'+cnt+'/'+G+t(depMode?'offDepN':'offN')+'</b>'
       +(depMode&&(o.n||0)?('<span class="hint" style="font-size:11px">· '+t('offInt')+(o.n||0)+'</span>'):'')
       +((o.seated||0)?('<span class="hint" style="font-size:11px">· '+t('offSeated')+(o.seated||0)+'</span>'):'')+'</div>'
       +(hit?('<div style="margin-top:4px;font-size:12px;font-weight:700;color:var(--green)">'+t(depMode?'offHitD':'offHit').replace('{g}',G)+'</div>'):'')
-      +((depMode&&!paid)?((early&&!codeOk)?('<div class="hint" style="margin-top:6px;font-size:11px">'+t('offEarlyRow').replace('{d}',fmtOpen(cfg.dep_open_at))+'</div>'):('<button onclick="event.stopPropagation();offDeposit(\''+escZ(o.id)+'\')" style="margin-top:8px;padding:10px;font-size:13px;background:var(--panel2);color:var(--gold);border:1px solid var(--gold)">'+t('offDep').replace('{amt}',cfg.dep_amt||'')+'</button>')):'')
+      +((depMode&&!(paid&&paid.conv))?(gate?('<div class="hint" style="margin-top:6px;font-size:11px">'+(cfg.code_always?t('offCodeRow'):t('offEarlyRow').replace('{d}',fmtOpen(cfg.dep_open_at)))+'</div>'):('<button onclick="event.stopPropagation();offDeposit(\''+escZ(o.id)+'\')" style="margin-top:8px;padding:10px;font-size:13px;background:var(--panel2);color:var(--gold);border:1px solid var(--gold)">'+t(paid?'offDepMore':'offDep').replace('{amt}',cfg.dep_amt||'')+'</button>')):'')
+      +((paid&&!paid.conv&&list.length>1)?('<div class="hint" style="margin-top:6px;font-size:12px" onclick="event.stopPropagation()"><a onclick="offMoveUI(\''+escZ(o.id)+'\')">'+t('offMove')+'</a><span id="mv_'+escZ(o.id)+'"></span></div>'):'')
+      +((paid&&paid.conv)?('<div style="margin-top:6px;font-size:12px;font-weight:700;color:var(--green)">'+(paid.done?t('offDone'):t('offWonMine').replace('{n}',paid.qty))+'</div>'+((!paid.done&&o.done_url)?('<button onclick="event.stopPropagation();offComplete(\''+escZ(o.id)+'\')" style="margin-top:6px;padding:10px;font-size:13px;background:var(--gold);color:var(--panel);border:1px solid var(--gold);font-weight:800">'+t('offCompleteB').replace('{p}',fmtTL(Math.max(0,(o.jury_tl||o.camp200_tl||0)-(cfg.dep_amt||0))))+'</button>'):((!paid.done)?('<div class="hint" style="font-size:11px">'+t('offCompleteSoon')+'</div>'):''))):'')
       +'</div>';
   }
   if(fold) h+='<button onclick="offShowAll()" style="margin-top:6px;padding:9px;font-size:13px;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">'+t('offMore').replace('{n}',list.length-shown.length)+'</button>';
@@ -812,10 +824,43 @@ function renderOffers(s){
   el.innerHTML=h; card.style.display='block';
   const wl=$('wishCard')&&$('wishCard').querySelector('.lbl'); if(wl) wl.textContent=t('wishAlt');   // teklif varken dilek kartı "listede yok mu?" olur
 }
+// v02v DÖNGÜ ÇUBUĞU: sayım (Pazar 20:00) → toplama·numune·reçete → kavurucuya → kavurma → kutulama·kargo → sayım
+function cyD(iso){ try{ return new Date(iso).toLocaleString(LANG==='en'?'en-GB':'tr-TR',{day:'numeric',month:'short',timeZone:'Europe/Istanbul'}); }catch(e){ return String(iso).slice(0,10); } }
+function cyDT(iso){ try{ return new Date(iso).toLocaleString(LANG==='en'?'en-GB':'tr-TR',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'}); }catch(e){ return String(iso).slice(0,16); } }
+function renderCycle(s){
+  const c=s&&s.cycle; if(!c||!c.next_close) return '';
+  const now=Date.now(), nc=new Date(c.next_close).getTime(), left=Math.max(0,nc-now), dd=Math.floor(left/86400000), hh=Math.floor((left%86400000)/3600000);
+  let h='<div style="margin:0 0 8px;padding:9px 10px;border-radius:10px;background:var(--panel2)">';
+  h+='<div style="font-size:12px;font-weight:700">'+t('cyNext').replace('{d}',cyDT(c.next_close))+' <span class="hint">· '+t('cyLeft').replace('{dd}',dd).replace('{hh}',hh)+'</span></div>';
+  if(c.last&&Array.isArray(c.last.winners)){
+    h+='<div style="margin-top:4px;font-size:12px">'+(c.last.winners.length?('<b style="color:var(--green)">'+t('cyWon').replace('{d}',cyD(c.last.closed_at))+'</b> '+c.last.winners.map(w=>escZ(w.name)+(w.jury_tl?(' · '+t('cyJury')+' '+fmtTL(w.jury_tl)+' TL'):'')).join(' + ')):('<span class="hint">'+t('cyNone').replace('{d}',cyD(c.last.closed_at))+'</span>'))+'</div>';
+    if(c.stages&&c.stages.length){ const cur=c.stages.findIndex(sg=>now>=new Date(sg.from).getTime()&&now<new Date(sg.to).getTime());
+      h+='<div style="display:flex;gap:3px;margin-top:8px">'+c.stages.map((sg,i)=>'<div style="flex:1;height:6px;border-radius:3px;background:'+(i<cur?'var(--green)':(i===cur?'var(--gold)':'var(--line)'))+'"></div>').join('')+'</div>';
+      h+='<div style="display:flex;gap:3px;margin-top:3px">'+c.stages.map((sg,i)=>'<div class="hint" style="flex:1;font-size:10px;line-height:1.25;'+(i===cur?'color:var(--gold);font-weight:700':'')+'">'+t('cy_'+sg.key)+'<br><span style="opacity:.7">'+cyD(sg.from)+'</span></div>').join('')+'</div>'; }
+  }
+  h+='</div>'; return h;
+}
+function offMoveUI(id){
+  const el=$('mv_'+id); if(!el||!STATE) return; if(el.innerHTML){ el.innerHTML=''; return; }
+  const opts=(STATE.offers||[]).filter(o=>o&&o.active!==false&&o.id!==id);
+  el.innerHTML=' <select id="mvs_'+id+'" style="width:auto;margin:0 4px;padding:4px 6px;font-size:12px">'+opts.map(o=>'<option value="'+escZ(o.id)+'">'+escZ(o.name)+'</option>').join('')+'</select><button onclick="offMoveTo(\''+escZ(id)+'\')" style="width:auto;margin:0;padding:5px 10px;font-size:12px">'+t('offMoveB')+'</button>';
+}
+async function offMoveTo(from){
+  const sel=$('mvs_'+from); if(!sel) return; const to=sel.value; if(!to) return;
+  try{ const r=await fetch(API+'/offer-move',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({dev:devId(),from,to})}); const j=await r.json().catch(()=>({}));
+    if(r.ok&&j.ok){ if(Array.isArray(j.offers)) STATE.offers=j.offers; OFFMINE=null; renderOffers(STATE); offLoadMine(STATE); const m=$('offMsg'); if(m){ m.textContent=t('offMoved'); m.style.display='block'; setTimeout(()=>{ m.style.display='none'; },4000); } }
+    else { const m=$('offMsg'); if(m){ m.textContent=t(j.error==='converted'?'offMoveConv':'netErr'); m.style.display='block'; } } }catch(e){}
+}
+function offComplete(id){
+  // kazanan kahvenin kaporası: Jüri fiyatı − kapora tutarı ürünü; attributes[done]=1 → webhook tamamlandı yazar
+  const o=(STATE&&STATE.offers||[]).find(x=>x.id===id); if(!o||!o.done_url) return;
+  let du=o.done_url; du+=(du.includes('?')?'&':'?')+'attributes[offer]='+encodeURIComponent(id)+'&attributes[dev]='+encodeURIComponent(devId())+'&attributes[done]=1';
+  location.href=du;
+}
 async function offLoadMine(s){
   // cihazın kaporaları/oyları (yalnız bu cihazda bir iz varsa sorulur)
   if(!s||!Array.isArray(s.offers)||!s.offers.length) return;
-  if(!offMine().length&&!offPend().length) return;
+  if(!MEYDAN&&!offMine().length&&!offPend().length) return;   // v02v: Meydan'da her zaman sor (kaporalar cihaza bağlı)
   try{ const r=await fetch(API+'/offer-mine?dev='+encodeURIComponent(devId())); const j=await r.json();
     if(j&&Array.isArray(j.votes)){ OFFMINE=j.votes;
       const paidIds=j.votes.filter(v=>v.paid).map(v=>v.id); if(paidIds.length){ try{ localStorage.setItem('grupal_odep', JSON.stringify(offPend().filter(id=>!paidIds.includes(id)))); }catch(e){} }
@@ -883,7 +928,8 @@ function renderChan(){
 }
 function renderChat(){
   const el=$('chatCard'); if(!el) return;
-  const u=STATE&&STATE.chat_url; const seated=MINE&&(MINE.status==='locked'||MINE.status==='paid');
+  const u=STATE&&STATE.chat_url; let seated=MINE&&(MINE.status==='locked'||MINE.status==='paid');
+  if(MEYDAN&&!seated){ try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i)||''; if(/^grupal_[a-z0-9-]+$/.test(k)&&!/^grupal_(dev|lang|cols|theme|ovotes|odep|gcode|gcode_ok|meydan)$/.test(k)&&/^[A-Z0-9]{4,12}$/.test(localStorage.getItem(k)||'')){ seated=true; break; } } if(gcodeOk()) seated=true; }catch(e){} }   // v02v: Meydan'da herhangi bir masada sandalyesi olan ya da Jüri kodunu girmiş
   if(!u||!seated){ el.style.display='none'; return; }
   el.innerHTML='<div class="lbl" style="color:#25D366">💬 '+t('chatL')+'</div><div class="hint" style="margin-top:4px">'+t('chatH')+'</div>'
     +'<a href="'+escZ(u)+'" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:10px;padding:12px;border-radius:12px;background:#25D366;color:#fff;font-weight:800;text-decoration:none">'+t('chatB')+'</a>';
@@ -1487,6 +1533,20 @@ async function startCampaign(){
   load(); setInterval(load, 30000);
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') load(); });
 }
+// v02v MEYDAN MODU: kampanya kartları yok; Meydan kartı + döngü çubuğu + dilek + kanal + grup
+async function startMeydan(){ loadMeydan(); setInterval(loadMeydan, 30000); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') loadMeydan(); }); }
+async function loadMeydan(){
+  try{
+    const r=await fetch(API+'/meydan'); const s=await r.json(); if(s.error){ $('title').textContent=t('netErr'); return; }
+    STATE=s; document.body.classList.add('meydan');
+    $('title').textContent=t('mdTitle'); $('lot').textContent=t('mdSub');
+    { const oc=$('offerCard'), cc=$('chatCard'); if(oc&&cc&&cc.parentNode&&oc.previousElementSibling!==null&&oc.compareDocumentPosition(cc)&Node.DOCUMENT_POSITION_PRECEDING) cc.parentNode.insertBefore(oc,cc); }   // Meydan kartı önce, grup kartı sonra
+    ['heroBox','deadline','roasterLine','dealLine','attCard','youCard','lvlCard','joinCard','paidCard','zincirCard','giftCard','payBlock','closedCard','annCard','howBox','shareRow'].forEach(id=>{ const el=$(id); if(el) el.style.display='none'; });
+    try{ document.title='Meydan · Grup-Al® Jüri'; }catch(e){}
+    renderOffers(s); offLoadMine(s); renderWishes(s); renderChan(); renderChat(); renderChips();
+    const wc=$('wishCard'); if(wc&&(!s.offers||!s.offers.length)) wc.style.display='block';
+  }catch(e){ $('title').textContent=t('netErr'); }
+}
 let COLS='1'; try{ COLS=localStorage.getItem('grupal_cols')||'1'; }catch(e){}
 function applyCols(){
   ['cols2','cols3','cols4'].forEach(function(c){ document.body.classList.remove(c); });
@@ -1521,6 +1581,7 @@ function renderPortal(list){
   }).join('');
 }
 async function boot(){
+  if(MEYDAN){ startMeydan(); return; }
   if(SLUG){ startCampaign(); return; }
   try{
     const r=await fetch(API+'/campaigns');
