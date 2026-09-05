@@ -346,7 +346,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-05a';
+const VERSION='v2026-09-05b';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -450,7 +450,8 @@ offCodeAlw:['Kapora için Jüri kodu gerekir','A Jury code is needed to place a 
 offMove:['kaporamı taşı →','move my deposit →'], offMoveB:['Taşı','Move'], offMoved:['Kaporan taşındı.','Your deposit moved.'], offMoveConv:['Bu kapora kazandı — taşınamaz, tamamlanır.','This deposit won — it completes, it does not move.'],
 offWonChip:['🏆 kazandı','🏆 won'], offWonMine:['Kaporan kazandı ×{n} — Jüri fiyatından tamamla','Your deposit won ×{n} — complete at the Jury price'], offDone:['✓ tamamlandı — kutun kavurma planında','✓ completed — your box is in the roast plan'], offCompleteB:['Kutunu tamamla · {p} TL','Complete your box · {p} TL'], offCompleteSoon:['tamamlama linki sayımdan sonra buraya gelir','the completion link appears here after the count'],
 cyNext:['Sayım: {d}','Count: {d}'], cyLeft:['{dd} gün {hh} saat','{dd}d {hh}h'], cyWon:['{d} sayımı:','{d} count:'], cyNone:['{d} sayımı: eşiği geçen kahve yok — CoffeeNutz seçer','{d} count: no coffee cleared the bar — CoffeeNutz picks'], cyJury:['Jüri','Jury'],
-cy_topla:['yeşil toplama · numune · reçete','green in · samples · recipe'], cy_yol:['kavurucuya','to the roaster'], cy_kavur:['kavurma','roasting'], cy_kargo:['kutulama · kargo','boxing · shipping'],
+cy_topla:['sepet · tamamlama · yeşil alım','basket · completion · green bought'], cy_yol:['numune · reçete · kavurucuya','samples · recipe · to the roaster'],
+cySepetBy:['Sepet {d}\'e kadar','Basket until {d}'], cySepetClosed:['Bu sayımın sepeti kapandı · sonraki sayım {d}','This count\'s basket has closed · next count {d}'], cy_kavur:['kavurma','roasting'], cy_kargo:['kutulama · kargo','boxing · shipping'],
 mdTitle:['Meydan','Meydan'], mdSub:['Grup-Al® Jüri: sıradaki kahveyi sen seç · kapora = oy · sayım iki haftada bir Pazar gecesi','Grup-Al® Jury: you choose the next coffee · deposit = vote · count every other Sunday night'],
 cyDoneBy:['Tamamlama: {d}\'e kadar','Complete by {d}'], cyForfeit:['süresi geçen kapora yanar','a deposit not completed in time is forfeited'], cyCredit:['süresi geçen kapora krediye döner','a deposit not completed in time becomes credit'],
 offForfeited:['kaporan yandı — süresinde tamamlanmadı','your deposit was forfeited — not completed in time'], offCredited:['kaporan Grup-Al kredine döndü — süresinde tamamlanmadı','your deposit became Grup-Al credit — not completed in time'],
@@ -813,14 +814,14 @@ function renderOffers(s){
     const isMine=mine.includes(o.id), paid=(OFFMINE||[]).find(v=>v.id===o.id&&v.paid), pendD=!paid&&pend.includes(o.id);
     const cnt=depMode?(o.dep||0):(o.n||0), pct=Math.min(100,Math.round(100*cnt/G)), hit=cnt>=G;
     const meta=[o.origin,o.process?wProcName(o.process):''].filter(Boolean).map(escZ).join(' · ');   // v02r: tedarikçi adı sayfada YOK (Ömer 04.09)
-    h+='<div class="orow'+(isMine||paid?' mine':'')+'" onclick="offToggle(\''+escZ(o.id)+'\')" style="cursor:pointer;padding:9px 10px;border-radius:10px;border:1px solid '+((isMine||paid)?'var(--gold)':'var(--line)')+';margin:6px 0">'
+    h+='<div class="orow'+((depMode?!!paid:(isMine||paid))?' mine':'')+'"'+(depMode?'':(' onclick="offToggle(\''+escZ(o.id)+'\')"'))+' style="'+(depMode?'':'cursor:pointer;')+'padding:9px 10px;border-radius:10px;border:1px solid '+((depMode?!!paid:(isMine||paid))?'var(--gold)':'var(--line)')+';margin:6px 0">'   // v05b: kapora modunda dokunma-oy YOK (ilgi gitti)
       +'<div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:14px;font-weight:700">'+escZ(o.name)+'</span>'
-      +'<span style="font-size:11px;font-weight:700;color:'+((isMine||paid)?'var(--gold)':'var(--accent)')+'">'+(paid?((paid.conv?t('offWonChip'):t('offDepMine'))+(paid.qty>1?' ×'+paid.qty:'')):(pendD?t('offDepPend'):(isMine?t('offMine'):t('offVote'))))+'</span></div>'
+      +'<span style="font-size:11px;font-weight:700;color:'+((isMine||paid)?'var(--gold)':'var(--accent)')+'">'+(paid?((paid.conv?t('offWonChip'):t('offDepMine'))+(paid.qty>1?' ×'+paid.qty:'')):(pendD?t('offDepPend'):(depMode?'':(isMine?t('offMine'):t('offVote')))))+'</span></div>'
       +(meta?('<div class="hint" style="margin-top:2px">'+meta+(o.note?(' · '+escZ(trNote(o.note))):'')+'</div>'):'')
       +(((o.list_tl)&&(o.jury_tl||o.camp200_tl))?('<div style="margin-top:5px;font-size:14px;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px;row-gap:1px"><span style="white-space:nowrap"><s style="opacity:.55">'+fmtTL(o.list_tl)+' TL</s> <b style="color:var(--gold);font-size:16px">'+fmtTL(o.jury_tl||o.camp200_tl)+' TL</b></span><span class="hint" style="white-space:nowrap">'+t('offJuryP')+'</span>'+((o.basket_tl||o.camp_tl)?('<span class="hint" style="opacity:.75;white-space:nowrap">· '+t('offBasketP')+fmtTL(o.basket_tl||o.camp_tl)+' TL</span>'):'')+(o.frozen?'<span class="hint" style="opacity:.6;white-space:nowrap">· '+t('offFrozen')+'</span>':'')+'</div>'):'')
       +'<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="flex:1;height:8px;border-radius:4px;background:var(--panel2);overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:'+(hit?'var(--green)':'var(--gold)')+'"></i></span>'
       +'<b style="font-size:12px">'+cnt+'/'+G+t(depMode?'offDepN':'offN')+'</b>'
-      +(depMode&&(o.n||0)?('<span class="hint" style="font-size:11px">· '+t('offInt')+(o.n||0)+'</span>'):'')
+      +''   // v05b: "ilgi" sayfada yok (admin'de kalır)
       +((o.seated||0)?('<span class="hint" style="font-size:11px">· '+t('offSeated')+(o.seated||0)+'</span>'):'')+'</div>'
       +(hit?('<div style="margin-top:4px;font-size:12px;font-weight:700;color:var(--green)">'+t(depMode?'offHitD':'offHit').replace('{g}',G)+'</div>'):'')
       +((depMode&&!(paid&&paid.conv))?((BANNED&&BANNED.getTime()>Date.now())?'':(gate?('<div class="hint" style="margin-top:6px;font-size:11px">'+(cfg.code_always?t('offCodeRow'):t('offEarlyRow').replace('{d}',fmtOpen(cfg.dep_open_at)))+'</div>'):((dbQ=dbGet()[o.id]||0)?('<div style="display:flex;align-items:center;gap:8px;margin-top:8px" onclick="event.stopPropagation()"><span style="flex:1;font-size:13px;font-weight:700;color:var(--gold)">'+t('dbIn').replace('{n}',dbQ)+'</span><button onclick="dbAdd(\''+escZ(o.id)+'\',-1)" style="width:38px;margin:0;padding:8px 0;font-size:16px;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">−</button><button onclick="dbAdd(\''+escZ(o.id)+'\',1)" style="width:38px;margin:0;padding:8px 0;font-size:16px;background:var(--panel2);color:var(--gold);border:1px solid var(--gold)">+</button></div>')
@@ -846,7 +847,9 @@ function renderCycle(s){
   h+='<div style="font-size:12px;font-weight:700">'+t('cyNext').replace('{d}',cyDT(c.next_close))+' <span class="hint">· '+t('cyLeft').replace('{dd}',dd).replace('{hh}',hh)+'</span></div>';
   if(c.last&&Array.isArray(c.last.winners)){
     h+='<div style="margin-top:4px;font-size:12px">'+(c.last.winners.length?('<b style="color:var(--green)">'+t('cyWon').replace('{d}',cyD(c.last.closed_at))+'</b> '+c.last.winners.map(w=>escZ(w.name)+(w.jury_tl?(' · '+t('cyJury')+' '+fmtTL(w.jury_tl)+' TL'):'')).join(' + ')+(c.last.done_by?('<div class="hint" style="margin-top:2px">'+t('cyDoneBy').replace('{d}',cyDT(c.last.done_by))+' · '+t(((STATE&&STATE.offer_cfg&&STATE.offer_cfg.forfeit_mode)==='credit')?'cyCredit':'cyForfeit')+'</div>'):'')):('<span class="hint">'+t('cyNone').replace('{d}',cyD(c.last.closed_at))+'</span>'))+'</div>';
-    if(c.last.sepet_url) h+='<a href="'+escZ(c.last.sepet_url)+'" style="display:block;text-align:center;margin-top:8px;padding:11px;border-radius:12px;background:var(--gold);color:var(--panel);font-weight:800;text-decoration:none;font-size:14px">'+t('cySepetB')+'</a><div class="hint" style="margin-top:3px;font-size:11px">'+t('cySepetH')+'</div>';   // v05a: Grup-Al® Jüri Sepeti (genel kullanıcı)
+    { const sb=c.last.sepet_by?new Date(c.last.sepet_by).getTime():0, open=!sb||now<sb;   // v05b: Sepet penceresi (Çarşamba 23:59'a kadar)
+      if(c.last.sepet_url&&open) h+='<a href="'+escZ(c.last.sepet_url)+'" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:8px;padding:11px;border-radius:12px;background:var(--gold);color:var(--panel);font-weight:800;text-decoration:none;font-size:14px">'+t('cySepetB')+'</a><div class="hint" style="margin-top:3px;font-size:11px">'+t('cySepetH')+(sb?(' · '+t('cySepetBy').replace('{d}',cyDT(c.last.sepet_by))):'')+'</div>';
+      else if(c.last.winners.length&&sb&&!open) h+='<div class="hint" style="margin-top:6px;font-size:12px">'+t('cySepetClosed').replace('{d}',cyD(c.next_close))+'</div>'; }
     if(c.stages&&c.stages.length){ const cur=c.stages.findIndex(sg=>now>=new Date(sg.from).getTime()&&now<new Date(sg.to).getTime());
       h+='<div style="display:flex;gap:3px;margin-top:8px">'+c.stages.map((sg,i)=>'<div style="flex:1;height:6px;border-radius:3px;background:'+(i<cur?'var(--green)':(i===cur?'var(--gold)':'var(--line)'))+'"></div>').join('')+'</div>';
       h+='<div style="display:flex;gap:3px;margin-top:3px">'+c.stages.map((sg,i)=>'<div class="hint" style="flex:1;font-size:10px;line-height:1.25;'+(i===cur?'color:var(--gold);font-weight:700':'')+'">'+t('cy_'+sg.key)+'<br><span style="opacity:.7">'+cyD(sg.from)+'</span></div>').join('')+'</div>'; }
@@ -868,8 +871,10 @@ function offComplete(id){
   // kazanan kahvenin kaporası: Jüri fiyatı − kapora tutarı ürünü; attributes[done]=1 → webhook tamamlandı yazar
   const o=(STATE&&STATE.offers||[]).find(x=>x.id===id); if(!o||!o.done_url) return;
   let du=o.done_url; du+=(du.includes('?')?'&':'?')+'attributes[offer]='+encodeURIComponent(id)+'&attributes[dev]='+encodeURIComponent(devId())+'&attributes[done]=1';
-  location.href=du;
+  openPayTab(du);
 }
+// v05b (Ömer): ödeme ekranı YENİ SEKMEDE — Meydan arkada kalır; açılır pencere engellenirse aynı sekme
+function openPayTab(du){ let w=null; try{ w=window.open(du,'_blank','noopener'); }catch(e){} if(!w) location.href=du; }
 async function offLoadMine(s){
   // cihazın kaporaları/oyları (yalnız bu cihazda bir iz varsa sorulur)
   if(!s||!Array.isArray(s.offers)||!s.offers.length) return;
@@ -882,7 +887,7 @@ async function offLoadMine(s){
 // v2026-09-05a KAPORA SEPETİ (Ömer: "3 ayrı sepet ödemek zor"): kahveleri sepete ekle, TEK ödeme — /cart/VARIANT:TOPLAM + attributes[offers]=id:adet,…
 function dbGet(){ try{ const o=JSON.parse(localStorage.getItem('grupal_dbasket')||'{}'); return (o&&typeof o==='object')?o:{}; }catch(e){ return {}; } }
 function dbSave(o){ try{ localStorage.setItem('grupal_dbasket', JSON.stringify(o)); }catch(e){} }
-function dbAdd(id,delta){ const o=dbGet(); const q=Math.max(0,Math.min(20,(parseInt(o[id])||0)+(delta||1))); if(q) o[id]=q; else delete o[id]; dbSave(o); renderOffers(STATE); }
+function dbAdd(id,delta){ const o=dbGet(); const q=Math.max(0,Math.min(30,(parseInt(o[id])||0)+(delta||1))); if(q) o[id]=q; else delete o[id]; dbSave(o); renderOffers(STATE); }   // v05b: kahve başına en çok 30 kutu (Ömer)
 function dbClear(){ dbSave({}); renderOffers(STATE); }
 function dbSum(){ const o=dbGet(), list=(STATE&&STATE.offers)||[]; let boxes=0, coffees=0; for(const id in o){ if(!list.some(x=>x.id===id)) continue; boxes+=o[id]; coffees++; } return {boxes,coffees}; }
 function dbUrl(){
@@ -900,7 +905,7 @@ function dbPay(){
   if(!termsOk()){ termsShow(); return; }
   const du=dbUrl(); if(!du) return;
   try{ const a=offPend(); for(const id in dbGet()) if(!a.includes(id)) a.push(id); localStorage.setItem('grupal_odep', JSON.stringify(a.slice(-20))); }catch(e){}
-  location.href=du;
+  openPayTab(du);
 }
 function termsShow(){
   let m=$('termsModal'); if(!m){ m=document.createElement('div'); m.id='termsModal'; document.body.appendChild(m); }

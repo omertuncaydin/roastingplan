@@ -9,7 +9,8 @@
 <link rel="icon" type="image/png" sizes="16x16" href="grupal-admin-icon-16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="grupal-admin-icon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
-<!-- grupal-admin.html · v2026-09-05a · Jüri Sepeti ürün linki (sayım başına) · kademeli ceza · krediye dönenleri Shopify'a yaz
+<!-- grupal-admin.html · v2026-09-05b · Sepet satış penceresi (gün)
+     grupal-admin.html · v2026-09-05a · Jüri Sepeti ürün linki (sayım başına) · kademeli ceza · krediye dönenleri Shopify'a yaz
      grupal-admin.html · v2026-09-02y · favicon siyah (Grup-Al ikonu, kırmızı yerine siyah) · tamamlama süresi · yanan kapora · Jüri askısı · Pazar 23:59
      grupal-admin.html · v2026-09-02x · MEYDAN: Jüri/Sepet oranları · döngü başlangıcı + sayım · kilitli fiyat · dönüşen/tamamlanan kapora · tamamlama linki -->
 <style>
@@ -174,10 +175,11 @@ a{color:var(--gold)}
           <div><span class="lbl">Jüri kodu (WhatsApp KANALINDA paylaş · açılış saati boşsa kapora HER ZAMAN kod ister)</span><input id="s_depcode" placeholder="ör. juri2026" autocapitalize="off"></div>
           <input id="s_depopen" type="hidden" value="">
           <div><span class="lbl">tamamlama süresi (gün · sayımdan sonra)</span><input id="s_donedays" inputmode="numeric" placeholder="2"></div>
+          <div><span class="lbl">Sepet satış penceresi (gün · sayımdan sonra)</span><input id="s_sepetdays" inputmode="numeric" placeholder="3"></div>
           <div><span class="lbl">tamamlanmayan kapora</span><select id="s_forfeit" style="margin:0"><option value="tiered">kademeli · ilk kaçırma krediye döner, sonraki yanar</option><option value="burn">hep yanar</option><option value="credit">hep krediye döner</option></select></div>
           <div><span class="lbl">Jüri askısı (döngü · 0 = yok)</span><input id="s_bancycles" inputmode="numeric" placeholder="1"></div>
         </div>
-        <div class="hint" style="margin-top:4px">Kod dolu = Jüri olmak için kod şart (kanal teşviki); kod sayfaya hiç gitmez. Sayımdan sonra kazanan kaporalar "tamamlama süresi" içinde tamamlanır; süresi dolanlar "Tamamlanmayanları kapat" ile yanar ya da krediye döner, cihaz askıya alınır.</div>
+        <div class="hint" style="margin-top:4px">Kod dolu = Jüri olmak için kod şart (kanal teşviki); kod sayfaya hiç gitmez. Kapora ürün linki bir kez girilir, boşaltılmaz (boş = Meydan serbest oya döner). Sayımdan sonra: tamamlama Salı 23:59, Sepet Çarşamba 23:59, yeşil alımı Perşembe; süresi dolanlar "Tamamlanmayanları kapat" ile kademeli işlem görür.</div>
         <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap"><button class="mini" onclick="cycleCloseNow()">Sayımı ŞİMDİ yap</button><button class="mini" onclick="cycleForfeit()">Tamamlanmayanları kapat</button><button class="mini" onclick="kaporaCredit()">Krediye dönenleri Shopify'a yaz</button><button class="mini" onclick="loadCycles()">Sayım kayıtları</button><span class="hint" id="cycleMsg"></span></div>
         <div id="cycleList" class="hint" style="margin-top:4px"></div>
         <div style="display:flex;gap:8px;margin-top:8px;align-items:center"><button class="mini" onclick="offSettingsSave()">Ayarları kaydet</button><span class="hint" id="offSetMsg"></span></div>
@@ -233,7 +235,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-05a';
+const VERSION='v2026-09-05b';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
@@ -329,7 +331,7 @@ async function loadOfferSettings(){
   try{ const r=await fetch(API+'/admin/settings',{headers:{'x-cc-key':KEY}}); const j=await r.json();
     if(j&&j.settings){ const st=j.settings; $('s_depurl').value=st.offer_dep_url||''; $('s_depamt').value=st.offer_dep_amt||''; $('s_goal').value=st.offer_goal||'';
       $('s_depcode').value=st.offer_dep_code||''; $('s_depopen').value='';   // v02y: açılış saati kaldırıldı (kod = her zaman)
-      $('s_donedays').value=st.offer_done_days||''; $('s_forfeit').value=(st.offer_forfeit_mode==='credit'||st.offer_forfeit_mode==='burn')?st.offer_forfeit_mode:'tiered'; $('s_bancycles').value=(st.offer_ban_cycles!=null&&st.offer_ban_cycles!=='')?st.offer_ban_cycles:'';
+      $('s_donedays').value=st.offer_done_days||''; $('s_sepetdays').value=st.offer_sepet_days||''; $('s_forfeit').value=(st.offer_forfeit_mode==='credit'||st.offer_forfeit_mode==='burn')?st.offer_forfeit_mode:'tiered'; $('s_bancycles').value=(st.offer_ban_cycles!=null&&st.offer_ban_cycles!=='')?st.offer_ban_cycles:'';
       $('s_refusd').value=st.offer_ref_usd||''; $('s_reflist').value=st.offer_ref_list||''; $('s_ref2usd').value=st.offer_ref2_usd||''; $('s_ref2list').value=st.offer_ref2_list||''; $('s_ref3usd').value=st.offer_ref3_usd||''; $('s_ref3list').value=st.offer_ref3_list||''; $('s_daygoal').value=st.offer_day_goal||''; $('s_rjury').value=st.offer_ratio_jury||st.offer_ratio_200||''; $('s_rbasket').value=st.offer_ratio_basket||st.offer_ratio_40||''; $('s_cycle').value=st.meydan_cycle_start?new Date(st.meydan_cycle_start).toLocaleString('sv',{timeZone:'Europe/Istanbul'}).slice(0,16).replace(' ','T'):'';
       $('s_showp').checked=st.offer_show_prices!=='0';   // v02t: varsayılan AÇIK
       OFFCFG=j.cfg||null; scalePreview(); renderOffersAdmin(); } }catch(e){}
@@ -338,7 +340,7 @@ async function offSettingsSave(){
   if(!(await resolveIfProduct('s_depurl'))) return;
   const body={offer_dep_url:$('s_depurl').value.trim(),offer_dep_amt:$('s_depamt').value.trim(),offer_goal:$('s_goal').value.trim(),
     offer_dep_code:$('s_depcode').value.trim(),offer_dep_open_at:'',offer_day_goal:$('s_daygoal').value.trim(),
-    offer_done_days:$('s_donedays').value.trim(),offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),
+    offer_done_days:$('s_donedays').value.trim(),offer_sepet_days:$('s_sepetdays').value.trim(),offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),
     offer_ref3_usd:$('s_ref3usd').value.trim().replace(',','.'),offer_ref3_list:$('s_ref3list').value.trim(),
     offer_ref_usd:$('s_refusd').value.trim().replace(',','.'),offer_ref_list:$('s_reflist').value.trim(),offer_ref2_usd:$('s_ref2usd').value.trim().replace(',','.'),offer_ref2_list:$('s_ref2list').value.trim(),offer_ratio_jury:$('s_rjury').value.trim().replace(',','.'),offer_ratio_basket:$('s_rbasket').value.trim().replace(',','.'),meydan_cycle_start:$('s_cycle').value?($('s_cycle').value+':00+03:00'):'',
     offer_show_prices:$('s_showp').checked?'1':'0'};
