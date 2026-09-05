@@ -392,7 +392,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-05h';
+const VERSION='v2026-09-05i';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -477,13 +477,13 @@ wishNoteP:["not (isteğe bağlı): 'Gesha olsun'","note (optional): 'make it a G
 wishMine:['Dileğin masada: ','Your wish is on the table: '], wishSent:['Dileğin alındı ✓','Wish received ✓'], wishTallyL:['dilekler','wishes'], wishFrom:[' · masadakilerden ',' · from seated guests '],
 wishNone:['İlk dilek senin olsun.','Be the first to wish.'], wishSeated:['masadan','seated'], wishCountryP:['Ülke seç','Pick a country'], wishProcP:['İşlem seç','Pick a process'],
 rgAfrica:['Afrika','Africa'], rgAmerica:['Amerika','Americas'], rgAsia:['Asya-Pasifik','Asia-Pacific'], rgAny:['Sürpriz','Surprise'],
-prWashed:['Yıkanmış (Washed)','Washed'], prNatural:['Doğal (Natural)','Natural'], prHoney:['Honey','Honey'], prAnaerobic:['Anaerobik','Anaerobic'], prInfused:['Infused (katkılı fermantasyon)','Infused (co-fermented)'], prFunky:['En cafcaflısından olsun','Funky as it can be'], prAny:['Fark etmez','Any'],
+prWashed:['Yıkanmış (Washed)','Washed'], prNatural:['Doğal (Natural)','Natural'], prHoney:['Honey','Honey'], prAnaerobic:['Anaerobik','Anaerobic'], prInfused:['Infused (katkılı fermantasyon)','Infused (co-fermented)'], prFunky:['Fermente (funky)','Fermented (funky)'], prAny:['Fark etmez','Any'],
 hWashed:['Meyve eti soyulur, çekirdek yıkanıp kurutulur — temiz, parlak asidite.','Pulp removed, seeds washed then dried — clean, bright acidity.'],
 hNatural:['Meyvesiyle birlikte kurutulur — tatlı, meyvemsi, dolgun gövde.','Dried inside the fruit — sweet, fruity, full body.'],
 hHoney:['Meyve eti alınır, yapışkan bal katmanı kalır — tatlı ve yumuşak.','Pulp removed, the sticky mucilage stays — sweet and soft.'],
 hAnaerobic:['Oksijensiz tankta fermantasyon — yoğun, şarabımsı, baharatlı.','Fermented in a sealed, oxygen-free tank — intense, winey, spiced.'],
 hInfused:['Fermantasyona meyve, baharat ya da maya eklenir — aroma dışarıdan gelir, etiketi bunu söyler.','Fruit, spice or yeast added during fermentation — the aroma comes from outside; the label says so.'],
-hFunky:['Uçlarda deneysel: uzun fermantasyon, sürpriz aromalar — herkese göre değil.','Experimental at the edges: long ferments, surprise aromas — not for everyone.'],
+hFunky:['Uzun ya da deneysel fermantasyon.','Long or experimental fermentation.'],
 hAny:['Kavurucu seçsin.','Let the roaster choose.'],
 // İLETİŞİM RAYLARI (G) — 2026-09-02d
 chanL:['Grup-Al WhatsApp kanalı','Grup-Al WhatsApp channel'], chanH:['masa açılınca · basamak geçilince · kutular yola çıkınca — yalnız bu üçü','table opens · rung passes · boxes ship — only these three'],
@@ -876,7 +876,9 @@ function renderOffers(s){
   for(const o of shown){
     const isMine=mine.includes(o.id), paid=(OFFMINE||[]).find(v=>v.id===o.id&&v.paid), pendD=!paid&&pend.includes(o.id);
     const cnt=depMode?(o.dep||0):(o.n||0), pct=Math.min(100,Math.round(100*cnt/G)), hit=cnt>=G, open=OFFOPEN.has(o.id);
-    const meta=[o.origin,o.process?wProcName(o.process):''].filter(Boolean).map(escZ).join(' · ')+(o.note?(' · '+escZ(trNote(o.note))):'');   // v02r: tedarikçi adı sayfada YOK (Ömer 04.09)
+    // v05i (Ömer: "işlemi gruplama/yorumlama, olduğu gibi yaz"): not zaten işlemi yazıyorsa (Anaerobic Natural, Pulped Natural…) ayrıca yazma; not yoksa kayıttaki işlem OLDUĞU GİBİ
+    const hasProc=/washed|natural|honey|anaerob|ferment|carbonic|macerat|infus|decaf|pulped|wet|dry|yıkan|doğal|semi/i.test(o.note||'');
+    const meta=[o.origin,(o.process&&!hasProc)?o.process:''].filter(Boolean).map(escZ).join(' · ')+(o.note?((o.origin||(o.process&&!hasProc))?' · ':'')+escZ(trNote(o.note)):'');   // v02r: tedarikçi adı sayfada YOK (Ömer 04.09)
     const rowMine=depMode?!!paid:(isMine||paid);
     const chip=paid?((paid.conv?t('offWonChip'):t('offDepMine'))+(paid.qty>1?' ×'+paid.qty:'')):(pendD?t('offDepPend'):(depMode?'':(isMine?t('offMine'):'')));
     const jury=o.jury_tl||o.camp200_tl, basket=o.basket_tl||o.camp_tl;

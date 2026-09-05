@@ -235,7 +235,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-05b';
+const VERSION='v2026-09-05c';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
@@ -317,7 +317,7 @@ async function houseSet(){
   loadPledges();
 }
 const WNAME={ET:'Etiyopya',KE:'Kenya',RW:'Ruanda',BI:'Burundi',TZ:'Tanzanya',UG:'Uganda',CD:'Kongo DC',MW:'Malavi',ZM:'Zambiya',ZW:'Zimbabve',CM:'Kamerun',CI:'Fildişi Sahili',MG:'Madagaskar',MZ:'Mozambik',TG:'Togo',GN:'Gine',AO:'Angola',ST:'São Tomé',LR:'Liberya',SL:'Sierra Leone',NG:'Nijerya',GA:'Gabon',CF:'Orta Afrika Cum.',BR:'Brezilya',CO:'Kolombiya',PE:'Peru',EC:'Ekvador',BO:'Bolivya',VE:'Venezuela',GT:'Guatemala',CR:'Kosta Rika',HN:'Honduras',SV:'El Salvador',NI:'Nikaragua',PA:'Panama',MX:'Meksika',JM:'Jamaika',DO:'Dominik Cum.',CU:'Küba',HT:'Haiti',PR:'Porto Riko','US-HI':'Hawaii',PY:'Paraguay','ID-SUM':'Sumatra','ID-JAV':'Java','ID-SUL':'Sulawesi','ID-BAL':'Bali','ID-FLO':'Flores','ID-PAP':'Papua (Endonezya)',PG:'Papua Yeni Gine',VN:'Vietnam',TH:'Tayland',LA:'Laos',MM:'Myanmar',IN:'Hindistan',NP:'Nepal',CN:'Çin · Yunnan',PH:'Filipinler',TL:'Doğu Timor',YE:'Yemen',TW:'Tayvan',LK:'Sri Lanka',MY:'Malezya',KH:'Kamboçya',AU:'Avustralya',VU:'Vanuatu',ANY:'Fark etmez'};
-const WPROCN={washed:'Yıkanmış',natural:'Doğal',honey:'Honey',anaerobic:'Anaerobik',infused:'Infused',funky:'En cafcaflısı',any:'Fark etmez'};
+const WPROCN={washed:'Yıkanmış',natural:'Doğal',honey:'Honey',anaerobic:'Anaerobik',infused:'Infused',funky:'Fermente',any:'Fark etmez'};
 // TEKLİFLER (I/J/K): taslak liste · satır düzenleme · toplu ekle (tedarikçi başlıkları) · UYGULA · kapora ayarları
 let OFFERS=[], OFFEDIT=null, OFFCFG=null;
 async function loadOffers(){
