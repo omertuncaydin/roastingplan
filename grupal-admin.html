@@ -9,7 +9,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="grupal-admin-icon-16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="grupal-admin-icon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
-<!-- grupal-admin.html · v2026-09-02z · kademeli ceza (varsayılan) · krediye dönenleri Shopify'a yaz
+<!-- grupal-admin.html · v2026-09-05a · Jüri Sepeti ürün linki (sayım başına) · kademeli ceza · krediye dönenleri Shopify'a yaz
      grupal-admin.html · v2026-09-02y · favicon siyah (Grup-Al ikonu, kırmızı yerine siyah) · tamamlama süresi · yanan kapora · Jüri askısı · Pazar 23:59
      grupal-admin.html · v2026-09-02x · MEYDAN: Jüri/Sepet oranları · döngü başlangıcı + sayım · kilitli fiyat · dönüşen/tamamlanan kapora · tamamlama linki -->
 <style>
@@ -233,7 +233,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-02z';
+const VERSION='v2026-09-05a';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
@@ -418,13 +418,22 @@ async function kaporaCredit(){
   $('cycleMsg').textContent='kredi yazıldı: '+okN+(bad.length?(' · olmadı '+bad.length+': '+bad.map(x=>(x.email||x.dev)+' ('+x.error+')').join(' / ')):'');
   await loadOffers();
 }
+async function sepetSave(n){
+  const v=$('s_sepet').value.trim(); if(v&&!/^https:\/\/(www\.)?coffeenutz\.net\//.test(v)){ $('sepetMsg').textContent='coffeenutz.net ürün linki olmalı'; return; }
+  const body={}; body['sepet_'+n]=v;
+  const r=await fetch(API+'/admin/settings',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({})); $('sepetMsg').textContent=j.ok?(v?'kaydedildi — Meydan sayfasında "Jüri Sepeti\'ni al" düğmesi açık':'kaldırıldı'):('Olmadı: '+(j.error||r.status));
+}
 async function loadCycles(){
   const el=$('cycleList'); if(!el) return;
   const r=await fetch(API+'/admin/cycles',{headers:{'x-cc-key':KEY}}); const j=await r.json().catch(()=>null);
   if(!r.ok||!j){ el.textContent='okunamadı'; return; }
   const c=j.cycle; const f=iso=>iso?new Date(iso).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'}):'—';
+  const last=(j.records||[])[0];
   el.innerHTML=(c?('<div>sıradaki sayım: <b>'+f(c.next_close)+'</b>'+(c.last_close?(' · son sayım '+f(c.last_close)):'')+'</div>'):'<div>döngü başlangıcı girilmemiş</div>')
-    +(j.records||[]).map(rec=>'<div>#'+rec.n+' · '+f(rec.closed_at)+' · eşik '+rec.goal+' · '+((rec.winners||[]).map(w=>esc(w.name)+' '+w.dep+' kapora'+(w.jury_tl?(' · Jüri '+w.jury_tl+' ₺'):'')).join(' + ')||'kazanan yok')+'</div>').join('');
+    +(j.records||[]).map(rec=>'<div>#'+rec.n+' · '+f(rec.closed_at)+' · eşik '+rec.goal+' · '+((rec.winners||[]).map(w=>esc(w.name)+' '+w.dep+' kapora'+(w.jury_tl?(' · Jüri '+w.jury_tl+' ₺'):'')).join(' + ')||'kazanan yok')+'</div>').join('')
+    +(last?('<div style="margin-top:8px"><span class="lbl">Grup-Al® Jüri Sepeti · ürün linki (sayım #'+last.n+' · sayfada düğme olur)</span><div style="display:flex;gap:6px"><input id="s_sepet" placeholder="https://www.coffeenutz.net/products/juri-sepeti-..." style="margin:0;flex:1"><button class="mini" onclick="sepetSave('+last.n+')">Kaydet</button></div><span class="hint" id="sepetMsg"></span></div>'):'');
+  if(last){ try{ const r2=await fetch(API+'/admin/settings',{headers:{'x-cc-key':KEY}}); const j2=await r2.json(); if(j2&&j2.settings&&$('s_sepet')) $('s_sepet').value=j2.settings['sepet_'+last.n]||''; }catch(e){} }
 }
 // v02t: admin sıralama — yalnız görünüm; sayfa sırası sunucudan (kapora · oy) gelir
 function offSortKey(){ try{ return localStorage.getItem('grupal_admin_offsort')||'page'; }catch(e){ return 'page'; } }
