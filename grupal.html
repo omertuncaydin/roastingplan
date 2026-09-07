@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Grup-Al · kolektif kavurma günü</title>
-  <meta property="og:title" content="Grup-Al · Kolektif kavurma günü">
-  <meta property="og:description" content="Kolektif kavurma günü partileri. Masa kurulur, söz sözdür.">
+<title>Grup-Al® · Jüri seçer, herkes alır</title>
+  <meta property="og:title" content="Grup-Al® · Jüri seçer, herkes alır">
+  <meta property="og:description" content="Grup-Al® Jüri sıradaki kahveyi Meydan'da seçer — oturum her Pazar 23:59'da biter. Jüri seçtiğini Jüri fiyatından, herkes Sepet fiyatından alır.">
   <meta property="og:image" content="https://guide.coffeenutz.net/og-cover.png">
-  <meta property="og:url" content="https://guide.coffeenutz.net/grupal.html">
+  <meta property="og:url" content="https://grup-al.com/">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
-<meta name="description" content="Grup-Al: kolektif kavurma günü partisi. Masa kurulur, söz sözdür; masa büyüdükçe fiyat herkes için düşer.">
+<meta name="description" content="Grup-Al® Jüri sıradaki kahveyi Meydan'da seçer — oturum her Pazar 23:59'da biter. Jüri seçtiğini Jüri fiyatından, herkes Sepet fiyatından alır.">
 <link rel="manifest" href="manifest-grupal.json">
 <meta name="theme-color" content="#16130f">
 <link rel="apple-touch-icon" href="grupal-icon-180.png">
@@ -399,7 +399,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-07c';
+const VERSION='v2026-09-07d';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null;
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
