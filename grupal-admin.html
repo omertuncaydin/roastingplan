@@ -11,6 +11,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
 <!-- grupal-admin.html · v2026-09-05b · Sepet satış penceresi (gün)
      grupal-admin.html · v2026-09-05a · Jüri Sepeti ürün linki (sayım başına) · kademeli ceza · krediye dönenleri Shopify'a yaz
+     grupal-admin.html · v2026-09-07c · kampanya rozeti gerçek durum (süresi doldu / açık tutuluyor / duyuruda) · "süresi dolsa da açık tut" (keepopen_<slug>, proxy v3.34)
+     grupal-admin.html · v2026-09-07b · tamamlama linki = sepet kalıcı bağlantısı (/cart/VARYANT:1) zorunlu
      grupal-admin.html · v2026-09-02y · favicon siyah (Grup-Al ikonu, kırmızı yerine siyah) · tamamlama süresi · yanan kapora · Jüri askısı · Pazar 23:59
      grupal-admin.html · v2026-09-02x · MEYDAN: Jüri/Sepet oranları · döngü başlangıcı + sayım · kilitli fiyat · dönüşen/tamamlanan kapora · tamamlama linki -->
 <style>
@@ -120,6 +122,8 @@ a{color:var(--gold)}
         <option value="fulfilled">fulfilled · kavurma yapıldı, kutular yolda</option>
         <option value="failed">failed · iptal (mücbir sebep · arşiv)</option>
       </select>
+      <label class="hint" style="display:flex;gap:6px;align-items:center;cursor:pointer;margin-top:6px"><input type="checkbox" id="f_keepopen" style="width:auto;margin:0"> süresi dolsa da masayı AÇIK tut — sayfa "son gün geçti — masa açık tutuluyor" yazar, sandalye çekilmeye devam eder; işaret dururken kredi dağıtılmaz</label>
+      <div class="hint" id="endHint" style="color:#e0705a"></div>
       <button onclick="save()">Kaydet / Yayınla</button>
       <div class="hint" id="msg"></div>
       <div class="hint" id="linkOut"></div>
@@ -237,7 +241,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-07a';
+const VERSION='v2026-09-07c';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
@@ -471,7 +475,7 @@ function renderOffersAdmin(){
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><input id="oe_origin" value="'+esc(o.origin||'')+'" placeholder="Ülke" style="margin:0">'
       +'<select id="oe_proc" style="margin:0">'+['','washed','natural','honey','anaerobic','infused','funky','any'].map(k=>'<option value="'+k+'"'+(k===(o.process||'')?' selected':'')+'>'+(k?(WPROCN[k]||k):'— işlem —')+'</option>').join('')+'</select>'
       +'<input id="oe_vendor" value="'+esc(o.vendor||'')+'" placeholder="Tedarikçi" style="margin:0"><input id="oe_note" value="'+esc(o.note||'')+'" placeholder="Not (ör. 20 kutu sınırlı)" style="margin:0">'
-      +'<input id="oe_usd" value="'+esc((o.meta&&o.meta.usd_kg!=null)?String(o.meta.usd_kg):'')+'" placeholder="yeşil $/kg (ör. 16,55)" style="margin:0"><input id="oe_list" value="'+esc((o.meta&&o.meta.list_tl)?String(o.meta.list_tl):'')+'" placeholder="liste ₺ (boş = ölçekten)" style="margin:0"><input id="oe_jury" value="'+esc((o.meta&&o.meta.jury_tl)?String(o.meta.jury_tl):'')+'" placeholder="Jüri ₺ (boş = oranla)" style="margin:0"><input id="oe_basket" value="'+esc((o.meta&&(o.meta.basket_tl||o.meta.camp_tl))?String(o.meta.basket_tl||o.meta.camp_tl):'')+'" placeholder="Sepet ₺ (boş = oranla)" style="margin:0"><input id="oe_done" value="'+esc((o.meta&&o.meta.done_url)?String(o.meta.done_url):'')+'" placeholder="tamamlama ürün/sepet linki (kazanınca · Jüri ₺ − kapora)" style="margin:0;grid-column:1/-1"></div>'
+      +'<input id="oe_usd" value="'+esc((o.meta&&o.meta.usd_kg!=null)?String(o.meta.usd_kg):'')+'" placeholder="yeşil $/kg (ör. 16,55)" style="margin:0"><input id="oe_list" value="'+esc((o.meta&&o.meta.list_tl)?String(o.meta.list_tl):'')+'" placeholder="liste ₺ (boş = ölçekten)" style="margin:0"><input id="oe_jury" value="'+esc((o.meta&&o.meta.jury_tl)?String(o.meta.jury_tl):'')+'" placeholder="Jüri ₺ (boş = oranla)" style="margin:0"><input id="oe_basket" value="'+esc((o.meta&&(o.meta.basket_tl||o.meta.camp_tl))?String(o.meta.basket_tl||o.meta.camp_tl):'')+'" placeholder="Sepet ₺ (boş = oranla)" style="margin:0"><input id="oe_done" value="'+esc((o.meta&&o.meta.done_url)?String(o.meta.done_url):'')+'" placeholder="tamamlama linki: https://coffeenutz.net/cart/VARYANT_ID:1 (kilitlenince · fiyat = Jüri ₺ − kapora)" style="margin:0;grid-column:1/-1"></div>'
       +'<div style="display:flex;gap:6px;margin-top:8px"><button class="mini" onclick="offEditSave(\''+o.id+'\')">Taslağa kaydet</button><button class="mini" onclick="offEdit(null)">Vazgeç</button></div></div>';
     const st=offState(o);
     return '<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;'+(o.active?'':'opacity:.6')+'">'
@@ -513,7 +517,9 @@ async function offEditSave(id){
   const num=v=>{ const n=parseFloat(String(v||'').replace(',','.')); return isFinite(n)&&n>0?n:null; };
   const usd=num($('oe_usd').value), lst=num($('oe_list').value), jry=num($('oe_jury').value), bsk=num($('oe_basket').value), dn=$('oe_done').value.trim();
   if(usd) meta.usd_kg=usd; else delete meta.usd_kg; if(lst) meta.list_tl=Math.round(lst); else delete meta.list_tl; if(jry) meta.jury_tl=Math.round(jry); else delete meta.jury_tl; if(bsk) meta.basket_tl=Math.round(bsk); else delete meta.basket_tl; delete meta.camp_tl;
-  if(/^https:\/\/(www\.)?coffeenutz\.net\//.test(dn)) meta.done_url=dn; else delete meta.done_url;
+  // v07b: tamamlama linki SEPET KALICI BAĞLANTISI olmalı (/cart/VARYANT:1) — ürün sayfası linkinde attributes[done] siparişe geçmez, tamamlama işlenmez
+  if(dn&&!/^https:\/\/(www\.)?coffeenutz\.net\/cart\/\d+:\d+(\?|$)/.test(dn)){ alert('Tamamlama linki sepet kalıcı bağlantısı olmalı: https://coffeenutz.net/cart/VARYANT_ID:1\n(Ürün sayfası linki olursa tamamlama siparişi işlenmez.) Kaydedilmedi.'); return; }
+  if(dn) meta.done_url=dn; else delete meta.done_url;
   await offSet(id,{name:$('oe_name').value.trim(),origin:$('oe_origin').value.trim()||null,process:$('oe_proc').value||null,vendor:$('oe_vendor').value.trim()||null,note:$('oe_note').value.trim()||null,meta:meta}); }
 async function offDel(id){
   const o=OFFERS.find(x=>x.id===id); if(!o) return;
@@ -711,14 +717,25 @@ async function unlock(){
   $('keyCard').style.display='none'; $('panel').style.display='block';
   renderList(); loadOffers();   // teklifler global: anahtar açılınca yüklenir
 }
+let PUBBY={};   // v07c: /campaigns (sayfanın gördüğü) — keep_open + kilitli sayısı
+function endedOf(c){ return c&&c.status==='open'&&!!c.end_at&&new Date(c.end_at).getTime()<Date.now(); }   // v07c: durum "open" ama son gün geçti
+function fmtD(iso){ try{ return new Date(iso).toLocaleDateString('tr-TR',{day:'numeric',month:'short',timeZone:'Europe/Istanbul'}); }catch(e){ return ''; } }
 async function renderList(){
   let by={};
   try{ const r=await fetch(API+'/campaigns'); const pub=await r.json(); (Array.isArray(pub)?pub:[]).forEach(c=>{ by[c.slug]=c; }); }catch(e){}
-  $('campList').innerHTML=CAMPS.map((c,i)=>{ const p=by[c.slug]; const extra=p?(' · '+(p.locked||0)+' kilitli'):''; return '<span class="pill" onclick="pick('+i+')">'+esc(c.slug)+' · '+esc(c.status)+extra+'</span>'; }).join('')||'<div class="hint">Henüz kampanya yok.</div>';
+  PUBBY=by;
+  // v07c (Ömer: "admin açık diyor ama sayfa kapalı — bayat bilgi olmaz"): rozet gerçek durumu söyler
+  $('campList').innerHTML=CAMPS.map((c,i)=>{ const p=by[c.slug]; const extra=p?(' · '+(p.locked||0)+' kilitli'):'';
+    const keep=!!(p&&p.keep_open); const ended=endedOf(c); const ann=c.status==='open'&&!!c.opens_at&&new Date(c.opens_at).getTime()>Date.now();
+    const st=ended?(keep?'<b style="color:var(--gold)">süresi doldu '+fmtD(c.end_at)+' · açık tutuluyor</b>':'<b style="color:#e0705a">süresi doldu '+fmtD(c.end_at)+' — sayfada kapalı</b>'):(ann?esc(c.status)+' · duyuruda':esc(c.status));
+    return '<span class="pill" onclick="pick('+i+')">'+esc(c.slug)+' · '+st+extra+'</span>'; }).join('')||'<div class="hint">Henüz kampanya yok.</div>';
 }
+function endHintFor(c){ const el=$('endHint'); if(!el) return; if(!c||!endedOf(c)){ el.textContent=''; return; }
+  const keep=!!(PUBBY[c.slug]&&PUBBY[c.slug].keep_open);
+  el.textContent=keep?('Son gün geçti ('+fmtD(c.end_at)+') — masa işaretle AÇIK tutuluyor; sayfa bunu yazıyor. Kapatmak için işareti kaldır ya da durumu değiştir.'):('Son gün geçti ('+fmtD(c.end_at)+') — durum "open" ama sayfa KAPALI gösteriyor, sandalye çekilemiyor. Açık tutmak istersen yukarıdaki kutuyu işaretle; bitti demek istersen durumu fulfilled/failed yap.'); }
 function blank(){
   ['f_slug','f_title','f_lot','f_cap','f_unit','f_shipdays','f_dep','f_depamt','f_img','f_maxq','l1a','l1p','l2a','l2p','l3a','l3p'].forEach(i=>$(i).value=''); updatePrev();
-  $('f_status').value='open'; $('f_opens').value=''; $('f_shipfree').value=''; $('f_shipfee').value=''; $('f_end').value=''; $('f_roast').value=''; $('f_dep').value=''; fillNext(''); $('f_next').value=''; $('f_roaster').value=''; $('f_channel').value=''; $('f_chat').value=''; econFill(null); $('msg').textContent='Yeni kampanya: LOT ürün linkini yapıştır (tavan fiyatlı), merdiveni kur, tarihleri ver.'; $('linkOut').textContent=''; CURSLUG=''; $('plCard').style.display='none'; $('kapCard').style.display='none'; $('wishCard').style.display='none';
+  $('f_status').value='open'; if($('f_keepopen')) $('f_keepopen').checked=false; endHintFor(null); $('f_opens').value=''; $('f_shipfree').value=''; $('f_shipfee').value=''; $('f_end').value=''; $('f_roast').value=''; $('f_dep').value=''; fillNext(''); $('f_next').value=''; $('f_roaster').value=''; $('f_channel').value=''; $('f_chat').value=''; econFill(null); $('msg').textContent='Yeni kampanya: LOT ürün linkini yapıştır (tavan fiyatlı), merdiveni kur, tarihleri ver.'; $('linkOut').textContent=''; CURSLUG=''; $('plCard').style.display='none'; $('kapCard').style.display='none'; $('wishCard').style.display='none';
 }
 function pick(i){
   const c=CAMPS[i];
@@ -730,6 +747,7 @@ function pick(i){
     if(![...sel.options].some(o=>o.value===st)) sel.insertAdjacentHTML('beforeend','<option value="'+st+'">'+st+' · (eski kayıt)</option>');
     sel.value=st; }
   $('f_end').value=(c.end_at||'').slice(0,10);
+  if($('f_keepopen')) $('f_keepopen').checked=!!(PUBBY[c.slug]&&PUBBY[c.slug].keep_open); endHintFor(c);   // v07c
   $('f_opens').value=c.opens_at?new Date(c.opens_at).toLocaleString('sv',{timeZone:'Europe/Istanbul'}).slice(0,16).replace(' ','T'):''; // UTC gelir, İstanbul saatiyle göster
   $('f_roast').value=(c.roast_date||'').slice(0,10);
   const L=c.ladder||[];
@@ -770,7 +788,15 @@ async function save(){
   const r=await fetch(API+'/admin/upsert',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify(body)});
   const j=await r.json().catch(()=>({}));
   if(j.ok){ $('msg').textContent='Kaydedildi: '+j.slug; showLink(j.slug);
+    // v07c: "süresi dolsa da açık tut" işareti grupal_settings keepopen_<slug> (proxy v3.34)
+    try{ const kb={}; kb['keepopen_'+j.slug]=($('f_keepopen')&&$('f_keepopen').checked)?'1':'';
+      const rk=await fetch(API+'/admin/settings',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify(kb)}); const jk=await rk.json().catch(()=>({}));
+      const got=String(((jk&&jk.settings)||{})['keepopen_'+j.slug]||'');   // eski proxy bilinmeyen anahtarı sessizce atlar → geri okuyup doğrula
+      if(!jk.ok) $('msg').textContent+=' · açık-tut işareti kaydedilemedi: '+(jk.error||rk.status)+' (proxy v3.34 yüklü mü?)';
+      else if(got!==kb['keepopen_'+j.slug]) $('msg').textContent+=' · açık-tut işareti KAYDEDİLMEDİ — proxy v3.34 gerekli';
+      else if(kb['keepopen_'+j.slug]==='1') $('msg').textContent+=' · süresi dolsa da açık tutulacak'; }catch(e){}
     const r2=await fetch(API+'/admin/list',{headers:{'x-cc-key':KEY}}); CAMPS=await r2.json(); renderList();
+    const ci=CAMPS.findIndex(x=>x.slug===j.slug); if(ci>=0) endHintFor(CAMPS[ci]);
   } else $('msg').textContent='Hata: '+(j.error||r.status);
 }
 </script>

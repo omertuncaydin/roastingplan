@@ -399,12 +399,13 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-07d';
+const VERSION='v2026-09-07f';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
-let ENDAT=null, TICKT=null;
+let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
   if(left<=0){ if(ANN){ ANN=false; delete el.dataset.built; if(TICKT){ clearInterval(TICKT); TICKT=null; } load(); return; } // açılış saati: sayfa kendini canlıya çevirir
-    el.innerHTML='<div class="tlbl">'+t('timeLeft')+'</div><div class="tended">'+t('ended')+'</div>';
+    el.innerHTML='<div class="tlbl">'+t('timeLeft')+'</div><div class="tended">'+t('ended')+'</div>'
+      +(KEEP?('<div class="hint" style="margin-top:6px;font-weight:700;color:var(--gold)">'+t('keptOpen').replace('{d}',fmtDate(STATE&&STATE.end_at))+'</div>'):'');   // v07f: bitti ama açık tutuluyor — ikisi de yazar
     el.classList.remove('urgent'); delete el.dataset.built; if(TICKT){ clearInterval(TICKT); TICKT=null; } return; }
   if(!el.dataset.built){ el.innerHTML='<div class="tlbl" id="tkLbl"></div><div class="tgrid">'
     +['d','h','m','s'].map(k=>'<div><div class="tbox" id="tb_'+k+'">00</div><div class="tlab" id="tl_'+k+'"></div></div>').join('')
@@ -452,6 +453,7 @@ cl1:['Bu parti kapandı.','This party has closed.'], cl1h:['Sıradaki kavurma g�
 clRed:['Kavurma günü yapıldı.','Roast day is done.'], clRedH:['Kutular yolda. Kargo bilgin e-posta ile sende.','Boxes are on their way. Shipping info is in your email.'],
 clFail:['Alınan ödemelerin tamamı geri döner. Açık ve net.','Every payment comes back in full. Plain and simple.'],
 clDone:['Bu parti tamamlandı.','This party is complete.'], clDoneH:['Kavurma günü yapıldı. Sıradaki parti burada duyurulacak.','Roast day is done. The next party will be announced here.'],
+keptOpen:['Son gün ({d}) geçti — masa açık tutuluyor: sandalye hâlâ çekilebilir.','The last day ({d}) has passed — the table is being kept open: you can still pull up a chair.'], keptOpenS:['son gün geçti · geç sandalye açık','last day passed · late chairs open'],
 clExp:['Bu partinin süresi doldu.','This party has ended.'], clExpH:['Yeni katılım alınmıyor. Sıradaki parti burada duyurulacak.','No new entries. The next party will be announced here.'],
 pack:[' kutu',' box'], packPl:[' kutu',' boxes'], flagSeat:['sandalyede','th seat'], thAuto:['oto','auto'], thIsik:['Gece Işık','Night Glow'], thKraft:['Kraft','Kraft'], thRed:['CoffeeNutz Kırmızısı','CoffeeNutz Red'], timeLeft:['KALAN SÜRE','TIME LEFT'], uDay:['gün','days'], uHour:['saat','hours'], uMin:['dakika','minutes'], uSec:['saniye','seconds'], dealTavan:['tavan','ceiling'], dealTaban:['taban','floor'], ekleOpt:[' kutu daha',' more'], ekleBtn:['Ekle','Add'],
 kvkkBody:["Ad, e-posta ve telefon yalnızca ödeme sayfasında alınır; kampanyanın yürütülmesi, kargo ve teslimat için kullanılır, üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin.","Name, email and phone are collected only at checkout; used solely to run the campaign, ship and deliver, never shared with third parties. You can ask for your record to be deleted at any time."],
@@ -501,7 +503,7 @@ offDep:['Kapora sepetine ekle · {amt} TL','Add to deposit basket · {amt} TL'],
 offMore:['{n} kahve daha · tümünü gör','{n} more coffees · see all'], offJuryP:['Jüri fiyatı · kaporayla','Jury price · with a deposit'], offBasketP:['Sepet ','Basket '], offFrozen:['fiyat kilitli','price locked'], offDepMore:['Bir kutu daha sepete · {amt} TL','One more box to the basket · {amt} TL'],
 offCodeAlw:['Kapora için Jüri kodu gerekir','A Jury code is needed to place a deposit'], offCodeAlwH:['Kod {ch} içinde paylaşılıyor — katıl, kodu al, Jüri ol.','The code is shared in the {ch} — join, get the code, become Jury.'], offCodeRow:['kapora: Jüri koduyla','deposit: with the Jury code'],
 offMove:['kaporamı taşı →','move my deposit →'], offMoveB:['Taşı','Move'], offMoved:['Kaporan taşındı.','Your deposit moved.'], offMoveConv:['Bu kapora kazandı — taşınamaz, tamamlanır.','This deposit won — it completes, it does not move.'],
-offWonChip:['🔒 kilitli','🔒 locked'], offWonMine:['Kaporan kilitlendi ×{n} — üretime giriyor; Jüri fiyatından tamamla','Your deposit is locked ×{n} — going into production; complete at the Jury price'], offDone:['✓ tamamlandı — kutun kavurma planında','✓ completed — your box is in the roast plan'], offCompleteB:['Kutunu tamamla · {p} TL','Complete your box · {p} TL'], offCompleteSoon:['tamamlama linki oturum bitince buraya gelir','the completion link appears here when the session ends'],
+offWonChip:['🔒 kilitli','🔒 locked'], offWonMine:['Kaporan kilitlendi ×{n} — üretime giriyor; Jüri fiyatından tamamla','Your deposit is locked ×{n} — going into production; complete at the Jury price'], offDone:['✓ tamamlandı — kutun kavurma planında','✓ completed — your box is in the roast plan'], offCompleteB:['Kutunu tamamla{n} · {p} TL','Complete your box{n} · {p} TL'], offCompleteSoon:['tamamlama linki yakında burada — hazır olunca grupta duyurulur','completion link coming here — announced in the group when ready'],
 cyNext:['Oturum: {d}','Session: {d}'], cyLeft:['{dd} gün {hh} saat','{dd}d {hh}h'], cySess:['Oturum bitişine {dd} gün {hh} saat','Session ends in {dd}d {hh}h'], cyEndMark:['{d} · oturum biter','{d} · session ends'], cyRule:['{g} kapora → kahve kilitlenir, oturum bitince üretime girer · haftada {c} kahve · {g}\'e ulaşmayan kahvelerin kaporası sonraki oturuma taşınır','{g} deposits → the coffee locks and goes into production when the session ends · {c} coffees a week · deposits on coffees under {g} carry into the next session'], cyLocked:['🔒 {name} · {dep} kapora · kilitli → {d}\'den sonra üretime','🔒 {name} · {dep} deposits · locked → production after {d}'], cyCarried:['🔒 {name} · {dep} kapora · kilitli → sonraki oturum ({d})','🔒 {name} · {dep} deposits · locked → next session ({d})'], cyEmptyNow:['Kilitli: 0 · Üretimde: 0','Locked: 0 · In production: 0'], cyProd:['Üretimde:','In production:'], offLockRow:['🔒 kilitli → {d}\'den sonra üretime','🔒 locked → production after {d}'], offCarryRow:['🔒 kilitli → sonraki oturum ({d})','🔒 locked → next session ({d})'], offProdRow:['üretimde · {d} oturumu','in production · {d} session'],  cyWon:['{d} oturumu','{d} session'], cyNone:['{d} oturumu: {g} kaporaya ulaşan kahve yok — kaporalar bu oturuma taşındı','{d} session: no coffee reached {g} deposits — deposits carried into this session'], cyJury:['Jüri','Jury'],
 cy_tamamla:['tamamlama','completion'], cy_yesil:['yeşil alım','green buying'], cy_recete:['numune · reçete','sample · recipe'], cy_topla:['sepet · tamamlama · yeşil alım','basket · completion · green bought'], cy_yol:['numune · reçete · kavurucuya','samples · recipe · to the roaster'],
 cySepetBy:['Sepet {d}\'e kadar','Basket until {d}'], cySepetClosed:['Bu oturumun sepeti kapandı · sonraki oturum {d}','This session\'s basket has closed · next session {d}'], cy_kavur:['kavurma','roasting'], cy_kargo:['kargo','shipping'],
@@ -914,7 +916,7 @@ function renderOffers(s){
         :(hit?('<div style="margin-top:4px;font-size:12px;font-weight:700;color:var(--green)">'+t(depMode?'offHitD':'offHit').replace('{g}',G)+'</div>'):''))
       +((depMode&&paid)?('<div class="hint" style="margin-top:5px;font-size:12px" onclick="event.stopPropagation()"><a onclick="shRow(\''+escZ(o.id)+'\')" style="font-weight:700;cursor:pointer">'+t('shRowL')+'</a></div>'):'')   // v07c: Jüri övünmesi — tek dokunuş paylaşım
       +(open?('<div class="od hint">'+det.map(x=>'<div>'+x+'</div>').join('')+mv+'</div>'):'')
-      +((paid&&paid.conv)?((paid.forfeited||paid.credited)?('<div style="margin-top:6px;font-size:12px;font-weight:700;color:#e0705a">'+t(paid.credited?'offCredited':'offForfeited')+'</div>'):('<div style="margin-top:6px;font-size:12px;font-weight:700;color:var(--green)">'+(paid.done?t('offDone'):t('offWonMine').replace('{n}',paid.qty))+'</div>'+((!paid.done&&o.done_url)?('<button onclick="event.stopPropagation();offComplete(\''+escZ(o.id)+'\')" style="margin-top:6px;padding:10px;font-size:13px;background:var(--gold);color:var(--panel);border:1px solid var(--gold);font-weight:800">'+t('offCompleteB').replace('{p}',fmtTL(Math.max(0,(jury||0)-(cfg.dep_amt||0))))+'</button>'):((!paid.done)?('<div class="hint" style="font-size:11px">'+t('offCompleteSoon')+'</div>'):'')))):'')
+      +((paid&&paid.conv)?((paid.forfeited||paid.credited)?('<div style="margin-top:6px;font-size:12px;font-weight:700;color:#e0705a">'+t(paid.credited?'offCredited':'offForfeited')+'</div>'):('<div style="margin-top:6px;font-size:12px;font-weight:700;color:var(--green)">'+(paid.done?t('offDone'):t('offWonMine').replace('{n}',offConvQty(o.id)))+'</div>'+((!paid.done&&o.done_url)?('<button onclick="event.stopPropagation();offComplete(\''+escZ(o.id)+'\')" style="margin-top:6px;padding:10px;font-size:13px;background:var(--gold);color:var(--panel);border:1px solid var(--gold);font-weight:800">'+t('offCompleteB').replace('{n}',offConvQty(o.id)>1?(' ×'+offConvQty(o.id)):'').replace('{p}',fmtTL(Math.max(0,(jury||0)-(cfg.dep_amt||0))*offConvQty(o.id)))+'</button>'):((!paid.done)?('<div class="hint" style="font-size:11px">'+t('offCompleteSoon')+'</div>'):'')))):'')
       +'</div>';
   }
   if(fold) h+='<button onclick="offShowAll()" style="margin-top:6px;padding:9px;font-size:13px;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">'+t('offMore').replace('{n}',list.length-shown.length)+'</button>';
@@ -973,10 +975,13 @@ async function offMoveTo(from){
     if(r.ok&&j.ok){ if(Array.isArray(j.offers)) STATE.offers=j.offers; OFFMINE=null; renderOffers(STATE); offLoadMine(STATE); const m=$('offMsg'); if(m){ m.textContent=t('offMoved'); m.style.display='block'; setTimeout(()=>{ m.style.display='none'; },4000); } }
     else { const m=$('offMsg'); if(m){ m.textContent=t(j.error==='converted'?'offMoveConv':'netErr'); m.style.display='block'; } } }catch(e){}
 }
+// v07e: bu cihazın kilitlenmiş (dönüşmüş) ve henüz tamamlanmamış kapora adedi — tamamlama kutu sayısı ve tutarı bundan
+function offConvQty(id){ return (OFFMINE||[]).filter(v=>v.id===id&&v.paid&&v.conv&&!v.done&&!v.forfeited&&!v.credited).reduce((a,v)=>a+(Math.max(1,parseInt(v.qty)||1)),0)||1; }
 function offComplete(id){
   // kazanan kahvenin kaporası: Jüri fiyatı − kapora tutarı ürünü; attributes[done]=1 → webhook tamamlandı yazar
+  // v07e: sepet kalıcı bağlantısında (/cart/VARYANT:1) adet = kilitli kapora adedi (×2 kapora → 2 kutu, 2 × (Jüri − kapora))
   const o=(STATE&&STATE.offers||[]).find(x=>x.id===id); if(!o||!o.done_url) return;
-  let du=o.done_url; du+=(du.includes('?')?'&':'?')+'attributes[offer]='+encodeURIComponent(id)+'&attributes[dev]='+encodeURIComponent(devId())+'&attributes[done]=1';
+  let du=o.done_url.replace(/(\/cart\/\d+):\d+/, '$1:'+offConvQty(id)); du+=(du.includes('?')?'&':'?')+'attributes[offer]='+encodeURIComponent(id)+'&attributes[dev]='+encodeURIComponent(devId())+'&attributes[done]=1';
   openPayTab(du);
 }
 // v05b (Ömer): ödeme ekranı YENİ SEKMEDE — Meydan arkada kalır; açılır pencere engellenirse aynı sekme
@@ -1201,6 +1206,7 @@ async function load(){
      if(dl){ if(ladx.length>1){ dl.innerHTML='<b>'+escZ(ladx[0].price)+'</b> '+t('dealTavan')+' → <b>'+escZ(ladx[ladx.length-1].price)+'</b> '+t('dealTaban')+' · <a onclick="openHow()">'+t('howSum')+'</a>'; dl.style.display='block'; }
        else dl.style.display='none'; }}
     ANN=(s.status==='open')&&!!s.opens_at&&(new Date(s.opens_at).getTime()>Date.now()); // DUYURU: saat bir kilittir, durum değil
+    KEEP=(s.status==='open')&&!!s.keep_open&&!!s.end_at&&(new Date(s.end_at).getTime()<Date.now());   // v07f (Ömer): süresi dolan masa admin işaretiyle açık kalır; "bitti" yine yazılır — tick()'ten ÖNCE
     const tgt=ANN?s.opens_at:s.end_at;
     {const dle=$('deadline'); const md=ANN?'a':'e'; if(dle.dataset.mode!==md){ delete dle.dataset.built; dle.dataset.mode=md; }}
     if(tgt){ ENDAT=new Date(tgt).getTime(); $('deadline').style.display='block'; tick(); if(!TICKT) TICKT=setInterval(tick,1000); }
@@ -1208,7 +1214,7 @@ async function load(){
     renderRanks(s.ref_ranks||s.referral_ranks);
     renderAttendees(s);
     renderLevels(s);
-    CLOSED=(s.status==='failed'||s.status==='fulfilled'||s.status==='expired'||s.status==='closed')||(s.status==='open'&&!!s.end_at&&(new Date(s.end_at).getTime()<Date.now()));
+    CLOSED=(s.status==='failed'||s.status==='fulfilled'||s.status==='expired'||s.status==='closed')||(s.status==='open'&&!!s.end_at&&(new Date(s.end_at).getTime()<Date.now())&&!KEEP);
     renderClosed(s); renderAnnounce(s); renderPay(); renderChips(); credScan();
     // BASAMAK GEÇİLDİ Mİ: bu tarayıcının son gördüğü basamakla karşılaştır; yükseldiyse havai fişek.
     try{ const li=ladInfo(); if(li&&!CLOSED){
@@ -1739,7 +1745,7 @@ async function renderMeydanTables(){
   let list=[]; try{ const r=await fetch(API+'/campaigns'); const j=await r.json(); list=(Array.isArray(j)?j:[]).filter(c=>c.status==='open'||c.status==='funded'||c.status==='paying'); }catch(e){}
   let el=$('mdTables'); if(!list.length){ if(el) el.style.display='none'; return; }
   if(!el){ el=document.createElement('div'); el.id='mdTables'; el.className='card'; const oc=$('offerCard'); if(oc&&oc.parentNode) oc.parentNode.insertBefore(el, oc.nextSibling); else document.body.appendChild(el); }
-  el.innerHTML='<div class="lbl">'+t('mdTables')+'</div>'+list.map(c=>'<a href="?k='+encodeURIComponent(c.slug)+'" style="display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);text-decoration:none;color:inherit"><b>'+escZ(c.title||c.slug)+'</b><span class="hint">'+(c.end_at?(t('mdTableEnd')+' '+cyD(c.end_at)):'')+' →</span></a>').join('');
+  el.innerHTML='<div class="lbl">'+t('mdTables')+'</div>'+list.map(c=>'<a href="?k='+encodeURIComponent(c.slug)+'" style="display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);text-decoration:none;color:inherit"><b>'+escZ(c.title||c.slug)+'</b><span class="hint">'+(c.end_at?(t('mdTableEnd')+' '+cyD(c.end_at)):'')+((c.keep_open&&c.end_at&&new Date(c.end_at).getTime()<Date.now())?(' · '+t('keptOpenS')):'')+' →</span></a>').join('');
   el.style.display='block';
 }
 let COLS='1'; try{ COLS=localStorage.getItem('grupal_cols')||'1'; }catch(e){}
@@ -1809,7 +1815,7 @@ function renderPortal(list){
     return '<a class="pcard'+(annP?' pnext':'')+'" href="?k='+encodeURIComponent(c.slug)+'">'
       +(c.img_url?('<div class="pimgw"><img src="'+escP(c.img_url)+'" alt="">'+(annP?ov:'')+'</div>'):(annP?ov:''))
       +'<div class="pbody"><div class="pt">'+escP(c.title)+'</div>'
-      +'<div class="pm">'+(annP?(t('annP')+'<b style="color:var(--accent)">'+fmtDT(c.opens_at)+'</b>'):((c.locked||0)+' '+t('seats')+t('lastDayS')+fmtDate(c.end_at)))+'</div></div></a>';
+      +'<div class="pm">'+(annP?(t('annP')+'<b style="color:var(--accent)">'+fmtDT(c.opens_at)+'</b>'):((c.locked||0)+' '+t('seats')+t('lastDayS')+fmtDate(c.end_at)+((c.keep_open&&c.end_at&&new Date(c.end_at).getTime()<Date.now())?(' · <b style="color:var(--gold)">'+t('keptOpenS')+'</b>'):'')))+'</div></div></a>';
   }).join('');
 }
 async function boot(){
