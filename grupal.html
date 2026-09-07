@@ -399,7 +399,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-07f';
+const VERSION='v2026-09-07g';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -454,7 +454,8 @@ clRed:['Kavurma günü yapıldı.','Roast day is done.'], clRedH:['Kutular yolda
 clFail:['Alınan ödemelerin tamamı geri döner. Açık ve net.','Every payment comes back in full. Plain and simple.'],
 clDone:['Bu parti tamamlandı.','This party is complete.'], clDoneH:['Kavurma günü yapıldı. Sıradaki parti burada duyurulacak.','Roast day is done. The next party will be announced here.'],
 keptOpen:['Son gün ({d}) geçti — masa açık tutuluyor: sandalye hâlâ çekilebilir.','The last day ({d}) has passed — the table is being kept open: you can still pull up a chair.'], keptOpenS:['son gün geçti · geç sandalye açık','last day passed · late chairs open'],
-clExp:['Bu partinin süresi doldu.','This party has ended.'], clExpH:['Yeni katılım alınmıyor. Sıradaki parti burada duyurulacak.','No new entries. The next party will be announced here.'],
+clExp:['Bu partinin süresi doldu.','This party has ended.'], clExpT:['Masa kapandı · {d}','Table closed · {d}'], clTableP:['masa fiyatı ','table price '], clRoast:['Kavurma günü: ','Roast day: '],
+clExpH2:['Yeni sandalye çekilmiyor. Katılanların ödemesi tavan fiyattan alındı; masa fiyatıyla arasındaki fark Grup-Al kredisi olarak hesaba döner.','No more chairs. Payments were taken at the ceiling price; the difference to the table price returns as Grup-Al credit.'], clExpH:['Yeni katılım alınmıyor. Sıradaki parti burada duyurulacak.','No new entries. The next party will be announced here.'],
 pack:[' kutu',' box'], packPl:[' kutu',' boxes'], flagSeat:['sandalyede','th seat'], thAuto:['oto','auto'], thIsik:['Gece Işık','Night Glow'], thKraft:['Kraft','Kraft'], thRed:['CoffeeNutz Kırmızısı','CoffeeNutz Red'], timeLeft:['KALAN SÜRE','TIME LEFT'], uDay:['gün','days'], uHour:['saat','hours'], uMin:['dakika','minutes'], uSec:['saniye','seconds'], dealTavan:['tavan','ceiling'], dealTaban:['taban','floor'], ekleOpt:[' kutu daha',' more'], ekleBtn:['Ekle','Add'],
 kvkkBody:["Ad, e-posta ve telefon yalnızca ödeme sayfasında alınır; kampanyanın yürütülmesi, kargo ve teslimat için kullanılır, üçüncü kişilerle paylaşılmaz. Dilediğinde kaydının silinmesini isteyebilirsin.","Name, email and phone are collected only at checkout; used solely to run the campaign, ship and deliver, never shared with third parties. You can ask for your record to be deleted at any time."],
 footerTxt:['Grup-Al® bir CoffeeNutz projesidir · sorular: <a href="https://www.coffeenutz.net/pages/iletisim" target="_blank" rel="noopener">iletişim sayfası</a>','Grup-Al® is a CoffeeNutz project · questions: <a href="https://www.coffeenutz.net/pages/iletisim" target="_blank" rel="noopener">contact page</a>'],
@@ -1153,7 +1154,11 @@ function renderClosed(s){
   if(redWindow()){ tt2=t('clRed'); h=t('clRedH'); }
   else if(s.status==='failed'){ tt2=t('cl1'); h=t('clFail'); }
   else if(s.status==='fulfilled'){ tt2=t('clDone'); h=t('clDoneH'); }
-  else if(s.status==='open'){ tt2=t('clExp'); h=t('clExpH'); }
+  else if(s.status==='open'){   // v07g (Ömer "kapanan masa daha çok anlatsın"): tarih · sandalye · masa fiyatı · kavurma · kargo · kredi kuralı
+    tt2=t('clExpT').replace('{d}',fmtDate(s.end_at)); const li=ladInfo(); const parts=[];
+    parts.push((s.locked||0)+' '+t('seats')+(li&&li.table?(' · '+t('clTableP')+li.table+(/TL/.test(String(li.table))?'':' TL')):''));
+    if(s.roast_date) parts.push(t('clRoast')+fmtDate(s.roast_date)+(s.ships_by?(' · '+s.ships_by):''));
+    h='<div style="text-align:left;line-height:1.6">'+parts.map(x=>'<div>'+x+'</div>').join('')+'<div style="margin-top:6px">'+t('clExpH2')+'</div></div>'; }
   cc.innerHTML='<div style="font-weight:800;font-size:17px;margin-bottom:6px">'+tt2+'</div><div class="hint">'+h+'</div>'
     +'<a href="?k=meydan" style="display:block;margin-top:10px;padding:11px;border-radius:12px;background:var(--gold);color:var(--panel);font-weight:800;text-decoration:none;font-size:14px">'+t('clMeydan')+'</a>';   // v05c: kapanan masadan Meydan'a
   cc.style.display='block';
@@ -1741,8 +1746,10 @@ async function loadMeydan(){
     renderMeydanTables();
   }catch(e){ $('title').textContent=t('netErr'); }
 }
+// v07g: "Açık masalar" gerçekten açık olanlar — son günü geçmiş masa yalnız açık tutuluyorsa (keep_open) listelenir
+function tableOpenish(c){ if(!c||!(c.status==='open'||c.status==='funded'||c.status==='paying')) return false; if(!c.end_at) return true; return new Date(c.end_at).getTime()>Date.now()||!!c.keep_open; }
 async function renderMeydanTables(){
-  let list=[]; try{ const r=await fetch(API+'/campaigns'); const j=await r.json(); list=(Array.isArray(j)?j:[]).filter(c=>c.status==='open'||c.status==='funded'||c.status==='paying'); }catch(e){}
+  let list=[]; try{ const r=await fetch(API+'/campaigns'); const j=await r.json(); list=(Array.isArray(j)?j:[]).filter(tableOpenish); }catch(e){}
   let el=$('mdTables'); if(!list.length){ if(el) el.style.display='none'; return; }
   if(!el){ el=document.createElement('div'); el.id='mdTables'; el.className='card'; const oc=$('offerCard'); if(oc&&oc.parentNode) oc.parentNode.insertBefore(el, oc.nextSibling); else document.body.appendChild(el); }
   el.innerHTML='<div class="lbl">'+t('mdTables')+'</div>'+list.map(c=>'<a href="?k='+encodeURIComponent(c.slug)+'" style="display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);text-decoration:none;color:inherit"><b>'+escZ(c.title||c.slug)+'</b><span class="hint">'+(c.end_at?(t('mdTableEnd')+' '+cyD(c.end_at)):'')+((c.keep_open&&c.end_at&&new Date(c.end_at).getTime()<Date.now())?(' · '+t('keptOpenS')):'')+' →</span></a>').join('');
@@ -1824,7 +1831,7 @@ async function boot(){
   try{
     const r=await fetch(API+'/campaigns');
     const list=await r.json();
-    const openish=(Array.isArray(list)?list:[]).filter(c=>c.status==='open'||c.status==='funded'||c.status==='paying');
+    const openish=(Array.isArray(list)?list:[]).filter(tableOpenish);   // v07g: süresi dolan masa vitrinde değil (açık tutulmuyorsa)
     // VİTRİN SIRASI (Ömer 2026-08-31): CANLI masa hep üstte; duyurudakiler altta. Grup içinde tarihe göre.
     openish.sort(function(a,b){
       const aw=(a.opens_at&&new Date(a.opens_at).getTime()>Date.now())?1:0;

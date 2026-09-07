@@ -11,6 +11,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
 <!-- grupal-admin.html · v2026-09-05b · Sepet satış penceresi (gün)
      grupal-admin.html · v2026-09-05a · Jüri Sepeti ürün linki (sayım başına) · kademeli ceza · krediye dönenleri Shopify'a yaz
+     grupal-admin.html · v2026-09-07d · "Masayı şimdi kapat" (end_at = şimdi; ISO korunur) · open etiketi
      grupal-admin.html · v2026-09-07c · kampanya rozeti gerçek durum (süresi doldu / açık tutuluyor / duyuruda) · "süresi dolsa da açık tut" (keepopen_<slug>, proxy v3.34)
      grupal-admin.html · v2026-09-07b · tamamlama linki = sepet kalıcı bağlantısı (/cart/VARYANT:1) zorunlu
      grupal-admin.html · v2026-09-02y · favicon siyah (Grup-Al ikonu, kırmızı yerine siyah) · tamamlama süresi · yanan kapora · Jüri askısı · Pazar 23:59
@@ -117,13 +118,14 @@ a{color:var(--gold)}
       <select id="f_next"><option value="">— yok —</option></select>
       <span class="lbl">durum</span>
       <select id="f_status">
-        <option value="open">open · masa açık, kayıt alıyor</option>
+        <option value="open">open · masa açık, kayıt alıyor (son gün 23:59'da kendiliğinden kapanır)</option>
         <option value="funded">funded · masa doldu (kayıt kapalı, parti kesin)</option>
         <option value="fulfilled">fulfilled · kavurma yapıldı, kutular yolda</option>
         <option value="failed">failed · iptal (mücbir sebep · arşiv)</option>
       </select>
       <label class="hint" style="display:flex;gap:6px;align-items:center;cursor:pointer;margin-top:6px"><input type="checkbox" id="f_keepopen" style="width:auto;margin:0"> süresi dolsa da masayı AÇIK tut — sayfa "son gün geçti — masa açık tutuluyor" yazar, sandalye çekilmeye devam eder; işaret dururken kredi dağıtılmaz</label>
       <div class="hint" id="endHint" style="color:#e0705a"></div>
+      <button class="mini" id="closeNowBtn" onclick="closeNow()" style="margin-top:6px" title="Son gün şu ana çekilir: sayfa 'Masa kapandı · bugün' yazar, sandalye çekilmez, vitrinden düşer. Sonradan açmak için 'süresi dolsa da açık tut'.">Masayı şimdi kapat</button>
       <button onclick="save()">Kaydet / Yayınla</button>
       <div class="hint" id="msg"></div>
       <div class="hint" id="linkOut"></div>
@@ -241,10 +243,17 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-07c';
+const VERSION='v2026-09-07d';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
+let CUR_END='';   // v07d: seçili masanın end_at ISO'su — tarih kutusu değişmediyse aynen gider ("şimdi kapat" saati 23:59'a yuvarlanmaz)
+function endAtFromForm(){ const d=$('f_end').value; if(!d) return null; return (CUR_END&&CUR_END.slice(0,10)===d)?CUR_END:(d+'T23:59:59+03:00'); }
+async function closeNow(){   // v07d (Ömer "bitmiş ve katılınamayan masa da lazım"): son gün = şimdi → tarih kapatır, sayfa anlatır, kredi dağıtımı açılır
+  if(!$('f_slug').value.trim()){ alert('Önce listeden bir masa seç.'); return; }
+  if(!confirm('Masa ŞİMDİ kapansın mı?\nSandalye çekilemez, sayfa "Masa kapandı · bugün" yazar, vitrinden düşer, kredi dağıtımı açılır.\nSonradan açmak istersen: "süresi dolsa da açık tut".')) return;
+  const iso=new Date().toISOString(); CUR_END=iso; $('f_end').value=iso.slice(0,10); if($('f_keepopen')) $('f_keepopen').checked=false;
+  await save(); }
 async function kapPreview(){
   if(!CURSLUG) return;
   $('kapMsg').textContent='Hesaplanıyor...';
@@ -735,7 +744,7 @@ function endHintFor(c){ const el=$('endHint'); if(!el) return; if(!c||!endedOf(c
   el.textContent=keep?('Son gün geçti ('+fmtD(c.end_at)+') — masa işaretle AÇIK tutuluyor; sayfa bunu yazıyor. Kapatmak için işareti kaldır ya da durumu değiştir.'):('Son gün geçti ('+fmtD(c.end_at)+') — durum "open" ama sayfa KAPALI gösteriyor, sandalye çekilemiyor. Açık tutmak istersen yukarıdaki kutuyu işaretle; bitti demek istersen durumu fulfilled/failed yap.'); }
 function blank(){
   ['f_slug','f_title','f_lot','f_cap','f_unit','f_shipdays','f_dep','f_depamt','f_img','f_maxq','l1a','l1p','l2a','l2p','l3a','l3p'].forEach(i=>$(i).value=''); updatePrev();
-  $('f_status').value='open'; if($('f_keepopen')) $('f_keepopen').checked=false; endHintFor(null); $('f_opens').value=''; $('f_shipfree').value=''; $('f_shipfee').value=''; $('f_end').value=''; $('f_roast').value=''; $('f_dep').value=''; fillNext(''); $('f_next').value=''; $('f_roaster').value=''; $('f_channel').value=''; $('f_chat').value=''; econFill(null); $('msg').textContent='Yeni kampanya: LOT ürün linkini yapıştır (tavan fiyatlı), merdiveni kur, tarihleri ver.'; $('linkOut').textContent=''; CURSLUG=''; $('plCard').style.display='none'; $('kapCard').style.display='none'; $('wishCard').style.display='none';
+  $('f_status').value='open'; if($('f_keepopen')) $('f_keepopen').checked=false; endHintFor(null); CUR_END=''; $('f_opens').value=''; $('f_shipfree').value=''; $('f_shipfee').value=''; $('f_end').value=''; $('f_roast').value=''; $('f_dep').value=''; fillNext(''); $('f_next').value=''; $('f_roaster').value=''; $('f_channel').value=''; $('f_chat').value=''; econFill(null); $('msg').textContent='Yeni kampanya: LOT ürün linkini yapıştır (tavan fiyatlı), merdiveni kur, tarihleri ver.'; $('linkOut').textContent=''; CURSLUG=''; $('plCard').style.display='none'; $('kapCard').style.display='none'; $('wishCard').style.display='none';
 }
 function pick(i){
   const c=CAMPS[i];
@@ -746,7 +755,7 @@ function pick(i){
   { const st=c.status||'open'; const sel=$('f_status');
     if(![...sel.options].some(o=>o.value===st)) sel.insertAdjacentHTML('beforeend','<option value="'+st+'">'+st+' · (eski kayıt)</option>');
     sel.value=st; }
-  $('f_end').value=(c.end_at||'').slice(0,10);
+  $('f_end').value=(c.end_at||'').slice(0,10); CUR_END=c.end_at||'';
   if($('f_keepopen')) $('f_keepopen').checked=!!(PUBBY[c.slug]&&PUBBY[c.slug].keep_open); endHintFor(c);   // v07c
   $('f_opens').value=c.opens_at?new Date(c.opens_at).toLocaleString('sv',{timeZone:'Europe/Istanbul'}).slice(0,16).replace(' ','T'):''; // UTC gelir, İstanbul saatiyle göster
   $('f_roast').value=(c.roast_date||'').slice(0,10);
@@ -779,7 +788,7 @@ async function save(){
   const body={ slug:$('f_slug').value, title:$('f_title').value, lot:$('f_lot').value,
     target:0, cap:parseInt($('f_cap').value)||null,
     unit:$('f_unit').value, ships_by:SHIP_TPL($('f_shipdays').value.trim()),
-    end_at:$('f_end').value?($('f_end').value+'T23:59:59+03:00'):null,
+    end_at:endAtFromForm(),   // v07d
     roast_date:$('f_roast').value?($('f_roast').value+'T09:00:00+03:00'):null,
     ladder, deposit_url:$('f_dep').value, deposit_txt:DEP_TPL($('f_depamt').value.trim()),
     pay_url:null, img_url:$('f_img').value.trim()||null, max_qty:parseInt($('f_maxq').value)||5, status:$('f_status').value, next_slug:$('f_next').value.trim()||null, roaster:$('f_roaster').value.trim()||null, opens_at:$('f_opens').value?($('f_opens').value+':00+03:00'):null, ship_free_at:parseInt($('f_shipfree').value)||null, ship_fee:$('f_shipfee').value.trim()||null, econ:econRead(), channel_url:$('f_channel').value.trim()||null, chat_url:$('f_chat').value.trim()||null };
