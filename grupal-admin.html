@@ -11,6 +11,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
 <!-- grupal-admin.html · v2026-09-05b · Sepet satış penceresi (gün)
      grupal-admin.html · v2026-09-05a · Jüri Sepeti ürün linki (sayım başına) · kademeli ceza · krediye dönenleri Shopify'a yaz
+     grupal-admin.html · v2026-09-07e · katılımcı satırı: kayıt zamanı · Shopify sipariş linki (order_ids, proxy v3.35) · ödeme e-postası · siparişsiz kilit uyarısı
      grupal-admin.html · v2026-09-07d · "Masayı şimdi kapat" (end_at = şimdi; ISO korunur) · open etiketi
      grupal-admin.html · v2026-09-07c · kampanya rozeti gerçek durum (süresi doldu / açık tutuluyor / duyuruda) · "süresi dolsa da açık tut" (keepopen_<slug>, proxy v3.34)
      grupal-admin.html · v2026-09-07b · tamamlama linki = sepet kalıcı bağlantısı (/cart/VARYANT:1) zorunlu
@@ -243,7 +244,7 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-07d';
+const VERSION='v2026-09-07e';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let CURSLUG='';
@@ -281,6 +282,17 @@ async function kapDistribute(){
   $('kapMsg').innerHTML='<b>'+okN+' kredi yazıldı</b>'+(skipN?(' · '+skipN+' zaten dağıtılmış'):'')+(errN?(' · <span style="color:#e0705a">'+errN+' hata</span>'):'')
     +(errN?res.filter(x=>x.error).map(x=>'<div style="color:#e0705a">'+esc(x.email)+': '+esc(x.error)+'</div>').join(''):'');
 }
+// v07e: katılımcı satırının izi — kayıt zamanı, Shopify siparişi (link), ödeme e-postası farkı, siparişsiz kilit uyarısı
+const SHOP_ADMIN='https://admin.shopify.com/store/coffeenutz/orders/';
+function plTrace(p,locked){
+  const parts=[];
+  if(p.created_at){ try{ parts.push('kayıt '+new Date(p.created_at).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'})); }catch(e){} }
+  const oids=Array.isArray(p.order_ids)?p.order_ids.filter(x=>/^\d+$/.test(String(x))):[];
+  if(oids.length) parts.push('sipariş: '+oids.map(id=>'<a href="'+SHOP_ADMIN+esc(String(id))+'" target="_blank" rel="noopener" style="color:var(--gold)">#'+esc(String(id))+'</a>').join(', '));
+  else if(locked&&!p.house) parts.push('<b style="color:#e0705a">sipariş kaydı yok — webhook değil, elle oturtulmuş ya da order_ids sütunu boş</b>');
+  if(!p.is_gift&&p.checkout_email&&p.email&&String(p.checkout_email).toLowerCase()!==String(p.email).toLowerCase()) parts.push('ödeme e-postası: <b>'+esc(p.checkout_email)+'</b> (Shopify\'da bununla ara)');
+  return parts.join(' · ');
+}
 async function loadPledges(){
   if(!CURSLUG){ $('plCard').style.display='none'; return; }
   const r=await fetch(API+'/admin/pledges?slug='+encodeURIComponent(CURSLUG),{headers:{'x-cc-key':KEY}});
@@ -302,6 +314,7 @@ async function loadPledges(){
       +'<span class="hint">'+esc(p.status)+(p.show_name?' · isim açık':' · isim gizli')+(p.is_gift?' · <b style="color:var(--gold)">hediye</b>':'')+(p.house?' · <b style="color:var(--gold)">ev sandalyesi · krediden hariç</b>':'')+'</span></div>'
       // HEDİYE SATIRI (v2026-09-02a): e-posta yer tutucudur; ödeyenin adı + e-postası burada (kredi ona yazılır)
       +'<div class="hint">'+(p.is_gift?('ödeyen: <b>'+esc(p.gift_from||'?')+'</b>'+(p.checkout_email?(' · '+esc(p.checkout_email)):'')):(esc(p.email)+' · '+esc(p.phone)))+' · '+qOf(p)+' kutu · ref '+esc(p.ref_code)+(p.referred_by?(' · davet: '+esc(p.referred_by)):'')+'</div>'
+      +'<div class="hint">'+plTrace(p,locked)+'</div>'   // v07e (Ömer "bu kayıt nasıl düştü?"): kayıt zamanı · Shopify sipariş linki · ödeme e-postası · sipariş yoksa uyarı
       +'<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'
       +'<button class="mini" title="'+(locked?'Koltuğu masadan kaldırır, kaydı SİLMEZ. Yalnız Shopify iadesinden SONRA kullan.':'Bekleyen kaydı masaya oturtur.')+'" onclick="plStatus(\''+p.id+'\',\''+(locked?'pledged':'locked')+'\',\''+esc(p.status)+'\')">'+(locked?'Koltuğu düşür (iade)':'Koltuğa oturt')+'</button>'
       +'<button class="mini" onclick="plShow(\''+p.id+'\','+(!p.show_name)+')">'+(p.show_name?'İsmi gizle':'İsmi göster')+'</button>'
