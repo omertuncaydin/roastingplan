@@ -113,17 +113,17 @@ details.how[open] summary,details.kvkk[open] summary{color:var(--ink)}
 .pcard .pm{color:var(--muted);font-size:12.5px;margin-top:4px;font-variant-numeric:tabular-nums}
 /* VİTRİN SÜTUN SEÇİCİ (Ömer 2026-08-31 v2): varsayılan HER YERDE telefon görünümü (dar tek sütun).
    Masaüstünde küçük 1·2·3·4 seçici çıkar; seçim cihazda hatırlanır (grupal_cols). Otomatik kırılım YOK. */
-body.portalWide #portal{display:block}
+body.portalWide #portal,body.portalWide #portalClosed{display:block}
 #colPick{display:none}
 @media(min-width:900px){
   body.portalWide #colPick{display:flex;justify-content:center;gap:6px;margin:2px 0 10px}
   body.portalWide.cols2 .wrap{max-width:1180px}
   body.portalWide.cols3 .wrap{max-width:1540px}
   body.portalWide.cols4 .wrap{max-width:1880px}
-  body.portalWide.cols2 #portal,body.portalWide.cols3 #portal,body.portalWide.cols4 #portal{display:grid;gap:14px;align-items:start}
-  body.portalWide.cols2 #portal{grid-template-columns:repeat(2,1fr)}
-  body.portalWide.cols3 #portal{grid-template-columns:repeat(3,1fr)}
-  body.portalWide.cols4 #portal{grid-template-columns:repeat(4,1fr)}
+  body.portalWide.cols2 #portal,body.portalWide.cols3 #portal,body.portalWide.cols4 #portal,body.portalWide.cols2 #portalClosed,body.portalWide.cols3 #portalClosed,body.portalWide.cols4 #portalClosed{display:grid;gap:14px;align-items:start}
+  body.portalWide.cols2 #portal,body.portalWide.cols2 #portalClosed{grid-template-columns:repeat(2,1fr)}
+  body.portalWide.cols3 #portal,body.portalWide.cols3 #portalClosed{grid-template-columns:repeat(3,1fr)}
+  body.portalWide.cols4 #portal,body.portalWide.cols4 #portalClosed{grid-template-columns:repeat(4,1fr)}
   body.portalWide.cols2 .pcard,body.portalWide.cols3 .pcard,body.portalWide.cols4 .pcard{margin:0}
 }
 .colbtn{border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:10px;width:30px;height:26px;padding:0;margin:0;font-size:12px;font-weight:800;cursor:pointer;display:inline-block}
@@ -143,9 +143,10 @@ body.portalWide h1{font-size:17px;margin:16px 0 12px}
 #doorOr{text-align:center;font-size:13px;font-weight:700;color:var(--muted);margin:8px 0}
 #doorJoin{text-align:center;font-size:13px;font-weight:600;color:var(--muted);margin:14px 0 4px}
 #doorJoin a{color:var(--gold);font-weight:800;text-decoration:none}
-#lobbyTables{max-width:480px;margin:18px auto 0;font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;color:var(--muted)}
-body.portalWide.cols2 #lobbyTables,body.portalWide.cols3 #lobbyTables,body.portalWide.cols4 #lobbyTables{max-width:none}
-body.th-red #doorOr,body.th-red #doorJoin,body.th-red #lobbyTables{color:#f0dcc8}
+#lobbyTables,#lobbyClosed{max-width:480px;margin:18px auto 0;font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;color:var(--muted)}
+body.portalWide.cols2 #lobbyTables,body.portalWide.cols3 #lobbyTables,body.portalWide.cols4 #lobbyTables,body.portalWide.cols2 #lobbyClosed,body.portalWide.cols3 #lobbyClosed,body.portalWide.cols4 #lobbyClosed{max-width:none}
+body.th-red #doorOr,body.th-red #doorJoin,body.th-red #lobbyTables,body.th-red #lobbyClosed{color:#f0dcc8}
+.pcard.pclosed{border-style:dashed;opacity:.88}   /* v07h: kapanan masa — üretimde, alanlar durumu izler */
 body.th-red #doorJoin a{color:#e6c14b}
 body.portalWide #themeChips{margin-top:16px}
 #howLobby{text-align:left;line-height:1.65;margin-top:8px}
@@ -399,7 +400,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-07g';
+const VERSION='v2026-09-07h';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -508,7 +509,7 @@ offWonChip:['🔒 kilitli','🔒 locked'], offWonMine:['Kaporan kilitlendi ×{n}
 cyNext:['Oturum: {d}','Session: {d}'], cyLeft:['{dd} gün {hh} saat','{dd}d {hh}h'], cySess:['Oturum bitişine {dd} gün {hh} saat','Session ends in {dd}d {hh}h'], cyEndMark:['{d} · oturum biter','{d} · session ends'], cyRule:['{g} kapora → kahve kilitlenir, oturum bitince üretime girer · haftada {c} kahve · {g}\'e ulaşmayan kahvelerin kaporası sonraki oturuma taşınır','{g} deposits → the coffee locks and goes into production when the session ends · {c} coffees a week · deposits on coffees under {g} carry into the next session'], cyLocked:['🔒 {name} · {dep} kapora · kilitli → {d}\'den sonra üretime','🔒 {name} · {dep} deposits · locked → production after {d}'], cyCarried:['🔒 {name} · {dep} kapora · kilitli → sonraki oturum ({d})','🔒 {name} · {dep} deposits · locked → next session ({d})'], cyEmptyNow:['Kilitli: 0 · Üretimde: 0','Locked: 0 · In production: 0'], cyProd:['Üretimde:','In production:'], offLockRow:['🔒 kilitli → {d}\'den sonra üretime','🔒 locked → production after {d}'], offCarryRow:['🔒 kilitli → sonraki oturum ({d})','🔒 locked → next session ({d})'], offProdRow:['üretimde · {d} oturumu','in production · {d} session'],  cyWon:['{d} oturumu','{d} session'], cyNone:['{d} oturumu: {g} kaporaya ulaşan kahve yok — kaporalar bu oturuma taşındı','{d} session: no coffee reached {g} deposits — deposits carried into this session'], cyJury:['Jüri','Jury'],
 cy_tamamla:['tamamlama','completion'], cy_yesil:['yeşil alım','green buying'], cy_recete:['numune · reçete','sample · recipe'], cy_topla:['sepet · tamamlama · yeşil alım','basket · completion · green bought'], cy_yol:['numune · reçete · kavurucuya','samples · recipe · to the roaster'],
 cySepetBy:['Sepet {d}\'e kadar','Basket until {d}'], cySepetClosed:['Bu oturumun sepeti kapandı · sonraki oturum {d}','This session\'s basket has closed · next session {d}'], cy_kavur:['kavurma','roasting'], cy_kargo:['kargo','shipping'],
-noTableT:['Şu an açık masa yok','No open table right now'], noTableS:['Sıradaki kahveyi Meydan\'da Grup-Al® Jüri seçiyor; kilitlenen kahveler her hafta kavrulur.','The Grup-Al® Jury picks the next coffee at Meydan; locked coffees roast every week.'], mdTitle:['Meydan','Meydan'], mdCount:['{n} kahve','{n} coffees'], offLockC:['kod','code'], offListP:['Liste ','List '], offMineSum:['Kaporan: {list}','Your deposits: {list}'], offDetail:['detay ▾','details ▾'], offDetailX:['kapat ▴','close ▴'], lobbyT:['Jüri seçer · herkes alır.','The Jury picks · everyone buys.'], lobbyTables:['Açık masalar','Open tables'], mdCardT:['Grup-Al® Jüri · Meydan','Grup-Al® Jury · Meydan'], mdCardS:['Sıradaki kahveyi sen seç','You choose the next coffee'], mdCardN:['Meydan\'da {n} kahve','{n} coffees at Meydan'], doorOr:['ya da','or'], spCardT:['Herkese · Jüri Sepeti','Everyone · Jury Basket'], spCardS:['Jüri\'nin seçtiği kahveyi al','Buy the coffee the Jury picked'], spOpenM:['{list} · Sepet fiyatından · {d}\'e kadar','{list} · at the Basket price · until {d}'], spClosedM:['İki kahve · Sepet fiyatından · oturum bitince açılır: {d}','Two coffees · at the Basket price · opens when the session ends: {d}'], spNotify:['açılınca haber ver →','tell me when it opens →'], spClosed:['Şu an kapalı','Closed now'], spTables:['{n} açık masa aşağıda ↓','{n} open table(s) below ↓'], mdJoin:['Jüri olmak ister misin? {a}','Want to be on the Jury? {a}'], mdJoinA:['WhatsApp grubu →','WhatsApp group →'], mdCardMd:['Meydan: Grup-Al® Jüri yeşil kahve listesinden seçer; {g} kaporaya ulaşan kahve kilitlenir ve oturum bitince (Pazar 23:59) kavrulur — haftada {c} kahve.','Meydan: the Grup-Al® Jury picks from the green-coffee list; a coffee that reaches {g} deposits locks and roasts when the session ends (Sunday 23:59) — {c} coffees a week.'], mdCardJs:['Jüri Sepeti: Jüri\'nin seçtiği iki kahve — herkese açık, Sepet fiyatından.','Jury Basket: the two coffees the Jury picked — open to everyone, at the Basket price.'], mdCardNext:['Oturum biter: {d}','Session ends: {d}'], mdCardWon:['{d} oturumu: {list}','{d} session: {list}'], mdCardSepet:['Jüri Sepeti açık →','Jury Basket open →'], mdGo:['Meydan\'a git →','Go to Meydan →'], mdFull:['Meydan · tam sayfa →','Meydan · full page →'], clMeydan:['Sıradaki kahveyi Meydan\'da sen seç →','Choose the next coffee at Meydan →'], mdTables:['Açık masalar','Open tables'], mdTableEnd:['son gün','last day'], mdShareL:['Meydan\'ı paylaş','Share Meydan'], shMineL:['Jüri\'yim — paylaş','I\'m on the Jury — share'], shRowL:['📣 Jüri olarak paylaş','📣 Share as Jury'], shDep:['Grup-Al® Jüri\'deyim ☕ Sıradaki kahveyi biz seçiyoruz — kaporam: {coffee} ({n}/{g}). Jüri fiyatı bizim. Meydan\'da yerini al: ','I\'m on the Grup-Al® Jury ☕ We choose the next coffee — my deposit: {coffee} ({n}/{g}). The Jury price is ours. Take your place at Meydan: '], shLock:['🔒 {coffee} kilitlendi — Grup-Al® Jüri olarak biz seçtik, üretime giriyor. Jüri fiyatı bizim. Sıradaki kahve Meydan\'da: ','🔒 {coffee} is locked — we chose it as the Grup-Al® Jury and it goes into production. The Jury price is ours. The next coffee, at Meydan: '],  mdShareTxt:['Sıradaki kahveyi Grup-Al® Jüri seçiyor — Meydan\'da yerini al: ','The Grup-Al® Jury picks the next coffee — take your place at Meydan: '], mdSub:['Grup-Al® Jüri: sıradaki kahveyi sen seç · kapora = oy · oturum her Pazar 23:59\'da biter','Grup-Al® Jury: you choose the next coffee · deposit = vote · the session ends every Sunday 23:59'],
+noTableT:['Şu an açık masa yok','No open table right now'], noTableS:['Sıradaki kahveyi Meydan\'da Grup-Al® Jüri seçiyor; kilitlenen kahveler her hafta kavrulur.','The Grup-Al® Jury picks the next coffee at Meydan; locked coffees roast every week.'], mdTitle:['Meydan','Meydan'], mdCount:['{n} kahve','{n} coffees'], offLockC:['kod','code'], offListP:['Liste ','List '], offMineSum:['Kaporan: {list}','Your deposits: {list}'], offDetail:['detay ▾','details ▾'], offDetailX:['kapat ▴','close ▴'], lobbyT:['Jüri seçer · herkes alır.','The Jury picks · everyone buys.'], lobbyTables:['Açık masalar','Open tables'], lobbyClosed:['Kapanan masalar · üretimde','Closed tables · in production'], pClosedM:['🔒 kapandı {d} · {n} sandalye dolu','🔒 closed {d} · {n} seats taken'], mdCardT:['Grup-Al® Jüri · Meydan','Grup-Al® Jury · Meydan'], mdCardS:['Sıradaki kahveyi sen seç','You choose the next coffee'], mdCardN:['Meydan\'da {n} kahve','{n} coffees at Meydan'], doorOr:['ya da','or'], spCardT:['Herkese · Jüri Sepeti','Everyone · Jury Basket'], spCardS:['Jüri\'nin seçtiği kahveyi al','Buy the coffee the Jury picked'], spOpenM:['{list} · Sepet fiyatından · {d}\'e kadar','{list} · at the Basket price · until {d}'], spClosedM:['İki kahve · Sepet fiyatından · oturum bitince açılır: {d}','Two coffees · at the Basket price · opens when the session ends: {d}'], spNotify:['açılınca haber ver →','tell me when it opens →'], spClosed:['Şu an kapalı','Closed now'], spTables:['{n} açık masa aşağıda ↓','{n} open table(s) below ↓'], mdJoin:['Jüri olmak ister misin? {a}','Want to be on the Jury? {a}'], mdJoinA:['WhatsApp grubu →','WhatsApp group →'], mdCardMd:['Meydan: Grup-Al® Jüri yeşil kahve listesinden seçer; {g} kaporaya ulaşan kahve kilitlenir ve oturum bitince (Pazar 23:59) kavrulur — haftada {c} kahve.','Meydan: the Grup-Al® Jury picks from the green-coffee list; a coffee that reaches {g} deposits locks and roasts when the session ends (Sunday 23:59) — {c} coffees a week.'], mdCardJs:['Jüri Sepeti: Jüri\'nin seçtiği iki kahve — herkese açık, Sepet fiyatından.','Jury Basket: the two coffees the Jury picked — open to everyone, at the Basket price.'], mdCardNext:['Oturum biter: {d}','Session ends: {d}'], mdCardWon:['{d} oturumu: {list}','{d} session: {list}'], mdCardSepet:['Jüri Sepeti açık →','Jury Basket open →'], mdGo:['Meydan\'a git →','Go to Meydan →'], mdFull:['Meydan · tam sayfa →','Meydan · full page →'], clMeydan:['Sıradaki kahveyi Meydan\'da sen seç →','Choose the next coffee at Meydan →'], mdTables:['Açık masalar','Open tables'], mdTableEnd:['son gün','last day'], mdShareL:['Meydan\'ı paylaş','Share Meydan'], shMineL:['Jüri\'yim — paylaş','I\'m on the Jury — share'], shRowL:['📣 Jüri olarak paylaş','📣 Share as Jury'], shDep:['Grup-Al® Jüri\'deyim ☕ Sıradaki kahveyi biz seçiyoruz — kaporam: {coffee} ({n}/{g}). Jüri fiyatı bizim. Meydan\'da yerini al: ','I\'m on the Grup-Al® Jury ☕ We choose the next coffee — my deposit: {coffee} ({n}/{g}). The Jury price is ours. Take your place at Meydan: '], shLock:['🔒 {coffee} kilitlendi — Grup-Al® Jüri olarak biz seçtik, üretime giriyor. Jüri fiyatı bizim. Sıradaki kahve Meydan\'da: ','🔒 {coffee} is locked — we chose it as the Grup-Al® Jury and it goes into production. The Jury price is ours. The next coffee, at Meydan: '],  mdShareTxt:['Sıradaki kahveyi Grup-Al® Jüri seçiyor — Meydan\'da yerini al: ','The Grup-Al® Jury picks the next coffee — take your place at Meydan: '], mdSub:['Grup-Al® Jüri: sıradaki kahveyi sen seç · kapora = oy · oturum her Pazar 23:59\'da biter','Grup-Al® Jury: you choose the next coffee · deposit = vote · the session ends every Sunday 23:59'],
 cyDoneBy:['Tamamlama: {d}\'e kadar','Complete by {d}'], cyForfeit:['süresi geçen kapora yanar','a deposit not completed in time is forfeited'], cyCredit:['süresi geçen kapora krediye döner','a deposit not completed in time becomes credit'],
 offForfeited:['kaporan yandı — süresinde tamamlanmadı','your deposit was forfeited — not completed in time'], offCredited:['kaporan Grup-Al kredine döndü — süresinde tamamlanmadı','your deposit became Grup-Al credit — not completed in time'],
 offBanned:['Jüri askıda: {d}\'e kadar kapora koyamazsın (tamamlanmayan kapora)','Jury suspended: no deposits until {d} (an uncompleted deposit)'],
@@ -1709,7 +1710,7 @@ function restoreMine(){
   $('shareLink').textContent=location.origin+location.pathname+'?k='+SLUG+'&ref='+rc;
 }
 let PWAEV=null;
-window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); PWAEV=e; const b=$('pwaAdd'); if(b) b.style.display='inline-block'; });
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); PWAEV=e; const b=$('pwaAdd'); if(b) b.style.display='block'; });   // v07h: block + margin auto = ortalı (inline-block ortalanmıyordu)
 window.addEventListener('appinstalled',()=>{ PWAEV=null; const b=$('pwaAdd'); if(b) b.style.display='none'; });
 function pwaInstall(){ if(!PWAEV) return; const ev=PWAEV; PWAEV=null; $('pwaAdd').style.display='none'; try{ ev.prompt(); }catch(e){} }
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('/grupal-sw.js',{scope:'/grupal'}).catch(()=>{}); }); }
@@ -1748,6 +1749,9 @@ async function loadMeydan(){
 }
 // v07g: "Açık masalar" gerçekten açık olanlar — son günü geçmiş masa yalnız açık tutuluyorsa (keep_open) listelenir
 function tableOpenish(c){ if(!c||!(c.status==='open'||c.status==='funded'||c.status==='paying')) return false; if(!c.end_at) return true; return new Date(c.end_at).getTime()>Date.now()||!!c.keep_open; }
+// v07h (Ömer "kapanan masa alanlar için görünür kalsın, vitrinde de olsun"): kapanmış masa üretim bitene kadar vitrinde — kavurma günü + 7 gün, yoksa son gün + 21 gün
+function tableClosedRecent(c){ if(!c||tableOpenish(c)||!(c.status==='open'||c.status==='funded'||c.status==='paying')||!c.end_at) return false;
+  const until=c.roast_date?(new Date(c.roast_date).getTime()+7*86400000):(new Date(c.end_at).getTime()+21*86400000); return Date.now()<until; }
 async function renderMeydanTables(){
   let list=[]; try{ const r=await fetch(API+'/campaigns'); const j=await r.json(); list=(Array.isArray(j)?j:[]).filter(tableOpenish); }catch(e){}
   let el=$('mdTables'); if(!list.length){ if(el) el.style.display='none'; return; }
@@ -1825,6 +1829,19 @@ function renderPortal(list){
       +'<div class="pm">'+(annP?(t('annP')+'<b style="color:var(--accent)">'+fmtDT(c.opens_at)+'</b>'):((c.locked||0)+' '+t('seats')+t('lastDayS')+fmtDate(c.end_at)+((c.keep_open&&c.end_at&&new Date(c.end_at).getTime()<Date.now())?(' · <b style="color:var(--gold)">'+t('keptOpenS')+'</b>'):'')))+'</div></div></a>';
   }).join('');
 }
+// v07h: KAPANAN MASALAR — vitrinde ayrı bölüm; kart masaya gider (tahta + "Masa kapandı" kartı: alanlar durumu izler)
+function renderPortalClosed(list){
+  const host=$('portal'); if(!host) return;
+  let lb=$('lobbyClosed'), pc=$('portalClosed');
+  if(!(Array.isArray(list)&&list.length)){ if(lb) lb.remove(); if(pc) pc.remove(); return; }
+  if(!pc){ pc=document.createElement('div'); pc.id='portalClosed'; host.parentNode.insertBefore(pc, host.nextSibling); }
+  if(!lb){ lb=document.createElement('div'); lb.id='lobbyClosed'; host.parentNode.insertBefore(lb, pc); }
+  lb.textContent=t('lobbyClosed');
+  const escP=x=>String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  pc.innerHTML=list.map(c=>'<a class="pcard pclosed" href="?k='+encodeURIComponent(c.slug)+'">'
+    +(c.img_url?('<div class="pimgw"><img src="'+escP(c.img_url)+'" alt=""></div>'):'')
+    +'<div class="pbody"><div class="pt">'+escP(c.title)+'</div><div class="pm">'+t('pClosedM').replace('{d}',fmtDate(c.end_at)).replace('{n}',c.locked||0)+(c.roast_date?(' · '+t('clRoast').trim()+' '+fmtDate(c.roast_date)):'')+'</div></div></a>').join('');
+}
 async function boot(){
   if(MEYDAN){ startMeydan(); return; }
   if(SLUG){ startCampaign(); return; }
@@ -1832,6 +1849,7 @@ async function boot(){
     const r=await fetch(API+'/campaigns');
     const list=await r.json();
     const openish=(Array.isArray(list)?list:[]).filter(tableOpenish);   // v07g: süresi dolan masa vitrinde değil (açık tutulmuyorsa)
+    const closedish=(Array.isArray(list)?list:[]).filter(tableClosedRecent).sort((a,b)=>new Date(b.end_at)-new Date(a.end_at));   // v07h: kapanan masalar (üretimde) ayrı bölümde
     // VİTRİN SIRASI (Ömer 2026-08-31): CANLI masa hep üstte; duyurudakiler altta. Grup içinde tarihe göre.
     openish.sort(function(a,b){
       const aw=(a.opens_at&&new Date(a.opens_at).getTime()>Date.now())?1:0;
@@ -1840,8 +1858,7 @@ async function boot(){
       return aw?(new Date(a.opens_at)-new Date(b.opens_at)):(new Date(a.end_at||0)-new Date(b.end_at||0));
     });
     // Ömer 2026-08-30: tek kampanyada da PORTAL görünür (otomatik dalış yok) — vitrin her zaman vitrin.
-    if(!openish.length){ renderPortal([]); renderMeydanCard([]); return; }   // v05c: masa yokken de Meydan var · v05e: başlık hep vaat, "masa yok" kapıda okunur
-    renderPortal(openish); renderMeydanCard(openish);
+    renderPortal(openish); renderPortalClosed(closedish); renderMeydanCard(openish);   // v05c: masa yokken de Meydan var · v05e: başlık hep vaat · v07h: kapananlar altta
   }catch(e){ $('title').textContent=t('netErr'); }
 }
 {const fq=$('fQty'); if(fq) fq.addEventListener('change',function(){ updJoinBtn(); renderShipNudge(); });} // adet değişince düğme yeniden hesaplar (31h bug'ı: tel hiç çekilmemişti)
