@@ -401,7 +401,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-07j';
+const VERSION='v2026-09-08a';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1001,7 +1001,8 @@ async function offLoadMine(s){
 // v2026-09-05a KAPORA SEPETİ (Ömer: "3 ayrı sepet ödemek zor"): kahveleri sepete ekle, TEK ödeme — /cart/VARIANT:TOPLAM + attributes[offers]=id:adet,…
 function dbGet(){ try{ const o=JSON.parse(localStorage.getItem('grupal_dbasket')||'{}'); return (o&&typeof o==='object')?o:{}; }catch(e){ return {}; } }
 function dbSave(o){ try{ localStorage.setItem('grupal_dbasket', JSON.stringify(o)); }catch(e){} }
-function dbAdd(id,delta){ const o=dbGet(); const q=Math.max(0,Math.min(30,(parseInt(o[id])||0)+(delta||1))); if(q) o[id]=q; else delete o[id]; dbSave(o); renderOffers(STATE); }   // v05b: kahve başına en çok 30 kutu (Ömer)
+const DEP_CAP=10;   // v07k (Ömer, eşik 40): kahve başına en çok 10 kapora — tek kişi masayı kilitleyemesin (eskiden 30)
+function dbAdd(id,delta){ const o=dbGet(); const q=Math.max(0,Math.min(DEP_CAP,(parseInt(o[id])||0)+(delta||1))); if(q) o[id]=q; else delete o[id]; dbSave(o); renderOffers(STATE); }
 function dbClear(){ dbSave({}); renderOffers(STATE); }
 function dbSum(){ const o=dbGet(), list=(STATE&&STATE.offers)||[]; let boxes=0, coffees=0; for(const id in o){ if(!list.some(x=>x.id===id)) continue; boxes+=o[id]; coffees++; } return {boxes,coffees}; }
 function dbUrl(){
