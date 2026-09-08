@@ -400,7 +400,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-07h';
+const VERSION='v2026-09-07i';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1749,9 +1749,9 @@ async function loadMeydan(){
 }
 // v07g: "Açık masalar" gerçekten açık olanlar — son günü geçmiş masa yalnız açık tutuluyorsa (keep_open) listelenir
 function tableOpenish(c){ if(!c||!(c.status==='open'||c.status==='funded'||c.status==='paying')) return false; if(!c.end_at) return true; return new Date(c.end_at).getTime()>Date.now()||!!c.keep_open; }
-// v07h (Ömer "kapanan masa alanlar için görünür kalsın, vitrinde de olsun"): kapanmış masa üretim bitene kadar vitrinde — kavurma günü + 7 gün, yoksa son gün + 21 gün
-function tableClosedRecent(c){ if(!c||tableOpenish(c)||!(c.status==='open'||c.status==='funded'||c.status==='paying')||!c.end_at) return false;
-  const until=c.roast_date?(new Date(c.roast_date).getTime()+7*86400000):(new Date(c.end_at).getTime()+21*86400000); return Date.now()<until; }
+// v07h (Ömer "kapanan masa alanlar için görünür kalsın, vitrinde de olsun"): kapanmış masa vitrinde kalır — admin durumu fulfilled/failed
+// yapana kadar (v07i: zaman kuralı YOK; kavurma tarihi geçmişte kalınca kart kayboluyordu — durum tek gerçek)
+function tableClosedRecent(c){ return !!c&&!tableOpenish(c)&&(c.status==='open'||c.status==='funded'||c.status==='paying')&&!!c.end_at&&new Date(c.end_at).getTime()<Date.now(); }
 async function renderMeydanTables(){
   let list=[]; try{ const r=await fetch(API+'/campaigns'); const j=await r.json(); list=(Array.isArray(j)?j:[]).filter(tableOpenish); }catch(e){}
   let el=$('mdTables'); if(!list.length){ if(el) el.style.display='none'; return; }
