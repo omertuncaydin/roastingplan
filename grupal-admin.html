@@ -11,6 +11,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
 <!-- grupal-admin.html · v2026-09-05b · Sepet satış penceresi (gün)
      grupal-admin.html · v2026-09-05a · Jüri Sepeti ürün linki (sayım başına) · kademeli ceza · krediye dönenleri Shopify'a yaz
+     grupal-admin.html · v2026-09-09a · temalar (oto/gece/gündüz/kırmızı) + açılır bölümler (Liste yükle · Meydan ayarları · Fiyat ölçeği), durum hatırlanır; yalnız görünüm
      grupal-admin.html · v2026-09-08a · Meydan ayarları bölümlü düzen (Kapora · Oturum · Jüri · Oturum sonrası · Oturumlar) + fiyat ölçeği; yalnız görünüm
      grupal-admin.html · v2026-09-07e · katılımcı satırı: kayıt zamanı · Shopify sipariş linki (order_ids, proxy v3.35) · ödeme e-postası · siparişsiz kilit uyarısı
      grupal-admin.html · v2026-09-07d · "Masayı şimdi kapat" (end_at = şimdi; ISO korunur) · open etiketi
@@ -36,6 +37,21 @@ button{width:100%;border:none;border-radius:12px;padding:14px;font-size:16px;fon
 .pill{display:inline-block;border:1px solid var(--line);border-radius:16px;padding:6px 12px;font-size:13px;margin:3px 4px 3px 0;cursor:pointer;color:var(--muted)}
 .pill.on{border-color:var(--accent);color:var(--ink)}
 a{color:var(--gold)}
+/* v09a: temalar (sayfayla aynı paletler) — gece varsayılan; gündüz (kraft); kırmızı */
+body.th-day{--bg:#e7d9c3;--panel:#f6efe1;--panel2:#efe5d2;--accent:#a5661f;--gold:#8a6d15;--green:#2e6a4c;--ink:#291f15;--muted:#7d6b56;--line:#d3c2a6;--warn:#b34a26}
+body.th-red{--bg:#8F0101;--panel:#f6efe1;--panel2:#efe5d2;--accent:#8F0101;--gold:#a2801a;--green:#2e6a4c;--ink:#2a1410;--muted:#8a6a5c;--line:#e0d0b8;--warn:#7c2d12}
+body.th-red .brand,body.th-red h1{color:#f6efe1}
+body.th-day button:not(.mini),body.th-red button:not(.mini){color:#fff}
+.tchips{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;align-items:center;margin:-6px 0 12px}
+.tchip{border:1px solid var(--line);border-radius:14px;padding:3px 10px;font-size:10.5px;font-weight:700;color:var(--muted);cursor:pointer;background:var(--panel);display:inline-flex;align-items:center;gap:6px}
+.tchip.on{border-color:var(--accent);color:var(--ink)}
+.tdot{width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.25)}
+/* v09a: açılır bölümler — details/summary; açık/kapalı durumu cihazda hatırlanır */
+details.set>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none}
+details.set>summary::-webkit-details-marker{display:none}
+details.set>summary::before{content:'▸';color:var(--accent);font-size:12px;transition:transform .15s}
+details.set[open]>summary::before{transform:rotate(90deg)}
+details.set>summary .sub{font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--muted);margin-left:auto;text-align:right}
 /* v08a: bölümlü ayar düzeni (Meydan ayarları · fiyat ölçeği) — yalnız görünüm */
 .set{border:1px solid var(--line);border-radius:12px;padding:12px 12px 10px;margin-top:12px;background:rgba(0,0,0,.12)}
 .set-t{font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin:0 0 4px}
@@ -54,6 +70,7 @@ a{color:var(--gold)}
 <div class="wrap">
   <div class="brand">GRUP-AL</div>
   <h1>Kampanya Kokpiti</h1>
+  <div class="tchips" id="themeChips"></div>
 
   <div class="card" id="keyCard">
     <span class="lbl">anahtar (CC key)</span>
@@ -166,8 +183,9 @@ a{color:var(--gold)}
       <span class="lbl">MEYDAN · teklifler · tedarikçi listeleri (global) · TASLAK → UYGULA</span>
       <div class="hint" style="margin:4px 0 8px">Sayfa yalnız <b>UYGULA</b> ile yayınladığın hâli görür; ekleme, düzenleme, pasife alma taslakta kalır. İki yapıştırma biçimi: (1) <code>## Tedarikçi</code> başlığı + <code>Ülke · Lot adı · İşlem · Tedarikçi · not… · {meta}</code> satırları; (2) Excel/Sheets'ten kopyalanan <b>sekmeli tablo</b> (başlık satırı: name/farm, process, region, score, price, descriptors, lot no, bags, quantity, variety, farmer, crop, altitude — ülke satırları tek hücre olabilir). İşlem otomatik eşlenir (anaerob→anaerobic, ferm→funky, washed/decaf→washed, natural, honey). Fiyat/çuval/kg yalnız admin'de kalır.</div>
       <!-- v02v (Ömer 04.09 "textbox işe yaramaz, dosya yükleme"): .txt (Grup-Al biçimi) · .tsv/.csv · .xlsx (SheetJS, cdnjs) → aynı ayrıştırıcı → önizleme → Taslağa ekle. PDF yok: sayfa düzeni sütunları karıştırır, dönüştürme bende. -->
-      <div style="border:1px dashed var(--gold);border-radius:10px;padding:10px;margin:6px 0">
-        <span class="lbl">liste dosyası yükle · .txt (Grup-Al biçimi) · .tsv / .csv (Excel'den "sekmeyle ayrılmış" kaydet) · .xlsx</span>
+      <details class="set" id="uploadSet">
+        <summary class="set-t">Liste yükle<span class="sub">.txt · .tsv / .csv · .xlsx → taslak</span></summary>
+        <span class="lbl">liste dosyası · .txt (Grup-Al biçimi) · .tsv / .csv (Excel'den "sekmeyle ayrılmış" kaydet) · .xlsx</span>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
           <input type="file" id="offFile" accept=".txt,.tsv,.csv,.xlsx,.xls" onchange="offFilePick(this)" style="margin:0;padding:8px">
           <input id="offFileVendor" placeholder="tedarikçi adı (dosyada ## başlık yoksa)" style="margin:0">
@@ -175,15 +193,15 @@ a{color:var(--gold)}
         <div class="hint" id="offFileMsg" style="margin-top:6px">Dosya seç → satırlar sayılır → Taslağa ekle. PDF için: PDF'i bana gönder, .txt'ye çeviririm.</div>
         <div id="offFilePrev" class="hint" style="margin-top:4px;max-height:140px;overflow:auto;font-family:ui-monospace,monospace;font-size:11px"></div>
         <div style="display:flex;gap:8px;margin-top:8px;align-items:center"><button class="mini" id="offFileAdd" onclick="offFileAdd()" disabled>Taslağa ekle</button><button class="mini" onclick="offFileClear()">Temizle</button></div>
-      </div>
       <details style="margin:6px 0"><summary class="hint" style="cursor:pointer">elle yapıştır (metin kutusu)</summary>
       <textarea id="offBulk" rows="5" placeholder="## Nordic Approach&#10;Etiyopya · Guji Hambela · natural&#10;Kolombiya · Huila Pink Bourbon · washed&#10;## Bonsai&#10;Panama · Finca Deborah Geisha · anaerobic" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;background:var(--panel2);color:var(--ink)"></textarea>
       <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;align-items:center"><button class="mini" onclick="offBulk()">Taslağa ekle</button><span class="hint" id="offMsg"></span></div>
       </details>
+      </details>
       <!-- KAPORA AYARLARI (Ömer 2026-09-04 "deposit logic"): kapora ürünü sepet linki + tutar + eşik -->
       <!-- v08a (Ömer 09.09 "görünüm karıştı"): bölümlü düzen — YALNIZ işaretleme/CSS; id'ler, onclick'ler, alanlar aynen (işlev dokunulmadı) -->
-      <div class="set" id="meydanSet">
-        <div class="set-t">Meydan ayarları</div>
+      <details class="set" id="meydanSet">
+        <summary class="set-t">Meydan ayarları<span class="sub">kapora · oturum · Jüri · oturum sonrası</span></summary>
         <div class="sh">Kapora</div>
         <div class="g2">
           <div class="f full"><span class="lbl">kapora ürünü (ürün linki yapıştır → sepet linkine çevrilir)</span><input id="s_depurl" placeholder="https://www.coffeenutz.net/products/grup-al-kapora"></div>
@@ -217,10 +235,10 @@ a{color:var(--gold)}
         <div class="sh" style="margin-top:14px">Oturumlar</div>
         <div class="acts"><button class="mini" onclick="loadCycles()">Sayım kayıtları</button><button class="mini" onclick="cycleCloseNow()">Son oturum kaydını yeniden yaz</button><button class="mini" onclick="cycleForfeit()">Tamamlanmayanları kapat</button><button class="mini" onclick="kaporaCredit()">Krediye dönenleri Shopify'a yaz</button><span class="hint" id="cycleMsg"></span></div>
         <div id="cycleList" class="hint" style="margin-top:4px"></div>
-      </div>
+      </details>
       <!-- FİYAT ÖLÇEĞİ (Ömer 2026-09-04): iki referans kahve → taban + oran (v02s); referans 1 Rumanda 20,8 $/kg = 1275 ₺, referans 2 Killenso 13,55 $/kg = 900 ₺ (rakip fiyatları) -->
-      <div class="set" id="scaleSet">
-        <div class="set-t">Fiyat ölçeği</div><div class="hint" style="margin:0">yeşil $/kg → kutu liste fiyatı (₺) · taban + oran · masa fiyatları oranla</div>
+      <details class="set" id="scaleSet">
+        <summary class="set-t">Fiyat ölçeği<span class="sub">yeşil $/kg → liste ₺ · Jüri/Sepet oranları</span></summary>
         <div class="hint" style="margin:4px 0 6px">Referans kahvelerden eğri: 1 referans = orantı; 2–3 referans = $/kg'a göre sıralı parçalı doğru (her referanstan tam geçer, uçlarda komşu parçanın eğimiyle uzar). Jüri fiyatı = liste × oran(Jüri); Sepet fiyatı = liste × oran(Sepet). Bir kahveye ilk kapora düşünce fiyatları DONAR (🔒 kilitli) — ölçek değişse de o kahve değişmez. Satır bazında elle ezmek için düzenlemede "liste / Jüri / Sepet ₺".</div>
         <div class="g2">
           <div class="f"><span class="lbl">referans 1 · $/kg</span><input id="s_refusd" inputmode="decimal" placeholder="20,8" oninput="scalePreview()"></div>
@@ -238,7 +256,7 @@ a{color:var(--gold)}
           <span class="hint" style="opacity:.75">yeşil $/kg ve tedarikçi adı sayfaya hiçbir ayarla çıkmaz.</span>
         </div>
         <div class="acts"><button class="mini" onclick="offSettingsSave()">Ölçeği kaydet</button><span class="hint" id="offScaleMsg"></span></div>
-      </div>
+      </details>
       <div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap">
         <button class="mini" style="background:var(--gold);color:var(--panel);border-color:var(--gold);font-weight:800" onclick="offApply()">UYGULA — taslağı yayınla</button>
         <span class="hint" id="offApplyMsg"></span>
@@ -269,9 +287,20 @@ a{color:var(--gold)}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-08a';
+const VERSION='v2026-09-09a';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+// v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
+let ATHEME='auto'; try{ ATHEME=localStorage.getItem('grupal_admin_theme')||'auto'; }catch(e){}
+const ATHEMES=[['auto','oto','linear-gradient(135deg,#e7d9c3 50%,#16130f 50%)'],['isik','Gece','#16130f'],['kraft','Gündüz','#e7d9c3'],['red','Kırmızı','#8F0101']];
+function applyAdminTheme(){ let m=ATHEME; if(m==='auto'){ const h=new Date().getHours(); m=(h>=7&&h<19)?'kraft':'isik'; }
+  document.body.classList.toggle('th-day',m==='kraft'); document.body.classList.toggle('th-red',m==='red');
+  const el=document.getElementById('themeChips'); if(el) el.innerHTML=ATHEMES.map(o=>'<span class="tchip'+(ATHEME===o[0]?' on':'')+'" onclick="setAdminTheme(\''+o[0]+'\')"><i class="tdot" style="background:'+o[2]+'"></i>'+o[1]+'</span>').join(''); }
+function setAdminTheme(p){ ATHEME=p; try{ localStorage.setItem('grupal_admin_theme',p); }catch(e){} applyAdminTheme(); }
+applyAdminTheme();
+// v09a: açılır bölümlerin durumu cihazda hatırlanır (grupal_admin_open_<id>)
+document.querySelectorAll('details.set[id]').forEach(d=>{ try{ const v=localStorage.getItem('grupal_admin_open_'+d.id); if(v==='1') d.open=true; }catch(e){}
+  d.addEventListener('toggle',()=>{ try{ localStorage.setItem('grupal_admin_open_'+d.id, d.open?'1':'0'); }catch(e){} }); });
 let CURSLUG='';
 let CUR_END='';   // v07d: seçili masanın end_at ISO'su — tarih kutusu değişmediyse aynen gider ("şimdi kapat" saati 23:59'a yuvarlanmaz)
 function endAtFromForm(){ const d=$('f_end').value; if(!d) return null; return (CUR_END&&CUR_END.slice(0,10)===d)?CUR_END:(d+'T23:59:59+03:00'); }
