@@ -11,6 +11,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
 <!-- grupal-admin.html · v2026-09-05b · Sepet satış penceresi (gün)
      grupal-admin.html · v2026-09-05a · Jüri Sepeti ürün linki (sayım başına) · kademeli ceza · krediye dönenleri Shopify'a yaz
+     grupal-admin.html · v2026-09-09b · Kampanyalar tek açılır grup (liste + form) · Kutu ekonomisi ve Tedarikçiler ayrı açılır bölümler; yalnız görünüm
      grupal-admin.html · v2026-09-09a · temalar (oto/gece/gündüz/kırmızı) + açılır bölümler (Liste yükle · Meydan ayarları · Fiyat ölçeği), durum hatırlanır; yalnız görünüm
      grupal-admin.html · v2026-09-08a · Meydan ayarları bölümlü düzen (Kapora · Oturum · Jüri · Oturum sonrası · Oturumlar) + fiyat ölçeği; yalnız görünüm
      grupal-admin.html · v2026-09-07e · katılımcı satırı: kayıt zamanı · Shopify sipariş linki (order_ids, proxy v3.35) · ödeme e-postası · siparişsiz kilit uyarısı
@@ -63,6 +64,9 @@ details.set>summary .sub{font-size:11px;font-weight:600;letter-spacing:0;text-tr
 .g2 .full{grid-column:1/-1}
 .g2 .note{grid-column:1/-1;color:var(--muted);font-size:12px;line-height:1.45;margin:6px 0 2px}
 .acts{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap}
+details.set.card{border-radius:14px}
+details.set.card>summary .set-t{margin:0}
+details.set.card[open]>summary{margin-bottom:6px}
 @media(max-width:480px){.g2{grid-template-columns:1fr}.g2 .f .lbl{min-height:0}}
 </style>
 </head>
@@ -79,13 +83,14 @@ details.set>summary .sub{font-size:11px;font-weight:600;letter-spacing:0;text-tr
   </div>
 
   <div id="panel" style="display:none">
-    <div class="card">
+    <details class="set card" id="campSet" style="padding:12px 16px">
+    <summary class="set-t">Kampanyalar<span class="sub">liste · kampanya formu · kutu ekonomisi</span></summary>
+    <div>
       <span class="lbl">kampanyalar</span>
       <div id="campList"></div>
       <button style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)" onclick="blank()">+ Yeni kampanya</button>
     </div>
-
-    <div class="card">
+    <div style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--line)">
       <span class="lbl">slug (link adı: /grupal?k=SLUG)</span>
       <input id="f_slug" placeholder="eylul-ethiopia">
       <span class="lbl">başlık</span>
@@ -127,8 +132,8 @@ details.set>summary .sub{font-size:11px;font-weight:600;letter-spacing:0;text-tr
       <span class="lbl">kutu üst sınırı (kişi başına)</span>
       <input id="f_maxq" inputmode="numeric" placeholder="5">
       <!-- KUTU EKONOMİSİ (C, 2026-09-02): "Nasıl çalışır?" içindeki iki çubuğun kaynağı. Kutu başına TL. Boş = grafik yok. -->
-      <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:12px">
-        <span class="lbl">kutu ekonomisi (Nasıl çalışır? grafiği · kutu başına TL · boş bırakırsan grafik çıkmaz)</span>
+      <details class="set" id="econSet">
+        <summary class="set-t">Kutu ekonomisi<span class="sub">Nasıl çalışır? grafiği · kutu başına TL · boş = grafik yok</span></summary>
         <div class="hint" style="margin:4px 0 6px">İki senaryo (Ömer 2026-09-03): <b>sol = LİSTE FİYATI, kavurucu yok</b> (CoffeeNutz kendi kavurur; kalanın tamamı CoffeeNutz) · <b>sağ = masa dolu, konuk kavurucu</b> (kalan kavurucu ile CoffeeNutz arasında eşit). Liste fiyatını elle yaz (ör. 750); sağ toplam merdivenin son basamağından gelir, değiştirilebilir.</div>
         <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px 8px;align-items:center;font-size:13px">
           <div class="hint">kalem</div><div class="hint">liste fiyatı · kavurucu yok</div><div class="hint">masa dolu · konuk kavurucu</div>
@@ -142,7 +147,7 @@ details.set>summary .sub{font-size:11px;font-weight:600;letter-spacing:0;text-tr
           <div>CoffeeNutz payı <span class="hint">sol kalan · sağ kalanın yarısı</span></div><input id="e_cn_a" readonly tabindex="-1" placeholder="0" style="margin:0;opacity:.8"><input id="e_cn_b" readonly tabindex="-1" placeholder="0" style="margin:0;opacity:.8">
         </div>
         <div class="hint" id="econSum" style="margin-top:8px"></div>
-      </div>
+      </details>
       <span class="lbl">görsel (ürün linki yapıştır, kaydette resme çevrilir)</span>
       <input id="f_img" placeholder="https://www.coffeenutz.net/products/... ya da resim linki">
       <span class="lbl">sıradaki parti (lobi · boşsa zincir kartı görünmez)</span>
@@ -161,6 +166,7 @@ details.set>summary .sub{font-size:11px;font-weight:600;letter-spacing:0;text-tr
       <div class="hint" id="msg"></div>
       <div class="hint" id="linkOut"></div>
     </div>
+    </details>
 
     <div class="card" id="plCard" style="display:none">
       <span class="lbl">katılımcılar (admin)</span>
@@ -261,7 +267,10 @@ details.set>summary .sub{font-size:11px;font-weight:600;letter-spacing:0;text-tr
         <button class="mini" style="background:var(--gold);color:var(--panel);border-color:var(--gold);font-weight:800" onclick="offApply()">UYGULA — taslağı yayınla</button>
         <span class="hint" id="offApplyMsg"></span>
       </div>
-      <div id="offVendors" style="margin-top:10px"></div>
+      <details class="set" id="vendorSet">
+        <summary class="set-t">Tedarikçiler<span class="sub">liste bazında yayın/pasif · silme</span></summary>
+        <div id="offVendors" style="margin-top:6px"></div>
+      </details>
       <div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap"><span class="lbl" style="margin:0">sırala</span>
         <select id="offSort" onchange="offSortSave()" style="margin:0;width:auto">
           <option value="page">sayfa sırası (kapora · oy)</option><option value="vendor">tedarikçi</option><option value="origin">ülke</option><option value="usd">$/kg ↑</option><option value="usd_d">$/kg ↓</option><option value="list">liste ₺ ↑</option><option value="score">puan ↓</option><option value="name">ad</option><option value="state">durum (taslak önce)</option>
@@ -287,7 +296,7 @@ details.set>summary .sub{font-size:11px;font-weight:600;letter-spacing:0;text-tr
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-09a';
+const VERSION='v2026-09-09b';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
