@@ -11,6 +11,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
 <!-- grupal-admin.html · v2026-09-05b · Sepet satış penceresi (gün)
      grupal-admin.html · v2026-09-05a · Jüri Sepeti ürün linki (sayım başına) · kademeli ceza · krediye dönenleri Shopify'a yaz
+     grupal-admin.html · v2026-09-09c · Kahve listesi açılır bölüm (#listSet, başlıkta n kahve · yayında · taslak)
      grupal-admin.html · v2026-09-09b · Kampanyalar tek açılır grup (liste + form) · Kutu ekonomisi ve Tedarikçiler ayrı açılır bölümler; yalnız görünüm
      grupal-admin.html · v2026-09-09a · temalar (oto/gece/gündüz/kırmızı) + açılır bölümler (Liste yükle · Meydan ayarları · Fiyat ölçeği), durum hatırlanır; yalnız görünüm
      grupal-admin.html · v2026-09-08a · Meydan ayarları bölümlü düzen (Kapora · Oturum · Jüri · Oturum sonrası · Oturumlar) + fiyat ölçeği; yalnız görünüm
@@ -271,11 +272,14 @@ details.set.card[open]>summary{margin-bottom:6px}
         <summary class="set-t">Tedarikçiler<span class="sub">liste bazında yayın/pasif · silme</span></summary>
         <div id="offVendors" style="margin-top:6px"></div>
       </details>
+      <details class="set" id="listSet">
+        <summary class="set-t">Kahve listesi<span class="sub" id="listSetSub">taslak · yayın · düzenle</span></summary>
       <div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap"><span class="lbl" style="margin:0">sırala</span>
         <select id="offSort" onchange="offSortSave()" style="margin:0;width:auto">
           <option value="page">sayfa sırası (kapora · oy)</option><option value="vendor">tedarikçi</option><option value="origin">ülke</option><option value="usd">$/kg ↑</option><option value="usd_d">$/kg ↓</option><option value="list">liste ₺ ↑</option><option value="score">puan ↓</option><option value="name">ad</option><option value="state">durum (taslak önce)</option>
         </select><span class="hint" id="offSortMsg"></span></div>
       <div id="offList" style="margin-top:8px"></div>
+      </details>
     </div>
     <!-- DİLEKLER (E, 2026-09-02c): sıradaki masa için ülke·işlem·not — sıradaki lotu seçerken bak -->
     <div class="card" id="wishCard" style="display:none">
@@ -296,7 +300,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-09b';
+const VERSION='v2026-09-09c';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -546,7 +550,8 @@ function offSorted(){
   return a;
 }
 function offState(o){ return o.published?(o.dirty?['taslak değişiklik — UYGULA bekliyor','var(--gold)']:(o.active?['yayında','var(--green)']:['pasife alındı — UYGULA ile kalkar','var(--gold)'])):(o.active?['taslak — UYGULA ile yayınlanır','var(--gold)']:['yayında değil','var(--muted)']); }
-function renderOffersAdmin(){
+function listSetSub(){ try{ const el=document.getElementById('listSetSub'); if(!el) return; const n=OFFERS.length, pub=OFFERS.filter(o=>o.published).length, dirty=OFFERS.filter(o=>o.dirty).length; el.textContent=n?(n+' kahve · '+pub+' yayında'+(dirty?(' · '+dirty+' taslak'):'')):'taslak · yayın · düzenle'; }catch(e){} }   // v09c: açılır liste başlığı sayaçları
+function renderOffersAdmin(){ listSetSub();
   const el=$('offList'); if(!el) return;
   if(!OFFERS.length){ el.innerHTML='<div class="hint">Henüz teklif yok.</div>'; return; }
   const G=(OFFCFG&&OFFCFG.goal)||40, dep=!!(OFFCFG&&OFFCFG.dep_url);
