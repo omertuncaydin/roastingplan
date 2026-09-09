@@ -403,7 +403,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-09b';
+const VERSION='v2026-09-09c';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -982,7 +982,7 @@ function renderCycle(s){
     if(b.sepet_url&&open) h+='<a href="'+escZ(b.sepet_url)+'" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:8px;padding:11px;border-radius:12px;background:var(--gold);color:var(--panel);font-weight:800;text-decoration:none;font-size:14px">'+t('cySepetB')+'</a><div class="hint" style="margin-top:3px;font-size:11px">'+t('cySepetH')+(sb?(' · '+t('cySepetBy').replace('{d}',cyDT(b.sepet_by))):'')+'</div>';
     else if(bi===0&&sb&&!open) h+='<div class="hint" style="margin-top:4px;font-size:11px">'+t('cySepetClosed').replace('{d}',cyD(c.next_close))+'</div>';
   });
-  if(c.last&&!(Array.isArray(c.last.winners)&&c.last.winners.length)) h+='<div class="hint" style="margin-top:6px;font-size:12px">'+t('cyNone').replace('{d}',cyD(c.last.closed_at)).replace('{g}',G)+'</div>';
+  // v09c (Ömer "başarısızlık gibi duruyor"): kilitsiz biten oturum satırı KALDIRILDI — kaporalar zaten taşınır, kart "Kilitli: 0" der, yeter
   h+='</div>'; return h;
 }
 function offMoveUI(id){
