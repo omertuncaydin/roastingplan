@@ -166,6 +166,7 @@ body.portalWide #themeChips{margin-top:16px}
 .orow .ochip{font-size:11px;font-weight:700;color:var(--gold);white-space:nowrap}
 .orow .op{white-space:nowrap;font-size:12px}
 .orow .op s{opacity:.5}
+.orow .op .og{font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.3px;margin-right:2px}   /* v09e: 250 g fiyatın solunda */
 .orow .op b{color:var(--gold);font-size:16px;font-weight:800}
 .orow .om{margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .orow.open .om{white-space:normal}
@@ -403,7 +404,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-09d';
+const VERSION='v2026-09-09e';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -505,7 +506,7 @@ offLbl:['Meydan: sıradaki masa senin olsun','Meydan: the next table is yours'],
 offHD:['Kapora = oy. {g} kaporaya ulaşan kahve o an kilitlenir, oturum bitince (Pazar 23:59) üretime girer; kaporası olan Jüri fiyatından tamamlar. Haftada {c} kahve — fazlası sonraki oturuma. Ulaşmayan kahvenin kaporası taşınır; kilitlenene kadar başka kahveye taşıyabilirsin. Kutu 250 g; öğütüm tercihi tamamlama ödemesinde sorulur. Satıra dokun: detay.','A deposit is a vote. A coffee that reaches {g} deposits locks at once and goes into production when the session ends (Sunday 23:59); depositors complete at the Jury price. {c} coffees a week — extras roll into the next session. Deposits on coffees that do not reach {g} carry over; you can move yours until it locks. 250 g box; grind preference is asked at the completion payment. Tap a row for details.'],
 offVote:['oy ver','vote'], offMine:['✓ oyun','✓ your vote'], offN:[' oy',' votes'], offSeated:['masadan ','seated '], offGoal:['{g} oyu geçen kahveler sayımda yarışır','coffees over {g} votes compete at the count'], offHit:['{g} oyu geçti — sayımda yarışıyor 🎉','over {g} votes — in the count 🎉'], offAtTable:['Sayımda yarışanlar ({n}): {list}','In the count ({n}): {list}'], offDayGoal:[' · kavurma günü: {sum}/{dg} kutu',' · roast day: {sum}/{dg} boxes'], offTot:['Toplam kapora: {sum}','Total deposits: {sum}'], offTotG:['Toplam kapora: {sum}/{dg} kutu','Total deposits: {sum}/{dg} boxes'], offTotK:['{k} kahvede','on {k} coffees'], offDayHit:[' · kavurma günü doluyor 🎉',' · roast day is on 🎉'], offMax:['En çok 3 oy: önce birini geri al.','Up to 3 votes: withdraw one first.'],
 offDep:['Kapora sepetine ekle · {amt} TL','Add to deposit basket · {amt} TL'], offListP:['liste','list'], offCampP:['/ kutu · masa kurulunca','/ box · when the table is set'], off200P:['200 kutuda ','at 200 boxes '], offDepN:[' kapora',' deposits'], offInt:['ilgi ','interest '], offDepMine:['✓ kaporan var','✓ deposit placed'], offDepPend:['kapora kontrol ediliyor…','checking deposit…'],
-offMore:['{n} kahve daha · tümünü gör','{n} more coffees · see all'], offJuryP:['Jüri fiyatı · kaporayla','Jury price · with a deposit'], offBasketP:['Sepet ','Basket '], offFrozen:['fiyat kilitli','price locked'], offDepMore:['Bir kutu daha sepete · {amt} TL','One more box to the basket · {amt} TL'],
+offMore:['{n} kahve daha · tümünü gör','{n} more coffees · see all'], offJuryP:['Jüri fiyatı {p} TL: kaporayla','Jury price {p} TL: with a deposit'], boxGs:['250 g','250 g'], offBasketP:['Sepet ','Basket '], offFrozen:['fiyat kilitli','price locked'], offDepMore:['Bir kutu daha sepete · {amt} TL','One more box to the basket · {amt} TL'],
 offCodeAlw:['Kapora için Jüri kodu gerekir','A Jury code is needed to place a deposit'], offCodeAlwH:['Kod {ch} içinde paylaşılıyor — katıl, kodu al, Jüri ol.','The code is shared in the {ch} — join, get the code, become Jury.'], offCodeRow:['kapora: Jüri koduyla','deposit: with the Jury code'],
 offMove:['kaporamı taşı →','move my deposit →'], offMoveB:['Taşı','Move'], offMoved:['Kaporan taşındı.','Your deposit moved.'], offMoveConv:['Bu kapora kazandı — taşınamaz, tamamlanır.','This deposit won — it completes, it does not move.'],
 offWonChip:['🔒 kilitli','🔒 locked'], offWonMine:['Kaporan kilitlendi ×{n} — üretime giriyor; Jüri fiyatından tamamla (öğütüm tamamlamada sorulur)','Your deposit is locked ×{n} — going into production; complete at the Jury price (grind is asked at completion)'], offDone:['✓ tamamlandı — kutun kavurma planında','✓ completed — your box is in the roast plan'], offCompleteB:['Kutunu tamamla{n} · {p} TL','Complete your box{n} · {p} TL'], offCompleteSoon:['tamamlama linki yakında burada — hazır olunca grupta duyurulur','completion link coming here — announced in the group when ready'],
@@ -900,7 +901,7 @@ function renderOffers(s){
     const rowMine=depMode?!!paid:(isMine||paid);
     const chip=paid?((paid.conv?t('offWonChip'):t('offDepMine'))+(paid.qty>1?' ×'+paid.qty:'')):(pendD?t('offDepPend'):(depMode?'':(isMine?t('offMine'):'')));
     const jury=o.jury_tl||o.camp200_tl, basket=o.basket_tl||o.camp_tl;
-    const price=(o.list_tl&&jury)?('<span class="op">'+(o.list_tl>jury?('<s>'+fmtTL(o.list_tl)+'</s> '):'')+'<b>'+fmtTL(jury)+' TL</b></span>'):'';
+    const price=(o.list_tl&&jury)?('<span class="op"><span class="og">'+t('boxGs')+'</span> '+(o.list_tl>jury?('<s>'+fmtTL(o.list_tl)+'</s> '):'')+'<b>'+fmtTL(jury)+' TL</b></span>'):'';   // v09e (Ömer): gramaj fiyatın yanında
     // TEK EYLEM (çubuğun ucunda): + · [− n +] · kod · oy ver
     let ctl='';
     if(depMode){
@@ -913,7 +914,7 @@ function renderOffers(s){
     } else ctl='<button class="oc txt" onclick="event.stopPropagation();offToggle(\''+escZ(o.id)+'\')">'+(isMine?t('offMine'):t('offVote'))+'</button>';
     // DETAY (dokununca): liste · Sepet · kilit · masadan · taşı
     const det=[];
-    if(o.list_tl&&jury) det.push(t('boxG')+' · '+t('offListP')+fmtTL(o.list_tl)+' TL'+(basket?(' · '+t('offBasketP')+fmtTL(basket)+' TL'):'')+' · '+t('offJuryP')+(o.frozen?(' · '+t('offFrozen')):''));   // v09d: gramaj görünür
+    if(o.list_tl&&jury) det.push(t('boxG')+' · '+t('offListP')+fmtTL(o.list_tl)+' TL'+(basket?(' · '+t('offBasketP')+fmtTL(basket)+' TL'):'')+' · '+t('offJuryP').replace('{p}',fmtTL(jury)));   // v09e (Ömer): "Jüri fiyatı 805 TL: kaporayla" — 'fiyat kilitli' kalktı
     if(o.seated) det.push(t('offSeated')+o.seated);
     if(depMode&&gate&&!(paid&&paid.conv)) det.push(cfg.code_always?t('offCodeRow'):t('offEarlyRow').replace('{d}',fmtOpen(cfg.dep_open_at)));
     const mv=(paid&&!paid.conv&&list.length>1)?('<div onclick="event.stopPropagation()"><a onclick="offMoveUI(\''+escZ(o.id)+'\')">'+t('offMove')+'</a><span id="mv_'+escZ(o.id)+'"></span></div>'):'';
