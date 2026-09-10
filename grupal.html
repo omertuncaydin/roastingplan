@@ -391,7 +391,7 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-let SLUG=new URLSearchParams(location.search).get('k')||(/^\/meydan\/?$/.test(location.pathname)?'meydan':'');   // v07c: grup-al.com/meydan (Pages Function yeniden yazar) → Meydan
+let SLUG=new URLSearchParams(location.search).get('k')||(/^\/(meydan|juri)\/?$/.test(location.pathname)?'meydan':'');   // v09f: grup-al.com/juri = Meydan (dışarıya söylenen ad)   // v07c: grup-al.com/meydan (Pages Function yeniden yazar) → Meydan
 const MEYDAN=(SLUG==='meydan');   // v02v: kampanyasız Meydan sayfası (?k=meydan) — Jüri seçer, sayım 2 haftada bir
 const REF=new URLSearchParams(location.search).get('ref')||'';
 // HEDİYE LİNKİ: ?g=GREF — hediye alan kişi koltuğu bu cihaza alır (adoptGift)
@@ -404,7 +404,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-09e';
+const VERSION='v2026-09-10a';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1696,7 +1696,7 @@ function shMine(id){
 }
 function shBrag(m){ return t(m.kind==='lock'?'shLock':'shDep').replace('{coffee}',m.name).replace('{n}',m.n).replace('{g}',m.g); }
 async function shRow(id){
-  const m=shMine(id); if(!m) return; const txt=shBrag(m)+location.origin+'/meydan';
+  const m=shMine(id); if(!m) return; const txt=shBrag(m)+location.origin+'/juri';   // v09f: paylaşım linki /juri
   if(navigator.share){ try{ await navigator.share({text:txt}); return; }catch(e){ if(e&&e.name==='AbortError') return; } }
   window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank','noopener');
 }
@@ -1772,7 +1772,7 @@ async function loadMeydan(){
     renderOffers(s); offLoadMine(s); renderWishes(s); renderChan(); renderChat(); renderChips();
     const wc=$('wishCard'); if(wc&&(!s.offers||!s.offers.length)) wc.style.display='block';
     // v05c: paylaşım satırı Meydan linkiyle (davet/kilit satırları gizli) + açık masalar
-    { const sb=$('shareBox'); if(sb){ sb.style.display='block'; ['lockRow','cardBtn','davSlots','davTxt'].forEach(id=>{ const e=$(id); if(e) e.style.display='none'; }); const dl=sb.querySelector('[data-i18n="davLbl"]'); if(dl) dl.textContent=t(shMine()?'shMineL':'mdShareL'); $('shareLink').textContent=location.origin+'/meydan'; }
+    { const sb=$('shareBox'); if(sb){ sb.style.display='block'; ['lockRow','cardBtn','davSlots','davTxt'].forEach(id=>{ const e=$(id); if(e) e.style.display='none'; }); const dl=sb.querySelector('[data-i18n="davLbl"]'); if(dl) dl.textContent=t(shMine()?'shMineL':'mdShareL'); $('shareLink').textContent=location.origin+'/juri'; /* v09f: dışarıya /juri */ }
       const oc=$('offerCard'); if(oc&&oc.parentNode&&oc.nextSibling!==sb) oc.parentNode.insertBefore(sb, oc.nextSibling); }
     renderMeydanTables();
   }catch(e){ $('title').textContent=t('netErr'); }
