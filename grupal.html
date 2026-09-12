@@ -196,7 +196,16 @@ body.jmode #offerCard{border:0;padding:0;background:transparent}
 #jP1{min-height:calc(100dvh - 150px);display:flex;flex-direction:column}
 #jP1 .jdeck{flex:1;min-height:0}
 .jcard{height:calc(100dvh - 330px);min-height:400px;max-height:600px}
-.jclock{position:absolute;left:12px;right:12px;top:31%;text-align:center;pointer-events:none}
+.jdeckw{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+.jdeckw .jdeck{flex:1;min-height:0}
+.jclock{position:absolute;left:14px;right:14px;top:31%;text-align:center;pointer-events:none;z-index:2}
+.jq.pop,.oq.pop,button.oc.pop{animation:jPop .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes jPop{0%{transform:scale(.85)}55%{transform:scale(1.12)}100%{transform:scale(1)}}
+#dbBar.bump{animation:jBump .6s ease}
+@keyframes jBump{0%{transform:translateY(0)}30%{transform:translateY(-6px);box-shadow:0 -10px 30px rgba(230,193,75,.35)}100%{transform:translateY(0)}}
+#jTop .jtr{position:static !important;display:inline-flex !important;align-items:center;width:auto;min-width:0;margin:0;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800;background:var(--panel);color:var(--accent);border:1px solid var(--line);line-height:1.3;cursor:pointer}
+body.th-red #jTop .jtr{background:#f6efe1;color:#8F0101;border-color:#e0d0b8}
+body.th-red #jP3>.hint,body.th-red #jP3>details>summary,body.th-red #jP3>details>.hint,body.th-red #jP1 .jhint,body.th-red .jdots .jdn{color:#f0dcc8}
 .jclock .tlbl{color:#f3ede4;opacity:.85;text-shadow:0 1px 6px rgba(0,0,0,.6)}
 .jclock .tbox{background:rgba(22,19,15,.62);border:1px solid rgba(243,237,228,.28);color:#e6c14b;min-width:52px;backdrop-filter:blur(2px)}
 .jclock .tlab{color:#f3ede4;opacity:.85}
@@ -532,7 +541,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-12b';
+const VERSION='v2026-09-12c';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1030,14 +1039,17 @@ function renderTicker(list,G){ const top=list.filter(o=>(o.dep||0)>0).sort((a,b)
    +top.map((o,i)=>'<div class="jtm" style="left:calc('+Math.min(100,Math.round(100*(o.dep||0)/G))+'% - 13px + '+(i*9)+'px);z-index:'+(3-i)+'" title="'+escZ(o.name)+'"><span>'+jLand(o.origin,26,26)+'</span><b>'+(o.dep||0)+'</b></div>').join('')
    +'<div class="jtg"></div></div>'+(top.length?('<div class="jtlg">'+t('jLead')+': '+top.map(o=>escZ(jShort(o.name))+' <b style="color:var(--gold)">'+(o.dep||0)+'</b>').join(' · ')+'</div>'):'')+'</div>'; }
 function jShort(n){ return String(n||'').replace(/\s*#\d+.*$/,'').replace(/\s*\(.*\)$/,'').trim(); }
-function renderJTop(s,list){ let bar=$('jTop'); if(!bar){ bar=document.createElement('div'); bar.id='jTop'; const w=document.querySelector('.wrap'); const first=$('liveLogo'); if(w&&first) w.insertBefore(bar,first); else return; }
+function renderJTop(s,list){ const rb=document.querySelector('button[title="Refresh"]'); if(rb&&rb.parentElement&&rb.parentElement.id==='jTopR') document.body.appendChild(rb);   // v09n: yeniden çizimde düğme silinmesin
+  let bar=$('jTop'); if(!bar){ bar=document.createElement('div'); bar.id='jTop'; const w=document.querySelector('.wrap'); const first=$('liveLogo'); if(w&&first) w.insertBefore(bar,first); else return; }
   const c=s&&s.cycle; let clock=''; if(c&&c.next_close){ const v=cyClockVals(new Date(c.next_close).getTime()); clock=v.left>0?(v.d+t('uDayS')+' '+v.h+t('uHourS')):t('cyClockEnd'); }
   bar.innerHTML='<div class="jtb" onclick="location.href=(/(^|\\.)grup-al\\.com$/.test(location.hostname)?\'/\':location.pathname)"><svg width="34" height="34" viewBox="0 0 100 100" aria-hidden="true"><path d="M 80.6 29.3 A 36 36 0 1 0 85.65 55.01" fill="none" style="stroke:var(--accent)" stroke-width="7" stroke-linecap="round"/><path d="M 34 72 L 50 26 L 66 72" fill="none" style="stroke:var(--accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="85.65" cy="55.01" r="6.5" style="fill:var(--gold)"/></svg><div><div class="jtn">GRUP-AL</div><div class="jts">'+t('mdTitle')+' · '+t('mdCount').replace('{n}',list.length)+'</div></div></div>'
-   +(clock?('<div class="jtc" id="jTopClock"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>'+clock+'</span></div>'):'');
+   +'<span id="jTopR"></span>';
+  { const slot=bar.querySelector('#jTopR'); if(rb&&slot){ slot.appendChild(rb); rb.classList.add('jtr'); rb.style.cssText=''; } }   // v09n: Refresh düğmesi sayaç çipinin yerinde (sayaç kartta)
   document.body.classList.add('jmode'); document.documentElement.classList.add('jmode');
   if(!window.__jPage){ window.__jPage=true; let st=null, touching=false, snapping=false;   // v09m: sayfalama — deste ↔ damak arasında ortada kalınmaz (parmak kalkınca en yakın sayfaya)
-    const settle=()=>{ if(snapping||touching) return; const p2=$('jP2'); if(!p2) return; const T2=Math.round(p2.getBoundingClientRect().top+window.scrollY-56); const y=window.scrollY; if(y<=2||y>=T2-2) return; const target=(y<T2/2)?0:T2; snapping=true; window.scrollTo({top:target,behavior:'smooth'}); setTimeout(()=>{ snapping=false; },700); };
-    window.addEventListener('scroll',()=>{ clearTimeout(st); if(!touching) st=setTimeout(settle,150); },{passive:true});
+    let lastY=window.scrollY||0, dir=0;
+    const settle=()=>{ if(snapping||touching) return; const p2=$('jP2'); if(!p2) return; const T2=Math.round(p2.getBoundingClientRect().top+window.scrollY-56); const y=window.scrollY; if(y<=2||y>=T2-2) return; const f=y/T2; const target=(dir>0)?(f>0.25?T2:0):(f<0.75?0:T2); snapping=true; window.scrollTo({top:target,behavior:'smooth'}); setTimeout(()=>{ snapping=false; },700); };   // v09n: gidilen yönde %25 yeter
+    window.addEventListener('scroll',()=>{ const y=window.scrollY||0; if(y!==lastY) dir=y>lastY?1:-1; lastY=y; clearTimeout(st); if(!touching) st=setTimeout(settle,150); },{passive:true});
     window.addEventListener('touchstart',()=>{ touching=true; clearTimeout(st); },{passive:true});
     window.addEventListener('touchend',()=>{ touching=false; clearTimeout(st); st=setTimeout(settle,180); },{passive:true}); }
   if(!window.__jSun){ window.__jSun=true; const upd=()=>{ const p=Math.max(0,Math.min(1,(window.scrollY||0)/Math.max(300,(window.innerHeight||800)*0.9))); document.documentElement.style.setProperty('--sunset',p.toFixed(3)); }; window.addEventListener('scroll',()=>requestAnimationFrame(upd),{passive:true}); upd(); }   // v09l: güneş batışı — sayfa 1 kayarken kartın güneşi iner, gök kararır
@@ -1048,13 +1060,12 @@ function jCtl(o,cfg,paid,gate,banned){ if((paid&&paid.conv&&!paid.done)||banned)
           :('<button class="jplus" onclick="event.stopPropagation();dbAdd(\''+escZ(o.id)+'\',1)" title="'+t(paid?'offDepMore':'offDep').replace('{amt}',cfg.dep_amt||'')+'" aria-label="+">+</button>'); }
 function renderDeck(list,cfg,G,gate,banned,clk){ const all=list.slice().sort((a,b)=>((b.dep||0)-(a.dep||0)));   // v09l: tüm kahveler, ön sipariş sırasına göre
   const cards=all.map((o,i)=>{ const paid=(OFFMINE||[]).find(v=>v.id===o.id&&v.paid); const jury=o.jury_tl||o.camp200_tl; const tk=tasteOf(o); const tn=TASTES.find(x=>x[0]===tk); const tc=tn?TASTECOL[tk]:''; const tp=jTop(o);
-    return '<div class="jcard" data-i="'+i+'"><div class="jbg">'+jLand(o.origin,362,460,true)+'</div><div class="jsh"></div><div class="jsh2"></div>'
+    return '<div class="jcard" data-i="'+i+'" data-id="'+escZ(o.id)+'"><div class="jbg">'+jLand(o.origin,362,460,true)+'</div><div class="jsh"></div><div class="jsh2"></div>'
      +'<div class="jtop"><div style="display:flex;gap:6px;min-width:0"><span class="jchip">#'+(i+1)+(tp?' <span style="color:#e6c14b" title="'+t('jTop5')+'">★</span>':'')+'</span>'+(tn?('<span class="jchip jtaste"><i style="background:'+tc+'"></i>'+(LANG==='en'?tn[2]:tn[1])+'</span>'):'')+'</div>'
      +'<svg width="50" height="50" viewBox="0 0 50 50" aria-hidden="true"><circle cx="25" cy="25" r="21" fill="rgba(22,19,15,.5)" stroke="rgba(243,237,228,.25)" stroke-width="4"/><circle cx="25" cy="25" r="21" fill="none" stroke="#e6c14b" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+(2*Math.PI*21*Math.min(1,(o.dep||0)/G)).toFixed(1)+' 999" transform="rotate(-90 25 25)"/><text x="25" y="29" text-anchor="middle" font-size="14" font-weight="800" fill="#f3ede4" font-family="-apple-system,Segoe UI,Roboto,sans-serif">'+(o.dep||0)+'</text></svg></div>'
-     +(clk||'')
      +'<div class="jbody"><div class="jmeta">'+jMeta(o)+'</div><div class="jname">'+escZ(o.name)+'</div>'+(jDesc(o)?('<div class="jdesc">'+jDesc(o)+'</div>'):'')
      +'<div class="jrow"><div><div class="jpl">'+t('jJuryP')+' · '+t('boxGs')+'</div><div class="jprice">'+(o.list_tl&&jury&&o.list_tl>jury?('<s>'+fmtTL(o.list_tl)+'</s>'):'')+(jury?(fmtTL(jury)+' TL'):'')+'</div>'+(paid?('<div class="jpl" style="color:#e6c14b">'+t('jMine').replace('{n}',paid.qty||1)+'</div>'):'')+'</div>'+jCtl(o,cfg,paid,gate,banned)+'</div></div></div>'; }).join('');
-  return '<div class="jdeck" id="jDeck">'+cards+'</div><div class="jdots"><i class="on"></i><span class="jdn">1 / '+all.length+' · '+t('jSwipe')+'</span></div>'; }
+  return '<div class="jdeckw"><div class="jdeck" id="jDeck">'+cards+'</div>'+(clk||'')+'</div><div class="jdots"><i class="on"></i><span class="jdn">1 / '+all.length+' · '+t('jSwipe')+'</span></div>'; }
 const TASTECOL={hafif:'#7fb8c9',dolgun:'#d48a5a',yogun:'#a2588f',funky:'#8fc36f'};
 function renderBands(list){ let h='<div id="jDamak" class="jh2">'+t('jDamakT')+'</div>';
   for(const x of TASTES){ if(x[0]==='all') continue; const arr=list.filter(o=>tasteOf(o)===x[0]); if(!arr.length) continue; const prices=arr.map(o=>o.jury_tl||o.camp200_tl).filter(Boolean); const lo=Math.min(...prices), hi=Math.max(...prices);
@@ -1090,7 +1101,7 @@ function offRowHtml(o,ctx){
     if(depMode&&gate&&!(paid&&paid.conv)) det.push(cfg.code_always?t('offCodeRow'):t('offEarlyRow').replace('{d}',fmtOpen(cfg.dep_open_at)));
     const mv=(paid&&!paid.conv&&list.length>1)?('<div onclick="event.stopPropagation()"><a onclick="offMoveUI(\''+escZ(o.id)+'\')">'+t('offMove')+'</a><span id="mv_'+escZ(o.id)+'"></span></div>'):'';
     const laneNo=ctx.rank||0, topN=depMode?jTop(o):0;   // v09j: kulvar sırası + CoffeeNutz'ın 5'i yıldızı
-    return '<div class="orow'+(rowMine?' mine':'')+(open?' open':'')+(depMode?' lane':'')+'" onclick="offDetail(\''+escZ(o.id)+'\')">'
+    return '<div class="orow'+(rowMine?' mine':'')+(open?' open':'')+(depMode?' lane':'')+'" data-id="'+escZ(o.id)+'" onclick="offDetail(\''+escZ(o.id)+'\')">'
       +(depMode?('<div class="orank'+(laneNo<=2?' top':'')+'">'+laneNo+'</div><div class="othumb" style="border-color:'+(TASTECOL[tasteOf(o)]||'var(--line)')+'">'+jLand(o.origin,50,50)+'</div>'):'')
       +'<div class="ol1"><span class="on">'+escZ(o.name)+(topN?('<span class="ostar" title="'+t('jTop5')+'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></span>'):'')+'</span>'+(chip?('<span class="ochip">'+chip+'</span>'):'')+price+'</div>'
       +(meta?('<div class="hint om">'+meta+'</div>'):'')
@@ -1126,7 +1137,10 @@ function renderOffers(s){
     if(fold) h+='<button onclick="offShowAll()" style="margin-top:6px;padding:9px;font-size:13px;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">'+t('offMore').replace('{n}',list.length-shown.length)+'</button>';
     h+='<div class="hint" style="margin-top:4px;font-size:11px;opacity:.75">'+t('offGoal').split('{g}').join(G)+'</div>';
   }
+  const dk0=$('jDeck'), keepSL=dk0?dk0.scrollLeft:0;   // v09n: + basınca deste yerinde kalsın
   el.innerHTML=h; card.style.display='block'; renderBasketBar(); cyStartClock();   // v09a: geri sayım saati
+  { const dk=$('jDeck'); if(dk&&keepSL){ dk.scrollLeft=keepSL; const n=Math.round(keepSL/Math.max(1,dk.clientWidth))+1; const dn=document.querySelector('.jdots .jdn'); if(dn) dn.textContent=n+' / '+dk.children.length+' · '+t('jSwipe'); } }
+  if(window.__jPop){ const id=window.__jPop; window.__jPop=null; document.querySelectorAll('[data-id="'+id+'"] .jq,[data-id="'+id+'"] .oq,[data-id="'+id+'"] button.oc').forEach(e=>{ e.classList.add('pop'); }); const bar=$('dbBar'); if(bar){ bar.classList.remove('bump'); void bar.offsetWidth; bar.classList.add('bump'); } }   // v09n: dokunulan kontrol zıplar, sepet çubuğu vurgulanır
   { const dk=$('jDeck'); if(dk&&!dk.__w){ dk.__w=true; dk.addEventListener('scroll',()=>{ const n=Math.round(dk.scrollLeft/Math.max(1,dk.clientWidth))+1; const dn=document.querySelector('.jdots .jdn'); if(dn) dn.textContent=n+' / '+dk.children.length+' · '+t('jSwipe'); },{passive:true}); } }   // v09l: deste sayacı
   if(MEYDAN){ const dl=$('shareBox')&&$('shareBox').querySelector('[data-i18n="davLbl"]'); if(dl) dl.textContent=t(shMine()?'shMineL':'mdShareL'); }   // v07c: kaporam varsa paylaşım etiketi
   const wl=$('wishCard')&&$('wishCard').querySelector('.lbl'); if(wl) wl.textContent=t('wishAlt');   // teklif varken dilek kartı "listede yok mu?" olur
@@ -1140,7 +1154,7 @@ function jToggleBand(k){ JBAND=(JBAND===k)?null:k; try{ if(JBAND) localStorage.s
 function jOpenBand(k){ if(JBAND!==k){ JBAND=k; try{ localStorage.setItem('grupal_jband',k); }catch(e){} renderOffers(STATE); } const e=$('jb_'+k); if(e&&e.scrollIntoView) e.scrollIntoView({behavior:'smooth',block:'start'}); }
 function jClockBoxes(nc){ const v=cyClockVals(nc); if(v.left<=0) return '<div class="jclock"><div class="tlbl">'+t('cySessL')+'</div><div class="tended" style="font-size:14px">'+t('cyClockEnd')+'</div></div>';
   const p=n=>String(n).padStart(2,'0'); const labs={d:t('uDay'),h:t('uHour'),m:t('uMin'),s:t('uSec')};
-  return '<div class="jclock"><div class="tlbl">'+t('cySessL')+'</div><div class="tgrid'+(v.left<86400000?' urgent':'')+'">'+['d','h','m','s'].map(k=>'<div><div class="tbox jck" data-k="'+k+'">'+p(v[k])+'</div><div class="tlab">'+labs[k]+'</div></div>').join('')+'</div><div class="jcend">'+escZ(cyWd(new Date(nc).toISOString())+' '+cyHM(new Date(nc).toISOString()))+' · '+t('cyEndS')+'</div></div>'; }
+  return '<div class="jclock"><div class="tlbl">'+t('cySessL')+'</div><div class="tgrid'+(v.left<86400000?' urgent':'')+'">'+['d','h','m','s'].map(k=>'<div><div class="tbox jck" data-k="'+k+'">'+p(v[k])+'</div><div class="tlab">'+labs[k]+'</div></div>').join('')+'</div></div>'; }
 function jClockTxt(nc){ const v=cyClockVals(nc); if(v.left<=0) return t('cyClockEnd'); return (v.d?(v.d+t('uDayS')+' '):'')+v.h+t('uHourS')+' '+v.m+t('uMinS'); }
 function renderJuriPage(s,list,ctx,early,codeOk){
   const {cfg,G,mine,pend,gate,banned}=ctx; let h='';
@@ -1273,7 +1287,7 @@ async function offLoadMine(s){
 function dbGet(){ try{ const o=JSON.parse(localStorage.getItem('grupal_dbasket')||'{}'); return (o&&typeof o==='object')?o:{}; }catch(e){ return {}; } }
 function dbSave(o){ try{ localStorage.setItem('grupal_dbasket', JSON.stringify(o)); }catch(e){} }
 const DEP_CAP=10;   // v07k (Ömer, eşik 40): kahve başına en çok 10 kapora — tek kişi masayı kilitleyemesin (eskiden 30)
-function dbAdd(id,delta){ const o=dbGet(); const q=Math.max(0,Math.min(DEP_CAP,(parseInt(o[id])||0)+(delta||1))); if(q) o[id]=q; else delete o[id]; dbSave(o); renderOffers(STATE); }
+function dbAdd(id,delta){ const o=dbGet(); const q=Math.max(0,Math.min(DEP_CAP,(parseInt(o[id])||0)+(delta||1))); if(q) o[id]=q; else delete o[id]; dbSave(o); if((delta||1)>0) window.__jPop=id; renderOffers(STATE); }
 function dbClear(){ dbSave({}); renderOffers(STATE); }
 function dbSum(){ const o=dbGet(), list=(STATE&&STATE.offers)||[]; let boxes=0, coffees=0; for(const id in o){ if(!list.some(x=>x.id===id)) continue; boxes+=o[id]; coffees++; } return {boxes,coffees}; }
 function dbUrl(){
