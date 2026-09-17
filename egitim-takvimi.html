@@ -64,6 +64,21 @@ button{font:inherit;cursor:pointer}
 .note{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.5}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--panel2);color:var(--ink);border:1px solid var(--accent);padding:10px 18px;border-radius:99px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:99;max-width:90vw;text-align:center}
 #toast.show{opacity:1}
+/* admin mode (only rendered after sign-in) */
+.abar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--accent);border-radius:14px;padding:10px 12px;margin:0 0 12px}
+.abadge{font-size:12px;font-weight:800;color:var(--accent);letter-spacing:.04em;white-space:nowrap}
+.apanel{margin-bottom:14px}
+.arow{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px;flex-wrap:wrap}
+.arow.shop{border-style:dashed;border-color:var(--accent)}
+.arow.gone{opacity:.5}
+.abtns{display:flex;gap:6px;flex-wrap:wrap}
+.pill.danger{color:var(--red);border-color:var(--red)}
+.cta.danger{background:var(--red);color:#fff}
+.inp{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);color-scheme:dark;font:inherit}
+.lbl{display:block;margin:10px 0 4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.alink{color:var(--muted);text-decoration:none;font-size:11px;opacity:.7}
+.alink:hover{opacity:1}
 </style>
 </head>
 <body>
@@ -77,6 +92,8 @@ button{font:inherit;cursor:pointer}
     <button class="pill" id="langEN" onclick="setLangTo('en')">EN</button>
   </div>
   <div class="sub" id="tagline"></div>
+  <div id="adminBar" class="abar hidden"></div>
+  <div id="adminPanel" class="apanel hidden"></div>
 
   <div class="toolbar">
     <button class="pill" id="btnPrev" onclick="moveMonth(-1)">‹</button>
@@ -96,6 +113,7 @@ button{font:inherit;cursor:pointer}
   <div class="sec" id="monListTitle"></div>
   <div id="monList"></div>
   <div class="note" id="noteLine"></div>
+  <div class="note" id="adminLink" style="margin-top:6px"></div>
 </div>
 <div id="modalWrap" class="hidden" onclick="if(event.target===this) closeModal()"><div class="modal" id="modalBox"></div></div>
 <div id="toast"></div>
@@ -105,7 +123,7 @@ const FEED = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/public-train
 const OFFER = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/date-offer";
 const WA = "905333321414"; // offer pings land on Ömer's WhatsApp, sent from the visitor's own number
 const OFFER_TRAININGS = ["SCA Barista F+I","SCA Barista Pro","SCA Roasting F+I","SCA Roasting Pro","SCA Sensory F+I","SCA Sensory Pro","Q Grader Sertifikasyon"];
-const APP_VERSION = "v2026-09-04a";
+const APP_VERSION = "v2026-09-17a";
 const SITE = "https://www.coffeenutz.net";
 const IG = "https://ig.me/m/coffeenutznet"; // opens the DM thread directly, not the profile
 
@@ -150,6 +168,63 @@ const STR = {
   days_tr:["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"],
   days_en:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
   legRoast:["Roasting","Roasting"], legBar:["Barista","Barista"], legSens:["Sensory","Sensory"], legQ:["Q Grader","Q Grader"], legOther:["Diğer","Other"],
+  // admin mode
+  adLink:["Yönetici girişi","Admin sign-in"],
+  adTitle:["Yönetici girişi","Admin sign-in"],
+  adEmail:["E-posta","Email"],
+  adPass:["Şifre","Password"],
+  adLogin:["Giriş yap","Sign in"],
+  adMissing:["E-posta ve şifre gerekli.","Email and password are required."],
+  adLoginErr:["Giriş başarısız: e-posta veya şifre hatalı.","Sign-in failed: check the email or password."],
+  adWelcome:["Yönetici modu açık.","Admin mode on."],
+  adBye:["Çıkış yapıldı.","Signed out."],
+  adForbidden:["Bu hesap takvimi yönetmeye yetkili değil.","This account is not authorized to manage the calendar."],
+  adExpired:["Oturum süresi doldu, tekrar giriş yapın.","Session expired, please sign in again."],
+  adErr:["Olmadı:","Failed:"],
+  adMode:["Yönetici modu","Admin mode"],
+  adNew:["+ Yeni eğitim","+ New training"],
+  adShop:["Shopify'ı kontrol et","Check Shopify"],
+  adOut:["Çıkış","Sign out"],
+  adLoading:["Yükleniyor…","Loading…"],
+  adListTitle:["Takvimdeki eğitimler","Trainings on the calendar"],
+  adListEmpty:["Takvimde yaklaşan eğitim yok.","No upcoming trainings on the calendar."],
+  adSeats:["Kayıt","Booked"],
+  adSeatsHint:["Kayıt sayısı Academy Management'tan yönetilir.","Booked seats are managed in Academy Management."],
+  adEdit:["Düzenle","Edit"],
+  adDel:["Sil","Delete"],
+  adCancel:["İptal et","Cancel class"],
+  adNewTitle:["Yeni eğitim","New training"],
+  adEditTitle:["Eğitimi düzenle","Edit training"],
+  adTraining:["Eğitim","Training"],
+  adStart:["Başlangıç","Start"],
+  adEnd:["Bitiş","End"],
+  adLang:["Dil","Language"],
+  adStatus:["Durum","Status"],
+  adCap:["Kontenjan","Seats (cap)"],
+  adPrice:["Fiyat (TRY)","Price (TRY)"],
+  adUrl:["Kayıt linki","Registration link"],
+  adNotes:["Not","Note"],
+  adSave:["Kaydet","Save"],
+  adSaved:["Kaydedildi.","Saved."],
+  adEndErr:["Bitiş, başlangıçtan önce olamaz.","End cannot be before start."],
+  adDelTitle:["Eğitimi sil?","Delete this training?"],
+  adDelWarn:["Satır Trainings tablosundan kalıcı olarak silinir. Kayıtlı öğrencisi olan sınıflar silinemez; onları 'İptal et' ile kapatın. Shopify'daki varyantı ayrıca kapatmayı unutmayın.","The row is permanently removed from the Trainings sheet. Classes with booked students cannot be deleted; close those with 'Cancel class'. Remember to close the Shopify variant separately."],
+  adDelYes:["Evet, sil","Yes, delete"],
+  adDeleted:["Silindi.","Deleted."],
+  adCancelTitle:["Sınıfı iptal et?","Cancel this class?"],
+  adCancelWarn:["Durum 'Cancelled' olur: sınıf takvimden kalkar, kayıt geçmişi tabloda kalır. Shopify'daki varyantı ayrıca kapatmayı unutmayın.","Status becomes 'Cancelled': the class leaves the calendar, its history stays in the sheet. Remember to close the Shopify variant separately."],
+  adCancelYes:["Evet, iptal et","Yes, cancel it"],
+  adCancelled:["İptal edildi.","Cancelled."],
+  adLag:["Herkese açık takvim en geç 5 dakika içinde güncellenir.","The public calendar catches up within 5 minutes."],
+  adShopMissing:["Shopify'da satışta, takvimde yok","On sale in Shopify, missing from the calendar"],
+  adShopOk:["Shopify ile takvim uyumlu.","Shopify and the calendar agree."],
+  adShopErr:["Shopify kontrol edilemedi.","Could not check Shopify."],
+  adShopNoDate:["tarih okunamadı, elle girin","date not readable, enter it by hand"],
+  adShopUnavail:["satışta değil","not available"],
+  adShopAdd:["Takvime ekle","Add to calendar"],
+  adShopNotSelling:["Takvimde var, Shopify'da varyantı yok","On the calendar, no Shopify variant"],
+  stDelivered:["Tamamlandı","Delivered"],
+  stCancelled:["İptal edildi","Cancelled"],
 };
 function t(k){ const v = STR[k]; return v ? v[LANG==="en"?1:0] : k; }
 const AYLAR = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
@@ -262,6 +337,7 @@ function render(){
         <span class="chip ${statusCls(x)}">${statusTxt(x)}</span></div>
       <p class="meta" style="margin:6px 0 0">${esc(x.start)} → ${esc(x.end)}</p>
     </div>`).join("") || `<div class="card" style="cursor:default"><p class="meta" style="margin:0">${t("empty")}</p></div>`;
+  renderAdmin();
 }
 
 function openTr(i){
@@ -334,9 +410,369 @@ async function submitOffer(){
   }
 }
 
+// ---------- admin mode: Ömer manages the calendar himself ----------
+// Nothing below runs for visitors: the panel appears only after a Supabase sign-in, and every
+// write goes through the trainings-admin function (JWT + ALLOWED_EMAILS gate on the server).
+// Visitors keep getting the sanitized public feed; seat counts and prices exist only in admin mode.
+const SB = "https://efjvfggwnhqkunjvoyjb.supabase.co";
+const SB_ANON = "sb_publishable_GkkPHLQ8Syldn3sbvt1sDw_vKrBxnfZ"; // publishable key: safe in a browser
+const ADMIN_FN = SB + "/functions/v1/trainings-admin";
+const COURSE = { // exact sheet names -> storefront handle, usual length in days, usual seats
+  "SCA Barista F+I":{ h:"sca-barista-foundation-intermediate", days:3, cap:4 },
+  "SCA Barista Pro":{ h:"barista-professional", days:3, cap:4 },
+  "SCA Roasting F+I":{ h:"roasting-foundation-intermediate", days:4, cap:4 },
+  "SCA Roasting Pro":{ h:"roasting-professional", days:3, cap:4 },
+  "SCA Sensory F+I":{ h:"sca-sensory-skills-foundation-intermediate", days:3, cap:4 },
+  "SCA Sensory Pro":{ h:"sca-sensory-skills-professional", days:3, cap:4 },
+  "Q Grader Sertifikasyon":{ h:"q-grader", days:6, cap:6 },
+};
+let ADMIN = null;        // {access_token, refresh_token, expires_at, email}
+let AROWS = null;        // admin list from the sheet (rowId, name, start, end, lang, status, cap, booked, price, url, notes)
+let SHOP = null;         // storefront products + variants, SHOPERR when the check failed
+let SHOPERR = false;
+let SHOPMISSING = [];    // Shopify variants not on the calendar, as last rendered
+let adEndTouched = false;
+
+function adminLoad(){ try{ const s = JSON.parse(localStorage.getItem("cn_pub_admin") || "null"); if (s && s.access_token && s.refresh_token) ADMIN = s; }catch(_){} }
+function adminSave(){ try{ if (ADMIN) localStorage.setItem("cn_pub_admin", JSON.stringify(ADMIN)); else localStorage.removeItem("cn_pub_admin"); }catch(_){} }
+
+function openAdminLogin(){
+  openModal(`
+    <h3>${t("adTitle")}</h3>
+    <label class="meta lbl">${t("adEmail")}</label>
+    <input type="email" id="adEmail" class="inp" autocomplete="username" autocapitalize="off">
+    <label class="meta lbl">${t("adPass")}</label>
+    <input type="password" id="adPass" class="inp" autocomplete="current-password" onkeydown="if(event.key==='Enter') adminLogin()">
+    <div class="foot">
+      <button class="cta" id="adGo" onclick="adminLogin()">${t("adLogin")}</button>
+      <button class="cta ghost" onclick="closeModal()">${t("close")}</button>
+    </div>`);
+  setTimeout(() => { const el = document.getElementById("adEmail"); if (el) el.focus(); }, 50);
+}
+async function adminLogin(){
+  const email = (document.getElementById("adEmail").value || "").trim();
+  const pass = document.getElementById("adPass").value || "";
+  if (!email || !pass){ toast(t("adMissing")); return; }
+  const btn = document.getElementById("adGo"); btn.disabled = true;
+  try{
+    const r = await fetch(SB + "/auth/v1/token?grant_type=password", {
+      method:"POST", headers:{ "Content-Type":"application/json", "apikey": SB_ANON },
+      body: JSON.stringify({ email, password: pass }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.access_token) throw new Error("login");
+    ADMIN = { access_token: j.access_token, refresh_token: j.refresh_token,
+      expires_at: j.expires_at || Math.floor(Date.now() / 1000) + (j.expires_in || 3600),
+      email: (j.user && j.user.email) || email };
+    adminSave(); closeModal(); toast(t("adWelcome"));
+    await adminRefreshAll();
+  }catch(e){
+    btn.disabled = false;
+    toast(t("adLoginErr"));
+  }
+}
+async function adminRenew(){
+  const r = await fetch(SB + "/auth/v1/token?grant_type=refresh_token", {
+    method:"POST", headers:{ "Content-Type":"application/json", "apikey": SB_ANON },
+    body: JSON.stringify({ refresh_token: ADMIN.refresh_token }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.access_token){ adminLogout(true); throw new Error("renew"); }
+  ADMIN.access_token = j.access_token;
+  ADMIN.refresh_token = j.refresh_token || ADMIN.refresh_token;
+  ADMIN.expires_at = j.expires_at || Math.floor(Date.now() / 1000) + (j.expires_in || 3600);
+  adminSave();
+}
+function adminLogout(silent){
+  const tok = ADMIN && ADMIN.access_token;
+  ADMIN = null; AROWS = null; SHOP = null; SHOPERR = false; SHOPMISSING = [];
+  adminSave(); renderAdmin();
+  if (tok && !silent) fetch(SB + "/auth/v1/logout", { method:"POST", headers:{ "apikey": SB_ANON, "Authorization": "Bearer " + tok } }).catch(() => {});
+  if (!silent) toast(t("adBye"));
+}
+async function adminApi(action, payload){
+  if (!ADMIN) throw new Error("nosession");
+  if (ADMIN.expires_at && ADMIN.expires_at - 60 < Date.now() / 1000) await adminRenew();
+  const call = () => fetch(ADMIN_FN, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "apikey": SB_ANON, "Authorization": "Bearer " + ADMIN.access_token },
+    body: JSON.stringify(Object.assign({ action }, payload || {})) });
+  let r = await call();
+  if (r.status === 401){ await adminRenew(); r = await call(); }
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401 || r.status === 403){ adminLogout(true); throw new Error(r.status === 403 ? "forbidden" : "unauthorized"); }
+  if (!r.ok) throw new Error(j.error || ("HTTP " + r.status));
+  return j;
+}
+function adminErr(e){
+  const m = String((e && e.message) || e);
+  if (m === "forbidden") toast(t("adForbidden"));
+  else if (m === "unauthorized" || m === "renew" || m === "nosession") toast(t("adExpired"));
+  else if (m === "duplicate") toast(LANG === "en" ? "That training already has a class on that start date." : "Bu eğitimin o başlangıç tarihinde zaten bir sınıfı var.");
+  else if (m === "has registrations") toast(LANG === "en" ? "Booked students exist: use Cancel class instead." : "Kayıtlı öğrenci var: bunun yerine İptal et kullanın.");
+  else toast(t("adErr") + " " + m);
+  renderAdmin();
+}
+async function adminRefreshAll(){
+  if (!ADMIN) return;
+  renderAdmin();
+  try{
+    const j = await adminApi("list");
+    AROWS = j.trainings || [];
+    renderAdmin();
+    checkShopify();
+  }catch(e){ adminErr(e); }
+}
+async function checkShopify(fresh){
+  if (!ADMIN) return;
+  try{
+    const j = await adminApi("shopify", fresh ? { fresh: 1 } : {});
+    SHOP = j.products || []; SHOPERR = false;
+  }catch(e){ SHOP = null; SHOPERR = true; }
+  renderAdmin();
+}
+
+// ----- storefront variant titles -> dates ("15 - 17 Eylül 2026 (Sertifikalar dahil)", "27- 29 November 2026 (...)")
+const MON = { ocak:1, subat:2, mart:3, nisan:4, mayis:5, haziran:6, temmuz:7, agustos:8, eylul:9, ekim:10, kasim:11, aralik:12,
+  january:1, february:2, march:3, april:4, may:5, june:6, july:7, august:8, september:9, october:10, november:11, december:12,
+  jan:1, feb:2, mar:3, apr:4, jun:6, jul:7, aug:8, sep:9, sept:9, oct:10, nov:11, dec:12 };
+function foldTr(s){
+  return String(s).replace(/İ/g, "I").replace(/ı/g, "i").toLowerCase().replace(/̇/g, "")
+    .replace(/ş/g, "s").replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ö/g, "o").replace(/ç/g, "c");
+}
+function isoDay(y, mo, d){
+  if (!mo || !(d >= 1 && d <= 31)) return null;
+  const dt = new Date(Date.UTC(+y, mo - 1, d));
+  return dt.getUTCMonth() === mo - 1 ? dt.toISOString().slice(0, 10) : null;
+}
+function parseVariantDates(title){
+  const s = foldTr(title).replace(/\(.*?\)/g, " ").replace(/\s+/g, " ").trim();
+  let m;
+  if ((m = s.match(/(\d{1,2})\s*[-–—]\s*(\d{1,2})\s+([a-z]+)\.?,?\s+(\d{4})/))){       // 15 - 17 eylul 2026
+    const a = isoDay(m[4], MON[m[3]], +m[1]), b = isoDay(m[4], MON[m[3]], +m[2]);
+    if (a && b && b >= a) return { start:a, end:b };
+  }
+  if ((m = s.match(/(\d{1,2})\s+([a-z]+)\.?\s*[-–—]\s*(\d{1,2})\s+([a-z]+)\.?,?\s+(\d{4})/))){ // 30 kasim - 2 aralik 2026
+    const a = isoDay(m[5], MON[m[2]], +m[1]), b = isoDay(m[5], MON[m[4]], +m[3]);
+    if (a && b && b >= a) return { start:a, end:b };
+  }
+  if ((m = s.match(/([a-z]+)\.?\s+(\d{1,2})\s*[-–—]\s*(\d{1,2}),?\s+(\d{4})/))){          // november 24-26, 2026
+    const a = isoDay(m[4], MON[m[1]], +m[2]), b = isoDay(m[4], MON[m[1]], +m[3]);
+    if (a && b && b >= a) return { start:a, end:b };
+  }
+  if ((m = s.match(/(\d{1,2})\s+([a-z]+)\.?,?\s+(\d{4})/))){                                // 3 kasim 2026
+    const a = isoDay(m[3], MON[m[2]], +m[1]);
+    if (a) return { start:a, end:a };
+  }
+  return null;
+}
+function shopifyDiff(products, rows){
+  const tNow = todayStr();
+  const onCal = new Set(rows.filter(r => r.status !== "Cancelled").map(r => r.name + "|" + r.start));
+  const inShop = new Set();
+  const missing = [];
+  products.forEach(p => (p.variants || []).forEach(v => {
+    const d = parseVariantDates(v.title);
+    if (d) inShop.add(p.course + "|" + d.start);
+    if (d && d.end < tNow) return;                        // past variant, not the calendar's business
+    if (d && onCal.has(p.course + "|" + d.start)) return; // already on the calendar
+    missing.push({ course:p.course, url:p.url, title:v.title, price:v.price, available:v.available, start:d ? d.start : "", end:d ? d.end : "" });
+  }));
+  const notSelling = rows.filter(r => r.status !== "Cancelled" && r.start >= tNow && COURSE[r.name] && !inShop.has(r.name + "|" + r.start));
+  return { missing, notSelling };
+}
+function fmtPrice(p){
+  const s = String(p ?? "").trim(); const n = Number(s);
+  return s !== "" && Number.isFinite(n) ? new Intl.NumberFormat("tr-TR").format(Math.round(n)) + " TRY" : s;
+}
+function adStatusTxt(s){
+  return s === "Registration open" ? t("open") : s === "Confirmed" ? t("conf") : s === "In progress" ? t("ongoing")
+    : s === "Delivered" ? t("stDelivered") : s === "Cancelled" ? t("stCancelled") : s;
+}
+function adStatusCls(s){ return s === "Registration open" ? "open" : s === "Confirmed" ? "conf" : ""; }
+
+function renderAdmin(){
+  const bar = document.getElementById("adminBar"), panel = document.getElementById("adminPanel"), link = document.getElementById("adminLink");
+  if (!bar || !panel || !link) return;
+  link.innerHTML = ADMIN ? "" : `<a href="#" class="alink" onclick="event.preventDefault(); openAdminLogin()">${t("adLink")}</a>`;
+  if (!ADMIN){ bar.classList.add("hidden"); panel.classList.add("hidden"); bar.innerHTML = ""; panel.innerHTML = ""; return; }
+  bar.classList.remove("hidden"); panel.classList.remove("hidden");
+  bar.innerHTML = `<span class="abadge">🔧 ${t("adMode")}</span><span class="meta" style="flex:1; min-width:120px">${esc(ADMIN.email)}</span>
+    <button class="pill on" id="adNewBtn" onclick="openAdminForm(null)">${t("adNew")}</button>
+    <button class="pill" id="adShopBtn" onclick="checkShopify(true)">${t("adShop")}</button>
+    <button class="pill" id="adOutBtn" onclick="adminLogout()">${t("adOut")}</button>`;
+  let html = "";
+  if (AROWS && SHOP){
+    const d = shopifyDiff(SHOP, AROWS); SHOPMISSING = d.missing;
+    if (d.missing.length){
+      html += `<div class="sec" id="shopMissingTitle">${t("adShopMissing")} (${d.missing.length})</div>` + d.missing.map((m, k) => `
+        <div class="arow shop" data-shop="${k}"><span class="dotc" style="background:var(--c-${typeOf(m.course)})"></span>
+          <div style="flex:1; min-width:180px"><b>${esc(shortName(m.course))}</b> <span class="meta">${esc(m.title)}</span>
+            <div class="meta">${m.start ? esc(m.start) + " → " + esc(m.end) : t("adShopNoDate")}${m.price ? " · " + esc(fmtPrice(m.price)) : ""}${m.available ? "" : " · " + t("adShopUnavail")}</div></div>
+          <div class="abtns"><button class="pill on" onclick="addFromShop(${k})">${t("adShopAdd")}</button></div>
+        </div>`).join("");
+    } else html += `<p class="meta" id="shopOk">${t("adShopOk")}</p>`;
+    if (d.notSelling.length) html += `<p class="meta" id="shopNotSelling">${t("adShopNotSelling")}: ${d.notSelling.map(r => esc(shortName(r.name)) + " " + esc(r.start)).join(", ")}</p>`;
+  } else if (AROWS && SHOPERR) html += `<p class="meta" id="shopErr">${t("adShopErr")}</p>`;
+  if (!AROWS) html += `<p class="meta">${t("adLoading")}</p>`;
+  else {
+    html += `<div class="sec" id="adListTitle">${t("adListTitle")} (${AROWS.length})</div>`;
+    html += AROWS.map(adminRow).join("") || `<p class="meta">${t("adListEmpty")}</p>`;
+  }
+  panel.innerHTML = html;
+}
+function adminRow(r, i){
+  const booked = Number(r.booked) > 0 ? Number(r.booked) : 0;
+  const cancelled = r.status === "Cancelled";
+  const canDel = booked === 0 && r.status !== "In progress" && r.status !== "Delivered";
+  const act = canDel ? `<button class="pill danger" onclick="askRemove(${i})">${t("adDel")}</button>`
+    : (cancelled ? "" : `<button class="pill danger" onclick="askCancel(${i})">${t("adCancel")}</button>`);
+  return `<div class="arow${cancelled ? " gone" : ""}" data-row="${r.rowId}">
+    <span class="dotc" style="background:var(--c-${typeOf(r.name)})"></span>
+    <div style="flex:1; min-width:180px"><b>${esc(shortName(r.name))}</b> <span class="chip">${esc(langName(r.lang))}</span> <span class="chip ${cancelled ? "" : adStatusCls(r.status)}">${adStatusTxt(r.status)}</span>
+      <div class="meta">${esc(r.start)} → ${esc(r.end)} · ${t("adSeats")}: ${booked}/${esc(r.cap || "?")}${r.price ? " · " + esc(fmtPrice(r.price)) : ""}</div></div>
+    <div class="abtns"><button class="pill" onclick="openAdminForm(${i})">${t("adEdit")}</button>${act}</div>
+  </div>`;
+}
+function openAdminForm(i, prefill){
+  const r = (i !== null && i !== undefined && AROWS) ? AROWS[i] : null;
+  const f = Object.assign({ training:"", start:"", end:"", lang:"Turkish", status:"Registration open", cap:"", price:"", url:"", notes:"" },
+    r ? { training:r.name, start:r.start, end:r.end, lang:r.lang, status:r.status, cap:r.cap, price:r.price, url:r.url, notes:r.notes } : {},
+    prefill || {});
+  if (!Number.isFinite(Number(f.price)) || String(f.price).trim() === "") f.price = "";
+  const statuses = r ? ["Registration open","Confirmed","In progress","Delivered","Cancelled"] : ["Registration open","Confirmed"];
+  const langLbl = l => LANG === "tr" ? (l === "Turkish" ? "Türkçe" : "İngilizce") : l;
+  openModal(`
+    <h3>${r ? t("adEditTitle") : t("adNewTitle")}</h3>
+    <label class="meta lbl">${t("adTraining")}</label>
+    <select id="adTraining" class="inp" onchange="adTrainingChanged()">
+      <option value=""></option>
+      ${Object.keys(COURSE).map(x => `<option${x === f.training ? " selected" : ""}>${esc(x)}</option>`).join("")}
+    </select>
+    <div class="grid2">
+      <div><label class="meta lbl">${t("adStart")}</label><input type="date" id="adStart" class="inp" value="${esc(f.start)}" onchange="adStartChanged()"></div>
+      <div><label class="meta lbl">${t("adEnd")}</label><input type="date" id="adEnd" class="inp" value="${esc(f.end)}" onchange="adEndTouched=true"></div>
+    </div>
+    <div class="grid2">
+      <div><label class="meta lbl">${t("adLang")}</label><select id="adLang" class="inp">
+        ${["Turkish","English"].map(l => `<option value="${l}"${l === f.lang ? " selected" : ""}>${langLbl(l)}</option>`).join("")}</select></div>
+      <div><label class="meta lbl">${t("adStatus")}</label><select id="adStatus" class="inp">
+        ${statuses.map(s => `<option value="${s}"${s === f.status ? " selected" : ""}>${adStatusTxt(s)}</option>`).join("")}</select></div>
+    </div>
+    <div class="grid2">
+      <div><label class="meta lbl">${t("adCap")}</label><input type="number" id="adCap" class="inp" min="1" max="30" value="${esc(f.cap)}"></div>
+      <div><label class="meta lbl">${t("adPrice")}</label><input type="number" id="adPrice" class="inp" min="0" step="1" value="${esc(f.price)}"></div>
+    </div>
+    <label class="meta lbl">${t("adUrl")}</label>
+    <input type="url" id="adUrl" class="inp" value="${esc(f.url)}">
+    <label class="meta lbl">${t("adNotes")}</label>
+    <textarea id="adNotes" class="inp" rows="3">${esc(f.notes)}</textarea>
+    ${r ? `<p class="meta">${t("adSeats")}: ${Number(r.booked) > 0 ? Number(r.booked) : 0}/${esc(r.cap || "?")} · ${t("adSeatsHint")}</p>` : ""}
+    <input type="hidden" id="adRowId" value="${r ? r.rowId : ""}">
+    <div class="foot">
+      <button class="cta" id="adSave" onclick="saveAdminForm()">${t("adSave")}</button>
+      <button class="cta ghost" onclick="closeModal()">${t("close")}</button>
+    </div>`);
+  adEndTouched = !!f.end;
+  if (!r && f.training) adTrainingChanged();
+}
+function adTrainingChanged(){
+  const name = document.getElementById("adTraining").value, c = COURSE[name]; if (!c) return;
+  const cap = document.getElementById("adCap"); if (!cap.value) cap.value = c.cap;
+  const url = document.getElementById("adUrl");
+  if (!url.value || /coffeenutz\.net\/products\//.test(url.value)) url.value = SITE + "/products/" + c.h;
+  const price = document.getElementById("adPrice");
+  if (!price.value){
+    const last = (AROWS || []).filter(x => x.name === name && String(x.price).trim() !== "" && Number.isFinite(Number(x.price))).pop();
+    if (last) price.value = Math.round(Number(last.price));
+  }
+  adStartChanged();
+}
+function adStartChanged(){
+  const c = COURSE[document.getElementById("adTraining").value], s = document.getElementById("adStart").value;
+  if (!c || !s || adEndTouched) return;
+  const d = new Date(s + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + c.days - 1);
+  document.getElementById("adEnd").value = d.toISOString().slice(0, 10);
+}
+function addFromShop(k){
+  const m = SHOPMISSING[k]; if (!m) return;
+  openAdminForm(null, { training:m.course, start:m.start, end:m.end, price: m.price ? String(Math.round(m.price)) : "", url:m.url || "" });
+}
+async function saveAdminForm(){
+  const g = id => (document.getElementById(id).value || "").trim();
+  const f = { training:g("adTraining"), start:g("adStart"), end:g("adEnd"), lang:g("adLang"), status:g("adStatus"), cap:g("adCap"), price:g("adPrice"), url:g("adUrl"), notes:g("adNotes") };
+  const rowId = g("adRowId");
+  const missing = [];
+  if (!f.training) missing.push(t("adTraining"));
+  if (!f.start) missing.push(t("adStart"));
+  if (!f.end) missing.push(t("adEnd"));
+  if (!f.cap) missing.push(t("adCap"));
+  if (missing.length){ toast(t("offerMissing") + missing.join(", ")); return; }
+  if (f.end < f.start){ toast(t("adEndErr")); return; }
+  const btn = document.getElementById("adSave"); btn.disabled = true;
+  try{
+    if (rowId) await adminApi("update", Object.assign({ rowId: Number(rowId) }, f));
+    else await adminApi("add", f);
+    closeModal(); toast(t("adSaved"));
+    await afterWrite({ name:f.training, start:f.start, gone: f.status === "Cancelled" || f.status === "Delivered" });
+  }catch(e){ btn.disabled = false; adminErr(e); }
+}
+function askRemove(i){
+  const r = AROWS[i]; if (!r) return;
+  openModal(`
+    <h3>${t("adDelTitle")}</h3>
+    <p class="meta"><b>${esc(r.name)}</b> · ${esc(r.start)} → ${esc(r.end)}</p>
+    <p class="meta">${t("adDelWarn")}</p>
+    <div class="foot">
+      <button class="cta danger" id="adDelGo" onclick="doRemove(${r.rowId})">${t("adDelYes")}</button>
+      <button class="cta ghost" onclick="closeModal()">${t("close")}</button>
+    </div>`);
+}
+async function doRemove(rowId){
+  const btn = document.getElementById("adDelGo"); if (btn) btn.disabled = true;
+  const r = (AROWS || []).find(x => x.rowId === rowId);
+  try{
+    await adminApi("remove", { rowId });
+    closeModal(); toast(t("adDeleted"));
+    await afterWrite(r ? { name:r.name, start:r.start, gone:true } : null);
+  }catch(e){ if (btn) btn.disabled = false; adminErr(e); }
+}
+function askCancel(i){
+  const r = AROWS[i]; if (!r) return;
+  openModal(`
+    <h3>${t("adCancelTitle")}</h3>
+    <p class="meta"><b>${esc(r.name)}</b> · ${esc(r.start)} → ${esc(r.end)}</p>
+    <p class="meta">${t("adCancelWarn")}</p>
+    <div class="foot">
+      <button class="cta danger" id="adCancelGo" onclick="doCancel(${r.rowId})">${t("adCancelYes")}</button>
+      <button class="cta ghost" onclick="closeModal()">${t("close")}</button>
+    </div>`);
+}
+async function doCancel(rowId){
+  const btn = document.getElementById("adCancelGo"); if (btn) btn.disabled = true;
+  const r = (AROWS || []).find(x => x.rowId === rowId);
+  try{
+    await adminApi("update", { rowId, status:"Cancelled" });
+    closeModal(); toast(t("adCancelled"));
+    await afterWrite(r ? { name:r.name, start:r.start, gone:true } : null);
+  }catch(e){ if (btn) btn.disabled = false; adminErr(e); }
+}
+// after any write: admin list straight from the sheet, public cards via the feed (its fresh path is
+// throttled server-side, so a second quick change may show up to 5 minutes later; say so)
+async function afterWrite(expect){
+  try{ const j = await adminApi("list"); AROWS = j.trainings || []; }catch(e){ adminErr(e); }
+  renderAdmin();
+  await load(true);
+  if (expect){
+    const seen = DATA.some(x => x.name === expect.name && x.start === expect.start);
+    if (expect.gone ? seen : !seen) toast(t("adLag"));
+  }
+}
+
+adminLoad();
 const now = new Date(); curY = now.getFullYear(); curM = now.getMonth();
 render();
 load();
+if (ADMIN) adminRefreshAll();
+try{ if (new URLSearchParams(location.search).get("admin") === "1" && !ADMIN) openAdminLogin(); }catch(_){}
 // storefront deep link: ?offer=1 opens the offer form at once. Deliberately NO course preselect:
 // the visitor picks from the full list and sees the whole range of classes (Ömer, 2026-09-04).
 try{
