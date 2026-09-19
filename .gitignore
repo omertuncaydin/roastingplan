@@ -3,3 +3,4 @@ package.json
 package-lock.json
 .fuse_hidden*
 _to_delete/
+.DS_Store
