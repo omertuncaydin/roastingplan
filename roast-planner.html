@@ -127,8 +127,8 @@
     <button onclick="try{var k=document.getElementById('keyIn').value.trim();if(k){localStorage.setItem('ccKey',k);planShow();}}catch(e){}">Aç · Unlock</button>
   </div>
   <div id="planApp" style="display:none">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h1 style="margin-right:auto">Roast Planner</h1><button id="refreshChip" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px" title="Planı kaydeder (tarayıcı + giriş yapılmışsa bulut), sonra sayfayı yeniler · saves, then reloads">&#8635; Refresh</button></div>
-  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-21g</span></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h1 style="margin-right:auto">Roast Planner</h1><button id="refreshChip" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px" title="Buluttaki reçeteleri çeker, tabloyu yeniler — plan ve girdiğin değerler yerinde kalır (sayfa yenilenmez) · pulls the cloud recipes, keeps your edits">&#8635; Refresh</button></div>
+  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-21h</span></div>
 
   <div class="err" id="err"></div>
 
@@ -841,9 +841,13 @@ document.getElementById('recBtn').addEventListener('click',recOpen);
 document.getElementById('recAdd').addEventListener('click',()=>{ RECEDIT.push({match:[],bullet:'',hsr:'',note:'',sort:(RECEDIT.length+1)*10}); recDraw(); });
 document.getElementById('recSave').addEventListener('click',recSave);
 document.getElementById('recSeed').addEventListener('click',recSeed);
-document.getElementById('refreshChip').addEventListener('click',async()=>{ const b=document.getElementById('refreshChip'); b.disabled=true; b.textContent='…';
-  try{ if(DATA.length){ localStorage.setItem(SAVE_KEY,JSON.stringify(planBlob())); await Promise.race([cloudSave(),new Promise(r=>setTimeout(r,2500))]); } }catch(e){}
-  location.reload(); });   // v2026-09-21d: Refresh chip — never drops an unsaved plan
+// v2026-09-21h (Ömer: iki bilgisayar — çalışan reçete değişikliğini yalnız Refresh ile alsın, kendi girdileri kalsın): sayfa YENİLENMEZ;
+// buluttaki reçeteler çekilir, tablo yeniden çizilir (reçete hücresi, Target L*, renkler); DATA, Agtron girdileri, açık batch'ler yerinde kalır.
+document.getElementById('refreshChip').addEventListener('click',async()=>{ const b=document.getElementById('refreshChip'); if(b.disabled) return; const lbl=b.innerHTML; b.disabled=true; b.textContent='…';
+  const before=JSON.stringify(RECIPES); let msg='';
+  try{ if(!sbp) msg='bulut kapalı'; else if(!(await planUser())) msg='giriş yok — '+recSrcLabel(); else { const ok=await recipesLoad(); msg=!ok?'bulut okunamadı':(JSON.stringify(RECIPES)!==before?('reçeteler güncellendi · '+RECIPES.length):('reçeteler güncel · '+RECIPES.length)); } }catch(e){ msg='hata'; }
+  if(DATA.length) render();
+  b.textContent='✓ '+msg; setTimeout(()=>{ b.innerHTML=lbl; b.disabled=false; },2400); });
 recipesLoad();   // cloud recipes replace the built-in list as soon as the session is known
 </script>
 </body>
