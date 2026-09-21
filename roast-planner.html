@@ -127,8 +127,9 @@
     <button onclick="try{var k=document.getElementById('keyIn').value.trim();if(k){localStorage.setItem('ccKey',k);planShow();}}catch(e){}">Aç · Unlock</button>
   </div>
   <div id="planApp" style="display:none">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h1 style="margin-right:auto">Roast Planner</h1><button id="refreshChip" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px" title="Buluttaki reçeteleri çeker, tabloyu yeniler — plan ve girdiğin değerler yerinde kalır (sayfa yenilenmez) · pulls the cloud recipes, keeps your edits">&#8635; Refresh</button></div>
-  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-21h</span></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h1 style="margin-right:auto">Roast Planner</h1><span id="acctWrap" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end"><span id="acctChip" class="sub" style="margin:0;font-size:12px"></span><button id="acctBtn" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px">Giriş yap</button><button id="refreshChip" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px" title="Buluttaki reçeteleri çeker, tabloyu yeniler — plan ve girdiğin değerler yerinde kalır (sayfa yenilenmez) · pulls the cloud recipes, keeps your edits">&#8635; Refresh</button></span></div>
+  <div id="acctForm" style="display:none;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 2px"><input id="acctEmail" type="email" autocomplete="username" placeholder="e-posta" style="background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 10px;font-size:13px;width:22ch"><input id="acctPass" type="password" autocomplete="current-password" placeholder="şifre" style="background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 10px;font-size:13px;width:16ch"><button id="acctGo" style="padding:7px 14px">Gir</button><span id="acctMsg" class="sub" style="margin:0;font-size:12px">Guide hesabınla · same account as the Guide</span></div>
+  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-21i</span></div>
 
   <div class="err" id="err"></div>
 
@@ -141,7 +142,7 @@
     <div class="actions" id="actions">
       <button id="save" class="cardbtn">Save</button>
       <button id="hist" class="cardbtn">Geçmiş<br>History</button>
-      <button id="recBtn" class="cardbtn" title="Reçeteler · buluttan (Supabase roast_recipes), yoksa yerleşik liste">Reçeteler<br>Recipes</button>
+      <button id="recBtn" class="cardbtn" style="display:none" title="Reçeteler · yalnız sahip hesapta görünür · owner account only">Reçeteler<br>Recipes</button>
       <button id="dl" class="cardbtn">Download<br>CSV</button>
       <div class="datecard">
         <span class="dc-label">Roast Date</span>
@@ -806,13 +807,25 @@ document.getElementById('hist').addEventListener('click',histOpen);
 // ---- recipes on the account (roast_recipes: match keywords → Bullet / HSR15 recipe + note; edited here, matched by keyword in the table) ----
 function recRowsToList(rows){ return rows.map(r=>({id:r.id, match:String(r.match||'').split(',').map(x=>normName(x.trim())).filter(Boolean), bullet:r.bullet||'', hsr:r.hsr||'', note:r.note||'', sort:(r.sort==null?100:r.sort)})).filter(r=>r.match.length); }
 async function recipesLoad(){ try{ if(!sbp) return false; const u=await planUser(); if(!u) return false;
-  const {data,error}=await sbp.from('roast_recipes').select('id,match,bullet,hsr,note,sort').order('sort',{ascending:true}).order('updated_at',{ascending:true});
+  const {data,error}=await sbp.from('roast_recipes').select('id,owner,match,bullet,hsr,note,sort').order('sort',{ascending:true}).order('updated_at',{ascending:true});
   if(error||!Array.isArray(data)) return false;
+  RECOWNER = data.length ? data.some(r=>r.owner===u.id) : true;   // v21i: the Reçeteler button belongs to the account that owns the rows (empty cloud: whoever seeds — the write policy decides)
+  acctPaint();
   if(!data.length){ RECSRC='cloud-empty'; return true; }
   RECIPES=recRowsToList(data); RECSRC='cloud'; try{ localStorage.setItem('roastRecipesCache',JSON.stringify(RECIPES)); }catch(e){}
   if(DATA.length) render(); return true; }catch(e){ return false; } }
 function recSrcLabel(){ return RECSRC==='cloud'?('bulut · '+RECIPES.length):(RECSRC==='cache'?('önbellek · '+RECIPES.length):(RECSRC==='cloud-empty'?'bulut boş — yerleşik liste kullanılıyor':('yerleşik · '+RECIPES.length))); }
-let RECEDIT=[], RECDEL=[];
+let RECEDIT=[], RECDEL=[], RECOWNER=false, ACCT=null;
+// ---- account (same Supabase session as the Guide; sign in here or there) ----
+function acctPaint(){ const c=document.getElementById('acctChip'), b=document.getElementById('acctBtn'), r=document.getElementById('recBtn');
+  if(!sbp){ c.textContent='bulut kapalı'; b.style.display='none'; r.style.display='none'; return; }
+  if(ACCT){ c.textContent='👤 '+(ACCT.email||'giriş var'); b.textContent='Çıkış'; document.getElementById('acctForm').style.display='none'; }
+  else { c.textContent='giriş yok · reçeteler '+recSrcLabel(); b.textContent='Giriş yap'; }
+  r.style.display=(ACCT&&RECOWNER)?'':'none'; }
+async function acctRefresh(){ ACCT=await planUser(); if(!ACCT) RECOWNER=false; acctPaint(); }
+async function acctSignIn(){ const e=document.getElementById('acctEmail').value.trim(), p=document.getElementById('acctPass').value, m=document.getElementById('acctMsg'); if(!e||!p){ m.textContent='e-posta ve şifre'; return; }
+  m.textContent='…'; try{ const {error}=await sbp.auth.signInWithPassword({email:e,password:p}); if(error){ m.textContent='Olmadı: '+error.message; return; } document.getElementById('acctPass').value=''; m.textContent='Guide hesabınla · same account as the Guide'; await acctRefresh(); await recipesLoad(); if(DATA.length) render(); }catch(x){ m.textContent='Hata: '+x.message; } }
+async function acctToggle(){ if(!sbp) return; if(ACCT){ try{ await sbp.auth.signOut(); }catch(e){} ACCT=null; RECOWNER=false; acctPaint(); return; } const f=document.getElementById('acctForm'); f.style.display=f.style.display==='none'?'flex':'none'; if(f.style.display==='flex') document.getElementById('acctEmail').focus(); }
 function recDraw(){ const tb=document.querySelector('#recTbl tbody'); document.getElementById('recSrc').textContent='('+recSrcLabel()+')';
   tb.innerHTML=RECEDIT.map((r,i)=>'<tr data-i="'+i+'">'
     +'<td><input class="cell" style="width:22ch;text-align:left" data-rf="match" value="'+esc(r.match.join(', '))+'" placeholder="yaye, cocoa"></td>'
@@ -841,6 +854,11 @@ document.getElementById('recBtn').addEventListener('click',recOpen);
 document.getElementById('recAdd').addEventListener('click',()=>{ RECEDIT.push({match:[],bullet:'',hsr:'',note:'',sort:(RECEDIT.length+1)*10}); recDraw(); });
 document.getElementById('recSave').addEventListener('click',recSave);
 document.getElementById('recSeed').addEventListener('click',recSeed);
+document.getElementById('acctBtn').addEventListener('click',acctToggle);
+document.getElementById('acctGo').addEventListener('click',acctSignIn);
+document.getElementById('acctPass').addEventListener('keydown',e=>{ if(e.key==='Enter') acctSignIn(); });
+try{ if(sbp) sbp.auth.onAuthStateChange(()=>{ acctRefresh().then(()=>{ recipesLoad().then(()=>{ if(DATA.length) render(); }); }); }); }catch(e){}   // Guide tab signs in/out → chip follows
+acctRefresh();
 // v2026-09-21h (Ömer: iki bilgisayar — çalışan reçete değişikliğini yalnız Refresh ile alsın, kendi girdileri kalsın): sayfa YENİLENMEZ;
 // buluttaki reçeteler çekilir, tablo yeniden çizilir (reçete hücresi, Target L*, renkler); DATA, Agtron girdileri, açık batch'ler yerinde kalır.
 document.getElementById('refreshChip').addEventListener('click',async()=>{ const b=document.getElementById('refreshChip'); if(b.disabled) return; const lbl=b.innerHTML; b.disabled=true; b.textContent='…';
