@@ -36,6 +36,7 @@ body.lang-en .tr{display:none}
 svg.ic{width:22px;height:22px;flex:none;stroke:var(--ink);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .brand svg.ic{width:34px;height:26px}
 .pills{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.foot .pills{margin-top:18px}
 .hpill{border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--soft);background:var(--card);text-decoration:none;display:inline-block}
 .hpill.chip{border-color:var(--terra);color:var(--terra);cursor:pointer}
 .motto{margin:16px 0 4px;font-family:Georgia,serif;font-size:17px;font-weight:700;line-height:1.5}
@@ -107,12 +108,6 @@ body.align-title .faceq,body.align-all .faceq{text-align:center}
 
 <div class="wrap">
   <a class="brand" href="#" onclick="var f=document.querySelector('.face[data-face=&quot;all&quot;]'); if(f) f.click(); window.scrollTo({top:0,behavior:'smooth'}); return false" style="text-decoration:none;color:inherit"><svg class="ic"><use href="#i-turtle"/></svg><span><span class="lr">CoffeeNutz</span> Apps</span></a>
-  <div class="pills">
-    <span class="hpill" id="ver">v2026-09-01b</span>
-    <span class="hpill chip" onclick="location.href=location.pathname+'?v='+Date.now()"><span class="tr">Yenile</span><span class="en">Refresh</span></span>
-    <span class="hpill chip" id="langBtn" onclick="setLang(document.body.classList.contains('lang-en')?'tr':'en')">EN</span>
-  </div>
-
   <div class="motto">
     <div class="tr">Kahveyi farklı düşünüyoruz!</div>
     <div class="en">We think about coffee differently.</div>
@@ -217,6 +212,11 @@ body.align-title .faceq,body.align-all .faceq{text-align:center}
     <div class="free">
       <span class="tr">Uygulamalarımızı bilimsel araştırmalarınız için ücretsiz olarak kullanabilirsiniz.</span>
       <span class="en">You can use our apps free of charge for your scientific research.</span>
+    </div>
+    <div class="pills">
+      <span class="hpill" id="ver">v2026-09-21a</span>
+      <span class="hpill chip" onclick="location.href=location.pathname+'?v='+Date.now()"><span class="tr">Yenile</span><span class="en">Refresh</span></span>
+      <span class="hpill chip" id="langBtn" onclick="setLang(document.body.classList.contains('lang-en')?'tr':'en')">EN</span>
     </div>
   </div>
 </div>
