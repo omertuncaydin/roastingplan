@@ -41,8 +41,10 @@
   th:not(:first-child){width:100px;max-width:100px}
   th:first-child,td:first-child{min-width:170px}
   /* narrower 70px: 90G, 250G, 1000G (2-4), Net Order (7), Green Order (8), Roast Order (9), Batch Count (10) */
-  th:nth-child(2),th:nth-child(3),th:nth-child(4),th:nth-child(7),th:nth-child(8),th:nth-child(9),th:nth-child(10),
-  td:nth-child(2),td:nth-child(3),td:nth-child(4),td:nth-child(7),td:nth-child(8),td:nth-child(9),td:nth-child(10){width:70px;max-width:70px}
+  th:nth-child(2),th:nth-child(3),th:nth-child(4),th:nth-child(7),th:nth-child(8),th:nth-child(9),th:nth-child(10),th:nth-child(14),th:nth-child(15),
+  td:nth-child(2),td:nth-child(3),td:nth-child(4),td:nth-child(7),td:nth-child(8),td:nth-child(9),td:nth-child(10),td:nth-child(14),td:nth-child(15){width:70px;max-width:70px}
+  td.lstar{font-variant-numeric:tabular-nums;font-weight:600;color:var(--accent2)}
+  td.lstar.is-default{color:var(--muted);font-weight:500}   /* L* of the recipe default (nothing measured yet) */
   th:hover{color:var(--ink)}
   /* Item Name column stays left-aligned */
   th:first-child,td:first-child{text-align:left}
@@ -117,7 +119,7 @@
   </div>
   <div id="planApp" style="display:none">
   <h1>Roast Planner</h1>
-  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-08-24a</span></div>
+  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-21a</span></div>
 
   <div class="err" id="err"></div>
 
@@ -190,7 +192,9 @@
       <th class="num">Batch Count</th>
       <th>Equipment</th>
       <th>Recipe</th>
-      <th>Agtron</th>
+      <th title="Ölçülen Agtron (Omix+, öğütülmüş) · batch başına gir">Agtron</th>
+      <th class="num" title="CIELAB L* ≈ 30 − (115 − Agtron) / 6 · ilk çatlak (A1=115) → 30 · ±2, Samo'nun ölçümü gelene kadar geçici">L*</th>
+      <th class="num" title="Reçetedeki hedef Agtron'un L* karşılığı">Target L*</th>
       <th class="ck">Roasted?</th>
     </tr></thead>
     <tbody></tbody>
@@ -205,6 +209,8 @@
       <td class="num" id="fRoast">0</td>
       <td></td>
       <td class="num" id="fBatch">0</td>
+      <td></td>
+      <td></td>
       <td></td>
       <td></td>
       <td></td>
@@ -271,7 +277,7 @@ function process(rows){
     const base=cropName(name);
     if(!agg.has(base)) agg.set(base,{name:base,g90:0,g250:0,g1000:0,unknown:0,
       reserve:0,addReserve:0,roastOrder:"",batchCount:"",equipment:"",done:false,
-      expanded:false,children:[],lastOverride:null});
+      expanded:false,children:[],lastOverride:null,agtron:null,agtronSet:false});
     const o=agg.get(base);
     if(g) o[g]+=qty; else o.unknown+=qty;
   }
@@ -316,6 +322,8 @@ function childKgSum(o){ return (o.children||[]).reduce((s,c)=>s+(parseFloat(c.kg
 function effGreen(o){ return hasKids(o) ? childKgSum(o) : greenTarget(o); }
 function effBatch(o){ if(o.done) return 0; return hasKids(o) ? o.children.filter(c=>!c.done).length : (parseFloat(o.batchCount)||0); }  // remaining (un-roasted) batches; a roasted item counts 0
 function rollupRoast(o){ const s=o.children.map(c=>c.computedRoast).filter(v=>v!=null); return s.length?s.join(", "):"—"; }
+function rollupAgtron(o){ const s=o.children.filter(c=>c.agtronSet&&c.agtron!==''&&c.agtron!=null).map(c=>c.agtron); return s.length?s.join(", "):"—"; }   // measured batches only
+function rollupLstar(o){ const s=o.children.filter(c=>c.agtronSet&&c.agtron!==''&&c.agtron!=null).map(c=>lstar(c.agtron)).filter(v=>v!==""); return s.length?s.join(", "):"—"; }
 function splitByEquip(o){                                            // generate batches from machine capacity
   const cap=capOf(o.equipment); const old=o.children||[]; o.children=[];
   if(!cap) return;                                                  // no machine -> no batches
@@ -383,6 +391,10 @@ function recipeFor(o){
   return "";
 }
 function recipeAgtron(o){ const r=recipeFor(o); const m=r&&r.match(/(\d+)\s*A\s*$/); return m?parseInt(m[1],10):""; }  // the "##A" in the recipe
+// CIELAB L* from our Omix+ Agtron (2026-09-21 ladder, anchored on A1 = 115 → L* 30 at the roaster-called first crack; 6 Omix points per L* unit;
+// ±2 L*, provisional until the five ZHAW readings arrive): A0 125→32 · A1 115→30 · B0 105→28 · B1 95→27 · C0 85→25 · C1 75→23
+function lstar(a){ a=parseFloat(a); if(!isFinite(a)||a<=0) return ""; return Math.round(30-(115-a)/6); }
+function lstarCell(a,isDefault){ const v=lstar(a); return `<td class="num lstar${isDefault?' is-default':''}">${v===""?'—':v}</td>`; }
 function recipeNote(o){ const r=recipeMatch(o.name); return (r&&r.note)?r.note:""; }
 function recipeCellHTML(o){                                          // recipe text + reminder icon with hover note
   const rec=recipeFor(o), note=recipeNote(o);
@@ -444,7 +456,11 @@ function renderParent(tbody,it){
   // Equipment stays an editable dropdown on the parent — picking a machine builds the batches
   const equipCell = `<td><select class="cell" data-f="equipment">${equipOptions(it.equipment)}</select></td>`;
   const recipeCell = recipeCellHTML(it);
-  const agtronCell = `<td class="rollup">—</td>`;   // Agtron is measured per batch, not at plan level
+  // Agtron: unsplit item → its own textbox (defaults to the recipe's ##A, gray until measured); split item → the batches' readings rolled up
+  const agtronCell = kids
+    ? `<td class="rollup" title="Batch readings">${rollupAgtron(it)}</td>`
+    : `<td><input class="cell num${it.agtronSet?'':' agtron-default'}" type="number" step="1" min="0" data-f="agtron" value="${it.agtronSet?(it.agtron==null?'':it.agtron):recipeAgtron(it)}" placeholder="A" title="Measured Agtron (Omix+)"></td>`;
+  const lstarCells = (kids ? `<td class="rollup" title="Batch L*">${rollupLstar(it)}</td>` : lstarCell(it.agtronSet?it.agtron:recipeAgtron(it), !it.agtronSet)) + lstarCell(recipeAgtron(it), false);
   tr.innerHTML=
     `<td class="nameCell"><span class="grip" draggable="true" title="Drag to reorder">⠿</span>${tri}`+
       `<span class="nm">${esc(it.name)}</span>${it.unknown?` <span style="color:#d98a8a">(?: ${it.unknown})</span>`:''}</td>`+
@@ -452,7 +468,7 @@ function renderParent(tbody,it){
     `<td class="reserveCell"><input class="cell num" type="number" min="0" step="0.25" data-f="reserve" value="${it.reserve!==0?it.reserve:''}" placeholder="0"><span class="rrow" data-act="resetrow" title="Reset this row">⟲</span></td>`+
     `<td class="reserveCell"><input class="cell num" type="number" min="0" step="0.25" data-f="addReserve" value="${it.addReserve!==0?it.addReserve:''}" placeholder="0"><span class="rrow" data-act="resetadd" title="Reset this row">⟲</span></td>`+
     `<td class="kg">${fmt(net)}</td>`+
-    greenCell+roastCell+batchCell+equipCell+recipeCell+agtronCell+
+    greenCell+roastCell+batchCell+equipCell+recipeCell+agtronCell+lstarCells+
     `<td class="ck"><input type="checkbox" ${it.done?'checked':''}></td>`;
   tbody.appendChild(tr);
   // drag to reorder main rows
@@ -484,6 +500,7 @@ function renderParent(tbody,it){
     inp.addEventListener('change',()=>{
       const f=inp.dataset.f;
       it[f] = inp.type==='number' ? (inp.value===''?0:parseFloat(inp.value)) : inp.value;
+      if(f==='agtron'){ it.agtron = inp.value===''?null:parseFloat(inp.value); it.agtronSet=true; inp.classList.remove('agtron-default'); const c=tr.querySelector('td.lstar'); if(c){ const v=lstar(it.agtron); c.textContent=v===''?'—':v; c.classList.remove('is-default'); } return; }
       if(f==='equipment'){ it.lastOverride=null; splitByEquip(it); render(); }
       else if(f==='reserve'||f==='addReserve'){ if(capOf(it.equipment)) splitByEquip(it); render(); }
       else if(f==='roastOrder'){ render(); }                       // recompute the sequence numbers
@@ -516,7 +533,8 @@ function renderChild(tbody,parent,ch,ci){
     `<td class="num rollup">1</td>`+                 /* one batch */
     `<td class="rollup">${esc(parent.equipment)}</td>`+
     recipeCellHTML(parent)+
-    `<td><input class="cell num${ch.agtronSet?'':' agtron-default'}" type="number" step="1" min="0" data-cf="agtron" value="${ch.agtronSet?ch.agtron:recipeAgtron(parent)}"></td>`+
+    `<td><input class="cell num${ch.agtronSet?'':' agtron-default'}" type="number" step="1" min="0" data-cf="agtron" value="${ch.agtronSet?ch.agtron:recipeAgtron(parent)}" placeholder="A" title="Measured Agtron (Omix+)"></td>`+
+    lstarCell(ch.agtronSet?ch.agtron:recipeAgtron(parent), !ch.agtronSet)+lstarCell(recipeAgtron(parent), false)+
     `<td class="ck"><input type="checkbox" ${ch.done?'checked':''}></td>`;
   tbody.appendChild(tr);
   const ov=tr.querySelector('[data-cf="kgoverride"]');
@@ -525,7 +543,8 @@ function renderChild(tbody,parent,ch,ci){
     ch.kg=v; parent.lastOverride=v; render();
   });
   const ag=tr.querySelector('[data-cf="agtron"]');
-  ag.addEventListener('change',()=>{ ch.agtron = ag.value===''?'' : parseFloat(ag.value); ch.agtronSet=true; ag.classList.remove('agtron-default'); });
+  ag.addEventListener('change',()=>{ ch.agtron = ag.value===''?'' : parseFloat(ag.value); ch.agtronSet=true; ag.classList.remove('agtron-default');
+    const c=tr.querySelector('td.lstar'); if(c){ const v=lstar(ch.agtron); c.textContent=v===''?'—':v; c.classList.remove('is-default'); } });   // L* follows the reading; parent rollup refreshes on next render
   tr.querySelector('input[type=checkbox]').addEventListener('change',e=>{
     ch.done=e.target.checked;
     parent.done=parent.children.every(c=>c.done);   // parent reflects "all batches roasted"
@@ -561,15 +580,15 @@ function esc(s){return s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 
 function downloadCSV(){
   computeRoastNumbers();
-  const lines=[["Item Name","90G","250G","1000G","Shop Reserve (KG)","Additional Reserve (KG)","Net KG","Green KG","Roast Seq","Batch Count","Equipment","Recipe","Agtron","Roasted?"]];
+  const lines=[["Item Name","90G","250G","1000G","Shop Reserve (KG)","Additional Reserve (KG)","Net KG","Green KG","Roast Seq","Batch Count","Equipment","Recipe","Agtron","L*","Target L*","Roasted?"]];
   const d=[...DATA].sort((a,b)=>rowNet(b)-rowNet(a));
   for(const it of d){ const net=rowNet(it);
     lines.push([it.name,it.g90,it.g250,it.g1000,fmt(parseFloat(it.reserve)||0),fmt(parseFloat(it.addReserve)||0),
       fmt(net),fmt2(effGreen(it)),
       hasKids(it)?rollupRoast(it):it.roastOrder,
-      effBatch(it),it.equipment,recipeFor(it),"",it.done?"YES":"NO"]);
+      effBatch(it),it.equipment,recipeFor(it),(hasKids(it)?"":(it.agtronSet?(it.agtron==null?"":it.agtron):"")),(hasKids(it)?"":(it.agtronSet?lstar(it.agtron):"")),lstar(recipeAgtron(it)),it.done?"YES":"NO"]);
     if(hasKids(it)) it.children.forEach((ch,ci)=>{
-      lines.push([`  ↳ Batch ${ci+1}`,"","","","","","",fmt2(ch.kg),(ch.computedRoast!=null?ch.computedRoast:""),1,it.equipment,recipeFor(it),(ch.agtronSet?ch.agtron:recipeAgtron(it)),ch.done?"YES":"NO"]);
+      lines.push([`  ↳ Batch ${ci+1}`,"","","","","","",fmt2(ch.kg),(ch.computedRoast!=null?ch.computedRoast:""),1,it.equipment,recipeFor(it),(ch.agtronSet?ch.agtron:recipeAgtron(it)),lstar(ch.agtronSet?ch.agtron:recipeAgtron(it)),lstar(recipeAgtron(it)),ch.done?"YES":"NO"]);
     });
   }
   const csv=lines.map(r=>r.map(c=>{c=String(c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(",")).join("\n");
