@@ -44,7 +44,7 @@
   th:nth-child(2),th:nth-child(3),th:nth-child(4),th:nth-child(7),th:nth-child(8),th:nth-child(9),th:nth-child(10),th:nth-child(14),th:nth-child(15),
   td:nth-child(2),td:nth-child(3),td:nth-child(4),td:nth-child(7),td:nth-child(8),td:nth-child(9),td:nth-child(10),td:nth-child(14),td:nth-child(15){width:70px;max-width:70px}
   td.lstar,td.ltarget{font-variant-numeric:tabular-nums;font-weight:600}
-  /* v2026-09-21c: measured L* vs Target L* — 0 off = green · ±1 = orange · ±2 or more = red */
+  /* v2026-09-21c/d: measured L* vs Target L* — 0 off = green · ±1–2 = orange · ±3 or more = red */
   .lstar.ok{color:#4fc98a}.lstar.near{color:#e6a23c}.lstar.off{color:#e0705a}
   td.rollup .lstar{font-style:normal;font-weight:700}
   /* recipes panel: its own column widths (the plan table's fixed widths must not apply) */
@@ -127,8 +127,8 @@
     <button onclick="try{var k=document.getElementById('keyIn').value.trim();if(k){localStorage.setItem('ccKey',k);planShow();}}catch(e){}">Aç · Unlock</button>
   </div>
   <div id="planApp" style="display:none">
-  <h1>Roast Planner</h1>
-  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-21c</span></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h1 style="margin-right:auto">Roast Planner</h1><button id="refreshChip" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px" title="Planı kaydeder (tarayıcı + giriş yapılmışsa bulut), sonra sayfayı yeniler · saves, then reloads">&#8635; Refresh</button></div>
+  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-21d</span></div>
 
   <div class="err" id="err"></div>
 
@@ -421,7 +421,7 @@ function recipeAgtron(o){ const r=recipeFor(o); const m=r&&r.match(/(\d+)\s*A\s*
 // CIELAB L* from our Omix+ Agtron (2026-09-21 ladder, anchored on A1 = 115 → L* 30 at the roaster-called first crack; 6 Omix points per L* unit;
 // ±2 L*, provisional until the five ZHAW readings arrive): A0 125→32 · A1 115→30 · B0 105→28 · B1 95→27 · C0 85→25 · C1 75→23
 function lstar(a){ a=parseFloat(a); if(!isFinite(a)||a<=0) return ""; return Math.round(30-(115-a)/6); }
-function lstarDev(a,target){ const v=lstar(a), t=lstar(target); if(v===""||t==="") return ''; const d=Math.abs(v-t); return d===0?'ok':(d===1?'near':'off'); }   // vs Target L*: green · orange · red
+function lstarDev(a,target){ const v=lstar(a), t=lstar(target); if(v===""||t==="") return ''; const d=Math.abs(v-t); return d===0?'ok':(d<=2?'near':'off'); }   // vs Target L*: 0 green · 1–2 orange · ≥3 red (Ömer 21.09)
 function lstarCell(a,isDefault,target){ const v=lstar(a), cls=isDefault?'':lstarDev(a,target); return `<td class="num lstar${isDefault?' is-default':''}${cls?' '+cls:''}">${v===""?'—':v}</td>`; }
 function ltargetCell(a){ const v=lstar(a); return `<td class="num ltarget">${v===""?'—':v}</td>`; }
 function lstarPaint(td,a,isDefault,target){ if(!td) return; const v=lstar(a); td.textContent=v===""?'—':v; td.classList.remove('is-default','ok','near','off'); if(isDefault) td.classList.add('is-default'); else { const c=lstarDev(a,target); if(c) td.classList.add(c); } }
@@ -840,6 +840,9 @@ document.getElementById('recBtn').addEventListener('click',recOpen);
 document.getElementById('recAdd').addEventListener('click',()=>{ RECEDIT.push({match:[],bullet:'',hsr:'',note:'',sort:(RECEDIT.length+1)*10}); recDraw(); });
 document.getElementById('recSave').addEventListener('click',recSave);
 document.getElementById('recSeed').addEventListener('click',recSeed);
+document.getElementById('refreshChip').addEventListener('click',async()=>{ const b=document.getElementById('refreshChip'); b.disabled=true; b.textContent='…';
+  try{ if(DATA.length){ localStorage.setItem(SAVE_KEY,JSON.stringify(planBlob())); await Promise.race([cloudSave(),new Promise(r=>setTimeout(r,2500))]); } }catch(e){}
+  location.reload(); });   // v2026-09-21d: Refresh chip — never drops an unsaved plan
 recipesLoad();   // cloud recipes replace the built-in list as soon as the session is known
 </script>
 </body>
