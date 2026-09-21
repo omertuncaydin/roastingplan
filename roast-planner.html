@@ -44,6 +44,12 @@
   th:nth-child(2),th:nth-child(3),th:nth-child(4),th:nth-child(7),th:nth-child(8),th:nth-child(9),th:nth-child(10),th:nth-child(14),th:nth-child(15),
   td:nth-child(2),td:nth-child(3),td:nth-child(4),td:nth-child(7),td:nth-child(8),td:nth-child(9),td:nth-child(10),td:nth-child(14),td:nth-child(15){width:70px;max-width:70px}
   td.lstar{font-variant-numeric:tabular-nums;font-weight:600;color:var(--accent2)}
+  /* recipes panel: its own column widths (the plan table's fixed widths must not apply) */
+  #recTbl{width:100%;table-layout:fixed}
+  #recTbl th,#recTbl td{width:auto !important;max-width:none !important;min-width:0 !important;padding:6px 6px}
+  #recTbl th:nth-child(1){width:24% !important}#recTbl th:nth-child(2),#recTbl th:nth-child(3){width:19% !important}#recTbl th:nth-child(4){width:28% !important}#recTbl th:nth-child(5){width:6% !important}#recTbl th:nth-child(6){width:4% !important}
+  #recTbl td input.cell{width:100% !important;box-sizing:border-box;text-align:left}
+  #recTbl td input.cell[type=number]{text-align:center}
   td.lstar.is-default{color:var(--muted);font-weight:500}   /* L* of the recipe default (nothing measured yet) */
   th:hover{color:var(--ink)}
   /* Item Name column stays left-aligned */
@@ -119,7 +125,7 @@
   </div>
   <div id="planApp" style="display:none">
   <h1>Roast Planner</h1>
-  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-21a</span></div>
+  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-21b</span></div>
 
   <div class="err" id="err"></div>
 
@@ -132,6 +138,7 @@
     <div class="actions" id="actions">
       <button id="save" class="cardbtn">Save</button>
       <button id="hist" class="cardbtn">Geçmiş<br>History</button>
+      <button id="recBtn" class="cardbtn" title="Reçeteler · buluttan (Supabase roast_recipes), yoksa yerleşik liste">Reçeteler<br>Recipes</button>
       <button id="dl" class="cardbtn">Download<br>CSV</button>
       <div class="datecard">
         <span class="dc-label">Roast Date</span>
@@ -177,6 +184,20 @@
       <button class="ghost" style="padding:4px 12px" onclick="document.getElementById('histPanel').style.display='none'">&#10005;</button>
     </div>
     <div id="histList" class="sub" style="margin:0">yükleniyor…</div>
+  </div>
+  <div id="recPanel" style="display:none;background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:14px;margin:10px 0;max-width:1100px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+      <b>Reçeteler · Recipes <span id="recSrc" class="sub" style="display:inline;margin:0 0 0 8px;font-weight:400"></span></b>
+      <span style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="ghost" style="padding:4px 12px" id="recAdd">+ Yeni · New</button>
+        <button class="ghost" style="padding:4px 12px" id="recSeed" title="Yerleşik listeyi buluta kopyala (bulut boşken)">Yerleşiği buluta kopyala</button>
+        <button style="padding:4px 14px" id="recSave">Kaydet · Save</button>
+        <button class="ghost" style="padding:4px 12px" onclick="document.getElementById('recPanel').style.display='none'">&#10005;</button>
+      </span>
+    </div>
+    <div class="sub" style="margin:0 0 8px">Eşleşme: virgülle ayrılmış anahtar kelimeler, hepsi ürün adında geçmeli (örn. <code>yaye, cocoa</code>). Sıra: küçük sayı önce eşleşir (özel olan üstte). Reçete: <code>-P3 / B0 / 80s / 105A</code> — sondaki <code>##A</code> hedef Agtron, Target L* ondan hesaplanır.</div>
+    <div id="recMsg" class="sub" style="margin:0 0 6px;display:none"></div>
+    <table id="recTbl" style="display:table;margin:0"><thead><tr><th style="text-align:left">Eşleşme · match</th><th>Bullet</th><th>HSR15</th><th style="text-align:left">Not · note</th><th class="num">Sıra</th><th></th></tr></thead><tbody></tbody></table>
   </div>
   <table id="tbl">
     <thead><tr>
@@ -356,7 +377,7 @@ function equipOptions(v){ return `<option value=""${v===''?' selected':''}>—</
 
 // ---- roast recipes (keyword-matched to the coffee name) ----
 // match: all tokens must appear in the normalized item name. First match wins (most specific first).
-const RECIPES=[
+const RECIPES_BUILTIN=[
   {match:["yaye","cocoa"],  bullet:"-P2 / B1 / 40s / 95A",  hsr:"-P2 / B1 / 60s / 95A"},
   {match:["yaye","fruity"], bullet:"-P3 / B0 / 35s / 105A", hsr:"-P3 / B0 / 55s / 105A"},
   {match:["turk"],          bullet:"-P2 / A1 / 45s / 105A", hsr:"-P2 / A1 / 60s / 105A"},  // Türk Kahvesi (single origin, not a blend)
@@ -380,6 +401,9 @@ const RECIPES=[
   {match:["papayo"],        bullet:"35s / 93A",             hsr:"-"},
   {match:["wamena"],        bullet:"-P2 / B0 / 40s / 100A", hsr:"-P2 / B0 / 60s / 100A", note:"BE CAUITOUS BEFORE FC!"}
 ];
+// v2026-09-21b: live list — cloud (Supabase roast_recipes, per account) when signed in and non-empty, else the built-in seed above; cached in this browser
+let RECIPES=RECIPES_BUILTIN.slice(), RECSRC='builtin';
+try{ const c=JSON.parse(localStorage.getItem('roastRecipesCache')||'null'); if(Array.isArray(c)&&c.length){ RECIPES=c; RECSRC='cache'; } }catch(e){}
 function normName(s){ return s.toLowerCase()
   .replace(/ı/g,'i').replace(/İ/g,'i').replace(/ş/g,'s').replace(/ğ/g,'g')
   .replace(/ç/g,'c').replace(/ö/g,'o').replace(/ü/g,'u'); }
@@ -576,7 +600,7 @@ function updateFooter(){
   document.getElementById("fBatch").textContent=tBatch;
   document.getElementById("fCk").textContent=doneCount+"/"+DATA.length;
 }
-function esc(s){return s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
 
 function downloadCSV(){
   computeRoastNumbers();
@@ -772,6 +796,45 @@ function histLoad(i){ try{ const r=HISTCACHE[i]; if(!r||!r.plan||!r.plan.DATA) r
   document.getElementById('histPanel').style.display='none';
 }catch(e){} }
 document.getElementById('hist').addEventListener('click',histOpen);
+// ---- recipes on the account (roast_recipes: match keywords → Bullet / HSR15 recipe + note; edited here, matched by keyword in the table) ----
+function recRowsToList(rows){ return rows.map(r=>({id:r.id, match:String(r.match||'').split(',').map(x=>normName(x.trim())).filter(Boolean), bullet:r.bullet||'', hsr:r.hsr||'', note:r.note||'', sort:(r.sort==null?100:r.sort)})).filter(r=>r.match.length); }
+async function recipesLoad(){ try{ if(!sbp) return false; const u=await planUser(); if(!u) return false;
+  const {data,error}=await sbp.from('roast_recipes').select('id,match,bullet,hsr,note,sort').order('sort',{ascending:true}).order('updated_at',{ascending:true});
+  if(error||!Array.isArray(data)) return false;
+  if(!data.length){ RECSRC='cloud-empty'; return true; }
+  RECIPES=recRowsToList(data); RECSRC='cloud'; try{ localStorage.setItem('roastRecipesCache',JSON.stringify(RECIPES)); }catch(e){}
+  if(DATA.length) render(); return true; }catch(e){ return false; } }
+function recSrcLabel(){ return RECSRC==='cloud'?('bulut · '+RECIPES.length):(RECSRC==='cache'?('önbellek · '+RECIPES.length):(RECSRC==='cloud-empty'?'bulut boş — yerleşik liste kullanılıyor':('yerleşik · '+RECIPES.length))); }
+let RECEDIT=[], RECDEL=[];
+function recDraw(){ const tb=document.querySelector('#recTbl tbody'); document.getElementById('recSrc').textContent='('+recSrcLabel()+')';
+  tb.innerHTML=RECEDIT.map((r,i)=>'<tr data-i="'+i+'">'
+    +'<td><input class="cell" style="width:22ch;text-align:left" data-rf="match" value="'+esc(r.match.join(', '))+'" placeholder="yaye, cocoa"></td>'
+    +'<td><input class="cell" style="width:22ch" data-rf="bullet" value="'+esc(r.bullet)+'" placeholder="-P2 / B1 / 40s / 95A"></td>'
+    +'<td><input class="cell" style="width:22ch" data-rf="hsr" value="'+esc(r.hsr)+'" placeholder="-P2 / B1 / 60s / 95A"></td>'
+    +'<td><input class="cell" style="width:28ch;text-align:left" data-rf="note" value="'+esc(r.note)+'"></td>'
+    +'<td><input class="cell num" type="number" step="1" data-rf="sort" value="'+r.sort+'"></td>'
+    +'<td><button class="ghost" style="padding:3px 9px" data-rdel="'+i+'" title="Sil">&#10005;</button></td></tr>').join('');
+  tb.querySelectorAll('input[data-rf]').forEach(inp=>inp.addEventListener('change',()=>{ const r=RECEDIT[+inp.closest('tr').dataset.i], f=inp.dataset.rf;
+    if(f==='match') r.match=inp.value.split(',').map(x=>normName(x.trim())).filter(Boolean); else if(f==='sort') r.sort=parseInt(inp.value,10)||100; else r[f]=inp.value.trim(); r.dirty=true; }));
+  tb.querySelectorAll('button[data-rdel]').forEach(b=>b.addEventListener('click',()=>{ const r=RECEDIT.splice(+b.dataset.rdel,1)[0]; if(r&&r.id) RECDEL.push(r.id); recDraw(); })); }
+function recMsg(t){ const m=document.getElementById('recMsg'); m.textContent=t; m.style.display=t?'block':'none'; }
+async function recOpen(){ const p=document.getElementById('recPanel'); p.style.display='block'; recMsg(''); await recipesLoad();
+  RECEDIT=RECIPES.map(r=>Object.assign({},r,{match:r.match.slice()})); RECDEL=[]; recDraw();
+  if(!sbp) recMsg('Bulut kapalı — yerleşik liste, kaydedilemez.'); else if(!(await planUser())) recMsg('Buluta yazmak için bu cihazda bir kez Guide üzerinden giriş yap; şimdilik yerleşik liste.'); }
+async function recSave(){ try{ if(!sbp){ recMsg('Bulut kapalı.'); return; } const u=await planUser(); if(!u){ recMsg('Önce Guide üzerinden giriş yap.'); return; }
+  const rows=RECEDIT.filter(r=>r.match.length).map((r,i)=>{ const o={owner:u.id, match:r.match.join(', '), bullet:r.bullet||'', hsr:r.hsr||'', note:r.note||'', sort:(r.sort==null?(i+1)*10:r.sort), updated_at:new Date().toISOString()}; if(r.id) o.id=r.id; return o; });
+  if(RECDEL.length){ const {error}=await sbp.from('roast_recipes').delete().in('id',RECDEL); if(error){ recMsg('Silme hatası: '+error.message); return; } RECDEL=[]; }
+  if(rows.length){ const {error}=await sbp.from('roast_recipes').upsert(rows); if(error){ recMsg('Kayıt hatası: '+error.message+(/relation .* does not exist/i.test(error.message)?' — önce roast-recipes.sql çalıştır.':'')); return; } }
+  await recipesLoad(); RECEDIT=RECIPES.map(r=>Object.assign({},r,{match:r.match.slice()})); recDraw(); recMsg('Kaydedildi · '+recSrcLabel()); if(DATA.length) render(); }catch(e){ recMsg('Hata: '+e.message); } }
+async function recSeed(){ if(!sbp){ recMsg('Bulut kapalı.'); return; } const u=await planUser(); if(!u){ recMsg('Önce Guide üzerinden giriş yap.'); return; }
+  if(RECSRC==='cloud'&&!confirm('Bulutta zaten reçete var. Yerleşik listeyi ÜSTÜNE eklemek istiyor musun?')) return;
+  const base=(RECSRC==='cloud')?RECEDIT:[];   // empty cloud: the panel already shows the built-in list — replace, don't double it
+  RECEDIT=base.concat(RECIPES_BUILTIN.map((r,i)=>({match:r.match.slice(), bullet:r.bullet, hsr:r.hsr, note:r.note||'', sort:(base.length+i+1)*10}))); recDraw(); await recSave(); }
+document.getElementById('recBtn').addEventListener('click',recOpen);
+document.getElementById('recAdd').addEventListener('click',()=>{ RECEDIT.push({match:[],bullet:'',hsr:'',note:'',sort:(RECEDIT.length+1)*10}); recDraw(); });
+document.getElementById('recSave').addEventListener('click',recSave);
+document.getElementById('recSeed').addEventListener('click',recSeed);
+recipesLoad();   // cloud recipes replace the built-in list as soon as the session is known
 </script>
 </body>
 </html>
