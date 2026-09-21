@@ -43,7 +43,10 @@
   /* narrower 70px: 90G, 250G, 1000G (2-4), Net Order (7), Green Order (8), Roast Order (9), Batch Count (10) */
   th:nth-child(2),th:nth-child(3),th:nth-child(4),th:nth-child(7),th:nth-child(8),th:nth-child(9),th:nth-child(10),th:nth-child(14),th:nth-child(15),
   td:nth-child(2),td:nth-child(3),td:nth-child(4),td:nth-child(7),td:nth-child(8),td:nth-child(9),td:nth-child(10),td:nth-child(14),td:nth-child(15){width:70px;max-width:70px}
-  td.lstar{font-variant-numeric:tabular-nums;font-weight:600;color:var(--accent2)}
+  td.lstar,td.ltarget{font-variant-numeric:tabular-nums;font-weight:600}
+  /* v2026-09-21c: measured L* vs Target L* — 0 off = green · ±1 = orange · ±2 or more = red */
+  .lstar.ok{color:#4fc98a}.lstar.near{color:#e6a23c}.lstar.off{color:#e0705a}
+  td.rollup .lstar{font-style:normal;font-weight:700}
   /* recipes panel: its own column widths (the plan table's fixed widths must not apply) */
   #recTbl{width:100%;table-layout:fixed}
   #recTbl th,#recTbl td{width:auto !important;max-width:none !important;min-width:0 !important;padding:6px 6px}
@@ -125,7 +128,7 @@
   </div>
   <div id="planApp" style="display:none">
   <h1>Roast Planner</h1>
-  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-21b</span></div>
+  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-21c</span></div>
 
   <div class="err" id="err"></div>
 
@@ -344,7 +347,7 @@ function effGreen(o){ return hasKids(o) ? childKgSum(o) : greenTarget(o); }
 function effBatch(o){ if(o.done) return 0; return hasKids(o) ? o.children.filter(c=>!c.done).length : (parseFloat(o.batchCount)||0); }  // remaining (un-roasted) batches; a roasted item counts 0
 function rollupRoast(o){ const s=o.children.map(c=>c.computedRoast).filter(v=>v!=null); return s.length?s.join(", "):"—"; }
 function rollupAgtron(o){ const s=o.children.filter(c=>c.agtronSet&&c.agtron!==''&&c.agtron!=null).map(c=>c.agtron); return s.length?s.join(", "):"—"; }   // measured batches only
-function rollupLstar(o){ const s=o.children.filter(c=>c.agtronSet&&c.agtron!==''&&c.agtron!=null).map(c=>lstar(c.agtron)).filter(v=>v!==""); return s.length?s.join(", "):"—"; }
+function rollupLstar(o){ const t=recipeAgtron(o); const s=o.children.filter(c=>c.agtronSet&&c.agtron!==''&&c.agtron!=null).map(c=>{ const v=lstar(c.agtron); if(v==="") return ''; const d=lstarDev(c.agtron,t); return '<span class="lstar'+(d?' '+d:'')+'">'+v+'</span>'; }).filter(Boolean); return s.length?s.join(", "):"—"; }
 function splitByEquip(o){                                            // generate batches from machine capacity
   const cap=capOf(o.equipment); const old=o.children||[]; o.children=[];
   if(!cap) return;                                                  // no machine -> no batches
@@ -418,7 +421,10 @@ function recipeAgtron(o){ const r=recipeFor(o); const m=r&&r.match(/(\d+)\s*A\s*
 // CIELAB L* from our Omix+ Agtron (2026-09-21 ladder, anchored on A1 = 115 → L* 30 at the roaster-called first crack; 6 Omix points per L* unit;
 // ±2 L*, provisional until the five ZHAW readings arrive): A0 125→32 · A1 115→30 · B0 105→28 · B1 95→27 · C0 85→25 · C1 75→23
 function lstar(a){ a=parseFloat(a); if(!isFinite(a)||a<=0) return ""; return Math.round(30-(115-a)/6); }
-function lstarCell(a,isDefault){ const v=lstar(a); return `<td class="num lstar${isDefault?' is-default':''}">${v===""?'—':v}</td>`; }
+function lstarDev(a,target){ const v=lstar(a), t=lstar(target); if(v===""||t==="") return ''; const d=Math.abs(v-t); return d===0?'ok':(d===1?'near':'off'); }   // vs Target L*: green · orange · red
+function lstarCell(a,isDefault,target){ const v=lstar(a), cls=isDefault?'':lstarDev(a,target); return `<td class="num lstar${isDefault?' is-default':''}${cls?' '+cls:''}">${v===""?'—':v}</td>`; }
+function ltargetCell(a){ const v=lstar(a); return `<td class="num ltarget">${v===""?'—':v}</td>`; }
+function lstarPaint(td,a,isDefault,target){ if(!td) return; const v=lstar(a); td.textContent=v===""?'—':v; td.classList.remove('is-default','ok','near','off'); if(isDefault) td.classList.add('is-default'); else { const c=lstarDev(a,target); if(c) td.classList.add(c); } }
 function recipeNote(o){ const r=recipeMatch(o.name); return (r&&r.note)?r.note:""; }
 function recipeCellHTML(o){                                          // recipe text + reminder icon with hover note
   const rec=recipeFor(o), note=recipeNote(o);
@@ -484,7 +490,7 @@ function renderParent(tbody,it){
   const agtronCell = kids
     ? `<td class="rollup" title="Batch readings">${rollupAgtron(it)}</td>`
     : `<td><input class="cell num${it.agtronSet?'':' agtron-default'}" type="number" step="1" min="0" data-f="agtron" value="${it.agtronSet?(it.agtron==null?'':it.agtron):recipeAgtron(it)}" placeholder="A" title="Measured Agtron (Omix+)"></td>`;
-  const lstarCells = (kids ? `<td class="rollup" title="Batch L*">${rollupLstar(it)}</td>` : lstarCell(it.agtronSet?it.agtron:recipeAgtron(it), !it.agtronSet)) + lstarCell(recipeAgtron(it), false);
+  const lstarCells = (kids ? `<td class="rollup" title="Batch L*">${rollupLstar(it)}</td>` : lstarCell(it.agtronSet?it.agtron:recipeAgtron(it), !it.agtronSet, recipeAgtron(it))) + ltargetCell(recipeAgtron(it));
   tr.innerHTML=
     `<td class="nameCell"><span class="grip" draggable="true" title="Drag to reorder">⠿</span>${tri}`+
       `<span class="nm">${esc(it.name)}</span>${it.unknown?` <span style="color:#d98a8a">(?: ${it.unknown})</span>`:''}</td>`+
@@ -524,7 +530,7 @@ function renderParent(tbody,it){
     inp.addEventListener('change',()=>{
       const f=inp.dataset.f;
       it[f] = inp.type==='number' ? (inp.value===''?0:parseFloat(inp.value)) : inp.value;
-      if(f==='agtron'){ it.agtron = inp.value===''?null:parseFloat(inp.value); it.agtronSet=true; inp.classList.remove('agtron-default'); const c=tr.querySelector('td.lstar'); if(c){ const v=lstar(it.agtron); c.textContent=v===''?'—':v; c.classList.remove('is-default'); } return; }
+      if(f==='agtron'){ it.agtron = inp.value===''?null:parseFloat(inp.value); it.agtronSet=true; inp.classList.remove('agtron-default'); lstarPaint(tr.querySelector('td.lstar'), it.agtron, false, recipeAgtron(it)); return; }
       if(f==='equipment'){ it.lastOverride=null; splitByEquip(it); render(); }
       else if(f==='reserve'||f==='addReserve'){ if(capOf(it.equipment)) splitByEquip(it); render(); }
       else if(f==='roastOrder'){ render(); }                       // recompute the sequence numbers
@@ -558,7 +564,7 @@ function renderChild(tbody,parent,ch,ci){
     `<td class="rollup">${esc(parent.equipment)}</td>`+
     recipeCellHTML(parent)+
     `<td><input class="cell num${ch.agtronSet?'':' agtron-default'}" type="number" step="1" min="0" data-cf="agtron" value="${ch.agtronSet?ch.agtron:recipeAgtron(parent)}" placeholder="A" title="Measured Agtron (Omix+)"></td>`+
-    lstarCell(ch.agtronSet?ch.agtron:recipeAgtron(parent), !ch.agtronSet)+lstarCell(recipeAgtron(parent), false)+
+    lstarCell(ch.agtronSet?ch.agtron:recipeAgtron(parent), !ch.agtronSet, recipeAgtron(parent))+ltargetCell(recipeAgtron(parent))+
     `<td class="ck"><input type="checkbox" ${ch.done?'checked':''}></td>`;
   tbody.appendChild(tr);
   const ov=tr.querySelector('[data-cf="kgoverride"]');
@@ -568,7 +574,7 @@ function renderChild(tbody,parent,ch,ci){
   });
   const ag=tr.querySelector('[data-cf="agtron"]');
   ag.addEventListener('change',()=>{ ch.agtron = ag.value===''?'' : parseFloat(ag.value); ch.agtronSet=true; ag.classList.remove('agtron-default');
-    const c=tr.querySelector('td.lstar'); if(c){ const v=lstar(ch.agtron); c.textContent=v===''?'—':v; c.classList.remove('is-default'); } });   // L* follows the reading; parent rollup refreshes on next render
+    lstarPaint(tr.querySelector('td.lstar'), ch.agtron, false, recipeAgtron(parent)); });   // L* follows the reading, coloured vs target; parent rollup refreshes on next render
   tr.querySelector('input[type=checkbox]').addEventListener('change',e=>{
     ch.done=e.target.checked;
     parent.done=parent.children.every(c=>c.done);   // parent reflects "all batches roasted"
