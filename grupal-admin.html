@@ -9,7 +9,8 @@
 <link rel="icon" type="image/png" sizes="16x16" href="grupal-admin-icon-16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="grupal-admin-icon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
-<!-- grupal-admin.html · v2026-09-05b · Sepet satış penceresi (gün)
+<!-- grupal-admin.html · v2026-09-22a · Kahve görseli: teklif satırında Görsel yükle / değiştir / kaldır (proxy v3.37 /admin/offer-image → Storage, meta.img_url); sayfada kartın arka planı, yoksa dağ+güneş
+     grupal-admin.html · v2026-09-05b · Sepet satış penceresi (gün)
      grupal-admin.html · v2026-09-05a · Jüri Sepeti ürün linki (sayım başına) · kademeli ceza · krediye dönenleri Shopify'a yaz
      grupal-admin.html · v2026-09-09c · Kahve listesi açılır bölüm (#listSet, başlıkta n kahve · yayında · taslak)
      grupal-admin.html · v2026-09-09b · Kampanyalar tek açılır grup (liste + form) · Kutu ekonomisi ve Tedarikçiler ayrı açılır bölümler; yalnız görünüm
@@ -300,7 +301,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-09c';
+const VERSION='v2026-09-22a';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -576,6 +577,9 @@ function renderOffersAdmin(){ listSetSub();
       +(o.lock?('<div class="hint" style="margin-top:2px;color:var(--gold);font-weight:700">🔒 '+(o.lock.state==='production'?'üretimde':(o.lock.state==='carried'?'kilitli · sonraki oturuma taşındı':'kilitli'))+' · oturum #'+o.lock.n+' · '+o.lock.dep+' kapora · kilit '+new Date(o.lock.at).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'})+'</div>'):'')
       +((o.conv||o.won_at)?('<div class="hint" style="margin-top:2px;color:var(--green)">🏆 kilitlendi '+(o.won_at?new Date(o.won_at).toLocaleDateString('tr-TR',{day:'numeric',month:'short',timeZone:'Europe/Istanbul'}):'')+' · dönüşen kapora '+(o.conv||0)+' · tamamlanan '+(o.done||0)+(o.forfeit?(' · <span style="color:#e0705a">kapatılan '+o.forfeit+'</span>'):'')+(o.done_url?'':' · <span style="color:#e0705a">tamamlama linki yok (Düzenle)</span>')+'</div>'):'')
       +'<div class="hint" style="color:'+st[1]+';font-weight:700;margin-top:2px">'+st[0]+'</div>'
+      +'<div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">'+(o.img_url?('<img src="'+esc(o.img_url)+'" alt="" style="width:60px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--line)">'):'<span class="hint" style="opacity:.75">görsel yok · sayfada dağ+güneş</span>')
+      +'<label class="mini" style="cursor:pointer">'+(o.img_url?'Görseli değiştir':'Görsel yükle')+'<input type="file" accept="image/*" style="display:none" onchange="offImg(\''+o.id+'\',this)"></label>'
+      +(o.img_url?('<button class="mini" onclick="offImgRemove(\''+o.id+'\')">Görseli kaldır</button>'):'')+'</div>'   // v22a: kahve görseli (proxy v3.37)
       +'<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="mini" onclick="offEdit(\''+o.id+'\')">Düzenle</button>'
       +'<button class="mini" onclick="offSet(\''+o.id+'\',{active:'+(!o.active)+'})">'+(o.active?'Pasife al':'Aktif et')+'</button>'
       +'<button class="mini" style="color:#e0705a" onclick="offDel(\''+o.id+'\')">Sil</button>'
@@ -588,6 +592,20 @@ async function offSet(id,patch){
   const j=await r.json().catch(()=>({})); if(j.ok&&Array.isArray(j.offers)){ OFFERS=j.offers; OFFEDIT=null; renderOffersAdmin(); } else alert('Olmadı: '+(j.error||r.status));
 }
 function offEdit(id){ OFFEDIT=id; renderOffersAdmin(); }
+// v2026-09-22a KAHVE GÖRSELİ (Ömer: 6'şar aldığım kahvelerin fotoğrafı dağ+güneş yerine): tarayıcıda ≤1200 px JPEG'e küçült → proxy /admin/offer-image → Storage → meta.img_url
+function offImgShrink(file){ return new Promise((res,rej)=>{ const img=new Image(); const u=URL.createObjectURL(file);
+  img.onload=()=>{ try{ const M=1200; let w=img.naturalWidth,h=img.naturalHeight; const sc=Math.min(1,M/Math.max(w,h)); w=Math.max(1,Math.round(w*sc)); h=Math.max(1,Math.round(h*sc));
+    const c=document.createElement('canvas'); c.width=w; c.height=h; const x=c.getContext('2d'); x.fillStyle='#16130f'; x.fillRect(0,0,w,h); x.drawImage(img,0,0,w,h);
+    const b64=c.toDataURL('image/jpeg',0.85).split(',')[1]; URL.revokeObjectURL(u); res({b64,type:'image/jpeg',w,h}); }catch(e){ rej(e); } };
+  img.onerror=()=>rej(new Error('bu dosya tarayıcıda açılamadı (HEIC ise JPEG/PNG olarak kaydet)')); img.src=u; }); }
+async function offImg(id,inp){ const f=inp&&inp.files&&inp.files[0]; if(!f) return; const lbl=inp.parentElement; const old=lbl?lbl.firstChild.textContent:''; if(lbl) lbl.firstChild.textContent='yükleniyor…';
+  try{ const d=await offImgShrink(f);
+    const r=await fetch(API+'/admin/offer-image',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({id,data:d.b64,type:d.type})});
+    const j=await r.json().catch(()=>({})); if(j.ok&&Array.isArray(j.offers)){ OFFERS=j.offers; renderOffersAdmin(); } else { alert('Olmadı: '+(j.error||r.status)); if(lbl) lbl.firstChild.textContent=old; } }
+  catch(e){ alert('Görsel okunamadı: '+e.message); if(lbl) lbl.firstChild.textContent=old; } }
+async function offImgRemove(id){ if(!confirm('Görsel kaldırılsın mı? Sayfa dağ+güneş çizimine döner.')) return;
+  const r=await fetch(API+'/admin/offer-image',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({id,remove:true})});
+  const j=await r.json().catch(()=>({})); if(j.ok&&Array.isArray(j.offers)){ OFFERS=j.offers; renderOffersAdmin(); } else alert('Olmadı: '+(j.error||r.status)); }
 // v02w (Ömer: masa = eşiği geçen tüm kahveler): eşiği geçen tekliften kampanya formunu doldur — LOT ürün linki + tarihler senden, Kaydet
 function campFromOffer(id){
   const o=OFFERS.find(x=>x.id===id); if(!o) return;

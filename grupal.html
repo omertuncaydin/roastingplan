@@ -289,6 +289,7 @@ body.th-red .jtick .jth a{color:#8a6a5c}
 .jcard{position:relative;flex:0 0 calc(100% - 4px);scroll-snap-align:center;height:460px;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:var(--panel2);color:#f3ede4}
 .jcard .jbg{position:absolute;inset:0}
 .jcard .jsh{position:absolute;inset:0;background:linear-gradient(180deg,rgba(22,19,15,0) 30%,rgba(22,19,15,.55) 58%,rgba(22,19,15,.96) 100%)}
+.jcard.photo .jsh{background:linear-gradient(180deg,rgba(22,19,15,.18) 0%,rgba(22,19,15,.08) 22%,rgba(22,19,15,.62) 56%,rgba(22,19,15,.97) 100%)}   /* v09s: fotoğraf üstünde yazı okunsun */
 .jcard .jtop{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .jchip{display:inline-flex;align-items:center;gap:6px;border-radius:14px;padding:5px 10px;font-size:11.5px;font-weight:800;background:rgba(22,19,15,.62);color:#f3ede4;border:1px solid rgba(243,237,228,.28);white-space:nowrap}
 .jchip i{width:9px;height:9px;border-radius:50%;display:inline-block}
@@ -559,7 +560,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-22a';
+const VERSION='v2026-09-22b';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1095,7 +1096,9 @@ function jCtl(o,cfg,paid,gate,banned){
           :('<button class="jplus" onclick="event.stopPropagation();dbAdd(\''+escZ(o.id)+'\',1)" title="'+t(paid?'offDepMore':'offDep').replace('{amt}',cfg.dep_amt||'')+'" aria-label="+">+</button>'); }
 function renderDeck(list,cfg,G,gate,banned,clk){ const all=jDeckOrder(list);   // v09l: tüm kahveler, ön sipariş sırasına göre
   const cards=all.map((o,i)=>{ const paid=(OFFMINE||[]).find(v=>v.id===o.id&&v.paid); const jury=o.jury_tl||o.camp200_tl; const tk=tasteOf(o); const tn=TASTES.find(x=>x[0]===tk); const tc=tn?TASTECOL[tk]:''; const tp=jTop(o);
-    return '<div class="jcard'+(paid?' mine':'')+'" data-i="'+i+'" data-id="'+escZ(o.id)+'"><div class="jbg">'+jLand(o.origin,362,460,true)+'</div><div class="jsh"></div><div class="jsh2"></div>'
+    const hasImg=!!(o.img_url&&/^https:\/\//.test(String(o.img_url)));   // v09s (22.09): kahvenin fotoğrafı varsa arka plan o; yoksa dağ+güneş (renk mantığı aynen)
+    const bg=hasImg?('<img src="'+escZ(o.img_url)+'" alt="" loading="lazy" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover">'):jLand(o.origin,362,460,true);
+    return '<div class="jcard'+(paid?' mine':'')+(hasImg?' photo':'')+'" data-i="'+i+'" data-id="'+escZ(o.id)+'"><div class="jbg">'+bg+'</div><div class="jsh"></div><div class="jsh2"></div>'
      +'<div class="jtop"><div style="display:flex;gap:6px;min-width:0"><span class="jchip">#'+(i+1)+(tp?' <span style="color:#e6c14b" title="'+t('jTop5')+'">★</span>':'')+'</span>'+(paid?('<span class="jchip jminec">'+(paid.conv?'🔒 ':'')+t('jMineChip').replace('{n}',Math.max(1,parseInt(paid.qty)||1))+'</span>'+((!paid.conv&&!JMOVE&&!JBUSY&&all.length>1)?('<span class="jchip jmvl" onclick="event.stopPropagation();jMoveStart(\''+escZ(o.id)+'\')">'+t('jMoveL')+'</span>'):'')):(tn?('<span class="jchip jtaste"><i style="background:'+tc+'"></i>'+(LANG==='en'?tn[2]:tn[1])+'</span>'):''))+'</div>'
      +'<svg width="50" height="50" viewBox="0 0 50 50" aria-hidden="true"><circle cx="25" cy="25" r="21" fill="rgba(22,19,15,.5)" stroke="rgba(243,237,228,.25)" stroke-width="4"/><circle cx="25" cy="25" r="21" fill="none" stroke="#e6c14b" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+(2*Math.PI*21*Math.min(1,(o.dep||0)/G)).toFixed(1)+' 999" transform="rotate(-90 25 25)"/><text x="25" y="29" text-anchor="middle" font-size="14" font-weight="800" fill="#f3ede4" font-family="-apple-system,Segoe UI,Roboto,sans-serif">'+(o.dep||0)+'</text></svg></div>'
      +'<div class="jbody"><div class="jmeta">'+jMeta(o)+'</div><div class="jname">'+escZ(o.name)+'</div>'+(jDesc(o)?('<div class="jdesc">'+jDesc(o)+'</div>'):'')
