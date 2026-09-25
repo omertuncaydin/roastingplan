@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="robots" content="noindex">
 <title>CoffeeNutz Fiyat</title>
-<!-- v2026-09-25d -->
+<!-- v2026-09-25e -->
 <style>
 :root{ --bg:#141210; --panel:#1d1a16; --panel2:#262119; --line:#3a332a; --ink:#ece5da; --muted:#9c917f; --accent:#e8a33d; --green:#7fb069; --red:#D8453B; }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -69,7 +69,7 @@ footer{color:var(--muted);font-size:10.5px;text-align:center;margin-top:14px}
 <div id="app" style="display:none">
 <div class="hdr">
   <div class="brand" onclick="location.reload()"><span>CoffeeNutz</span> <span class="a">Fiyat</span></div>
-  <div class="hsub"><span>v2026-09-25d</span><button class="iconbtn" onclick="location.reload()">&#8635;</button><button class="iconbtn" onclick="lock()" title="anahtari bu cihazdan sil">kilitle</button></div>
+  <div class="hsub"><span>v2026-09-25e</span><button class="iconbtn" onclick="location.reload()">&#8635;</button><button class="iconbtn" onclick="lock()" title="anahtari bu cihazdan sil">kilitle</button></div>
 </div>
 <div class="tabs">
   <button class="tab on" data-t="prices" onclick="setTab('prices')">Fiyatlar</button>
@@ -95,15 +95,15 @@ const DEF={
   {n:'Amortisman (yillik / 12)',p:0},{n:'Sabit vergiler',p:0},{n:'Bakim & kalibrasyon',p:0}
  ],
  pack:[
-  {n:'Etiket',sup:'DYMO',url:'https://www.amazon.com.tr',p:0.6},
-  {n:'Koli',sup:'kolinizburada',url:'https://morpack.com',p:9.4},
-  {n:'Kucuk Kutu',sup:'kolinizburada',url:'https://kolikutu.net',p:19.5},
-  {n:'Buyuk Kutu (25x20x10)',sup:'MorPack',url:'https://morpack.com',p:0},
+  {n:'Etiket',sup:'DYMO',url:'https://www.amazon.com.tr/gp/css/order-history?ref_=nav_orders_first',p:0.6},
+  {n:'Koli',sup:'kolinizburada',url:'https://morpack.com/urun/ekonomik-kargo-kolisi/',p:9.4},
+  {n:'Kucuk Kutu',sup:'kolinizburada',url:'https://kolikutu.net/bibox-hazir-kutu-24-16-6-kraft',p:19.5},
+  {n:'Buyuk Kutu (25x20x10)',sup:'MorPack',url:'https://morpack.com/urun/e-ticaret-kargo-kutusu/?attribute_pa_olcu=25cm-x-16cm-x-10cm-13-desi&attribute_pa_avantajli-paket=200-adet',p:0},
   {n:'Kucuk Paket',sup:'Vakumpak',url:'',p:13.2},
   {n:'Buyuk Paket',sup:'Vakumpak',url:'',p:21},
-  {n:'Poset',sup:'crtistanbul',url:'https://www.istanbultcrt.com',p:0.9},
-  {n:'Stick',sup:'Migros',url:'',p:0.14},
-  {n:'Kavanoz',sup:'Akgun Zuccaciye',url:'https://www.akgunzuccaciye.com',p:6.52},
+  {n:'Poset',sup:'crtistanbul',url:'https://www.istanbultcrt.com/rulo-tirtikli-vakum-torbalari/rulo-tirtikli-gofrajli-vakum-torbasi-9-cm-x-15-mt',p:0.9},
+  {n:'Stick Karistirici (Kaplamali)',sup:'Migros',url:'',p:0.14},
+  {n:'Kavanoz',sup:'Akgun Zuccaciye',url:'https://www.akgunzuccaciye.com/products/49/cam-kavanozlar-244-cc-uzun-boru-kavanoz-1-kolisinde-120-adet-var-kapakli-gnderilir_349.html',p:6.52},
   {n:'Kargo',sup:'Yurtici Kargo',url:'',p:0}
  ],
  sizes:[
@@ -149,8 +149,17 @@ function ensure100(s){
   const np={}; Object.keys(s.px||{}).forEach(k=>{ const a=k.split('_'),ci=a[0],si=+a[1]; np[ci+'_'+(si>=1?si+1:si)]=s.px[k]; }); s.px=np;
   return s;
 }
+function normN(x){ return String(x||'').toLowerCase().replace(/[ıİ]/g,'i').replace(/ş/g,'s').replace(/ğ/g,'g').replace(/ç/g,'c').replace(/ö/g,'o').replace(/ü/g,'u').replace(/[^a-z0-9]/g,''); }
+function healPack(s){
+  (s.pack||[]).forEach(p=>{
+    if(p.sup&&p.url) return;
+    const d=DEF.pack.find(x=>normN(x.n)===normN(p.n)||normN(x.n).indexOf(normN(p.n))===0||normN(p.n).indexOf(normN(x.n))===0);
+    if(d){ if(!p.sup) p.sup=d.sup; if(!p.url) p.url=d.url; }
+  });
+  return s;
+}
 function load(){
-  try{ const s=JSON.parse(localStorage.getItem('cnPricing3')||'null'); if(s&&s.coffees) return ensure100(s); }catch(e){}
+  try{ const s=JSON.parse(localStorage.getItem('cnPricing3')||'null'); if(s&&s.coffees) return healPack(ensure100(s)); }catch(e){}
   try{ const o=JSON.parse(localStorage.getItem('cnPricing2')||'null');
     if(o&&o.coffees){
       const s=JSON.parse(JSON.stringify(DEF));
