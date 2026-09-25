@@ -143,8 +143,10 @@ let softTimer=null; function renderSoft(){ clearTimeout(softTimer); softTimer=se
 
 function vPrices(){
   const z=S.sizes[SIZE];
-  let h='<div class="card"><div class="chips" style="margin-bottom:10px">'+S.sizes.map((s,i)=>'<span class="chip'+(i===SIZE?' on':'')+'" onclick="setSize('+i+')">'+s.g+' g</span>').join('')+'</div>';
-  h+='<div class="lbl">'+z.g+' g · ambalaj '+fmt(packCost(SIZE))+' \u20BA · kademeler %'+z.tiers.join(' / %')+'</div>';
+  let h='<div class="card"><div class="chips" style="margin-bottom:8px">'+S.sizes.map((s,i)=>'<span class="chip'+(i===SIZE?' on':'')+'" onclick="setSize('+i+')">'+s.g+' g</span>').join('')+'</div>';
+  const scales=[200,350,500,750,1000]; if(scales.indexOf(S.aykg)<0) scales.push(S.aykg);
+  h+='<div class="chips" style="margin-bottom:10px"><span class="hint" style="margin:0;align-self:center">Olcek kg/ay:</span>'+scales.sort(function(a,b){return a-b}).map(function(k){return '<span class="chip'+(k===S.aykg?' on':'')+'" onclick="setScale('+k+')">'+k+'</span>';}).join('')+'</div>';
+  h+='<div class="lbl">'+z.g+' g · ambalaj '+fmt(packCost(SIZE))+' \u20BA · genel gider '+fmt(giderKg(),0)+' \u20BA/kg · kademeler %'+z.tiers.join(' / %')+'</div>';
   h+='<table><tr><th>Kahve</th><th class="num">Maliyet+KDV \u20BA</th><th>Kademe</th><th class="num">Hesaplanan \u20BA</th><th class="num">GUNCEL \u20BA</th><th class="num">Marj %</th></tr>';
   S.coffees.forEach((c,ci)=>{
     const cost=bagCostKdv(c,SIZE), p=pxOf(ci,SIZE), sug=suggested(c,ci,SIZE), g=num(p.g);
@@ -156,7 +158,7 @@ function vPrices(){
      +'<td class="num"><input class="w80" inputmode="decimal" value="'+esc(p.g)+'" onchange="setGuncel('+ci+',this.value)"></td>'
      +'<td class="num"><span'+cls+'>'+marj+'</span></td></tr>';
   });
-  h+='</table><div class="hint">Hesaplanan = (kahve maliyeti + ambalaj) + KDV + secili kademe'+(num(S.iyzico)>0?(' + iyzico %'+S.iyzico):'')+'. GUNCEL = raftaki fiyatin; kirmizi marj, guncelin hesaplananin altina dustugunu soyler. Olcek cipleri aylik kavrum kg'sini degistirir, genel gider /kg ve tum fiyatlar aninda yeniden hesaplanir. Kademe yuzdeleri Ayarlar yerine buradan: '
+  h+='</table><div class="hint">Hesaplanan = (kahve maliyeti + ambalaj) + KDV + secili kademe'+(num(S.iyzico)>0?(' + iyzico %'+S.iyzico):'')+'. GUNCEL = raftaki fiyatin; kirmizi marj, guncelin hesaplananin altina dustugunu soyler. Olcek cipleri aylik kavrum kg miktarini degistirir, genel gider /kg ve tum fiyatlar aninda yeniden hesaplanir. Kademe yuzdeleri Ayarlar yerine buradan: '
    +z.tiers.map((t,i)=>'<input class="w60" inputmode="decimal" value="'+t+'" onchange="S.sizes['+SIZE+'].tiers['+i+']=parseFloat(this.value)||0;save();render()">').join(' ')+'</div></div>';
   return h;
 }
@@ -197,7 +199,7 @@ function vSet(){
   return '<div class="card"><div class="lbl">Ayarlar</div><div class="grid">'
    +setF('usd','USD/TRY kuru')+setF('eur','EUR/TRY kuru')+setF('kdv','KDV %')
    +setF('fire','Fire payi %')+setF('sabit','Sabit gider \u20BA/ay')+setF('aykg','Aylik kavrum kg')+setF('iyzico','iyzico komisyonu %')
-   +'</div><div class="hint">Kurlar elle girilir, sen kontrol edersin. Fire payi, xls'teki 0.15 carpaninin kendisi (Kavrulmus Kahve Firesi). Genel gider = sabit gider (maas + kira + muhasebeci + faturalar + Shopify) &divide; aylik kavrum: su an '+fmt(giderKg(),0)+' \u20BA/kg. Olcek projeksiyonu icin Fiyatlar sekmesindeki kg/ay cipleri. iyzico komisyonu hesaplanan fiyatin ustune eklenir; %0 ise etkisiz.</div>'
+   +'</div><div class="hint">Kurlar elle girilir, sen kontrol edersin. Fire payi, xls icindeki 0.15 carpaninin kendisi (Kavrulmus Kahve Firesi). Genel gider = sabit gider (maas + kira + muhasebeci + faturalar + Shopify) &divide; aylik kavrum: su an '+fmt(giderKg(),0)+' \u20BA/kg. Olcek projeksiyonu icin Fiyatlar sekmesindeki kg/ay cipleri. iyzico komisyonu hesaplanan fiyatin ustune eklenir; %0 ise etkisiz.</div>'
    +'<div style="margin-top:12px"><button class="iconbtn" onclick="resetAll()">Fabrika verisine don (xls tohumu)</button></div></div>';
 }
 function setF(k,label){ return '<div class="f"><label>'+label+'</label><input inputmode="decimal" value="'+S[k]+'" onchange="S[\''+k+'\']=parseFloat(this.value)||0;save();render()"></div>'; }
