@@ -28,6 +28,10 @@ h1 .lr{color:var(--red)}
 .ctl{display:flex;gap:6px}
 .ctl button{background:#2e241c;border:1px solid var(--accent);color:var(--accent);border-radius:9px;font-size:15px;width:38px;height:34px;cursor:pointer}
 .ctl button.eye.off{border-color:var(--red);color:var(--red)}
+.grip{cursor:grab;touch-action:none;color:var(--muted);font-size:18px;padding:4px 8px 4px 0;user-select:none;-webkit-user-select:none;flex:none}
+.grip:active{cursor:grabbing;color:var(--gold)}
+.row.drag-ghost{opacity:.4}
+.row.drag-lift{border-color:var(--gold);box-shadow:0 8px 20px rgba(0,0,0,.45)}
 #bar{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--accent);padding:12px 16px;display:flex;gap:10px;align-items:center}
 #bar .in{max-width:560px;margin:0 auto;display:flex;gap:10px;align-items:center;width:100%}
 #save{background:var(--gold);color:#1a1410;border:none;border-radius:999px;padding:10px 22px;font-weight:800;font-size:14px;cursor:pointer}
@@ -45,8 +49,8 @@ a.back{color:var(--accent);text-decoration:none;font-size:13px;font-weight:600}
 <body>
 <div class="wrap">
   <h1><span class="lr">CoffeeNutz</span> Apps Yöneticisi</h1>
-  <div class="pills"><span class="hpill" id="ver">v2026-09-01a</span><span class="hpill">apps.coffeenutz.net</span><span class="hpill" style="border-color:var(--accent);color:var(--accent);cursor:pointer" onclick="location.href=location.pathname+'?v='+Date.now()">Yenile</span></div>
-  <p class="sub">Ön kapıdaki kart sırası ve görünürlük. Oklarla sırala, gözle gizle, Kaydet ile yayınla; ziyaretçiler anında yeni düzeni görür.</p>
+  <div class="pills"><span class="hpill" id="ver">v2026-09-25a</span><span class="hpill">apps.coffeenutz.net</span><span class="hpill" style="border-color:var(--accent);color:var(--accent);cursor:pointer" onclick="location.href=location.pathname+'?v='+Date.now()">Yenile</span></div>
+  <p class="sub">Ön kapıdaki kart sırası ve görünürlük. &#8801; tutup sürükleyerek sırala, gözle gizle, Kaydet ile yayınla; ziyaretçiler anında yeni düzeni görür.</p>
   <div id="auth">Yazmak için Guide hesabınla giriş gerekli. <a href="/roast-guide" target="_blank">Guide'ı aç, giriş yap</a>, sonra bu sayfayı yenile.</div>
   <div id="list"></div>
   <p class="sub" style="margin:16px 0 4px">Giriş · başlık, alt başlık ve hizalama</p>
@@ -68,6 +72,7 @@ a.back{color:var(--accent);text-decoration:none;font-size:13px;font-weight:600}
 </div>
 <div id="bar"><div class="in"><button id="save" disabled>Kaydet · Yayınla</button><span id="st">yükleniyor...</span></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <script>
 const SUPA_URL="https://efjvfggwnhqkunjvoyjb.supabase.co";
 const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA";
@@ -103,11 +108,11 @@ function render(){
   const map={}; APPS.forEach(a=>map[a.id]=a);
   $('list').innerHTML=ORDER.filter(id=>map[id]).map(id=>{
     const a=map[id], hid=HIDDEN.includes(id);
-    return '<div class="row'+(hid?' hid':'')+'" data-id="'+id+'">'
+    return '<div class="row appr'+(hid?' hid':'')+'" data-id="'+id+'">'
+      +'<span class="grip">&#8801;</span>'
       +'<div class="badge" style="background:'+a.c+'">'+a.b+'</div>'
       +'<div class="nm"><b>'+a.nm+'</b><span>'+a.d+'</span></div>'
-      +'<div class="ctl"><button data-a="up">&#8593;</button><button data-a="dn">&#8595;</button>'
-      +'<button class="eye'+(hid?' off':'')+'" data-a="eye">&#128065;</button></div></div>';
+      +'<div class="ctl"><button class="eye'+(hid?' off':'')+'" data-a="eye">&#128065;</button></div></div>';
   }).join('')
   +'<p class="sub" style="margin:16px 0 8px">Bloklar &middot; sayfa b&ouml;l&uuml;mleri</p>'
   +BLOCKS.map(a=>{
@@ -122,15 +127,15 @@ function renderFaces(){
   const map={}; APPS.forEach(a=>map[a.id]=a);
   $('faces').innerHTML=['roa','cup','ent'].map(k=>{
     FACES[k]=(FACES[k]||[]).filter(id=>map[id]); APPS.forEach(a=>{ if(!FACES[k].includes(a.id)) FACES[k].push(a.id); });
-    return '<p class="sub" style="margin:10px 0 6px"><b>'+FACENM[k]+'</b></p>'+FACES[k].map(id=>{
+    return '<p class="sub" style="margin:10px 0 6px"><b>'+FACENM[k]+'</b></p><div class="facewrap" data-face="'+k+'">'+FACES[k].map(id=>{
       const a=map[id];
       const fh=(FACEHIDE[k]||[]).includes(id);
       return '<div class="row'+(fh?' hid':'')+'" data-face="'+k+'" data-id="'+id+'" style="padding:8px 12px">'
+        +'<span class="grip">&#8801;</span>'
         +'<div class="badge" style="background:'+a.c+';width:30px;height:30px;flex-basis:30px;font-size:12px">'+a.b+'</div>'
         +'<div class="nm"><b style="font-size:13.5px">'+a.nm+'</b></div>'
-        +'<div class="ctl"><button data-a="fup">&#8593;</button><button data-a="fdn">&#8595;</button>'
-        +'<button class="eye'+(fh?' off':'')+'" data-a="feye">&#128065;</button></div></div>';
-    }).join('');
+        +'<div class="ctl"><button class="eye'+(fh?' off':'')+'" data-a="feye">&#128065;</button></div></div>';
+    }).join('')+'</div>';
   }).join('');
 }
 function paintLook(){
@@ -143,20 +148,30 @@ $('alignbtns').addEventListener('click',e=>{ const b=e.target.closest('button');
   $('st').textContent='kaydedilmedi · unsaved'; }); });
 $('faces').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
-  const row=e.target.closest('.row'), k=row.dataset.face, id=row.dataset.id, arr=FACES[k], i=arr.indexOf(id);
-  if(b.dataset.a==='fup'&&i>0){ arr.splice(i,1); arr.splice(i-1,0,id); }
-  else if(b.dataset.a==='fdn'&&i<arr.length-1){ arr.splice(i,1); arr.splice(i+1,0,id); }
-  else if(b.dataset.a==='feye'){ const h=FACEHIDE[k]||(FACEHIDE[k]=[]); h.includes(id)?h.splice(h.indexOf(id),1):h.push(id); }
-  renderFaces(); $('st').textContent='kaydedilmedi · unsaved';
+  const row=e.target.closest('.row'), k=row.dataset.face, id=row.dataset.id;
+  if(b.dataset.a==='feye'){ const h=FACEHIDE[k]||(FACEHIDE[k]=[]); h.includes(id)?h.splice(h.indexOf(id),1):h.push(id); }
+  renderFaces(); initSorts(); $('st').textContent='kaydedilmedi · unsaved';
 });
 $('list').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
-  const row=e.target.closest('.row'), id=row.dataset.id, i=ORDER.indexOf(id), act=b.dataset.a;
-  if(act==='up'&&i>0){ ORDER.splice(i,1); ORDER.splice(i-1,0,id); }
-  else if(act==='dn'&&i<ORDER.length-1){ ORDER.splice(i,1); ORDER.splice(i+1,0,id); }
-  else if(act==='eye'){ HIDDEN.includes(id)?HIDDEN.splice(HIDDEN.indexOf(id),1):HIDDEN.push(id); }
-  render(); $('st').textContent='kaydedilmedi · unsaved';
+  const row=e.target.closest('.row'), id=row.dataset.id;
+  if(b.dataset.a==='eye'){ HIDDEN.includes(id)?HIDDEN.splice(HIDDEN.indexOf(id),1):HIDDEN.push(id); }
+  render(); initSorts(); $('st').textContent='kaydedilmedi · unsaved';
 });
+function initSorts(){
+  if(!window.Sortable) return;
+  const L=$('list');
+  if(L){ if(L._sort){ try{ L._sort.destroy(); }catch(e){} }
+    L._sort=Sortable.create(L,{handle:'.grip',animation:150,draggable:'.row.appr',ghostClass:'drag-ghost',chosenClass:'drag-lift',onEnd:function(){
+      ORDER=[].slice.call(L.querySelectorAll('.row.appr')).map(function(r){ return r.dataset.id; });
+      render(); initSorts(); $('st').textContent='kaydedilmedi · unsaved'; }}); }
+  [].slice.call(document.querySelectorAll('#faces .facewrap')).forEach(function(w){
+    if(w._sort){ try{ w._sort.destroy(); }catch(e){} }
+    w._sort=Sortable.create(w,{handle:'.grip',animation:150,draggable:'.row',ghostClass:'drag-ghost',chosenClass:'drag-lift',onEnd:function(){
+      const k=w.dataset.face;
+      FACES[k]=[].slice.call(w.querySelectorAll('.row')).map(function(r){ return r.dataset.id; });
+      renderFaces(); initSorts(); $('st').textContent='kaydedilmedi · unsaved'; }}); });
+}
 async function load(){
   try{
     const {data}=await sb.from('apps_config').select('cfg').eq('id',1).maybeSingle();
@@ -166,7 +181,7 @@ async function load(){
       if(data.cfg.faces){ ['roa','cup','ent'].forEach(k=>{ if(Array.isArray(data.cfg.faces[k])&&data.cfg.faces[k].length) FACES[k]=data.cfg.faces[k].slice(); }); }
       if(data.cfg.facehide){ ['roa','cup','ent'].forEach(k=>{ if(Array.isArray(data.cfg.facehide[k])) FACEHIDE[k]=data.cfg.facehide[k].slice(); }); } }
   }catch(e){}
-  render(); renderFaces(); paintLook();
+  render(); renderFaces(); paintLook(); initSorts();
   const {data:s}=await sb.auth.getSession();
   if(s&&s.session){ $('save').disabled=false; $('st').textContent='hazır · '+(s.session.user.email||''); }
   else{ $('auth').style.display='block'; $('st').textContent='salt okunur · read-only'; }
