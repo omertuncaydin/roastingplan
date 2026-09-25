@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="robots" content="noindex">
+<title>CoffeeNutz Fiyat</title>
+<!-- v2026-09-25b -->
+<style>
+:root{ --bg:#141210; --panel:#1d1a16; --panel2:#262119; --line:#3a332a; --ink:#ece5da; --muted:#9c917f; --accent:#e8a33d; --green:#7fb069; --red:#D8453B; }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,'Segoe UI',Roboto,sans-serif;
+  padding:12px;padding-top:calc(10px + env(safe-area-inset-top));padding-bottom:calc(30px + env(safe-area-inset-bottom));max-width:980px;margin:0 auto}
+.hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.brand{font-weight:800;cursor:pointer}.brand .a{color:var(--accent)}
+.hsub{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11px}
+.iconbtn{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tab{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:9px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer}
+.tab.on{background:var(--accent);color:#1a1410;border-color:var(--accent)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px;overflow-x:auto}
+.lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:8px}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}
+th{color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:6px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+input,select{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:6px 7px;font-size:13px;color-scheme:dark}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+input.w60{width:64px}input.w80{width:86px}input.w120{width:130px}input.wname{width:200px}
+.tsel{display:inline-flex;gap:3px}
+.tsel button{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer}
+.tsel button.on{background:var(--green);color:#10150f;border-color:var(--green)}
+.sug{font-weight:800}
+.low{color:var(--red);font-weight:800}
+.ok{color:var(--green)}
+.del{background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:2px 6px}
+.del:active{color:var(--red)}
+.addbtn{background:var(--panel2);border:1px dashed var(--line);color:var(--muted);border-radius:9px;padding:9px;width:100%;cursor:pointer;font-size:12.5px;margin-top:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label{font-size:11px;color:var(--muted)}
+.hint{font-size:11px;color:var(--muted);margin-top:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--muted)}
+.chip.on{background:var(--accent);color:#1a1410;border-color:var(--accent);font-weight:700}
+#gate{max-width:380px;margin:60px auto}
+#gate input{width:100%;font-size:16px;padding:11px;margin:10px 0}
+#gate button{width:100%;background:var(--accent);border:none;color:#1a1410;border-radius:9px;padding:12px;font-weight:800;font-size:15px;cursor:pointer}
+footer{color:var(--muted);font-size:10.5px;text-align:center;margin-top:14px}
+</style>
+</head>
+<body>
+<div id="gate" style="display:none">
+  <div class="card" style="overflow:visible">
+    <div class="lbl">CoffeeNutz Fiyat</div>
+    <div class="hint" style="margin:0 0 4px">Kokpit anahtarini gir; bu cihazda kalir. Diger CoffeeNutz uygulamalariyla ayni anahtar.</div>
+    <input type="password" id="keyIn" placeholder="Kokpit anahtari" autocomplete="off">
+    <button onclick="unlock()">Ac</button>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+<div class="hdr">
+  <div class="brand" onclick="location.reload()"><span>CoffeeNutz</span> <span class="a">Fiyat</span></div>
+  <div class="hsub"><span>v2026-09-25b</span><button class="iconbtn" onclick="location.reload()">&#8635;</button><button class="iconbtn" onclick="lock()">kilitle</button></div>
+</div>
+<div class="tabs">
+  <button class="tab on" data-t="prices" onclick="setTab('prices')">Fiyatlar</button>
+  <button class="tab" data-t="coffees" onclick="setTab('coffees')">Kahveler</button>
+  <button class="tab" data-t="pack" onclick="setTab('pack')">Ambalaj</button>
+  <button class="tab" data-t="set" onclick="setTab('set')">Ayarlar</button>
+</div>
+<div id="view"></div>
+<footer>CoffeeNutz ic arac · tek dosya · veriler bu cihazda saklanir</footer>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const DEF={
+ usd:50, eur:57, kdv:1, fire:15, sabit:90000, aykg:500, iyzico:0,
+ pack:[
+  {n:'Etiket',p:0.6},{n:'Koli',p:9.4},{n:'Kucuk Kutu',p:19.5},{n:'Buyuk Kutu',p:0},
+  {n:'Kucuk Paket',p:13.2},{n:'Buyuk Paket',p:21},{n:'Poset',p:0.9},{n:'Stick',p:0.14},{n:'Kavanoz',p:6.52}
+ ],
+ sizes:[
+  {g:90,  sel:[0,2],   tiers:[40,60,95]},
+  {g:250, sel:[0,2,4], tiers:[15,50,135]},
+  {g:1000,sel:[0,3,5], tiers:[30,65,90]}
+ ],
+ coffees:[
+  {n:'ET - URAGA',sup:'Fest Coffee',p:17.25,cur:'$',loj:10},
+  {n:'ET - KILLENSO',sup:'Fest Coffee',p:14.3,cur:'$',loj:20},
+  {n:'BI - FW15+',sup:'Cafe Bien',p:8.5,cur:'$',loj:6},
+  {n:'ET - ASEFA DUKAMO HONEY',sup:'Ulusal Gida',p:19.8,cur:'$',loj:0},
+  {n:'ET - YAYE NATURAL',sup:'Fest Coffee',p:21.78,cur:'$',loj:10},
+  {n:'CR - CHIRRIPO',sup:'Fest Coffee',p:13.81,cur:'$',loj:18},
+  {n:'COL - LA SIRENA HONEY PEACH',sup:'Fest Coffee',p:26,cur:'$',loj:18},
+  {n:'COL - MILAN WASHED NG',sup:'Fest Coffee',p:27.6,cur:'$',loj:18},
+  {n:'COL - EL MIRADOR NATURAL',sup:'Fest Coffee',p:29.6,cur:'$',loj:18},
+  {n:'KN - WANRICH ANAEROBIC WASHED',sup:'Fest Coffee',p:19.2,cur:'$',loj:0},
+  {n:'KN - WANRICH WASHED',sup:'Fest Coffee',p:15.95,cur:'$',loj:6},
+  {n:'COL - GEISHA HONEY',sup:'Sucafina',p:38,cur:'$',loj:0},
+  {n:'COL - GEISHA FINCAMIGOS',sup:'Sucafina',p:32.5,cur:'$',loj:0},
+  {n:'NITROBREWD BLEND',sup:'Various',p:10,cur:'$',loj:10},
+  {n:'GT - MARAGOGYPE WASHED',sup:'Sucafina',p:18,cur:'$',loj:4.75},
+  {n:'PR - APROCASSI WASHED',sup:'Fest Coffee',p:7.92,cur:'$',loj:5},
+  {n:'IN - MERA MERDA',sup:'Kungpow',p:26,cur:'$',loj:0},
+  {n:'IN - ANAEROBIK KARAMELA',sup:'Kungpow',p:23,cur:'$',loj:0},
+  {n:'ET - HAMBELA WAMENA',sup:'TIN',p:20.5,cur:'$',loj:0},
+  {n:'ET - HAMBELA',sup:'Fest Coffee',p:15.77,cur:'$',loj:0},
+  {n:'COL - LA LOMA',sup:'Fest Coffee',p:21.92,cur:'$',loj:0},
+  {n:'COL - SIDRA',sup:'TIN',p:50,cur:'$',loj:0},
+  {n:'ET - RUMUDAMO WASHED ANAEROBIC',sup:'Ulusal Gida',p:25.09,cur:'$',loj:0},
+  {n:'ET - BOCHESA NATURAL ANAEROBIC',sup:'Ulusal Gida',p:30.78,cur:'$',loj:0},
+  {n:'ET - KERAMO NATURAL 2024',sup:'Ulusal Gida',p:13,cur:'$',loj:0},
+  {n:'ET - YIRGACHEFFE GR2',sup:'Arabica Trade',p:11.3,cur:'$',loj:0}
+ ],
+ px:{}   // per coffee-index per size-index: {t:tier(0/1/2), g:guncel}
+};
+let S=load(), TAB='prices', SIZE=1;
+function load(){ try{ const s=JSON.parse(localStorage.getItem('cnPricing2')||'null'); if(s&&s.coffees) return s; }catch(e){} return JSON.parse(JSON.stringify(DEF)); }
+function save(){ try{ localStorage.setItem('cnPricing2',JSON.stringify(S)); }catch(e){} }
+function num(v){ const x=parseFloat(String(v).replace(',','.')); return isFinite(x)?x:0; }
+function esc(s){ const d=document.createElement('div'); d.textContent=s==null?'':s; return d.innerHTML; }
+function fmt(n,d){ return isFinite(n)?new Intl.NumberFormat('tr-TR',{minimumFractionDigits:d==null?2:d,maximumFractionDigits:d==null?2:d}).format(n):'-'; }
+
+function conv(p,cur){ return cur==='$'?p*S.usd:(cur==='\u20AC'?p*S.eur:p); }
+function giderKg(){ return S.aykg>0?S.sabit/S.aykg:0; }
+function costKg(c){ return (conv(c.p,c.cur)+num(c.loj))*(1+S.fire/100)+giderKg(); }
+function packCost(si){ return (S.sizes[si].sel||[]).reduce((a,i)=>a+(S.pack[i]?num(S.pack[i].p):0),0); }
+function bagCostKdv(c,si){ const z=S.sizes[si]; const base=costKg(c)*z.g/1000+packCost(si); return base*(1+S.kdv/100); }
+function pxOf(ci,si){ const k=ci+'_'+si; if(!S.px[k]) S.px[k]={t:1,g:''}; return S.px[k]; }
+function suggested(c,ci,si){ const z=S.sizes[si]; return bagCostKdv(c,si)*(1+z.tiers[pxOf(ci,si).t]/100)*(1+num(S.iyzico)/100); }
+
+function setTab(t){ TAB=t; document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t)); render(); }
+function setSize(i){ SIZE=i; render(); }
+function setScale(k){ S.aykg=k; save(); render(); }
+function setTier(ci,i){ pxOf(ci,SIZE).t=i; save(); render(); }
+function setGuncel(ci,v){ pxOf(ci,SIZE).g=v; save(); renderSoft(); }
+let softTimer=null; function renderSoft(){ clearTimeout(softTimer); softTimer=setTimeout(render,600); }
+
+function vPrices(){
+  const z=S.sizes[SIZE];
+  let h='<div class="card"><div class="chips" style="margin-bottom:10px">'+S.sizes.map((s,i)=>'<span class="chip'+(i===SIZE?' on':'')+'" onclick="setSize('+i+')">'+s.g+' g</span>').join('')+'</div>';
+  h+='<div class="lbl">'+z.g+' g · ambalaj '+fmt(packCost(SIZE))+' \u20BA · kademeler %'+z.tiers.join(' / %')+'</div>';
+  h+='<table><tr><th>Kahve</th><th class="num">Maliyet+KDV \u20BA</th><th>Kademe</th><th class="num">Hesaplanan \u20BA</th><th class="num">GUNCEL \u20BA</th><th class="num">Marj %</th></tr>';
+  S.coffees.forEach((c,ci)=>{
+    const cost=bagCostKdv(c,SIZE), p=pxOf(ci,SIZE), sug=suggested(c,ci,SIZE), g=num(p.g);
+    let marj='-', cls='';
+    if(g>0){ const m=(g-cost)/g*100; marj=fmt(m,0)+'%'; cls=g<sug?' class="low"':(m>0?' class="ok"':' class="low"'); }
+    h+='<tr><td>'+esc(c.n)+'</td><td class="num">'+fmt(cost)+'</td>'
+     +'<td><span class="tsel">'+z.tiers.map((t,i)=>'<button class="'+(p.t===i?'on':'')+'" onclick="setTier('+ci+','+i+')">%'+t+'</button>').join('')+'</span></td>'
+     +'<td class="num sug">'+fmt(sug)+'</td>'
+     +'<td class="num"><input class="w80" inputmode="decimal" value="'+esc(p.g)+'" onchange="setGuncel('+ci+',this.value)"></td>'
+     +'<td class="num"><span'+cls+'>'+marj+'</span></td></tr>';
+  });
+  h+='</table><div class="hint">Hesaplanan = (kahve maliyeti + ambalaj) + KDV + secili kademe'+(num(S.iyzico)>0?(' + iyzico %'+S.iyzico):'')+'. GUNCEL = raftaki fiyatin; kirmizi marj, guncelin hesaplananin altina dustugunu soyler. Olcek cipleri aylik kavrum kg'sini degistirir, genel gider /kg ve tum fiyatlar aninda yeniden hesaplanir. Kademe yuzdeleri Ayarlar yerine buradan: '
+   +z.tiers.map((t,i)=>'<input class="w60" inputmode="decimal" value="'+t+'" onchange="S.sizes['+SIZE+'].tiers['+i+']=parseFloat(this.value)||0;save();render()">').join(' ')+'</div></div>';
+  return h;
+}
+function vCoffees(){
+  let h='<div class="card"><div class="lbl">Yesil kahve maliyetleri</div>';
+  h+='<table><tr><th>Kahve</th><th>Tedarikci</th><th class="num">Fiyat</th><th>Birim</th><th class="num">Lojistik \u20BA/kg</th><th class="num">Maliyet \u20BA/kg</th><th></th></tr>';
+  S.coffees.forEach((c,ci)=>{
+    h+='<tr><td><input class="wname" value="'+esc(c.n)+'" onchange="S.coffees['+ci+'].n=this.value;save()"></td>'
+     +'<td><input class="w120" value="'+esc(c.sup||'')+'" onchange="S.coffees['+ci+'].sup=this.value;save()"></td>'
+     +'<td class="num"><input class="w80" inputmode="decimal" value="'+c.p+'" onchange="S.coffees['+ci+'].p=parseFloat(this.value)||0;save();render()"></td>'
+     +'<td><select onchange="S.coffees['+ci+'].cur=this.value;save();render()">'+['$','\u20AC','\u20BA'].map(u=>'<option'+(c.cur===u?' selected':'')+'>'+u+'</option>').join('')+'</select></td>'
+     +'<td class="num"><input class="w60" inputmode="decimal" value="'+c.loj+'" onchange="S.coffees['+ci+'].loj=parseFloat(this.value)||0;save();render()"></td>'
+     +'<td class="num">'+fmt(costKg(c))+'</td>'
+     +'<td><button class="del" onclick="delCoffee('+ci+')">&times;</button></td></tr>';
+  });
+  h+='</table><button class="addbtn" onclick="addCoffee()">+ Kahve ekle</button>';
+  h+='<div class="hint">Maliyet \u20BA/kg = (fiyat &times; kur + lojistik \u20BA/kg) &times; (1 + fire payi %'+S.fire+') + genel gider '+fmt(giderKg(),0)+' \u20BA/kg ('+fmt(S.sabit,0)+' \u20BA/ay &divide; '+S.aykg+' kg). Gumruk ve ithalat ekstralari (dokumantasyon, ardiye vb.) lojistik \u20BA/kg sutununa girilir.</div></div>';
+  return h;
+}
+function vPack(){
+  let h='<div class="card"><div class="lbl">Ambalaj kalemleri (\u20BA / adet)</div>';
+  h+='<table><tr><th>Kalem</th><th class="num">\u20BA</th><th></th></tr>';
+  S.pack.forEach((p,i)=>{
+    h+='<tr><td><input class="wname" value="'+esc(p.n)+'" onchange="S.pack['+i+'].n=this.value;save()"></td>'
+     +'<td class="num"><input class="w80" inputmode="decimal" value="'+p.p+'" onchange="S.pack['+i+'].p=parseFloat(this.value)||0;save();render()"></td>'
+     +'<td><button class="del" onclick="delPack('+i+')">&times;</button></td></tr>';
+  });
+  h+='</table><button class="addbtn" onclick="S.pack.push({n:\'Yeni kalem\',p:0});save();render()">+ Kalem ekle</button></div>';
+  S.sizes.forEach((z,si)=>{
+    h+='<div class="card"><div class="lbl">'+z.g+' g ambalaji · toplam '+fmt(packCost(si))+' \u20BA</div><div class="chips">';
+    S.pack.forEach((p,i)=>{ const on=(z.sel||[]).includes(i);
+      h+='<span class="chip'+(on?' on':'')+'" onclick="togglePack('+si+','+i+')">'+esc(p.n)+' '+fmt(num(p.p))+'</span>'; });
+    h+='</div></div>';
+  });
+  return h;
+}
+function vSet(){
+  return '<div class="card"><div class="lbl">Ayarlar</div><div class="grid">'
+   +setF('usd','USD/TRY kuru')+setF('eur','EUR/TRY kuru')+setF('kdv','KDV %')
+   +setF('fire','Fire payi %')+setF('sabit','Sabit gider \u20BA/ay')+setF('aykg','Aylik kavrum kg')+setF('iyzico','iyzico komisyonu %')
+   +'</div><div class="hint">Kurlar elle girilir, sen kontrol edersin. Fire payi, xls'teki 0.15 carpaninin kendisi (Kavrulmus Kahve Firesi). Genel gider = sabit gider (maas + kira + muhasebeci + faturalar + Shopify) &divide; aylik kavrum: su an '+fmt(giderKg(),0)+' \u20BA/kg. Olcek projeksiyonu icin Fiyatlar sekmesindeki kg/ay cipleri. iyzico komisyonu hesaplanan fiyatin ustune eklenir; %0 ise etkisiz.</div>'
+   +'<div style="margin-top:12px"><button class="iconbtn" onclick="resetAll()">Fabrika verisine don (xls tohumu)</button></div></div>';
+}
+function setF(k,label){ return '<div class="f"><label>'+label+'</label><input inputmode="decimal" value="'+S[k]+'" onchange="S[\''+k+'\']=parseFloat(this.value)||0;save();render()"></div>'; }
+
+function addCoffee(){ S.coffees.push({n:'YENI KAHVE',sup:'',p:0,cur:'$',loj:0}); save(); render(); }
+function delCoffee(ci){ if(!confirm('"'+S.coffees[ci].n+'" silinsin mi?')) return; S.coffees.splice(ci,1); const np={}; Object.keys(S.px).forEach(k=>{ const a=k.split('_'),i=+a[0]; if(i<ci) np[k]=S.px[k]; else if(i>ci) np[(i-1)+'_'+a[1]]=S.px[k]; }); S.px=np; save(); render(); }
+function delPack(i){ if(!confirm('"'+S.pack[i].n+'" silinsin mi?')) return; S.pack.splice(i,1); S.sizes.forEach(z=>{ z.sel=(z.sel||[]).filter(x=>x!==i).map(x=>x>i?x-1:x); }); save(); render(); }
+function togglePack(si,i){ const z=S.sizes[si]; z.sel=z.sel||[]; const at=z.sel.indexOf(i); if(at>=0) z.sel.splice(at,1); else z.sel.push(i); save(); render(); }
+function resetAll(){ if(!confirm('Tum veriler xls tohumuna donsun mu? Kendi girdigin degisiklikler silinir.')) return; S=JSON.parse(JSON.stringify(DEF)); save(); render(); }
+
+function render(){ $('view').innerHTML = TAB==='prices'?vPrices():TAB==='coffees'?vCoffees():TAB==='pack'?vPack():vSet(); }
+
+function unlock(){ const k=$('keyIn').value.trim(); if(!k) return; localStorage.setItem('ccKey',k); show(); }
+function lock(){ localStorage.removeItem('ccKey'); location.reload(); }
+function show(){ $('gate').style.display='none'; $('app').style.display='block'; render(); }
+if(localStorage.getItem('ccKey')) show(); else $('gate').style.display='block';
+</script>
+</body>
+</html>

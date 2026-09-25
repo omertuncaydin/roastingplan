@@ -45,6 +45,20 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
   T('desk: taste filter shows only that band\'s coffees, ranked', nH===MD.offers.filter(o=>/washed/.test(o.process)).length && nH>3);
   w.eval("jDeskFilter('all'); dbAdd('"+ord[0].id+"',1)"); await sleep(40); D=w.document;
   T('desk: + on a card → stepper on that card, basket bar shown, grid keeps filter', !!D.querySelector('.jdk-grid .jcard[data-id="'+ord[0].id+'"] .jq') && D.getElementById('dbBar').style.display==='flex' && D.querySelectorAll('.jdk-grid .jcard').length===24);
+  // ---- v09w: Kartlar / Liste toggle; photo coffees pulled into a showcase, the rest default to the list once photos exist
+  T('desk: toggle present, default Kartlar when no coffee has a photo, no showcase/table', D.querySelectorAll('.jdk-seg button').length===2 && D.querySelector('.jdk-seg button.on').textContent.includes('Kartlar') && !D.querySelector('.jdk-sub') && !D.querySelector('.jdk-table'));
+  w.eval("jDeskView('list')"); await sleep(40); D=w.document;
+  T('desk: Liste → table with 24 rows (rank, name, count bar, price, +), no cards; choice persisted', !!D.querySelector('.jdk-table') && D.querySelectorAll('.jdk-table tr.jdk-r').length===24 && !D.querySelector('.jdk-grid') && D.querySelector('.jdk-table tr.jdk-r td.r').textContent.trim()==='1' && D.querySelector('.jdk-table tr.jdk-r td.p b').textContent.endsWith(' TL') && !!D.querySelector('.jdk-table tr.jdk-r td.a button') && w.localStorage.getItem('grupal_jdv')==='list');
+  T('desk: table rows — mine row carries the ✓ chip, rows open the drawer', !!D.querySelector('.jdk-table tr.jdk-r.mine .jdk-mine') && D.querySelector('.jdk-table tr.jdk-r').getAttribute('onclick').includes('jDeskOpen'));
+  w.eval("jDeskOpen('"+ord[3].id+"')"); await sleep(40); D=w.document; T('desk: drawer from a table row, row marked sel', !!D.querySelector('#jDrawer .orow.lane[data-id="'+ord[3].id+'"]') && D.querySelector('.jdk-table tr.jdk-r[data-id="'+ord[3].id+'"]').classList.contains('sel'));
+  w.eval("jDeskClose(); jDeskView('cards')"); await sleep(40); D=w.document; T('desk: back to Kartlar → grid', !!D.querySelector('.jdk-grid') && !D.querySelector('.jdk-table'));
+  { const MDP=JSON.parse(JSON.stringify(MD)); MDP.offers[0].img_url='https://x.test/o/a.jpg'; MDP.offers[3].img_url='https://x.test/o/b.jpg';
+    const wp=mk({'/meydan':MDP,'/offer-mine':{votes:[]},'/campaigns':[]},1366); await sleep(250); const Dp=wp.document;
+    T('desk with photos: Vitrin section holds the 2 photo cards, the other 22 default to the LIST (auto), toggle shows Liste on', Dp.querySelectorAll('.jdk-sub').length===2 && Dp.querySelector('.jdk-sub').textContent.includes('Vitrin') && Dp.querySelectorAll('.jdk-grid .jcard.photo').length===2 && Dp.querySelectorAll('.jdk-grid .jcard').length===2 && Dp.querySelectorAll('.jdk-table tr.jdk-r').length===22 && Dp.querySelector('.jdk-seg button.on').textContent.includes('Liste'));
+    wp.eval("jDeskView('cards')"); await sleep(40);
+    T('desk with photos, Kartlar: showcase stays first, the rest become mountain cards (22), ranks stay global', wp.document.querySelectorAll('.jdk-grid').length===2 && wp.document.querySelectorAll('.jdk-grid')[1].querySelectorAll('.jcard').length===22 && !wp.document.querySelector('.jdk-table') && wp.document.querySelectorAll('.jdk-grid')[1].querySelector('.jcard .jchip').textContent.trim()!=='#1');
+    wp.eval("jDeskFilter('hafif')"); await sleep(40);
+    T('desk with photos: taste filter applies to both showcase and rest', wp.document.querySelectorAll('.jcard').length===MDP.offers.filter(o=>/washed/.test(o.process)).length); }
   // ---- resize crossing the threshold re-renders the other layout
   w.innerWidth=390; w.dispatchEvent(new w.Event('resize')); await sleep(320); D=w.document;
   T('resize 1366 → 390: deck layout replaces the grid', !!D.getElementById('jDeck') && !D.querySelector('.jdk-grid') && !D.body.classList.contains('jdesk'));
