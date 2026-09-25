@@ -1,4 +1,4 @@
-// functions/_middleware.js — Cloudflare Pages Function v5 (2026-09-07, Ömer: "grup-al.com adres çubuğunda kalsın"; 10.09: dışarıya söylenen ad /juri)
+// functions/_middleware.js — Cloudflare Pages Function v6 (2026-09-07, Ömer: "grup-al.com adres çubuğunda kalsın"; 10.09: dışarıya söylenen ad /juri)
 // grup-al.com bu Pages projesine özel alan adı olarak bağlanınca: grup-al.com/ ve grup-al.com/meydan → Grup-Al sayfası (grupal.html)
 // yeniden yazılarak sunulur (adres değişmez; sayfa /meydan yolunu Meydan modu sayar). www → apex 301. Diğer yollar ve
 // guide.coffeenutz.net olduğu gibi (next). GoDaddy yönlendirmesi (302) ile adres çubuğu KORUNAMAZ — bu dosya o yüzden var.
@@ -16,7 +16,8 @@ export async function onRequest(ctx) {
     if (p === '/meydan') { url.pathname = '/juri'; return Response.redirect(url.toString(), 301); }
     // v5 (19.09, Ömer: "grup-al.com → /juri"): kök artık Jüri sayfasına gider (302: tarayıcı ezberlemesin, vitrin /misafir'de kalır).
     // ?k=<masa> taşıyan kök linkleri (kampanya davet/hediye linkleri: grup-al.com/?k=wanrich&ref=…) DOKUNULMAZ — masa sayfası açılır.
-    if ((p === '/' || p === '/index.html') && !url.searchParams.has('k')) { url.pathname = '/juri'; return Response.redirect(url.toString(), 302); }
+    // v6 (25.09, Ömer: "jüri sayfası ana sayfa olsun"): kök YÖNLENDİRMEZ, Jüri sayfasını doğrudan sunar (sayfa: grup-al.com kökü = Jüri modu;
+    // ?k=<masa> yine masa sayfası). Adres çubuğu grup-al.com kalır, arama motoru içerik görür; /juri dışarıya söylenen ad olarak aynı sayfa.
     if (p === '/' || p === '/index.html' || p === '/juri' || p === '/misafir') return serveGrupal(ctx, url);
   }
   return ctx.next();

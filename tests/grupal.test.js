@@ -64,6 +64,19 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
   T('resize 1366 → 390: deck layout replaces the grid', !!D.getElementById('jDeck') && !D.querySelector('.jdk-grid') && !D.body.classList.contains('jdesk'));
   w.innerWidth=1366; w.dispatchEvent(new w.Event('resize')); await sleep(320); D=w.document;
   T('resize 390 → 1366: grid is back', !!D.querySelector('.jdk-grid') && !D.getElementById('jDeck') && D.body.classList.contains('jdesk'));
+  // ---- v09x: grup-al.com root = Jüri page (home); /misafir = lobby; first-visit strip once
+  w=mk({'/meydan':MD,'/offer-mine':{votes:[]},'/campaigns':[]},390,'https://grup-al.com/'); await sleep(250); D=w.document;
+  T('root of grup-al.com is the Jüri page (deck), not the doors', w.__g('SLUG')==='meydan' && !!D.getElementById('jDeck') && !D.getElementById('doors'));
+  T('first visit: one-sentence strip with the kapora amount and Anladım, page 1 flagged haswelc (shorter card)', !!D.getElementById('jWelc') && D.getElementById('jWelc').textContent.includes('100 TL kapora bir oydur') && D.querySelector('#jWelc button').textContent==='Anladım' && D.getElementById('jP1').classList.contains('haswelc') && html.includes('#jP1.haswelc .jcard{'));
+  w.eval('jWelcOk()'); await sleep(20); D=w.document;
+  T('Anladım removes the strip, remembers it, card height class dropped', !D.getElementById('jWelc') && w.localStorage.getItem('grupal_welcomed')==='1' && !D.getElementById('jP1').classList.contains('haswelc'));
+  w.__g('renderOffers(STATE)'); await sleep(20); T('re-render after Anladım: strip stays gone', !w.document.getElementById('jWelc'));
+  w=mk({'/meydan':MD,'/offer-mine':{votes:[]},'/campaigns':[]},1366,'https://grup-al.com/'); await sleep(250); D=w.document;
+  T('desktop root: Jüri grid with the strip above the head', D.body.classList.contains('jdesk') && !!D.querySelector('.jdk-main .jwelc') && !!D.querySelector('.jdk-grid'));
+  w=mk({'/meydan':MD,'/offer-mine':{votes:[]},'/campaigns':[]},390,'https://grup-al.com/?k=wanrich'); await sleep(150);
+  T('root with ?k=<masa> is still the campaign page (SLUG from k)', w.__g('SLUG')==='wanrich');
+  w=mk({'/meydan':MD,'/offer-mine':{votes:[]},'/campaigns':[]},390,'https://guide.coffeenutz.net/grupal'); await sleep(250);
+  T('guide host /grupal without k stays the lobby', w.__g('SLUG')==='' && !!w.document.getElementById('doors'));
   // ---- lobby untouched on desktop (no dep page → no jdesk)
   w=mk({'/meydan':MD,'/offer-mine':{votes:[]},'/campaigns':[]},1366,'https://grup-al.com/misafir'); await sleep(250); D=w.document;
   T('desk: /misafir lobby is not the Jüri layout (no jdesk, doors present)', !D.body.classList.contains('jdesk') && !!D.getElementById('doors'));
