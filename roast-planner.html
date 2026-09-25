@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <title>Roast Planner · CoffeeNutz</title>
 <style>
   :root{
@@ -44,7 +45,7 @@
   th:nth-child(2),th:nth-child(3),th:nth-child(4),th:nth-child(7),th:nth-child(8),th:nth-child(9),th:nth-child(10),th:nth-child(14),th:nth-child(15),
   td:nth-child(2),td:nth-child(3),td:nth-child(4),td:nth-child(7),td:nth-child(8),td:nth-child(9),td:nth-child(10),td:nth-child(14),td:nth-child(15){width:70px;max-width:70px}
   td.lstar,td.ltarget{font-variant-numeric:tabular-nums;font-weight:600}
-  /* v2026-09-21g: measured L* vs Target L* — 0 off = green · ±1 = orange · ±2 or more = red (bands: LSTAR_ORANGE_MAX below) */
+  /* v2026-09-25a: measured L* vs Target L* — 0 off = green · ±1 = orange · ±2 or more = red (bands: LSTAR_ORANGE_MAX below) */
   .lstar.ok{color:#4fc98a}.lstar.near{color:#e6a23c}.lstar.off{color:#e0705a}
   td.rollup .lstar{font-style:normal;font-weight:700}
   /* recipes panel: its own column widths (the plan table's fixed widths must not apply) */
@@ -253,7 +254,14 @@ const FILTER = "Sonraki Kavrulma Tarihinde Gönderim";
 const KG = {g90:0.09, g250:0.25, g1000:1.0};   // bag weights in kg
 let DATA = [];        // [{name,g90,g250,g1000,net,done}]
 let sortKey = "roastOrder", sortDir = 1;   // default: manual (drag) order
-let draggedItem = null;                     // row being dragged
+function initPlanSort(){ if(!window.Sortable) return; const tb=document.querySelector('#tbl tbody'); if(!tb) return;
+  if(tb._sort){ try{ tb._sort.destroy(); }catch(x9){} }
+  tb._sort=Sortable.create(tb,{handle:'.grip',animation:150,draggable:'tr[data-di]',ghostClass:'dropbefore',chosenClass:'dragging',onEnd:function(){
+    const items=[].slice.call(tb.querySelectorAll('tr[data-di]')).map(function(r){ return DATA[+r.dataset.di]; }).filter(Boolean);
+    if(items.length===DATA.length){ DATA.splice.apply(DATA,[0,DATA.length].concat(items)); sortKey="roastOrder"; render(); }
+  }});
+}
+const _render9=render; render=function(){ _render9(); initPlanSort(); };
 
 // --- minimal RFC4180 CSV parser ---
 function parseCSV(text){
@@ -494,7 +502,7 @@ function renderParent(tbody,it){
     : `<td><input class="cell num${it.agtronSet?'':' agtron-default'}" type="number" step="1" min="0" data-f="agtron" value="${it.agtronSet?(it.agtron==null?'':it.agtron):recipeAgtron(it)}" placeholder="A" title="Measured Agtron (Omix+)"></td>`;
   const lstarCells = (kids ? `<td class="rollup" title="Batch L*">${rollupLstar(it)}</td>` : lstarCell(it.agtronSet?it.agtron:recipeAgtron(it), !it.agtronSet, recipeAgtron(it))) + ltargetCell(recipeAgtron(it));
   tr.innerHTML=
-    `<td class="nameCell"><span class="grip" draggable="true" title="Drag to reorder">⠿</span>${tri}`+
+    `<td class="nameCell"><span class="grip" title="Drag to reorder" style="touch-action:none;cursor:grab">⠿</span>${tri}`+
       `<span class="nm">${esc(it.name)}</span>${it.unknown?` <span style="color:#d98a8a">(?: ${it.unknown})</span>`:''}</td>`+
     cell(it.g90)+cell(it.g250)+cell(it.g1000)+
     `<td class="reserveCell"><input class="cell num" type="number" min="0" step="0.25" data-f="reserve" value="${it.reserve!==0?it.reserve:''}" placeholder="0"><span class="rrow" data-act="resetrow" title="Reset this row">⟲</span></td>`+
@@ -502,21 +510,8 @@ function renderParent(tbody,it){
     `<td class="kg">${fmt(net)}</td>`+
     greenCell+roastCell+batchCell+equipCell+recipeCell+agtronCell+lstarCells+
     `<td class="ck"><input type="checkbox" ${it.done?'checked':''}></td>`;
+  tr.dataset.di=DATA.indexOf(it);
   tbody.appendChild(tr);
-  // drag to reorder main rows
-  const grip=tr.querySelector('.grip');
-  grip.addEventListener('dragstart',e=>{ draggedItem=it; e.dataTransfer.effectAllowed='move'; tr.classList.add('dragging'); });
-  grip.addEventListener('dragend',()=>{ draggedItem=null; tr.classList.remove('dragging'); });
-  tr.addEventListener('dragover',e=>{ if(draggedItem&&draggedItem!==it){ e.preventDefault(); tr.classList.add('dropbefore'); } });
-  tr.addEventListener('dragleave',()=>tr.classList.remove('dropbefore'));
-  tr.addEventListener('drop',e=>{
-    e.preventDefault(); tr.classList.remove('dropbefore');
-    if(!draggedItem||draggedItem===it) return;
-    DATA.splice(DATA.indexOf(draggedItem),1);     // remove from old spot
-    DATA.splice(DATA.indexOf(it),0,draggedItem);  // insert before drop target
-    sortKey="roastOrder";                          // show the manual order
-    render();
-  });
   const tg=tr.querySelector('[data-act="toggle"]');
   if(tg) tg.addEventListener('click',()=>{it.expanded=!it.expanded;render();});
   tr.querySelector('[data-act="resetrow"]').addEventListener('click',()=>{

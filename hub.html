@@ -90,14 +90,14 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
     <div class="brand" onclick="location.reload()" title="refresh" style="cursor:pointer"><span class="lr">CoffeeNutz</span> <span class="lg">Hub</span></div>
     <div id="a2hs" style="display:none;margin:10px 0 4px;border:1px dashed #3a3128;border-radius:12px;padding:9px 12px;font-size:12.5px;color:#a8998a;text-align:left;align-items:center;gap:10px"><span style="flex:1">Tam ekran ve daha iyi bir görünüm için: <b style="color:#f3ede4">Paylaş &#x2192; Ana Ekrana Ekle</b>.</span><button onclick="try{localStorage.setItem('bsA2HS','1');document.getElementById('a2hs').style.display='none'}catch(e){}" style="width:auto;background:none;border:1px solid #3a3128;color:#a8998a;border-radius:999px;padding:4px 10px;font-size:12px">&#10005;</button></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span class="sub" style="margin:0" id="hubVer">v2026-09-20a</span>
+      <span class="sub" style="margin:0" id="hubVer">v2026-09-25a</span>
       <select class="stsel" id="colSel" title="cards per row" onchange="setCols(this.value)"><option value="auto">Auto</option><option value="1">1/row</option><option value="2">2/row</option><option value="3">3/row</option><option value="4">4/row</option><option value="5">5/row</option><option value="6">6/row</option></select>
       <button class="iconbtn" onclick="loadAll()">Recheck Versions</button>
       <button class="linkish" onclick="lock()">lock</button>
     </div>
   </div>
   <h1>Your apps <button class="ordbtn" style="width:auto;padding:4px 12px;font-size:13px;vertical-align:middle" onclick="newCard()">+ New card</button> <button class="ordbtn" style="width:auto;padding:4px 12px;font-size:13px;vertical-align:middle;border-color:var(--accent);color:var(--accent)" onclick="location.href=location.pathname+'?v='+Date.now()">Refresh</button></h1>
-  <div class="sub">Tap a card to open. Arrows reorder within a group. Version is read live. <span style="opacity:.5">hub v2026-09-20a</span></div>
+  <div class="sub">Tap a card to open. Arrows reorder within a group. Version is read live. <span style="opacity:.5">hub v2026-09-25a</span></div>
   <div id="sections"></div>
   <div id="restore" class="restore"></div>
 
@@ -106,6 +106,7 @@ button.go{width:100%;border:none;border-radius:11px;padding:13px;font-size:15px;
   <div class="sub" style="margin-top:10px">Tell Claude the external apps to add (Shopify, Smartsheets, SEO Komuta file, anything) and they land here.</div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 // same-origin apps in this repo; version is read live from each page
@@ -185,7 +186,7 @@ function card(a,external){
   el.onclick=()=>openApp(p,external);
   const sel=external?'':'<select class="stsel" onchange="changeStatus(\''+p+'\',this.value)" onclick="event.stopPropagation()"><option value="live"'+(st==='live'?' selected':'')+'>Live</option><option value="developing"'+(st==='developing'?' selected':'')+'>Developing</option><option value="passive"'+(st==='passive'?' selected':'')+'>Passive</option><option value="delete">Delete</option></select>';
   const gsel=external?'':'<select class="stsel gsel" title="group" onchange="changeGroup(\''+p+'\',this.value)" onclick="event.stopPropagation()">'+CATS.map(c=>'<option value="'+c[0]+'"'+(catOf(a)===c[0]?' selected':'')+'>'+c[1]+'</option>').join('')+'</select>';
-  el.innerHTML=(external?'':'<div class="ord"><button class="ordbtn" title="move back" onclick="moveApp(event,\''+p+'\',-1)">&#9664;</button><button class="ordbtn" title="move forward" onclick="moveApp(event,\''+p+'\',1)">&#9654;</button></div>')+
+  el.innerHTML=(external?'':'<div class="ord"><span class="grip" title="drag to reorder or move between groups">&#8801;</span></div>')+
     '<div class="top"><div class="badge" style="background:'+(a.c||'#c98a3c')+'">'+a.b+'</div><div class="nm">'+a.nm+'</div></div>'+
     '<div class="desc">'+a.desc+'</div>'+
     '<div class="meta"><span class="ver" id="v_'+p+'">'+(external?'external':'…')+'</span><span class="mctl">'+gsel+sel+'</span></div>';
@@ -209,7 +210,6 @@ function toggleCollapse(cat){ let c=getCollapsed(); if(c.includes(cat)) c=c.filt
 function getCatOrder(){ const base=CATS.map(c=>c[0]); try{ const s=JSON.parse(localStorage.getItem('hubCatOrder')||'null'); if(Array.isArray(s)){ const v=s.filter(x=>base.includes(x)); base.forEach(x=>{ if(!v.includes(x)) v.push(x); }); return v; } }catch(e){} return base; }
 function saveCatOrder(a){ localStorage.setItem('hubCatOrder',JSON.stringify(a)); }
 function orderedCats(){ const map={}; CATS.forEach(c=>map[c[0]]=c); return getCatOrder().map(k=>map[k]).filter(Boolean); }
-function moveSection(e,cat,dir){ if(e) e.stopPropagation(); const ord=getCatOrder(); const i=ord.indexOf(cat), j=i+dir; if(i<0||j<0||j>=ord.length) return; const t=ord[i]; ord[i]=ord[j]; ord[j]=t; saveCatOrder(ord); render(); loadAll(); }
 function orderedInCat(cat){ const del=getDeleted(), ord=getOrder(); const inCat=allApps().filter(a=>catOf(a)===cat && !del.includes(a.path)); const map={}; inCat.forEach(a=>map[a.path]=a); const out=[]; ord.forEach(p=>{ if(map[p]){ out.push(map[p]); delete map[p]; } }); inCat.forEach(a=>{ if(map[a.path]) out.push(a); }); return out; }
 function saveDomOrder(){ saveOrder([...document.querySelectorAll('#sections .grid .card')].map(c=>c.dataset.path)); }
 let justDragged=0, didMove=false;
@@ -218,18 +218,26 @@ function revealEmptySections(){ const S=$('sections'); CATS.forEach(([cat,label]
 function startDrag(e,path){ e.preventDefault(); e.stopPropagation(); const c=findCard(path); if(!c) return; didMove=false; c.classList.add('dragging'); $('sections').classList.add('dragging-active'); revealEmptySections(); const grip=e.currentTarget; try{ grip.setPointerCapture(e.pointerId); }catch(_){ } grip.onpointermove=onDrag; grip.onpointerup=function(){ grip.onpointermove=null; grip.onpointerup=null; endDrag(); }; }
 function onDrag(e){ e.preventDefault(); didMove=true; const dragged=document.querySelector('.card.dragging'); if(!dragged) return; const grids=[...document.querySelectorAll('#sections .grid')]; let tg=null; for(const g of grids){ const r=g.parentNode.getBoundingClientRect(); if(e.clientY>=r.top&&e.clientY<=r.bottom){ tg=g; break; } } if(!tg){ let bd=Infinity; for(const g of grids){ const r=g.getBoundingClientRect(); const dy=Math.abs(e.clientY-(r.top+r.height/2)); if(dy<bd){ bd=dy; tg=g; } } } if(!tg) return; const cards=[...tg.querySelectorAll('.card')].filter(c=>c!==dragged); if(!cards.length){ tg.appendChild(dragged); return; } let best=null,bd=Infinity; for(const c of cards){ const r=c.getBoundingClientRect(); const dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2); const d=dx*dx+dy*dy; if(d<bd){ bd=d; best=c; } } const r=best.getBoundingClientRect(); const before=e.clientY<r.top+r.height/2-2||(Math.abs(e.clientY-(r.top+r.height/2))<=r.height/2&&e.clientX<r.left+r.width/2); tg.insertBefore(dragged, before?best:best.nextSibling); }
 function endDrag(){ const dragged=document.querySelector('.card.dragging'); $('sections').classList.remove('dragging-active'); if(dragged) dragged.classList.remove('dragging'); justDragged=Date.now(); if(!dragged||!didMove){ [...document.querySelectorAll('#sections .sect.temp')].forEach(s=>s.remove()); return; } const grid=dragged.parentNode; const cat=grid&&grid.dataset?grid.dataset.cat:null; if(cat) setCat(dragged.dataset.path,cat); saveDomOrder(); render(); loadAll(); }
-function moveApp(e,path,dir){ if(e) e.stopPropagation(); justDragged=Date.now(); const c=findCard(path); if(!c) return; const grid=c.parentNode; const cards=[...grid.querySelectorAll('.card')]; const i=cards.indexOf(c), j=i+dir; if(i<0||j<0||j>=cards.length) return; const nb=cards[j]; if(dir>0) grid.insertBefore(nb,c); else grid.insertBefore(c,nb); saveDomOrder(); }
+function initHubSort(){ if(!window.Sortable) return;
+  document.querySelectorAll('#sections .grid').forEach(function(g){ if(g._sort){ try{ g._sort.destroy(); }catch(x9){} }
+    g._sort=Sortable.create(g,{group:'hubcards',handle:'.grip',animation:150,draggable:'.card[data-path]',onEnd:function(evt){
+      justDragged=Date.now(); const cat=evt.to&&evt.to.dataset?evt.to.dataset.cat:null;
+      if(cat) setCat(evt.item.dataset.path,cat); saveDomOrder(); render(); loadAll(); }}); });
+  var S9=document.getElementById('sections'); if(S9){ if(S9._sort){ try{ S9._sort.destroy(); }catch(x9){} }
+    S9._sort=Sortable.create(S9,{handle:'.sectlbl',animation:150,draggable:'.sect',onEnd:function(){
+      saveCatOrder([].slice.call(S9.querySelectorAll('.sect')).map(function(s){ return s.dataset.cat; })); }}); }
+}
 function render(){
   const S=$('sections'); S.innerHTML=''; const coll=getCollapsed();
   orderedCats().forEach(([cat,label])=>{
     const apps=orderedInCat(cat);
     const sect=document.createElement('div'); sect.className='sect'+(coll.includes(cat)?' collapsed':''); sect.dataset.cat=cat;
-    const lbl=document.createElement('div'); lbl.className='grouplbl sectlbl'; lbl.innerHTML='<span class="chev">&#9656;</span> <span class="slbl">'+label+'</span> <span class="cnt">('+apps.length+')</span><span class="secmove"><button class="ordbtn" title="section up" onclick="moveSection(event,\''+cat+'\',-1)">&#9650;</button><button class="ordbtn" title="section down" onclick="moveSection(event,\''+cat+'\',1)">&#9660;</button></span>'; lbl.onclick=()=>toggleCollapse(cat);
+    const lbl=document.createElement('div'); lbl.className='grouplbl sectlbl'; lbl.innerHTML='<span class="chev">&#9656;</span> <span class="slbl">'+label+'</span> <span class="cnt">('+apps.length+')</span>'; lbl.onclick=()=>toggleCollapse(cat);
     const g=document.createElement('div'); g.className='grid'; g.dataset.cat=cat; apps.forEach(a=>g.appendChild(card(a,false)));
     sect.appendChild(lbl); sect.appendChild(g); S.appendChild(sect);
   });
   const e=$('ext'); e.innerHTML=''; if(!EXT.length){ e.innerHTML='<div class="sub" style="grid-column:1/-1;margin:0">None yet.</div>'; } else EXT.forEach(a=>e.appendChild(card(a,true)));
-  renderRestore();
+  renderRestore(); initHubSort();
 }
 async function checkVer(a){
   const ver=$('v_'+a.path); if(!ver) return;

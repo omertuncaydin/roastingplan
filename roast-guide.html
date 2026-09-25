@@ -20,6 +20,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <style>
   :root{ --bg:#1a1410; --panel:#241c16; --ink:#f3ede4; --muted:#a8998a; --accent:#c98a3c; --accent2:#3c7a5a; --line:#3a2f26; --gold:#e6c14b; --warn:#e0b070; --dark:#d98a8a; }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -609,7 +610,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-08-24i</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-09-25a</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1173,20 +1174,15 @@ async function gInlineRenameGo(i){ try{ const r=getRecipes()[i]; if(!r) return;
 function renderRecipes(){ const eb=document.getElementById('exportBtn'); if(eb) eb.style.display=IS_ADMIN?'':'none';
   const el=document.getElementById('rlist'); el.innerHTML=''; const list=getRecipes();
   list.forEach((r,i)=>{ const d=document.createElement('div'); d.className='ritem'; d.dataset.idx=i;
-    d.innerHTML=`<div style="display:flex;flex-direction:column;gap:3px;align-items:center;margin-right:8px"><span class="grip" draggable="true" title="Drag to reorder">⠿</span><button class="iconbtn mv" data-up="${i}" ${i===0?'disabled':''}>▲</button><button class="iconbtn mv" data-down="${i}" ${i===list.length-1?'disabled':''}>▼</button></div>`+
+    d.innerHTML=`<div style="display:flex;flex-direction:column;gap:3px;align-items:center;margin-right:8px"><span class="grip" title="Drag to reorder" style="touch-action:none;cursor:grab">⠿</span></div>`+
       `<div style="flex:1"><div class="rn">${esc(r.name)} <span class="grn" data-grn="${i}" style="cursor:pointer;color:var(--accent);font-size:12px">&#9998;</span> ${r.active?'<span style="color:var(--accent2)">●</span>':'<span style="color:var(--muted)">○</span>'}${gMapMarkTag(gMapMark(r.name))}</div>`+
       `<div class="rmeta">B: ${esc(r.bullet||'-')}</div>${r.note?`<div class="rmeta" style="color:var(--warn)">🔔 ${esc(r.note)}</div>`:''}</div>`+
       `<div style="display:flex;gap:4px"><button class="iconbtn" data-e="${i}">Edit</button><button class="iconbtn" data-d="${i}">Del</button></div>`;
     el.appendChild(d); enableSwipeDelete(d,()=>delRecipeAt(i,false)); });   // v08-17c: every delete warns, swipe included (his order)
-  el.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>moveRecipe(+b.dataset.up,-1));
-  el.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>moveRecipe(+b.dataset.down,1));
-  el.querySelectorAll('.grip').forEach(g=>{ const item=g.closest('.ritem');
-    g.addEventListener('dragstart',e=>{ dragIdx=+item.dataset.idx; e.dataTransfer.effectAllowed='move'; item.classList.add('dragging'); });
-    g.addEventListener('dragend',()=>{ dragIdx=null; el.querySelectorAll('.ritem').forEach(x=>x.classList.remove('dragging','dropon')); }); });
-  el.querySelectorAll('.ritem').forEach(item=>{
-    item.addEventListener('dragover',e=>{ if(dragIdx==null)return; e.preventDefault(); item.classList.add('dropon'); });
-    item.addEventListener('dragleave',()=>item.classList.remove('dropon'));
-    item.addEventListener('drop',e=>{ e.preventDefault(); item.classList.remove('dropon'); const to=+item.dataset.idx; if(dragIdx==null||to===dragIdx)return; const moved=RECIPES.splice(dragIdx,1)[0]; RECIPES.splice(to,0,moved); ensureOrder(); renderRecipes(); buildBeans(); }); });
+  if(window.Sortable){ if(el._sort){ try{ el._sort.destroy(); }catch(x9){} }
+    el._sort=Sortable.create(el,{handle:'.grip',animation:150,draggable:'.ritem',ghostClass:'dropon',chosenClass:'dragging',onEnd:function(){
+      const snap=RECIPES.slice(); const ord=[].slice.call(el.querySelectorAll('.ritem')).map(function(x){ return +x.dataset.idx; });
+      RECIPES=ord.map(function(i9){ return snap[i9]; }).filter(Boolean); ensureOrder(); renderRecipes(); buildBeans(); }}); }
   el.querySelectorAll('[data-grn]').forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); gInlineRename(+b.dataset.grn); });
   el.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>editRecipe(+b.dataset.e));
   el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>delRecipeAt(+b.dataset.d,false));
