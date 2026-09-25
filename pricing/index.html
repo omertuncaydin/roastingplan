@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="robots" content="noindex">
 <title>CoffeeNutz Fiyat</title>
-<!-- v2026-09-25c -->
+<!-- v2026-09-25d -->
 <style>
 :root{ --bg:#141210; --panel:#1d1a16; --panel2:#262119; --line:#3a332a; --ink:#ece5da; --muted:#9c917f; --accent:#e8a33d; --green:#7fb069; --red:#D8453B; }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -27,6 +27,8 @@ td{padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:middle;whi
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 input,select{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:6px 7px;font-size:13px;color-scheme:dark}
 input:focus,select:focus{outline:none;border-color:var(--accent)}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{opacity:1;height:22px;cursor:pointer}
+input[type=number]{-moz-appearance:number-input}
 input.w60{width:64px}input.w80{width:86px}input.w110{width:112px}input.w120{width:130px}input.wname{width:190px}
 .tsel{display:inline-flex;gap:3px}
 .tsel button{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer}
@@ -67,7 +69,7 @@ footer{color:var(--muted);font-size:10.5px;text-align:center;margin-top:14px}
 <div id="app" style="display:none">
 <div class="hdr">
   <div class="brand" onclick="location.reload()"><span>CoffeeNutz</span> <span class="a">Fiyat</span></div>
-  <div class="hsub"><span>v2026-09-25c</span><button class="iconbtn" onclick="location.reload()">&#8635;</button><button class="iconbtn" onclick="lock()" title="anahtari bu cihazdan sil">kilitle</button></div>
+  <div class="hsub"><span>v2026-09-25d</span><button class="iconbtn" onclick="location.reload()">&#8635;</button><button class="iconbtn" onclick="lock()" title="anahtari bu cihazdan sil">kilitle</button></div>
 </div>
 <div class="tabs">
   <button class="tab on" data-t="prices" onclick="setTab('prices')">Fiyatlar</button>
@@ -106,6 +108,7 @@ const DEF={
  ],
  sizes:[
   {g:90,  sel:[0,2],   tiers:[40,60,95]},
+  {g:100, sel:[0,2],   tiers:[40,60,95]},
   {g:250, sel:[0,2,4], tiers:[15,50,135]},
   {g:1000,sel:[0,3,5], tiers:[30,65,90]}
  ],
@@ -139,9 +142,15 @@ const DEF={
  ],
  px:{}
 };
-let S=load(), TAB='prices', SIZE=1;
+let S=load(), TAB='prices', SIZE=2;
+function ensure100(s){
+  if(!s.sizes||s.sizes.length!==3) return s;
+  s.sizes.splice(1,0,{g:100,sel:(s.sizes[0].sel||[]).slice(),tiers:(s.sizes[0].tiers||[40,60,95]).slice()});
+  const np={}; Object.keys(s.px||{}).forEach(k=>{ const a=k.split('_'),ci=a[0],si=+a[1]; np[ci+'_'+(si>=1?si+1:si)]=s.px[k]; }); s.px=np;
+  return s;
+}
 function load(){
-  try{ const s=JSON.parse(localStorage.getItem('cnPricing3')||'null'); if(s&&s.coffees) return s; }catch(e){}
+  try{ const s=JSON.parse(localStorage.getItem('cnPricing3')||'null'); if(s&&s.coffees) return ensure100(s); }catch(e){}
   try{ const o=JSON.parse(localStorage.getItem('cnPricing2')||'null');
     if(o&&o.coffees){
       const s=JSON.parse(JSON.stringify(DEF));
@@ -150,7 +159,7 @@ function load(){
       s.coffees=o.coffees.map(c=>({n:c.n,sup:c.sup||'',p:c.p,cur:c.cur,loj:c.loj,arch:false}));
       s.pack=o.pack.map(p=>({n:p.n,sup:'',url:'',p:p.p}));
       if(o.sabit&&Math.abs(o.sabit-90000)>0.5) s.fixed=[{n:'Sabit gider (onceki toplam)',p:o.sabit}];
-      return s;
+      return ensure100(s);
     } }catch(e){}
   return JSON.parse(JSON.stringify(DEF));
 }
@@ -211,7 +220,7 @@ function vPrices(){
      +'<td class="num"><span'+style+'>'+marj+'</span></td></tr>';
   });
   h+='</table><div class="hint">Hesaplanan = (kahve maliyeti + ambalaj) + KDV + secili kademe'+(num(S.pos)>0?(' + odeme komisyonu %'+S.pos):'')+'. GUNCEL = raftaki fiyatin; kirmizi marj, guncelin hesaplananin altina dustugunu soyler. Olcek cipleri aylik kavrum kg miktarini degistirir, genel gider /kg ve tum fiyatlar aninda yeniden hesaplanir. Kademe yuzdeleri: '
-   +z.tiers.map((t,i)=>'<input class="w60" inputmode="decimal" value="'+t+'" onchange="S.sizes['+SIZE+'].tiers['+i+']=parseFloat(this.value)||0;save();render()">').join(' ')+'</div></div>';
+   +z.tiers.map((t,i)=>'<input class="w80" type="number" step="5" min="0" value="'+t+'" onchange="S.sizes['+SIZE+'].tiers['+i+']=parseFloat(this.value)||0;save();render()">').join(' ')+'</div></div>';
   return h;
 }
 function vCoffees(){
