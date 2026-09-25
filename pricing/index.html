@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="robots" content="noindex">
 <title>CoffeeNutz Fiyat</title>
-<!-- v2026-09-25h -->
+<!-- v2026-09-25i -->
 <style>
 :root{ --bg:#141210; --panel:#1d1a16; --panel2:#262119; --line:#3a332a; --ink:#ece5da; --muted:#9c917f; --accent:#e8a33d; --green:#7fb069; --red:#D8453B; }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -41,7 +41,8 @@ input.w60{width:64px}input.w80{width:86px}input.w110{width:112px}input.w120{widt
 .mini{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer}
 .grip{cursor:grab;touch-action:none;color:var(--muted);font-size:17px;padding:4px 10px;user-select:none;-webkit-user-select:none;display:inline-block}
 .grip:active{cursor:grabbing;color:var(--accent)}
-tr.dragrow{outline:1px solid var(--accent);opacity:.85;background:var(--panel2)}
+tr.drag-ghost{opacity:.35;background:var(--panel2)}
+tr.drag-lift{background:var(--panel2);box-shadow:0 8px 22px rgba(0,0,0,.55)}
 .addbtn{background:var(--panel2);border:1px dashed var(--line);color:var(--muted);border-radius:9px;padding:9px;width:100%;cursor:pointer;font-size:12.5px;margin-top:8px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
 .f{display:flex;flex-direction:column;gap:4px}
@@ -72,7 +73,7 @@ footer{color:var(--muted);font-size:10.5px;text-align:center;margin-top:14px}
 <div id="app" style="display:none">
 <div class="hdr">
   <div class="brand" onclick="location.reload()"><span>CoffeeNutz</span> <span class="a">Fiyat</span></div>
-  <div class="hsub"><span>v2026-09-25h</span><button class="iconbtn" onclick="location.reload()">&#8635;</button><button class="iconbtn" onclick="lock()" title="anahtari bu cihazdan sil">kilitle</button></div>
+  <div class="hsub"><span>v2026-09-25i</span><button class="iconbtn" onclick="location.reload()">&#8635;</button><button class="iconbtn" onclick="lock()" title="anahtari bu cihazdan sil">kilitle</button></div>
 </div>
 <div class="tabs">
   <button class="tab on" data-t="prices" onclick="setTab('prices')">Fiyatlar</button>
@@ -85,6 +86,7 @@ footer{color:var(--muted);font-size:10.5px;text-align:center;margin-top:14px}
 <footer>CoffeeNutz ic arac · tek dosya · veriler bu cihazda saklanir</footer>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -198,21 +200,19 @@ function byId(id){ return S.coffees.find(c=>c.id===id); }
 function idxOf(id){ return S.coffees.findIndex(c=>c.id===id); }
 function pxOf(id,si){ const k=id+'_'+si; if(!S.px[k]) S.px[k]={t:1,g:''}; return S.px[k]; }
 function suggested(c,si){ const z=S.sizes[si]; return bagCostKdv(c,si)*(1+z.tiers[pxOf(c.id,si).t]/100)*(1+num(S.pos)/100); }
-let DRAGMOVED=false;
-function rowDragStart(e,id){ e.preventDefault(); e.stopPropagation(); DRAGMOVED=false;
-  const grip=e.currentTarget; try{ grip.setPointerCapture(e.pointerId); }catch(x){}
-  const tr=grip.closest('tr'); if(!tr) return; tr.classList.add('dragrow');
-  grip.onpointermove=rowDragMove;
-  grip.onpointerup=function(){ grip.onpointermove=null; grip.onpointerup=null; rowDragEnd(tr); }; }
-function rowDragMove(e){ e.preventDefault(); DRAGMOVED=true;
-  const tr=document.querySelector('tr.dragrow'); if(!tr) return; const tb=tr.parentNode;
-  const rows=[].slice.call(tb.querySelectorAll('tr[data-id]')).filter(function(r){ return r!==tr; });
-  let best=null,bd=1e9; rows.forEach(function(r){ const b=r.getBoundingClientRect(); const d=Math.abs(e.clientY-(b.top+b.height/2)); if(d<bd){ bd=d; best=r; } });
-  if(best){ const b=best.getBoundingClientRect(); if(e.clientY<b.top+b.height/2) tb.insertBefore(tr,best); else tb.insertBefore(tr,best.nextSibling); } }
-function rowDragEnd(tr){ tr.classList.remove('dragrow'); if(!DRAGMOVED) return;
-  const tb=tr.parentNode; const ids=[].slice.call(tb.querySelectorAll('tr[data-id]')).map(function(r){ return r.dataset.id; });
+function persistOrder(evt){
+  const ids=[].slice.call(evt.to.querySelectorAll('tr[data-id]')).map(function(r){ return r.dataset.id; });
   const vis=ids.map(byId).filter(Boolean); const rest=S.coffees.filter(function(c){ return ids.indexOf(c.id)<0; });
-  S.coffees=vis.concat(rest); save(); render(); }
+  S.coffees=vis.concat(rest); save(); render();
+}
+function initSort(){
+  if(!window.Sortable) return;
+  document.querySelectorAll('table.sortable tbody').forEach(function(tb){
+    if(tb._sort){ try{ tb._sort.destroy(); }catch(x){} }
+    tb._sort=Sortable.create(tb,{handle:'.grip',animation:150,draggable:'tr[data-id]',
+      ghostClass:'drag-ghost',chosenClass:'drag-lift',onEnd:persistOrder});
+  });
+}
 function offered(c,si){ return !Array.isArray(c.sz)||c.sz.includes(S.sizes[si].g); }
 function toggleSz(id,g){ const c=byId(id); if(!c) return; let sz=Array.isArray(c.sz)?c.sz.slice():S.sizes.map(z=>z.g); const at=sz.indexOf(g); if(at>=0) sz.splice(at,1); else sz.push(g); const all=S.sizes.map(z=>z.g); if(sz.length===all.length&&all.every(x=>sz.includes(x))) delete c.sz; else c.sz=sz; save(); render(); }
 
@@ -245,13 +245,13 @@ function vPrices(){
   const scales=[200,350,500,750,1000]; if(scales.indexOf(S.aykg)<0) scales.push(S.aykg);
   h+='<div class="chips" style="margin-bottom:10px"><span class="hint" style="margin:0;align-self:center">Olcek kg/ay:</span>'+scales.sort(function(a,b){return a-b}).map(function(k){return '<span class="chip'+(k===S.aykg?' on':'')+'" onclick="setScale('+k+')">'+k+'</span>';}).join('')+'</div>';
   h+='<div class="lbl">'+z.g+' g \u00b7 ambalaj '+fmt(packCost(SIZE))+' \u20BA \u00b7 genel gider '+fmt(giderKg(),0)+' \u20BA/kg \u00b7 kademeler %'+z.tiers.join(' / %')+'</div>';
-  h+='<table><tr><th></th><th>Kahve</th><th class="num">Maliyet+KDV \u20BA</th><th>Kademe</th><th class="num">Hesaplanan \u20BA</th><th class="num">GUNCEL \u20BA</th><th class="num">Marj %</th></tr>';
+  h+='<table class="sortable"><tr><th></th><th>Kahve</th><th class="num">Maliyet+KDV \u20BA</th><th>Kademe</th><th class="num">Hesaplanan \u20BA</th><th class="num">GUNCEL \u20BA</th><th class="num">Marj %</th></tr>';
   S.coffees.forEach((c)=>{
     if(c.arch||!offered(c,SIZE)) return;
     const cost=bagCostKdv(c,SIZE), p=pxOf(c.id,SIZE), sug=suggested(c,SIZE), g=num(p.g);
     let marj='-', style='';
     if(g>0){ const m=(g-cost)/g*100; marj=fmt(m,0)+'%'; style=g<sug?' class="low"':(m>0?' class="ok"':' class="low"'); }
-    h+='<tr data-id="'+c.id+'"><td><span class="grip" onpointerdown="rowDragStart(event,\''+c.id+'\')">&#8801;</span></td>'
+    h+='<tr data-id="'+c.id+'"><td><span class="grip">&#8801;</span></td>'
      +'<td>'+esc(c.n)+'</td><td class="num">'+fmt(cost)+'</td>'
      +'<td><span class="tsel">'+z.tiers.map((t,i)=>'<button class="'+(p.t===i?'on':'')+'" onclick="setTier(\''+c.id+'\','+i+')">%'+t+'</button>').join('')+'</span></td>'
      +'<td class="num sug">'+fmt(sug)+'</td>'
@@ -264,10 +264,10 @@ function vPrices(){
 }
 function vCoffees(){
   let h='<div class="card"><div class="lbl">Yesil kahve maliyetleri</div>';
-  h+='<table><tr><th></th><th>Kahve</th><th>Tedarikci</th><th class="num">Fiyat</th><th>Birim</th><th class="num">Lojistik \u20BA/kg</th><th>Ambalaj</th><th class="num">Maliyet \u20BA/kg</th><th></th></tr>';
+  h+='<table class="sortable"><tr><th></th><th>Kahve</th><th>Tedarikci</th><th class="num">Fiyat</th><th>Birim</th><th class="num">Lojistik \u20BA/kg</th><th>Ambalaj</th><th class="num">Maliyet \u20BA/kg</th><th></th></tr>';
   S.coffees.forEach((c,ci)=>{
     if(c.arch) return;
-    h+='<tr data-id="'+c.id+'"><td><span class="grip" onpointerdown="rowDragStart(event,\''+c.id+'\')">&#8801;</span></td>'
+    h+='<tr data-id="'+c.id+'"><td><span class="grip">&#8801;</span></td>'
      +'<td><input class="wname" value="'+escA(c.n)+'" onchange="S.coffees['+ci+'].n=this.value;save();renderVlist()"></td>'
      +'<td><input class="w120" list="vlist" value="'+escA(c.sup||'')+'" onchange="S.coffees['+ci+'].sup=this.value;save();renderVlist()"></td>'
      +'<td class="num"><input class="w80" inputmode="decimal" value="'+c.p+'" onchange="S.coffees['+ci+'].p=parseFloat(this.value)||0;save();render()"></td>'
@@ -344,7 +344,7 @@ function delFixed(i){ if(!confirm('"'+S.fixed[i].n+'" silinsin mi?')) return; S.
 function togglePack(si,i){ const z=S.sizes[si]; z.sel=z.sel||[]; const at=z.sel.indexOf(i); if(at>=0) z.sel.splice(at,1); else z.sel.push(i); save(); render(); }
 function resetAll(){ if(!confirm('Tum veriler xls tohumuna donsun mu? Kendi girdigin degisiklikler silinir.')) return; S=JSON.parse(JSON.stringify(DEF)); save(); render(); }
 
-function render(){ $('view').innerHTML = TAB==='prices'?vPrices():TAB==='coffees'?vCoffees():TAB==='pack'?vPack():vSet(); renderVlist(); }
+function render(){ $('view').innerHTML = TAB==='prices'?vPrices():TAB==='coffees'?vCoffees():TAB==='pack'?vPack():vSet(); renderVlist(); initSort(); }
 
 function unlock(){ const k=$('keyIn').value.trim(); if(!k) return; localStorage.setItem('ccKey',k); show(); }
 function lock(){ localStorage.removeItem('ccKey'); location.reload(); }
