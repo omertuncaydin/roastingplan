@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="robots" content="noindex">
 <title>CoffeeNutz Fiyat</title>
-<!-- v2026-09-25f -->
+<!-- v2026-09-25g -->
 <style>
 :root{ --bg:#141210; --panel:#1d1a16; --panel2:#262119; --line:#3a332a; --ink:#ece5da; --muted:#9c917f; --accent:#e8a33d; --green:#7fb069; --red:#D8453B; }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -69,7 +69,7 @@ footer{color:var(--muted);font-size:10.5px;text-align:center;margin-top:14px}
 <div id="app" style="display:none">
 <div class="hdr">
   <div class="brand" onclick="location.reload()"><span>CoffeeNutz</span> <span class="a">Fiyat</span></div>
-  <div class="hsub"><span>v2026-09-25f</span><button class="iconbtn" onclick="location.reload()">&#8635;</button><button class="iconbtn" onclick="lock()" title="anahtari bu cihazdan sil">kilitle</button></div>
+  <div class="hsub"><span>v2026-09-25g</span><button class="iconbtn" onclick="location.reload()">&#8635;</button><button class="iconbtn" onclick="lock()" title="anahtari bu cihazdan sil">kilitle</button></div>
 </div>
 <div class="tabs">
   <button class="tab on" data-t="prices" onclick="setTab('prices')">Fiyatlar</button>
@@ -190,17 +190,14 @@ function giderTotal(){ return (S.fixed||[]).reduce((a,f)=>a+num(f.p),0); }
 function giderKg(){ return S.aykg>0?giderTotal()/S.aykg:0; }
 function costKg(c){ return (conv(c.p,c.cur)+num(c.loj))*(1+S.fire/100)+giderKg(); }
 function packCost(si){ return (S.sizes[si].sel||[]).reduce((a,i)=>a+(S.pack[i]?num(S.pack[i].p):0),0); }
-function packCostFor(c,si){ if(c&&Array.isArray(c.pk)) return c.pk.reduce((a,i)=>a+(S.pack[i]?num(S.pack[i].p):0),0); return packCost(si); }
-function bagCostKdv(c,si){ const z=S.sizes[si]; const base=costKg(c)*z.g/1000+packCostFor(c,si); return base*(1+S.kdv/100); }
+function bagCostKdv(c,si){ const z=S.sizes[si]; const base=costKg(c)*z.g/1000+packCost(si); return base*(1+S.kdv/100); }
 function byId(id){ return S.coffees.find(c=>c.id===id); }
 function idxOf(id){ return S.coffees.findIndex(c=>c.id===id); }
 function pxOf(id,si){ const k=id+'_'+si; if(!S.px[k]) S.px[k]={t:1,g:''}; return S.px[k]; }
 function suggested(c,si){ const z=S.sizes[si]; return bagCostKdv(c,si)*(1+z.tiers[pxOf(c.id,si).t]/100)*(1+num(S.pos)/100); }
 function moveCoffee(id,dir){ const arr=S.coffees, i=idxOf(id); if(i<0) return; let j=i+dir; while(j>=0&&j<arr.length&&arr[j].arch) j+=dir; if(j<0||j>=arr.length) return; const it=arr.splice(i,1)[0]; arr.splice(j,0,it); save(); render(); }
-let PKOPEN=null;
-function togglePkOpen(id){ PKOPEN=(PKOPEN===id)?null:id; render(); }
-function clearPk(id){ const c=byId(id); if(c){ delete c.pk; save(); render(); } }
-function togglePkItem(id,i){ const c=byId(id); if(!c) return; if(!Array.isArray(c.pk)) c.pk=[i]; else { const at=c.pk.indexOf(i); if(at>=0) c.pk.splice(at,1); else c.pk.push(i); } save(); render(); }
+function offered(c,si){ return !Array.isArray(c.sz)||c.sz.includes(S.sizes[si].g); }
+function toggleSz(id,g){ const c=byId(id); if(!c) return; let sz=Array.isArray(c.sz)?c.sz.slice():S.sizes.map(z=>z.g); const at=sz.indexOf(g); if(at>=0) sz.splice(at,1); else sz.push(g); const all=S.sizes.map(z=>z.g); if(sz.length===all.length&&all.every(x=>sz.includes(x))) delete c.sz; else c.sz=sz; save(); render(); }
 
 function vendors(){ const s=new Set(); S.coffees.forEach(c=>{ if(c.sup) s.add(c.sup); }); S.pack.forEach(p=>{ if(p.sup) s.add(p.sup); }); return [...s].sort(); }
 function renderVlist(){ const d=$('vlist'); if(d) d.innerHTML=vendors().map(v=>'<option value="'+escA(v)+'">').join(''); }
@@ -233,12 +230,12 @@ function vPrices(){
   h+='<div class="lbl">'+z.g+' g \u00b7 ambalaj '+fmt(packCost(SIZE))+' \u20BA \u00b7 genel gider '+fmt(giderKg(),0)+' \u20BA/kg \u00b7 kademeler %'+z.tiers.join(' / %')+'</div>';
   h+='<table><tr><th></th><th>Kahve</th><th class="num">Maliyet+KDV \u20BA</th><th>Kademe</th><th class="num">Hesaplanan \u20BA</th><th class="num">GUNCEL \u20BA</th><th class="num">Marj %</th></tr>';
   S.coffees.forEach((c)=>{
-    if(c.arch) return;
+    if(c.arch||!offered(c,SIZE)) return;
     const cost=bagCostKdv(c,SIZE), p=pxOf(c.id,SIZE), sug=suggested(c,SIZE), g=num(p.g);
     let marj='-', style='';
     if(g>0){ const m=(g-cost)/g*100; marj=fmt(m,0)+'%'; style=g<sug?' class="low"':(m>0?' class="ok"':' class="low"'); }
     h+='<tr><td><span class="tsel"><button onclick="moveCoffee(\''+c.id+'\',-1)">&#9650;</button><button onclick="moveCoffee(\''+c.id+'\',1)">&#9660;</button></span></td>'
-     +'<td>'+esc(c.n)+(Array.isArray(c.pk)?' <span title="ozel ambalaj" style="color:var(--accent)">*</span>':'')+'</td><td class="num">'+fmt(cost)+'</td>'
+     +'<td>'+esc(c.n)+'</td><td class="num">'+fmt(cost)+'</td>'
      +'<td><span class="tsel">'+z.tiers.map((t,i)=>'<button class="'+(p.t===i?'on':'')+'" onclick="setTier(\''+c.id+'\','+i+')">%'+t+'</button>').join('')+'</span></td>'
      +'<td class="num sug">'+fmt(sug)+'</td>'
      +'<td class="num"><input class="w80" inputmode="decimal" value="'+escA(p.g)+'" onchange="setGuncel(\''+c.id+'\',this.value)"></td>'
@@ -259,18 +256,12 @@ function vCoffees(){
      +'<td class="num"><input class="w80" inputmode="decimal" value="'+c.p+'" onchange="S.coffees['+ci+'].p=parseFloat(this.value)||0;save();render()"></td>'
      +'<td><select onchange="S.coffees['+ci+'].cur=this.value;save();render()">'+['$','\u20AC','\u20BA'].map(u=>'<option'+(c.cur===u?' selected':'')+'>'+u+'</option>').join('')+'</select></td>'
      +'<td class="num"><input class="w60" inputmode="decimal" value="'+c.loj+'" onchange="S.coffees['+ci+'].loj=parseFloat(this.value)||0;save();render()"></td>'
-     +'<td><button class="mini" onclick="togglePkOpen(\''+c.id+'\')">'+(Array.isArray(c.pk)?(c.pk.length+' ozel'):'std')+'</button></td>'
+     +'<td><span class="tsel">'+S.sizes.map(z=>{ const on=offered(c,S.sizes.indexOf(z)); return '<button class="'+(on?'on':'')+'" onclick="toggleSz(\''+c.id+'\','+z.g+')">'+z.g+'</button>'; }).join('')+'</span></td>'
      +'<td class="num">'+fmt(costKg(c))+'</td>'
      +'<td><button class="del" title="arsive tasi" onclick="archCoffee(\''+c.id+'\')">&times;</button></td></tr>';
-    if(PKOPEN===c.id){
-      h+='<tr><td colspan="9"><div class="chips" style="padding:6px 0">'
-       +'<span class="chip'+(!Array.isArray(c.pk)?' on':'')+'" onclick="clearPk(\''+c.id+'\')">VARSAYILAN (boyut secimi)</span>'
-       +S.pack.map((p,i)=>{ const on=Array.isArray(c.pk)&&c.pk.includes(i); return '<span class="chip'+(on?' on':'')+'" onclick="togglePkItem(\''+c.id+'\','+i+')">'+esc(p.n)+' '+fmt(num(p.p))+'</span>'; }).join('')
-       +'</div><div class="hint" style="margin:0 0 6px">Ozel secim bu kahvede TUM boyutlarda boyut varsayilaninin yerine gecer. Fiyatlar sekmesinde * ile gorunur.</div></td></tr>';
-    }
   });
   h+='</table><button class="addbtn" onclick="addCoffee()">+ Kahve ekle</button>';
-  h+='<div class="hint">Maliyet \u20BA/kg = (fiyat &times; kur + lojistik \u20BA/kg) &times; (1 + fire payi %'+S.fire+') + genel gider '+fmt(giderKg(),0)+' \u20BA/kg. Gumruk ve ithalat ekstralari (dokumantasyon, ardiye vb.) lojistik \u20BA/kg sutununa girilir. &times; kahveyi silmez, arsive tasir.</div>';
+  h+='<div class="hint">Maliyet \u20BA/kg = (fiyat &times; kur + lojistik \u20BA/kg) &times; (1 + fire payi %'+S.fire+') + genel gider '+fmt(giderKg(),0)+' \u20BA/kg. Gumruk ve ithalat ekstralari (dokumantasyon, ardiye vb.) lojistik \u20BA/kg sutununa girilir. &times; kahveyi silmez, arsive tasir. Ambalaj sutunu kahvenin hangi boyutlarda satildigini secer; kapali boyutlar Fiyatlar sekmesinde o kahveyi gizler.</div>';
   const archived=S.coffees.map((c,ci)=>({c,ci})).filter(x=>x.c.arch);
   h+='<details class="arch"><summary>Arsiv ('+archived.length+')</summary>';
   if(archived.length){
@@ -331,7 +322,7 @@ function addCoffee(){ S.seq=(S.seq||0)+1; S.coffees.push({id:'c'+S.seq,n:'YENI K
 function archCoffee(id){ const c=byId(id); if(c){ c.arch=true; save(); render(); } }
 function unarchCoffee(id){ const c=byId(id); if(c){ c.arch=false; save(); render(); } }
 function delCoffee(id){ const c=byId(id); if(!c) return; if(!confirm('"'+c.n+'" KALICI olarak silinsin mi? Bu geri alinamaz.')) return; S.coffees.splice(idxOf(id),1); Object.keys(S.px).forEach(k=>{ if(k.split('_')[0]===id) delete S.px[k]; }); save(); render(); }
-function delPack(i){ if(!confirm('"'+S.pack[i].n+'" silinsin mi?')) return; S.pack.splice(i,1); S.sizes.forEach(z=>{ z.sel=(z.sel||[]).filter(x=>x!==i).map(x=>x>i?x-1:x); }); S.coffees.forEach(c=>{ if(Array.isArray(c.pk)) c.pk=c.pk.filter(x=>x!==i).map(x=>x>i?x-1:x); }); save(); render(); }
+function delPack(i){ if(!confirm('"'+S.pack[i].n+'" silinsin mi?')) return; S.pack.splice(i,1); S.sizes.forEach(z=>{ z.sel=(z.sel||[]).filter(x=>x!==i).map(x=>x>i?x-1:x); }); save(); render(); }
 function delFixed(i){ if(!confirm('"'+S.fixed[i].n+'" silinsin mi?')) return; S.fixed.splice(i,1); save(); render(); }
 function togglePack(si,i){ const z=S.sizes[si]; z.sel=z.sel||[]; const at=z.sel.indexOf(i); if(at>=0) z.sel.splice(at,1); else z.sel.push(i); save(); render(); }
 function resetAll(){ if(!confirm('Tum veriler xls tohumuna donsun mu? Kendi girdigin degisiklikler silinir.')) return; S=JSON.parse(JSON.stringify(DEF)); save(); render(); }
