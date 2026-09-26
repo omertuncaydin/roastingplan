@@ -451,6 +451,13 @@
 
   <!-- CUP (CVA combined: descriptive + affective) -->
   <div id="view-cup" class="hide">
+    <div class="card" style="margin-top:0;margin-bottom:14px;border-color:var(--gold)"><div class="cgrplbl" data-i18n="Watch seat · live from the wrist">&#8986; Watch seat &middot; live from the wrist</div>
+      <div id="wsyncFrom" style="margin-top:6px"></div>
+      <div class="small" id="wsyncStatus" style="margin-top:6px;color:var(--accent2)"></div>
+      <div class="small" id="wsyncList" style="margin-top:2px"></div>
+      <div class="small" style="color:var(--muted)" data-i18n="Paired to your account: every device you sign into syncs your watch cuppings automatically.">Paired to your account: every device you sign into syncs your watch cuppings automatically.</div>
+      <details style="margin-top:6px"><summary class="small" style="cursor:pointer" data-i18n="Pair manually">Pair manually</summary>
+        <div class="cuprow" style="gap:8px;align-items:center;margin-top:6px"><input type="text" id="wsyncKey" placeholder="watch key (Settings → watch)" style="flex:1"><button class="iconbtn" onclick="wsyncAdd()" data-i18n="Pair">Pair</button></div></details></div>
     <button class="btn" style="margin-bottom:14px;padding:17px;font-size:17px;letter-spacing:.3px" onclick="show('flight')" data-i18n="Build Cupping Session">Build Cupping Session</button>
     <div class="subnav" id="cupModes">
       <button id="cm-descriptive" class="on" onclick="setCupMode('descriptive')" data-i18n="Descriptive">Descriptive</button>
@@ -503,13 +510,7 @@
       <div class="small" style="margin-top:6px;color:var(--muted)" data-i18n="Prints your marks onto the official SCA form. Needs internet.">Prints your marks onto the official SCA form. Needs internet.</div></div>
     <button class="nullbtn" title="Coming in the next version">Class Mode &nbsp;·&nbsp; aggregate a class on one coffee &nbsp;·&nbsp; coming soon</button>
     <div class="small" id="cupMsg" style="margin-top:10px;color:var(--accent2)"></div>
-    <div class="card" style="margin-top:12px;border-color:var(--gold)"><div class="cgrplbl" data-i18n="Watch seat · live from the wrist">&#8986; Watch seat &middot; live from the wrist</div>
-      <div id="wsyncFrom" style="margin-top:6px"></div>
-      <div class="small" id="wsyncStatus" style="margin-top:6px;color:var(--accent2)"></div>
-      <div class="small" id="wsyncList" style="margin-top:2px"></div>
-      <div class="small" style="color:var(--muted)" data-i18n="Paired to your account: every device you sign into syncs your watch cuppings automatically.">Paired to your account: every device you sign into syncs your watch cuppings automatically.</div>
-      <details style="margin-top:6px"><summary class="small" style="cursor:pointer" data-i18n="Pair manually">Pair manually</summary>
-        <div class="cuprow" style="gap:8px;align-items:center;margin-top:6px"><input type="text" id="wsyncKey" placeholder="watch key (Settings → watch)" style="flex:1"><button class="iconbtn" onclick="wsyncAdd()" data-i18n="Pair">Pair</button></div></details></div>
+    
     <div class="card" style="margin-top:12px"><div class="cgrplbl">Saved cuppings</div><div id="cupList"></div></div>
   </div>
 
@@ -610,7 +611,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-09-26a</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-09-26b</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
