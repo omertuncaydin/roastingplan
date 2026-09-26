@@ -503,14 +503,14 @@
       <div class="small" style="margin-top:6px;color:var(--muted)" data-i18n="Prints your marks onto the official SCA form. Needs internet.">Prints your marks onto the official SCA form. Needs internet.</div></div>
     <button class="nullbtn" title="Coming in the next version">Class Mode &nbsp;·&nbsp; aggregate a class on one coffee &nbsp;·&nbsp; coming soon</button>
     <div class="small" id="cupMsg" style="margin-top:10px;color:var(--accent2)"></div>
-    <div class="card" style="margin-top:12px"><div class="cgrplbl">Saved cuppings</div><div id="cupList"></div></div>
-    <div class="card" style="margin-top:12px"><div class="cgrplbl" data-i18n="Watch pairing">Watch pairing</div>
-      <div class="small" id="wsyncList" style="margin-top:2px"></div>
-      <div class="small" id="wsyncStatus" style="margin-top:4px;color:var(--accent2)"></div>
+    <div class="card" style="margin-top:12px;border-color:var(--gold)"><div class="cgrplbl" data-i18n="Watch seat · live from the wrist">&#8986; Watch seat &middot; live from the wrist</div>
       <div id="wsyncFrom" style="margin-top:6px"></div>
+      <div class="small" id="wsyncStatus" style="margin-top:6px;color:var(--accent2)"></div>
+      <div class="small" id="wsyncList" style="margin-top:2px"></div>
       <div class="small" style="color:var(--muted)" data-i18n="Paired to your account: every device you sign into syncs your watch cuppings automatically.">Paired to your account: every device you sign into syncs your watch cuppings automatically.</div>
       <details style="margin-top:6px"><summary class="small" style="cursor:pointer" data-i18n="Pair manually">Pair manually</summary>
         <div class="cuprow" style="gap:8px;align-items:center;margin-top:6px"><input type="text" id="wsyncKey" placeholder="watch key (Settings → watch)" style="flex:1"><button class="iconbtn" onclick="wsyncAdd()" data-i18n="Pair">Pair</button></div></details></div>
+    <div class="card" style="margin-top:12px"><div class="cgrplbl">Saved cuppings</div><div id="cupList"></div></div>
   </div>
 
   <!-- FLIGHT (attribute-paged scoring across several coffees) -->
@@ -610,7 +610,7 @@
 
   <!-- ACCOUNT (opened from the wordmark) -->
   <div id="view-account" class="hide">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-09-25a</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><button class="iconbtn" onclick="hardRefresh()" data-i18n="Refresh">Refresh</button><span class="small" style="color:var(--muted)">v2026-09-26a</span></div><div style="display:flex;gap:8px"><button class="iconbtn" onclick="doLogout()" data-i18n="Log out">Log out</button><button class="langBtn iconbtn" onclick="toggleLang()">TR</button></div></div>
     <div class="card hide" id="classCard">
       <div class="cgrplbl" onclick="toggleClass()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span>Classroom (admin)</span><span id="classChev" style="font-size:13px">&#9662;</span></div>
       <div id="classBody">
@@ -1496,7 +1496,7 @@ function wsyncAdd(){ const el=document.getElementById('wsyncKey'); const k=(el&&
   if(!WSYNC_KEYS.includes(k)) WSYNC_KEYS.push(k); localStorage.setItem('cnWatchKeys',JSON.stringify(WSYNC_KEYS));
   if(el) el.value=''; wsyncRenderList(); wsyncAccountSave(); wsyncTick(); toast(LANG==='tr'?'Saat eşleşti.':'Watch paired.'); }
 function wsyncDel(k){ WSYNC_KEYS=WSYNC_KEYS.filter(x=>x!==k); localStorage.setItem('cnWatchKeys',JSON.stringify(WSYNC_KEYS)); wsyncRenderList(); wsyncAccountSave(); }
-let WSYNC_BUSY=false, WSYNC_SEEN={}, WSYNC_LATEST={}, WSYNC_ACCT=false;
+let WSYNC_BUSY=false, WSYNC_SEEN={}, WSYNC_LATEST={}, WSYNC_ACCT=false, WSYNC_ORDER=[];
 async function wsyncEmail(){ try{ const r=await sb.auth.getUser(); return r&&r.data&&r.data.user&&r.data.user.email||null; }catch(e){ return null; } }
 async function wsyncAccountSave(){ if(!sb) return; try{ const em=await wsyncEmail(); if(!em) return;
   await sb.from('user_maps').upsert({email:em,universe_id:'__watch__',coffee:'__link__',cal:{keys:WSYNC_KEYS}}); }catch(e){} }
@@ -1509,8 +1509,16 @@ async function wsyncAccountLoad(){ if(!sb||WSYNC_ACCT) return; try{ const em=awa
   if(WSYNC_KEYS.some(k=>!ks.includes(k))) await wsyncAccountSave();   // union up: local pairs join the account
 }catch(e){} }
 function wsyncRenderFrom(){ const el=document.getElementById('wsyncFrom'); if(!el) return;
-  const codes=Object.keys(WSYNC_LATEST).sort();
-  el.innerHTML=codes.length?('<span class="small" style="color:var(--muted)">'+(LANG==='tr'?'Saatten: ':'From watch: ')+'</span>'+codes.map(c=>`<span class="chip sub" style="cursor:pointer" onclick="wsyncOpen('${c}')">${esc(c)}</span>`).join(' ')):'';
+  // v2026-09-26a THE WATCH SEAT (his order): codes STACK here live as they are opened
+  // on the wrist — newest on top, a seat of its own at the cupping table. Tap a row =
+  // load that sample into the form (scores/CATA arrive; notes are yours to type).
+  const codes=WSYNC_ORDER.filter(c=>WSYNC_LATEST[c]);
+  for(const c of Object.keys(WSYNC_LATEST)){ if(!WSYNC_ORDER.includes(c)) codes.push(c); }
+  if(!codes.length){ el.innerHTML='<div class="small" style="color:var(--muted)">'+(LANG==='tr'?'Saatte bir numune kodu açtığında burada dizilir.':'Open a sample code on the watch — it stacks up here.')+'</div>'; return; }
+  el.innerHTML=codes.map(c=>{ const d=WSYNC_LATEST[c]; const ex=CUPS.find(x=>x.wid===(d&&d.wid));
+    const hasNotes=ex&&ex.notes&&Object.values(ex.notes).some(v=>v);
+    const st=ex?((LANG==='tr'?'kaydedildi \u2713':'saved \u2713')+(hasNotes?'':' \u00b7 <span style="color:var(--gold)">'+(LANG==='tr'?'not yaz':'type notes')+'</span>')):(LANG==='tr'?'geliyor\u2026':'incoming\u2026');
+    return '<div onclick="wsyncOpen(\''+esc(c)+'\')" style="display:flex;align-items:baseline;gap:10px;border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:9px;padding:8px 12px;margin-top:6px;cursor:pointer"><span style="font-weight:800;font-size:16px">'+esc(c)+'</span><span class="small" style="color:var(--muted)">\u231a '+(LANG==='tr'?'saatten':'from the watch')+'</span><span class="small" style="margin-left:auto">'+st+'</span></div>'; }).join('');
 }
 function wsyncOpen(code){ const d=WSYNC_LATEST[code]; if(!d) return;
   try{ show('cup'); }catch(e){}
@@ -1580,7 +1588,7 @@ async function wsyncTick(){ if(WSYNC_BUSY) return;
   const n=p.flights.reduce((a,fl)=>a+(((fl.capture||{}).samples)||[]).length,0);
   const latest={}; let freshRev=false;
   for(const fl of p.flights){ for(const sm of (fl.capture&&fl.capture.samples)||[]){ if(!sm||!sm.data) continue;
-    latest[sm.sample]=sm.data; WSYNC_LATEST[sm.sample]=sm.data;
+    latest[sm.sample]=sm.data; if(!WSYNC_LATEST[sm.sample]&&!WSYNC_ORDER.includes(sm.sample)) WSYNC_ORDER.unshift(sm.sample); WSYNC_LATEST[sm.sample]=sm.data;
     const w=sm.data.wid; if(w&&(sm.data.watchRev||0)>(WSYNC_SEEN[w]||0)){ WSYNC_SEEN[w]=sm.data.watchRev||0; freshRev=true; } } }
   try{ wsyncRenderFrom(); }catch(e){}
   const mirrored=freshRev?wsyncMirror(latest):false;
