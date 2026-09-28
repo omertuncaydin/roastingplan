@@ -130,7 +130,7 @@
   <div id="planApp" style="display:none">
   <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h1 style="margin-right:auto">Roast Planner</h1><span id="acctWrap" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end"><span id="acctChip" class="sub" style="margin:0;font-size:12px"></span><button id="acctBtn" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px">Giriş yap</button><button id="refreshChip" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px" title="Buluttaki reçeteleri çeker, tabloyu yeniler — plan ve girdiğin değerler yerinde kalır (sayfa yenilenmez) · pulls the cloud recipes, keeps your edits">&#8635; Refresh</button></span></div>
   <div id="acctForm" style="display:none;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 2px"><input id="acctEmail" type="email" autocomplete="username" placeholder="e-posta" style="background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 10px;font-size:13px;width:22ch"><input id="acctPass" type="password" autocomplete="current-password" placeholder="şifre" style="background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 10px;font-size:13px;width:16ch"><button id="acctGo" style="padding:7px 14px">Gir</button><span id="acctMsg" class="sub" style="margin:0;font-size:12px">Guide hesabınla · same account as the Guide</span></div>
-  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-28a</span></div>
+  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-28b</span></div>
   <div id="presRow" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin:-6px 0 16px;font-size:12px;color:var(--muted)">
     <span style="white-space:nowrap">Bu bilgisayar: <input id="presName" style="background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:3px 8px;font-size:12px;width:14ch" title="Bu bilgisayarın adı, diğer bilgisayarlara böyle görünür · this computer's name, shown to the other computers"></span>
     <span id="presOthers" style="display:contents"></span>
@@ -199,7 +199,7 @@
       <b>Reçeteler · Recipes <span id="recSrc" class="sub" style="display:inline;margin:0 0 0 8px;font-weight:400"></span></b>
       <span style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="ghost" style="padding:4px 12px" id="recAdd">+ Yeni · New</button>
-        <button class="ghost" style="padding:4px 12px" id="recSeed" title="Yerleşik listeden yalnız eksik olanları ekler — kopya oluşturmaz">Yerleşikten eksikleri ekle</button>
+        <button class="ghost" style="padding:4px 12px" id="recSeed" title="Yerleşik listeden yalnız eksik olanları ekler, kopya oluşturmaz">Yerleşikten eksikleri ekle</button>
         <button class="ghost" style="padding:4px 12px;display:none;color:#e0705a;border-color:#e0705a" id="recDedupe" title="Aynı eşleşmenin eski kopyalarını buluttan siler; her eşleşmenin en yenisi kalır">Eski kopyaları sil</button>
         <button style="padding:4px 14px" id="recSave">Kaydet · Save</button>
         <button class="ghost" style="padding:4px 12px" onclick="document.getElementById('recPanel').style.display='none'">&#10005;</button>
@@ -779,7 +779,7 @@ async function cloudSave(){ try{ if(!sbp||!DATA.length) return false; const u=aw
   try{ const {data:cur}=await sbp.from('roast_plans').select('updated_at').eq('day',day).maybeSingle();
     if(cur&&cur.updated_at&&String(cur.updated_at)!==String(PLANSEEN[day]||'')){
       const t=new Date(cur.updated_at).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
-      if(!confirm('Bu günün planı bulutta başka bir kayıtla değişmiş ('+t+') — bu sayfa onu görmedi.\nÜzerine yazılsın mı?\n(İptal dersen önce Geçmiş → '+day+' yükleyip bakabilirsin.)')) return false;
+      if(!confirm('Bu günün planı bulutta başka bir kayıtla değişmiş ('+t+'), bu sayfa onu görmedi.\nÜzerine yazılsın mı?\n(İptal dersen önce Geçmiş → '+day+' yükleyip bakabilirsin.)')) return false;
     } }catch(e2){}
   const now=new Date().toISOString();
   const {error}=await sbp.from('roast_plans').upsert({owner:u.id, day, plan:planBlob(), updated_at:now});
@@ -854,25 +854,26 @@ function recDraw(){ const tb=document.querySelector('#recTbl tbody'); document.g
   tb.querySelectorAll('input[data-rf]').forEach(inp=>inp.addEventListener('change',()=>{ const r=RECEDIT[+inp.closest('tr').dataset.i], f=inp.dataset.rf;
     if(f==='match') r.match=inp.value.split(',').map(x=>normName(x.trim())).filter(Boolean); else if(f==='sort') r.sort=parseInt(inp.value,10)||100; else r[f]=inp.value.trim(); r.dirty=true; }));
   tb.querySelectorAll('button[data-rdel]').forEach(b=>b.addEventListener('click',()=>{ const r=RECEDIT.splice(+b.dataset.rdel,1)[0]; if(r&&r.id) RECDEL.push(r.id); recDraw(); })); }
-function recMsg(t){ const m=document.getElementById('recMsg'); m.textContent=t; m.style.display=t?'block':'none'; }
+function recMsg(t,bad){ const m=document.getElementById('recMsg'); m.textContent=t; m.style.display=t?'block':'none'; m.style.color=bad?'#e0705a':''; m.style.fontWeight=bad?'600':''; }
+function newUuid(){ try{ if(window.crypto&&crypto.randomUUID) return crypto.randomUUID(); }catch(e){} const b=(window.crypto&&crypto.getRandomValues)?crypto.getRandomValues(new Uint8Array(16)):Uint8Array.from({length:16},()=>Math.random()*256|0); b[6]=(b[6]&15)|64; b[8]=(b[8]&63)|128; const h=Array.from(b,x=>x.toString(16).padStart(2,'0')).join(''); return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20); }
 async function recOpen(){ const p=document.getElementById('recPanel'); p.style.display='block'; recMsg(''); await recipesLoad();
   RECEDIT=RECIPES.map(r=>Object.assign({},r,{match:r.match.slice()})); RECDEL=[]; recDraw();
   const db=document.getElementById('recDedupe'); if(db){ db.style.display=RECDUP.length?'':'none'; if(RECDUP.length) db.textContent='Eski kopyaları sil ('+RECDUP.length+')'; }
   if(!sbp) recMsg('Bulut kapalı — yerleşik liste, kaydedilemez.'); else if(!(await planUser())) recMsg('Buluta yazmak için bu cihazda bir kez Guide üzerinden giriş yap; şimdilik yerleşik liste.'); }
 async function recSave(){ try{ if(!sbp){ recMsg('Bulut kapalı.'); return; } const u=await planUser(); if(!u){ recMsg('Önce Guide üzerinden giriş yap.'); return; }
   // v2026-09-28a: the duplication fix. (1) two panel rows with the same match never save; (2) a row without an id (eski önbellek / seed) adopts the id of the cloud row with the same match, so saving UPDATES instead of inserting a copy.
-  const seenM={}; for(const r of RECEDIT){ if(!r.match.length) continue; const k=r.match.join(','); if(seenM[k]){ recMsg('Aynı eşleşme iki satırda: «'+r.match.join(', ')+'» — birini sil, sonra kaydet.'); return; } seenM[k]=1; }
+  const seenM={}; for(const r of RECEDIT){ if(!r.match.length) continue; const k=r.match.join(','); if(seenM[k]){ recMsg('Aynı eşleşme iki satırda: «'+r.match.join(', ')+'»: birini sil, sonra kaydet.',true); return; } seenM[k]=1; }
   let cloudMap={}; try{ const {data:cur}=await sbp.from('roast_recipes').select('id,match'); (cur||[]).forEach(cr=>{ const k=String(cr.match||'').split(',').map(x=>normName(x.trim())).filter(Boolean).join(','); if(k&&!cloudMap[k]) cloudMap[k]=cr.id; }); }catch(e0){}
   const usedIds={}; RECEDIT.forEach(r=>{ if(r.id) usedIds[r.id]=1; });
-  const rows=RECEDIT.filter(r=>r.match.length).map((r,i)=>{ const o={owner:u.id, match:r.match.join(', '), bullet:r.bullet||'', hsr:r.hsr||'', note:r.note||'', sort:(r.sort==null?(i+1)*10:r.sort), updated_at:new Date().toISOString()}; let rid=r.id; if(!rid){ const k=r.match.join(','); if(cloudMap[k]&&!usedIds[cloudMap[k]]){ rid=cloudMap[k]; usedIds[rid]=1; } } if(rid) o.id=rid; return o; });
-  if(RECDEL.length){ const {error}=await sbp.from('roast_recipes').delete().in('id',RECDEL); if(error){ recMsg('Silme hatası: '+error.message); return; } RECDEL=[]; }
-  if(rows.length){ const {error}=await sbp.from('roast_recipes').upsert(rows); if(error){ recMsg('Kayıt hatası: '+error.message+(/relation .* does not exist/i.test(error.message)?' — önce roast-recipes.sql çalıştır.':'')); return; } }
-  await recipesLoad(); RECEDIT=RECIPES.map(r=>Object.assign({},r,{match:r.match.slice()})); recDraw(); recMsg('Kaydedildi · '+recSrcLabel()); if(DATA.length) render(); }catch(e){ recMsg('Hata: '+e.message); } }
+  const rows=RECEDIT.filter(r=>r.match.length).map((r,i)=>{ const o={owner:u.id, match:r.match.join(', '), bullet:r.bullet||'', hsr:r.hsr||'', note:r.note||'', sort:(r.sort==null?(i+1)*10:r.sort), updated_at:new Date().toISOString()}; let rid=r.id; if(!rid){ const k=r.match.join(','); if(cloudMap[k]&&!usedIds[cloudMap[k]]){ rid=cloudMap[k]; usedIds[rid]=1; } } o.id=rid||newUuid(); return o; });   // v28b: id ALWAYS present, PGRST102 (mixed keys kills the whole save) can never fire
+  if(RECDEL.length){ const {error}=await sbp.from('roast_recipes').delete().in('id',RECDEL); if(error){ recMsg('Silme hatası: '+error.message,true); return; } RECDEL=[]; }
+  if(rows.length){ const {error}=await sbp.from('roast_recipes').upsert(rows); if(error){ recMsg('Kayıt hatası: '+error.message+(/relation .* does not exist/i.test(error.message)?' (önce roast-recipes.sql çalıştır)':''),true); return; } }
+  await recipesLoad(); RECEDIT=RECIPES.map(r=>Object.assign({},r,{match:r.match.slice()})); recDraw(); recMsg('Kaydedildi · '+recSrcLabel()); if(DATA.length) render(); }catch(e){ recMsg('Hata: '+e.message,true); } }
 async function recSeed(){ if(!sbp){ recMsg('Bulut kapalı.'); return; } const u=await planUser(); if(!u){ recMsg('Önce Guide üzerinden giriş yap.'); return; }
   // v2026-09-28a: adds only the built-in recipes whose match is not in the panel yet — pressing it twice (or on the second computer) no longer duplicates the whole list
   const have={}; RECEDIT.forEach(r=>{ if(r.match.length) have[r.match.join(',')]=1; });
   const missing=RECIPES_BUILTIN.filter(r=>!have[r.match.map(x=>normName(x.trim())).filter(Boolean).join(',')]);
-  if(!missing.length){ recMsg('Yerleşik listedeki her reçete zaten var — kopya eklenmedi.'); return; }
+  if(!missing.length){ recMsg('Yerleşik listedeki her reçete zaten var, kopya eklenmedi.'); return; }
   if(RECSRC==='cloud'&&!confirm('Yerleşik listeden eksik '+missing.length+' reçete eklenecek. Devam?')) return;
   const base=RECEDIT.filter(r=>r.match.length);
   RECEDIT=base.concat(missing.map((r,i)=>({match:r.match.map(x=>normName(x.trim())), bullet:r.bullet, hsr:r.hsr, note:r.note||'', sort:(base.length+i+1)*10}))); recDraw(); await recSave(); }
@@ -896,7 +897,7 @@ document.getElementById('refreshChip').addEventListener('click',async()=>{ const
 recipesLoad();   // cloud recipes replace the built-in list as soon as the session is known
 document.getElementById('recDedupe').addEventListener('click',async()=>{ if(!RECDUP.length) return; const u=await planUser(); if(!u){ recMsg('Önce Guide üzerinden giriş yap.'); return; }
   if(!confirm('Buluttaki '+RECDUP.length+' eski kopya silinecek; her eşleşmenin en yeni hali kalır. Devam?')) return;
-  try{ const {error}=await sbp.from('roast_recipes').delete().in('id',RECDUP); if(error){ recMsg('Silme hatası: '+error.message); return; } }catch(e){ recMsg('Hata: '+e.message); return; }
+  try{ const {error}=await sbp.from('roast_recipes').delete().in('id',RECDUP); if(error){ recMsg('Silme hatası: '+error.message,true); return; } }catch(e){ recMsg('Hata: '+e.message,true); return; }
   await recOpen(); recMsg('Eski kopyalar silindi · '+recSrcLabel()); });
 // ---- presence: what the other computers are doing in the planner (roast_presence — run roast-sync.sql once; one row per device, refreshed every minute and a few seconds after each action) ----
 let PRESDEV=''; try{ PRESDEV=localStorage.getItem('rpDevice')||''; }catch(e){}
