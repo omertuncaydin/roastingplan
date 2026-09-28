@@ -22,8 +22,9 @@
   input[type=date]{background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:8px;
     padding:7px 9px;font-size:14px;color-scheme:dark}
   input[type=date]:focus{outline:none;border-color:var(--accent)}
-  button.chip,span.chip{background:transparent;color:var(--muted);border:1px solid var(--line);
-    border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer}
+  button.chip,span.chip,a.chip{background:transparent;color:var(--muted);border:1px solid var(--line);
+    border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
+  a.chip:hover{color:var(--ink);border-color:var(--accent)}
   button.chip:hover{color:var(--ink);border-color:var(--accent)}
   button.chip.on{color:#1a1410;background:var(--accent);border-color:var(--accent)}
   .cards{display:flex;gap:14px;flex-wrap:wrap;margin:16px 0}
@@ -63,10 +64,11 @@
 </head>
 <body>
   <div class="hdr">
-    <div><h1>Kavurma Günü · HQ</h1><div class="sub">canlı gün paneli · admin <span style="opacity:.5">v2026-09-28a</span></div></div>
+    <div><h1>Kavurma Günü · HQ</h1><div class="sub">canlı gün paneli · admin <span style="opacity:.5">v2026-09-28b</span></div></div>
     <div class="sp">
       <span id="who" class="sub"></span>
       <input type="date" id="day">
+      <a class="chip" href="/roast-planner">Planner</a>
       <button class="chip" id="refresh">&#8635; Yenile</button>
     </div>
   </div>
@@ -83,7 +85,7 @@
         <div class="sub" style="margin-top:10px" id="cNote"></div>
       </div>
     </div>
-    <div class="sect"><div class="t">Kahveler · batch ilerleme</div><div id="coffees"></div></div>
+    <div class="sect"><div class="t" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span>Kahveler · batch ilerleme</span><a id="openPlanner" href="/roast-planner" style="color:var(--accent);text-decoration:none;font-weight:600;text-transform:none;letter-spacing:0">Planner'da aç · İzleme ↗</a></div><div id="coffees"></div></div>
     <div class="sect"><div class="t">Canlı · bilgisayarlar</div><div class="pres" id="presRow"></div><div class="feed" id="feed"></div></div>
   </div>
   <div class="foot"><span id="upd"></span><span>45 sn'de bir yenilenir</span><span id="planTime"></span></div>
@@ -184,6 +186,10 @@ function renderBoard(){
       +(chips?'<div class="lchips">'+chips+'</div>':'')+'</div>';
   }).join('') || '<div class="sub">Planda kahve yok.</div>';
   document.getElementById('planTime').textContent = s.updated? ('plan kaydı: '+hhmm(s.updated)) : '';
+  const op=document.getElementById('openPlanner');
+  if(op){ const day=document.getElementById('day').value||new Date().toISOString().slice(0,10);
+    if(ME&&s.owner===ME.id){ op.href='/roast-planner'; op.textContent="Planner'da aç ↗"; }
+    else { op.href='/roast-planner?izle='+encodeURIComponent(s.owner)+'&day='+encodeURIComponent(day); op.textContent="Planner'da aç · İzleme ↗"; } }
   renderPres();
 }
 function renderPres(){

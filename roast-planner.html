@@ -128,9 +128,9 @@
     <button onclick="try{var k=document.getElementById('keyIn').value.trim();if(k){localStorage.setItem('ccKey',k);planShow();}}catch(e){}">Aç · Unlock</button>
   </div>
   <div id="planApp" style="display:none">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h1 style="margin-right:auto">Roast Planner</h1><span id="acctWrap" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end"><span id="acctChip" class="sub" style="margin:0;font-size:12px"></span><button id="acctBtn" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px">Giriş yap</button><button id="refreshChip" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px" title="Buluttaki reçeteleri çeker, tabloyu yeniler — plan ve girdiğin değerler yerinde kalır (sayfa yenilenmez) · pulls the cloud recipes, keeps your edits">&#8635; Refresh</button></span></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h1 style="margin-right:auto">Roast Planner</h1><span id="acctWrap" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end"><span id="acctChip" class="sub" style="margin:0;font-size:12px"></span><button id="acctBtn" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px">Giriş yap</button><a id="hqLink" href="/hq" target="_blank" rel="noopener" style="display:none;padding:6px 14px;border-radius:999px;font-size:13px;border:1px solid var(--line);color:var(--muted);text-decoration:none" title="Kavurma günü paneli · gauges">HQ Panel</a><button id="refreshChip" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px" title="Buluttaki reçeteleri çeker, tabloyu yeniler — plan ve girdiğin değerler yerinde kalır (sayfa yenilenmez) · pulls the cloud recipes, keeps your edits">&#8635; Refresh</button></span></div>
   <div id="acctForm" style="display:none;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 2px"><input id="acctEmail" type="email" autocomplete="username" placeholder="e-posta" style="background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 10px;font-size:13px;width:22ch"><input id="acctPass" type="password" autocomplete="current-password" placeholder="şifre" style="background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 10px;font-size:13px;width:16ch"><button id="acctGo" style="padding:7px 14px">Gir</button><span id="acctMsg" class="sub" style="margin:0;font-size:12px">Guide hesabınla · same account as the Guide</span></div>
-  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-28d</span></div>
+  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-28e</span></div>
   <div id="presRow" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin:-6px 0 16px;font-size:12px;color:var(--muted)">
     <span style="white-space:nowrap">Bu bilgisayar: <input id="presName" style="background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:3px 8px;font-size:12px;width:14ch" title="Bu bilgisayarın adı, diğer bilgisayarlara böyle görünür · this computer's name, shown to the other computers"></span>
     <span id="viewChip" style="display:none;border:1px solid var(--accent2);color:var(--accent2);border-radius:999px;padding:3px 12px;font-weight:600"></span>
@@ -854,7 +854,8 @@ function acctPaint(){ const c=document.getElementById('acctChip'), b=document.ge
   if(!sbp){ c.textContent='bulut kapalı'; b.style.display='none'; r.style.display='none'; return; }
   if(ACCT){ c.textContent='👤 '+(ACCT.email||'giriş var'); b.textContent='Çıkış'; document.getElementById('acctForm').style.display='none'; }
   else { c.textContent='giriş yok · reçeteler '+recSrcLabel(); b.textContent='Giriş yap'; }
-  r.style.display=(ACCT&&RECOWNER)?'':'none'; }
+  r.style.display=(ACCT&&RECOWNER)?'':'none';
+  const hq=document.getElementById('hqLink'); if(hq) hq.style.display=(ACCT&&RECOWNER)?'':'none'; }
 async function acctRefresh(){ ACCT=await planUser(); if(!ACCT) RECOWNER=false; acctPaint(); }
 async function acctSignIn(){ const e=document.getElementById('acctEmail').value.trim(), p=document.getElementById('acctPass').value, m=document.getElementById('acctMsg'); if(!e||!p){ m.textContent='e-posta ve şifre'; return; }
   m.textContent='…'; try{ const {error}=await sbp.auth.signInWithPassword({email:e,password:p}); if(error){ m.textContent='Olmadı: '+error.message; return; } document.getElementById('acctPass').value=''; m.textContent='Guide hesabınla · same account as the Guide'; await acctRefresh(); await recipesLoad(); if(DATA.length) render(); }catch(x){ m.textContent='Hata: '+x.message; } }
@@ -901,7 +902,7 @@ document.getElementById('acctBtn').addEventListener('click',acctToggle);
 document.getElementById('acctGo').addEventListener('click',acctSignIn);
 document.getElementById('acctPass').addEventListener('keydown',e=>{ if(e.key==='Enter') acctSignIn(); });
 try{ if(sbp) sbp.auth.onAuthStateChange(()=>{ acctRefresh().then(()=>{ recipesLoad().then(()=>{ if(DATA.length) render(); }); presBeat(); presPoll(); }); }); }catch(e){}   // Guide tab signs in/out → chip follows
-acctRefresh().then(()=>{ presBeat(); presPoll(); });
+acctRefresh().then(()=>{ presBeat(); presPoll(); bootIzle(); });
 // v2026-09-21h (Ömer: iki bilgisayar — çalışan reçete değişikliğini yalnız Refresh ile alsın, kendi girdileri kalsın): sayfa YENİLENMEZ;
 // buluttaki reçeteler çekilir, tablo yeniden çizilir (reçete hücresi, Target L*, renkler); DATA, Agtron girdileri, açık batch'ler yerinde kalır.
 document.getElementById('refreshChip').addEventListener('click',async()=>{ const b=document.getElementById('refreshChip'); if(b.disabled) return; const lbl=b.innerHTML; b.disabled=true; b.textContent='…';
@@ -947,6 +948,10 @@ async function presPoll(){ try{ const row=document.getElementById('presRow'); if
       +'💻 '+who+'<b>'+esc(r.device)+'</b> · '+presAge(r.seen_at)+(r.day?' · '+r.day:'')+(items?' · '+items:'')+(prog?' · '+prog:'')+now+last+'</span>'; }).join(' ');
   el.querySelectorAll('span[data-oi]').forEach(sp=>sp.addEventListener('click',()=>presView(+sp.dataset.oi)));
 }catch(e){} }
+async function bootIzle(){ try{ const q=new URLSearchParams(location.search); const ow=q.get('izle'), d=q.get('day');
+  if(!ow||!d||!sbp||!ACCT) return;
+  const {data}=await sbp.from('roast_plans').select('owner,day,updated_at,plan').eq('owner',ow).eq('day',d).maybeSingle();
+  if(data&&data.plan&&data.plan.DATA){ HISTCACHE=[data]; histLoad(0); } }catch(e){} }
 async function presView(i){ try{ const r=PRESOTHERS[i]; if(!r||!sbp||!ACCT) return; if(r.owner===ACCT.id) return;
   const day=r.day||new Date().toISOString().slice(0,10);
   const {data,error}=await sbp.from('roast_plans').select('owner,day,updated_at,plan').eq('owner',r.owner).eq('day',day).maybeSingle();
