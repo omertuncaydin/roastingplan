@@ -130,7 +130,11 @@
   <div id="planApp" style="display:none">
   <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h1 style="margin-right:auto">Roast Planner</h1><span id="acctWrap" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end"><span id="acctChip" class="sub" style="margin:0;font-size:12px"></span><button id="acctBtn" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px">Giriş yap</button><button id="refreshChip" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px" title="Buluttaki reçeteleri çeker, tabloyu yeniler — plan ve girdiğin değerler yerinde kalır (sayfa yenilenmez) · pulls the cloud recipes, keeps your edits">&#8635; Refresh</button></span></div>
   <div id="acctForm" style="display:none;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 2px"><input id="acctEmail" type="email" autocomplete="username" placeholder="e-posta" style="background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 10px;font-size:13px;width:22ch"><input id="acctPass" type="password" autocomplete="current-password" placeholder="şifre" style="background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 10px;font-size:13px;width:16ch"><button id="acctGo" style="padding:7px 14px">Gir</button><span id="acctMsg" class="sub" style="margin:0;font-size:12px">Guide hesabınla · same account as the Guide</span></div>
-  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-21i</span></div>
+  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-28a</span></div>
+  <div id="presRow" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin:-6px 0 16px;font-size:12px;color:var(--muted)">
+    <span style="white-space:nowrap">Bu bilgisayar: <input id="presName" style="background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:3px 8px;font-size:12px;width:14ch" title="Bu bilgisayarın adı, diğer bilgisayarlara böyle görünür · this computer's name, shown to the other computers"></span>
+    <span id="presOthers" style="display:contents"></span>
+  </div>
 
   <div class="err" id="err"></div>
 
@@ -195,7 +199,8 @@
       <b>Reçeteler · Recipes <span id="recSrc" class="sub" style="display:inline;margin:0 0 0 8px;font-weight:400"></span></b>
       <span style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="ghost" style="padding:4px 12px" id="recAdd">+ Yeni · New</button>
-        <button class="ghost" style="padding:4px 12px" id="recSeed" title="Yerleşik listeyi buluta kopyala (bulut boşken)">Yerleşiği buluta kopyala</button>
+        <button class="ghost" style="padding:4px 12px" id="recSeed" title="Yerleşik listeden yalnız eksik olanları ekler — kopya oluşturmaz">Yerleşikten eksikleri ekle</button>
+        <button class="ghost" style="padding:4px 12px;display:none;color:#e0705a;border-color:#e0705a" id="recDedupe" title="Aynı eşleşmenin eski kopyalarını buluttan siler; her eşleşmenin en yenisi kalır">Eski kopyaları sil</button>
         <button style="padding:4px 14px" id="recSave">Kaydet · Save</button>
         <button class="ghost" style="padding:4px 12px" onclick="document.getElementById('recPanel').style.display='none'">&#10005;</button>
       </span>
@@ -254,6 +259,7 @@ const FILTER = "Sonraki Kavrulma Tarihinde Gönderim";
 const KG = {g90:0.09, g250:0.25, g1000:1.0};   // bag weights in kg
 let DATA = [];        // [{name,g90,g250,g1000,net,done}]
 let sortKey = "roastOrder", sortDir = 1;   // default: manual (drag) order
+function presNote(t){ try{ if(window._presNote) window._presNote(t); }catch(e){} }   // v2026-09-28a: feeds the presence strip (defined in the cloud script)
 function initPlanSort(){ if(!window.Sortable) return; const tb=document.querySelector('#tbl tbody'); if(!tb) return;
   if(tb._sort){ try{ tb._sort.destroy(); }catch(x9){} }
   tb._sort=Sortable.create(tb,{handle:'.grip',animation:150,draggable:'tr[data-di]',ghostClass:'dropbefore',chosenClass:'dragging',onEnd:function(){
@@ -527,7 +533,7 @@ function renderParent(tbody,it){
     inp.addEventListener('change',()=>{
       const f=inp.dataset.f;
       it[f] = inp.type==='number' ? (inp.value===''?0:parseFloat(inp.value)) : inp.value;
-      if(f==='agtron'){ it.agtron = inp.value===''?null:parseFloat(inp.value); it.agtronSet=true; inp.classList.remove('agtron-default'); lstarPaint(tr.querySelector('td.lstar'), it.agtron, false, recipeAgtron(it)); return; }
+      if(f==='agtron'){ it.agtron = inp.value===''?null:parseFloat(inp.value); it.agtronSet=true; inp.classList.remove('agtron-default'); lstarPaint(tr.querySelector('td.lstar'), it.agtron, false, recipeAgtron(it)); presNote(it.name+' → Agtron '+(it.agtron==null?'—':it.agtron)); return; }
       if(f==='equipment'){ it.lastOverride=null; splitByEquip(it); render(); }
       else if(f==='reserve'||f==='addReserve'){ if(capOf(it.equipment)) splitByEquip(it); render(); }
       else if(f==='roastOrder'){ render(); }                       // recompute the sequence numbers
@@ -535,7 +541,7 @@ function renderParent(tbody,it){
     });
   });
   tr.querySelector('input[type=checkbox]').addEventListener('change',e=>{
-    it.done=e.target.checked;
+    it.done=e.target.checked; presNote((it.done?'✓ ':'↩ ')+it.name);
     if(hasKids(it)) it.children.forEach(c=>c.done=it.done);   // roast off / restore every batch
     render();
   });
@@ -570,10 +576,10 @@ function renderChild(tbody,parent,ch,ci){
     ch.kg=v; parent.lastOverride=v; render();
   });
   const ag=tr.querySelector('[data-cf="agtron"]');
-  ag.addEventListener('change',()=>{ ch.agtron = ag.value===''?'' : parseFloat(ag.value); ch.agtronSet=true; ag.classList.remove('agtron-default');
+  ag.addEventListener('change',()=>{ ch.agtron = ag.value===''?'' : parseFloat(ag.value); ch.agtronSet=true; ag.classList.remove('agtron-default'); presNote(parent.name+' B'+(ci+1)+' → Agtron '+(ch.agtron===''||ch.agtron==null?'—':ch.agtron));
     lstarPaint(tr.querySelector('td.lstar'), ch.agtron, false, recipeAgtron(parent)); });   // L* follows the reading, coloured vs target; parent rollup refreshes on next render
   tr.querySelector('input[type=checkbox]').addEventListener('change',e=>{
-    ch.done=e.target.checked;
+    ch.done=e.target.checked; presNote((ch.done?'✓ ':'↩ ')+parent.name+' · Batch '+(ci+1));
     parent.done=parent.children.every(c=>c.done);   // parent reflects "all batches roasted"
     render();                                        // parent Batch Count drops
   });
@@ -681,7 +687,7 @@ function saveState(){
     localStorage.setItem(SAVE_KEY,JSON.stringify(state));
     const b=document.getElementById("save");const t=b.dataset.label||b.textContent;b.dataset.label=t;
     b.textContent="Saved ✓"; setTimeout(()=>{b.textContent=t;},1600);
-    cloudSave().then(ok=>{ b.textContent= ok ? "Cloud ✓ "+planDay() : "Saved (bu tarayıcı)"; setTimeout(()=>{b.textContent=t;},1600); });
+    cloudSave().then(ok=>{ if(ok) presNote('Plan kaydedildi · '+planDay()); b.textContent= ok ? "Cloud ✓ "+planDay() : "Saved (bu tarayıcı)"; setTimeout(()=>{b.textContent=t;},1600); });
   }catch(e){ alert("Could not save in this browser: "+e.message); }
 }
 function restoreState(){
@@ -710,6 +716,7 @@ function handleFile(file){
       if(!DATA.length){err.textContent='No lines containing "'+FILTER+'" were found.';err.style.display="block";return;}
       document.getElementById("loss").value=15;
       render();
+      presNote('CSV yüklendi · '+DATA.length+' kahve');
     }catch(ex){err.textContent="Hata: "+ex.message;err.style.display="block";}
   };
   reader.readAsText(file,"utf-8");
@@ -766,8 +773,17 @@ function planBlob(){ return {v:1,DATA,
   roastDate:document.getElementById("roastDate").value,
   sortKey,sortDir,
   meta:{items:DATA.length, green:Math.round(DATA.reduce((a,o)=>a+effGreen(o),0)*100)/100}}; }
+let PLANSEEN={};   // v2026-09-28a: day → cloud updated_at this page last loaded or wrote (two computers: warn before overwriting the other one's newer save)
 async function cloudSave(){ try{ if(!sbp||!DATA.length) return false; const u=await planUser(); if(!u) return false;
-  const {error}=await sbp.from('roast_plans').upsert({owner:u.id, day:planDay(), plan:planBlob(), updated_at:new Date().toISOString()});
+  const day=planDay();
+  try{ const {data:cur}=await sbp.from('roast_plans').select('updated_at').eq('day',day).maybeSingle();
+    if(cur&&cur.updated_at&&String(cur.updated_at)!==String(PLANSEEN[day]||'')){
+      const t=new Date(cur.updated_at).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+      if(!confirm('Bu günün planı bulutta başka bir kayıtla değişmiş ('+t+') — bu sayfa onu görmedi.\nÜzerine yazılsın mı?\n(İptal dersen önce Geçmiş → '+day+' yükleyip bakabilirsin.)')) return false;
+    } }catch(e2){}
+  const now=new Date().toISOString();
+  const {error}=await sbp.from('roast_plans').upsert({owner:u.id, day, plan:planBlob(), updated_at:now});
+  if(!error) PLANSEEN[day]=now;
   return !error; }catch(e){ return false; } }
 let HISTCACHE=[];
 async function histOpen(){ const p=document.getElementById('histPanel'), l=document.getElementById('histList');
@@ -786,6 +802,7 @@ async function histOpen(){ const p=document.getElementById('histPanel'), l=docum
       +'<button class="ghost" style="padding:4px 12px" onclick="histLoad('+i+')">Yükle · Load</button></div>'; }).join('');
 }
 function histLoad(i){ try{ const r=HISTCACHE[i]; if(!r||!r.plan||!r.plan.DATA) return;
+  if(r.updated_at) PLANSEEN[r.day]=r.updated_at;
   const sp=r.plan;
   DATA=sp.DATA;
   if(sp.loss!=null) document.getElementById("loss").value=sp.loss;
@@ -800,17 +817,22 @@ function histLoad(i){ try{ const r=HISTCACHE[i]; if(!r||!r.plan||!r.plan.DATA) r
 }catch(e){} }
 document.getElementById('hist').addEventListener('click',histOpen);
 // ---- recipes on the account (roast_recipes: match keywords → Bullet / HSR15 recipe + note; edited here, matched by keyword in the table) ----
-function recRowsToList(rows){ return rows.map(r=>({id:r.id, match:String(r.match||'').split(',').map(x=>normName(x.trim())).filter(Boolean), bullet:r.bullet||'', hsr:r.hsr||'', note:r.note||'', sort:(r.sort==null?100:r.sort)})).filter(r=>r.match.length); }
+function recRowsToList(rows){ return rows.map(r=>({id:r.id, updated_at:r.updated_at||'', match:String(r.match||'').split(',').map(x=>normName(x.trim())).filter(Boolean), bullet:r.bullet||'', hsr:r.hsr||'', note:r.note||'', sort:(r.sort==null?100:r.sort)})).filter(r=>r.match.length); }
 async function recipesLoad(){ try{ if(!sbp) return false; const u=await planUser(); if(!u) return false;
-  const {data,error}=await sbp.from('roast_recipes').select('id,owner,match,bullet,hsr,note,sort').order('sort',{ascending:true}).order('updated_at',{ascending:true});
+  const {data,error}=await sbp.from('roast_recipes').select('id,owner,match,bullet,hsr,note,sort,updated_at').order('sort',{ascending:true}).order('updated_at',{ascending:false});
   if(error||!Array.isArray(data)) return false;
   RECOWNER = data.length ? data.some(r=>r.owner===u.id) : true;   // v21i: the Reçeteler button belongs to the account that owns the rows (empty cloud: whoever seeds — the write policy decides)
   acctPaint();
-  if(!data.length){ RECSRC='cloud-empty'; return true; }
-  RECIPES=recRowsToList(data); RECSRC='cloud'; try{ localStorage.setItem('roastRecipesCache',JSON.stringify(RECIPES)); }catch(e){}
+  if(!data.length){ RECSRC='cloud-empty'; RECDUP=[]; return true; }
+  // v2026-09-28a: the same match saved twice (two computers / double seed) → the NEWEST copy is the recipe, older ids go to RECDUP (recPanel offers the cleanup). Before this, the oldest copy shadowed every edit.
+  const list=recRowsToList(data), newest={};
+  list.forEach(r=>{ const k=r.match.join(','); if(!newest[k]||String(r.updated_at)>String(newest[k].updated_at)) newest[k]=r; });
+  const keep=[], dup=[];
+  list.forEach(r=>{ if(newest[r.match.join(',')]===r) keep.push(r); else if(r.id) dup.push(r.id); });
+  RECIPES=keep; RECDUP=dup; RECSRC='cloud'; try{ localStorage.setItem('roastRecipesCache',JSON.stringify(RECIPES)); }catch(e){}
   if(DATA.length) render(); return true; }catch(e){ return false; } }
 function recSrcLabel(){ return RECSRC==='cloud'?('bulut · '+RECIPES.length):(RECSRC==='cache'?('önbellek · '+RECIPES.length):(RECSRC==='cloud-empty'?'bulut boş — yerleşik liste kullanılıyor':('yerleşik · '+RECIPES.length))); }
-let RECEDIT=[], RECDEL=[], RECOWNER=false, ACCT=null;
+let RECEDIT=[], RECDEL=[], RECDUP=[], RECOWNER=false, ACCT=null;
 // ---- account (same Supabase session as the Guide; sign in here or there) ----
 function acctPaint(){ const c=document.getElementById('acctChip'), b=document.getElementById('acctBtn'), r=document.getElementById('recBtn');
   if(!sbp){ c.textContent='bulut kapalı'; b.style.display='none'; r.style.display='none'; return; }
@@ -835,16 +857,25 @@ function recDraw(){ const tb=document.querySelector('#recTbl tbody'); document.g
 function recMsg(t){ const m=document.getElementById('recMsg'); m.textContent=t; m.style.display=t?'block':'none'; }
 async function recOpen(){ const p=document.getElementById('recPanel'); p.style.display='block'; recMsg(''); await recipesLoad();
   RECEDIT=RECIPES.map(r=>Object.assign({},r,{match:r.match.slice()})); RECDEL=[]; recDraw();
+  const db=document.getElementById('recDedupe'); if(db){ db.style.display=RECDUP.length?'':'none'; if(RECDUP.length) db.textContent='Eski kopyaları sil ('+RECDUP.length+')'; }
   if(!sbp) recMsg('Bulut kapalı — yerleşik liste, kaydedilemez.'); else if(!(await planUser())) recMsg('Buluta yazmak için bu cihazda bir kez Guide üzerinden giriş yap; şimdilik yerleşik liste.'); }
 async function recSave(){ try{ if(!sbp){ recMsg('Bulut kapalı.'); return; } const u=await planUser(); if(!u){ recMsg('Önce Guide üzerinden giriş yap.'); return; }
-  const rows=RECEDIT.filter(r=>r.match.length).map((r,i)=>{ const o={owner:u.id, match:r.match.join(', '), bullet:r.bullet||'', hsr:r.hsr||'', note:r.note||'', sort:(r.sort==null?(i+1)*10:r.sort), updated_at:new Date().toISOString()}; if(r.id) o.id=r.id; return o; });
+  // v2026-09-28a: the duplication fix. (1) two panel rows with the same match never save; (2) a row without an id (eski önbellek / seed) adopts the id of the cloud row with the same match, so saving UPDATES instead of inserting a copy.
+  const seenM={}; for(const r of RECEDIT){ if(!r.match.length) continue; const k=r.match.join(','); if(seenM[k]){ recMsg('Aynı eşleşme iki satırda: «'+r.match.join(', ')+'» — birini sil, sonra kaydet.'); return; } seenM[k]=1; }
+  let cloudMap={}; try{ const {data:cur}=await sbp.from('roast_recipes').select('id,match'); (cur||[]).forEach(cr=>{ const k=String(cr.match||'').split(',').map(x=>normName(x.trim())).filter(Boolean).join(','); if(k&&!cloudMap[k]) cloudMap[k]=cr.id; }); }catch(e0){}
+  const usedIds={}; RECEDIT.forEach(r=>{ if(r.id) usedIds[r.id]=1; });
+  const rows=RECEDIT.filter(r=>r.match.length).map((r,i)=>{ const o={owner:u.id, match:r.match.join(', '), bullet:r.bullet||'', hsr:r.hsr||'', note:r.note||'', sort:(r.sort==null?(i+1)*10:r.sort), updated_at:new Date().toISOString()}; let rid=r.id; if(!rid){ const k=r.match.join(','); if(cloudMap[k]&&!usedIds[cloudMap[k]]){ rid=cloudMap[k]; usedIds[rid]=1; } } if(rid) o.id=rid; return o; });
   if(RECDEL.length){ const {error}=await sbp.from('roast_recipes').delete().in('id',RECDEL); if(error){ recMsg('Silme hatası: '+error.message); return; } RECDEL=[]; }
   if(rows.length){ const {error}=await sbp.from('roast_recipes').upsert(rows); if(error){ recMsg('Kayıt hatası: '+error.message+(/relation .* does not exist/i.test(error.message)?' — önce roast-recipes.sql çalıştır.':'')); return; } }
   await recipesLoad(); RECEDIT=RECIPES.map(r=>Object.assign({},r,{match:r.match.slice()})); recDraw(); recMsg('Kaydedildi · '+recSrcLabel()); if(DATA.length) render(); }catch(e){ recMsg('Hata: '+e.message); } }
 async function recSeed(){ if(!sbp){ recMsg('Bulut kapalı.'); return; } const u=await planUser(); if(!u){ recMsg('Önce Guide üzerinden giriş yap.'); return; }
-  if(RECSRC==='cloud'&&!confirm('Bulutta zaten reçete var. Yerleşik listeyi ÜSTÜNE eklemek istiyor musun?')) return;
-  const base=(RECSRC==='cloud')?RECEDIT:[];   // empty cloud: the panel already shows the built-in list — replace, don't double it
-  RECEDIT=base.concat(RECIPES_BUILTIN.map((r,i)=>({match:r.match.slice(), bullet:r.bullet, hsr:r.hsr, note:r.note||'', sort:(base.length+i+1)*10}))); recDraw(); await recSave(); }
+  // v2026-09-28a: adds only the built-in recipes whose match is not in the panel yet — pressing it twice (or on the second computer) no longer duplicates the whole list
+  const have={}; RECEDIT.forEach(r=>{ if(r.match.length) have[r.match.join(',')]=1; });
+  const missing=RECIPES_BUILTIN.filter(r=>!have[r.match.map(x=>normName(x.trim())).filter(Boolean).join(',')]);
+  if(!missing.length){ recMsg('Yerleşik listedeki her reçete zaten var — kopya eklenmedi.'); return; }
+  if(RECSRC==='cloud'&&!confirm('Yerleşik listeden eksik '+missing.length+' reçete eklenecek. Devam?')) return;
+  const base=RECEDIT.filter(r=>r.match.length);
+  RECEDIT=base.concat(missing.map((r,i)=>({match:r.match.map(x=>normName(x.trim())), bullet:r.bullet, hsr:r.hsr, note:r.note||'', sort:(base.length+i+1)*10}))); recDraw(); await recSave(); }
 document.getElementById('recBtn').addEventListener('click',recOpen);
 document.getElementById('recAdd').addEventListener('click',()=>{ RECEDIT.push({match:[],bullet:'',hsr:'',note:'',sort:(RECEDIT.length+1)*10}); recDraw(); });
 document.getElementById('recSave').addEventListener('click',recSave);
@@ -852,16 +883,50 @@ document.getElementById('recSeed').addEventListener('click',recSeed);
 document.getElementById('acctBtn').addEventListener('click',acctToggle);
 document.getElementById('acctGo').addEventListener('click',acctSignIn);
 document.getElementById('acctPass').addEventListener('keydown',e=>{ if(e.key==='Enter') acctSignIn(); });
-try{ if(sbp) sbp.auth.onAuthStateChange(()=>{ acctRefresh().then(()=>{ recipesLoad().then(()=>{ if(DATA.length) render(); }); }); }); }catch(e){}   // Guide tab signs in/out → chip follows
-acctRefresh();
+try{ if(sbp) sbp.auth.onAuthStateChange(()=>{ acctRefresh().then(()=>{ recipesLoad().then(()=>{ if(DATA.length) render(); }); presBeat(); presPoll(); }); }); }catch(e){}   // Guide tab signs in/out → chip follows
+acctRefresh().then(()=>{ presBeat(); presPoll(); });
 // v2026-09-21h (Ömer: iki bilgisayar — çalışan reçete değişikliğini yalnız Refresh ile alsın, kendi girdileri kalsın): sayfa YENİLENMEZ;
 // buluttaki reçeteler çekilir, tablo yeniden çizilir (reçete hücresi, Target L*, renkler); DATA, Agtron girdileri, açık batch'ler yerinde kalır.
 document.getElementById('refreshChip').addEventListener('click',async()=>{ const b=document.getElementById('refreshChip'); if(b.disabled) return; const lbl=b.innerHTML; b.disabled=true; b.textContent='…';
   const before=JSON.stringify(RECIPES); let msg='';
   try{ if(!sbp) msg='bulut kapalı'; else if(!(await planUser())) msg='giriş yok — '+recSrcLabel(); else { const ok=await recipesLoad(); msg=!ok?'bulut okunamadı':(JSON.stringify(RECIPES)!==before?('reçeteler güncellendi · '+RECIPES.length):('reçeteler güncel · '+RECIPES.length)); } }catch(e){ msg='hata'; }
   if(DATA.length) render();
+  presBeat(); presPoll();
   b.textContent='✓ '+msg; setTimeout(()=>{ b.innerHTML=lbl; b.disabled=false; },2400); });
 recipesLoad();   // cloud recipes replace the built-in list as soon as the session is known
+document.getElementById('recDedupe').addEventListener('click',async()=>{ if(!RECDUP.length) return; const u=await planUser(); if(!u){ recMsg('Önce Guide üzerinden giriş yap.'); return; }
+  if(!confirm('Buluttaki '+RECDUP.length+' eski kopya silinecek; her eşleşmenin en yeni hali kalır. Devam?')) return;
+  try{ const {error}=await sbp.from('roast_recipes').delete().in('id',RECDUP); if(error){ recMsg('Silme hatası: '+error.message); return; } }catch(e){ recMsg('Hata: '+e.message); return; }
+  await recOpen(); recMsg('Eski kopyalar silindi · '+recSrcLabel()); });
+// ---- presence: what the other computers are doing in the planner (roast_presence — run roast-sync.sql once; one row per device, refreshed every minute and a few seconds after each action) ----
+let PRESDEV=''; try{ PRESDEV=localStorage.getItem('rpDevice')||''; }catch(e){}
+if(!PRESDEV){ PRESDEV='PC-'+Math.random().toString(36).slice(2,6).toUpperCase(); try{ localStorage.setItem('rpDevice',PRESDEV); }catch(e){} }
+const PRESLOG=[];
+window._presNote=function(t){ try{ const hh=new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}); PRESLOG.unshift(hh+' '+t); if(PRESLOG.length>8) PRESLOG.length=8; clearTimeout(window._presT); window._presT=setTimeout(presBeat,4000); }catch(e){} };
+function presState(){ let bt=0,bd=0,di=0; DATA.forEach(o=>{ if(hasKids(o)){ bt+=o.children.length; bd+=o.children.filter(c=>c.done).length; } if(o.done) di++; });
+  return {day:planDay(), items:DATA.length, doneItems:di, batchDone:bd, batchTotal:bt, recent:PRESLOG.slice(0,8)}; }
+async function presBeat(){ try{ if(!sbp||!ACCT) return; await sbp.from('roast_presence').upsert({owner:ACCT.id, device:PRESDEV, day:planDay(), seen_at:new Date().toISOString(), state:presState()}); }catch(e){} }
+function presAge(ts){ const x=Math.max(0,(Date.now()-new Date(ts).getTime())/1000); if(x<90) return 'şimdi'; if(x<3600) return Math.round(x/60)+' dk önce'; if(x<86400) return Math.round(x/3600)+' sa önce'; return Math.round(x/86400)+' gün önce'; }
+async function presPoll(){ try{ const row=document.getElementById('presRow'); if(!row) return;
+  if(!sbp||!ACCT){ row.style.display='none'; return; }
+  row.style.display='flex';
+  const {data,error}=await sbp.from('roast_presence').select('device,day,seen_at,state');
+  if(error||!Array.isArray(data)) return;
+  const others=data.filter(r=>r.device!==PRESDEV).sort((a,b)=>String(b.seen_at).localeCompare(String(a.seen_at)));
+  const el=document.getElementById('presOthers');
+  if(!others.length){ el.innerHTML='<span style="opacity:.6">başka bilgisayar görünmüyor · no other computer yet</span>'; return; }
+  el.innerHTML=others.map(r=>{ const st=r.state||{}; const live=(Date.now()-new Date(r.seen_at).getTime())<600000;
+    const prog=(st.batchTotal?(st.batchDone+'/'+st.batchTotal+' batch'):(st.items?(st.items+' kahve'):''));
+    const last=(st.recent&&st.recent[0])?(' · son: '+esc(st.recent[0])):'';
+    return '<span style="border:1px solid var(--line);border-radius:999px;padding:3px 12px;'+(live?'color:var(--ink)':'opacity:.55')+'" title="'+esc((st.recent||[]).join('\n'))+'">'
+      +'💻 <b>'+esc(r.device)+'</b> · '+presAge(r.seen_at)+(r.day?' · '+r.day:'')+(prog?' · '+prog:'')+last+'</span>'; }).join(' ');
+}catch(e){} }
+document.getElementById('presName').value=PRESDEV;
+document.getElementById('presName').addEventListener('change',async()=>{ const inp=document.getElementById('presName'), v=inp.value.trim(); if(!v||v===PRESDEV){ inp.value=PRESDEV; return; }
+  const old=PRESDEV; PRESDEV=v; try{ localStorage.setItem('rpDevice',v); }catch(e){}
+  try{ if(sbp&&ACCT) await sbp.from('roast_presence').delete().match({owner:ACCT.id, device:old}); }catch(e){}
+  presBeat(); presPoll(); });
+setInterval(()=>{ presBeat(); presPoll(); },60000);
 </script>
 </body>
 </html>
