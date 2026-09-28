@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>Kavurma Günü · HQ</title>
+<style>
+  :root{
+    --bg:#1a1410; --panel:#241c16; --ink:#f3ede4; --muted:#a8998a;
+    --accent:#c98a3c; --track:#4b3a24; --line:#3a2f26;
+    --ok:#4fc98a; --near:#e6a23c; --off:#c94f42; --none:#4a4038;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);padding:22px;line-height:1.45}
+  h1{font-size:20px;margin:0}
+  .sub{color:var(--muted);font-size:13px}
+  .hdr{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  .hdr .sp{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  input[type=date]{background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:8px;
+    padding:7px 9px;font-size:14px;color-scheme:dark}
+  input[type=date]:focus{outline:none;border-color:var(--accent)}
+  button.chip,span.chip{background:transparent;color:var(--muted);border:1px solid var(--line);
+    border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer}
+  button.chip:hover{color:var(--ink);border-color:var(--accent)}
+  button.chip.on{color:#1a1410;background:var(--accent);border-color:var(--accent)}
+  .cards{display:flex;gap:14px;flex-wrap:wrap;margin:16px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;flex:1;min-width:170px}
+  .card .t{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px}
+  .gwrap{display:flex;justify-content:center}
+  .gwrap svg{width:140px;height:140px}
+  .colorcard{min-width:250px;flex:1.4}
+  .cstack{display:flex;gap:2px;height:18px;border-radius:6px;overflow:hidden;background:var(--bg);margin:14px 0 10px}
+  .cstack div{min-width:4px}
+  .clegend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+  .clegend b{color:var(--ink);font-weight:600}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:1px}
+  .sect{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 14px}
+  .sect .t{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px}
+  .crow{display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px dashed var(--line);flex-wrap:wrap}
+  .crow:last-child{border-bottom:none}
+  .crow .nm{min-width:150px;font-weight:600;font-size:14px;flex:0 0 auto}
+  .cbar{flex:1;min-width:140px;display:flex;gap:2px;height:14px;background:var(--bg);border-radius:5px;overflow:hidden}
+  .cbar div{background:var(--track)}
+  .cbar div.d{background:var(--accent)}
+  .crow .nums{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .crow .nums b{color:var(--ink)}
+  .lchips{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--muted);flex-basis:100%;padding-left:162px}
+  .lchips span{border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-variant-numeric:tabular-nums}
+  @media (max-width:640px){ .lchips{padding-left:0} .crow .nm{min-width:0;flex-basis:100%} }
+  .pres{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .pres span{border:1px solid var(--line);border-radius:999px;padding:4px 13px;font-size:13px;color:var(--muted)}
+  .pres span.live{color:var(--ink)}
+  .pres b{color:var(--ink)}
+  .feed{font-size:13px;color:var(--muted);display:grid;grid-template-columns:auto auto 1fr;gap:3px 12px;font-variant-numeric:tabular-nums}
+  .feed b{color:var(--ink);font-weight:600}
+  .note{color:var(--muted);font-size:13px;padding:26px 0;text-align:center}
+  .note a{color:var(--accent)}
+  .foot{color:var(--muted);font-size:12px;margin-top:16px;display:flex;gap:12px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+  <div class="hdr">
+    <div><h1>Kavurma Günü · HQ</h1><div class="sub">canlı gün paneli · admin <span style="opacity:.5">v2026-09-28a</span></div></div>
+    <div class="sp">
+      <span id="who" class="sub"></span>
+      <input type="date" id="day">
+      <button class="chip" id="refresh">&#8635; Yenile</button>
+    </div>
+  </div>
+  <div id="tabs" class="pres" style="margin:4px 0 0"></div>
+  <div id="msg" class="note" style="display:none"></div>
+  <div id="board" style="display:none">
+    <div class="cards">
+      <div class="card"><div class="t">Batch</div><div class="gwrap" id="gBatch"></div></div>
+      <div class="card"><div class="t">Kahve</div><div class="gwrap" id="gCoffee"></div></div>
+      <div class="card"><div class="t">Yeşil KG</div><div class="gwrap" id="gGreen"></div></div>
+      <div class="card colorcard"><div class="t">Renk · ölçülen L* hedefe göre</div>
+        <div class="cstack" id="cStack"></div>
+        <div class="clegend" id="cLegend"></div>
+        <div class="sub" style="margin-top:10px" id="cNote"></div>
+      </div>
+    </div>
+    <div class="sect"><div class="t">Kahveler · batch ilerleme</div><div id="coffees"></div></div>
+    <div class="sect"><div class="t">Canlı · bilgisayarlar</div><div class="pres" id="presRow"></div><div class="feed" id="feed"></div></div>
+  </div>
+  <div class="foot"><span id="upd"></span><span>45 sn'de bir yenilenir</span><span id="planTime"></span></div>
+
+<script>
+const SUPA_URL="https://efjvfggwnhqkunjvoyjb.supabase.co";
+const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA";
+const ADMIN="omer_aydin@coffeenutz.net";
+let sbp=null; try{ sbp=window.supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
+let ME=null, RECIPES=[], PLANS=[], PRES=[], SEL=null;
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function normName(s){ return String(s||'').toLowerCase()
+  .replace(/ı/g,'i').replace(/İ/g,'i').replace(/ş/g,'s').replace(/ğ/g,'g')
+  .replace(/ç/g,'c').replace(/ö/g,'o').replace(/ü/g,'u'); }
+// same math as the planner (v2026-09-21 ladder): A1 = 115 → L* 30, 6 Omix points per L* unit; ±1 = near, ±2+ = off
+function lstar(a){ a=parseFloat(a); if(!isFinite(a)||a<=0) return null; return Math.round(30-(115-a)/6); }
+function recipeMatch(name){ const n=normName(name); return RECIPES.find(r=>r.match.every(k=>n.includes(k)))||null; }
+function recipeAgtron(name,equipment){ const r=recipeMatch(name); if(!r) return null;
+  const rec = equipment==='Bullet'?r.bullet : equipment==='HSR15'?r.hsr : '';
+  const m=rec&&rec.match(/(\d+)\s*A\s*$/); return m?parseInt(m[1],10):null; }
+function fmt1(n){ return (Math.round(n*10)/10).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1}); }
+function hhmm(ts){ try{ return new Date(ts).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
+function age(ts){ const x=Math.max(0,(Date.now()-new Date(ts).getTime())/1000);
+  if(x<90) return 'şimdi'; if(x<3600) return Math.round(x/60)+' dk önce'; if(x<86400) return Math.round(x/3600)+' sa önce'; return Math.round(x/86400)+' gün önce'; }
+
+// ---- model: one summary per account from its saved plan blob ----
+function summarize(row){
+  const p=row.plan||{}, data=p.DATA||[], meta=p.meta||{};
+  const s={owner:row.owner, updated:row.updated_at, by:meta.by||'', items:data.length, itemsDone:0,
+    bTot:0,bDone:0, kgPlan:0,kgDone:0, ok:0,near:0,off:0,unmeasured:0, coffees:[]};
+  data.forEach(o=>{
+    if(o.done) s.itemsDone++;
+    const kids=(o.children&&o.children.length)?o.children:[];
+    const target=recipeAgtron(o.name,o.equipment);
+    const c={name:o.name, target, batches:[], kgPlan:0, kgDone:0, bTot:kids.length, bDone:0};
+    kids.forEach(ch=>{
+      const kg=parseFloat(ch.kg)||0; c.kgPlan+=kg; s.kgPlan+=kg; s.bTot++;
+      if(ch.done){ c.bDone++; s.bDone++; c.kgDone+=kg; s.kgDone+=kg; }
+      const measured=ch.agtronSet&&ch.agtron!==''&&ch.agtron!=null;
+      const L=measured?lstar(ch.agtron):null, T=target!=null?lstar(target):null;
+      let st='none';
+      if(measured&&L!=null&&T!=null){ const d=Math.abs(L-T); st=d===0?'ok':(d<=1?'near':'off'); if(st==='ok')s.ok++; else if(st==='near')s.near++; else s.off++; }
+      else if(ch.done){ s.unmeasured++; }
+      c.batches.push({kg,done:!!ch.done,measured,L,st});
+    });
+    s.coffees.push(c);
+  });
+  return s;
+}
+
+// ---- render ----
+function gauge(el,frac,big,sub){
+  const R=52,C=2*Math.PI*R,f=Math.min(1,Math.max(0,frac||0));
+  el.innerHTML='<svg viewBox="0 0 140 140" role="img" aria-label="'+esc(sub)+'">'
+    +'<circle cx="70" cy="70" r="'+R+'" fill="none" stroke="var(--track)" stroke-width="12"/>'
+    +(f>0?'<circle cx="70" cy="70" r="'+R+'" fill="none" stroke="var(--accent)" stroke-width="12" stroke-linecap="round" stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-f))+'" transform="rotate(-90 70 70)"/>':'')
+    +'<text x="70" y="67" text-anchor="middle" style="font:600 26px -apple-system,BlinkMacSystemFont,sans-serif" fill="var(--ink)">'+esc(big)+'</text>'
+    +'<text x="70" y="89" text-anchor="middle" style="font:500 12px -apple-system,BlinkMacSystemFont,sans-serif" fill="var(--muted)">'+esc(sub)+'</text></svg>';
+}
+function whoLabel(s){ return s.by?String(s.by).split('@')[0]:(ME&&s.owner===ME.id?'ben':'hesap'); }
+function renderTabs(){
+  const el=document.getElementById('tabs');
+  if(!PLANS.length){ el.innerHTML=''; return; }
+  el.innerHTML=PLANS.map((s,i)=>'<button class="chip'+(SEL===i?' on':'')+'" data-i="'+i+'">'+esc(whoLabel(s))+' · '+s.items+' kahve</button>').join('');
+  el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ SEL=+b.dataset.i; renderBoard(); }));
+}
+function renderBoard(){
+  renderTabs();
+  const board=document.getElementById('board'), msg=document.getElementById('msg');
+  const s=PLANS[SEL];
+  if(!s){ board.style.display='none'; msg.style.display='block';
+    msg.innerHTML='Bu gün için buluta kaydedilmiş plan yok. Planner otomatik kaydeder; kavurmacı planı yükleyince burada belirir.'; renderPres(); return; }
+  msg.style.display='none'; board.style.display='block';
+  gauge(document.getElementById('gBatch'), s.bTot?s.bDone/s.bTot:0, s.bDone+'/'+s.bTot, 'batch bitti');
+  gauge(document.getElementById('gCoffee'), s.items?s.itemsDone/s.items:0, s.itemsDone+'/'+s.items, 'kahve bitti');
+  gauge(document.getElementById('gGreen'), s.kgPlan?s.kgDone/s.kgPlan:0, fmt1(s.kgDone), '/ '+fmt1(s.kgPlan)+' kg yeşil');
+  const meas=s.ok+s.near+s.off, tot=meas+s.unmeasured;
+  const st=document.getElementById('cStack');
+  if(tot){ st.style.display='flex'; st.innerHTML=
+      (s.ok?'<div style="flex:'+s.ok+';background:var(--ok)"></div>':'')
+      +(s.near?'<div style="flex:'+s.near+';background:var(--near)"></div>':'')
+      +(s.off?'<div style="flex:'+s.off+';background:var(--off)"></div>':'')
+      +(s.unmeasured?'<div style="flex:'+s.unmeasured+';background:var(--none)"></div>':''); }
+  else { st.style.display='none'; }
+  document.getElementById('cLegend').innerHTML=
+    '<span><span class="dot" style="background:var(--ok)"></span>hedefte <b>'+s.ok+'</b></span>'
+    +'<span><span class="dot" style="background:var(--near)"></span>±1 <b>'+s.near+'</b></span>'
+    +'<span><span class="dot" style="background:var(--off)"></span>±2+ <b>'+s.off+'</b></span>'
+    +'<span><span class="dot" style="background:var(--none)"></span>ölçülmedi <b>'+s.unmeasured+'</b></span>';
+  document.getElementById('cNote').textContent = meas? (meas+' batch ölçüldü · L* merdiveni geçici (A1=115→30)') : 'Henüz Agtron ölçümü girilmedi.';
+  document.getElementById('coffees').innerHTML=s.coffees.map(c=>{
+    const segs=c.batches.length? c.batches.map(b=>'<div class="'+(b.done?'d':'')+'" style="flex:'+Math.max(b.kg,0.05)+'"></div>').join('')
+      : '<div style="flex:1"></div>';
+    const chips=c.batches.filter(b=>b.measured).map((b,i)=>'<span><span class="dot" style="background:var(--'+(b.st==='none'?'none':b.st)+')"></span>L'+b.L+(c.target!=null?'/'+lstar(c.target):'')+'</span>').join('');
+    return '<div class="crow"><span class="nm">'+esc(c.name)+'</span><div class="cbar">'+segs+'</div>'
+      +'<span class="nums"><b>'+c.bDone+'/'+c.bTot+'</b> batch · <b>'+fmt1(c.kgDone)+'</b>/'+fmt1(c.kgPlan)+' kg</span>'
+      +(chips?'<div class="lchips">'+chips+'</div>':'')+'</div>';
+  }).join('') || '<div class="sub">Planda kahve yok.</div>';
+  document.getElementById('planTime').textContent = s.updated? ('plan kaydı: '+hhmm(s.updated)) : '';
+  renderPres();
+}
+function renderPres(){
+  const el=document.getElementById('presRow'), fd=document.getElementById('feed');
+  const rows=PRES.filter(r=>(Date.now()-new Date(r.seen_at).getTime())<43200000);
+  el.innerHTML=rows.length? rows.map(r=>{ const st=r.state||{}; const live=(Date.now()-new Date(r.seen_at).getTime())<600000;
+    const who=st.who?('<b>'+esc(String(st.who).split('@')[0])+'</b> · '):'';
+    return '<span class="'+(live?'live':'')+'">💻 '+who+esc(r.device)+' · '+age(r.seen_at)
+      +(st.now?(' · şu an: '+esc(st.now)):'')+'</span>'; }).join('')
+    : '<span>şu an açık planner yok</span>';
+  const items=[];
+  rows.forEach(r=>{ const st=r.state||{}; (st.recent||[]).forEach(t=>{ const m=String(t).match(/^(\d{2}:\d{2})\s(.*)$/);
+    items.push({t:m?m[1]:'', x:m?m[2]:String(t), w:(st.who?String(st.who).split('@')[0]:esc(r.device))}); }); });
+  items.sort((a,b)=>b.t.localeCompare(a.t));
+  fd.innerHTML=items.slice(0,16).map(i=>'<span>'+esc(i.t)+'</span><b>'+esc(i.w)+'</b><span>'+esc(i.x)+'</span>').join('')
+    || '<span></span><b></b><span>henüz eylem yok</span>';
+}
+
+// ---- data ----
+async function user(){ try{ const {data}=await sbp.auth.getSession(); return (data&&data.session)?data.session.user:null; }catch(e){ return null; } }
+async function loadRecipes(){ try{ const {data}=await sbp.from('roast_recipes').select('match,bullet,hsr,sort,updated_at').order('sort',{ascending:true}).order('updated_at',{ascending:false});
+  const seen={};
+  RECIPES=(data||[]).map(r=>({match:String(r.match||'').split(',').map(x=>normName(x.trim())).filter(Boolean),bullet:r.bullet||'',hsr:r.hsr||''}))
+    .filter(r=>{ const k=r.match.join(','); if(!r.match.length||seen[k]) return false; seen[k]=1; return true; }); }catch(e){} }
+async function loadAll(){
+  const day=document.getElementById('day').value||new Date().toISOString().slice(0,10);
+  const msg=document.getElementById('msg');
+  if(!sbp){ msg.style.display='block'; msg.textContent='Bulut yüklenemedi.'; return; }
+  ME=await user();
+  document.getElementById('who').textContent=ME?('👤 '+(ME.email||'')):'';
+  if(!ME){ document.getElementById('board').style.display='none'; msg.style.display='block';
+    msg.innerHTML='Önce <a href="/roast-guide" target="_blank">Guide üzerinden giriş yap</a>, sonra Yenile.'; return; }
+  if((ME.email||'').toLowerCase()!==ADMIN){ document.getElementById('board').style.display='none'; msg.style.display='block';
+    msg.textContent='Bu panel yönetici hesabına özel.'; return; }
+  if(!RECIPES.length) await loadRecipes();
+  try{ const {data}=await sbp.from('roast_plans').select('owner,day,updated_at,plan').eq('day',day);
+    const prevOwner=(PLANS[SEL]||{}).owner;
+    PLANS=(data||[]).map(summarize).sort((x,y)=>(x.owner===ME.id)-(y.owner===ME.id));   // staff first
+    SEL=Math.max(0,PLANS.findIndex(p=>p.owner===prevOwner)); if(!PLANS.length) SEL=null; }catch(e){ PLANS=[]; SEL=null; }
+  try{ const {data}=await sbp.from('roast_presence').select('owner,device,day,seen_at,state').order('seen_at',{ascending:false}); PRES=data||[]; }catch(e){ PRES=[]; }
+  renderBoard();
+  document.getElementById('upd').textContent='son güncelleme '+new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+document.getElementById('day').value=new Date().toISOString().slice(0,10);
+document.getElementById('day').addEventListener('change',loadAll);
+document.getElementById('refresh').addEventListener('click',loadAll);
+setInterval(loadAll,45000);
+loadAll();
+// test hook: window.__mock({plans:[summary,...], pres:[...]}) renders fixtures without the cloud
+window.__mock=function(m){ ME={id:'me',email:ADMIN}; PLANS=m.plans||[]; PRES=m.pres||[]; SEL=m.sel||0; renderBoard();
+  document.getElementById('upd').textContent='mock'; };
+</script>
+</body>
+</html>
