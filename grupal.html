@@ -476,8 +476,10 @@ body.jdesk #jSheet{left:auto;right:24px;bottom:24px;width:520px;border-radius:18
 .jcard.lopen .jrow.j2{background:rgba(243,237,228,.08)}
 body.jdesk .jcard.lopen{height:auto;min-height:400px}
 .jcard{container-type:inline-size}
-@container (max-width:330px){.jcard .jlanes{grid-template-columns:1fr}}
 .jcard .jlane .cta{font-size:12.5px;padding:11px 6px}
+/* v10g (Ömer "mockup'taki tasarım nerede?"): masaüstü ızgara kartı (içerik ~280–320px) da mockup gibi İKİ ŞERİT yan yana — sıkı ölçek; yalnız 250px altında alt alta */
+@container (max-width:340px){.jcard .jlanes{gap:6px}.jcard .jlane{padding:10px 8px;border-radius:14px}.jcard .jlane .lp{font-size:23px}.jcard .jlane .qt{font-size:13px}.jcard .jlane .qt b{font-size:19px}.jcard .jlane .why{font-size:10.5px}.jcard .jlane .cta{font-size:11.5px;padding:10px 4px}.jcard .jlane .cal{display:none}.jcard .jlane .ls{font-size:11px}}
+@container (max-width:250px){.jcard .jlanes{grid-template-columns:1fr}}
 .jcard .jrow.j2:has(.jq) .jnow{display:none}
 body.jdesk .jcard.lopen .jbody{position:relative;left:0;right:0;bottom:0;padding:170px 14px 12px}
 body.jdesk .jcard .jlanes{max-height:none;overflow:visible}
@@ -721,7 +723,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30g';
+const VERSION='v2026-09-30h';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
