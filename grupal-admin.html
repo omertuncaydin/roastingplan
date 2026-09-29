@@ -9,6 +9,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="grupal-admin-icon-16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="grupal-admin-icon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
+<!-- grupal-admin.html · v2026-09-30f · UYGULA cevabındaki backfill (proxy v3.43) mesajda: "davetiye ×n" -->
 <!-- grupal-admin.html · v2026-09-30e · Ayarlar → Hemen-Al: "Eski kaporalara davetiye bas" (proxy v3.41 /admin/inv-backfill: v3.38 öncesi kaporalara kutu × davetiye, bir kez) -->
 <!-- grupal-admin.html · v2026-09-30d · Düzenle: Hemen-Al / tamamlama alanına ÜRÜN SAYFASI linki de yapıştırılabilir → ?variant=ID varsa doğrudan, yoksa proxy v3.40 /admin/variants ile varyant listesi (liste fiyatına eşit + "Sonraki" olan seçilir, aksi halde seçim kutusu) → /cart/ID:1 -->
 <!-- grupal-admin.html · v2026-09-30a · Hemen-Al (proxy v3.38): Ayarlar → Hemen-Al bölümü (açık koltuk · davetiye · özel süre) · Düzenle → Hemen-Al linki / elde yeşil / kota · satırda Hemen-Al sayaçları · görsel = stokta -->
@@ -314,7 +315,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-30e';
+const VERSION='v2026-09-30f';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -707,7 +708,7 @@ async function offApply(){
   if(!confirm('Taslak yayınlansın mı? Aktif satırlar sayfada görünür, pasifler kalkar.')) return;
   const r=await fetch(API+'/admin/offers-apply',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:'{}'});
   const j=await r.json().catch(()=>({}));
-  if(j.ok){ OFFERS=Array.isArray(j.offers)?j.offers:OFFERS; renderOffersAdmin(); $('offApplyMsg').textContent='yayınlandı: '+j.published+' teklif'; }
+  if(j.ok){ OFFERS=Array.isArray(j.offers)?j.offers:OFFERS; renderOffersAdmin(); $('offApplyMsg').textContent='yayınlandı: '+j.published+' teklif'+((j.backfill&&j.backfill.minted)?(' · davetiye ×'+j.backfill.minted+' ('+j.backfill.devs+' cihaz)'):''); }   // v30f: UYGULA şeridi açılan kahvenin kaporalarına davetiye basar (proxy v3.43)
   else alert('Olmadı: '+(j.error||r.status));
 }
 const PROC_ALIAS={washed:'washed',yıkanmış:'washed',yikanmis:'washed',natural:'natural',doğal:'natural',dogal:'natural',honey:'honey',bal:'honey',anaerobic:'anaerobic',anaerobik:'anaerobic',infused:'infused',funky:'funky',cafcaflı:'funky',cafcafli:'funky',any:'any','fark etmez':'any'};

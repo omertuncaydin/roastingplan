@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || 'x@y.z', customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.42 tag', r.json && r.json.v === '3.42');
+T('v3.43 tag', r.json && r.json.v === '3.43');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -163,6 +163,14 @@ const mine = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).map(x =
 T('4 private invitations for OLDDEV0001 on A, named from the e-mail, flagged bf', mine.length === 4 && mine.every(j => j.o === A && j.st === 'p' && j.n === 'Ayse' && j.bf === 1));
 r = await px.call('GET', '/offer-mine?dev=OLDDEV0001'); T('/offer-mine shows the backfilled tickets to that device', r.json && Array.isArray(r.json.inv) && r.json.inv.filter(i => i.id === A && i.st === 'p').length === 4);
 r = await px.call('POST', '/admin/inv-backfill', {}, { 'x-cc-key': 'adminkey' }); T('second run mints nothing', r.json.ok && r.json.minted === 0 && px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).length === invBefore + 6);
+
+// ---- v3.43: the lane opens later (photo + link via Düzenle, then UYGULA) → the kapora paid on that coffee gets its invitations at UYGULA
+{ const ob = px.DB.grupal_offers.find(o => o.id === B); const meta = { ...(ob.meta || {}), img_url: 'https://x.test/o/b.jpg', hemen_url: 'https://coffeenutz.net/cart/333:1', list_tl: 1200 };
+  r = await px.call('POST', '/admin/offer-upsert', { id: B, name: ob.name, active: true, sort: ob.sort || 0, meta }, { 'x-cc-key': 'adminkey' }); T('admin sets B\'s photo + Hemen-Al link', r.json.ok);
+  r = await px.call('POST', '/admin/offers-apply', {}, { 'x-cc-key': 'adminkey' });
+  T('UYGULA mints the missing invitations for the newly opened lane (NOLANE0001 ×1 box → 2)', r.json.ok && r.json.backfill && r.json.backfill.ok && r.json.backfill.minted === 2 && r.json.backfill.devs === 1);
+  r = await px.call('GET', '/offer-mine?dev=NOLANE0001'); T('the kapora payer on B now sees 2 private tickets on B', r.json && r.json.inv.filter(i => i.id === B && i.st === 'p').length === 2);
+  r = await px.call('POST', '/admin/offers-apply', {}, { 'x-cc-key': 'adminkey' }); T('a second UYGULA mints nothing more', r.json.ok && r.json.backfill.minted === 0); }
 
 Date.now = realNow;
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);
