@@ -15,6 +15,6 @@ async function page(vp){ const ctx=await b.newContext({viewport:vp,deviceScaleFa
   await p.goto('https://grup-al.com/juri'); await p.waitForTimeout(1300); return {p,ctx}; }
 { const {p,ctx}=await page({width:390,height:844}); await p.click('.jcard[data-id="'+H0.id+'"] .jrow.j2'); await p.waitForTimeout(400); await p.screenshot({path:'/tmp/_shots/inc_1.png'}); await p.waitForTimeout(2200); await p.screenshot({path:'/tmp/_shots/inc_2.png'});
   await p.evaluate(()=>jLaneClose()); await p.evaluate(id=>jLaneOpen(id),ord[3].id); await p.waitForTimeout(2300); await p.screenshot({path:'/tmp/_shots/inc_3.png'}); await ctx.close(); }
-{ const {p,ctx}=await page({width:1366,height:900}); await p.evaluate(id=>jLaneOpen(id),H0.id); await p.waitForTimeout(2300); await p.screenshot({path:'/tmp/_shots/inc_desk.png'});
+{ const {p,ctx}=await page({width:1366,height:900}); await p.evaluate(id=>jLaneOpen(id),H0.id); await p.waitForTimeout(2300); await p.evaluate(id=>jLaneKap(id),H0.id); await p.waitForTimeout(400); await p.screenshot({path:'/tmp/_shots/inc_desk.png'});
   await p.evaluate(id=>jDeskOpen(id),H2.id); await p.waitForTimeout(600); await p.screenshot({path:'/tmp/_shots/inc_drawer.png'}); await ctx.close(); }
 await b.close(); console.log('ok');

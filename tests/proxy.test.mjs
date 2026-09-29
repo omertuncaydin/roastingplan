@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || 'x@y.z', customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.38 tag', r.json && r.json.v === '3.38');
+T('v3.39 tag', r.json && r.json.v === '3.39');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -87,6 +87,32 @@ r = await px.call('GET', '/meydan'); oa = r.json.offers.find(o => o.id === A); T
 r = await hook({ offer: A, dev: 'DEV3CCCCCC' }, { id: 9007, name: 'Ali' }); const code3 = px.DB.grupal_settings.filter(s => s.key.startsWith('inv_')).map(s => s.key.slice(4)).find(c => c !== code1 && c !== code2);
 r = await px.call('GET', '/inv?c=' + code3 + '&dev=X000000001'); T('with green exhausted the invitation says green', r.json.ok === false && r.json.reason === 'green');
 
+// ---- v3.39 /hemen-link: single-use Shopify discount code + attributes; rules enforced before Shopify is touched
+{ // fresh pool coffee B2 with lane, green 3
+  const B2 = '10000000-0000-4000-8000-0000000000cc';
+  px.DB.grupal_offers.push({ id: B2, name: 'Kello Bensa', origin: 'Etiyopya', process: 'washed', active: true, sort: 3, pub: { name: 'Kello Bensa', origin: 'Etiyopya', process: 'washed' }, meta: { list_tl: 1600, img_url: 'https://db.test/x.jpg', hemen_url: 'https://coffeenutz.net/cart/333:1', green_boxes: 3 }, created_at: '2026-09-01T00:00:00Z' });
+  const nGql = () => px.log.filter(l => l.startsWith('GQL')).length;
+  r = await px.call('POST', '/hemen-link', { id: B2, dev: 'BUYER00001' });
+  T('hemen-link (pool): ok, url = variant permalink + discount code + attributes, off = 1600 − 1280 = 320, via pool', r.json.ok && r.json.via === 'pool' && r.json.off === 320 && /^https:\/\/coffeenutz\.net\/cart\/333:1\?discount=HA[A-Z0-9]{6}&attributes\[offer\]=/.test(r.json.url) && r.json.url.includes('attributes[dev]=BUYER00001') && r.json.url.includes('attributes[hemen]=1') && !r.json.url.includes('attributes[inv]'));
+  const d = px.DB.__discounts[px.DB.__discounts.length - 1];
+  T('discount created single-use, 2 h, product-restricted, fixed amount per item', d.usageLimit === 1 && d.appliesOncePerCustomer === true && d.customerGets.value.discountAmount.amount === '320.00' && d.customerGets.value.discountAmount.appliesOnEachItem === true && d.customerGets.items.products.productsToAdd[0] === 'gid://shopify/Product/777' && (new Date(d.endsAt) - new Date(d.startsAt)) <= 2 * 3600000 + 60000);
+  T('hl_ record stored', px.DB.grupal_settings.some(s => s.key === 'hl_' + r.json.code));
+  const before = nGql();
+  // exhaust the pool (base 2): two pool purchases → full
+  await hook({ hemen: '1', offer: B2, dev: 'P1ZZZZZZZZ' }, { id: 9101 }); await hook({ hemen: '1', offer: B2, dev: 'P2ZZZZZZZZ' }, { id: 9102 });
+  r = await px.call('POST', '/hemen-link', { id: B2, dev: 'BUYER00002' });
+  T('pool full → reason full, Shopify not called', r.json.ok === false && r.json.reason === 'full' && nGql() === before);
+  // invitation bypasses the pool: mint via a kapora on B2 and use the code
+  await hook({ offer: B2, dev: 'DEV9ZZZZZZ' }, { id: 9103, name: 'Zeynep' });
+  const codeB = px.DB.grupal_settings.filter(s => s.key.startsWith('inv_')).map(s => [s.key.slice(4), JSON.parse(s.value)]).find(([c, j]) => j.o === B2)[0];
+  r = await px.call('POST', '/hemen-link', { id: B2, dev: 'BUYER00002', inv: codeB });
+  T('with an invitation the link is issued despite the full pool, carries attributes[inv]', r.json.ok && r.json.via === 'inv' && r.json.url.includes('attributes[inv]=' + codeB) && r.json.url.includes('discount=HA'));
+  // green cap: green 3, sold 2 pool → 1 left; use it via invitation purchase, then refuse
+  await hook({ hemen: '1', offer: B2, dev: 'BUYER00002', inv: codeB }, { id: 9104, name: 'Ali' });
+  r = await px.call('POST', '/hemen-link', { id: B2, dev: 'BUYER00003' }); T('green exhausted → reason green (pool full anyway checked after) ', r.json.ok === false && (r.json.reason === 'full' || r.json.reason === 'green'));
+  r = await px.call('POST', '/hemen-link', { id: B, dev: 'BUYER00003' }); T('coffee without a lane → nolane', r.json.ok === false && r.json.reason === 'nolane');
+  r = await px.call('POST', '/hemen-link', { id: B2, dev: 'BUYER00003', inv: 'NOPE' }); T('bad invitation code → nocode', r.json.ok === false && r.json.reason === 'nocode');
+}
 // ---- offer-move ignores H/I rows; kapora move still works
 r = await px.call('POST', '/offer-move', { dev: 'FRIEND0001', from: A, to: B }); T('a hemen box cannot be moved (no deposit)', r.status === 404);
 r = await px.call('POST', '/offer-move', { dev: 'DEV2BBBBBB', from: B, to: A }); T('a kapora moves as before', r.json && r.json.ok === true);
