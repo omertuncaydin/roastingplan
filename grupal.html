@@ -725,7 +725,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30i';
+const VERSION='v2026-09-30j';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1326,7 +1326,9 @@ function jHemen(o){ return !!(o&&o.hemen&&o.hemen.url&&Number(o.hemen.price)>0);
 function jHemenLeft(o){ return jHemen(o)?Math.max(0,parseInt(o.hemen.left)||0):0; }
 function jTableOf(o){ return (jHemen(o)&&Array.isArray(o.hemen.table))?o.hemen.table.filter(x=>x&&x.c):[]; }
 function jMyInv(id){ return (OFFINV||[]).filter(i=>i&&i.id===id&&(i.st==='p'||i.st==='t')); }
-function jHemenTag(o){ const left=jHemenLeft(o), tb=jTableOf(o).length; if(left) return t('jHLeft').replace('{n}',left); if(tb) return t('jHTable').replace('{n}',tb); return t('jHFull'); }
+// v10i (Ömer "masaya bıraktım, 2 kaldı değişmedi"): açık koltuk = kota + masadaki davetiyeler (ikisi de ilk gelenin) — tek sayı; masadakiler ayrıca not düşülür
+function jHemenOpen(o){ return jHemenLeft(o)+jTableOf(o).length; }
+function jHemenTag(o){ const n=jHemenOpen(o); if(n) return t('jHLeft').replace('{n}',n); return t('jHFull'); }
 function jHemenChips(o){ if(!jHemen(o)) return ''; let h='<span class="jchip jhm" onclick="event.stopPropagation();jLaneOpen(\''+escZ(o.id)+'\')">'+t('jHA')+' · '+jHemenTag(o)+'</span>';
   const mi=jMyInv(o.id); if(mi.length) h+='<span class="jchip jinv" onclick="event.stopPropagation();jInvOpen(\''+escZ(o.id)+'\')">'+t('jInvChip').replace('{n}',mi.length)+'</span>';
   else { const tb=jTableOf(o); if(tb.length&&!jHemenLeft(o)) h+='<span class="jchip jtbl" onclick="event.stopPropagation();jLaneOpen(\''+escZ(o.id)+'\',\''+escZ(tb[0].c)+'\')">🪑 '+t('jHTable').replace('{n}',tb.length)+' · '+t('jTblGo')+'</span>'; }
@@ -1487,7 +1489,7 @@ function jLanesHtml(o,pick0){ const cfg=offCfg(), G=cfg.goal;
     else { cta=t('jHFull'); cls=' off'; }
     const rd=jRoastD(o);
     h+='<div class="jlane ha'+(full?' full':'')+'">'+(rd?('<span class="cal">Pzt<b>'+escZ(rd)+'</b></span>'):'')+'<div class="lt">'+t('jHA')+(pick?(' · '+t('jHAInv')):'')+'</div><div class="lp">'+fmtTL(hm.price)+'<small>TL</small></div><div class="ls">'+(o.list_tl?('<s>'+t('offListP')+fmtTL(o.list_tl)+'</s>'):'')+(jPct(o.list_tl,hm.price)?('<span class="jpct">%'+jPct(o.list_tl,hm.price)+'</span>'):'')+'</div>'
-      +'<div class="qt"><b>'+left+'</b> '+t('jHLeft').replace('{n} ','')+(tb.length?('<span class="hint">· '+t('jHTable').replace('{n}',tb.length)+'</span>'):'')+((!paid&&!pick)?('<span class="jplus2">+'+parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2)+' '+t('jInvTk').toLocaleLowerCase('tr-TR')+'</span>'):'')+'</div>'
+      +'<div class="qt"><b>'+(left+tb.length)+'</b> '+t('jHLeft').replace('{n} ','')+(tb.length?('<span class="hint">· '+t('jHTable').replace('{n}',tb.length)+'</span>'):'')+((!paid&&!pick)?('<span class="jplus2">+'+parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2)+' '+t('jInvTk').toLocaleLowerCase('tr-TR')+'</span>'):'')+'</div>'
       +'<div class="st">'+(full?('🔒 '+t('jLaneFull').replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2))):('✓ '+t('jHRoast')))+'</div>'
       +'<div class="why">'+t('jLaneHAx').replace('{g}',G)+'</div>'
       +'<button class="cta'+cls+'"'+(cls===' off'?'':(' onclick="jHemenGo(\''+escZ(o.id)+'\''+(code?(',\''+escZ(code)+'\''):'')+')"'))+'>'+cta+'</button></div>'; }
