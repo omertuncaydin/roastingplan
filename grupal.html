@@ -527,6 +527,8 @@ body.jdesk .jcard .jlanes{max-height:none;overflow:visible}
 .jlane.ha .cta{background:transparent;color:var(--ink);border:1.5px solid rgba(243,237,228,.55)}
 .jlane.ha .cta.inv{background:var(--gold);color:var(--btnink);border-color:var(--gold)}
 .jlane.ha.full .cta.off{opacity:.5;cursor:default}
+/* v10h (Ömer "Hemen-Al düğmesi her kahvede olsun"): şeridi olmayan kahvede de ikinci şerit — kilitli, fiyatı gösterir, kavrulunca açılır */
+.jlane.ha.locked .lp,.jlane.ha.locked .qt b{color:var(--muted)}.jlane.ha.locked .st{color:var(--muted)}.jlane.ha.locked .cta.off{opacity:.5;cursor:default}
 .jlfoot{font-size:11px;color:var(--muted);text-align:center;padding:10px 0 0;font-weight:700}
 .jlfoot i{color:var(--gold);font-style:normal}
 .jtk{display:flex;margin-top:12px;border-radius:14px;overflow:hidden;background:var(--panel2);border:1px solid rgba(230,193,75,.35)}
@@ -723,7 +725,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30h';
+const VERSION='v2026-09-30i';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -842,7 +844,7 @@ jWelc:['Grup-Al: 40 ön sipariş bir kahveyi kilitler ve kavrulur — {amt} TL k
 // v10a Grup-Al / Hemen-Al şeritleri · davetiye · masa
 jGA:['Grup-Al','Grup-Al'], jHA:['Hemen-Al','Hemen-Al'], jHLeft:['{n} kaldı','{n} left'], jHFull:['doldu','sold out'], jHTable:['masada {n}','{n} on the table'], jHRoast:['pazartesi kavrulur','roasted Monday'], jHRoastD:['{d} kavrulur','roasted {d}'],
 jLaneGAt:['{g} olunca kavrulur.','Roasts when {g} is reached.'], jLaneGAx:['Kaporan fiyattan düşer · kilitlenene kadar taşınır, kaybolmaz.','Your deposit comes off the price · moves until locked, never lost.'], jLaneKap:['Kapora koy · {amt} TL','Deposit · {amt} TL'], jLaneMine:['Kaporan ×{n} · kilitlenince {p} TL\'den tamamla','Your deposit ×{n} · complete at {p} TL once locked'],
-jLaneHAx:['Kaporasız, beklemeden. Kutun {g}\'a sayılır.','No deposit, no waiting. Your box counts toward {g}.'], jLaneBuy:['Sepete · {p} TL','Add to cart · {p} TL'], jLaneBuyInv:['Davetiyeyle al · {p} TL','Buy with the invitation · {p} TL'], jLaneTake:['Masadan al · {n}','Take from the table · {n}'], jLaneFull:['Hemen-Al doldu — kapora koy, +{k} davetiye','Sold out — deposit and get +{k} invitations'], jLaneFoot:['Bir kapora: sana %{a} · {k} Hemen-Al davetiyesi','One deposit: {a}% for you · {k} Hemen-Al invitations'], jPlusYou:['+1 sen','+1 you'], jHMine:['Hemen-Al kutun ×{n} · {d} kavrulur','Your Hemen-Al box ×{n} · roasted {d}'],
+jLaneHAx:['Kaporasız, beklemeden. Kutun {g}\'a sayılır.','No deposit, no waiting. Your box counts toward {g}.'], jLaneBuy:['Sepete · {p} TL','Add to cart · {p} TL'], jLaneBuyInv:['Davetiyeyle al · {p} TL','Buy with the invitation · {p} TL'], jLaneTake:['Masadan al · {n}','Take from the table · {n}'], jLaneFull:['Hemen-Al doldu — kapora koy, +{k} davetiye','Sold out — deposit and get +{k} invitations'], jLaneFoot:['Bir kapora: sana %{a} · {k} Hemen-Al davetiyesi','One deposit: {a}% for you · {k} Hemen-Al invitations'], jLaneHAoffS:['kavrulunca açılır','opens once roasted'], jLaneHAoffX:['Bu kahve kavrulunca kaporasız, beklemeden, %{p} ile. Şimdilik yol: kapora.','Once this coffee is roasted: no deposit, no waiting, {p}% off. For now: the deposit.'], jLaneHAoffB:['Henüz yok','Not yet'], jPlusYou:['+1 sen','+1 you'], jHMine:['Hemen-Al kutun ×{n} · {d} kavrulur','Your Hemen-Al box ×{n} · roasted {d}'],
 jInvChip:['✉ {n} davetiye','✉ {n} invitations'], jInvT:['Hemen-Al davetiyelerin','Your Hemen-Al invitations'], jInvSub:['Kaporan sana Hemen-Al davetiyesi verdi. Arkadaşına gönder ya da masaya bırak: ilk oturan alır. {h} saat sonra kendiliğinden masaya çıkar; davetiye kotaya bakmaz.','Your deposit gave you Hemen-Al invitations. Send one to a friend or leave it on the table: first come, first served. After {h} h it goes to the table by itself; an invitation ignores the pool.'], jInvSend:['Gönder','Send'], jInvTable:['Masaya bırak','Leave on the table'], jInvOnTable:['Masada · ilk oturan alır','On the table · first come'], jInvUsed:['✓ {n} aldı','✓ taken by {n}'], jInvExp:['süresi doldu','expired'], jInvSelf:['Birini kendin kullan ›','Use one yourself ›'], jInvNote:['Kendin kullanırsan kutun {g}\'a yine sayılır.','If you use one yourself, your box still counts toward {g}.'], jInvDays:['{d} gün','{d} days'], jInvHours:['{h} sa','{h} h'], jInvNone:['Davetiyen yok — kapora koy, {k} davetiye gelir.','No invitations yet — place a deposit and {k} arrive.'],
 jInvShare:['{me} {coffee} için kaporasını koydu · sana bir Hemen-Al davetiyesi: {p} TL (liste {l}), pazartesi kavrulur, kaporasız · {n}/{g} · ilk alan alır → {url}','{me} put a deposit on {coffee} · a Hemen-Al invitation for you: {p} TL (list {l}), roasted Monday, no deposit · {n}/{g} · first come → {url}'],
 jTblLine:['Masada: {n} → 1 Hemen-Al · {coffee}','On the table: 1 Hemen-Al from {n} · {coffee}'], jTblGo:['al ›','take ›'], jTblMore:['+{k} daha','+{k} more'],
@@ -1489,6 +1491,10 @@ function jLanesHtml(o,pick0){ const cfg=offCfg(), G=cfg.goal;
       +'<div class="st">'+(full?('🔒 '+t('jLaneFull').replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2))):('✓ '+t('jHRoast')))+'</div>'
       +'<div class="why">'+t('jLaneHAx').replace('{g}',G)+'</div>'
       +'<button class="cta'+cls+'"'+(cls===' off'?'':(' onclick="jHemenGo(\''+escZ(o.id)+'\''+(code?(',\''+escZ(code)+'\''):'')+')"'))+'>'+cta+'</button></div>'; }
+  else { const bp=o.basket_tl||o.camp_tl||0;   // v10h: şerit yok (fotoğraf/link yok) → kilitli Hemen-Al şeridi: fiyat + "kavrulunca açılır"
+    h+='<div class="jlane ha locked"><div class="lt">'+t('jHA')+'</div><div class="lp">'+(bp?fmtTL(bp):'—')+'<small>TL</small></div><div class="ls">'+(o.list_tl&&bp?('<s>'+t('offListP')+fmtTL(o.list_tl)+'</s>'):'')+(jPct(o.list_tl,bp)?('<span class="jpct">%'+jPct(o.list_tl,bp)+'</span>'):'')+'</div>'
+      +'<div class="st">🔒 '+t('jLaneHAoffS')+'</div><div class="why">'+t('jLaneHAoffX').replace('{p}',jPct(o.list_tl,bp)||20)+'</div>'
+      +'<button class="cta off" disabled>'+t('jLaneHAoffB')+'</button></div>'; }
   h+='</div><div class="jlfoot">'+t('jLaneFoot').replace('{a}',jPct(o.list_tl,jury)).replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2))+' · <a onclick="event.stopPropagation();jLaneClose()">'+t('jSheetX')+'</a></div>';
   return h; }
 
