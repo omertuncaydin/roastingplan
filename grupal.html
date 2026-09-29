@@ -362,7 +362,9 @@ body.th-red .jwelc{background:#f6efe1;color:#2a1410}
 .jcard .jpl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;opacity:.8}
 .jcard .jprice{font-size:26px;font-weight:900;color:#e6c14b;line-height:1.1}
 .jcard .jprice s{font-size:14px;color:#a8998a;font-weight:600;margin-right:6px}
-.jcard .jplus{width:60px;height:60px;border-radius:50%;background:#e6c14b;color:#16130f;border:0;font-size:32px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(230,193,75,.35);margin:0;padding:0;line-height:1}
+.jcard .jplus{flex:none;width:60px;height:60px;aspect-ratio:1;border-radius:50%;background:#e6c14b;color:#16130f;border:0;font-size:32px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(230,193,75,.35);margin:0;padding:0;line-height:1;position:relative}
+/* v10j (Ömer "+ eğri"): artı işareti fontla değil iki çubukla — tam ortalı, daire daralamaz (flex:none) */
+.jcard .jplus[aria-label="+"]{font-size:0}.jcard .jplus[aria-label="+"]::before,.jcard .jplus[aria-label="+"]::after{content:'';position:absolute;left:50%;top:50%;background:#16130f;border-radius:2px;transform:translate(-50%,-50%)}.jcard .jplus[aria-label="+"]::before{width:24px;height:4px}.jcard .jplus[aria-label="+"]::after{width:4px;height:24px}
 .jcard .jq{display:inline-flex;align-items:center;gap:6px;background:rgba(22,19,15,.6);border-radius:30px;padding:4px}
 .jcard .jq b{font-size:18px;min-width:22px;text-align:center;color:#f3ede4}
 .jcard .jq button{width:44px;height:44px;border-radius:50%;background:#e6c14b;color:#16130f;border:0;font-size:22px;font-weight:900;margin:0;padding:0;line-height:1}
@@ -478,7 +480,7 @@ body.jdesk .jcard.lopen{height:auto;min-height:400px}
 .jcard{container-type:inline-size}
 .jcard .jlane .cta{font-size:12.5px;padding:11px 6px}
 /* v10g (Ömer "mockup'taki tasarım nerede?"): masaüstü ızgara kartı (içerik ~280–320px) da mockup gibi İKİ ŞERİT yan yana — sıkı ölçek; yalnız 250px altında alt alta */
-@container (max-width:340px){.jcard .jlanes{gap:6px}.jcard .jlane{padding:10px 8px;border-radius:14px}.jcard .jlane .lp{font-size:23px}.jcard .jlane .qt{font-size:13px}.jcard .jlane .qt b{font-size:19px}.jcard .jlane .why{font-size:10.5px}.jcard .jlane .cta{font-size:11.5px;padding:10px 4px}.jcard .jlane .cal{display:none}.jcard .jlane .ls{font-size:11px}}
+@container (max-width:340px){.jcard .jplus{width:52px;height:52px}.jcard .jplus[aria-label="+"]::before{width:20px}.jcard .jplus[aria-label="+"]::after{height:20px}.jcard .jlanes{gap:6px}.jcard .jlane{padding:10px 8px;border-radius:14px}.jcard .jlane .lp{font-size:23px}.jcard .jlane .qt{font-size:13px}.jcard .jlane .qt b{font-size:19px}.jcard .jlane .why{font-size:10.5px}.jcard .jlane .cta{font-size:11.5px;padding:10px 4px}.jcard .jlane .cal{display:none}.jcard .jlane .ls{font-size:11px}}
 @container (max-width:250px){.jcard .jlanes{grid-template-columns:1fr}}
 .jcard .jrow.j2:has(.jq) .jnow{display:none}
 body.jdesk .jcard.lopen .jbody{position:relative;left:0;right:0;bottom:0;padding:170px 14px 12px}
@@ -725,7 +727,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30j';
+const VERSION='v2026-09-30k';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1489,7 +1491,7 @@ function jLanesHtml(o,pick0){ const cfg=offCfg(), G=cfg.goal;
     else { cta=t('jHFull'); cls=' off'; }
     const rd=jRoastD(o);
     h+='<div class="jlane ha'+(full?' full':'')+'">'+(rd?('<span class="cal">Pzt<b>'+escZ(rd)+'</b></span>'):'')+'<div class="lt">'+t('jHA')+(pick?(' · '+t('jHAInv')):'')+'</div><div class="lp">'+fmtTL(hm.price)+'<small>TL</small></div><div class="ls">'+(o.list_tl?('<s>'+t('offListP')+fmtTL(o.list_tl)+'</s>'):'')+(jPct(o.list_tl,hm.price)?('<span class="jpct">%'+jPct(o.list_tl,hm.price)+'</span>'):'')+'</div>'
-      +'<div class="qt"><b>'+(left+tb.length)+'</b> '+t('jHLeft').replace('{n} ','')+(tb.length?('<span class="hint">· '+t('jHTable').replace('{n}',tb.length)+'</span>'):'')+((!paid&&!pick)?('<span class="jplus2">+'+parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2)+' '+t('jInvTk').toLocaleLowerCase('tr-TR')+'</span>'):'')+'</div>'
+      +'<div class="qt"><b>'+(left+tb.length)+'</b> '+t('jHLeft').replace('{n} ','')+((!paid&&!pick)?('<span class="jplus2">+'+parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2)+' '+t('jInvTk').toLocaleLowerCase('tr-TR')+'</span>'):'')+'</div>'
       +'<div class="st">'+(full?('🔒 '+t('jLaneFull').replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2))):('✓ '+t('jHRoast')))+'</div>'
       +'<div class="why">'+t('jLaneHAx').replace('{g}',G)+'</div>'
       +'<button class="cta'+cls+'"'+(cls===' off'?'':(' onclick="jHemenGo(\''+escZ(o.id)+'\''+(code?(',\''+escZ(code)+'\''):'')+')"'))+'>'+cta+'</button></div>'; }
