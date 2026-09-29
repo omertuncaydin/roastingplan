@@ -272,7 +272,8 @@ details.set.card[open]>summary{margin-bottom:6px}
           <label class="hint" style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="s_showp" style="width:auto;margin:0" checked> sayfada liste fiyatı göster (çizgili liste + masa fiyatı · varsayılan açık)</label>
           <span class="hint" style="opacity:.75">yeşil $/kg ve tedarikçi adı sayfaya hiçbir ayarla çıkmaz.</span>
         </div>
-        <div class="acts"><button class="mini" onclick="offSettingsSave()">Ölçeği kaydet</button><span class="hint" id="offScaleMsg"></span></div>
+        <div class="acts"><button class="mini" onclick="offSettingsSave()">Ölçeği kaydet</button><button class="mini" onclick="ratiosApplyAll()" title="Kaporası olan kahvelerin fiyatı ilk kaporada dondurulur (v3.28). Bu düğme dondurulmuş Kaporalı ve Sepet/Hemen-Al fiyatlarını GÜNCEL oranlarla yeniden yazar; liste fiyatı aynı kalır.">Oranları kilitli kahvelere de uygula</button><span class="hint" id="offScaleMsg"></span></div>
+        <div class="note">Kaporası olan kahvenin fiyatları ilk kaporada dondurulur; oranı değiştirmek onları etkilemez (sayfada eski % görünür). "Oranları kilitli kahvelere de uygula" dondurulmuş Kaporalı/Sepet fiyatlarını güncel oranla yeniden hesaplar (liste sabit) — müşteri lehine değişiklikte güvenle kullan.</div>
       </details>
       <div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap">
         <button class="mini" style="background:var(--gold);color:var(--panel);border-color:var(--gold);font-weight:800" onclick="offApply()">UYGULA — taslağı yayınla</button>
@@ -310,7 +311,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-30b';
+const VERSION='v2026-09-30c';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -598,6 +599,17 @@ function renderOffersAdmin(){ listSetSub();
       +'<button class="mini" style="color:#e0705a" onclick="offDel(\''+o.id+'\')">Sil</button>'
       +(((dep?o.dep:o.n)>=G&&o.list_tl)?('<button class="mini" style="border-color:var(--gold);color:var(--gold)" onclick="campFromOffer(\''+o.id+'\')">Kampanya taslağı ↑</button>'):'')+'</div></div>'; }).join('');
 }
+// v30c: dondurulmuş (kaporalı) kahvelerin Kaporalı/Sepet fiyatlarını güncel oranlarla yeniden yaz — liste sabit
+async function ratiosApplyAll(){
+  const rj=parseFloat(String($('s_rjury').value||'').replace(',','.'))||(OFFCFG&&OFFCFG.ratio_jury)||0, rb=parseFloat(String($('s_rbasket').value||'').replace(',','.'))||(OFFCFG&&OFFCFG.ratio_basket)||0;
+  if(!(rj>0&&rj<1&&rb>0&&rb<=1)){ alert('Önce oranları gir (ör. 0,60 ve 0,80) ve Ölçeği kaydet.'); return; }
+  const r5=x=>Math.round(x/5)*5; const rows=OFFERS.filter(o=>o.meta&&(o.meta.frozen_at||o.meta.jury_tl||o.meta.basket_tl)&&(Number(o.meta.list_tl)>0||Number(o.list_tl)>0));
+  if(!rows.length){ alert('Dondurulmuş fiyatı olan kahve yok.'); return; }
+  if(!confirm(rows.length+' kahvenin Kaporalı fiyatı liste×'+rj+' ve Sepet/Hemen-Al fiyatı liste×'+rb+' olarak yeniden yazılsın mı? (liste fiyatı değişmez)')) return;
+  let n=0; for(const o of rows){ const list=Number(o.meta.list_tl)>0?Number(o.meta.list_tl):Number(o.list_tl); const meta={...o.meta,list_tl:r5(list),jury_tl:r5(list*rj),basket_tl:r5(list*rb)}; delete meta.camp_tl;
+    const body={id:o.id,name:o.name,origin:o.origin,process:o.process,vendor:o.vendor,note:o.note,active:o.active,sort:o.sort,meta};
+    const r=await fetch(API+'/admin/offer-upsert',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify(body)}); const j=await r.json().catch(()=>({})); if(j.ok){ n++; if(Array.isArray(j.offers)) OFFERS=j.offers; } }
+  $('offScaleMsg').textContent=n+' kahve güncellendi'; renderOffersAdmin(); }
 async function offSet(id,patch){
   const o=OFFERS.find(x=>x.id===id); if(!o) return;
   const body={id:id,name:o.name,origin:o.origin,process:o.process,vendor:o.vendor,note:o.note,active:o.active,sort:o.sort,meta:o.meta||null,...patch};
