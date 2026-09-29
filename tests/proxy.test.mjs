@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || 'x@y.z', customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.40 tag', r.json && r.json.v === '3.40');
+T('v3.41 tag', r.json && r.json.v === '3.41');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -142,6 +142,22 @@ r = await px.call('POST', '/admin/variants', { url: 'https://www.coffeenutz.net/
 T('admin/variants returns id / title / price in TL / available', r.json.ok && r.json.handle === 'kolombiya-jose-espinoza-recreo-1' && r.json.variants.length === 2 && r.json.variants[0].id === 67856174350640 && r.json.variants[0].price === 1240 && r.json.variants[0].available === true && r.json.variants[1].available === false && /Sonraki/.test(r.json.variants[0].title));
 r = await px.call('POST', '/admin/variants', { url: 'https://evil.example/products/x' }, { 'x-cc-key': 'adminkey' }); T('admin/variants refuses other hosts', r.status === 400 && r.json.ok === false);
 r = await px.call('POST', '/admin/variants', { url: 'https://coffeenutz.net/products/yok' }, { 'x-cc-key': 'adminkey' }); T('admin/variants: unknown handle → shop 404 surfaced', r.status === 502 && /shop 404/.test(r.json.error));
+
+// ---- v3.41 /admin/inv-backfill: kapora rows paid before v3.38 (no inv_ records) get their invitations once
+px.DB.grupal_offer_votes.push(
+  { offer_id: A, dev: 'OLDDEV0001', seated: false, paid: true, qty: 2, order_id: 555, email: 'ayse.kaya@example.com', created_at: '2026-09-20T10:00:00.000Z' },
+  { offer_id: A, dev: 'OLDDEV00012', seated: false, paid: true, qty: 1, order_id: 556, email: 'ayse.kaya@example.com', created_at: '2026-09-21T10:00:00.000Z' },   // v3.33 derived key of the same device
+  { offer_id: A, dev: 'GONEDEV001', seated: false, paid: true, qty: 1, order_id: 557, email: 'x@example.com', done_order: 'FORFEIT', created_at: '2026-09-20T10:00:00.000Z' },
+  { offer_id: B, dev: 'NOLANE0001', seated: false, paid: true, qty: 1, order_id: 558, email: 'y@example.com', created_at: '2026-09-20T10:00:00.000Z' });
+r = await px.call('POST', '/admin/inv-backfill', {}); T('inv-backfill needs the admin key', r.status === 401);
+const invBefore = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).length;
+r = await px.call('POST', '/admin/inv-backfill', {}, { 'x-cc-key': 'adminkey' });
+// expected: OLDDEV0001 ×2 boxes → 4, plus DEV2BBBBBB (kapora paid on lane-less B, later moved to A, never minted) → 2; derived key folded, forfeited / no-lane / already-minted rows skipped
+T('backfill mints 2×qty for old kapora rows without invitations (6 = 4 + 2), skips forfeited, no-lane and already-minted', r.json.ok && r.json.minted === 6 && r.json.devs === 2 && r.json.skipped.done === 1 && r.json.skipped.nolane === 1 && r.json.skipped.had >= 3 && r.json.skipped.hemen === 7);
+const mine = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).map(x => JSON.parse(x.value)).filter(j => j.dev === 'OLDDEV0001');
+T('4 private invitations for OLDDEV0001 on A, named from the e-mail, flagged bf', mine.length === 4 && mine.every(j => j.o === A && j.st === 'p' && j.n === 'Ayse' && j.bf === 1));
+r = await px.call('GET', '/offer-mine?dev=OLDDEV0001'); T('/offer-mine shows the backfilled tickets to that device', r.json && Array.isArray(r.json.inv) && r.json.inv.filter(i => i.id === A && i.st === 'p').length === 4);
+r = await px.call('POST', '/admin/inv-backfill', {}, { 'x-cc-key': 'adminkey' }); T('second run mints nothing', r.json.ok && r.json.minted === 0 && px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).length === invBefore + 6);
 
 Date.now = realNow;
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);

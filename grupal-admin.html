@@ -9,6 +9,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="grupal-admin-icon-16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="grupal-admin-icon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
+<!-- grupal-admin.html · v2026-09-30e · Ayarlar → Hemen-Al: "Eski kaporalara davetiye bas" (proxy v3.41 /admin/inv-backfill: v3.38 öncesi kaporalara kutu × davetiye, bir kez) -->
 <!-- grupal-admin.html · v2026-09-30d · Düzenle: Hemen-Al / tamamlama alanına ÜRÜN SAYFASI linki de yapıştırılabilir → ?variant=ID varsa doğrudan, yoksa proxy v3.40 /admin/variants ile varyant listesi (liste fiyatına eşit + "Sonraki" olan seçilir, aksi halde seçim kutusu) → /cart/ID:1 -->
 <!-- grupal-admin.html · v2026-09-30a · Hemen-Al (proxy v3.38): Ayarlar → Hemen-Al bölümü (açık koltuk · davetiye · özel süre) · Düzenle → Hemen-Al linki / elde yeşil / kota · satırda Hemen-Al sayaçları · görsel = stokta -->
 <!-- grupal-admin.html · v2026-09-29a · Mağaza linki (stokta): Düzenle'de alan → meta.shop_url → sayfada 'Stokta · hemen al ›' (yalnız coffeenutz.net)
@@ -247,8 +248,9 @@ details.set.card[open]>summary{margin-bottom:6px}
           <div class="f"><span class="lbl">açık koltuk · kahve başına, haftalık (davetiye kotaya bakmaz)</span><input id="s_hbase" inputmode="numeric" placeholder="2"></div>
           <div class="f"><span class="lbl">kapora başına davetiye (0 = kapalı, en çok 6/sipariş)</span><input id="s_hinv" inputmode="numeric" placeholder="2"></div>
           <div class="f"><span class="lbl">davetiye özel kalma süresi (saat · sonra masaya çıkar)</span><input id="s_hinvh" inputmode="numeric" placeholder="24"></div>
-          <div class="note">Hemen-Al şeridi yalnız <b>görseli</b> ve <b>Hemen-Al linki</b> (Düzenle) olan kahvede görünür: görsel yüklenen kahve stokta sayılır. Sipariş sıradaki Pazartesi kavrulur, 40'a bakmaz; her kutu sayıma sayılır. Fiyat = liste × Sepet oranı (%20 için 0,80); Kaporalı fiyat = liste × Kaporalı oranı (%40 için 0,60).</div>
+          <div class="note">Hemen-Al şeridi yalnız <b>görseli</b> ve <b>Hemen-Al linki</b> (Düzenle) olan kahvede görünür: görsel yüklenen kahve stokta sayılır. Sipariş sıradaki Pazartesi kavrulur, 40'a bakmaz; her kutu sayıma sayılır. Fiyat = liste × Sepet oranı (%20 için 0,80); Kaporalı fiyat = liste × Kaporalı oranı (%40 için 0,60). Boş alan = varsayılan (2 · 2 · 24).</div>
         </div>
+        <div class="acts" style="margin-top:6px"><button class="mini" onclick="invBackfill()" title="Davetiye sistemi (v3.38) açılmadan önce ödenmiş kaporalara, şeridi açık kahvelerde kutu × davetiye basar; aynı cihaz+kahve ikinci kez basılmaz. 24 saat özel, sonra masaya.">Eski kaporalara davetiye bas</button><span class="hint" id="invBfMsg"></span></div>
         <div class="acts"><button class="mini" onclick="offSettingsSave()">Ayarları kaydet</button><span class="hint" id="offSetMsg"></span></div>
         <div class="sh" style="margin-top:14px">Oturumlar</div>
         <div class="acts"><button class="mini" onclick="loadCycles()">Sayım kayıtları</button><button class="mini" onclick="cycleCloseNow()">Son oturum kaydını yeniden yaz</button><button class="mini" onclick="cycleForfeit()">Tamamlanmayanları kapat</button><button class="mini" onclick="kaporaCredit()">Krediye dönenleri Shopify'a yaz</button><span class="hint" id="cycleMsg"></span></div>
@@ -312,7 +314,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-30d';
+const VERSION='v2026-09-30e';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -601,6 +603,14 @@ function renderOffersAdmin(){ listSetSub();
       +(((dep?o.dep:o.n)>=G&&o.list_tl)?('<button class="mini" style="border-color:var(--gold);color:var(--gold)" onclick="campFromOffer(\''+o.id+'\')">Kampanya taslağı ↑</button>'):'')+'</div></div>'; }).join('');
 }
 // v30c: dondurulmuş (kaporalı) kahvelerin Kaporalı/Sepet fiyatlarını güncel oranlarla yeniden yaz — liste sabit
+// v30e: proxy v3.41 /admin/inv-backfill — v3.38 öncesi kaporalara davetiye (bir kez; sonuç satırda)
+async function invBackfill(){
+  if(!confirm('Davetiyesi hiç basılmamış kaporalara (şeridi açık kahvelerde) kutu × davetiye basılsın mı? Sahipleri sayfayı açınca biletleri görür; 24 saat sonra masaya çıkar.')) return;
+  const m=$('invBfMsg'); m.textContent='basılıyor…';
+  try{ const r=await fetch(API+'/admin/inv-backfill',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:'{}'}); const j=await r.json().catch(()=>({}));
+    if(j.ok){ const sk=j.skipped||{}; m.textContent=j.minted+' davetiye · '+j.devs+' cihaz'+(j.minted?'':' — basılacak kapora yok')+' · atlanan: zaten var '+(sk.had||0)+', şeritsiz '+(sk.nolane||0)+', yanan/kredi '+(sk.done||0); loadOffers(); }
+    else m.textContent='Olmadı: '+(j.error||r.status); }
+  catch(e){ m.textContent='Olmadı: '+e; } }
 async function ratiosApplyAll(){
   const rj=parseFloat(String($('s_rjury').value||'').replace(',','.'))||(OFFCFG&&OFFCFG.ratio_jury)||0, rb=parseFloat(String($('s_rbasket').value||'').replace(',','.'))||(OFFCFG&&OFFCFG.ratio_basket)||0;
   if(!(rj>0&&rj<1&&rb>0&&rb<=1)){ alert('Önce oranları gir (ör. 0,60 ve 0,80) ve Ölçeği kaydet.'); return; }
