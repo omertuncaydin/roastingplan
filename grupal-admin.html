@@ -9,6 +9,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="grupal-admin-icon-16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="grupal-admin-icon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
+<!-- grupal-admin.html · v2026-09-30a · Hemen-Al (proxy v3.38): Ayarlar → Hemen-Al bölümü (açık koltuk · davetiye · özel süre) · Düzenle → Hemen-Al linki / elde yeşil / kota · satırda Hemen-Al sayaçları · görsel = stokta -->
 <!-- grupal-admin.html · v2026-09-29a · Mağaza linki (stokta): Düzenle'de alan → meta.shop_url → sayfada 'Stokta · hemen al ›' (yalnız coffeenutz.net)
      grupal-admin.html · v2026-09-22a · Kahve görseli: teklif satırında Görsel yükle / değiştir / kaldır (proxy v3.37 /admin/offer-image → Storage, meta.img_url); sayfada kartın arka planı, yoksa dağ+güneş
      grupal-admin.html · v2026-09-05b · Sepet satış penceresi (gün)
@@ -240,6 +241,13 @@ details.set.card[open]>summary{margin-bottom:6px}
           <div class="f"><span class="lbl">Sepet satış penceresi (gün · oturum bitişinden sonra)</span><input id="s_sepetdays" inputmode="numeric" placeholder="3"></div>
           <div class="note">Oturum bitince: tamamlama 2 gün (Salı 23:59), Sepet 3 gün (Çarşamba 23:59), yeşil alımı Perşembe; süresi dolanlar "Tamamlanmayanları kapat" ile kademeli işlem görür.</div>
         </div>
+        <div class="sh">Hemen-Al · beklemeden, %20 (proxy v3.38)</div>
+        <div class="g2">
+          <div class="f"><span class="lbl">açık koltuk · kahve başına, haftalık (davetiye kotaya bakmaz)</span><input id="s_hbase" inputmode="numeric" placeholder="2"></div>
+          <div class="f"><span class="lbl">kapora başına davetiye (0 = kapalı, en çok 6/sipariş)</span><input id="s_hinv" inputmode="numeric" placeholder="2"></div>
+          <div class="f"><span class="lbl">davetiye özel kalma süresi (saat · sonra masaya çıkar)</span><input id="s_hinvh" inputmode="numeric" placeholder="24"></div>
+          <div class="note">Hemen-Al şeridi yalnız <b>görseli</b> ve <b>Hemen-Al linki</b> (Düzenle) olan kahvede görünür: görsel yüklenen kahve stokta sayılır. Sipariş sıradaki Pazartesi kavrulur, 40'a bakmaz; her kutu sayıma sayılır. Fiyat = liste × Sepet oranı (%20 için 0,80); Kaporalı fiyat = liste × Kaporalı oranı (%40 için 0,60).</div>
+        </div>
         <div class="acts"><button class="mini" onclick="offSettingsSave()">Ayarları kaydet</button><span class="hint" id="offSetMsg"></span></div>
         <div class="sh" style="margin-top:14px">Oturumlar</div>
         <div class="acts"><button class="mini" onclick="loadCycles()">Sayım kayıtları</button><button class="mini" onclick="cycleCloseNow()">Son oturum kaydını yeniden yaz</button><button class="mini" onclick="cycleForfeit()">Tamamlanmayanları kapat</button><button class="mini" onclick="kaporaCredit()">Krediye dönenleri Shopify'a yaz</button><span class="hint" id="cycleMsg"></span></div>
@@ -302,7 +310,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-29a';
+const VERSION='v2026-09-30a';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -428,7 +436,7 @@ async function loadOfferSettings(){
   try{ const r=await fetch(API+'/admin/settings',{headers:{'x-cc-key':KEY}}); const j=await r.json();
     if(j&&j.settings){ const st=j.settings; $('s_depurl').value=st.offer_dep_url||''; $('s_depamt').value=st.offer_dep_amt||''; $('s_goal').value=st.offer_goal||'';
       $('s_depcode').value=st.offer_dep_code||''; $('s_depopen').value='';   // v02y: açılış saati kaldırıldı (kod = her zaman)
-      $('s_cycledays').value=st.offer_cycle_days||''; $('s_capacity').value=st.offer_capacity||''; $('s_donedays').value=st.offer_done_days||''; $('s_sepetdays').value=st.offer_sepet_days||''; $('s_forfeit').value=(st.offer_forfeit_mode==='credit'||st.offer_forfeit_mode==='burn')?st.offer_forfeit_mode:'tiered'; $('s_bancycles').value=(st.offer_ban_cycles!=null&&st.offer_ban_cycles!=='')?st.offer_ban_cycles:'';
+      $('s_cycledays').value=st.offer_cycle_days||''; $('s_capacity').value=st.offer_capacity||''; $('s_donedays').value=st.offer_done_days||''; $('s_sepetdays').value=st.offer_sepet_days||''; $('s_hbase').value=(st.offer_hemen_base!=null)?st.offer_hemen_base:''; $('s_hinv').value=(st.offer_hemen_inv!=null)?st.offer_hemen_inv:''; $('s_hinvh').value=st.offer_hemen_inv_h||''; $('s_forfeit').value=(st.offer_forfeit_mode==='credit'||st.offer_forfeit_mode==='burn')?st.offer_forfeit_mode:'tiered'; $('s_bancycles').value=(st.offer_ban_cycles!=null&&st.offer_ban_cycles!=='')?st.offer_ban_cycles:'';
       $('s_refusd').value=st.offer_ref_usd||''; $('s_reflist').value=st.offer_ref_list||''; $('s_ref2usd').value=st.offer_ref2_usd||''; $('s_ref2list').value=st.offer_ref2_list||''; $('s_ref3usd').value=st.offer_ref3_usd||''; $('s_ref3list').value=st.offer_ref3_list||''; $('s_daygoal').value=st.offer_day_goal||''; $('s_rjury').value=st.offer_ratio_jury||st.offer_ratio_200||''; $('s_rbasket').value=st.offer_ratio_basket||st.offer_ratio_40||''; $('s_cycle').value=st.meydan_cycle_start?new Date(st.meydan_cycle_start).toLocaleString('sv',{timeZone:'Europe/Istanbul'}).slice(0,16).replace(' ','T'):'';
       $('s_showp').checked=st.offer_show_prices!=='0';   // v02t: varsayılan AÇIK
       OFFCFG=j.cfg||null; scalePreview(); renderOffersAdmin(); } }catch(e){}
@@ -437,7 +445,7 @@ async function offSettingsSave(){
   if(!(await resolveIfProduct('s_depurl'))) return;
   const body={offer_dep_url:$('s_depurl').value.trim(),offer_dep_amt:$('s_depamt').value.trim(),offer_goal:$('s_goal').value.trim(),
     offer_dep_code:$('s_depcode').value.trim(),offer_dep_open_at:'',offer_day_goal:$('s_daygoal').value.trim(),
-    offer_cycle_days:$('s_cycledays').value.trim(),offer_capacity:$('s_capacity').value.trim(),offer_done_days:$('s_donedays').value.trim(),offer_sepet_days:$('s_sepetdays').value.trim(),offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),
+    offer_cycle_days:$('s_cycledays').value.trim(),offer_capacity:$('s_capacity').value.trim(),offer_done_days:$('s_donedays').value.trim(),offer_sepet_days:$('s_sepetdays').value.trim(),offer_hemen_base:$('s_hbase').value.trim(),offer_hemen_inv:$('s_hinv').value.trim(),offer_hemen_inv_h:$('s_hinvh').value.trim(),offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),
     offer_ref3_usd:$('s_ref3usd').value.trim().replace(',','.'),offer_ref3_list:$('s_ref3list').value.trim(),
     offer_ref_usd:$('s_refusd').value.trim().replace(',','.'),offer_ref_list:$('s_reflist').value.trim(),offer_ref2_usd:$('s_ref2usd').value.trim().replace(',','.'),offer_ref2_list:$('s_ref2list').value.trim(),offer_ratio_jury:$('s_rjury').value.trim().replace(',','.'),offer_ratio_basket:$('s_rbasket').value.trim().replace(',','.'),meydan_cycle_start:$('s_cycle').value?($('s_cycle').value+':00+03:00'):'',
     offer_show_prices:$('s_showp').checked?'1':'0'};
@@ -567,7 +575,10 @@ function renderOffersAdmin(){ listSetSub();
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><input id="oe_origin" value="'+esc(o.origin||'')+'" placeholder="Ülke" style="margin:0">'
       +'<select id="oe_proc" style="margin:0">'+['','washed','natural','honey','anaerobic','infused','funky','any'].map(k=>'<option value="'+k+'"'+(k===(o.process||'')?' selected':'')+'>'+(k?(WPROCN[k]||k):'— işlem —')+'</option>').join('')+'</select>'
       +'<input id="oe_vendor" value="'+esc(o.vendor||'')+'" placeholder="Tedarikçi" style="margin:0"><input id="oe_note" value="'+esc(o.note||'')+'" placeholder="Not (ör. 20 kutu sınırlı)" style="margin:0">'
-      +'<input id="oe_usd" value="'+esc((o.meta&&o.meta.usd_kg!=null)?String(o.meta.usd_kg):'')+'" placeholder="yeşil $/kg (ör. 16,55)" style="margin:0"><input id="oe_list" value="'+esc((o.meta&&o.meta.list_tl)?String(o.meta.list_tl):'')+'" placeholder="liste ₺ (boş = ölçekten)" style="margin:0"><input id="oe_jury" value="'+esc((o.meta&&o.meta.jury_tl)?String(o.meta.jury_tl):'')+'" placeholder="Kaporalı ₺ (boş = oranla)" style="margin:0"><input id="oe_basket" value="'+esc((o.meta&&(o.meta.basket_tl||o.meta.camp_tl))?String(o.meta.basket_tl||o.meta.camp_tl):'')+'" placeholder="Sepet ₺ (boş = oranla)" style="margin:0"><input id="oe_done" value="'+esc((o.meta&&o.meta.done_url)?String(o.meta.done_url):'')+'" placeholder="tamamlama linki: https://coffeenutz.net/cart/VARYANT_ID:1 (kilitlenince · fiyat = Kaporalı ₺ − kapora)" style="margin:0;grid-column:1/-1"><input id="oe_shop" value="'+esc((o.meta&&o.meta.shop_url)?String(o.meta.shop_url):'')+'" placeholder="mağaza linki (stokta): https://coffeenutz.net/products/… → sayfada Stokta · hemen al (liste fiyatı)" style="margin:0;grid-column:1/-1"></div>'
+      +'<input id="oe_usd" value="'+esc((o.meta&&o.meta.usd_kg!=null)?String(o.meta.usd_kg):'')+'" placeholder="yeşil $/kg (ör. 16,55)" style="margin:0"><input id="oe_list" value="'+esc((o.meta&&o.meta.list_tl)?String(o.meta.list_tl):'')+'" placeholder="liste ₺ (boş = ölçekten)" style="margin:0"><input id="oe_jury" value="'+esc((o.meta&&o.meta.jury_tl)?String(o.meta.jury_tl):'')+'" placeholder="Kaporalı ₺ (boş = oranla)" style="margin:0"><input id="oe_basket" value="'+esc((o.meta&&(o.meta.basket_tl||o.meta.camp_tl))?String(o.meta.basket_tl||o.meta.camp_tl):'')+'" placeholder="Sepet ₺ (boş = oranla)" style="margin:0"><input id="oe_done" value="'+esc((o.meta&&o.meta.done_url)?String(o.meta.done_url):'')+'" placeholder="tamamlama linki: https://coffeenutz.net/cart/VARYANT_ID:1 (kilitlenince · fiyat = Kaporalı ₺ − kapora)" style="margin:0;grid-column:1/-1"><input id="oe_shop" value="'+esc((o.meta&&o.meta.shop_url)?String(o.meta.shop_url):'')+'" placeholder="mağaza linki (stokta): https://coffeenutz.net/products/… → sayfada Stokta · hemen al (liste fiyatı)" style="margin:0;grid-column:1/-1">'
+      +'<input id="oe_hemen" value="'+esc((o.meta&&o.meta.hemen_url)?String(o.meta.hemen_url):'')+'" placeholder="Hemen-Al linki: https://coffeenutz.net/cart/VARYANT_ID:1 (fiyat = Sepet ₺ · görselle birlikte şeridi açar)" style="margin:0;grid-column:1/-1">'
+      +'<input id="oe_green" value="'+esc((o.meta&&o.meta.green_boxes!=null)?String(o.meta.green_boxes):'')+'" placeholder="elde yeşil (kutu · Hemen-Al tavanı, boş = tavan yok)" style="margin:0" inputmode="numeric">'
+      +'<input id="oe_hbase" value="'+esc((o.meta&&o.meta.hemen_base!=null)?String(o.meta.hemen_base):'')+'" placeholder="Hemen-Al açık koltuk (boş = genel ayar)" style="margin:0" inputmode="numeric"></div>'
       +'<div style="display:flex;gap:6px;margin-top:8px"><button class="mini" onclick="offEditSave(\''+o.id+'\')">Taslağa kaydet</button><button class="mini" onclick="offEdit(null)">Vazgeç</button></div></div>';
     const st=offState(o);
     return '<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;'+(o.active?'':'opacity:.6')+'">'
@@ -577,9 +588,10 @@ function renderOffersAdmin(){ listSetSub();
       +((o.list_tl&&(o.jury_tl||o.camp200_tl))?('<div class="hint" style="margin-top:2px"><s>'+o.list_tl+' ₺</s> <b style="color:var(--ink)">Jüri '+(o.jury_tl||o.camp200_tl)+' ₺</b> · Sepet '+(o.basket_tl||o.camp_tl)+' ₺'+(o.frozen?' · <span style="color:var(--gold)">🔒 kilitli</span>':((o.meta&&(o.meta.list_tl||o.meta.jury_tl||o.meta.basket_tl||o.meta.camp_tl))?' · <span style="color:var(--gold)">elle ezildi</span>':''))+'</div>'):(o.meta&&o.meta.usd_kg?'':'<div class="hint" style="margin-top:2px;opacity:.7">fiyat yok ($/kg girilmemiş)</div>'))
       +(o.lock?('<div class="hint" style="margin-top:2px;color:var(--gold);font-weight:700">🔒 '+(o.lock.state==='production'?'üretimde':(o.lock.state==='carried'?'kilitli · sonraki oturuma taşındı':'kilitli'))+' · oturum #'+o.lock.n+' · '+o.lock.dep+' kapora · kilit '+new Date(o.lock.at).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'})+'</div>'):'')
       +((o.conv||o.won_at)?('<div class="hint" style="margin-top:2px;color:var(--green)">🏆 kilitlendi '+(o.won_at?new Date(o.won_at).toLocaleDateString('tr-TR',{day:'numeric',month:'short',timeZone:'Europe/Istanbul'}):'')+' · dönüşen kapora '+(o.conv||0)+' · tamamlanan '+(o.done||0)+(o.forfeit?(' · <span style="color:#e0705a">kapatılan '+o.forfeit+'</span>'):'')+(o.done_url?'':' · <span style="color:#e0705a">tamamlama linki yok (Düzenle)</span>')+'</div>'):'')
+      +(o.hemen?('<div class="hint" style="margin-top:2px;color:#4f7f74;font-weight:700">⚡ Hemen-Al '+(o.hemen.price||'—')+' ₺ · açık koltuk '+o.hemen.left+'/'+o.hemen.base+' · bu tur kotadan '+o.hemen.sold+' · davetiyeyle '+o.hemen.inv+(o.hemen.table&&o.hemen.table.length?(' · masada '+o.hemen.table.length):'')+(o.hemen.green_left!=null?(' · yeşil kalan '+o.hemen.green_left+' kutu'):'')+'</div>'):((o.img_url&&!(o.meta&&o.meta.hemen_url))?'<div class="hint" style="margin-top:2px;color:#e0705a">görsel var ama Hemen-Al linki yok (Düzenle) — şerit kapalı</div>':''))
       +'<div class="hint" style="color:'+st[1]+';font-weight:700;margin-top:2px">'+st[0]+'</div>'
-      +'<div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">'+(o.img_url?('<img src="'+esc(o.img_url)+'" alt="" style="width:60px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--line)">'):'<span class="hint" style="opacity:.75">görsel yok · sayfada dağ+güneş</span>')
-      +'<label class="mini" style="cursor:pointer">'+(o.img_url?'Görseli değiştir':'Görsel yükle')+'<input type="file" accept="image/*" style="display:none" onchange="offImg(\''+o.id+'\',this)"></label>'
+      +'<div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">'+(o.img_url?('<img src="'+esc(o.img_url)+'" alt="" style="width:60px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--line)">'):'<span class="hint" style="opacity:.75">görsel yok · sayfada dağ+güneş · Hemen-Al kapalı</span>')
+      +'<label class="mini" style="cursor:pointer" title="Görsel yüklenen kahve stokta sayılır: Hemen-Al linki de varsa şerit açılır">'+(o.img_url?'Görseli değiştir':'Görsel yükle')+'<input type="file" accept="image/*" style="display:none" onchange="offImg(\''+o.id+'\',this)"></label>'
       +(o.img_url?('<button class="mini" onclick="offImgRemove(\''+o.id+'\')">Görseli kaldır</button>'):'')+'</div>'   // v22a: kahve görseli (proxy v3.37)
       +'<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="mini" onclick="offEdit(\''+o.id+'\')">Düzenle</button>'
       +'<button class="mini" onclick="offSet(\''+o.id+'\',{active:'+(!o.active)+'})">'+(o.active?'Pasife al':'Aktif et')+'</button>'
@@ -632,6 +644,12 @@ async function offEditSave(id){
   const sh=$('oe_shop').value.trim();   // v22b: stokta → mağaza linki (yalnız coffeenutz.net; proxy da süzer)
   if(sh&&!/^https:\/\/(www\.)?coffeenutz\.net\//.test(sh)){ alert('Mağaza linki coffeenutz.net ürün sayfası olmalı (https://coffeenutz.net/products/…). Kaydedilmedi.'); return; }
   if(sh) meta.shop_url=sh; else delete meta.shop_url;
+  const hu=$('oe_hemen').value.trim();   // v30a: Hemen-Al linki (sepet kalıcı bağlantısı; proxy v3.38 süzer)
+  if(hu&&!/^https:\/\/(www\.)?coffeenutz\.net\/cart\/\d+:\d+(\?|$)/.test(hu)){ alert('Hemen-Al linki sepet kalıcı bağlantısı olmalı: https://coffeenutz.net/cart/VARYANT_ID:1\nKaydedilmedi.'); return; }
+  if(hu) meta.hemen_url=hu; else delete meta.hemen_url;
+  const gb=num($('oe_green').value), hb=$('oe_hbase').value.trim();
+  if(gb) meta.green_boxes=Math.round(gb); else delete meta.green_boxes;
+  if(hb!==''&&isFinite(Number(hb))) meta.hemen_base=Math.max(0,Math.round(Number(hb))); else delete meta.hemen_base;
   await offSet(id,{name:$('oe_name').value.trim(),origin:$('oe_origin').value.trim()||null,process:$('oe_proc').value||null,vendor:$('oe_vendor').value.trim()||null,note:$('oe_note').value.trim()||null,meta:meta}); }
 async function offDel(id){
   const o=OFFERS.find(x=>x.id===id); if(!o) return;

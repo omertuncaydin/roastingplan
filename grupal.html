@@ -445,6 +445,79 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 .rankrow .pos{color:var(--gold);font-weight:800;margin-right:8px}
 .rankrow .cnt{color:var(--muted);font-variant-numeric:tabular-nums}
 #ranksReward{margin-top:8px;text-align:center}
+/* ===== v10a GRUP-AL / HEMEN-AL: kartta iki fiyat · alt sayfada iki şerit · davetiye biletleri · masa ===== */
+.jcard .jrow.j2{cursor:pointer;border-radius:12px;padding:6px 6px 4px;margin-left:-6px;margin-right:-6px}
+.jcard .jrow.j2:active{background:rgba(243,237,228,.08)}
+.jcard .jrow.j2>div:first-child{flex:none}
+.jcard .jnow{margin-left:auto;text-align:right;min-width:0}
+.jcard .jnow .jpl{line-height:1.2}
+.jcard .jnow .v{font-size:15px;font-weight:800;color:#f3ede4;opacity:.92;white-space:nowrap}
+.jcard .jnow .v.full{opacity:.55}
+.jcard .jprice{white-space:nowrap}
+.jchip.jhm{border-color:rgba(159,211,178,.55);color:#9fd3b2}
+.jchip.jinv{border-color:rgba(230,193,75,.7);color:#e6c14b;cursor:pointer}
+.jchip.jtbl{border-color:rgba(159,211,178,.6);color:#9fd3b2;cursor:pointer}
+#jSheetBack{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:60}
+#jSheet{position:fixed;left:0;right:0;bottom:0;z-index:61;background:var(--panel);color:var(--ink);border-radius:22px 22px 0 0;border-top:1px solid var(--line);padding:14px 16px 22px;box-shadow:0 -20px 50px rgba(0,0,0,.5);max-height:88dvh;overflow:auto;animation:jUp .45s cubic-bezier(.2,.8,.2,1)}
+body.jdesk #jSheet{left:auto;right:24px;bottom:24px;width:520px;border-radius:18px;border:1px solid var(--line)}
+@keyframes jUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.jsh-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.jsh-h b{font-size:17px;font-weight:900}
+.jsh-h .x{font-size:12px;color:var(--muted);font-weight:700;cursor:pointer;padding:4px 8px}
+.jsh-sub{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.4}
+.jlanes{display:grid;grid-template-columns:1.12fr 1fr;gap:8px;margin-top:12px}
+.jlane{min-width:0;border-radius:16px;padding:12px;background:var(--panel2);border:1px solid var(--line);position:relative}
+.jlane.ga{border-color:rgba(230,193,75,.55);box-shadow:0 0 0 1px rgba(230,193,75,.2)}
+.jlane .lt{font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;font-weight:800;color:var(--muted)}
+.jlane.ga .lt{color:var(--gold)}
+.jlane .lp{font-size:28px;font-weight:900;color:var(--gold);line-height:1.05;margin-top:4px;white-space:nowrap}
+.jlane .lp small{font-size:12px;font-weight:700;margin-left:2px}
+.jlane.ha .lp{color:var(--ink);font-size:25px}
+.jlane .ls{font-size:11.5px;color:var(--muted);margin-top:2px}
+.jlane .ls s{margin-right:4px}
+.jpct{display:inline-block;padding:1px 6px;border-radius:999px;font-size:10.5px;font-weight:800;background:rgba(230,193,75,.18);color:var(--gold);vertical-align:1px}
+.jlane.ha .jpct{background:rgba(243,237,228,.12);color:var(--ink)}
+.jmeter{margin-top:10px;height:8px;border-radius:4px;background:rgba(243,237,228,.14);overflow:hidden;position:relative}
+.jmeter b{position:absolute;left:0;top:0;height:100%;background:var(--gold);border-radius:4px}
+.jmeter b.me{background:#fff2b0}
+.jmtx{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px;font-weight:700}
+.jmtx .you{color:var(--gold)}
+.jlane .why{font-size:11px;color:var(--muted);line-height:1.35;margin-top:8px}
+.jlane .why em{font-style:normal;color:var(--ink);font-weight:700}
+.jlane .qt{font-size:15px;font-weight:900;margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.jlane .qt b{font-size:22px;color:var(--gold)}
+.jlane.full .qt b{color:var(--muted)}
+.jlane .st{font-size:11px;font-weight:800;margin-top:8px;color:#9fd3b2}
+.jlane.full .st{color:var(--muted)}
+.jlane .cal{position:absolute;right:12px;top:10px;display:flex;flex-direction:column;align-items:center;font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);background:rgba(243,237,228,.06);border:1px solid var(--line);border-radius:8px;padding:4px 7px;line-height:1.1}
+.jlane .cal b{font-size:11px;color:var(--ink);letter-spacing:0;margin-top:2px}
+.jlane .cta{margin-top:10px;width:100%;border:0;border-radius:12px;padding:11px 8px;font-weight:900;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.jlane.ga .cta{background:var(--gold);color:var(--btnink)}
+.jlane.ha .cta{background:transparent;color:var(--ink);border:1.5px solid rgba(243,237,228,.55)}
+.jlane.ha .cta.inv{background:var(--gold);color:var(--btnink);border-color:var(--gold)}
+.jlane.ha.full .cta.off{opacity:.5;cursor:default}
+.jlfoot{font-size:11px;color:var(--muted);text-align:center;padding:10px 0 0;font-weight:700}
+.jlfoot i{color:var(--gold);font-style:normal}
+.jtk{display:flex;margin-top:12px;border-radius:14px;overflow:hidden;background:var(--panel2);border:1px solid rgba(230,193,75,.35)}
+.jtk .l{flex:1;padding:12px 14px;border-right:2px dashed var(--line);min-width:0}
+.jtk .t1{font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;font-weight:800;color:var(--gold)}
+.jtk .t2{font-size:16px;font-weight:900;margin-top:2px}
+.jtk .t3{font-size:11.5px;color:var(--muted);margin-top:2px}
+.jtk .r{width:126px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:5px;padding:10px 8px}
+.jtk .r small{font-size:10.5px;color:var(--muted);font-weight:700;text-align:center}
+.jtk .snd{border:0;border-radius:10px;padding:8px 10px;background:#25d366;color:#0b3d1f;font-weight:900;font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-family:inherit}
+.jtk .tbl{border:1.5px solid rgba(230,193,75,.55);background:transparent;color:var(--gold);border-radius:10px;padding:7px 8px;font-weight:900;font-size:12px;cursor:pointer;font-family:inherit}
+.jtk.t .tbl{background:rgba(230,193,75,.16);cursor:default}
+.jtk.u,.jtk.x{opacity:.7}
+.jtk .done{font-size:12px;font-weight:800;color:#9fd3b2;text-align:center}
+.jself{display:block;text-align:center;margin-top:12px;font-size:12px;color:var(--muted);font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.jnote2{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.4}
+.jgb{margin:0 0 10px;border-radius:14px;padding:10px 12px;background:linear-gradient(90deg,rgba(230,193,75,.22),rgba(230,193,75,.08));border:1px solid rgba(230,193,75,.5);font-size:12.5px;line-height:1.35}
+.jgb b{color:var(--gold)}
+.jgb a{color:var(--ink);font-weight:800;text-decoration:underline;text-underline-offset:3px;cursor:pointer;margin-left:6px}
+.jgb.bad{background:var(--panel2);border-color:var(--line)}
+.jttbl{margin-top:6px;font-size:12px;font-weight:700;color:#9fd3b2}
+.jttbl a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer;margin-left:4px}
 </style>
 </head>
 <body>
@@ -619,7 +692,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-29a';
+const VERSION='v2026-09-30a';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -734,7 +807,15 @@ cyDoneBy:['Tamamlama: {d}\'e kadar','Complete by {d}'], cyForfeit:['süresi geç
 offForfeited:['kaporan yandı — süresinde tamamlanmadı','your deposit was forfeited — not completed in time'], offCredited:['kaporan Grup-Al kredine döndü — süresinde tamamlanmadı','your deposit became Grup-Al credit — not completed in time'],
 offBanned:['Jüri askıda: {d}\'e kadar ön sipariş veremezsin (tamamlanmayan kapora)','Jury suspended: no pre-orders until {d} (an uncompleted deposit)'],
 offTermsL:['Ön sipariş ve kapora şartları','Pre-order and deposit terms'], offTermsOk:['Okudum, kabul ediyorum — öde','I have read and accept — pay'], offTermsNo:['Vazgeç','Cancel'],
-jWelc:['Grup-Al: 40 ön sipariş bir kahveyi kilitler ve kavrulur — {amt} TL kapora bir oydur, kilitlenene kadar taşınır, kutunu alırken fiyattan düşer.','Grup-Al: 40 pre-orders lock a coffee and it gets roasted — a {amt} TL deposit is one vote, movable until the lock, deducted from your box.'], jWelcOk:['Anladım','Got it'], dbTitle:['Ön sipariş sepeti','Pre-order basket'], dbDepW:['kapora','deposit'], jRace:['40\'a yarış','Race to 40'], jLead:['Lider','Leading'], uDayS:['g','d'], uHourS:['s','h'], uMinS:['dk','m'], jAllList:['Tüm liste · {n}','Full list · {n}'], jBandAll:['Tüm liste','Full list'], jSessT:['Oturum · takvim · kurallar','Session · timeline · rules'], jSwipe:['kaydır','swipe'], cyEndS:['oturum biter','session ends'], jRank:['sıralama','ranking'], jTop5:['CoffeeNutz\'ın 5\'i','CoffeeNutz\'s 5'], jJuryP:['Kaporalı fiyat','Deposit price'], jMine:['senin ön siparişin ×{n}','your pre-order ×{n}'], jMineBar:['✓ Ön siparişin: ','✓ Your pre-order: '], jMoveL:['taşı →','move →'], jGoto:['Kahveye git ›','Go to coffee ›'], jDetail:['Detay ›','Details ›'], jdAll:['Tüm kahveler','All coffees'], jdMine:['Ön siparişim','My pre-order'], jdSort:['ön sipariş sırasına göre','by pre-orders'], jdClose:['Kapat','Close'], jdPick:['Bir kahveye tıkla — detay burada açılır','Click a coffee — details open here'], jdFilt:['Damak','Taste'], jdCards:['Kartlar','Cards'], jdList:['Liste','List'], jdVitrin:['Vitrin · fotoğraflı','Showcase · with photos'], jdRest:['Diğer adaylar','Other candidates'], jdColCoffee:['Kahve','Coffee'], jdColCount:['Ön sipariş','Pre-orders'], jdColPrice:['Kaporalı fiyat · 250 g','Deposit price · 250 g'], jShop:['Stokta · hemen al','In stock · buy now'], jShopRow:['Stokta: CoffeeNutz\'tan hemen al (liste fiyatı) →','In stock: buy now from CoffeeNutz (list price) →'], jMoveHere:['Buraya taşı','Move here'], jMoveBar:['↔ {name} taşınıyor — kaydır, istediğin kartta "Buraya taşı"','↔ Moving {name} — swipe, tap "Move here" on the card you want'], jMoveX:['vazgeç','cancel'], jMoving:['taşınıyor…','moving…'], jMineNth:['{n}. kart','card {n}'], jMineChip:['✓ ön siparişin ×{n}','✓ your pre-order ×{n}'], jDevHint:['Ön siparişin görünmüyor mu? Giriş yoktur; sayfa kaporayı verdiğin telefonu ve tarayıcıyı tanır — oradan açınca görünür.','Pre-order not showing? There is no login; the page recognises the phone and browser you paid the deposit from — open it there.'], jAllT:['aday kahve','candidate coffees'], jAllS:['damağına göre seç →','pick by taste →'], jSwipeUp:['yukarı kaydır · damağına göre seç','swipe up · pick by taste'], jDamakT:['Damağın hangisi?','Which is your palate?'], jCoffee:['kahve','coffees'], jHowT:['Nasıl çalışır? Çekiliş değil.','How does it work? Not a raffle.'], dbSum:['{c} kahve · {b} kutu','{c} coffees · {b} boxes'], dbClear:['Temizle','Clear'], dbPay:['Öde →','Pay →'], dbIn:['sepette ×{n}','in basket ×{n}'],
+jWelc:['Grup-Al: 40 ön sipariş bir kahveyi kilitler ve kavrulur — {amt} TL kapora bir oydur, kilitlenene kadar taşınır, kutunu alırken fiyattan düşer.','Grup-Al: 40 pre-orders lock a coffee and it gets roasted — a {amt} TL deposit is one vote, movable until the lock, deducted from your box.'], jWelcOk:['Anladım','Got it'],
+// v10a Grup-Al / Hemen-Al şeritleri · davetiye · masa
+jGA:['Grup-Al','Grup-Al'], jHA:['Hemen-Al','Hemen-Al'], jHLeft:['{n} kaldı','{n} left'], jHFull:['doldu','sold out'], jHTable:['masada {n}','{n} on the table'], jHRoast:['pazartesi kavrulur','roasted Monday'], jHRoastD:['{d} kavrulur','roasted {d}'],
+jLaneGAt:['{g} olunca kavrulur.','Roasts when {g} is reached.'], jLaneGAx:['Kaporan fiyattan düşer · kilitlenene kadar taşınır, kaybolmaz.','Your deposit comes off the price · moves until locked, never lost.'], jLaneKap:['Kapora koy · {amt} TL','Deposit · {amt} TL'], jLaneMine:['Kaporan ×{n} · kilitlenince {p} TL\'den tamamla','Your deposit ×{n} · complete at {p} TL once locked'],
+jLaneHAx:['Kaporasız, beklemeden. Kutun {g}\'a sayılır.','No deposit, no waiting. Your box counts toward {g}.'], jLaneBuy:['Sepete · {p} TL','Add to cart · {p} TL'], jLaneBuyInv:['Davetiyeyle al · {p} TL','Buy with the invitation · {p} TL'], jLaneTake:['Masadan al · {n}','Take from the table · {n}'], jLaneFull:['Hemen-Al doldu — kapora koy, +{k} davetiye','Sold out — deposit and get +{k} invitations'], jLaneFoot:['Bir kapora: sana %{a} · {k} Hemen-Al davetiyesi','One deposit: {a}% for you · {k} Hemen-Al invitations'], jPlusYou:['+1 sen','+1 you'], jHMine:['Hemen-Al kutun ×{n} · {d} kavrulur','Your Hemen-Al box ×{n} · roasted {d}'],
+jInvChip:['✉ {n} davetiye','✉ {n} invitations'], jInvT:['Hemen-Al davetiyelerin','Your Hemen-Al invitations'], jInvSub:['Kaporan sana Hemen-Al davetiyesi verdi. Arkadaşına gönder ya da masaya bırak: ilk oturan alır. {h} saat sonra kendiliğinden masaya çıkar; davetiye kotaya bakmaz.','Your deposit gave you Hemen-Al invitations. Send one to a friend or leave it on the table: first come, first served. After {h} h it goes to the table by itself; an invitation ignores the pool.'], jInvSend:['Gönder','Send'], jInvTable:['Masaya bırak','Leave on the table'], jInvOnTable:['Masada · ilk oturan alır','On the table · first come'], jInvUsed:['✓ {n} aldı','✓ taken by {n}'], jInvExp:['süresi doldu','expired'], jInvSelf:['Birini kendin kullan ›','Use one yourself ›'], jInvNote:['Kendin kullanırsan kutun {g}\'a yine sayılır.','If you use one yourself, your box still counts toward {g}.'], jInvDays:['{d} gün','{d} days'], jInvHours:['{h} sa','{h} h'], jInvNone:['Davetiyen yok — kapora koy, {k} davetiye gelir.','No invitations yet — place a deposit and {k} arrive.'],
+jInvShare:['{me} {coffee} için kaporasını koydu · sana bir Hemen-Al davetiyesi: {p} TL (liste {l}), pazartesi kavrulur, kaporasız · {n}/{g} · ilk alan alır → {url}','{me} put a deposit on {coffee} · a Hemen-Al invitation for you: {p} TL (list {l}), roasted Monday, no deposit · {n}/{g} · first come → {url}'],
+jTblLine:['Masada: {n} → 1 Hemen-Al · {coffee}','On the table: 1 Hemen-Al from {n} · {coffee}'], jTblGo:['al ›','take ›'], jTblMore:['+{k} daha','+{k} more'],
+jGB:['{n} → Hemen-Al davetiyesi · {coffee} · {p} TL · pazartesi kavrulur · {d} geçerli · kota dolu olsa da geçer','Hemen-Al invitation from {n} · {coffee} · {p} TL · roasted Monday · valid {d} · works even when the pool is full'], jGBOpen:['Kartı aç ›','Open the card ›'], jGBUsed:['Bu davetiyeyi {n} aldı — masada başkası var mı bak.','This invitation was taken by {n} — check the table.'], jGBExp:['Davetiyenin süresi dolmuş.','This invitation has expired.'], jGBLimit:['Bu hafta bu kahveden masadan bir kutu aldın.','You already took one box of this coffee from the table this week.'], jGBGreen:['Bu parti doldu — sıradaki kavurmada.','This lot is sold out — next roast.'], jGBNo:['Davetiye bulunamadı.','Invitation not found.'], jGBLane:['Bu kahvede Hemen-Al şu an yok.','Hemen-Al is not open on this coffee right now.'], jSheetX:['Kapat','Close'], jHAInv:['davetli','invited'], jInvTk:['Davetiye','Invitation'], dbTitle:['Ön sipariş sepeti','Pre-order basket'], dbDepW:['kapora','deposit'], jRace:['40\'a yarış','Race to 40'], jLead:['Lider','Leading'], uDayS:['g','d'], uHourS:['s','h'], uMinS:['dk','m'], jAllList:['Tüm liste · {n}','Full list · {n}'], jBandAll:['Tüm liste','Full list'], jSessT:['Oturum · takvim · kurallar','Session · timeline · rules'], jSwipe:['kaydır','swipe'], cyEndS:['oturum biter','session ends'], jRank:['sıralama','ranking'], jTop5:['CoffeeNutz\'ın 5\'i','CoffeeNutz\'s 5'], jJuryP:['Kaporalı fiyat','Deposit price'], jMine:['senin ön siparişin ×{n}','your pre-order ×{n}'], jMineBar:['✓ Ön siparişin: ','✓ Your pre-order: '], jMoveL:['taşı →','move →'], jGoto:['Kahveye git ›','Go to coffee ›'], jDetail:['Detay ›','Details ›'], jdAll:['Tüm kahveler','All coffees'], jdMine:['Ön siparişim','My pre-order'], jdSort:['ön sipariş sırasına göre','by pre-orders'], jdClose:['Kapat','Close'], jdPick:['Bir kahveye tıkla — detay burada açılır','Click a coffee — details open here'], jdFilt:['Damak','Taste'], jdCards:['Kartlar','Cards'], jdList:['Liste','List'], jdVitrin:['Vitrin · fotoğraflı','Showcase · with photos'], jdRest:['Diğer adaylar','Other candidates'], jdColCoffee:['Kahve','Coffee'], jdColCount:['Ön sipariş','Pre-orders'], jdColPrice:['Kaporalı fiyat · 250 g','Deposit price · 250 g'], jShop:['Stokta · hemen al','In stock · buy now'], jShopRow:['Stokta: CoffeeNutz\'tan hemen al (liste fiyatı) →','In stock: buy now from CoffeeNutz (list price) →'], jMoveHere:['Buraya taşı','Move here'], jMoveBar:['↔ {name} taşınıyor — kaydır, istediğin kartta "Buraya taşı"','↔ Moving {name} — swipe, tap "Move here" on the card you want'], jMoveX:['vazgeç','cancel'], jMoving:['taşınıyor…','moving…'], jMineNth:['{n}. kart','card {n}'], jMineChip:['✓ ön siparişin ×{n}','✓ your pre-order ×{n}'], jDevHint:['Ön siparişin görünmüyor mu? Giriş yoktur; sayfa kaporayı verdiğin telefonu ve tarayıcıyı tanır — oradan açınca görünür.','Pre-order not showing? There is no login; the page recognises the phone and browser you paid the deposit from — open it there.'], jAllT:['aday kahve','candidate coffees'], jAllS:['damağına göre seç →','pick by taste →'], jSwipeUp:['yukarı kaydır · damağına göre seç','swipe up · pick by taste'], jDamakT:['Damağın hangisi?','Which is your palate?'], jCoffee:['kahve','coffees'], jHowT:['Nasıl çalışır? Çekiliş değil.','How does it work? Not a raffle.'], dbSum:['{c} kahve · {b} kutu','{c} coffees · {b} boxes'], dbClear:['Temizle','Clear'], dbPay:['Öde →','Pay →'], dbIn:['sepette ×{n}','in basket ×{n}'],
 cySepetB:['Grup-Al® Jüri Sepeti\'ni al · Sepet fiyatı','Buy the Grup-Al® Jury Basket · Basket price'], cySepetH:['Jüri seçti, sen seçme: bu oturumun kahveleri, tek sepette.','The Jury chose so you don\'t have to: this session\'s coffees, one basket.'], offTerms:['1) Kapora = ön sipariş = oy: {amt} TL, kutu başına; kahve kilitlenene kadar başka kahveye taşınabilir. 2) {g} ön siparişe ulaşan kahve o an kilitlenir ve oturum bitince (Pazar 23:59) üretime girer; haftada {c} kahve, fazlası sonraki oturuma. 3) Kahven kilitlenince kaporan kaporalı fiyattan düşer ve {dd} gün içinde tamamlanır; kutu 250 g, öğütüm tercihi tamamlama ödemesinde sorulur. Süresinde tamamlanmazsa ilk seferde kaporan Grup-Al kredine döner ve bir oturum boyunca kapora koyamazsın; ikinci ve sonraki seferde kaporan yanar. 4) Kahven {g} ön siparişe ulaşmazsa kaporan sonraki oturuma taşınır ya da istersen iade edilir. 5) Tedarikçide tükenen kahvenin kaporası serbest kalır. Sorular: coffeenutz.net/pages/iletisim','1) Deposit = pre-order = vote: {amt} TL per box; it can be moved to another coffee until that coffee locks. 2) A coffee that reaches {g} pre-orders locks at once and goes into production when the session ends (Sunday 23:59); {c} coffees a week, extras roll into the next session. 3) Once your coffee locks, your deposit counts toward the deposit price and you complete within {dd} days; 250 g box, grind preference is asked at the completion payment. Not completed in time: the first time your deposit becomes Grup-Al credit and you cannot deposit for one session; the second time and after, it is forfeited. 4) If your coffee does not reach {g} pre-orders, your deposit carries into the next session or is refunded on request. 5) A coffee sold out at the importer releases its deposits. Questions: coffeenutz.net/pages/iletisim'], offEarly:['Ön sipariş şimdilik Grup-Al® WhatsApp grubundakilere açık · herkese: {d}','Pre-orders are open to the Grup-Al® WhatsApp group for now · everyone from {d}'], offEarlyH:['Kod grupta paylaşılıyor. Masadaysan grup linki aşağıda.','The code is shared in the group. If you have a seat, the group link is below.'], offCodeL:['grup kodu','group code'], offCodeB:['Gir','Enter'], offCodeOk:['✓ grup kodu geçerli — ön sipariş sana açık','✓ group code accepted — pre-orders are open for you'], offCodeBad:['Kod tanınmadı.','Code not recognised.'], offEarlyRow:['ön sipariş: grup koduyla şimdi · herkese {d}','pre-order: now with the group code · everyone from {d}'], offGoalD:['{g} ön siparişe ulaşan kahve o an kilitlenir · kaporan kilitlenince kaporalı fiyattan düşer, ulaşmazsa sonraki oturuma taşınır ya da geri döner','a coffee that reaches {g} pre-orders locks at once · once locked your deposit counts toward the deposit price; otherwise it carries into the next session or comes back'], offHitD:['{g} ön siparişi geçti — sayımda yarışıyor 🎉','over {g} pre-orders — in the count 🎉'],
 wishAlt:['Listede yok mu? Dilek bırak:','Not on the list? Leave a wish:'],
 voteL:['oy ver','vote'], voteMine:['✓ oyun','✓ your vote'], voteUndo:['oyu geri al','withdraw vote'], voteGone:['Oyun geri alındı.','Your vote is withdrawn.'], voteH:['Bir satıra dokun: oyun o kahveye geçer. Kendi satırına tekrar dokun: oyun geri alınır.','Tap a row: your vote moves to that coffee. Tap your own row again: your vote is withdrawn.'],
@@ -1048,6 +1129,11 @@ function renderWishes(s){
 // ---- TEKLİFLER (I): somut kahveler, oy = aç/kapa, cihaz başına ≤3; 40 oy çubuğu (masadan gelen oy ayrı) ----
 let OFFMINE=null;   // /offer-mine cevabı: [{id,paid,qty,conv,done,forfeited,credited}]
 let BANNED=null;    // v02w: Jüri askısı (tamamlanmayan kapora) — sayfa düğmeyi saklar
+// v10a (30.09, Ömer "iki şerit: Grup-Al bekler %40 · Hemen-Al beklemez %20 · her kapora 2 davetiye · 24 saat sonra masaya"): proxy v3.38
+let OFFINV=[];      // cihazın davetiyeleri [{c,id,st:p|t|u|x,at,exp,n,taker}]
+let OFFHEMEN=[];    // cihazın Hemen-Al kutuları [{id,qty,at,via}]
+let JSHEET=null;    // açık alt sayfa: {mode:'lanes'|'inv', id, c}
+let JINV=null;      // ziyaretçinin davetiyesi (?d=KOD → /inv): {ok,c,id,name,coffee,price,url,exp,st} ya da {ok:false,reason,...}
 let OFFALL=false; const OFFFOLD=8;
 // v09i (Ömer 11.09, müşteri "hafif içimli kahve" bulamadı): tat çipleri — işlem alanından türetilir; Hepsi · Hafif&Canlı · Dolgun&Meyvemsi · Yoğun&Fermente · Funky/Oyuncu
 const TASTES=[['all','Hepsi','All'],['hafif','Hafif&Canlı','Light&Bright'],['dolgun','Dolgun&Meyvemsi','Full&Fruity'],['yogun','Yoğun&Fermente','Intense&Fermented'],['funky','Funky/Oyuncu','Funky/Playful']];
@@ -1115,7 +1201,10 @@ function jBand(k){ setTaste(k); setTimeout(()=>jGo('offTot'),30); }
 function renderTicker(list,G){ const top=list.filter(o=>(o.dep||0)>0).sort((a,b)=>(b.dep||0)-(a.dep||0)).slice(0,3); const tot=list.reduce((a,o)=>a+(o.dep||0),0);
   return '<div class="jtick"><div class="jth"><span>'+t('jRace').replace('40',G)+' · <span style="color:var(--gold)">'+tot+'</span> <span class="hint">/ '+G+'</span></span><a onclick="jGo(\'offTot\')">'+t('jRank')+' ›</a></div><div class="jtl">'
    +top.map((o,i)=>'<div class="jtm" style="left:calc('+Math.min(100,Math.round(100*(o.dep||0)/G))+'% - 13px + '+(i*9)+'px);z-index:'+(3-i)+'" title="'+escZ(o.name)+'"><span>'+jLand(o.origin,26,26)+'</span><b>'+(o.dep||0)+'</b></div>').join('')
-   +'<div class="jtg"></div></div>'+(top.length?('<div class="jtlg">'+t('jLead')+': '+top.map(o=>escZ(jShort(o.name))+' <b style="color:var(--gold)">'+(o.dep||0)+'</b>').join(' · ')+'</div>'):'')+jMineLine(list)+'</div>'; }
+   +'<div class="jtg"></div></div>'+(top.length?('<div class="jtlg">'+t('jLead')+': '+top.map(o=>escZ(jShort(o.name))+' <b style="color:var(--gold)">'+(o.dep||0)+'</b>').join(' · ')+'</div>'):'')+jMineLine(list)+jTableLine(list)+'</div>'; }
+// v10a: masadaki davetiyeler (kapora sahibinin herkese bıraktığı Hemen-Al koltukları) — skorbordun altında tek satır
+function jTableLine(list){ const rows=[]; for(const o of list){ for(const e of jTableOf(o)){ if((OFFINV||[]).some(i=>i.c===e.c)) continue; rows.push({o,e}); } } if(!rows.length) return '';
+  const r=rows[0]; return '<div class="jttbl">'+t('jTblLine').replace('{n}',escZ(r.e.n||'Jüri')).replace('{coffee}',escZ(jShort(r.o.name)))+'<a onclick="jLaneOpen(\''+escZ(r.o.id)+'\',\''+escZ(r.e.c)+'\')">'+t('jTblGo')+'</a>'+(rows.length>1?(' <span class="hint">'+t('jTblMore').replace('{k}',rows.length-1)+'</span>'):'')+'</div>'; }
 function jShort(n){ return String(n||'').replace(/\s*#\d+.*$/,'').replace(/\s*\(.*\)$/,'').trim(); }
 // v09o: deste sırası (ön sipariş çoktan aza) — kartlar, skorbord satırı ve 'n. kart' aynı sırayı kullanır
 function jDeckOrder(list){ return list.slice().sort((a,b)=>((b.dep||0)-(a.dep||0))); }
@@ -1142,7 +1231,7 @@ function jRowHtml(o,i,cfg,G,gate,banned){ const paid=(OFFMINE||[]).find(v=>v.id=
    +'<td class="r">'+(i+1)+(tp?'<span style="color:var(--gold)" title="'+t('jTop5')+'"> ★</span>':'')+'</td>'
    +'<td class="c"><span class="th">'+jLand(o.origin,40,40)+'</span><div><b>'+escZ(o.name)+'</b>'+(paid?('<span class="jdk-mine">'+(paid.conv?'🔒 ':'✓ ')+t('jMineChip').replace('{n}',Math.max(1,parseInt(paid.qty)||1))+'</span>'):'')+'<div class="hint">'+(tn?('<i class="dot" style="background:'+TASTECOL[tk]+'"></i>'+(LANG==='en'?tn[2]:tn[1])+' · '):'')+jMeta(o)+'</div></div></td>'
    +'<td class="n"><span class="bar"><i class="'+(hit?'hit':'')+'" style="width:'+pct+'%"></i></span><b class="'+(hit?'hit':'')+'">'+(o.dep||0)+'/'+G+'</b></td>'
-   +'<td class="p">'+(o.list_tl&&jury&&o.list_tl>jury?('<s>'+fmtTL(o.list_tl)+'</s> '):'')+(jury?('<b>'+fmtTL(jury)+' TL</b>'):'—')+'</td>'
+   +'<td class="p">'+(o.list_tl&&jury&&o.list_tl>jury?('<s>'+fmtTL(o.list_tl)+'</s> '):'')+(jury?('<b>'+fmtTL(jury)+' TL</b>'):'—')+(jHemen(o)?('<div class="hint" style="font-size:11px">'+t('jHA')+' '+fmtTL(o.hemen.price)+' · '+jHemenTag(o)+'</div>'):'')+'</td>'
    +'<td class="s">'+(jShopUrl(o)?('<a class="jchip jshop" href="'+escZ(jShopUrl(o))+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i></i>'+t('jShop')+'</a>'):'')+'</td>'
    +'<td class="a" onclick="event.stopPropagation()">'+jCtl(o,cfg,paid,gate,banned)+'</td></tr>'; }
 function jTableHtml(rows,list,cfg,G,gate,banned){ if(!rows.length) return ''; const ord=jDeckOrder(list);
@@ -1190,8 +1279,24 @@ function jCardHtml(o,i,cfg,G,gate,banned){ const paid=(OFFMINE||[]).find(v=>v.id
      +'<svg width="50" height="50" viewBox="0 0 50 50" aria-hidden="true"><circle cx="25" cy="25" r="21" fill="rgba(22,19,15,.5)" stroke="rgba(243,237,228,.25)" stroke-width="4"/><circle cx="25" cy="25" r="21" fill="none" stroke="#e6c14b" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+(2*Math.PI*21*Math.min(1,(o.dep||0)/G)).toFixed(1)+' 999" transform="rotate(-90 25 25)"/><text x="25" y="29" text-anchor="middle" font-size="14" font-weight="800" fill="#f3ede4" font-family="-apple-system,Segoe UI,Roboto,sans-serif">'+(o.dep||0)+'</text></svg></div>'
      +'<div class="jbody"><div class="jmeta">'+jMeta(o)+'</div><div class="jname">'+escZ(o.name)+'</div>'+(jDesc(o)?('<div class="jdesc">'+jDesc(o)+'</div>'):'')
      +'<div class="jchips2"><span class="jchip jgoto" onclick="event.stopPropagation();jGoRow(\''+escZ(o.id)+'\')">'+t(jIsDesk()?'jDetail':'jGoto')+'</span>'
-     +(jShopUrl(o)?('<a class="jchip jshop" href="'+escZ(jShopUrl(o))+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i></i>'+t('jShop')+(o.list_tl?(' <b>'+fmtTL(o.list_tl)+' TL</b>'):'')+'</a>'):'')+'</div>'
-     +'<div class="jrow"><div><div class="jpl">'+t('jJuryP')+' · '+t('boxGs')+'</div><div class="jprice">'+(o.list_tl&&jury&&o.list_tl>jury?('<s>'+fmtTL(o.list_tl)+'</s>'):'')+(jury?(fmtTL(jury)+' TL'):'')+'</div></div>'+jCtl(o,cfg,paid,gate,banned)+'</div></div></div>'; }
+     +(jHemen(o)?jHemenChips(o):(jShopUrl(o)?('<a class="jchip jshop" href="'+escZ(jShopUrl(o))+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i></i>'+t('jShop')+(o.list_tl?(' <b>'+fmtTL(o.list_tl)+' TL</b>'):'')+'</a>'):''))+'</div>'
+     +jPriceRow(o,cfg,paid,gate,banned,jury)+'</div></div>'; }
+// v10a: kartın fiyat satırı — Hemen-Al şeridi olan kahvede iki fiyat (Grup-Al · Hemen-Al), dokununca alt sayfa; yoksa eski tek satır
+function jPriceRow(o,cfg,paid,gate,banned,jury){
+  const strike=(o.list_tl&&jury&&o.list_tl>jury)?('<s>'+fmtTL(o.list_tl)+'</s>'):''; const pr=jury?(fmtTL(jury)+' TL'):'';
+  if(!jHemen(o)) return '<div class="jrow"><div><div class="jpl">'+t('jJuryP')+' · '+t('boxGs')+'</div><div class="jprice">'+strike+pr+'</div></div>'+jCtl(o,cfg,paid,gate,banned)+'</div>';
+  const hm=o.hemen, left=jHemenLeft(o);
+  return '<div class="jrow j2" onclick="event.stopPropagation();jLaneOpen(\''+escZ(o.id)+'\')"><div><div class="jpl">'+t('jGA')+' · '+t('boxGs')+'</div><div class="jprice">'+strike+pr+'</div></div>'
+   +'<div class="jnow"><div class="jpl">'+t('jHA')+' · '+jHemenTag(o)+'</div><div class="v'+(left||jTableOf(o).length?'':' full')+'">'+fmtTL(hm.price||0)+' TL</div></div>'+jCtl(o,cfg,paid,gate,banned)+'</div>'; }
+function jHemen(o){ return !!(o&&o.hemen&&o.hemen.url&&Number(o.hemen.price)>0); }
+function jHemenLeft(o){ return jHemen(o)?Math.max(0,parseInt(o.hemen.left)||0):0; }
+function jTableOf(o){ return (jHemen(o)&&Array.isArray(o.hemen.table))?o.hemen.table.filter(x=>x&&x.c):[]; }
+function jMyInv(id){ return (OFFINV||[]).filter(i=>i&&i.id===id&&(i.st==='p'||i.st==='t')); }
+function jHemenTag(o){ const left=jHemenLeft(o), tb=jTableOf(o).length; if(left) return t('jHLeft').replace('{n}',left); if(tb) return t('jHTable').replace('{n}',tb); return t('jHFull'); }
+function jHemenChips(o){ if(!jHemen(o)) return ''; let h='<span class="jchip jhm" onclick="event.stopPropagation();jLaneOpen(\''+escZ(o.id)+'\')">'+t('jHA')+' · '+jHemenTag(o)+'</span>';
+  const mi=jMyInv(o.id); if(mi.length) h+='<span class="jchip jinv" onclick="event.stopPropagation();jInvOpen(\''+escZ(o.id)+'\')">'+t('jInvChip').replace('{n}',mi.length)+'</span>';
+  else { const tb=jTableOf(o); if(tb.length&&!jHemenLeft(o)) h+='<span class="jchip jtbl" onclick="event.stopPropagation();jLaneOpen(\''+escZ(o.id)+'\',\''+escZ(tb[0].c)+'\')">🪑 '+t('jHTable').replace('{n}',tb.length)+' · '+t('jTblGo')+'</span>'; }
+  return h; }
 const TASTECOL={hafif:'#7fb8c9',dolgun:'#d48a5a',yogun:'#a2588f',funky:'#8fc36f'};
 function renderBands(list){ let h='<div id="jDamak" class="jh2">'+t('jDamakT')+'</div>';
   for(const x of TASTES){ if(x[0]==='all') continue; const arr=list.filter(o=>tasteOf(o)===x[0]); if(!arr.length) continue; const prices=arr.map(o=>o.jury_tl||o.camp200_tl).filter(Boolean); const lo=Math.min(...prices), hi=Math.max(...prices);
@@ -1267,7 +1372,7 @@ function renderOffers(s){
     h+='<div class="hint" style="margin-top:4px;font-size:11px;opacity:.75">'+t('offGoal').split('{g}').join(G)+'</div>';
   }
   const dk0=$('jDeck'), keepSL=dk0?dk0.scrollLeft:0;   // v09n: + basınca deste yerinde kalsın
-  el.innerHTML=h; card.style.display='block'; renderBasketBar(); cyStartClock();   // v09a: geri sayım saati
+  el.innerHTML=h; card.style.display='block'; renderBasketBar(); renderSheet(); cyStartClock();   // v09a: geri sayım saati · v10a: alt sayfa (şeritler / davetiyeler)
   { const dk=$('jDeck'); if(dk&&keepSL){ dk.scrollLeft=keepSL; const n=Math.round(keepSL/Math.max(1,dk.clientWidth))+1; const dn=document.querySelector('.jdots .jdn'); if(dn) dn.textContent=n+' / '+dk.children.length+' · '+t('jSwipe'); } }
   { const dk=$('jDeck'); const mc=dk&&dk.querySelector('.jcard.mine'); if(mc&&!keepSL&&!window.__jMineOpened&&!(dk.__touched)){ window.__jMineOpened=true; const x=mc.offsetLeft-(dk.clientWidth-mc.clientWidth)/2; if(x>0){ dk.scrollLeft=x; const n=(parseInt(mc.getAttribute('data-i'))||0)+1; const dn=document.querySelector('.jdots .jdn'); if(dn) dn.textContent=n+' / '+dk.children.length+' · '+t('jSwipe'); } } }   // v09o: deste, senin kahvende açılır (bir kez; kaydırdıysan karışmaz
   if(window.__jPop){ const id=window.__jPop; window.__jPop=null; document.querySelectorAll('[data-id="'+id+'"] .jq,[data-id="'+id+'"] .oq,[data-id="'+id+'"] button.oc,[data-id="'+id+'"] .jminec,[data-id="'+id+'"] .jplus').forEach(e=>{ e.classList.add('pop'); }); const bar=$('dbBar'); if(bar){ bar.classList.remove('bump'); void bar.offsetWidth; bar.classList.add('bump'); } }   // v09n: dokunulan kontrol zıplar, sepet çubuğu vurgulanır
@@ -1277,6 +1382,69 @@ function renderOffers(s){
 }
 
 
+// ===== v10a GRUP-AL / HEMEN-AL: alt sayfa (iki şerit · davetiye biletleri) · davetli görünümü · Hemen-Al sipariş linki =====
+function jLaneOpen(id,c){ JSHEET={mode:'lanes',id,c:c||null}; renderOffers(STATE); }
+function jInvOpen(id){ JSHEET={mode:'inv',id:id||null}; renderOffers(STATE); }
+function jSheetClose(){ JSHEET=null; renderOffers(STATE); }
+function jLaneKap(id){ JSHEET=null; dbAdd(id,1); }
+function jHemenUrl(o,c){ if(!jHemen(o)) return ''; const u=String(o.hemen.url); return u+(u.includes('?')?'&':'?')+'attributes[offer]='+encodeURIComponent(o.id)+'&attributes[dev]='+encodeURIComponent(devId())+'&attributes[hemen]=1'+(c?('&attributes[inv]='+encodeURIComponent(c)):''); }
+function jHemenGo(id,c){ const o=((STATE&&STATE.offers)||[]).find(x=>x.id===id); const u=jHemenUrl(o,c); if(!u) return; try{ localStorage.setItem('grupal_hemen_pend',JSON.stringify({id,c:c||null,at:Date.now()})); }catch(e){} location.href=u; }
+function jRoastD(o){ const d=o&&o.hemen&&o.hemen.roast_at; if(!d) return ''; try{ return cyD(new Date(d).toISOString()); }catch(e){ return ''; } }
+function jPct(list,p){ return (list>0&&p>0&&list>p)?Math.round(100*(1-p/list)):0; }
+function jInvLeft(inv){ const ms=new Date(inv&&inv.exp||0).getTime()-Date.now(); if(!(ms>0)) return t('jInvExp'); const h=Math.floor(ms/3600000); return h>=48?t('jInvDays').replace('{d}',Math.round(h/24)):t('jInvHours').replace('{h}',Math.max(1,h)); }
+function jGuestHtml(){ if(!JINV) return ''; const o=JINV.id?((STATE&&STATE.offers)||[]).find(x=>x.id===JINV.id):null;
+  if(JINV.ok) return '<div class="jgb" id="jGB">'+t('jGB').replace('{n}',escZ(JINV.name||'Jüri')).replace('{coffee}',escZ(JINV.coffee||(o?jShort(o.name):''))).replace('{p}',fmtTL(JINV.price||0)).replace('{d}',jInvLeft(JINV))+(o?('<a onclick="jLaneOpen(\''+escZ(o.id)+'\',\''+escZ(JINV.c)+'\')">'+t('jGBOpen')+'</a>'):'')+'</div>';
+  const k={used:'jGBUsed',expired:'jGBExp',limit:'jGBLimit',green:'jGBGreen',nolane:'jGBLane'}[JINV.reason]||'jGBNo';
+  return '<div class="jgb bad" id="jGB">'+t(k).replace('{n}',escZ(JINV.taker||''))+(o?('<a onclick="jLaneOpen(\''+escZ(o.id)+'\')">'+t('jGBOpen')+'</a>'):'')+'</div>'; }
+async function jInvBoot(){ let c=''; try{ c=new URLSearchParams(location.search).get('d')||''; if(c) sessionStorage.setItem('grupal_invc',c); else c=sessionStorage.getItem('grupal_invc')||''; }catch(e){}
+  c=String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12); if(!c) return;
+  try{ const r=await fetch(API+'/inv?c='+encodeURIComponent(c)+'&dev='+encodeURIComponent(devId())); const j=await r.json(); if(j&&typeof j==='object'){ JINV={...j,c}; renderOffers(STATE); } }catch(e){} }
+function jInvShareText(inv,o){ const cfg=offCfg(); return t('jInvShare').replace('{me}',inv.n||'').replace('{coffee}',jShort(o.name)).replace('{p}',fmtTL(o.hemen.price||0)).replace('{l}',fmtTL(o.list_tl||0)).replace('{n}',o.dep||0).replace('{g}',cfg.goal).replace('{url}','https://grup-al.com/?d='+inv.c); }
+function jInvSend(c){ const inv=(OFFINV||[]).find(x=>x.c===c); const o=inv?((STATE&&STATE.offers)||[]).find(x=>x.id===inv.id):null; if(!inv||!o||!jHemen(o)) return; const txt=jInvShareText(inv,o);
+  if(navigator.share){ navigator.share({text:txt}).catch(()=>{}); return; } window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank','noopener'); }
+async function jInvTable(c){ const inv=(OFFINV||[]).find(x=>x.c===c); if(!inv||inv.st!=='p') return;
+  try{ const r=await fetch(API+'/inv-table',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({c,dev:devId()})}); const j=await r.json();
+    if(j&&j.ok){ inv.st='t'; const o=((STATE&&STATE.offers)||[]).find(x=>x.id===inv.id); if(o&&jHemen(o)){ o.hemen.table=(Array.isArray(o.hemen.table)?o.hemen.table:[]).concat([{c,n:inv.n||''}]); } jMsg(t('jInvOnTable'),2100); renderOffers(STATE); } }catch(e){} }
+function jSheetHtml(){ if(!JSHEET) return ''; const list=(STATE&&STATE.offers)||[]; const cfg=offCfg(), G=cfg.goal;
+  if(JSHEET.mode==='inv'){ const ORD={p:0,t:1,u:2,x:3}; const mine=(OFFINV||[]).filter(i=>i&&(!JSHEET.id||i.id===JSHEET.id)).sort((a,b)=>((a.st in ORD)?ORD[a.st]:9)-((b.st in ORD)?ORD[b.st]:9));
+    let h='<div class="jsh-h"><b>'+t('jInvT')+'</b><span class="x" onclick="jSheetClose()">✕ '+t('jSheetX')+'</span></div><div class="jsh-sub">'+t('jInvSub').replace('{h}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv_h)||24))+'</div>';
+    if(!mine.length) return h+'<div class="jnote2" style="margin-top:14px">'+t('jInvNone').replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2))+'</div>';
+    let usable=null;
+    for(const inv of mine){ const o=list.find(x=>x.id===inv.id); if(!o) continue; if(!usable&&(inv.st==='p'||inv.st==='t')&&jHemen(o)) usable=inv;
+      h+='<div class="jtk '+escZ(inv.st)+'" data-c="'+escZ(inv.c)+'"><div class="l"><div class="t1">'+t('jInvTk')+' · '+escZ(jShort(o.name))+'</div><div class="t2">'+t('jHA')+' · '+fmtTL(jHemen(o)?o.hemen.price:0)+' TL</div><div class="t3">'+(o.list_tl?(t('offListP')+fmtTL(o.list_tl)+' · '):'')+t('jHRoast')+'</div></div><div class="r">'
+        +(inv.st==='p'?('<small>'+jInvLeft(inv)+'</small><button class="snd" onclick="jInvSend(\''+escZ(inv.c)+'\')">'+t('jInvSend')+'</button><button class="tbl" onclick="jInvTable(\''+escZ(inv.c)+'\')">'+t('jInvTable')+'</button>')
+         :inv.st==='t'?('<small>'+jInvLeft(inv)+'</small><button class="tbl">🪑 '+t('jInvOnTable')+'</button>')
+         :inv.st==='u'?('<div class="done">'+t('jInvUsed').replace('{n}',escZ(inv.taker||''))+'</div>'):('<div class="done">'+t('jInvExp')+'</div>'))+'</div></div>'; }
+    if(usable) h+='<a class="jself" onclick="jHemenGo(\''+escZ(usable.id)+'\',\''+escZ(usable.c)+'\')">'+t('jInvSelf')+'</a><div class="jnote2">'+t('jInvNote').replace('{g}',G)+'</div>';
+    return h; }
+  const o=list.find(x=>x.id===JSHEET.id); if(!o) return '';
+  const jury=o.jury_tl||o.camp200_tl, paid=jPaidOf(o), dep=o.dep||0, hm=jHemen(o)?o.hemen:null, left=hm?jHemenLeft(o):0, tb=hm?jTableOf(o):[];
+  const myInv=jMyInv(o.id); const guestC=(JINV&&JINV.ok&&JINV.id===o.id)?JINV.c:null; const pick=JSHEET.c||guestC||null;
+  const pctG=Math.min(100,Math.round(100*dep/G)), pctMe=paid?0:Math.min(100-pctG,Math.round(100/G));
+  let h='<div class="jsh-h"><b>'+escZ(o.name)+'</b><span class="x" onclick="jSheetClose()">✕ '+t('jSheetX')+'</span></div><div class="jlanes">';
+  h+='<div class="jlane ga"><div class="lt">'+t('jGA')+'</div><div class="lp">'+(jury?fmtTL(jury):'—')+'<small>TL</small></div><div class="ls">'+(o.list_tl?('<s>'+t('offListP')+fmtTL(o.list_tl)+'</s>'):'')+(jPct(o.list_tl,jury)?('<span class="jpct">%'+jPct(o.list_tl,jury)+'</span>'):'')+'</div>'
+    +'<div class="jmeter"><b style="width:'+pctG+'%"></b>'+(pctMe?('<b class="me" style="left:'+pctG+'%;width:'+pctMe+'%"></b>'):'')+'</div><div class="jmtx"><span>'+dep+'/'+G+'</span>'+(pctMe?('<span class="you">'+t('jPlusYou')+'</span>'):'')+'<span>'+Math.max(0,G-dep)+' '+t('jHLeft').replace('{n} ','')+'</span></div>'
+    +'<div class="why"><em>'+t('jLaneGAt').replace('{g}',G)+'</em> '+t('jLaneGAx')+'</div>'
+    +(paid?('<div class="st">'+t('jLaneMine').replace('{n}',Math.max(1,parseInt(paid.qty)||1)).replace('{p}',fmtTL(jury||0))+'</div>'):('<button class="cta" onclick="jLaneKap(\''+escZ(o.id)+'\')">'+t('jLaneKap').replace('{amt}',cfg.dep_amt||'')+'</button>'))+'</div>';
+  if(hm){ const full=!left&&!pick&&!myInv.length&&!tb.length; let cta='', code=null, cls='';
+    if(pick){ code=pick; cls=' inv'; cta=t('jLaneBuyInv').replace('{p}',fmtTL(hm.price)); }
+    else if(left){ cta=t('jLaneBuy').replace('{p}',fmtTL(hm.price)); }
+    else if(myInv.length){ code=myInv[0].c; cls=' inv'; cta=t('jLaneBuyInv').replace('{p}',fmtTL(hm.price)); }
+    else if(tb.length){ code=tb[0].c; cls=' inv'; cta=t('jLaneTake').replace('{n}',escZ(tb[0].n||'Jüri')); }
+    else { cta=t('jHFull'); cls=' off'; }
+    const rd=jRoastD(o);
+    h+='<div class="jlane ha'+(full?' full':'')+'">'+(rd?('<span class="cal">Pzt<b>'+escZ(rd)+'</b></span>'):'')+'<div class="lt">'+t('jHA')+(pick?(' · '+t('jHAInv')):'')+'</div><div class="lp">'+fmtTL(hm.price)+'<small>TL</small></div><div class="ls">'+(o.list_tl?('<s>'+t('offListP')+fmtTL(o.list_tl)+'</s>'):'')+(jPct(o.list_tl,hm.price)?('<span class="jpct">%'+jPct(o.list_tl,hm.price)+'</span>'):'')+'</div>'
+      +'<div class="qt"><b>'+left+'</b> '+t('jHLeft').replace('{n} ','')+(tb.length?('<span class="hint">· '+t('jHTable').replace('{n}',tb.length)+'</span>'):'')+'</div>'
+      +'<div class="st">'+(full?('🔒 '+t('jLaneFull').replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2))):('✓ '+t('jHRoast')))+'</div>'
+      +'<div class="why">'+t('jLaneHAx').replace('{g}',G)+'</div>'
+      +'<button class="cta'+cls+'"'+(cls===' off'?'':(' onclick="jHemenGo(\''+escZ(o.id)+'\''+(code?(',\''+escZ(code)+'\''):'')+')"'))+'>'+cta+'</button></div>'; }
+  h+='</div><div class="jlfoot">'+t('jLaneFoot').replace('{a}',jPct(o.list_tl,jury)).replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2))+'</div>';
+  return h; }
+function renderSheet(){ let back=$('jSheetBack'), sh=$('jSheet'); const h=jSheetHtml();
+  if(!h){ if(back) back.remove(); if(sh) sh.remove(); return; }
+  if(!back){ back=document.createElement('div'); back.id='jSheetBack'; back.onclick=jSheetClose; document.body.appendChild(back); }
+  if(!sh){ sh=document.createElement('div'); sh.id='jSheet'; document.body.appendChild(sh); }
+  sh.innerHTML=h; }
 // ===== v09l JÜRİ SAYFASI: sayfa 1 Deste (tüm kahveler + sayaç) · sayfa 2 Damak akordeonu (tat bantları + CoffeeNutz'ın 5'i + Tüm liste) · sayfa 3 Oturum =====
 let JBAND=null; try{ const v=localStorage.getItem('grupal_jband'); if(v) JBAND=v; }catch(e){}
 function jBandKeys(list){ return [['top5',t('jTop5'),'#e6c14b',list.filter(o=>jTop(o)).sort((a,b)=>jTop(a)-jTop(b))]].concat(TASTES.filter(x=>x[0]!=='all').map(x=>[x[0],(LANG==='en'?x[2]:x[1]),TASTECOL[x[0]],list.filter(o=>tasteOf(o)===x[0])])).concat([['all',t('jBandAll'),'var(--accent)',list.slice()]]); }
@@ -1292,7 +1460,7 @@ function renderJuriPage(s,list,ctx,early,codeOk){
   const c=s&&s.cycle, nc=(c&&c.next_close)?new Date(c.next_close).getTime():0;
   const clk=nc?jClockBoxes(nc):'';   // v09m: çerçeveli sayaç kartın üstünde (dağların hizasında)
   // SAYFA 1 — Deste: tüm kahveler, ön sipariş sırasına göre; sayaç kartın üstünde
-  h+='<section class="jpage'+(jMineList(list).length?' hasmine':'')+(jWelcShow()?' haswelc':'')+'" id="jP1">'+jWelcHtml(cfg)+renderTicker(list,G)+renderDeck(list,cfg,G,gate,banned,clk)
+  h+='<section class="jpage'+(jMineList(list).length?' hasmine':'')+(jWelcShow()?' haswelc':'')+'" id="jP1">'+jWelcHtml(cfg)+jGuestHtml()+renderTicker(list,G)+renderDeck(list,cfg,G,gate,banned,clk)
     +'<div class="jnav"><button class="jnb" onclick="jOpenBand(\'top5\')">★ '+t('jTop5')+' ›</button><button class="jnb" onclick="jOpenBand(\'all\')">'+t('jAllList').replace('{n}',list.length)+' ›</button></div>'
     +'<div class="jhint" onclick="jGo(\'jP2\')">⌃ '+t('jSwipeUp')+'</div></section>';
   // SAYFA 2 — Damak akordeonu
@@ -1341,7 +1509,7 @@ function renderJuriDesk(s,list,ctx,early,codeOk){
     +'<details class="jhow"><summary>'+t('jHowT')+'</summary><div class="hint" style="margin-top:6px;font-size:12px;line-height:1.55">'+escZ(t('offHD').split('{g}').join(G).split('{c}').join(cyCap()).split('{amt}').join(cfg.dep_amt||''))+'</div></details>'
     +'<div class="hint" style="margin-top:4px;font-size:11px;opacity:.75">'+t('offGoalD').split('{g}').join(G)+'</div>'
     +'<details style="margin-top:6px"><summary class="hint" style="cursor:pointer;font-size:11px">'+t('offTermsL')+'</summary><div class="hint" style="margin-top:4px;font-size:11px;line-height:1.5">'+t('offTerms').split('{amt}').join(cfg.dep_amt||'').split('{g}').join(G).split('{c}').join(cyCap()).split('{dd}').join(String((STATE&&STATE.offer_cfg&&parseInt(STATE.offer_cfg.done_days))||2))+'</div></details></div>';
-  h+='</aside><main class="jdk-main">'+jWelcHtml(cfg);
+  h+='</aside><main class="jdk-main">'+jWelcHtml(cfg)+jGuestHtml();
   { const tot=list.reduce((a,o)=>a+(o.dep||0),0), kk=list.filter(o=>(o.dep||0)>0).length, dg=parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.day_goal)||0)||0;
     const feat=shown.filter(jHasImg), rest=shown.filter(o=>!jHasImg(o)); const view=JDV||(feat.length?'list':'cards');   // v09w: fotoğraflı kahveler vitrinde kart; gerisi seçime göre (fotoğraf varsa varsayılan liste — dağ kartları birbirine benzer)
     h+='<div class="jdk-head"><div><div class="jdk-t">'+escZ(cur[1])+' <span class="hint">· '+shown.length+' '+t('jCoffee')+' · '+t('jdSort')+'</span></div><div id="offTot" class="hint" style="margin-top:2px;font-weight:700">'+(dg?t('offTotG').replace('{sum}',tot).replace('{dg}',dg):t('offTot').replace('{sum}',tot))+(kk?(' · '+t('offTotK').replace('{k}',kk)):'')+'</div></div>'
@@ -1459,7 +1627,7 @@ async function offLoadMine(s){
   if(!s||!Array.isArray(s.offers)||!s.offers.length) return;
   // v02v: Meydan'da her zaman sor (kaporalar cihaza bağlı) · v05h: kampanyada da sor — link kartı "Kaporan: …" satırını gösterir
   try{ const r=await fetch(API+'/offer-mine?dev='+encodeURIComponent(devId())); const j=await r.json();
-    if(j&&Array.isArray(j.votes)){ OFFMINE=j.votes; BANNED=j.banned_until?new Date(j.banned_until):null; if(BANNED&&isNaN(BANNED.getTime())) BANNED=null;
+    if(j&&Array.isArray(j.votes)){ OFFMINE=j.votes; OFFINV=Array.isArray(j.inv)?j.inv:[]; OFFHEMEN=Array.isArray(j.hemen)?j.hemen:[]; BANNED=j.banned_until?new Date(j.banned_until):null; if(BANNED&&isNaN(BANNED.getTime())) BANNED=null;
       const paidIds=j.votes.filter(v=>v.paid).map(v=>v.id); if(paidIds.length){ try{ localStorage.setItem('grupal_odep', JSON.stringify(offPend().filter(id=>!paidIds.includes(id)))); }catch(e){} }
       renderOffers(s); } }catch(e){}
 }
@@ -2206,7 +2374,7 @@ async function loadMeydan(){
     { const oc=$('offerCard'), cc=$('chatCard'); if(oc&&cc&&cc.parentNode&&oc.previousElementSibling!==null&&oc.compareDocumentPosition(cc)&Node.DOCUMENT_POSITION_PRECEDING) cc.parentNode.insertBefore(oc,cc); }   // Meydan kartı önce, grup kartı sonra
     ['heroBox','deadline','roasterLine','dealLine','attCard','youCard','lvlCard','joinCard','paidCard','zincirCard','giftCard','payBlock','closedCard','annCard','howBox','shareRow'].forEach(id=>{ const el=$(id); if(el) el.style.display='none'; });
     try{ document.title='Grup-Al® Jüri · sıradaki kahveyi sen seç'; }catch(e){}
-    renderOffers(s); offLoadMine(s); renderWishes(s); renderChan(); renderChat(); renderChips();
+    renderOffers(s); offLoadMine(s); jInvBoot(); renderWishes(s); renderChan(); renderChat(); renderChips();
     const wc=$('wishCard'); if(wc&&(!s.offers||!s.offers.length)) wc.style.display='block';
     // v05c: paylaşım satırı Meydan linkiyle (davet/kilit satırları gizli) + açık masalar
     { const sb=$('shareBox'); if(sb){ sb.style.display='block'; ['lockRow','cardBtn','davSlots','davTxt'].forEach(id=>{ const e=$(id); if(e) e.style.display='none'; }); const dl=sb.querySelector('[data-i18n="davLbl"]'); if(dl) dl.textContent=t(shMine()?'shMineL':'mdShareL'); $('shareLink').textContent=location.origin+'/juri'; /* v09f: dışarıya /juri */ }
