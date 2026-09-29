@@ -264,8 +264,8 @@ details.set.card[open]>summary{margin-bottom:6px}
           <div class="f"><span class="lbl">referans 2 · liste ₺ (250 g)</span><input id="s_ref2list" inputmode="numeric" placeholder="900" oninput="scalePreview()"></div>
           <div class="f"><span class="lbl">referans 3 · $/kg (üst uç)</span><input id="s_ref3usd" inputmode="decimal" placeholder="32,87" oninput="scalePreview()"></div>
           <div class="f"><span class="lbl">referans 3 · liste ₺ (250 g)</span><input id="s_ref3list" inputmode="numeric" placeholder="2200" oninput="scalePreview()"></div>
-          <div class="f"><span class="lbl">oran · JÜRİ fiyatı (kaporalı)</span><input id="s_rjury" inputmode="decimal" placeholder="0,65"></div>
-          <div class="f"><span class="lbl">oran · SEPET fiyatı (Jüri Sepeti)</span><input id="s_rbasket" inputmode="decimal" placeholder="0,80"></div>
+          <div class="f"><span class="lbl">oran · KAPORALI fiyat (Grup-Al · %40 için 0,60)</span><input id="s_rjury" inputmode="decimal" placeholder="0,65"></div>
+          <div class="f"><span class="lbl">oran · SEPET / HEMEN-AL fiyatı (%20 için 0,80)</span><input id="s_rbasket" inputmode="decimal" placeholder="0,80"></div>
         </div>
         <div class="hint" id="scaleLine" style="margin-top:6px;color:var(--gold);font-weight:700"></div>
         <div style="display:flex;gap:14px;margin-top:8px;flex-wrap:wrap">
@@ -310,7 +310,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-30a';
+const VERSION='v2026-09-30b';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme

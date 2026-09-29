@@ -1,0 +1,16 @@
+import { chromium } from 'playwright-core'; import fs from 'fs'; import path from 'path';
+const here='/tmp/work6/tests'; const html=fs.readFileSync('/tmp/work6/grupal.html','utf8'); const MD=JSON.parse(fs.readFileSync(path.join(here,'mock-meydan.json'),'utf8'));
+const ord=MD.offers.slice().sort((a,b)=>((b.dep||0)-(a.dep||0))); const MH=JSON.parse(JSON.stringify(MD)); const H0=MH.offers.find(o=>o.id===ord[0].id);
+H0.img_url='https://x.test/o/a.jpg'; H0.hemen={url:'https://coffeenutz.net/cart/222:1',price:1280,base:2,sold:0,inv:0,left:2,green_left:null,table:[],roast_at:'2026-10-05T20:59:00.000Z'}; H0.list_tl=1600; H0.jury_tl=960; MH.offer_cfg.hemen_inv=2;
+const photo=fs.existsSync('/tmp/_shots/fakephoto.b64')?fs.readFileSync('/tmp/_shots/fakephoto.b64','utf8'):'';
+const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell',args:['--no-sandbox']});
+const ctx=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:1.5,locale:'tr-TR'}); await ctx.addInitScript(()=>{ try{ localStorage.clear(); localStorage.setItem('grupal_welcomed','1'); }catch(e){} }); const p=await ctx.newPage();
+await p.route('**/*',async route=>{ const u=route.request().url(); if(u.startsWith('https://grup-al.com/')&&!u.includes('/functions/')) return route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html});
+  if(u.includes('x.test/o/')) return photo?route.fulfill({status:200,contentType:'image/jpeg',body:Buffer.from(photo.split(',')[1],'base64')}):route.fulfill({status:404,body:''});
+  if(u.includes('/meydan')) return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(MH)});
+  if(u.includes('/offer-mine')) return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({votes:[],inv:[],hemen:[]})});
+  if(u.includes('/campaigns')) return route.fulfill({status:200,contentType:'application/json',body:'[]'}); return route.fulfill({status:204,body:''}); });
+await p.goto('https://grup-al.com/juri'); await p.waitForTimeout(1300);
+await p.click('.jcard[data-id="'+H0.id+'"] .jplus'); await p.waitForTimeout(350); await p.screenshot({path:'/tmp/_shots/anim_1.png'});
+await p.waitForTimeout(2200); await p.screenshot({path:'/tmp/_shots/anim_2.png'});
+await b.close(); console.log('ok');

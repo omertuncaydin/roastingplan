@@ -458,8 +458,14 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 .jchip.jinv{border-color:rgba(230,193,75,.7);color:#e6c14b;cursor:pointer}
 .jchip.jtbl{border-color:rgba(159,211,178,.6);color:#9fd3b2;cursor:pointer}
 #jSheetBack{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:60}
-#jSheet{position:fixed;left:0;right:0;bottom:0;z-index:61;background:var(--panel);color:var(--ink);border-radius:22px 22px 0 0;border-top:1px solid var(--line);padding:14px 16px 22px;box-shadow:0 -20px 50px rgba(0,0,0,.5);max-height:88dvh;overflow:auto;animation:jUp .45s cubic-bezier(.2,.8,.2,1)}
-body.jdesk #jSheet{left:auto;right:24px;bottom:24px;width:520px;border-radius:18px;border:1px solid var(--line)}
+#jSheet{position:fixed;left:0;right:0;bottom:0;z-index:61;--panel:#221c15;--panel2:#1c1712;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--gold:#e6c14b;--btnink:#16130f;background:#16130f;color:#f3ede4;border-radius:22px 22px 0 0;border-top:1px solid #3a2f26;padding:14px 16px 22px;box-shadow:0 -20px 50px rgba(0,0,0,.5);max-height:88dvh;overflow:auto;animation:jUp .45s cubic-bezier(.2,.8,.2,1)}
+body.jdesk #jSheet{left:auto;right:24px;bottom:24px;width:520px;border-radius:18px;border:1px solid #3a2f26}
+#jSheetBack{background:rgba(0,0,0,.55)}
+.jlane{background:rgba(22,19,15,.72);border-color:rgba(243,237,228,.16)}
+.jlane .lp.roll{transition:transform .18s}.jlane .lp.pulse{transform:scale(1.06)}
+.jmeter b.me{width:0 !important;transition:width .6s cubic-bezier(.2,.8,.2,1) .15s}#jSheet.plus .jmeter b.me{width:var(--me) !important}
+.jmtx .you{opacity:0;transform:translateY(4px);transition:opacity .4s .3s,transform .4s .3s}#jSheet.plus .jmtx .you{opacity:1;transform:none}
+.jplus2{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--gold);color:var(--btnink);font-size:11px;font-weight:900;white-space:nowrap;opacity:0;transform:scale(.6);transition:opacity .3s,transform .4s cubic-bezier(.3,1.6,.4,1)}#jSheet.opened .jplus2{opacity:1;transform:scale(1)}
 @keyframes jUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
 .jsh-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .jsh-h b{font-size:17px;font-weight:900}
@@ -692,7 +698,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30a';
+const VERSION='v2026-09-30b';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1266,7 +1272,7 @@ function jCtl(o,cfg,paid,gate,banned){
   if(JMOVE) return (o.id===JMOVE)?('<button class="jmvx" onclick="event.stopPropagation();jMoveCancel()">'+t('jMoveX')+'</button>'):((paid&&paid.conv)?'':('<button class="jmvb" onclick="event.stopPropagation();jMoveTo(\''+escZ(o.id)+'\')">'+t('jMoveHere')+' →</button>'));   // v09p: taşıma modu
   if((paid&&paid.conv&&!paid.done)||banned) return ''; if(gate) return '<button class="jplus" style="font-size:20px" onclick="event.stopPropagation();gcodeFocus()">🔒</button>'; const q=dbGet()[o.id]||0;
   return q?('<span class="jq" onclick="event.stopPropagation()"><button onclick="dbAdd(\''+escZ(o.id)+'\',-1)" aria-label="−">−</button><b>'+q+'</b><button onclick="dbAdd(\''+escZ(o.id)+'\',1)" aria-label="+">+</button></span>')
-          :('<button class="jplus" onclick="event.stopPropagation();dbAdd(\''+escZ(o.id)+'\',1)" title="'+t(paid?'offDepMore':'offDep').replace('{amt}',cfg.dep_amt||'')+'" aria-label="+">+</button>'); }
+          :('<button class="jplus" onclick="event.stopPropagation();jLaneOpen(\''+escZ(o.id)+'\')" title="'+t(paid?'offDepMore':'offDep').replace('{amt}',cfg.dep_amt||'')+'" aria-label="+">+</button>'); }   // v10b: + → şeritler (mockup gibi); Kapora koy sepete ekler
 function renderDeck(list,cfg,G,gate,banned,clk){ const all=jDeckOrder(list);   // v09l: tüm kahveler, ön sipariş sırasına göre
   const cards=all.map((o,i)=>jCardHtml(o,i,cfg,G,gate,banned)).join('');
   return '<div class="jdeckw"><div class="jdeck" id="jDeck">'+cards+'</div>'+(clk||'')+'</div><div class="jdots"><i class="on"></i><span class="jdn">1 / '+all.length+' · '+t('jSwipe')+'</span></div>'; }
@@ -1383,7 +1389,7 @@ function renderOffers(s){
 
 
 // ===== v10a GRUP-AL / HEMEN-AL: alt sayfa (iki şerit · davetiye biletleri) · davetli görünümü · Hemen-Al sipariş linki =====
-function jLaneOpen(id,c){ JSHEET={mode:'lanes',id,c:c||null}; renderOffers(STATE); }
+function jLaneOpen(id,c){ JSHEET={mode:'lanes',id,c:c||null,anim:true}; renderOffers(STATE); }
 function jInvOpen(id){ JSHEET={mode:'inv',id:id||null}; renderOffers(STATE); }
 function jSheetClose(){ JSHEET=null; renderOffers(STATE); }
 function jLaneKap(id){ JSHEET=null; dbAdd(id,1); }
@@ -1422,8 +1428,8 @@ function jSheetHtml(){ if(!JSHEET) return ''; const list=(STATE&&STATE.offers)||
   const myInv=jMyInv(o.id); const guestC=(JINV&&JINV.ok&&JINV.id===o.id)?JINV.c:null; const pick=JSHEET.c||guestC||null;
   const pctG=Math.min(100,Math.round(100*dep/G)), pctMe=paid?0:Math.min(100-pctG,Math.round(100/G));
   let h='<div class="jsh-h"><b>'+escZ(o.name)+'</b><span class="x" onclick="jSheetClose()">✕ '+t('jSheetX')+'</span></div><div class="jlanes">';
-  h+='<div class="jlane ga"><div class="lt">'+t('jGA')+'</div><div class="lp">'+(jury?fmtTL(jury):'—')+'<small>TL</small></div><div class="ls">'+(o.list_tl?('<s>'+t('offListP')+fmtTL(o.list_tl)+'</s>'):'')+(jPct(o.list_tl,jury)?('<span class="jpct">%'+jPct(o.list_tl,jury)+'</span>'):'')+'</div>'
-    +'<div class="jmeter"><b style="width:'+pctG+'%"></b>'+(pctMe?('<b class="me" style="left:'+pctG+'%;width:'+pctMe+'%"></b>'):'')+'</div><div class="jmtx"><span>'+dep+'/'+G+'</span>'+(pctMe?('<span class="you">'+t('jPlusYou')+'</span>'):'')+'<span>'+Math.max(0,G-dep)+' '+t('jHLeft').replace('{n} ','')+'</span></div>'
+  h+='<div class="jlane ga"><div class="lt">'+t('jGA')+'</div><div class="lp" data-list="'+(o.list_tl||0)+'" data-jury="'+(jury||0)+'"><span class="n">'+(jury?fmtTL(jury):'—')+'</span><small>TL</small></div><div class="ls">'+(o.list_tl?('<s>'+t('offListP')+fmtTL(o.list_tl)+'</s>'):'')+(jPct(o.list_tl,jury)?('<span class="jpct">%'+jPct(o.list_tl,jury)+'</span>'):'')+'</div>'
+    +'<div class="jmeter"><b style="width:'+pctG+'%"></b>'+(pctMe?('<b class="me" style="left:'+pctG+'%;--me:'+pctMe+'%"></b>'):'')+'</div><div class="jmtx"><span>'+dep+'/'+G+'</span>'+(pctMe?('<span class="you">'+t('jPlusYou')+'</span>'):'')+'<span>'+Math.max(0,G-dep)+' '+t('jHLeft').replace('{n} ','')+'</span></div>'
     +'<div class="why"><em>'+t('jLaneGAt').replace('{g}',G)+'</em> '+t('jLaneGAx')+'</div>'
     +(paid?('<div class="st">'+t('jLaneMine').replace('{n}',Math.max(1,parseInt(paid.qty)||1)).replace('{p}',fmtTL(jury||0))+'</div>'):('<button class="cta" onclick="jLaneKap(\''+escZ(o.id)+'\')">'+t('jLaneKap').replace('{amt}',cfg.dep_amt||'')+'</button>'))+'</div>';
   if(hm){ const full=!left&&!pick&&!myInv.length&&!tb.length; let cta='', code=null, cls='';
@@ -1434,7 +1440,7 @@ function jSheetHtml(){ if(!JSHEET) return ''; const list=(STATE&&STATE.offers)||
     else { cta=t('jHFull'); cls=' off'; }
     const rd=jRoastD(o);
     h+='<div class="jlane ha'+(full?' full':'')+'">'+(rd?('<span class="cal">Pzt<b>'+escZ(rd)+'</b></span>'):'')+'<div class="lt">'+t('jHA')+(pick?(' · '+t('jHAInv')):'')+'</div><div class="lp">'+fmtTL(hm.price)+'<small>TL</small></div><div class="ls">'+(o.list_tl?('<s>'+t('offListP')+fmtTL(o.list_tl)+'</s>'):'')+(jPct(o.list_tl,hm.price)?('<span class="jpct">%'+jPct(o.list_tl,hm.price)+'</span>'):'')+'</div>'
-      +'<div class="qt"><b>'+left+'</b> '+t('jHLeft').replace('{n} ','')+(tb.length?('<span class="hint">· '+t('jHTable').replace('{n}',tb.length)+'</span>'):'')+'</div>'
+      +'<div class="qt"><b>'+left+'</b> '+t('jHLeft').replace('{n} ','')+(tb.length?('<span class="hint">· '+t('jHTable').replace('{n}',tb.length)+'</span>'):'')+((!paid&&!pick)?('<span class="jplus2">+'+parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2)+' '+t('jInvTk').toLocaleLowerCase('tr-TR')+'</span>'):'')+'</div>'
       +'<div class="st">'+(full?('🔒 '+t('jLaneFull').replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2))):('✓ '+t('jHRoast')))+'</div>'
       +'<div class="why">'+t('jLaneHAx').replace('{g}',G)+'</div>'
       +'<button class="cta'+cls+'"'+(cls===' off'?'':(' onclick="jHemenGo(\''+escZ(o.id)+'\''+(code?(',\''+escZ(code)+'\''):'')+')"'))+'>'+cta+'</button></div>'; }
@@ -1444,7 +1450,13 @@ function renderSheet(){ let back=$('jSheetBack'), sh=$('jSheet'); const h=jSheet
   if(!h){ if(back) back.remove(); if(sh) sh.remove(); return; }
   if(!back){ back=document.createElement('div'); back.id='jSheetBack'; back.onclick=jSheetClose; document.body.appendChild(back); }
   if(!sh){ sh=document.createElement('div'); sh.id='jSheet'; document.body.appendChild(sh); }
-  sh.innerHTML=h; }
+  sh.innerHTML=h; if(JSHEET&&JSHEET.anim){ JSHEET.anim=false; jSheetAnim(sh); } else if(JSHEET&&JSHEET.mode==='lanes'){ sh.classList.add('plus','opened'); } }
+// v10b: mockup animasyonu — fiyat listeden kaporalıya iner, sayaca +1 sen düşer, Hemen-Al'da +2 davetiye rozeti belirir (testte __jFast: anında)
+function jSheetAnim(sh){ const lp=sh.querySelector('.jlane.ga .lp'); const fast=!!window.__jFast; const done=()=>{ sh.classList.add('plus'); }; const done2=()=>{ sh.classList.add('opened'); };
+  if(fast){ done(); done2(); return; }
+  const L=lp?parseInt(lp.getAttribute('data-list'))||0:0, J=lp?parseInt(lp.getAttribute('data-jury'))||0:0, n=lp&&lp.querySelector('.n');
+  if(lp&&n&&L>J&&J>0){ lp.classList.add('roll'); n.textContent=fmtTL(L); const t0=performance.now(), ms=1100; const step=tm=>{ const k=Math.min(1,(tm-t0)/ms), e=1-Math.pow(1-k,3); n.textContent=fmtTL(L+(J-L)*e); if(k<1) requestAnimationFrame(step); else { lp.classList.add('pulse'); setTimeout(()=>lp.classList.remove('pulse'),180); } }; requestAnimationFrame(step); }
+  setTimeout(done,1250); setTimeout(done2,1900); }
 // ===== v09l JÜRİ SAYFASI: sayfa 1 Deste (tüm kahveler + sayaç) · sayfa 2 Damak akordeonu (tat bantları + CoffeeNutz'ın 5'i + Tüm liste) · sayfa 3 Oturum =====
 let JBAND=null; try{ const v=localStorage.getItem('grupal_jband'); if(v) JBAND=v; }catch(e){}
 function jBandKeys(list){ return [['top5',t('jTop5'),'#e6c14b',list.filter(o=>jTop(o)).sort((a,b)=>jTop(a)-jTop(b))]].concat(TASTES.filter(x=>x[0]!=='all').map(x=>[x[0],(LANG==='en'?x[2]:x[1]),TASTECOL[x[0]],list.filter(o=>tasteOf(o)===x[0])])).concat([['all',t('jBandAll'),'var(--accent)',list.slice()]]); }
