@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || 'x@y.z', customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.41 tag', r.json && r.json.v === '3.41');
+T('v3.42 tag', r.json && r.json.v === '3.42');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -143,6 +143,11 @@ T('admin/variants returns id / title / price in TL / available', r.json.ok && r.
 r = await px.call('POST', '/admin/variants', { url: 'https://evil.example/products/x' }, { 'x-cc-key': 'adminkey' }); T('admin/variants refuses other hosts', r.status === 400 && r.json.ok === false);
 r = await px.call('POST', '/admin/variants', { url: 'https://coffeenutz.net/products/yok' }, { 'x-cc-key': 'adminkey' }); T('admin/variants: unknown handle → shop 404 surfaced', r.status === 502 && /shop 404/.test(r.json.error));
 
+// ---- v3.42: a Shopify call that never answers is cut at SHOPIFY_TIMEOUT_MS → error JSON, no hang
+{ process.env.SHOPIFY_TIMEOUT_MS = '250'; px.DB.__hang = true; const t0 = Date.now(); const keep = setTimeout(() => {}, 3000);   // Node unrefs AbortSignal.timeout timers; keep the loop alive
+  r = await px.call('POST', '/hemen-link', { id: A, dev: 'TIMEOUT001' }); clearTimeout(keep);
+  T('hanging Shopify token call → 502 {reason:shopify, error: …timeout…} within ~1 s', r.status === 502 && r.json.ok === false && r.json.reason === 'shopify' && /timeout/.test(r.json.error) && (Date.now() - t0) < 1500);
+  px.DB.__hang = false; delete process.env.SHOPIFY_TIMEOUT_MS; }
 // ---- v3.41 /admin/inv-backfill: kapora rows paid before v3.38 (no inv_ records) get their invitations once
 px.DB.grupal_offer_votes.push(
   { offer_id: A, dev: 'OLDDEV0001', seated: false, paid: true, qty: 2, order_id: 555, email: 'ayse.kaya@example.com', created_at: '2026-09-20T10:00:00.000Z' },

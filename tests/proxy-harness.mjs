@@ -18,7 +18,7 @@ export async function boot(tsPath, seed = {}) {
       return { ok: true, status: 200, json: async () => ({ title: 'Kolombiya Jose Espinoza Recreo', handle: h, variants: [
         { id: 67856174350640, title: 'Sonraki Kavrulma Tarihinde Gönderim / 250G', price: 124000, available: true },
         { id: 67856174350641, title: '28.09.26 Stoğundan Gönderim / 250G', price: 124000, available: false } ] }), text: async () => '' }; }
-    if (s.includes('/admin/oauth/access_token')) return { ok: true, status: 200, json: async () => ({ access_token: 'tok' }), text: async () => '' };
+    if (s.includes('/admin/oauth/access_token')) { if (DB.__hang) return new Promise((_, rej) => { const sig = init.signal; if (sig) sig.addEventListener('abort', () => rej(Object.assign(new Error('The operation was aborted'), { name: 'AbortError' }))); }); return { ok: true, status: 200, json: async () => ({ access_token: 'tok' }), text: async () => '' }; }
     if (s.includes('/graphql.json')) { const body = JSON.parse(init.body || '{}'); const q = String(body.query || ''); log.push('GQL ' + q.slice(0, 40));
       if (q.includes('productVariant(')) { const vid = String((body.variables || {}).id || ''); return { ok: true, status: 200, json: async () => ({ data: { productVariant: { id: vid, price: '1600.00', product: { id: 'gid://shopify/Product/777', title: 'El Recreo' } } } }), text: async () => '' }; }
       if (q.includes('discountCodeBasicCreate')) { const d = (body.variables || {}).d || {}; DB.__discounts = DB.__discounts || []; DB.__discounts.push(d); return { ok: true, status: 200, json: async () => ({ data: { discountCodeBasicCreate: { codeDiscountNode: { id: 'gid://shopify/DiscountCodeNode/' + DB.__discounts.length }, userErrors: [] } } }), text: async () => '' }; }
@@ -36,7 +36,7 @@ export async function boot(tsPath, seed = {}) {
     if (method === 'DELETE') { const keep = rows.filter(r => !flt.every(f => match(r, f))); DB[table] = keep; return { ok: true, status: 204, json: async () => [], text: async () => '' }; }
     return { ok: false, status: 405, text: async () => 'method', json: async () => ({}) };
   };
-  globalThis.Deno = { serve: (h) => { handler = h; }, env: { get: (k) => ({ SUPABASE_URL: 'https://db.test', SUPABASE_SERVICE_ROLE_KEY: 'k', CC_KEY: 'adminkey', SHOPIFY_CLIENT_SECRET: 'sec' })[k] || '' } };
+  globalThis.Deno = { serve: (h) => { handler = h; }, env: { get: (k) => ({ SUPABASE_URL: 'https://db.test', SUPABASE_SERVICE_ROLE_KEY: 'k', CC_KEY: 'adminkey', SHOPIFY_CLIENT_SECRET: 'sec' })[k] || process.env[k] || '' } };
   globalThis.fetch = fakeFetch;
   await import('data:text/javascript;base64,' + Buffer.from(js).toString('base64'));
   const call = async (method, path, body, headers = {}) => {

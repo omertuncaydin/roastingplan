@@ -721,7 +721,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30f';
+const VERSION='v2026-09-30g';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1432,7 +1432,7 @@ async function jHemenGo(id,c){ const o=((STATE&&STATE.offers)||[]).find(x=>x.id=
   try{ const r=await fetch(API+'/hemen-link',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id,dev:devId(),inv:c||null}),signal:ac?ac.signal:undefined}); const j=await r.json();
     if(j&&j.ok&&j.url){ try{ localStorage.setItem('grupal_hemen_pend',JSON.stringify({id,c:c||null,at:Date.now()})); }catch(e){} jNavigate(j.url); return; }
     const k={full:'jGBFullT',green:'jGBGreen',limit:'jGBLimit',used:'jGBUsed',expired:'jGBExp',nolane:'jGBLane',nocode:'jGBNo'}[j&&j.reason]||'jHErr';
-    jMsg(t(k).replace('{n}',(j&&j.taker)||''),3200); renderOffers(STATE); }
+    jMsg(t(k).replace('{n}',(j&&j.taker)||'')+((j&&j.error)?(' · '+String(j.error).slice(0,90)):''),(j&&j.error)?6000:3200); renderOffers(STATE); }   // v10f: proxy hata metni toast'ta (teşhis)
   catch(e){ jMsg(t((e&&e.name==='AbortError')?'jHSlow':'jHErr'),3200); renderOffers(STATE); }
   finally{ if(tm) clearTimeout(tm); } }
 function jNavigate(u){ location.href=u; }   // v10d: tek kullanımlık indirim kodlu sepet linki (proxy v3.39); testte ezilir
