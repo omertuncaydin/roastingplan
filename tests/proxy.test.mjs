@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || 'x@y.z', customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.39 tag', r.json && r.json.v === '3.39');
+T('v3.40 tag', r.json && r.json.v === '3.40');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -129,6 +129,19 @@ T('Hemen-Al boxes count toward the lock (lock record present, dep ≥ 5)', !!oa.
 // ---- admin settings allowlist accepts the three new keys
 r = await px.call('POST', '/admin/settings', { offer_hemen_base: '3', offer_hemen_inv: '2', offer_hemen_inv_h: '24' }, { 'x-cc-key': 'adminkey' });
 T('admin settings: hemen keys saved and reflected in cfg', r.json.ok && r.json.cfg.hemen_base === 3 && r.json.settings.offer_hemen_inv_h === '24');
+// v3.40 (BA): Ayarlar saved with the Hemen-Al fields left blank must NOT zero the pool / invitations (live bug: "doldu" on every lane)
+r = await px.call('POST', '/admin/settings', { offer_hemen_base: '', offer_hemen_inv: '', offer_hemen_inv_h: '', offer_ban_cycles: '' }, { 'x-cc-key': 'adminkey' });
+T('blank Hemen-Al settings fall back to defaults 2 / 2 / 24 h / ban 1', r.json.ok && r.json.cfg.hemen_base === 2 && r.json.cfg.hemen_inv === 2 && r.json.cfg.hemen_inv_h === 24 && r.json.cfg.ban_cycles === 1);
+r = await px.call('POST', '/admin/settings', { offer_hemen_base: '0' }, { 'x-cc-key': 'adminkey' }); T('an explicit "0" is still zero', r.json.ok && r.json.cfg.hemen_base === 0);
+r = await px.call('POST', '/admin/settings', { offer_hemen_base: '3' }, { 'x-cc-key': 'adminkey' });
+
+// ---- v3.40 /admin/variants: product page link → variant list from the public storefront .js endpoint
+r = await px.call('POST', '/admin/variants', { url: 'https://www.coffeenutz.net/products/kolombiya-jose-espinoza-recreo-1' });
+T('admin/variants needs the admin key', r.status === 401);
+r = await px.call('POST', '/admin/variants', { url: 'https://www.coffeenutz.net/products/kolombiya-jose-espinoza-recreo-1?variant=1' }, { 'x-cc-key': 'adminkey' });
+T('admin/variants returns id / title / price in TL / available', r.json.ok && r.json.handle === 'kolombiya-jose-espinoza-recreo-1' && r.json.variants.length === 2 && r.json.variants[0].id === 67856174350640 && r.json.variants[0].price === 1240 && r.json.variants[0].available === true && r.json.variants[1].available === false && /Sonraki/.test(r.json.variants[0].title));
+r = await px.call('POST', '/admin/variants', { url: 'https://evil.example/products/x' }, { 'x-cc-key': 'adminkey' }); T('admin/variants refuses other hosts', r.status === 400 && r.json.ok === false);
+r = await px.call('POST', '/admin/variants', { url: 'https://coffeenutz.net/products/yok' }, { 'x-cc-key': 'adminkey' }); T('admin/variants: unknown handle → shop 404 surfaced', r.status === 502 && /shop 404/.test(r.json.error));
 
 Date.now = realNow;
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);

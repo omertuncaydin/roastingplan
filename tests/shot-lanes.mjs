@@ -15,12 +15,12 @@ const MINE={votes:[{id:H0.id,paid:true,qty:1}],inv:[{c:'INV1',id:H0.id,st:'p',at
 const photo=fs.existsSync(path.join(here,'..','..','_shots','fakephoto.b64'))?fs.readFileSync(path.join(here,'..','..','_shots','fakephoto.b64'),'utf8'):'';
 const browser=await chromium.launch({executablePath:'/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell',args:['--no-sandbox']});
 const OUT=path.join(here,'..','..','_shots'); fs.mkdirSync(OUT,{recursive:true});
-async function shot(vp,name,mine,url,steps){
+async function shot(vp,name,mine,url,steps,md){ md=md||MH;
   const ctx=await browser.newContext({viewport:vp,deviceScaleFactor:1.5,locale:'tr-TR'}); await ctx.addInitScript(()=>{ try{ localStorage.clear(); localStorage.setItem('grupal_welcomed','1'); }catch(e){} }); const page=await ctx.newPage();
   await page.route('**/*',async route=>{ const u=route.request().url();
     if(u.startsWith('https://grup-al.com/')&&!u.includes('/functions/')) return route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html});
     if(u.includes('x.test/o/')) return photo?route.fulfill({status:200,contentType:'image/jpeg',body:Buffer.from(photo.split(',')[1],'base64')}):route.fulfill({status:404,body:''});
-    if(u.includes('/meydan')) return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(MH)});
+    if(u.includes('/meydan')) return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(md)});
     if(u.includes('/offer-mine')) return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(mine)});
     if(u.includes('/inv-table')) return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true})});
     if(u.includes('/inv?c=')) return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,c:'ABCD2345',id:H2.id,name:'Ömer',coffee:H2.name,price:1280,url:'https://coffeenutz.net/cart/222:1',exp,st:'t'})});
@@ -34,4 +34,9 @@ await shot({width:390,height:844},'lanes_phone_full',E,null,async p=>{ await p.e
 await shot({width:390,height:844},'lanes_phone_inv',MINE,null,async p=>{ await p.evaluate(id=>jInvOpen(id),H0.id); await p.waitForTimeout(500); });
 await shot({width:390,height:844},'lanes_phone_guest',E,'https://grup-al.com/?d=ABCD2345');
 await shot({width:1366,height:820},'lanes_desk_sheet',MINE,null,async p=>{ await p.evaluate(id=>jLaneOpen(id),H2.id); await p.waitForTimeout(500); });
+// v10c: masaüstü ızgara paketleme — açık kart uzarken yanındaki sütunların sonraki kartları yukarı çekilir (boşluk yok)
+const MH6=JSON.parse(JSON.stringify(MH)); for(const k of [3,4,5]){ const o=MH6.offers.find(x=>x.id===ord[k].id); o.img_url='https://x.test/o/'+k+'.jpg'; }   // 6 fotoğraflı kahve → vitrin 2 satır
+await shot({width:1366,height:1000},'lanes_desk_masonry',MINE,null,async p=>{ await p.evaluate(id=>jLaneOpen(id),H0.id); await p.waitForTimeout(900);
+  const m=await p.evaluate(()=>{ const cs=[...document.querySelectorAll('.jdk-grid>.jcard')].slice(0,6).map(c=>{ const r=c.getBoundingClientRect(); return {id:c.dataset.id,top:Math.round(r.top),h:Math.round(r.height),span:c.style.gridRowEnd}; }); return {mas:!!document.querySelector('.jdk-grid.jmas'),cs}; });
+  console.log(JSON.stringify(m)); },MH6);
 await browser.close();

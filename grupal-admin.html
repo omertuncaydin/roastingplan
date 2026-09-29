@@ -9,6 +9,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="grupal-admin-icon-16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="grupal-admin-icon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
+<!-- grupal-admin.html · v2026-09-30d · Düzenle: Hemen-Al / tamamlama alanına ÜRÜN SAYFASI linki de yapıştırılabilir → ?variant=ID varsa doğrudan, yoksa proxy v3.40 /admin/variants ile varyant listesi (liste fiyatına eşit + "Sonraki" olan seçilir, aksi halde seçim kutusu) → /cart/ID:1 -->
 <!-- grupal-admin.html · v2026-09-30a · Hemen-Al (proxy v3.38): Ayarlar → Hemen-Al bölümü (açık koltuk · davetiye · özel süre) · Düzenle → Hemen-Al linki / elde yeşil / kota · satırda Hemen-Al sayaçları · görsel = stokta -->
 <!-- grupal-admin.html · v2026-09-29a · Mağaza linki (stokta): Düzenle'de alan → meta.shop_url → sayfada 'Stokta · hemen al ›' (yalnız coffeenutz.net)
      grupal-admin.html · v2026-09-22a · Kahve görseli: teklif satırında Görsel yükle / değiştir / kaldır (proxy v3.37 /admin/offer-image → Storage, meta.img_url); sayfada kartın arka planı, yoksa dağ+güneş
@@ -311,7 +312,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-30c';
+const VERSION='v2026-09-30d';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -576,8 +577,8 @@ function renderOffersAdmin(){ listSetSub();
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><input id="oe_origin" value="'+esc(o.origin||'')+'" placeholder="Ülke" style="margin:0">'
       +'<select id="oe_proc" style="margin:0">'+['','washed','natural','honey','anaerobic','infused','funky','any'].map(k=>'<option value="'+k+'"'+(k===(o.process||'')?' selected':'')+'>'+(k?(WPROCN[k]||k):'— işlem —')+'</option>').join('')+'</select>'
       +'<input id="oe_vendor" value="'+esc(o.vendor||'')+'" placeholder="Tedarikçi" style="margin:0"><input id="oe_note" value="'+esc(o.note||'')+'" placeholder="Not (ör. 20 kutu sınırlı)" style="margin:0">'
-      +'<input id="oe_usd" value="'+esc((o.meta&&o.meta.usd_kg!=null)?String(o.meta.usd_kg):'')+'" placeholder="yeşil $/kg (ör. 16,55)" style="margin:0"><input id="oe_list" value="'+esc((o.meta&&o.meta.list_tl)?String(o.meta.list_tl):'')+'" placeholder="liste ₺ (boş = ölçekten)" style="margin:0"><input id="oe_jury" value="'+esc((o.meta&&o.meta.jury_tl)?String(o.meta.jury_tl):'')+'" placeholder="Kaporalı ₺ (boş = oranla)" style="margin:0"><input id="oe_basket" value="'+esc((o.meta&&(o.meta.basket_tl||o.meta.camp_tl))?String(o.meta.basket_tl||o.meta.camp_tl):'')+'" placeholder="Sepet ₺ (boş = oranla)" style="margin:0"><input id="oe_done" value="'+esc((o.meta&&o.meta.done_url)?String(o.meta.done_url):'')+'" placeholder="tamamlama linki: https://coffeenutz.net/cart/VARYANT_ID:1 (kilitlenince · fiyat = Kaporalı ₺ − kapora)" style="margin:0;grid-column:1/-1"><input id="oe_shop" value="'+esc((o.meta&&o.meta.shop_url)?String(o.meta.shop_url):'')+'" placeholder="mağaza linki (stokta): https://coffeenutz.net/products/… → sayfada Stokta · hemen al (liste fiyatı)" style="margin:0;grid-column:1/-1">'
-      +'<input id="oe_hemen" value="'+esc((o.meta&&o.meta.hemen_url)?String(o.meta.hemen_url):'')+'" placeholder="Hemen-Al linki: https://coffeenutz.net/cart/VARYANT_ID:1 (fiyat = Sepet ₺ · görselle birlikte şeridi açar)" style="margin:0;grid-column:1/-1">'
+      +'<input id="oe_usd" value="'+esc((o.meta&&o.meta.usd_kg!=null)?String(o.meta.usd_kg):'')+'" placeholder="yeşil $/kg (ör. 16,55)" style="margin:0"><input id="oe_list" value="'+esc((o.meta&&o.meta.list_tl)?String(o.meta.list_tl):'')+'" placeholder="liste ₺ (boş = ölçekten)" style="margin:0"><input id="oe_jury" value="'+esc((o.meta&&o.meta.jury_tl)?String(o.meta.jury_tl):'')+'" placeholder="Kaporalı ₺ (boş = oranla)" style="margin:0"><input id="oe_basket" value="'+esc((o.meta&&(o.meta.basket_tl||o.meta.camp_tl))?String(o.meta.basket_tl||o.meta.camp_tl):'')+'" placeholder="Sepet ₺ (boş = oranla)" style="margin:0"><input id="oe_done" value="'+esc((o.meta&&o.meta.done_url)?String(o.meta.done_url):'')+'" placeholder="tamamlama linki: https://coffeenutz.net/cart/VARYANT_ID:1 ya da ürün linki (kilitlenince · fiyat = Kaporalı ₺ − kapora)" style="margin:0;grid-column:1/-1"><input id="oe_shop" value="'+esc((o.meta&&o.meta.shop_url)?String(o.meta.shop_url):'')+'" placeholder="mağaza linki (stokta): https://coffeenutz.net/products/… → sayfada Stokta · hemen al (liste fiyatı)" style="margin:0;grid-column:1/-1">'
+      +'<input id="oe_hemen" value="'+esc((o.meta&&o.meta.hemen_url)?String(o.meta.hemen_url):'')+'" placeholder="Hemen-Al linki: ürün sayfası linkini yapıştır (Sonraki Kavrulma varyantı seçilir) ya da https://coffeenutz.net/cart/VARYANT_ID:1" style="margin:0;grid-column:1/-1">'
       +'<input id="oe_green" value="'+esc((o.meta&&o.meta.green_boxes!=null)?String(o.meta.green_boxes):'')+'" placeholder="elde yeşil (kutu · Hemen-Al tavanı, boş = tavan yok)" style="margin:0" inputmode="numeric">'
       +'<input id="oe_hbase" value="'+esc((o.meta&&o.meta.hemen_base!=null)?String(o.meta.hemen_base):'')+'" placeholder="Hemen-Al açık koltuk (boş = genel ayar)" style="margin:0" inputmode="numeric"></div>'
       +'<div style="display:flex;gap:6px;margin-top:8px"><button class="mini" onclick="offEditSave(\''+o.id+'\')">Taslağa kaydet</button><button class="mini" onclick="offEdit(null)">Vazgeç</button></div></div>';
@@ -645,10 +646,33 @@ function campFromOffer(id){
   $('msg').textContent='Meydan\'dan taslak: '+o.name+' · Sepet fiyatı '+tl(bsk)+' (kampanya tavanı) · Kaporalı fiyat '+tl(jry)+' (kaporalılar tamamlama ürünüyle öder). Shopify\'da Sepet fiyatlı LOT ürünü aç, linkini yapıştır; bitiş + kavurma tarihi ver; Kaydet / Yayınla.';
   try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){}
 }
+// v30d: ürün sayfası linki → sepet kalıcı bağlantısı. ?variant=ID varsa doğrudan; yoksa proxy /admin/variants (v3.40) ile varyantlar:
+//   tercih = satılabilir + fiyatı `pref` ₺ olan (+ başlığında "Sonraki" geçen); tek aday → yazılır, birden çok → alanın altına seçim kutusu (null döner = kaydetme).
+async function cartLinkFrom(v,inputId,pref){
+  v=String(v||'').trim(); if(!v) return v;
+  if(/^https:\/\/(www\.)?coffeenutz\.net\/cart\/\d+:\d+(\?|$)/.test(v)) return v.replace(/^https:\/\/www\./,'https://');
+  if(!/^https:\/\/(www\.)?coffeenutz\.net\/products\/[a-z0-9-]+/i.test(v)) return v;
+  const vm=/[?&]variant=(\d+)/.exec(v); if(vm) return 'https://coffeenutz.net/cart/'+vm[1]+':1';
+  let vs=null, err='';
+  try{ const r=await fetch(API+'/admin/variants',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({url:v})});
+    const j=await r.json().catch(()=>({})); if(j.ok&&Array.isArray(j.variants)) vs=j.variants; else err=j.error||String(r.status); }catch(e){ err=String(e); }
+  if(!vs||!vs.length){ alert('Varyant listesi alınamadı ('+(err||'boş')+').\nÜrün sayfasında varyantı seçip adres çubuğundaki ?variant=… linkini yapıştır ya da https://coffeenutz.net/cart/VARYANT_ID:1 yaz.'); return null; }
+  const avail=vs.filter(x=>x.available); let pick=pref?avail.filter(x=>Math.round(x.price)===Math.round(pref)):[];
+  if(pick.length>1){ const s2=pick.filter(x=>/sonraki/i.test(x.title)); if(s2.length) pick=s2; }
+  if(pick.length===1) return 'https://coffeenutz.net/cart/'+pick[0].id+':1';
+  const inp=$(inputId); let sel=$(inputId+'_pick');
+  if(!sel){ sel=document.createElement('select'); sel.id=inputId+'_pick'; sel.style.cssText='margin:0;grid-column:1/-1'; inp.insertAdjacentElement('afterend',sel); }
+  sel.innerHTML='<option value="">— varyant seç ('+vs.length+') —</option>'+vs.map(x=>'<option value="https://coffeenutz.net/cart/'+x.id+':1">'+esc(x.title)+' · '+String(Math.round(x.price))+' ₺'+(x.available?'':' · tükendi')+'</option>').join('');
+  sel.onchange=()=>{ if(sel.value){ inp.value=sel.value; sel.remove(); } };
+  alert((pick.length?'Birden çok':'Fiyatı '+(pref?Math.round(pref)+' ₺ olan yok; ':'')+'uygun')+' varyant: listeden seç, sonra Taslağa kaydet.'); return null;
+}
 async function offEditSave(id){
   const o=OFFERS.find(x=>x.id===id); const meta=Object.assign({},(o&&o.meta)||{});
   const num=v=>{ const n=parseFloat(String(v||'').replace(',','.')); return isFinite(n)&&n>0?n:null; };
-  const usd=num($('oe_usd').value), lst=num($('oe_list').value), jry=num($('oe_jury').value), bsk=num($('oe_basket').value), dn=$('oe_done').value.trim();
+  const usd=num($('oe_usd').value), lst=num($('oe_list').value), jry=num($('oe_jury').value), bsk=num($('oe_basket').value);
+  const hu1=await cartLinkFrom($('oe_hemen').value,'oe_hemen',lst||(o&&o.list_tl)||null); if(hu1===null) return; $('oe_hemen').value=hu1;   // v30d
+  const dn1=await cartLinkFrom($('oe_done').value,'oe_done',null); if(dn1===null) return; $('oe_done').value=dn1;
+  const dn=$('oe_done').value.trim();
   if(usd) meta.usd_kg=usd; else delete meta.usd_kg; if(lst) meta.list_tl=Math.round(lst); else delete meta.list_tl; if(jry) meta.jury_tl=Math.round(jry); else delete meta.jury_tl; if(bsk) meta.basket_tl=Math.round(bsk); else delete meta.basket_tl; delete meta.camp_tl;
   // v07b: tamamlama linki SEPET KALICI BAĞLANTISI olmalı (/cart/VARYANT:1) — ürün sayfası linkinde attributes[done] siparişe geçmez, tamamlama işlenmez
   if(dn&&!/^https:\/\/(www\.)?coffeenutz\.net\/cart\/\d+:\d+(\?|$)/.test(dn)){ alert('Tamamlama linki sepet kalıcı bağlantısı olmalı: https://coffeenutz.net/cart/VARYANT_ID:1\n(Ürün sayfası linki olursa tamamlama siparişi işlenmez.) Kaydedilmedi.'); return; }

@@ -14,6 +14,10 @@ export async function boot(tsPath, seed = {}) {
   const project = (row, sel) => { if (!sel || sel === '*') return row; const o = {}; for (const c of sel.split(',')) o[c.trim()] = row[c.trim()]; return o; };
   const fakeFetch = async (u, init = {}) => {
     const s = String(u); log.push((init.method || 'GET') + ' ' + s.replace(/^https?:\/\/[^/]+/, ''));
+    if (/^https:\/\/coffeenutz\.net\/products\/[a-z0-9-]+\.js$/.test(s)) { const h = s.split('/products/')[1].replace(/\.js$/, ''); if (h === 'yok') return { ok: false, status: 404, json: async () => ({}), text: async () => 'nope' };
+      return { ok: true, status: 200, json: async () => ({ title: 'Kolombiya Jose Espinoza Recreo', handle: h, variants: [
+        { id: 67856174350640, title: 'Sonraki Kavrulma Tarihinde Gönderim / 250G', price: 124000, available: true },
+        { id: 67856174350641, title: '28.09.26 Stoğundan Gönderim / 250G', price: 124000, available: false } ] }), text: async () => '' }; }
     if (s.includes('/admin/oauth/access_token')) return { ok: true, status: 200, json: async () => ({ access_token: 'tok' }), text: async () => '' };
     if (s.includes('/graphql.json')) { const body = JSON.parse(init.body || '{}'); const q = String(body.query || ''); log.push('GQL ' + q.slice(0, 40));
       if (q.includes('productVariant(')) { const vid = String((body.variables || {}).id || ''); return { ok: true, status: 200, json: async () => ({ data: { productVariant: { id: vid, price: '1600.00', product: { id: 'gid://shopify/Product/777', title: 'El Recreo' } } } }), text: async () => '' }; }

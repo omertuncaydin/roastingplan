@@ -201,6 +201,8 @@ body.jdesk .jclock .tlbl,body.jdesk .jclock .tlab{color:var(--muted);text-shadow
 .jdk-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:2px 0 12px}
 .jdk-t{font-size:22px;font-weight:900;letter-spacing:-.3px}
 .jdk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:16px}
+/* v10c (Ömer "kartlar birbirine yakın olsun"): masaüstünde açık kart uzayınca yanındaki kısa kartların altı boş kalmasın — satır birimi 4px, her kart yüksekliğine göre span alır (jMasonry); sıra korunur, alttaki kartlar boşluğa yukarı çekilir */
+.jdk-grid.jmas{grid-auto-rows:4px;row-gap:0;align-items:start}
 body.jdesk .jcard{flex:none;height:400px;min-height:0;max-height:none;scroll-snap-align:none;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease}
 body.jdesk .jcard:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,.35)}
 body.jdesk .jcard.sel{outline:2px solid var(--gold);outline-offset:2px}
@@ -719,7 +721,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30d';
+const VERSION='v2026-09-30e';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1400,7 +1402,7 @@ function renderOffers(s){
     h+='<div class="hint" style="margin-top:4px;font-size:11px;opacity:.75">'+t('offGoal').split('{g}').join(G)+'</div>';
   }
   const dk0=$('jDeck'), keepSL=dk0?dk0.scrollLeft:0;   // v09n: + basınca deste yerinde kalsın
-  el.innerHTML=h; card.style.display='block'; renderBasketBar(); renderSheet(); renderLanePanels(); cyStartClock();   // v09a: geri sayım saati · v10a: alt sayfa (şeritler / davetiyeler)
+  el.innerHTML=h; card.style.display='block'; renderBasketBar(); renderSheet(); renderLanePanels(); jMasonryWatch(); cyStartClock();   // v09a: geri sayım saati · v10a: alt sayfa (şeritler / davetiyeler) · v10c: masaüstü ızgara paketleme
   { const dk=$('jDeck'); if(dk&&keepSL){ dk.scrollLeft=keepSL; const n=Math.round(keepSL/Math.max(1,dk.clientWidth))+1; const dn=document.querySelector('.jdots .jdn'); if(dn) dn.textContent=n+' / '+dk.children.length+' · '+t('jSwipe'); } }
   { const dk=$('jDeck'); const mc=dk&&dk.querySelector('.jcard.mine'); if(mc&&!keepSL&&!window.__jMineOpened&&!(dk.__touched)){ window.__jMineOpened=true; const x=mc.offsetLeft-(dk.clientWidth-mc.clientWidth)/2; if(x>0){ dk.scrollLeft=x; const n=(parseInt(mc.getAttribute('data-i'))||0)+1; const dn=document.querySelector('.jdots .jdn'); if(dn) dn.textContent=n+' / '+dk.children.length+' · '+t('jSwipe'); } } }   // v09o: deste, senin kahvende açılır (bir kez; kaydırdıysan karışmaz
   if(window.__jPop){ const id=window.__jPop; window.__jPop=null; document.querySelectorAll('[data-id="'+id+'"] .jq,[data-id="'+id+'"] .oq,[data-id="'+id+'"] button.oc,[data-id="'+id+'"] .jminec,[data-id="'+id+'"] .jplus').forEach(e=>{ e.classList.add('pop'); }); const bar=$('dbBar'); if(bar){ bar.classList.remove('bump'); void bar.offsetWidth; bar.classList.add('bump'); } }   // v09n: dokunulan kontrol zıplar, sepet çubuğu vurgulanır
@@ -1415,6 +1417,10 @@ function jLaneOpen(id,c){ if(JLANE&&JLANE.id===id&&!c){ return jLaneClose(); } J
   if(jIsDesk()&&!document.querySelector('.jcard[data-id="'+id+'"]')){ return jDeskOpen(id); }   // masaüstü Liste görünümü: kart yok → çekmece (şeritler çekmecede)
   renderOffers(STATE); if(!jIsDesk()) jGoCard(id); }
 function jLaneClose(){ JLANE=null; renderOffers(STATE); }
+// v10c: masaüstü ızgarası — her kart (yükseklik + 16px boşluk) / 4px satır kadar span alır; açılış animasyonu boyunca ResizeObserver spanı günceller
+const JM_UNIT=4, JM_GAP=16; let JMRO=null;
+function jMasonry(){ if(!jIsDesk()) return; document.querySelectorAll('.jdk-grid').forEach(g=>{ g.classList.add('jmas'); g.querySelectorAll(':scope>.jcard').forEach(c=>{ const h=c.offsetHeight; if(!h) return; const sp='span '+Math.ceil((h+JM_GAP)/JM_UNIT); if(c.style.gridRowEnd!==sp) c.style.gridRowEnd=sp; }); }); }
+function jMasonryWatch(){ if(!jIsDesk()) return; jMasonry(); if(typeof ResizeObserver==='undefined') return; if(!JMRO) JMRO=new ResizeObserver(()=>jMasonry()); JMRO.disconnect(); document.querySelectorAll('.jdk-grid>.jcard').forEach(c=>JMRO.observe(c)); }
 function jInvOpen(id){ JSHEET={mode:'inv',id:id||null}; renderOffers(STATE); }
 function jSheetClose(){ JSHEET=null; renderOffers(STATE); }
 function jLaneKap(id){ dbAdd(id,1); }   // v10d: panel açık kalır, düğme Öde'ye döner
