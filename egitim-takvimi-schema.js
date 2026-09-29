@@ -1,4 +1,4 @@
-// CoffeeNutz egitim-takvimi-schema.js  v2026-09-04c
+// CoffeeNutz egitim-takvimi-schema.js  v2026-09-28a
 // Sync-free Course + CourseInstance JSON-LD for coffeenutz.net. Three modes, decided by the URL:
 //   /pages/sca-egitim-takvimi      -> ItemList of all 7 SCA courses with their live cohorts
 //   /products/<course handle>      -> that single Course with its live cohorts
@@ -7,8 +7,13 @@
 //                                     the Course + EducationEvent JSON-LD for that language
 // Anything else (coffee products, other pages) -> does nothing.
 //
-// Instances come from the public-trainings feed (the Trainings sheet), prices from Shopify's
-// own product JSON, so no date or price on the site is ever typed by hand again.
+// Instances come from the public-trainings feed (the Trainings sheet); prices AND availability come
+// from Shopify's own product JSON, so no date, price or stock claim on the site is ever typed by hand.
+// v2026-09-28a: availability is never asserted blindly. A cohort is InStock only when its Shopify
+// variant (matched by the date in the variant title) is purchasable, SoldOut when that variant is
+// out of stock, and omitted when no variant matches. A course is InStock only with such a cohort,
+// OutOfStock when Shopify says the whole product is unavailable, omitted otherwise. Cohort offers
+// deep-link to their variant (?variant=id).
 // Replaces: the May-2026 ItemList block and the per-product Course blocks in theme.liquid.
 //
 // Include from theme.liquid:
@@ -111,15 +116,64 @@
     trainings = (await r.json()).trainings || [];
   } catch (_) { return; } // no feed, no schema: never inject a stale one
 
-  // Price from Shopify's public product JSON (same origin on coffeenutz.net). Missing = omit price.
-  async function priceOf(handle) {
+  // Shopify's public product JSON (same origin on coffeenutz.net): price, availability and the
+  // variants, whose titles carry the class dates ("13 - 16 Ekim 2026 (Sertifikalar dahil)").
+  // Missing or unreadable = null, and every claim that would depend on it is omitted.
+  const MON = { ocak:1, subat:2, mart:3, nisan:4, mayis:5, haziran:6, temmuz:7, agustos:8, eylul:9, ekim:10, kasim:11, aralik:12,
+    january:1, february:2, march:3, april:4, may:5, june:6, july:7, august:8, september:9, october:10, november:11, december:12,
+    jan:1, feb:2, mar:3, apr:4, jun:6, jul:7, aug:8, sep:9, sept:9, oct:10, nov:11, dec:12 };
+  function foldTr(str) {
+    return String(str).replace(/İ/g, "I").replace(/ı/g, "i").toLowerCase().replace(/\u0307/g, "")
+      .replace(/ş/g, "s").replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ö/g, "o").replace(/ç/g, "c");
+  }
+  function isoDay(y, mo, d) {
+    if (!mo || !(d >= 1 && d <= 31)) return null;
+    const dt = new Date(Date.UTC(+y, mo - 1, d));
+    return dt.getUTCMonth() === mo - 1 ? dt.toISOString().slice(0, 10) : null;
+  }
+  function variantDates(title) {
+    const v = foldTr(title).replace(/\(.*?\)/g, " ").replace(/\s+/g, " ").trim();
+    let m;
+    if ((m = v.match(/(\d{1,2})\s*[-–—]\s*(\d{1,2})\s+([a-z]+)\.?,?\s+(\d{4})/))) {
+      const a = isoDay(m[4], MON[m[3]], +m[1]), b = isoDay(m[4], MON[m[3]], +m[2]);
+      if (a && b && b >= a) return { start: a, end: b };
+    }
+    if ((m = v.match(/(\d{1,2})\s+([a-z]+)\.?\s*[-–—]\s*(\d{1,2})\s+([a-z]+)\.?,?\s+(\d{4})/))) {
+      const a = isoDay(m[5], MON[m[2]], +m[1]), b = isoDay(m[5], MON[m[4]], +m[3]);
+      if (a && b && b >= a) return { start: a, end: b };
+    }
+    if ((m = v.match(/([a-z]+)\.?\s+(\d{1,2})\s*[-–—]\s*(\d{1,2}),?\s+(\d{4})/))) {
+      const a = isoDay(m[4], MON[m[1]], +m[2]), b = isoDay(m[4], MON[m[1]], +m[3]);
+      if (a && b && b >= a) return { start: a, end: b };
+    }
+    if ((m = v.match(/(\d{1,2})\s+([a-z]+)\.?,?\s+(\d{4})/))) {
+      const a = isoDay(m[3], MON[m[2]], +m[1]);
+      if (a) return { start: a, end: a };
+    }
+    return null;
+  }
+  async function productOf(handle) {
     try {
       const r = await fetch("/products/" + handle + ".js", { cache: "no-store" });
       if (!r.ok) return null;
       const p = await r.json();
-      return typeof p.price === "number" ? String(Math.round(p.price / 100)) : null;
+      return {
+        price: typeof p.price === "number" ? String(Math.round(p.price / 100)) : null,
+        available: typeof p.available === "boolean" ? p.available : null,
+        variants: (p.variants || []).map((v) => ({
+          id: v.id, title: String(v.title || ""), available: !!v.available,
+          price: typeof v.price === "number" ? String(Math.round(v.price / 100)) : null,
+          dates: variantDates(v.title || ""),
+        })),
+      };
     } catch (_) { return null; }
   }
+  // the Shopify variant that sells this cohort: same start date in its title
+  function variantFor(prod, x) {
+    if (!prod) return null;
+    return prod.variants.find((v) => v.dates && v.dates.start === x.start) || null;
+  }
+  const IN_STOCK = "https://schema.org/InStock", SOLD_OUT = "https://schema.org/SoldOut", OUT_OF_STOCK = "https://schema.org/OutOfStock";
 
   const TR_M = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
   const EN_M = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -133,12 +187,19 @@
     if (a.getUTCMonth() === b.getUTCMonth()) return `${a.getUTCDate()}-${b.getUTCDate()} ${M[a.getUTCMonth()]} ${y}`;
     return `${a.getUTCDate()} ${M[a.getUTCMonth()]}-${b.getUTCDate()} ${M[b.getUTCMonth()]} ${y}`;
   }
-  function instance(x, c, price) {
+  function instance(x, c, prod) {
     const lang = langCode(x.lang);
     const days = Math.round((Date.parse(x.end) - Date.parse(x.start)) / 86400000) + 1;
     const productUrl = SITE + "/products/" + c.handle;
-    const url = (x.url && /^https:\/\//.test(x.url)) ? x.url : ((lang === "en" && c.enUrl) ? c.enUrl : productUrl);
-    const offer = { "@type": "Offer", "category": "Paid", "priceCurrency": "TRY", "availability": "https://schema.org/InStock", "url": url };
+    // registration link: the sheet's own URL when it is not just the product page, the English page for
+    // English cohorts without one, otherwise the product page deep-linked to the cohort's variant
+    const own = (x.url && /^https:\/\//.test(x.url)) ? x.url.replace(/\/+$/, "") : "";
+    const custom = own && own !== productUrl ? own : ((!own && lang === "en" && c.enUrl) ? c.enUrl : null);
+    const v = variantFor(prod, x);
+    const offer = { "@type": "Offer", "category": "Paid", "priceCurrency": "TRY" };
+    if (v) offer.availability = v.available ? IN_STOCK : SOLD_OUT; // unknown variant: no stock claim at all
+    offer.url = custom ? custom : (v ? productUrl + "?variant=" + v.id : productUrl);
+    const price = (v && v.price) || (prod && prod.price) || null;
     if (price) offer.price = price;
     const ci = {
       "@type": "CourseInstance",
@@ -154,7 +215,15 @@
     if (days > 0 && days < 30) ci.courseWorkload = `P${days}D`;
     return ci;
   }
-  function course(key, price, opts) {
+  // course-level stock claim: InStock only with a purchasable cohort, OutOfStock when Shopify says the
+  // whole product is unavailable, otherwise nothing (a placeholder variant is not a class)
+  function courseAvailability(prod, inst) {
+    if (!prod) return null;
+    if (inst.some((i) => i.offers.availability === IN_STOCK)) return IN_STOCK;
+    if (prod.available === false) return OUT_OF_STOCK;
+    return null;
+  }
+  function course(key, prod, opts) {
     const c = COURSES[key];
     const productUrl = SITE + "/products/" + c.handle;
     const out = {
@@ -171,10 +240,12 @@
     const inst = trainings
       .filter((x) => x.name === key && x.start && x.end)
       .sort((a, b) => a.start.localeCompare(b.start))
-      .map((x) => instance(x, c, price));
+      .map((x) => instance(x, c, prod));
     if (inst.length) out.hasCourseInstance = inst;
-    const offer = { "@type": "Offer", "category": "Paid", "priceCurrency": "TRY", "availability": "https://schema.org/InStock", "url": productUrl };
-    if (price) offer.price = price;
+    const offer = { "@type": "Offer", "category": "Paid", "priceCurrency": "TRY", "url": productUrl };
+    const avail = courseAvailability(prod, inst);
+    if (avail) offer.availability = avail;
+    if (prod && prod.price) offer.price = prod.price;
     out.offers = offer;
     return out;
   }
@@ -202,9 +273,10 @@
       .filter((x) => x.name === key && langCode(x.lang) === landing.lang && x.start && x.end && x.start > todayIso)
       .sort((a, b) => a.start.localeCompare(b.start));
     const fi = upcoming(landing.course), pro = landing.pro ? upcoming(landing.pro) : [];
-    const [priceFi, pricePro, rate] = await Promise.all([
-      priceOf(c.handle), landing.pro ? priceOf(COURSES[landing.pro].handle) : null, eurRate(),
+    const [prodFi, prodPro, rate] = await Promise.all([
+      productOf(c.handle), landing.pro ? productOf(COURSES[landing.pro].handle) : null, eurRate(),
     ]);
+    const priceFi = prodFi ? prodFi.price : null, pricePro = prodPro ? prodPro.price : null;
     const calEn = "https://guide.coffeenutz.net/egitim-takvimi?lang=" + landing.lang;
     const noDate = '<a href="' + calEn + '" target="_blank" rel="noopener">see the live calendar</a>';
     const noDateRu = '<a href="' + calEn + '" target="_blank" rel="noopener">смотрите календарь</a>';
@@ -227,12 +299,15 @@
       "educationalCredentialAwarded": c.credential,
       "courseCode": c.code,
       "inLanguage": landing.lang,
-      "offers": Object.assign({ "@type": "Offer", "category": "Paid", "priceCurrency": "TRY", "availability": "https://schema.org/InStock", "url": landingUrl }, priceFi ? { price: priceFi } : {}),
     };
-    if (fi.length) {
-      courseLd.hasCourseInstance = fi.map((x) => { const i = instance(x, c, priceFi); i.offers.url = landingUrl; return i; });
-    }
-    const events = fi.map((x) => ({
+    const fiInst = fi.map((x) => { const i = instance(x, c, prodFi); i.offers.url = landingUrl; return i; });
+    const landingOffer = { "@type": "Offer", "category": "Paid", "priceCurrency": "TRY", "url": landingUrl };
+    const landingAvail = courseAvailability(prodFi, fiInst);
+    if (landingAvail) landingOffer.availability = landingAvail;
+    if (priceFi) landingOffer.price = priceFi;
+    courseLd.offers = landingOffer;
+    if (fiInst.length) courseLd.hasCourseInstance = fiInst;
+    const events = fi.map((x, k) => ({
       "@type": "EducationEvent",
       "name": landing.name + ", " + range(x.start, x.end, "en"),
       "startDate": x.start, "endDate": x.end,
@@ -242,15 +317,15 @@
       "location": LOCATION,
       "organizer": PROVIDER,
       "performer": INSTRUCTOR,
-      "offers": Object.assign({ "@type": "Offer", "category": "Paid", "priceCurrency": "TRY", "availability": "https://schema.org/InStock", "url": landingUrl }, priceFi ? { price: priceFi } : {}),
+      "offers": Object.assign({}, fiInst[k].offers), // same stock claim as the cohort it describes
     }));
     ld = { "@context": "https://schema.org", "@graph": [courseLd].concat(events) };
   } else if (productKey) {
-    const price = await priceOf(COURSES[productKey].handle);
-    ld = Object.assign({ "@context": "https://schema.org" }, course(productKey, price, { tr: true }));
+    const prod = await productOf(COURSES[productKey].handle);
+    ld = Object.assign({ "@context": "https://schema.org" }, course(productKey, prod, { tr: true }));
   } else {
-    const prices = {};
-    await Promise.all(ORDER.map(async (k) => { prices[k] = await priceOf(COURSES[k].handle); }));
+    const prods = {};
+    await Promise.all(ORDER.map(async (k) => { prods[k] = await productOf(COURSES[k].handle); }));
     ld = {
       "@context": "https://schema.org",
       "@type": "ItemList",
@@ -259,7 +334,7 @@
       "url": PAGE,
       "itemListOrder": "https://schema.org/ItemListOrderAscending",
       "numberOfItems": ORDER.length,
-      "itemListElement": ORDER.map((k, i) => ({ "@type": "ListItem", "position": i + 1, "item": course(k, prices[k]) })),
+      "itemListElement": ORDER.map((k, i) => ({ "@type": "ListItem", "position": i + 1, "item": course(k, prods[k]) })),
     };
   }
 

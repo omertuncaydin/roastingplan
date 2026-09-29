@@ -9,7 +9,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="grupal-admin-icon-16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="grupal-admin-icon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
-<!-- grupal-admin.html · v2026-09-22b · Mağaza linki (stokta): Düzenle'de alan → meta.shop_url → sayfada 'Stokta · hemen al ›' (yalnız coffeenutz.net)
+<!-- grupal-admin.html · v2026-09-29a · Mağaza linki (stokta): Düzenle'de alan → meta.shop_url → sayfada 'Stokta · hemen al ›' (yalnız coffeenutz.net)
      grupal-admin.html · v2026-09-22a · Kahve görseli: teklif satırında Görsel yükle / değiştir / kaldır (proxy v3.37 /admin/offer-image → Storage, meta.img_url); sayfada kartın arka planı, yoksa dağ+güneş
      grupal-admin.html · v2026-09-05b · Sepet satış penceresi (gün)
      grupal-admin.html · v2026-09-05a · Jüri Sepeti ürün linki (sayım başına) · kademeli ceza · krediye dönenleri Shopify'a yaz
@@ -248,7 +248,7 @@ details.set.card[open]>summary{margin-bottom:6px}
       <!-- FİYAT ÖLÇEĞİ (Ömer 2026-09-04): iki referans kahve → taban + oran (v02s); referans 1 Rumanda 20,8 $/kg = 1275 ₺, referans 2 Killenso 13,55 $/kg = 900 ₺ (rakip fiyatları) -->
       <details class="set" id="scaleSet">
         <summary class="set-t">Fiyat ölçeği<span class="sub">yeşil $/kg → liste ₺ · Jüri/Sepet oranları</span></summary>
-        <div class="hint" style="margin:4px 0 6px">Referans kahvelerden eğri: 1 referans = orantı; 2–3 referans = $/kg'a göre sıralı parçalı doğru (her referanstan tam geçer, uçlarda komşu parçanın eğimiyle uzar). Jüri fiyatı = liste × oran(Jüri); Sepet fiyatı = liste × oran(Sepet). Bir kahveye ilk kapora düşünce fiyatları DONAR (🔒 kilitli) — ölçek değişse de o kahve değişmez. Satır bazında elle ezmek için düzenlemede "liste / Jüri / Sepet ₺".</div>
+        <div class="hint" style="margin:4px 0 6px">Referans kahvelerden eğri: 1 referans = orantı; 2–3 referans = $/kg'a göre sıralı parçalı doğru (her referanstan tam geçer, uçlarda komşu parçanın eğimiyle uzar). Kaporalı fiyat = liste × oran(Jüri); Sepet fiyatı = liste × oran(Sepet). Bir kahveye ilk kapora düşünce fiyatları DONAR (🔒 kilitli) — ölçek değişse de o kahve değişmez. Satır bazında elle ezmek için düzenlemede "liste / Kaporalı / Sepet ₺".</div>
         <div class="g2">
           <div class="f"><span class="lbl">referans 1 · $/kg</span><input id="s_refusd" inputmode="decimal" placeholder="20,8" oninput="scalePreview()"></div>
           <div class="f"><span class="lbl">referans 1 · liste ₺ (250 g)</span><input id="s_reflist" inputmode="numeric" placeholder="1275" oninput="scalePreview()"></div>
@@ -302,7 +302,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-22b';
+const VERSION='v2026-09-29a';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -567,7 +567,7 @@ function renderOffersAdmin(){ listSetSub();
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><input id="oe_origin" value="'+esc(o.origin||'')+'" placeholder="Ülke" style="margin:0">'
       +'<select id="oe_proc" style="margin:0">'+['','washed','natural','honey','anaerobic','infused','funky','any'].map(k=>'<option value="'+k+'"'+(k===(o.process||'')?' selected':'')+'>'+(k?(WPROCN[k]||k):'— işlem —')+'</option>').join('')+'</select>'
       +'<input id="oe_vendor" value="'+esc(o.vendor||'')+'" placeholder="Tedarikçi" style="margin:0"><input id="oe_note" value="'+esc(o.note||'')+'" placeholder="Not (ör. 20 kutu sınırlı)" style="margin:0">'
-      +'<input id="oe_usd" value="'+esc((o.meta&&o.meta.usd_kg!=null)?String(o.meta.usd_kg):'')+'" placeholder="yeşil $/kg (ör. 16,55)" style="margin:0"><input id="oe_list" value="'+esc((o.meta&&o.meta.list_tl)?String(o.meta.list_tl):'')+'" placeholder="liste ₺ (boş = ölçekten)" style="margin:0"><input id="oe_jury" value="'+esc((o.meta&&o.meta.jury_tl)?String(o.meta.jury_tl):'')+'" placeholder="Jüri ₺ (boş = oranla)" style="margin:0"><input id="oe_basket" value="'+esc((o.meta&&(o.meta.basket_tl||o.meta.camp_tl))?String(o.meta.basket_tl||o.meta.camp_tl):'')+'" placeholder="Sepet ₺ (boş = oranla)" style="margin:0"><input id="oe_done" value="'+esc((o.meta&&o.meta.done_url)?String(o.meta.done_url):'')+'" placeholder="tamamlama linki: https://coffeenutz.net/cart/VARYANT_ID:1 (kilitlenince · fiyat = Jüri ₺ − kapora)" style="margin:0;grid-column:1/-1"><input id="oe_shop" value="'+esc((o.meta&&o.meta.shop_url)?String(o.meta.shop_url):'')+'" placeholder="mağaza linki (stokta): https://coffeenutz.net/products/… → sayfada Stokta · hemen al (liste fiyatı)" style="margin:0;grid-column:1/-1"></div>'
+      +'<input id="oe_usd" value="'+esc((o.meta&&o.meta.usd_kg!=null)?String(o.meta.usd_kg):'')+'" placeholder="yeşil $/kg (ör. 16,55)" style="margin:0"><input id="oe_list" value="'+esc((o.meta&&o.meta.list_tl)?String(o.meta.list_tl):'')+'" placeholder="liste ₺ (boş = ölçekten)" style="margin:0"><input id="oe_jury" value="'+esc((o.meta&&o.meta.jury_tl)?String(o.meta.jury_tl):'')+'" placeholder="Kaporalı ₺ (boş = oranla)" style="margin:0"><input id="oe_basket" value="'+esc((o.meta&&(o.meta.basket_tl||o.meta.camp_tl))?String(o.meta.basket_tl||o.meta.camp_tl):'')+'" placeholder="Sepet ₺ (boş = oranla)" style="margin:0"><input id="oe_done" value="'+esc((o.meta&&o.meta.done_url)?String(o.meta.done_url):'')+'" placeholder="tamamlama linki: https://coffeenutz.net/cart/VARYANT_ID:1 (kilitlenince · fiyat = Kaporalı ₺ − kapora)" style="margin:0;grid-column:1/-1"><input id="oe_shop" value="'+esc((o.meta&&o.meta.shop_url)?String(o.meta.shop_url):'')+'" placeholder="mağaza linki (stokta): https://coffeenutz.net/products/… → sayfada Stokta · hemen al (liste fiyatı)" style="margin:0;grid-column:1/-1"></div>'
       +'<div style="display:flex;gap:6px;margin-top:8px"><button class="mini" onclick="offEditSave(\''+o.id+'\')">Taslağa kaydet</button><button class="mini" onclick="offEdit(null)">Vazgeç</button></div></div>';
     const st=offState(o);
     return '<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;'+(o.active?'':'opacity:.6')+'">'
@@ -618,7 +618,7 @@ function campFromOffer(id){
   $('l1a').value='1'; $('l1p').value=tl(bsk); $('l2a').value=''; $('l2p').value=''; $('l3a').value=''; $('l3p').value='';
   $('f_depamt').value=bsk?String(Math.round(bsk)):'';
   if($('e_total_a')&&o.list_tl){ $('e_total_a').value=String(Math.round(o.list_tl)); $('e_total_b').value=String(Math.round(bsk||0)); }
-  $('msg').textContent='Meydan\'dan taslak: '+o.name+' · Sepet fiyatı '+tl(bsk)+' (kampanya tavanı) · Jüri fiyatı '+tl(jry)+' (kaporalılar tamamlama ürünüyle öder). Shopify\'da Sepet fiyatlı LOT ürünü aç, linkini yapıştır; bitiş + kavurma tarihi ver; Kaydet / Yayınla.';
+  $('msg').textContent='Meydan\'dan taslak: '+o.name+' · Sepet fiyatı '+tl(bsk)+' (kampanya tavanı) · Kaporalı fiyat '+tl(jry)+' (kaporalılar tamamlama ürünüyle öder). Shopify\'da Sepet fiyatlı LOT ürünü aç, linkini yapıştır; bitiş + kavurma tarihi ver; Kaydet / Yayınla.';
   try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){}
 }
 async function offEditSave(id){
