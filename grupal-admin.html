@@ -11,11 +11,12 @@
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
 <!-- grupal-admin.html · v2026-09-30f · UYGULA cevabındaki backfill (proxy v3.43) mesajda: "davetiye ×n" -->
 <!-- grupal-admin.html · v2026-09-30j · Jüri üyeleri açılır bölüm; WhatsApp sütunu: ✓ kendisi · ✓ admin · sorulmadı; satırda "Grupta ✓" (admin onayı → sayfa bir daha sormaz) · "Grupta değil" / "Onayla" -->
-<!-- grupal-admin.html · v2026-09-30l · Kilitle şimdi: kilidin kapora TL'si sorulur (proxy v3.49 dep_tl; ayar sonradan değişse de kilitli lotun Tamamla tutarı sabit) · kilit satırında 'n TL/kutu'
+<!-- grupal-admin.html · v2026-09-30m · kutu → paket (Ömer: proje artık paket konuşur)
+     grupal-admin.html · v2026-09-30l · Kilitle şimdi: kilidin kapora TL'si sorulur (proxy v3.49 dep_tl; ayar sonradan değişse de kilitli lotun Tamamla tutarı sabit) · kilit satırında 'n TL/paket'
      grupal-admin.html · v2026-09-30i · ERKEN KİLİT (proxy v3.47): satırda "Kilitle şimdi" (40 beklemeden; kaporalar tamamlamaya açılır) · Jüri üyeleri: "Eski kaporalardan üye çıkar" (Shopify müşterisinden ad/telefon) -->
 <!-- grupal-admin.html · v2026-09-30h · JÜRİ KAPISI (proxy v3.46): kayıt = Shopify siparişi; ilk kaporada bir kez WhatsApp grubu; üye listesi e-posta anahtarlı (Grupta değil / Onayla) -->
-<!-- grupal-admin.html · v2026-09-30g · JÜRİ GİRİŞİ (proxy v3.45): Ayarlar → "Jüri girişi" (zorunlu aç/kapa · WhatsApp grup linki · SMTP/şablon notu) · "Jüri üyeleri" paneli (e-posta · telefon · WhatsApp onayı · kutu · cihaz · askı · "Grupta değil" işareti) -->
-<!-- grupal-admin.html · v2026-09-30e · Ayarlar → Hemen-Al: "Eski kaporalara davetiye bas" (proxy v3.41 /admin/inv-backfill: v3.38 öncesi kaporalara kutu × davetiye, bir kez) -->
+<!-- grupal-admin.html · v2026-09-30g · JÜRİ GİRİŞİ (proxy v3.45): Ayarlar → "Jüri girişi" (zorunlu aç/kapa · WhatsApp grup linki · SMTP/şablon notu) · "Jüri üyeleri" paneli (e-posta · telefon · WhatsApp onayı · paket · cihaz · askı · "Grupta değil" işareti) -->
+<!-- grupal-admin.html · v2026-09-30e · Ayarlar → Hemen-Al: "Eski kaporalara davetiye bas" (proxy v3.41 /admin/inv-backfill: v3.38 öncesi kaporalara paket × davetiye, bir kez) -->
 <!-- grupal-admin.html · v2026-09-30d · Düzenle: Hemen-Al / tamamlama alanına ÜRÜN SAYFASI linki de yapıştırılabilir → ?variant=ID varsa doğrudan, yoksa proxy v3.40 /admin/variants ile varyant listesi (liste fiyatına eşit + "Sonraki" olan seçilir, aksi halde seçim kutusu) → /cart/ID:1 -->
 <!-- grupal-admin.html · v2026-09-30a · Hemen-Al (proxy v3.38): Ayarlar → Hemen-Al bölümü (açık koltuk · davetiye · özel süre) · Düzenle → Hemen-Al linki / elde yeşil / kota · satırda Hemen-Al sayaçları · görsel = stokta -->
 <!-- grupal-admin.html · v2026-09-29a · Mağaza linki (stokta): Düzenle'de alan → meta.shop_url → sayfada 'Stokta · hemen al ›' (yalnız coffeenutz.net)
@@ -23,7 +24,7 @@
      grupal-admin.html · v2026-09-05b · Sepet satış penceresi (gün)
      grupal-admin.html · v2026-09-05a · Jüri Sepeti ürün linki (sayım başına) · kademeli ceza · krediye dönenleri Shopify'a yaz
      grupal-admin.html · v2026-09-09c · Kahve listesi açılır bölüm (#listSet, başlıkta n kahve · yayında · taslak)
-     grupal-admin.html · v2026-09-09b · Kampanyalar tek açılır grup (liste + form) · Kutu ekonomisi ve Tedarikçiler ayrı açılır bölümler; yalnız görünüm
+     grupal-admin.html · v2026-09-09b · Kampanyalar tek açılır grup (liste + form) · Paket ekonomisi ve Tedarikçiler ayrı açılır bölümler; yalnız görünüm
      grupal-admin.html · v2026-09-09a · temalar (oto/gece/gündüz/kırmızı) + açılır bölümler (Liste yükle · Meydan ayarları · Fiyat ölçeği), durum hatırlanır; yalnız görünüm
      grupal-admin.html · v2026-09-08a · Meydan ayarları bölümlü düzen (Kapora · Oturum · Jüri · Oturum sonrası · Oturumlar) + fiyat ölçeği; yalnız görünüm
      grupal-admin.html · v2026-09-07e · katılımcı satırı: kayıt zamanı · Shopify sipariş linki (order_ids, proxy v3.35) · ödeme e-postası · siparişsiz kilit uyarısı
@@ -96,7 +97,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
   <div id="panel" style="display:none">
     <details class="set card" id="campSet" style="padding:12px 16px">
-    <summary class="set-t">Kampanyalar<span class="sub">liste · kampanya formu · kutu ekonomisi</span></summary>
+    <summary class="set-t">Kampanyalar<span class="sub">liste · kampanya formu · paket ekonomisi</span></summary>
     <div>
       <span class="lbl">kampanyalar</span>
       <div id="campList"></div>
@@ -133,7 +134,7 @@ details.set.card[open]>summary{margin-bottom:6px}
       <span class="lbl">tavan (₺) — ürün fiyatının aynısı; sayfadaki tavan cümlesinde görünür</span>
       <input id="f_depamt" inputmode="numeric" placeholder="700">
       <div class="hint" id="depPrev"></div>
-      <span class="lbl">kargo bedava eşiği (kutu · ops. — Shopify kargo kuralını tavan×bu sayı TL olarak AYNI anda kur; söz sayfada, makine Shopify'da)</span>
+      <span class="lbl">kargo bedava eşiği (paket · ops. — Shopify kargo kuralını tavan×bu sayı TL olarak AYNI anda kur; söz sayfada, makine Shopify'da)</span>
       <input id="f_shipfree" inputmode="numeric" placeholder="3">
       <span class="lbl">kargo ücreti (görünüm metni · ops. · ör. 89 TL)</span>
       <input id="f_shipfee" placeholder="89 TL">
@@ -141,15 +142,15 @@ details.set.card[open]>summary{margin-bottom:6px}
       <input id="f_channel" placeholder="https://whatsapp.com/channel/...">
       <span class="lbl">masa grubu linki (yalnız oturanlara · fişin altında · kapanışta da kalır)</span>
       <input id="f_chat" placeholder="https://chat.whatsapp.com/...">
-      <span class="lbl">kutu üst sınırı (kişi başına)</span>
+      <span class="lbl">paket üst sınırı (kişi başına)</span>
       <input id="f_maxq" inputmode="numeric" placeholder="5">
-      <!-- KUTU EKONOMİSİ (C, 2026-09-02): "Nasıl çalışır?" içindeki iki çubuğun kaynağı. Kutu başına TL. Boş = grafik yok. -->
+      <!-- KUTU EKONOMİSİ (C, 2026-09-02): "Nasıl çalışır?" içindeki iki çubuğun kaynağı. Paket başına TL. Boş = grafik yok. -->
       <details class="set" id="econSet">
-        <summary class="set-t">Kutu ekonomisi<span class="sub">Nasıl çalışır? grafiği · kutu başına TL · boş = grafik yok</span></summary>
+        <summary class="set-t">Paket ekonomisi<span class="sub">Nasıl çalışır? grafiği · paket başına TL · boş = grafik yok</span></summary>
         <div class="hint" style="margin:4px 0 6px">İki senaryo (Ömer 2026-09-03): <b>sol = LİSTE FİYATI, kavurucu yok</b> (CoffeeNutz kendi kavurur; kalanın tamamı CoffeeNutz) · <b>sağ = masa dolu, konuk kavurucu</b> (kalan kavurucu ile CoffeeNutz arasında eşit). Liste fiyatını elle yaz (ör. 750); sağ toplam merdivenin son basamağından gelir, değiştirilebilir.</div>
         <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px 8px;align-items:center;font-size:13px">
           <div class="hint">kalem</div><div class="hint">liste fiyatı · kavurucu yok</div><div class="hint">masa dolu · konuk kavurucu</div>
-          <div><b>Kutu fiyatı (toplam)</b></div><input id="e_total_a" inputmode="numeric" placeholder="750" style="margin:0;border-color:var(--gold)"><input id="e_total_b" inputmode="numeric" placeholder="taban" style="margin:0;border-color:var(--gold)">
+          <div><b>Paket fiyatı (toplam)</b></div><input id="e_total_a" inputmode="numeric" placeholder="750" style="margin:0;border-color:var(--gold)"><input id="e_total_b" inputmode="numeric" placeholder="taban" style="margin:0;border-color:var(--gold)">
           <div>Yeşil kahve</div><input id="e_yesil_a" inputmode="numeric" placeholder="0" style="margin:0"><input id="e_yesil_b" inputmode="numeric" placeholder="0" style="margin:0">
           <div>Kavurma günü sabitleri</div><input id="e_sabit_a" inputmode="numeric" placeholder="0" style="margin:0"><input id="e_sabit_b" inputmode="numeric" placeholder="0" style="margin:0">
           <div>Ambalaj</div><input id="e_ambalaj_a" inputmode="numeric" placeholder="0" style="margin:0"><input id="e_ambalaj_b" inputmode="numeric" placeholder="0" style="margin:0">
@@ -168,7 +169,7 @@ details.set.card[open]>summary{margin-bottom:6px}
       <select id="f_status">
         <option value="open">open · masa açık, kayıt alıyor (son gün 23:59'da kendiliğinden kapanır)</option>
         <option value="funded">funded · masa doldu (kayıt kapalı, parti kesin)</option>
-        <option value="fulfilled">fulfilled · kavurma yapıldı, kutular yolda</option>
+        <option value="fulfilled">fulfilled · kavurma yapıldı, paketler yolda</option>
         <option value="failed">failed · iptal (mücbir sebep · arşiv)</option>
       </select>
       <label class="hint" style="display:flex;gap:6px;align-items:center;cursor:pointer;margin-top:6px"><input type="checkbox" id="f_keepopen" style="width:auto;margin:0"> süresi dolsa da masayı AÇIK tut — sayfa "son gün geçti — masa açık tutuluyor" yazar, sandalye çekilmeye devam eder; işaret dururken kredi dağıtılmaz</label>
@@ -183,9 +184,9 @@ details.set.card[open]>summary{margin-bottom:6px}
     <div class="card" id="plCard" style="display:none">
       <span class="lbl">katılımcılar (admin)</span>
       <div id="plList"></div>
-      <!-- ETİKET CSV (B, 2026-09-02): DYMO Connect veri birleştirme — kutu başına bir satır -->
-      <button class="mini" style="margin-top:10px" onclick="labelCsv()" title="Kutu başına bir satır: 'Ayşe K. için kavruldu' · lot/kavurucu · masa/koltuk · QR linki. DYMO Connect → İçe aktar → bu dosya.">🏷 Etiket CSV (adına kavrulmuş kutu)</button>
-      <!-- CoffeeNutz SANDALYESİ (F, 2026-09-02c): Shopify siparişi olmadan masaya kutu koy — sayımda var, kredide yok -->
+      <!-- ETİKET CSV (B, 2026-09-02): DYMO Connect veri birleştirme — paket başına bir satır -->
+      <button class="mini" style="margin-top:10px" onclick="labelCsv()" title="Paket başına bir satır: 'Ayşe K. için kavruldu' · lot/kavurucu · masa/koltuk · QR linki. DYMO Connect → İçe aktar → bu dosya.">🏷 Etiket CSV (adına kavrulmuş paket)</button>
+      <!-- CoffeeNutz SANDALYESİ (F, 2026-09-02c): Shopify siparişi olmadan masaya paket koy — sayımda var, kredide yok -->
       <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:12px">
         <span class="lbl">🐢 CoffeeNutz sandalyesi (siparişsiz · sayımda var · kredide yok)</span>
         <div class="row" style="display:flex;gap:8px;align-items:center;margin-top:6px">
@@ -237,8 +238,8 @@ details.set.card[open]>summary{margin-bottom:6px}
           <div class="f"><span class="lbl">ilk oturum bitişi (Pazar 23:59, İstanbul) · sonrakiler otomatik</span><input id="s_cycle" type="datetime-local"></div>
           <div class="f"><span class="lbl">oturum süresi (gün)</span><input id="s_cycledays" inputmode="numeric" placeholder="7"></div>
           <div class="f"><span class="lbl">kapasite · oturum başına kahve (sayfada görünür)</span><input id="s_capacity" inputmode="numeric" placeholder="2"></div>
-          <div class="f"><span class="lbl">kavurma günü toplam kutu eşiği (0 = kapalı)</span><input id="s_daygoal" inputmode="numeric" placeholder="100"></div>
-          <div class="note">Oturum SÜREKLİ — her bitişte yenisi hemen başlar. Eşiğe ulaşan kahve O AN kilitlenir (kaporası taşınamaz), oturum bitince üretime girer; kapasiteden taşan kilit sonraki oturuma. Eşiği geçen yoksa CoffeeNutz seçmez, kaporalar kalır. Toplam kutu eşiği sayfada "toplam kapora: n/eşik" olarak görünür.</div>
+          <div class="f"><span class="lbl">kavurma günü toplam paket eşiği (0 = kapalı)</span><input id="s_daygoal" inputmode="numeric" placeholder="100"></div>
+          <div class="note">Oturum SÜREKLİ — her bitişte yenisi hemen başlar. Eşiğe ulaşan kahve O AN kilitlenir (kaporası taşınamaz), oturum bitince üretime girer; kapasiteden taşan kilit sonraki oturuma. Eşiği geçen yoksa CoffeeNutz seçmez, kaporalar kalır. Toplam paket eşiği sayfada "toplam kapora: n/eşik" olarak görünür.</div>
         </div>
         <div class="sh">Jüri</div>
         <div class="g2">
@@ -259,9 +260,9 @@ details.set.card[open]>summary{margin-bottom:6px}
           <div class="f"><span class="lbl">açık koltuk · kahve başına, haftalık (davetiye kotaya bakmaz)</span><input id="s_hbase" inputmode="numeric" placeholder="2"></div>
           <div class="f"><span class="lbl">kapora başına davetiye (0 = kapalı, en çok 6/sipariş)</span><input id="s_hinv" inputmode="numeric" placeholder="2"></div>
           <div class="f"><span class="lbl">davetiye özel kalma süresi (saat · sonra masaya çıkar)</span><input id="s_hinvh" inputmode="numeric" placeholder="24"></div>
-          <div class="note">Hemen-Al şeridi yalnız <b>görseli</b> ve <b>Hemen-Al linki</b> (Düzenle) olan kahvede görünür: görsel yüklenen kahve stokta sayılır. Sipariş sıradaki Pazartesi kavrulur, 40'a bakmaz; her kutu sayıma sayılır. Fiyat = liste × Sepet oranı (%20 için 0,80); Kaporalı fiyat = liste × Kaporalı oranı (%40 için 0,60). Boş alan = varsayılan (2 · 2 · 24).</div>
+          <div class="note">Hemen-Al şeridi yalnız <b>görseli</b> ve <b>Hemen-Al linki</b> (Düzenle) olan kahvede görünür: görsel yüklenen kahve stokta sayılır. Sipariş sıradaki Pazartesi kavrulur, 40'a bakmaz; her paket sayıma sayılır. Fiyat = liste × Sepet oranı (%20 için 0,80); Kaporalı fiyat = liste × Kaporalı oranı (%40 için 0,60). Boş alan = varsayılan (2 · 2 · 24).</div>
         </div>
-        <div class="acts" style="margin-top:6px"><button class="mini" onclick="invBackfill()" title="Davetiye sistemi (v3.38) açılmadan önce ödenmiş kaporalara, şeridi açık kahvelerde kutu × davetiye basar; aynı cihaz+kahve ikinci kez basılmaz. 24 saat özel, sonra masaya.">Eski kaporalara davetiye bas</button><span class="hint" id="invBfMsg"></span></div>
+        <div class="acts" style="margin-top:6px"><button class="mini" onclick="invBackfill()" title="Davetiye sistemi (v3.38) açılmadan önce ödenmiş kaporalara, şeridi açık kahvelerde paket × davetiye basar; aynı cihaz+kahve ikinci kez basılmaz. 24 saat özel, sonra masaya.">Eski kaporalara davetiye bas</button><span class="hint" id="invBfMsg"></span></div>
         <div class="sh" style="margin-top:14px">Jüri kapısı · WhatsApp (proxy v3.46)</div>
         <div class="g2">
           <div class="f"><span class="lbl">ilk kaporada WhatsApp grubu sor</span><select id="s_login"><option value="0">kapalı</option><option value="1">açık — ilk Kapora koy'da bir kez: "Gruba katıl" + "Katıldım"</option></select></div>
@@ -331,7 +332,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-30l';
+const VERSION='v2026-09-30m';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -361,7 +362,7 @@ async function kapPreview(){
   const d=await r.json();
   const rows=Array.isArray(d.rows)?d.rows:[];
   if(!rows.length){ $('kapList').innerHTML='<div class="hint">Kilitli katılımcı yok.</div>'; $('kapGo').style.display='none'; $('kapMsg').textContent=''; return; }
-  $('kapList').innerHTML=rows.map(x=>'<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;font-size:13px"><b>'+esc(x.name)+'</b> · '+x.qty+' kutu · davet +'+x.bonus
+  $('kapList').innerHTML=rows.map(x=>'<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;font-size:13px"><b>'+esc(x.name)+'</b> · '+x.qty+' paket · davet +'+x.bonus
     +'<div class="hint">tavan '+esc(x.tavan)+' · masa '+esc(x.table)+' · kişisel '+esc(x.personal)+' · <b>kredi '+x.credit+' TL</b>'+(x.already_credited?' · <span style="color:var(--green)">dağıtıldı ✓</span>':'')+'</div></div>').join('')
     +'<div style="font-weight:800;margin-top:8px">Toplam kredi: '+d.total_credit+' TL · '+rows.length+' kişi</div>';
   $('kapGo').style.display='block'; $('kapMsg').textContent='';
@@ -404,14 +405,14 @@ async function loadPledges(){
   const lockedQ=arr.filter(p=>p.status==='locked'||p.status==='paid').reduce((t,p)=>t+qOf(p),0);
   const giftQ=arr.filter(p=>p.is_gift&&(p.status==='locked'||p.status==='paid')).reduce((t,p)=>t+qOf(p),0);
   const houseQ=arr.filter(p=>p.house&&(p.status==='locked'||p.status==='paid')).reduce((t,p)=>t+qOf(p),0);
-  const head=arr.length?('<div class="hint" style="margin-bottom:4px"><b>'+lockedQ+'</b> kilitli kutu · '+arr.length+' kişi'+(houseQ?(' · 🐢 '+houseQ+' ev sandalyesi'):'')+(giftQ?(' · 🎁 '+giftQ+' hediye kutu'):'')+(totQ>lockedQ?(' · <b>'+(totQ-lockedQ)+'</b> kutu beklemede (eski kayıt)'):'')+'</div>'):'';
+  const head=arr.length?('<div class="hint" style="margin-bottom:4px"><b>'+lockedQ+'</b> kilitli paket · '+arr.length+' kişi'+(houseQ?(' · 🐢 '+houseQ+' ev sandalyesi'):'')+(giftQ?(' · 🎁 '+giftQ+' hediye paket'):'')+(totQ>lockedQ?(' · <b>'+(totQ-lockedQ)+'</b> paket beklemede (eski kayıt)'):'')+'</div>'):'';
   $('plList').innerHTML=head+((arr.length)?arr.map(p=>{
     const locked=(p.status==='locked'||p.status==='paid');
     return '<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0">'
       +'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>'+(p.house?'🐢 ':'')+(p.is_gift?'🎁 ':'')+esc(p.name)+'</b>'
       +'<span class="hint">'+esc(p.status)+(p.show_name?' · isim açık':' · isim gizli')+(p.is_gift?' · <b style="color:var(--gold)">hediye</b>':'')+(p.house?' · <b style="color:var(--gold)">ev sandalyesi · krediden hariç</b>':'')+'</span></div>'
       // HEDİYE SATIRI (v2026-09-02a): e-posta yer tutucudur; ödeyenin adı + e-postası burada (kredi ona yazılır)
-      +'<div class="hint">'+(p.is_gift?('ödeyen: <b>'+esc(p.gift_from||'?')+'</b>'+(p.checkout_email?(' · '+esc(p.checkout_email)):'')):(esc(p.email)+' · '+esc(p.phone)))+' · '+qOf(p)+' kutu · ref '+esc(p.ref_code)+(p.referred_by?(' · davet: '+esc(p.referred_by)):'')+'</div>'
+      +'<div class="hint">'+(p.is_gift?('ödeyen: <b>'+esc(p.gift_from||'?')+'</b>'+(p.checkout_email?(' · '+esc(p.checkout_email)):'')):(esc(p.email)+' · '+esc(p.phone)))+' · '+qOf(p)+' paket · ref '+esc(p.ref_code)+(p.referred_by?(' · davet: '+esc(p.referred_by)):'')+'</div>'
       +'<div class="hint">'+plTrace(p,locked)+'</div>'   // v07e (Ömer "bu kayıt nasıl düştü?"): kayıt zamanı · Shopify sipariş linki · ödeme e-postası · sipariş yoksa uyarı
       +'<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'
       +'<button class="mini" title="'+(locked?'Koltuğu masadan kaldırır, kaydı SİLMEZ. Yalnız Shopify iadesinden SONRA kullan.':'Bekleyen kaydı masaya oturtur.')+'" onclick="plStatus(\''+p.id+'\',\''+(locked?'pledged':'locked')+'\',\''+esc(p.status)+'\')">'+(locked?'Koltuğu düşür (iade)':'Koltuğa oturt')+'</button>'
@@ -439,7 +440,7 @@ async function houseSet(){
   const qty=Math.max(0,parseInt($('houseQty').value)||0);
   const r=await fetch(API+'/admin/house-set',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({slug:CURSLUG,qty})});
   const j=await r.json().catch(()=>({}));
-  $('houseMsg').textContent=j.ok?('masada: '+j.qty+' kutu · kilitli toplam '+j.locked):('Olmadı: '+(j.error||r.status));
+  $('houseMsg').textContent=j.ok?('masada: '+j.qty+' paket · kilitli toplam '+j.locked):('Olmadı: '+(j.error||r.status));
   loadPledges();
 }
 const WNAME={ET:'Etiyopya',KE:'Kenya',RW:'Ruanda',BI:'Burundi',TZ:'Tanzanya',UG:'Uganda',CD:'Kongo DC',MW:'Malavi',ZM:'Zambiya',ZW:'Zimbabve',CM:'Kamerun',CI:'Fildişi Sahili',MG:'Madagaskar',MZ:'Mozambik',TG:'Togo',GN:'Gine',AO:'Angola',ST:'São Tomé',LR:'Liberya',SL:'Sierra Leone',NG:'Nijerya',GA:'Gabon',CF:'Orta Afrika Cum.',BR:'Brezilya',CO:'Kolombiya',PE:'Peru',EC:'Ekvador',BO:'Bolivya',VE:'Venezuela',GT:'Guatemala',CR:'Kosta Rika',HN:'Honduras',SV:'El Salvador',NI:'Nikaragua',PA:'Panama',MX:'Meksika',JM:'Jamaika',DO:'Dominik Cum.',CU:'Küba',HT:'Haiti',PR:'Porto Riko','US-HI':'Hawaii',PY:'Paraguay','ID-SUM':'Sumatra','ID-JAV':'Java','ID-SUL':'Sulawesi','ID-BAL':'Bali','ID-FLO':'Flores','ID-PAP':'Papua (Endonezya)',PG:'Papua Yeni Gine',VN:'Vietnam',TH:'Tayland',LA:'Laos',MM:'Myanmar',IN:'Hindistan',NP:'Nepal',CN:'Çin · Yunnan',PH:'Filipinler',TL:'Doğu Timor',YE:'Yemen',TW:'Tayvan',LK:'Sri Lanka',MY:'Malezya',KH:'Kamboçya',AU:'Avustralya',VU:'Vanuatu',ANY:'Fark etmez'};
@@ -451,20 +452,20 @@ async function loadUsers(){ const el=$('userList'); if(!el) return; try{ const r
     const sub=$('memSetSub'); if(sub) sub.textContent=j.users.length+' üye · grupta '+j.users.filter(u=>u.wa).length+' · işaretli '+j.users.filter(u=>!u.ok).length;
     if(!j.users.length){ el.textContent='henüz kapora veren yok (üyeler siparişle oluşur; eskiler için "Eski kaporalardan üye çıkar")'; return; }
     const d=iso=>iso?new Date(iso).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'}):'—';
-    // v30k: satır = iki çizgi (tablo taşıyordu): 1) ad · e-posta · telefon  2) WhatsApp · kutu · sipariş·cihaz · son kapora · düğmeler
+    // v30k: satır = iki çizgi (tablo taşıyordu): 1) ad · e-posta · telefon  2) WhatsApp · paket · sipariş·cihaz · son kapora · düğmeler
     el.innerHTML=j.users.map(u=>{ const wa=u.wa?('<span style="color:var(--green)">✓ WhatsApp · '+(u.wa_by==='admin'?'sen onayladın':'kendisi')+' · '+d(u.wa_at)+'</span>'):'<span style="color:var(--muted)">WhatsApp: sorulmadı</span>';
         return '<div style="border-top:1px solid var(--line);padding:7px 0'+(u.ok?'':';color:#e0705a')+'"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline"><span><b>'+esc(u.name||'(ad yok)')+'</b> · '+esc(u.email)+(u.banned?' · <span style="color:#e0705a">askıda</span>':'')+(u.ok?'':' · <b style="color:#e0705a">grupta değil</b>')+'</span><span style="white-space:nowrap">'+esc(u.phone||'telefon yok')+'</span></div>'
-          +'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;margin-top:3px"><span class="hint" style="font-size:11.5px">'+wa+' · <b>'+u.boxes+' kutu</b>'+(u.hemen?(' · ⚡'+u.hemen):'')+' · '+(u.orders||0)+' sipariş · '+(u.devs||1)+' cihaz · son '+d(u.last||u.first)+'</span><span style="white-space:nowrap">'
+          +'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;margin-top:3px"><span class="hint" style="font-size:11.5px">'+wa+' · <b>'+u.boxes+' paket</b>'+(u.hemen?(' · ⚡'+u.hemen):'')+' · '+(u.orders||0)+' sipariş · '+(u.devs||1)+' cihaz · son '+d(u.last||u.first)+'</span><span style="white-space:nowrap">'
           +(u.ok?((u.wa?'':'<button class="mini" onclick="userWa(\''+esc(u.email)+'\',true)" title="Grupta gördün: işaretle — sayfa bir daha sormaz">Grupta ✓</button> ')+'<button class="mini" onclick="userFlag(\''+esc(u.email)+'\',false)">Grupta değil</button>'):'<button class="mini" onclick="userFlag(\''+esc(u.email)+'\',true)">Onayla</button>')+'</span></div></div>'; }).join('')
       +'<div class="hint" style="margin-top:6px">"kendisi" = ilk kaporada Katıldım dedi · "sen onayladın" = Grupta ✓ · "sorulmadı" = bir sonraki Kapora koy\'da sorulur. "Grupta değil": kaporası kapanır, sayfada gruba katıl uyarısı · "Onayla": geri açar.</div>'; }catch(e){ el.textContent='üye listesi alınamadı: '+e; } }
 async function userWa(email,wa){ const r=await fetch(API+'/admin/user-flag',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({email,wa})}); const j=await r.json().catch(()=>({})); if(j.ok) loadUsers(); else alert('Olmadı: '+(j.error||r.status)); }
 // v30i: 40'ı beklemeden kilitle (proxy v3.47 /admin/offer-lock) · v30l: kilidin kaporası sorulur (proxy v3.49 dep_tl) — ayar 200 olsa da eski kaporalar 100 ise 100 yaz
 async function offLockNow(id){ const o=OFFERS.find(x=>x.id===id); if(!o) return;
   const cur=String($('s_depamt')&&$('s_depamt').value||'').trim()||'100';
-  const ans=prompt('"'+o.name+'" ŞİMDİ kilitlensin mi? '+(o.dep||0)+' kapora dönüşür; kapora verenler sayfada "Tamamla" görür (Grup-Al fiyatı − kapora, tek kullanımlık kodla). Geri alınamaz.\n\nBu kilidin KAPORASI (TL · kutu başına) — kapora verenlerin GERÇEKTEN ödediği tutar. Ayardaki güncel tutar '+cur+' TL; farklı ödemişlerse buraya onu yaz:',cur);
+  const ans=prompt('"'+o.name+'" ŞİMDİ kilitlensin mi? '+(o.dep||0)+' kapora dönüşür; kapora verenler sayfada "Tamamla" görür (Grup-Al fiyatı − kapora, tek kullanımlık kodla). Geri alınamaz.\n\nBu kilidin KAPORASI (TL · paket başına) — kapora verenlerin GERÇEKTEN ödediği tutar. Ayardaki güncel tutar '+cur+' TL; farklı ödemişlerse buraya onu yaz:',cur);
   if(ans===null) return; const dep_tl=parseInt(String(ans).replace(/[^0-9]/g,''),10); if(!(dep_tl>=0&&dep_tl<=5000)){ alert('Kapora 0–5000 TL arası bir sayı olmalı.'); return; }
   const r=await fetch(API+'/admin/offer-lock',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({id,dep_tl})}); const j=await r.json().catch(()=>({}));
-  if(j.ok){ if(Array.isArray(j.offers)) OFFERS=j.offers; renderOffersAdmin(); alert('Kilitlendi · oturum #'+j.lock.n+' · '+j.lock.dep+' kapora · kapora '+(j.lock.dep_tl!=null?j.lock.dep_tl:dep_tl)+' TL/kutu. Şimdi WhatsApp grubuna yaz: "'+o.name+' kilitlendi — kaporası olanlar kartta Tamamla ile öder."'); } else alert('Olmadı: '+(j.error||r.status)); }
+  if(j.ok){ if(Array.isArray(j.offers)) OFFERS=j.offers; renderOffersAdmin(); alert('Kilitlendi · oturum #'+j.lock.n+' · '+j.lock.dep+' kapora · kapora '+(j.lock.dep_tl!=null?j.lock.dep_tl:dep_tl)+' TL/paket. Şimdi WhatsApp grubuna yaz: "'+o.name+' kilitlendi — kaporası olanlar kartta Tamamla ile öder."'); } else alert('Olmadı: '+(j.error||r.status)); }
 async function membersBackfill(){ const m=$('memBfMsg'); m.textContent='çıkarılıyor…';
   try{ const r=await fetch(API+'/admin/members-backfill',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:'{}'}); const j=await r.json().catch(()=>({}));
     if(j.ok){ m.textContent=j.created+' yeni üye · '+j.skipped+' zaten vardı · Shopify: '+j.shopify; loadUsers(); } else m.textContent='Olmadı: '+(j.error||r.status); }catch(e){ m.textContent='Olmadı: '+e; } }
@@ -500,7 +501,7 @@ async function offSettingsSave(){
   $('offSetMsg').textContent=msg; $('offScaleMsg').textContent=msg;
   if(j.ok){ OFFCFG=j.cfg||null; scalePreview(); await loadOffers(); }
 }
-// v02s: taban + oran — sunucuyla aynı hesap (scaleOf); kutulara yazarken canlı önizleme, kaydedince sunucu değeri
+// v02s: taban + oran — sunucuyla aynı hesap (scaleOf); paketlere yazarken canlı önizleme, kaydedince sunucu değeri
 function scaleCalc(u1,l1,u2,l2,u3,l3){   // v02w: sunucudaki scaleOf'un kopyası — 1 ref: orantı; 2–3 ref: parçalı doğru
   const n=v=>{ const x=parseFloat(String(v==null?'':v).replace(',','.')); return isFinite(x)&&x>0?x:0; };
   u1=n(u1); l1=n(l1); u2=n(u2); l2=n(l2); u3=n(u3); l3=n(l3); if(!u1||!l1) return null;
@@ -558,11 +559,11 @@ async function cycleForfeit(){
   if(!confirm('Son sayımın süresi dolmuş, tamamlanmamış kaporaları kapat? (ayara göre YANAR ya da krediye döner; cihazlar askıya alınır)')) return;
   const r=await fetch(API+'/admin/cycle-forfeit',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({})});
   const j=await r.json().catch(()=>({}));
-  $('cycleMsg').textContent=j.ok?('kapatıldı · '+j.marked+' kapora ('+j.boxes+' kutu) · krediye '+(j.credited||0)+' · yanan '+(j.burned||0)+' · askı: '+j.banned+' cihaz'+((j.credited||0)?' — krediler için "Krediye dönenleri Shopify\'a yaz"':'')):('Olmadı: '+(j.error||r.status)+(j.done_by?(' · süre '+new Date(j.done_by).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'})+' bitiyor'):''));
+  $('cycleMsg').textContent=j.ok?('kapatıldı · '+j.marked+' kapora ('+j.boxes+' paket) · krediye '+(j.credited||0)+' · yanan '+(j.burned||0)+' · askı: '+j.banned+' cihaz'+((j.credited||0)?' — krediler için "Krediye dönenleri Shopify\'a yaz"':'')):('Olmadı: '+(j.error||r.status)+(j.done_by?(' · süre '+new Date(j.done_by).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'})+' bitiyor'):''));
   if(j.ok){ await loadOffers(); loadCycles(); }
 }
 async function kaporaCredit(){
-  if(!confirm('Son sayımın krediye dönen kaporalarını Shopify store credit olarak yaz? (kapora × kutu, TRY; müşteri e-postayla bulunur; bir kez yazılır)')) return;
+  if(!confirm('Son sayımın krediye dönen kaporalarını Shopify store credit olarak yaz? (kapora × paket, TRY; müşteri e-postayla bulunur; bir kez yazılır)')) return;
   const r=await fetch(API+'/admin/kapora-credit',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({})});
   const j=await r.json().catch(()=>({}));
   if(!j.ok){ $('cycleMsg').textContent='Olmadı: '+(j.error||r.status); return; }
@@ -619,10 +620,10 @@ function renderOffersAdmin(){ listSetSub();
       +'<input id="oe_name" value="'+esc(o.name)+'" placeholder="Lot adı" style="margin:0 0 6px">'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><input id="oe_origin" value="'+esc(o.origin||'')+'" placeholder="Ülke" style="margin:0">'
       +'<select id="oe_proc" style="margin:0">'+['','washed','natural','honey','anaerobic','infused','funky','any'].map(k=>'<option value="'+k+'"'+(k===(o.process||'')?' selected':'')+'>'+(k?(WPROCN[k]||k):'— işlem —')+'</option>').join('')+'</select>'
-      +'<input id="oe_vendor" value="'+esc(o.vendor||'')+'" placeholder="Tedarikçi" style="margin:0"><input id="oe_note" value="'+esc(o.note||'')+'" placeholder="Not (ör. 20 kutu sınırlı)" style="margin:0">'
+      +'<input id="oe_vendor" value="'+esc(o.vendor||'')+'" placeholder="Tedarikçi" style="margin:0"><input id="oe_note" value="'+esc(o.note||'')+'" placeholder="Not (ör. 20 paket sınırlı)" style="margin:0">'
       +'<input id="oe_usd" value="'+esc((o.meta&&o.meta.usd_kg!=null)?String(o.meta.usd_kg):'')+'" placeholder="yeşil $/kg (ör. 16,55)" style="margin:0"><input id="oe_list" value="'+esc((o.meta&&o.meta.list_tl)?String(o.meta.list_tl):'')+'" placeholder="liste ₺ (boş = ölçekten)" style="margin:0"><input id="oe_jury" value="'+esc((o.meta&&o.meta.jury_tl)?String(o.meta.jury_tl):'')+'" placeholder="Kaporalı ₺ (boş = oranla)" style="margin:0"><input id="oe_basket" value="'+esc((o.meta&&(o.meta.basket_tl||o.meta.camp_tl))?String(o.meta.basket_tl||o.meta.camp_tl):'')+'" placeholder="Sepet ₺ (boş = oranla)" style="margin:0"><input id="oe_done" value="'+esc((o.meta&&o.meta.done_url)?String(o.meta.done_url):'')+'" placeholder="tamamlama linki: https://coffeenutz.net/cart/VARYANT_ID:1 ya da ürün linki (kilitlenince · fiyat = Kaporalı ₺ − kapora)" style="margin:0;grid-column:1/-1"><input id="oe_shop" value="'+esc((o.meta&&o.meta.shop_url)?String(o.meta.shop_url):'')+'" placeholder="mağaza linki (stokta): https://coffeenutz.net/products/… → sayfada Stokta · hemen al (liste fiyatı)" style="margin:0;grid-column:1/-1">'
       +'<input id="oe_hemen" value="'+esc((o.meta&&o.meta.hemen_url)?String(o.meta.hemen_url):'')+'" placeholder="Hemen-Al linki: ürün sayfası linkini yapıştır (Sonraki Kavrulma varyantı seçilir) ya da https://coffeenutz.net/cart/VARYANT_ID:1" style="margin:0;grid-column:1/-1">'
-      +'<input id="oe_green" value="'+esc((o.meta&&o.meta.green_boxes!=null)?String(o.meta.green_boxes):'')+'" placeholder="elde yeşil (kutu · Hemen-Al tavanı, boş = tavan yok)" style="margin:0" inputmode="numeric">'
+      +'<input id="oe_green" value="'+esc((o.meta&&o.meta.green_boxes!=null)?String(o.meta.green_boxes):'')+'" placeholder="elde yeşil (paket · Hemen-Al tavanı, boş = tavan yok)" style="margin:0" inputmode="numeric">'
       +'<input id="oe_hbase" value="'+esc((o.meta&&o.meta.hemen_base!=null)?String(o.meta.hemen_base):'')+'" placeholder="Hemen-Al açık koltuk (boş = genel ayar)" style="margin:0" inputmode="numeric"></div>'
       +'<div style="display:flex;gap:6px;margin-top:8px"><button class="mini" onclick="offEditSave(\''+o.id+'\')">Taslağa kaydet</button><button class="mini" onclick="offEdit(null)">Vazgeç</button></div></div>';
     const st=offState(o);
@@ -631,9 +632,9 @@ function renderOffersAdmin(){ listSetSub();
       +'<div class="hint">'+[o.origin,WPROCN[o.process]||o.process,o.vendor,o.note].filter(Boolean).map(esc).join(' · ')+(o.shop_url?' · <a href="'+esc(o.shop_url)+'" target="_blank" rel="noopener" style="color:var(--green);font-weight:700">🛒 stokta</a>':'')+'</div>'
       +(metaLine(o.meta)?('<div class="hint" style="color:var(--gold);margin-top:2px">🔒 '+metaLine(o.meta)+'</div>'):'')
       +((o.list_tl&&(o.jury_tl||o.camp200_tl))?('<div class="hint" style="margin-top:2px"><s>'+o.list_tl+' ₺</s> <b style="color:var(--ink)">Jüri '+(o.jury_tl||o.camp200_tl)+' ₺</b> · Sepet '+(o.basket_tl||o.camp_tl)+' ₺'+(o.frozen?' · <span style="color:var(--gold)">🔒 kilitli</span>':((o.meta&&(o.meta.list_tl||o.meta.jury_tl||o.meta.basket_tl||o.meta.camp_tl))?' · <span style="color:var(--gold)">elle ezildi</span>':''))+'</div>'):(o.meta&&o.meta.usd_kg?'':'<div class="hint" style="margin-top:2px;opacity:.7">fiyat yok ($/kg girilmemiş)</div>'))
-      +(o.lock?('<div class="hint" style="margin-top:2px;color:var(--gold);font-weight:700">🔒 '+(o.lock.state==='production'?'üretimde':(o.lock.state==='carried'?'kilitli · sonraki oturuma taşındı':'kilitli'))+' · oturum #'+o.lock.n+' · '+o.lock.dep+' kapora'+(o.lock.dep_tl>0?(' · '+o.lock.dep_tl+' TL/kutu'):'')+' · kilit '+new Date(o.lock.at).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'})+'</div>'):'')
+      +(o.lock?('<div class="hint" style="margin-top:2px;color:var(--gold);font-weight:700">🔒 '+(o.lock.state==='production'?'üretimde':(o.lock.state==='carried'?'kilitli · sonraki oturuma taşındı':'kilitli'))+' · oturum #'+o.lock.n+' · '+o.lock.dep+' kapora'+(o.lock.dep_tl>0?(' · '+o.lock.dep_tl+' TL/paket'):'')+' · kilit '+new Date(o.lock.at).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'})+'</div>'):'')
       +((o.conv||o.won_at)?('<div class="hint" style="margin-top:2px;color:var(--green)">🏆 kilitlendi '+(o.won_at?new Date(o.won_at).toLocaleDateString('tr-TR',{day:'numeric',month:'short',timeZone:'Europe/Istanbul'}):'')+' · dönüşen kapora '+(o.conv||0)+' · tamamlanan '+(o.done||0)+(o.forfeit?(' · <span style="color:#e0705a">kapatılan '+o.forfeit+'</span>'):'')+(o.done_url?'':' · <span style="color:#e0705a">tamamlama linki yok (Düzenle)</span>')+'</div>'):'')
-      +(o.hemen?('<div class="hint" style="margin-top:2px;color:#4f7f74;font-weight:700">⚡ Hemen-Al '+(o.hemen.price||'—')+' ₺ · açık koltuk '+o.hemen.left+'/'+o.hemen.base+' · bu tur kotadan '+o.hemen.sold+' · davetiyeyle '+o.hemen.inv+(o.hemen.table&&o.hemen.table.length?(' · masada '+o.hemen.table.length):'')+(o.hemen.green_left!=null?(' · yeşil kalan '+o.hemen.green_left+' kutu'):'')+'</div>'):((o.img_url&&!(o.meta&&o.meta.hemen_url))?'<div class="hint" style="margin-top:2px;color:#e0705a">görsel var ama Hemen-Al linki yok (Düzenle) — şerit kapalı</div>':''))
+      +(o.hemen?('<div class="hint" style="margin-top:2px;color:#4f7f74;font-weight:700">⚡ Hemen-Al '+(o.hemen.price||'—')+' ₺ · açık koltuk '+o.hemen.left+'/'+o.hemen.base+' · bu tur kotadan '+o.hemen.sold+' · davetiyeyle '+o.hemen.inv+(o.hemen.table&&o.hemen.table.length?(' · masada '+o.hemen.table.length):'')+(o.hemen.green_left!=null?(' · yeşil kalan '+o.hemen.green_left+' paket'):'')+'</div>'):((o.img_url&&!(o.meta&&o.meta.hemen_url))?'<div class="hint" style="margin-top:2px;color:#e0705a">görsel var ama Hemen-Al linki yok (Düzenle) — şerit kapalı</div>':''))
       +'<div class="hint" style="color:'+st[1]+';font-weight:700;margin-top:2px">'+st[0]+'</div>'
       +'<div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">'+(o.img_url?('<img src="'+esc(o.img_url)+'" alt="" style="width:60px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--line)">'):'<span class="hint" style="opacity:.75">görsel yok · sayfada dağ+güneş · Hemen-Al kapalı</span>')
       +'<label class="mini" style="cursor:pointer" title="Görsel yüklenen kahve stokta sayılır: Hemen-Al linki de varsa şerit açılır">'+(o.img_url?'Görseli değiştir':'Görsel yükle')+'<input type="file" accept="image/*" style="display:none" onchange="offImg(\''+o.id+'\',this)"></label>'
@@ -647,7 +648,7 @@ function renderOffersAdmin(){ listSetSub();
 // v30c: dondurulmuş (kaporalı) kahvelerin Kaporalı/Sepet fiyatlarını güncel oranlarla yeniden yaz — liste sabit
 // v30e: proxy v3.41 /admin/inv-backfill — v3.38 öncesi kaporalara davetiye (bir kez; sonuç satırda)
 async function invBackfill(){
-  if(!confirm('Davetiyesi hiç basılmamış kaporalara (şeridi açık kahvelerde) kutu × davetiye basılsın mı? Sahipleri sayfayı açınca biletleri görür; 24 saat sonra masaya çıkar.')) return;
+  if(!confirm('Davetiyesi hiç basılmamış kaporalara (şeridi açık kahvelerde) paket × davetiye basılsın mı? Sahipleri sayfayı açınca biletleri görür; 24 saat sonra masaya çıkar.')) return;
   const m=$('invBfMsg'); m.textContent='basılıyor…';
   try{ const r=await fetch(API+'/admin/inv-backfill',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:'{}'}); const j=await r.json().catch(()=>({}));
     if(j.ok){ const sk=j.skipped||{}; m.textContent=j.minted+' davetiye · '+j.devs+' cihaz'+(j.minted?'':' — basılacak kapora yok')+' · atlanan: zaten var '+(sk.had||0)+', şeritsiz '+(sk.nolane||0)+', yanan/kredi '+(sk.done||0); loadOffers(); }
@@ -844,7 +845,7 @@ async function loadWishes(){
   $('wishList').innerHTML=h;
 }
 function labelCsv(){
-  // ETİKET CSV (B): kutu başına bir satır — DYMO Connect'te veri birleştirme. UTF-8 BOM (Türkçe karakterler Excel/DYMO'da düzgün).
+  // ETİKET CSV (B): paket başına bir satır — DYMO Connect'te veri birleştirme. UTF-8 BOM (Türkçe karakterler Excel/DYMO'da düzgün).
   const c=CAMPS.find(x=>x.slug===CURSLUG)||{}; const rows=PLROWS.filter(p=>p.status==='locked'||p.status==='paid');
   if(!rows.length){ alert('Kilitli katılımcı yok.'); return; }
   const short=full=>{ const parts=String(full||'').trim().split(/\s+/).filter(Boolean); if(!parts.length) return ''; if(parts.length===1) return parts[0]; return parts[0]+' '+parts[parts.length-1].charAt(0).toLocaleUpperCase('tr-TR')+'.'; };
@@ -861,7 +862,7 @@ function labelCsv(){
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='grupal-etiket-'+(CURSLUG||'masa')+'.csv'; document.body.appendChild(a); a.click(); a.remove();
 }
 // KUTU EKONOMİSİ (C): form ↔ econ {anahtar:[tavan,taban]}
-// KUTU EKONOMİSİ (Ömer 2026-09-03): TOPLAMDAN hesap — kutu fiyatı yazılır, kalemler girilir, CoffeeNutz payı = kalan.
+// KUTU EKONOMİSİ (Ömer 2026-09-03): TOPLAMDAN hesap — paket fiyatı yazılır, kalemler girilir, CoffeeNutz payı = kalan.
 const ECON_KEYS=['yesil','sabit','ambalaj','kargo','kdv','roaster','cn'];
 const ECON_IN=ECON_KEYS.filter(k=>k!=='cn'&&k!=='roaster');   // elle girilen maliyetler; kalan kavurucu+CoffeeNutz'a EŞİT bölünür (Ömer 2026-09-03)
 const ladderPrice=(col)=>{ const num=v=>{ const m=String(v||'').match(/\d[\d.]*/); return m?parseInt(m[0].replace(/\./g,'')):0; };
@@ -886,7 +887,7 @@ function econSum(){
   if(!e){ el.textContent='Boş: grafik yayınlanmaz.'; return; }
   const taban=ladderPrice('b');
   const line=(col,lbl,ref)=>{ const i=col==='a'?0:1, tot=econTotal(col), rem=e.roaster[i]+e.cn[i];
-    let h=lbl+': kutu fiyatı <b>'+tot+' TL</b>'+(col==='a'&&!tot?' — <span style="color:#e0705a">liste fiyatını yaz</span>':'')+(ref?(tot===ref?' ✓ merdivenle eşit':' — <span style="color:#e0705a">merdiven '+ref+' TL</span>'):'');
+    let h=lbl+': paket fiyatı <b>'+tot+' TL</b>'+(col==='a'&&!tot?' — <span style="color:#e0705a">liste fiyatını yaz</span>':'')+(ref?(tot===ref?' ✓ merdivenle eşit':' — <span style="color:#e0705a">merdiven '+ref+' TL</span>'):'');
     h+=' · kalan <b'+(rem<0?' style="color:#e0705a"':'')+'>'+rem+' TL</b> → '+(col==='a'?('CoffeeNutz <b>'+e.cn[i]+'</b> (kavurucu yok)'):(esc($('f_roaster').value.trim()||'kavurucu')+' <b>'+e.roaster[i]+'</b> · CoffeeNutz <b>'+e.cn[i]+'</b>'))+(rem<0?' — <span style="color:#e0705a">kalemler fiyatı aşıyor</span>':'');
     return h; };
   el.innerHTML=line('a','liste fiyatı',0)+'<br>'+line('b','masa dolu',taban);

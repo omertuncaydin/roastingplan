@@ -253,5 +253,23 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     wd.eval("jLaneOpen('"+H0.id+"')"); await sleep(40); const cta=wd.document.querySelector('.jcard.lopen .jlane.ga .cta');
     T('setting says 200 but the lock was made at 100 → "Tamamla · 1.720 TL" (2 × (960 − 100)), not 1.520', !!cta && cta.textContent==='Tamamla · 1.720 TL');
     T('jLockDep falls back to the setting when the lock has no dep_tl', wd.eval("jLockDep({lock:{n:1}},{dep_amt:200})")===200 && wd.eval("jLockDep({lock:{n:1,dep_tl:100}},{dep_amt:200})")===100); }
+  // v30u: lock badge — ONE status for every locked coffee: "🔥 Seçildi · n paket kavruluyor" + CTA chip "sonrakine katıl ›" (opens the lanes: a new kapora = the next lot); green full ring
+  { const ML=JSON.parse(JSON.stringify(MD)); const L0=ML.offers.find(o=>o.id===ord[0].id), L1=ML.offers.find(o=>o.id===ord[1].id), L2=ML.offers.find(o=>o.id===ord[2].id);
+    L0.lock={at:'2026-09-22T10:00:00Z',n:3,dep:17,dep_tl:100,state:'locked',forced:true,close:'2026-10-05T20:59:00Z'}; L0.won_at='2026-09-22T10:00:00Z';          // Kilitle şimdi
+    L1.lock={at:'2026-09-21T10:00:00Z',n:3,dep:40,dep_tl:100,state:'locked',forced:false,close:'2026-10-05T20:59:00Z'}; L1.won_at='2026-09-21T10:00:00Z';         // automatic at 40
+    L2.lock={at:'2026-09-21T11:00:00Z',n:4,dep:40,dep_tl:100,state:'carried',forced:false,close:'2026-10-12T20:59:00Z'}; L2.won_at='2026-09-21T11:00:00Z';        // carried to the next session
+    const wl=mk({'/meydan':ML,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},390); await sleep(250); const Dl=wl.document;
+    const c0=Dl.querySelector('.jcard[data-id="'+ord[0].id+'"]'), c1=Dl.querySelector('.jcard[data-id="'+ord[1].id+'"]'), c2=Dl.querySelector('.jcard[data-id="'+ord[2].id+'"]'), c3=Dl.querySelector('.jcard[data-id="'+ord[3].id+'"]');
+    T('locked card → chip "🔥 Seçildi · 17 paket kavruluyor" (green), ring green and full, ring number = packages in the lot', !!c0 && c0.querySelector('.jchip.jlockb').textContent==='🔥 Seçildi · 17 paket kavruluyor' && c0.querySelector('.jtop svg circle:nth-of-type(2)').getAttribute('stroke')==='#4fc98a' && c0.querySelector('.jtop svg circle:nth-of-type(2)').getAttribute('stroke-dasharray').startsWith('131.9') && c0.querySelector('.jtop svg text').textContent==='17');
+    T('same single status for the automatic lock and the carried lock (no dates, no second status)', !!c1 && c1.querySelector('.jchip.jlockb').textContent==='🔥 Seçildi · 40 paket kavruluyor' && !!c2 && c2.querySelector('.jchip.jlockb').textContent==='🔥 Seçildi · 40 paket kavruluyor');
+    T('CTA chip "sonrakine katıl ›" next to the status; unlocked coffee has neither, gold ring', c0.querySelector('.jchip.jlocknext').textContent==='sonrakine katıl ›' && !!c3 && !c3.querySelector('.jchip.jlockb') && !c3.querySelector('.jchip.jlocknext') && c3.querySelector('.jtop svg circle:nth-of-type(2)').getAttribute('stroke')==='#e6c14b');
+    T('sonrakine katıl → jLaneOpen(id) (inline handlers do not run in jsdom: check the attribute, then call it)', (c0.querySelector('.jchip.jlocknext').getAttribute('onclick')||'').includes("jLaneOpen('"+ord[0].id+"')"));
+    wl.eval("jLaneOpen('"+ord[0].id+"')"); await sleep(60);
+    T('…and the card opens its lanes (Kapora koy for the next lot)', !!wl.document.querySelector('.jcard.lopen[data-id="'+ord[0].id+'"] .jlane.ga'));
+    wl.eval("jLaneClose(); jGoRow('"+ord[0].id+"')"); await sleep(60); const row=wl.document.querySelector('.orow[data-id="'+ord[0].id+'"]');
+    T('list row: "🔥 Seçildi · 17 paket kavruluyor" (no "kilitli", no "kutu")', !!row && /🔥 Seçildi · 17 paket kavruluyor/.test(row.textContent) && !/kilitli|kutu/.test(row.textContent));
+    const wt=mk({'/meydan':ML,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); wt.eval("jDeskView('list')"); await sleep(60); const tr=wt.document.querySelector('.jdk-table tr.jdk-r[data-id="'+ord[0].id+'"]');
+    T('desktop table row: status chip under the name, bar full and green, count shows the lot (17/40)', !!tr && !!tr.querySelector('.jdk-lock .jchip.jlockb') && tr.querySelector('td.n .bar i').classList.contains('hit') && tr.querySelector('td.n .bar i').style.width==='100%' && tr.querySelector('td.n b').textContent==='17/40');
+    T('no "kutu"/"box" left in the page strings (Ömer: packages, not boxes) — only the checkbox idioms', !/\d+ kutu|kutu başına|kutun\b|kutular/.test(html) && (html.match(/[kK]utu/g)||[]).length<=3 && !/ boxes?[ .,;'·]/.test(html.replace(/tick the box\./g,''))); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })().catch(e=>{ console.log('CRASH',e.message,e.stack.split('\n').slice(0,3).join(' / ')); process.exit(1); });
