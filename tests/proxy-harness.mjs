@@ -18,6 +18,13 @@ export async function boot(tsPath, seed = {}) {
       return { ok: true, status: 200, json: async () => ({ title: 'Kolombiya Jose Espinoza Recreo', handle: h, variants: [
         { id: 67856174350640, title: 'Sonraki Kavrulma Tarihinde Gönderim / 250G', price: 124000, available: true },
         { id: 67856174350641, title: '28.09.26 Stoğundan Gönderim / 250G', price: 124000, available: false } ] }), text: async () => '' }; }
+    if (s.includes('/auth/v1/')) { const path = s.split('/auth/v1/')[1]; const body = init.body ? JSON.parse(init.body) : {}; const bearer = ((init.headers || {}).Authorization || (init.headers || {}).authorization || '').replace(/^Bearer /, '');
+      const USERS = { 'tok-ayse': { id: '11111111-1111-4111-8111-111111111111', email: 'ayse.kaya@example.com' }, 'tok-mehmet': { id: '22222222-2222-4222-8222-222222222222', email: 'mehmet@example.com' } };
+      if (path === 'user') { const u = USERS[bearer]; return u ? { ok: true, status: 200, json: async () => u, text: async () => JSON.stringify(u) } : { ok: false, status: 401, json: async () => ({ msg: 'invalid' }), text: async () => 'invalid' }; }
+      if (path === 'otp') { DB.__otp = (DB.__otp || []).concat([body.email]); if (body.email === 'ratelimit@example.com') return { ok: false, status: 429, json: async () => ({ msg: 'email rate limit exceeded' }), text: async () => '{"msg":"email rate limit exceeded"}' }; return { ok: true, status: 200, json: async () => ({}), text: async () => '{}' }; }
+      if (path === 'verify') { const good = body.token === '123456'; const sess = { access_token: 'tok-ayse', refresh_token: 'ref-ayse', expires_in: 3600, user: USERS['tok-ayse'] }; return good ? { ok: true, status: 200, json: async () => sess, text: async () => JSON.stringify(sess) } : { ok: false, status: 403, json: async () => ({ msg: 'Token has expired or is invalid' }), text: async () => '{"msg":"Token has expired or is invalid"}' }; }
+      if (path.startsWith('token?grant_type=refresh_token')) { const sess = { access_token: 'tok-ayse', refresh_token: 'ref-ayse-2', expires_in: 3600, user: USERS['tok-ayse'] }; return body.refresh_token === 'ref-ayse' ? { ok: true, status: 200, json: async () => sess, text: async () => JSON.stringify(sess) } : { ok: false, status: 400, json: async () => ({ msg: 'bad' }), text: async () => '{"msg":"bad"}' }; }
+      return { ok: false, status: 404, json: async () => ({}), text: async () => 'no' }; }
     if (s.includes('/admin/oauth/access_token')) { if (DB.__hang) return new Promise((_, rej) => { const sig = init.signal; if (sig) sig.addEventListener('abort', () => rej(Object.assign(new Error('The operation was aborted'), { name: 'AbortError' }))); }); return { ok: true, status: 200, json: async () => ({ access_token: 'tok' }), text: async () => '' }; }
     if (s.includes('/graphql.json')) { const body = JSON.parse(init.body || '{}'); const q = String(body.query || ''); log.push('GQL ' + q.slice(0, 40));
       if (q.includes('productVariant(')) { const vid = String((body.variables || {}).id || ''); return { ok: true, status: 200, json: async () => ({ data: { productVariant: { id: vid, price: '1600.00', product: { id: 'gid://shopify/Product/777', title: 'El Recreo' } } } }), text: async () => '' }; }
@@ -36,7 +43,7 @@ export async function boot(tsPath, seed = {}) {
     if (method === 'DELETE') { const keep = rows.filter(r => !flt.every(f => match(r, f))); DB[table] = keep; return { ok: true, status: 204, json: async () => [], text: async () => '' }; }
     return { ok: false, status: 405, text: async () => 'method', json: async () => ({}) };
   };
-  globalThis.Deno = { serve: (h) => { handler = h; }, env: { get: (k) => ({ SUPABASE_URL: 'https://db.test', SUPABASE_SERVICE_ROLE_KEY: 'k', CC_KEY: 'adminkey', SHOPIFY_CLIENT_SECRET: 'sec' })[k] || process.env[k] || '' } };
+  globalThis.Deno = { serve: (h) => { handler = h; }, env: { get: (k) => ({ SUPABASE_URL: 'https://db.test', SUPABASE_SERVICE_ROLE_KEY: 'k', CC_KEY: 'adminkey', SHOPIFY_CLIENT_SECRET: 'sec', SUPABASE_ANON_KEY: 'anon' })[k] || process.env[k] || '' } };
   globalThis.fetch = fakeFetch;
   await import('data:text/javascript;base64,' + Buffer.from(js).toString('base64'));
   const call = async (method, path, body, headers = {}) => {

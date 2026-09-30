@@ -179,5 +179,46 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
   // ---- lobby untouched on desktop (no dep page → no jdesk)
   w=mk({'/meydan':MD,'/offer-mine':{votes:[]},'/campaigns':[]},1366,'https://grup-al.com/misafir'); await sleep(250); D=w.document;
   T('desk: /misafir lobby is not the Jüri layout (no jdesk, doors present)', !D.body.classList.contains('jdesk') && !!D.getElementById('doors'));
+  // ===== v10o JÜRİ KAPISI: first Kapora koy → WhatsApp sheet once → /wa-ok → continues; never again; flagged member blocked; Öde gated too; bind by order no + e-mail
+  { const MH=JSON.parse(JSON.stringify(MD)); const H0=MH.offers.find(o=>o.id===ord[0].id); H0.img_url='https://x.test/o/a.jpg'; H0.hemen={url:'https://coffeenutz.net/cart/222:1',price:1280,base:2,sold:0,inv:0,left:2,green_left:null,table:[],roast_at:'2026-10-05T20:59:00.000Z'}; H0.list_tl=1600; H0.jury_tl=960; MH.offer_cfg.hemen_inv=2; MH.offer_cfg.hemen_inv_h=24;
+    const ML=JSON.parse(JSON.stringify(MH)); ML.offer_cfg.login_required=true; ML.offer_cfg.wa_group_url='https://chat.whatsapp.com/ABCdef123456';
+    const calls=[]; const MINE0={votes:[],inv:[],hemen:[],me:{member:false,name:'',phone_tail:null,wa:false,wa_at:null,ok:true}};
+    const w6=mk({'/meydan':ML,'/offer-mine':MINE0,'/campaigns':[]},390); await sleep(250);
+    const f0=w6.fetch; w6.fetch=async(u,init)=>{ const s=String(u); const body=init&&init.body?JSON.parse(init.body):{};
+      if(s.endsWith('/wa-ok')){ calls.push(['wa-ok',body.dev]); return {ok:true,status:200,json:async()=>({ok:true,wa:true,wa_at:new Date().toISOString(),me:null})}; }
+      if(s.endsWith('/dev-bind')){ calls.push(['bind',body]); return body.order==='1201'&&body.email==='ayse.kaya@example.com'?{ok:true,status:200,json:async()=>({ok:true,dev:'PHONE00001',me:{member:true,name:'Ayşe Kaya',phone_tail:'4567',wa:true,ok:true}})}:{ok:false,status:404,json:async()=>({ok:false,error:'nomatch'})}; }
+      return f0(u,init); };
+    T('gate: no Giriş chip anywhere (registration is the Shopify order)', !w6.document.querySelector('#jTop .jlgc') && !/jLoginHtml/.test(html));
+    w6.eval("jLaneOpen('"+H0.id+"'); jLaneKap('"+H0.id+"')"); await sleep(60);
+    T('first Kapora koy → WhatsApp sheet: group link, "Gruba katıldım" tick, Devam; nothing in the basket yet', !!w6.document.getElementById('jSheet') && w6.document.querySelector('#jSheet a.go').getAttribute('href')==='https://chat.whatsapp.com/ABCdef123456' && !!w6.document.getElementById('jgWa') && !(w6.__g('dbGet')()[H0.id]) && /bir kez/.test(w6.document.getElementById('jSheet').textContent));
+    await w6.eval("jGateWa()"); await sleep(40);
+    T('Devam without the tick → refused with a message', !!w6.document.getElementById('jgWa') && /Önce gruba katıl/.test(w6.document.querySelector('#jSheet .err').textContent) && calls.length===0);
+    w6.document.getElementById('jgWa').checked=true; await w6.eval("jGateWa()"); await sleep(80);
+    T('tick + Devam → POST /wa-ok {dev} → sheet closes, local flag set, the pending Kapora koy runs (basket 1, panel open with Öde)', calls.some(c=>c[0]==='wa-ok'&&/^[A-Z0-9]{8,16}$/.test(c[1])) && !w6.document.getElementById('jSheet') && w6.localStorage.getItem('grupal_waok')==='1' && (w6.__g('dbGet')()[H0.id]||0)===1 && !!w6.document.querySelector('.jcard.lopen[data-id="'+H0.id+'"]') && /^Öde/.test(w6.document.querySelector('.jcard.lopen .jlane.ga .cta').textContent));
+    w6.eval("jLaneKap('"+H0.id+"')"); await sleep(40);
+    T('second Kapora koy → no sheet, basket 2 (asked only once)', !w6.document.getElementById('jSheet') && (w6.__g('dbGet')()[H0.id]||0)===2 && calls.filter(c=>c[0]==='wa-ok').length===1);
+    let paid=null; w6.openPayTab=u=>{ paid=u; }; w6.eval("try{ localStorage.setItem('grupal_terms','1'); }catch(e){}"); await w6.eval("dbPay()"); await sleep(40);
+    T('Öde passes the gate too (no sheet)', !w6.document.getElementById('jSheet'));
+    // a fresh device whose server record already says wa (paid before from another device, merged) → no sheet either
+    const MINEW={votes:[{id:H0.id,paid:true,qty:1}],inv:[],hemen:[],me:{member:true,name:'Ayşe Kaya',phone_tail:'4567',wa:true,wa_at:'2026-09-30T10:00:00Z',ok:true}};
+    const w8=mk({'/meydan':ML,'/offer-mine':MINEW,'/campaigns':[]},390); await sleep(250); w8.eval("jLaneOpen('"+H0.id+"'); jLaneKap('"+H0.id+"')"); await sleep(40);
+    T('server says wa → no sheet on this device, basket +1', !w8.document.getElementById('jSheet') && (w8.__g('dbGet')()[H0.id]||0)===1 && w8.localStorage.getItem('grupal_waok')==='1');
+    // flagged by admin → blocked with the warning, even with the local flag
+    const MINEF={votes:[{id:H0.id,paid:true,qty:1}],inv:[],hemen:[],me:{member:true,name:'Ayşe Kaya',phone_tail:'4567',wa:true,wa_at:'2026-09-30T10:00:00Z',ok:false}};
+    const w9=mk({'/meydan':ML,'/offer-mine':MINEF,'/campaigns':[]},390); await sleep(250); w9.eval("dbClear(); jLaneOpen('"+H0.id+"'); jLaneKap('"+H0.id+"')"); await sleep(60);
+    T('flagged member → sheet with "WhatsApp grubunda görünmüyorsun" + group link, nothing added', !!w9.document.getElementById('jSheet') && /WhatsApp grubunda görünmüyorsun/.test(w9.document.querySelector('#jSheet .err').textContent) && !!w9.document.querySelector('#jSheet a.go') && !(w9.__g('dbGet')()[H0.id]));
+    // bind: order no + e-mail → adopt the primary dev
+    const w10=mk({'/meydan':ML,'/offer-mine':MINE0,'/campaigns':[]},390); await sleep(250); w10.fetch=w6.fetch; // same mocks
+    T('device hint carries the "Bu cihaza bağla" link', /Bu cihaza bağla/.test(w10.document.querySelector('.jdevh').textContent));
+    w10.eval("jBindOpen()"); await sleep(60); w10.document.getElementById('jgOrder').value='#1201'; w10.document.getElementById('jgMail').value='ayse.kaya@example.com'; await w10.eval("jBindGo()"); await sleep(80);
+    T('bind → POST /dev-bind {order, email, dev} → local dev becomes PHONE00001, wa flag set, sheet closed', calls.some(c=>c[0]==='bind'&&c[1].order==='1201'&&c[1].email==='ayse.kaya@example.com') && w10.localStorage.getItem('grupal_dev')==='PHONE00001' && w10.localStorage.getItem('grupal_waok')==='1' && !w10.document.getElementById('jSheet'));
+    w10.eval("jBindOpen()"); await sleep(40); w10.document.getElementById('jgOrder').value='9'; w10.document.getElementById('jgMail').value='x@example.com'; await w10.eval("jBindGo()"); await sleep(60);
+    T('bind with wrong data → "Eşleşmedi" stays on the sheet', !!w10.document.getElementById('jSheet') && /Eşleşmedi/.test(w10.document.querySelector('#jSheet .err').textContent));
+    // gate off, or on without a group link: no sheet, Kapora koy works directly
+    const MO=JSON.parse(JSON.stringify(MH)); MO.offer_cfg.login_required=false; const w7=mk({'/meydan':MO,'/offer-mine':MINE0,'/campaigns':[]},390); await sleep(250); w7.eval("jLaneOpen('"+H0.id+"'); jLaneKap('"+H0.id+"')"); await sleep(40);
+    T('login_required off: Kapora koy adds to the basket directly', (w7.__g('dbGet')()[H0.id]||0)===1 && !w7.document.getElementById('jSheet'));
+    const MN=JSON.parse(JSON.stringify(ML)); MN.offer_cfg.wa_group_url=''; const w11=mk({'/meydan':MN,'/offer-mine':MINE0,'/campaigns':[]},390); await sleep(250); w11.eval("jLaneOpen('"+H0.id+"'); jLaneKap('"+H0.id+"')"); await sleep(40);
+    T('gate on but no group link configured → no gate (cannot ask to join nothing)', (w11.__g('dbGet')()[H0.id]||0)===1 && !w11.document.getElementById('jSheet'));
+    T('welcome sentence carries Ömer\'s wording (hedefine ulaşınca · geçerli olmaya devam eder · kendinize veya başkalarına)', /hedefine ulaşınca/.test(html) && /geçerli olmaya devam eder/.test(html) && /kendinize veya başkalarına kullandırabileceğiniz/.test(html)); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })().catch(e=>{ console.log('CRASH',e.message,e.stack.split('\n').slice(0,3).join(' / ')); process.exit(1); });

@@ -17,7 +17,7 @@ function mk(variants){
   return w;
 }
 (async()=>{
-  T('admin version bumped', /const VERSION='v2026-09-30f';/.test(html));
+  T('admin version bumped', /const VERSION='v2026-09-30h';/.test(html));
   let w=mk(VARS); const g=w.__g;
   // 1. cart permalink passes through (www stripped)
   let r=await g('cartLinkFrom')('https://www.coffeenutz.net/cart/123:1','oe_hemen',1240); T('cart permalink accepted, www stripped', r==='https://coffeenutz.net/cart/123:1');
@@ -42,5 +42,11 @@ function mk(variants){
   // 8. unrelated text passes through untouched (validation downstream rejects it)
   w=mk(VARS); r=await w.__g('cartLinkFrom')('https://coffeenutz.net/collections/all','oe_hemen',1240); T('non-product link passes through for the regex check', r==='https://coffeenutz.net/collections/all');
   r=await w.__g('cartLinkFrom')('','oe_hemen',1240); T('empty stays empty', r==='');
+  // v30g: Jüri üyeleri panel renders from /admin/users; flag button posts /admin/user-flag
+  { const w=mk(VARS); const calls=[]; const f0=w.fetch; w.fetch=async(u,init)=>{ const s=String(u); if(s.endsWith('/admin/users')) return {ok:true,status:200,json:async()=>({ok:true,n:2,users:[{email:'ayse@example.com',name:'Ayşe Kaya',phone:'+905321234567',wa:true,wa_at:'2026-09-30T10:00:00Z',ok:true,boxes:3,hemen:1,orders:2,devs:2,banned:false,first:'2026-09-30T09:00:00Z',last:'2026-09-30T11:00:00Z'},{email:'x@example.com',name:'',phone:null,wa:false,ok:false,boxes:0,hemen:0,orders:1,devs:1,banned:true,first:'2026-09-29T09:00:00Z',last:'2026-09-29T09:00:00Z'}]})}; if(s.endsWith('/admin/user-flag')){ calls.push(JSON.parse(init.body)); return {ok:true,status:200,json:async()=>({ok:true})}; } return f0(u,init); };
+    w.document.body.insertAdjacentHTML('beforeend','<div id="userList"></div>'); await w.__g('loadUsers')(); const el=w.document.getElementById('userList');
+    T('members table: name · e-mail, phone, WhatsApp ✓ with time / katılmadı, boxes 3 · ⚡1, orders · devices, flag buttons', /Ayşe Kaya/.test(el.textContent) && /\+905321234567/.test(el.textContent) && /✓/.test(el.textContent) && /katılmadı/.test(el.textContent) && /3 · ⚡1/.test(el.textContent) && /2 · 2/.test(el.textContent) && el.querySelectorAll('button').length===2 && el.querySelectorAll('button')[0].textContent==='Grupta değil' && el.querySelectorAll('button')[1].textContent==='Onayla' && /askıda/.test(el.textContent) && /grupta değil/.test(el.textContent));
+    w.confirm=()=>true; await w.__g('userFlag')('ayse@example.com',false); T('Grupta değil → POST /admin/user-flag {email, ok:false}', calls.length===1 && calls[0].email==='ayse@example.com' && calls[0].ok===false);
+    T('settings fields for login exist (s_login select · s_wagroup)', !!w.document.getElementById('s_login') && !!w.document.getElementById('s_wagroup') && /login_required:\$\('s_login'\)\.value/.test(html) && /wa_group_url:\$\('s_wagroup'\)/.test(html)); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })();

@@ -10,6 +10,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="grupal-admin-icon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
 <!-- grupal-admin.html · v2026-09-30f · UYGULA cevabındaki backfill (proxy v3.43) mesajda: "davetiye ×n" -->
+<!-- grupal-admin.html · v2026-09-30h · JÜRİ KAPISI (proxy v3.46): kayıt = Shopify siparişi; ilk kaporada bir kez WhatsApp grubu; üye listesi e-posta anahtarlı (Grupta değil / Onayla) -->
+<!-- grupal-admin.html · v2026-09-30g · JÜRİ GİRİŞİ (proxy v3.45): Ayarlar → "Jüri girişi" (zorunlu aç/kapa · WhatsApp grup linki · SMTP/şablon notu) · "Jüri üyeleri" paneli (e-posta · telefon · WhatsApp onayı · kutu · cihaz · askı · "Grupta değil" işareti) -->
 <!-- grupal-admin.html · v2026-09-30e · Ayarlar → Hemen-Al: "Eski kaporalara davetiye bas" (proxy v3.41 /admin/inv-backfill: v3.38 öncesi kaporalara kutu × davetiye, bir kez) -->
 <!-- grupal-admin.html · v2026-09-30d · Düzenle: Hemen-Al / tamamlama alanına ÜRÜN SAYFASI linki de yapıştırılabilir → ?variant=ID varsa doğrudan, yoksa proxy v3.40 /admin/variants ile varyant listesi (liste fiyatına eşit + "Sonraki" olan seçilir, aksi halde seçim kutusu) → /cart/ID:1 -->
 <!-- grupal-admin.html · v2026-09-30a · Hemen-Al (proxy v3.38): Ayarlar → Hemen-Al bölümü (açık koltuk · davetiye · özel süre) · Düzenle → Hemen-Al linki / elde yeşil / kota · satırda Hemen-Al sayaçları · görsel = stokta -->
@@ -193,6 +195,8 @@ details.set.card[open]>summary{margin-bottom:6px}
 
     <!-- TEKLİFLER (I, 2026-09-04): somut yeşil kahveler (global) — 40 oy = masa (karar senin) -->
     <div class="card" id="offCard">
+      <span class="lbl">JÜRİ ÜYELERİ · kapora verenler (proxy v3.46)</span>
+      <div id="userList" class="hint" style="margin:6px 0 14px">—</div>
       <span class="lbl">MEYDAN · teklifler · tedarikçi listeleri (global) · TASLAK → UYGULA</span>
       <div class="hint" style="margin:4px 0 8px">Sayfa yalnız <b>UYGULA</b> ile yayınladığın hâli görür; ekleme, düzenleme, pasife alma taslakta kalır. İki yapıştırma biçimi: (1) <code>## Tedarikçi</code> başlığı + <code>Ülke · Lot adı · İşlem · Tedarikçi · not… · {meta}</code> satırları; (2) Excel/Sheets'ten kopyalanan <b>sekmeli tablo</b> (başlık satırı: name/farm, process, region, score, price, descriptors, lot no, bags, quantity, variety, farmer, crop, altitude — ülke satırları tek hücre olabilir). İşlem otomatik eşlenir (anaerob→anaerobic, ferm→funky, washed/decaf→washed, natural, honey). Fiyat/çuval/kg yalnız admin'de kalır.</div>
       <!-- v02v (Ömer 04.09 "textbox işe yaramaz, dosya yükleme"): .txt (Grup-Al biçimi) · .tsv/.csv · .xlsx (SheetJS, cdnjs) → aynı ayrıştırıcı → önizleme → Taslağa ekle. PDF yok: sayfa düzeni sütunları karıştırır, dönüştürme bende. -->
@@ -252,6 +256,12 @@ details.set.card[open]>summary{margin-bottom:6px}
           <div class="note">Hemen-Al şeridi yalnız <b>görseli</b> ve <b>Hemen-Al linki</b> (Düzenle) olan kahvede görünür: görsel yüklenen kahve stokta sayılır. Sipariş sıradaki Pazartesi kavrulur, 40'a bakmaz; her kutu sayıma sayılır. Fiyat = liste × Sepet oranı (%20 için 0,80); Kaporalı fiyat = liste × Kaporalı oranı (%40 için 0,60). Boş alan = varsayılan (2 · 2 · 24).</div>
         </div>
         <div class="acts" style="margin-top:6px"><button class="mini" onclick="invBackfill()" title="Davetiye sistemi (v3.38) açılmadan önce ödenmiş kaporalara, şeridi açık kahvelerde kutu × davetiye basar; aynı cihaz+kahve ikinci kez basılmaz. 24 saat özel, sonra masaya.">Eski kaporalara davetiye bas</button><span class="hint" id="invBfMsg"></span></div>
+        <div class="sh" style="margin-top:14px">Jüri kapısı · WhatsApp (proxy v3.46)</div>
+        <div class="g2">
+          <div class="f"><span class="lbl">ilk kaporada WhatsApp grubu sor</span><select id="s_login"><option value="0">kapalı</option><option value="1">açık — ilk Kapora koy'da bir kez: "Gruba katıl" + "Katıldım"</option></select></div>
+          <div class="f"><span class="lbl">Jüri WhatsApp grubu davet linki</span><input id="s_wagroup" placeholder="https://chat.whatsapp.com/…"></div>
+          <div class="note">Kayıt yok, giriş yok: <b>kapora siparişi = kayıt</b> (ad · e-posta · telefon Shopify'dan gelir). Sayfa yalnız ilk kaporada, bir kez "gruba katıl + katıldım" ister; link boşsa sormaz. Aynı e-postayla başka cihazdan ödeme kendiliğinden aynı üyeye bağlanır; üye isterse "sipariş no + e-posta" ile cihaz bağlar. WhatsApp üyeliği API ile doğrulanamaz: aşağıdaki listeyi grupla karşılaştır, olmayanı <b>Grupta değil</b> işaretle — kaporası o an kapanır, sayfada "gruba katıl, Ömer'e yaz" görür; <b>Onayla</b> geri açar.</div>
+        </div>
         <div class="acts"><button class="mini" onclick="offSettingsSave()">Ayarları kaydet</button><span class="hint" id="offSetMsg"></span></div>
         <div class="sh" style="margin-top:14px">Oturumlar</div>
         <div class="acts"><button class="mini" onclick="loadCycles()">Sayım kayıtları</button><button class="mini" onclick="cycleCloseNow()">Son oturum kaydını yeniden yaz</button><button class="mini" onclick="cycleForfeit()">Tamamlanmayanları kapat</button><button class="mini" onclick="kaporaCredit()">Krediye dönenleri Shopify'a yaz</button><span class="hint" id="cycleMsg"></span></div>
@@ -315,7 +325,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-30f';
+const VERSION='v2026-09-30h';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -430,6 +440,15 @@ const WNAME={ET:'Etiyopya',KE:'Kenya',RW:'Ruanda',BI:'Burundi',TZ:'Tanzanya',UG:
 const WPROCN={washed:'Yıkanmış',natural:'Doğal',honey:'Honey',anaerobic:'Anaerobik',infused:'Infused',funky:'Fermente',any:'Fark etmez'};
 // TEKLİFLER (I/J/K): taslak liste · satır düzenleme · toplu ekle (tedarikçi başlıkları) · UYGULA · kapora ayarları
 let OFFERS=[], OFFEDIT=null, OFFCFG=null;
+// v30g: Jüri üyeleri — /admin/users; "Grupta değil" işareti /admin/user-flag
+async function loadUsers(){ const el=$('userList'); if(!el) return; try{ const r=await fetch(API+'/admin/users',{headers:{'x-cc-key':KEY}}); const j=await r.json().catch(()=>null); if(!j||!j.ok){ el.textContent='üye listesi alınamadı ('+((j&&j.error)||r.status)+') — proxy v3.46 gerekir'; return; }
+    if(!j.users.length){ el.textContent='henüz kapora veren yok (üyeler siparişle oluşur)'; return; }
+    const d=iso=>iso?new Date(iso).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'}):'—';
+    el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:var(--muted);text-align:left"><th style="padding:4px 6px">ad · e-posta</th><th style="padding:4px 6px">telefon</th><th style="padding:4px 6px">WhatsApp</th><th style="padding:4px 6px">kutu</th><th style="padding:4px 6px">sipariş · cihaz</th><th style="padding:4px 6px">son kapora</th><th style="padding:4px 6px"></th></tr>'
+      +j.users.map(u=>'<tr style="border-top:1px solid var(--line)'+(u.ok?'':';color:#e0705a')+'"><td style="padding:5px 6px"><b>'+esc(u.name||'')+'</b>'+(u.name?' · ':'')+esc(u.email)+(u.banned?' · <span style="color:#e0705a">askıda</span>':'')+(u.ok?'':' · <span style="color:#e0705a">grupta değil</span>')+'</td><td style="padding:5px 6px">'+esc(u.phone||'—')+'</td><td style="padding:5px 6px">'+(u.wa?('✓ '+d(u.wa_at)):'<span style="color:#e0705a">katılmadı</span>')+'</td><td style="padding:5px 6px">'+u.boxes+(u.hemen?(' · ⚡'+u.hemen):'')+'</td><td style="padding:5px 6px">'+(u.orders||0)+' · '+(u.devs||1)+'</td><td style="padding:5px 6px">'+d(u.last||u.first)+'</td><td style="padding:5px 6px;text-align:right"><button class="mini" onclick="userFlag(\''+esc(u.email)+'\','+(u.ok?'false':'true')+')">'+(u.ok?'Grupta değil':'Onayla')+'</button></td></tr>').join('')+'</table>'
+      +'<div class="hint" style="margin-top:4px">'+j.users.length+' üye · WhatsApp sütunu üyenin "katıldım" dediği an; grupla karşılaştır. "Grupta değil": kaporası kapanır, sayfada gruba katıl uyarısı · "Onayla": geri açar.</div>'; }catch(e){ el.textContent='üye listesi alınamadı: '+e; } }
+async function userFlag(email,ok){ if(!ok&&!confirm('Bu üyeyi "Grupta değil" işaretle? Kapora koyamaz; sayfada gruba katılıp sana yazması istenir.')) return;
+  const r=await fetch(API+'/admin/user-flag',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({email,ok})}); const j=await r.json().catch(()=>({})); if(j.ok) loadUsers(); else alert('Olmadı: '+(j.error||r.status)); }
 async function loadOffers(){
   const el=$('offList'); if(!el) return;
   const r=await fetch(API+'/admin/offers',{headers:{'x-cc-key':KEY}});
@@ -441,7 +460,7 @@ async function loadOfferSettings(){
   try{ const r=await fetch(API+'/admin/settings',{headers:{'x-cc-key':KEY}}); const j=await r.json();
     if(j&&j.settings){ const st=j.settings; $('s_depurl').value=st.offer_dep_url||''; $('s_depamt').value=st.offer_dep_amt||''; $('s_goal').value=st.offer_goal||'';
       $('s_depcode').value=st.offer_dep_code||''; $('s_depopen').value='';   // v02y: açılış saati kaldırıldı (kod = her zaman)
-      $('s_cycledays').value=st.offer_cycle_days||''; $('s_capacity').value=st.offer_capacity||''; $('s_donedays').value=st.offer_done_days||''; $('s_sepetdays').value=st.offer_sepet_days||''; $('s_hbase').value=(st.offer_hemen_base!=null)?st.offer_hemen_base:''; $('s_hinv').value=(st.offer_hemen_inv!=null)?st.offer_hemen_inv:''; $('s_hinvh').value=st.offer_hemen_inv_h||''; $('s_forfeit').value=(st.offer_forfeit_mode==='credit'||st.offer_forfeit_mode==='burn')?st.offer_forfeit_mode:'tiered'; $('s_bancycles').value=(st.offer_ban_cycles!=null&&st.offer_ban_cycles!=='')?st.offer_ban_cycles:'';
+      $('s_cycledays').value=st.offer_cycle_days||''; $('s_capacity').value=st.offer_capacity||''; $('s_donedays').value=st.offer_done_days||''; $('s_sepetdays').value=st.offer_sepet_days||''; $('s_hbase').value=(st.offer_hemen_base!=null)?st.offer_hemen_base:''; $('s_hinv').value=(st.offer_hemen_inv!=null)?st.offer_hemen_inv:''; $('s_hinvh').value=st.offer_hemen_inv_h||''; $('s_forfeit').value=(st.offer_forfeit_mode==='credit'||st.offer_forfeit_mode==='burn')?st.offer_forfeit_mode:'tiered'; $('s_bancycles').value=(st.offer_ban_cycles!=null&&st.offer_ban_cycles!=='')?st.offer_ban_cycles:''; $('s_login').value=(st.login_required==='1')?'1':'0'; $('s_wagroup').value=st.wa_group_url||'';   // v30g
       $('s_refusd').value=st.offer_ref_usd||''; $('s_reflist').value=st.offer_ref_list||''; $('s_ref2usd').value=st.offer_ref2_usd||''; $('s_ref2list').value=st.offer_ref2_list||''; $('s_ref3usd').value=st.offer_ref3_usd||''; $('s_ref3list').value=st.offer_ref3_list||''; $('s_daygoal').value=st.offer_day_goal||''; $('s_rjury').value=st.offer_ratio_jury||st.offer_ratio_200||''; $('s_rbasket').value=st.offer_ratio_basket||st.offer_ratio_40||''; $('s_cycle').value=st.meydan_cycle_start?new Date(st.meydan_cycle_start).toLocaleString('sv',{timeZone:'Europe/Istanbul'}).slice(0,16).replace(' ','T'):'';
       $('s_showp').checked=st.offer_show_prices!=='0';   // v02t: varsayılan AÇIK
       OFFCFG=j.cfg||null; scalePreview(); renderOffersAdmin(); } }catch(e){}
@@ -450,7 +469,7 @@ async function offSettingsSave(){
   if(!(await resolveIfProduct('s_depurl'))) return;
   const body={offer_dep_url:$('s_depurl').value.trim(),offer_dep_amt:$('s_depamt').value.trim(),offer_goal:$('s_goal').value.trim(),
     offer_dep_code:$('s_depcode').value.trim(),offer_dep_open_at:'',offer_day_goal:$('s_daygoal').value.trim(),
-    offer_cycle_days:$('s_cycledays').value.trim(),offer_capacity:$('s_capacity').value.trim(),offer_done_days:$('s_donedays').value.trim(),offer_sepet_days:$('s_sepetdays').value.trim(),offer_hemen_base:$('s_hbase').value.trim(),offer_hemen_inv:$('s_hinv').value.trim(),offer_hemen_inv_h:$('s_hinvh').value.trim(),offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),
+    offer_cycle_days:$('s_cycledays').value.trim(),offer_capacity:$('s_capacity').value.trim(),offer_done_days:$('s_donedays').value.trim(),offer_sepet_days:$('s_sepetdays').value.trim(),offer_hemen_base:$('s_hbase').value.trim(),offer_hemen_inv:$('s_hinv').value.trim(),offer_hemen_inv_h:$('s_hinvh').value.trim(),offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),login_required:$('s_login').value,wa_group_url:$('s_wagroup').value.trim(),
     offer_ref3_usd:$('s_ref3usd').value.trim().replace(',','.'),offer_ref3_list:$('s_ref3list').value.trim(),
     offer_ref_usd:$('s_refusd').value.trim().replace(',','.'),offer_ref_list:$('s_reflist').value.trim(),offer_ref2_usd:$('s_ref2usd').value.trim().replace(',','.'),offer_ref2_list:$('s_ref2list').value.trim(),offer_ratio_jury:$('s_rjury').value.trim().replace(',','.'),offer_ratio_basket:$('s_rbasket').value.trim().replace(',','.'),meydan_cycle_start:$('s_cycle').value?($('s_cycle').value+':00+03:00'):'',
     offer_show_prices:$('s_showp').checked?'1':'0'};
@@ -892,7 +911,7 @@ async function unlock(){
   CAMPS=await r.json();
   localStorage.setItem('grupalKey',KEY);
   $('keyCard').style.display='none'; $('panel').style.display='block';
-  renderList(); loadOffers();   // teklifler global: anahtar açılınca yüklenir
+  renderList(); loadOffers(); loadUsers();   // teklifler global: anahtar açılınca yüklenir · v30g: Jüri üyeleri
 }
 let PUBBY={};   // v07c: /campaigns (sayfanın gördüğü) — keep_open + kilitli sayısı
 function endedOf(c){ return c&&c.status==='open'&&!!c.end_at&&new Date(c.end_at).getTime()<Date.now(); }   // v07c: durum "open" ama son gün geçti

@@ -15,10 +15,10 @@ const px = await boot(PROXY, {
   grupal_offers: [
     { id: A, name: 'El Recreo', origin: 'Kolombiya', process: 'washed', active: true, sort: 1, pub: { name: 'El Recreo', origin: 'Kolombiya', process: 'washed' }, meta: { list_tl: 1600, img_url: 'https://db.test/storage/v1/object/public/grupal/o/a.jpg', hemen_url: 'https://coffeenutz.net/cart/222:1', green_boxes: 4 }, created_at: '2026-09-01T00:00:00Z' },
     { id: B, name: 'Nuwa Senchi', origin: 'Peru', process: 'washed', active: true, sort: 2, pub: { name: 'Nuwa Senchi', origin: 'Peru', process: 'washed' }, meta: { list_tl: 1500 }, created_at: '2026-09-01T00:00:00Z' } ] });
-const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || 'x@y.z', customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
+const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.44 tag', r.json && r.json.v === '3.44');
+T('v3.46 tag', r.json && r.json.v === '3.46');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -181,6 +181,39 @@ r = await px.call('POST', '/admin/inv-backfill', {}, { 'x-cc-key': 'adminkey' })
   T('UYGULA mints the missing invitations for the newly opened lane (NOLANE0001 ×1 box → 2)', r.json.ok && r.json.backfill && r.json.backfill.ok && r.json.backfill.minted === 2 && r.json.backfill.devs === 1);
   r = await px.call('GET', '/offer-mine?dev=NOLANE0001'); T('the kapora payer on B now sees 2 private tickets on B', r.json && r.json.inv.filter(i => i.id === B && i.st === 'p').length === 2);
   r = await px.call('POST', '/admin/offers-apply', {}, { 'x-cc-key': 'adminkey' }); T('a second UYGULA mints nothing more', r.json.ok && r.json.backfill.minted === 0); }
+
+// ---- v3.45 auth proxy (dormant, still answers) — a quick smoke only
+r = await px.call('POST', '/auth/otp', { email: 'not-an-email' }); T('auth/otp rejects a bad e-mail', r.status === 400);
+r = await px.call('POST', '/auth/verify', { email: 'ayse.kaya@example.com', token: '123 456' }); T('auth/verify still works (dormant OTP path)', r.json.ok && r.json.access_token === 'tok-ayse');
+r = await px.call('POST', '/me', { dev: 'PHONE00001' }); T('/me without a token → 401', r.status === 401);
+// ---- v3.46 JÜRİ KAPISI: Shopify order = registration · first-kapora WhatsApp tick · dev-bind by order no + e-mail · admin list
+const hookP = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, order_number: order.no, name: '#' + order.no, financial_status: 'paid', email: order.email, phone: order.phone || null, customer: { first_name: order.first || 'Ayşe', last_name: order.last || 'Kaya', phone: order.cphone || null }, billing_address: { phone: order.bphone || null }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
+r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('offer-mine: unknown device → me.member false, wa false', r.json.me && r.json.me.member === false && r.json.me.wa === false && r.json.me.ok === true);
+r = await px.call('POST', '/wa-ok', { dev: 'PHONE00001' }); T('wa-ok: device declares it joined the group', r.json.ok && r.json.wa === true && !!px.DB.grupal_settings.find(x => x.key === 'waok_PHONE00001'));
+r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('offer-mine: wa true for that device even before any order', r.json.me.wa === true && r.json.me.member === false);
+r = await hookP({ offer: A, dev: 'PHONE00001' }, { id: 9301, no: 1201, email: 'Ayse.Kaya@example.com', bphone: '0532 123 45 67' });
+{ const m = JSON.parse(px.DB.grupal_settings.find(x => x.key === 'mem_ayse.kaya@example.com').value);
+  T('webhook: member record from the order — name, phone (billing, E.164), primary dev, order no, wa from the device flag', m.email === 'ayse.kaya@example.com' && m.name === 'Ayşe Kaya' && m.phone === '+905321234567' && m.dev === 'PHONE00001' && m.orders.includes('1201') && m.wa === true && !!m.wa_at && !!px.DB.grupal_settings.find(x => x.key === 'ord_1201')); }
+r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('offer-mine: me is now a member with name and phone tail, wa, ok', r.json.me.member === true && r.json.me.name === 'Ayşe Kaya' && r.json.me.phone_tail === '4567' && r.json.me.wa === true && r.json.me.ok === true);
+// her laptop pays a kapora on B without any tick → rows merge into the phone (primary), member phone kept, wa unchanged
+px.DB.grupal_settings.push({ key: 'inv_LAPINV02', value: JSON.stringify({ o: A, dev: 'LAPTOP0002', n: 'Ayşe', at: new Date(NOW).toISOString(), exp: new Date(NOW + 7 * 86400000).toISOString(), st: 'p', oid: 1 }) });
+r = await hookP({ offer: B, dev: 'LAPTOP0002' }, { id: 9302, no: 1202, email: 'ayse.kaya@example.com', phone: '+90 532 123 45 67' });
+T('webhook from another device with the same e-mail → merged into the primary device (B row on PHONE00001, invitation moved), orders 2, devs 1', px.DB.grupal_offer_votes.some(v => v.offer_id === B && v.dev === 'PHONE00001') && !px.DB.grupal_offer_votes.some(v => v.dev === 'LAPTOP0002') && JSON.parse(px.DB.grupal_settings.find(x => x.key === 'inv_LAPINV02').value).dev === 'PHONE00001' && JSON.parse(px.DB.grupal_settings.find(x => x.key === 'mem_ayse.kaya@example.com').value).orders.length === 2 && JSON.parse(px.DB.grupal_settings.find(x => x.key === 'mem_ayse.kaya@example.com').value).devs.includes('LAPTOP0002'));
+// dev-bind: a third device with order no + e-mail
+const B2c = '10000000-0000-4000-8000-0000000000cc'; px.DB.grupal_offer_votes.push({ offer_id: B2c, dev: 'TABLET0003', seated: false, paid: true, qty: 1, order_id: 9303, email: 'ayse.kaya@example.com', created_at: '2026-09-25T10:00:00.000Z' });
+r = await px.call('POST', '/dev-bind', { order: '#1201', email: 'x@example.com', dev: 'TABLET0003' }); T('dev-bind: wrong e-mail → nomatch, nothing merged', r.status === 404 && px.DB.grupal_offer_votes.some(v => v.dev === 'TABLET0003'));
+r = await px.call('POST', '/dev-bind', { order: '#1201', email: 'AYSE.kaya@example.com', dev: 'TABLET0003' }); T('dev-bind: order no + e-mail → returns the primary dev, tablet rows merged', r.json.ok && r.json.dev === 'PHONE00001' && !px.DB.grupal_offer_votes.some(v => v.dev === 'TABLET0003') && px.DB.grupal_offer_votes.some(v => v.offer_id === B2c && v.dev === 'PHONE00001'));
+r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('offer-mine on the primary sees A, B and B2', r.json.votes.some(v => v.id === A) && r.json.votes.some(v => v.id === B) && r.json.votes.some(v => v.id === B2c));
+r = await px.call('GET', '/admin/users'); T('admin/users needs the key', r.status === 401);
+r = await px.call('GET', '/admin/users', null, { 'x-cc-key': 'adminkey' }); { const a = r.json.users.find(u => u.email === 'ayse.kaya@example.com');
+  T('admin/users: Ayşe Kaya, phone, wa with time, boxes 3 (A + B + B2), orders 2, devs 3, ok', r.json.ok && !!a && a.name === 'Ayşe Kaya' && a.phone === '+905321234567' && a.wa === true && !!a.wa_at && a.boxes === 3 && a.orders === 2 && a.devs === 3 && a.ok === true); }
+r = await px.call('POST', '/admin/user-flag', { email: 'ayse.kaya@example.com', ok: false }, { 'x-cc-key': 'adminkey' }); T('admin flags Ayşe (not in the group) → ok false', r.json.ok && r.json.me.ok === false);
+r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('offer-mine reports ok:false after the flag (page blocks kapora)', r.json.me.ok === false);
+r = await px.call('POST', '/admin/user-flag', { email: 'ayse.kaya@example.com', ok: true }, { 'x-cc-key': 'adminkey' }); T('admin un-flags', r.json.me.ok === true);
+r = await px.call('POST', '/admin/settings', { login_required: '1', wa_group_url: 'https://chat.whatsapp.com/ABCdef123456' }, { 'x-cc-key': 'adminkey' });
+T('settings: login_required + wa_group_url accepted and published in cfg', r.json.ok && r.json.cfg.login_required === true && r.json.cfg.wa_group_url === 'https://chat.whatsapp.com/ABCdef123456');
+r = await px.call('POST', '/admin/settings', { wa_group_url: 'https://evil.example/x' }, { 'x-cc-key': 'adminkey' }); T('settings: a non-WhatsApp link is dropped from cfg', r.json.cfg.wa_group_url === '');
+r = await px.call('GET', '/meydan'); T('/meydan offer_cfg carries login_required + wa_group_url', r.json.offer_cfg.login_required === true && 'wa_group_url' in r.json.offer_cfg);
 
 Date.now = realNow;
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);
