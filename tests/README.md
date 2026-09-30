@@ -28,6 +28,7 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - `tests/shot-bands.mjs` renders an open group at 390 px and checks: cards not rows, deck scrollable, no snap, no hint.
 
 
-## v11d (2026-09-30) — one coffee sheet
-- The in-card lane panel (which re-slid on every 30-second refresh) is gone. `+`, the price line and `Detay ›` all open the same **coffee sheet** on every device: a persistent `#jDrawer` node (right drawer on desktop, full-width bottom sheet on phones) with the Grup-Al / Hemen-Al lanes first (Kapora koy · Tamamla · Sepete) and the detail row below; backdrop or ✕ closes. Re-renders update its content in place, so it never re-animates.
-- Phone page: deck + groups (cards) + session; the 'Tüm liste' band and button are gone; no scroll snapping. `tests/shot-sheet.mjs` measures the sheet at 390 and 1366 (lanes first, CTA visible without scrolling, full width on phones). `shot-lanes*.mjs` / `shot-overlay.mjs` were removed with the in-card panel.
+## v11e (2026-09-30) — in-card panel kept, replay fixed, paging killed
+- The v11d "one coffee sheet" was reverted the same day (Ömer: the card panel was fine, only the re-sliding was the bug). The in-card lane panel stays; on re-renders (30 s refresh, basket changes) it is emitted in its end state (`plus opened`), so nothing slides or fades again. Same for the desktop drawer lanes.
+- The v09m JavaScript paging (after a small scroll the page settled onto page 1 or page 2) is removed — that was the iPhone "snap". CSS scroll-snap on the pages was already gone in v11c; the horizontal card deck keeps its snap.
+- `tests/shot-noreplay.mjs`: opens a panel with one kapora, re-renders, and checks opacity/transform/height are unchanged; scrolls 140 px and checks the page stays there.
