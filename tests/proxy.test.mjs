@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.50 tag', r.json && r.json.v === '3.50');
+T('v3.51 tag', r.json && r.json.v === '3.51');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -206,7 +206,8 @@ r = await px.call('POST', '/dev-bind', { order: '#1201', email: 'AYSE.kaya@examp
 r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('offer-mine on the primary sees A, B and B2', r.json.votes.some(v => v.id === A) && r.json.votes.some(v => v.id === B) && r.json.votes.some(v => v.id === B2c));
 r = await px.call('GET', '/admin/users'); T('admin/users needs the key', r.status === 401);
 r = await px.call('GET', '/admin/users', null, { 'x-cc-key': 'adminkey' }); { const a = r.json.users.find(u => u.email === 'ayse.kaya@example.com');
-  T('admin/users: Ayşe Kaya, phone, wa with time, boxes 3 (A + B + B2), orders 2, devs 3, ok', r.json.ok && !!a && a.name === 'Ayşe Kaya' && a.phone === '+905321234567' && a.wa === true && !!a.wa_at && a.boxes === 3 && a.orders === 2 && a.devs === 3 && a.ok === true); }
+  T('admin/users: Ayşe Kaya, phone, wa with time, boxes 3 (A + B + B2), orders 2, devs 3, ok', r.json.ok && !!a && a.name === 'Ayşe Kaya' && a.phone === '+905321234567' && a.wa === true && !!a.wa_at && a.boxes === 3 && a.orders === 2 && a.devs === 3 && a.ok === true);
+  T('v3.51: coffees breakdown — 3 coffees × 1 package, names from the offers, no hemen', Array.isArray(a.coffees) && a.coffees.length === 3 && a.coffees.every(c => c.q === 1 && c.hemen === 0 && typeof c.name === 'string' && c.name.length > 0) && a.coffees.reduce((x, c) => x + c.q, 0) === a.boxes); }
 r = await px.call('POST', '/admin/user-flag', { email: 'ayse.kaya@example.com', ok: false }, { 'x-cc-key': 'adminkey' }); T('admin flags Ayşe (not in the group) → ok false', r.json.ok && r.json.me.ok === false);
 r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('offer-mine reports ok:false after the flag (page blocks kapora)', r.json.me.ok === false);
 r = await px.call('POST', '/admin/user-flag', { email: 'ayse.kaya@example.com', ok: true }, { 'x-cc-key': 'adminkey' }); T('admin un-flags', r.json.me.ok === true);

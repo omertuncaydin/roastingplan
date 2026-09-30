@@ -17,7 +17,7 @@ function mk(variants){
   return w;
 }
 (async()=>{
-  T('admin version bumped', /const VERSION='v2026-09-30o';/.test(html));
+  T('admin version bumped', /const VERSION='v2026-09-30p';/.test(html));
   let w=mk(VARS); const g=w.__g;
   // 1. cart permalink passes through (www stripped)
   let r=await g('cartLinkFrom')('https://www.coffeenutz.net/cart/123:1','oe_hemen',1240); T('cart permalink accepted, www stripped', r==='https://coffeenutz.net/cart/123:1');
@@ -48,8 +48,9 @@ function mk(variants){
     T('member rows (v30k): name · e-mail · phone, WhatsApp "✓ … kendisi" / "sorulmadı", 3 paket · ⚡1, 2 sipariş · 2 cihaz; buttons: Grupta değil (wa member), Onayla (flagged); no table', /Ayşe Kaya/.test(el.textContent) && /\+905321234567/.test(el.textContent) && /✓ WhatsApp · kendisi/.test(el.textContent) && /sorulmadı/.test(el.textContent) && !/katılmadı/.test(el.textContent) && /3 paket · ⚡1/.test(el.textContent) && /2 sipariş · 2 cihaz/.test(el.textContent) && !el.querySelector('table') && el.querySelectorAll('button').length===2 && el.querySelectorAll('button')[0].textContent==='Grupta değil' && el.querySelectorAll('button')[1].textContent==='Onayla' && /askıda/.test(el.textContent) && /grupta değil/.test(el.textContent) && !!w.document.getElementById('memSet') && /2 üye · grupta 1 · işaretli 1/.test(w.document.getElementById('memSetSub').textContent));
     w.confirm=()=>true; await w.__g('userFlag')('ayse@example.com',false); T('Grupta değil → POST /admin/user-flag {email, ok:false}', calls.length===1 && calls[0].email==='ayse@example.com' && calls[0].ok===false);
     // a member not yet asked and not flagged gets "Grupta ✓" → POST {email, wa:true}
-    w.fetch=async(u,init)=>{ const s=String(u); if(s.endsWith('/admin/users')) return {ok:true,status:200,json:async()=>({ok:true,n:1,users:[{email:'z@example.com',name:'Zeynep',phone:'+905000000000',wa:false,ok:true,boxes:1,hemen:0,orders:1,devs:1,banned:false,first:'2026-09-29T09:00:00Z',last:'2026-09-29T09:00:00Z'}]})}; if(s.endsWith('/admin/user-flag')){ calls.push(JSON.parse(init.body)); return {ok:true,status:200,json:async()=>({ok:true})}; } return f0(u,init); };
+    w.fetch=async(u,init)=>{ const s=String(u); if(s.endsWith('/admin/users')) return {ok:true,status:200,json:async()=>({ok:true,n:1,users:[{email:'z@example.com',name:'Zeynep',phone:'+905000000000',wa:false,ok:true,boxes:1,hemen:0,orders:1,devs:1,banned:false,first:'2026-09-29T09:00:00Z',last:'2026-09-29T09:00:00Z',coffees:[{name:'El Recreo',q:1,hemen:0,conv:1,done:0}]}]})}; if(s.endsWith('/admin/user-flag')){ calls.push(JSON.parse(init.body)); return {ok:true,status:200,json:async()=>({ok:true})}; } return f0(u,init); };
     await w.__g('loadUsers')(); const el2=w.document.getElementById('userList');
+    T('v30p: "n paket" carries the per-coffee breakdown as a hover tip (data-tip)', (()=>{ const b=el2.querySelector('b.tip'); return !!b && b.textContent==='1 paket' && /tip/.test(b.className); })());
     T('unasked member: "Grupta ✓" + "Grupta değil" buttons', el2.querySelectorAll('button').length===2 && el2.querySelectorAll('button')[0].textContent==='Grupta ✓');
     await w.__g('userWa')('z@example.com',true); T('Grupta ✓ → POST /admin/user-flag {email, wa:true}', calls.some(c=>c.email==='z@example.com'&&c.wa===true));
     T('settings fields for login exist (s_login select · s_wagroup)', !!w.document.getElementById('s_login') && !!w.document.getElementById('s_wagroup') && /login_required:\$\('s_login'\)\.value/.test(html) && /wa_group_url:\$\('s_wagroup'\)/.test(html));
