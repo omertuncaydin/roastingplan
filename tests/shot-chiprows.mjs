@@ -24,8 +24,8 @@ async function run(width,height,file){
     if(u.includes('/campaigns')) return route.fulfill({status:200,contentType:'application/json',body:'[]'}); return route.fulfill({status:204,body:''}); });
   await page.goto('https://grup-al.com/juri'); await page.waitForTimeout(1000);
   if(mobile){ await page.evaluate(()=>{ const el=document.querySelector('.jcard[data-i="1"]'); if(el) el.scrollIntoView({block:'center',inline:'center'}); }); await page.waitForTimeout(300); }
-  const m=await page.evaluate(id=>{ const c=document.querySelector('.jcard[data-id="'+id+'"]'); if(!c) return null; const chips=[...c.querySelectorAll('.jchips2 .jchip')]; const tops=[...new Set(chips.map(x=>Math.round(x.getBoundingClientRect().top)))]; const w=c.getBoundingClientRect().width; return {card:Math.round(w),rows:tops.length,chips:chips.map(x=>[x.textContent.trim(),Math.round(x.getBoundingClientRect().width)])}; },ord[1].id);
-  console.log(width+'px', JSON.stringify(m)); if(!m||m.rows>2) bad++;
+  const m=await page.evaluate(id=>{ const c=document.querySelector('.jcard[data-id="'+id+'"]'); if(!c) return null; const chips=[...c.querySelectorAll('.jchips2 .jchip')].filter(x=>x.offsetParent!==null); const tops=[]; for(const x of chips){ const y=x.getBoundingClientRect().top; if(!tops.some(t=>Math.abs(t-y)<8)) tops.push(y); } const w=c.getBoundingClientRect().width; const st=c.querySelector('.jchip.jlockb'); const cs=getComputedStyle(st); return {card:Math.round(w),rows:tops.length,font:cs.fontSize,cut:st.scrollWidth>st.clientWidth,chips:chips.map(x=>[x.textContent.trim(),Math.round(x.getBoundingClientRect().width)])}; },ord[1].id);
+  console.log(width+'px', JSON.stringify(m)); if(!m||m.rows>2||(width>365&&m.font!=='11.5px')) bad++;
   if(file){ const b=await page.evaluate(id=>{ const r=document.querySelector('.jcard[data-id="'+id+'"]').getBoundingClientRect(); return {x:r.left-4,y:r.top-4,width:r.width+8,height:r.height+8}; },ord[1].id); await page.screenshot({path:path.join(OUT,file),clip:b}); }
   await ctx.close(); }
 await run(1180,900,null); await run(1366,900,'chips_desk.png'); await run(1440,900,null); await run(1512,900,null); await run(1728,1000,null);

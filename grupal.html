@@ -326,7 +326,8 @@ body.th-red .jwelc{background:#f6efe1;color:#2a1410}
 .jcard.mine{border:2px solid #e6c14b;box-shadow:0 0 0 3px rgba(230,193,75,.28)}
 .jchip.jminec{background:#e6c14b;color:#16130f;border-color:#e6c14b}
 .jchip.jlockb{background:#4fc98a;color:#16130f;border-color:#4fc98a;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-.jcard.jlock .jchips2{gap:4px}.jcard.jlock .jchips2 .jchip{font-size:10.5px;padding:4px 8px}body.jdesk .jcard.jlock .jchips2{gap:5px}body.jdesk .jcard.jlock .jchips2 .jchip{font-size:10px;padding:4px 8px}   /* v10w: kilitli kartta 5 çip → 2 satır (285 px karta kadar) */.jchip.jlocknext{color:#e6c14b;border-color:rgba(230,193,75,.7);cursor:pointer}.jdk-lock{margin-top:4px}.jdk-lock .jchip{padding:3px 9px;font-size:11px}
+.jlockrow{display:flex;gap:6px;flex:0 0 100%;min-width:0;align-items:center}.jlockrow .jchip.jlockb{display:block;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}.jlockrow .jchip.jlocknext{flex:none}
+.jcard.jlock .jchips2{gap:4px}.jcard.jlock .jchips2 .jchip{padding:5px 9px}body.jdesk .jcard.jlock .jchip.jgoto{display:none}@media (max-width:365px){.jcard.jlock .jchips2 .jchip{font-size:10.5px}}   /* v10x: 1. satır durum+CTA (durum '…'), 2. satır kalanı; masaüstünde kilitli kartta 'Detay ›' yok (kart zaten tıklanır) */.jchip.jlocknext{color:#e6c14b;border-color:rgba(230,193,75,.7);cursor:pointer}.jdk-lock{margin-top:4px}.jdk-lock .jchip{padding:3px 9px;font-size:11px}
 /* v09p (Ömer: taşıma kartta, en yalın): çipin yanında 'taşı →' → öteki kartlarda 'Buraya taşı' */
 .jchip.jmvl{color:#e6c14b;border-color:rgba(230,193,75,.7);cursor:pointer}
 /* v09r (Ömer 22.09): 'Kahveye git ›' çipi — kart → Damak sayfasında kahvenin satırı (bant açılır, detay açılır) */
@@ -736,7 +737,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30w';
+const VERSION='v2026-09-30x';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1742,7 +1743,7 @@ function jMsg(txt,ms){ ms=ms||3500; const tk={txt,until:Date.now()+ms}; window._
 // v07e: bu cihazın kilitlenmiş (dönüşmüş) ve henüz tamamlanmamış kapora adedi — tamamlama paket sayısı ve tutarı bundan
 function offConvQty(id){ return (OFFMINE||[]).filter(v=>v.id===id&&v.paid&&v.conv&&!v.done&&!v.forfeited&&!v.credited).reduce((a,v)=>a+(Math.max(1,parseInt(v.qty)||1)),0)||1; }
 function jLockN(o){ return (o&&o.lock&&parseInt(o.lock.dep))||(o&&o.conv)||0; }   // v10t: kilitli lotun paket sayısı
-function jLockBadge(o,cta){ if(!o||!o.lock) return ''; const txt=t('jLockB').replace('{n}',jLockN(o)); return '<span class="jchip jlockb" title="'+escZ(txt)+'">'+escZ(txt)+'</span>'+(cta?('<span class="jchip jlocknext" onclick="event.stopPropagation();jLaneOpen(\''+escZ(o.id)+'\')">'+t('jLockNext')+'</span>'):''); }   // v10u (Ömer): tek durum — Seçildi · n paket kavruluyor · CTA: sonrakine katıl → şeritler (yeni kapora = sonraki parti)
+function jLockBadge(o,cta){ if(!o||!o.lock) return ''; const txt=t('jLockB').replace('{n}',jLockN(o)); const b='<span class="jchip jlockb" title="'+escZ(txt)+'">'+escZ(txt)+'</span>'; return cta?('<span class="jlockrow">'+b+'<span class="jchip jlocknext" onclick="event.stopPropagation();jLaneOpen(\''+escZ(o.id)+'\')">'+t('jLockNext')+'</span></span>'):b; }   // v10x (Ömer): kendi satırı — durum gerekirse '…' ile kesilir, CTA asla; yazı boyu diğer çiplerle aynı   // v10u (Ömer): tek durum — Seçildi · n paket kavruluyor · CTA: sonrakine katıl → şeritler (yeni kapora = sonraki parti)
 function jLockDep(o,cfg){ const d=o&&o.lock&&parseInt(o.lock.dep_tl); return (d>0)?d:((cfg||offCfg()).dep_amt||0); }   // v10s: kilidin kaporası (proxy v3.49 lock.dep_tl) — ayar değişse de kilitli lot sabit
 function offCanComplete(o){ return !!(o&&(o.done_url||jHemen(o))); }   // v10p: tamamlama linki YA DA Hemen-Al linki (normal varyant + tek kullanımlık kod, proxy v3.47 /done-link)
 async function offComplete(id){

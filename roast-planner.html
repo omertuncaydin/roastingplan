@@ -130,7 +130,7 @@
   <div id="planApp" style="display:none">
   <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h1 style="margin-right:auto">Roast Planner</h1><span id="acctWrap" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end"><span id="acctChip" class="sub" style="margin:0;font-size:12px"></span><button id="acctBtn" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px">Giriş yap</button><a id="hqLink" href="/hq" target="_blank" rel="noopener" style="display:none;padding:6px 14px;border-radius:999px;font-size:13px;border:1px solid var(--line);color:var(--muted);text-decoration:none" title="Kavurma günü paneli · gauges">HQ Panel</a><button id="refreshChip" class="ghost" style="padding:6px 14px;border-radius:999px;font-size:13px" title="Buluttaki reçeteleri çeker, tabloyu yeniler — plan ve girdiğin değerler yerinde kalır (sayfa yenilenmez) · pulls the cloud recipes, keeps your edits">&#8635; Refresh</button></span></div>
   <div id="acctForm" style="display:none;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 2px"><input id="acctEmail" type="email" autocomplete="username" placeholder="e-posta" style="background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 10px;font-size:13px;width:22ch"><input id="acctPass" type="password" autocomplete="current-password" placeholder="şifre" style="background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 10px;font-size:13px;width:16ch"><button id="acctGo" style="padding:7px 14px">Gir</button><span id="acctMsg" class="sub" style="margin:0;font-size:12px">Guide hesabınla · same account as the Guide</span></div>
-  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-28e</span></div>
+  <div class="sub">Drag & drop your Shopify <code>orders_export.csv</code>. Only the next-roast-date pre-order lines are included. <span style="opacity:.5">v2026-09-30a</span></div>
   <div id="presRow" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin:-6px 0 16px;font-size:12px;color:var(--muted)">
     <span style="white-space:nowrap">Bu bilgisayar: <input id="presName" style="background:#15100b;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:3px 8px;font-size:12px;width:14ch" title="Bu bilgisayarın adı, diğer bilgisayarlara böyle görünür · this computer's name, shown to the other computers"></span>
     <span id="viewChip" style="display:none;border:1px solid var(--accent2);color:var(--accent2);border-radius:999px;padding:3px 12px;font-weight:600"></span>
@@ -703,6 +703,7 @@ function restoreState(){
     if(s.roundB!=null) document.getElementById("roundBullet").value=s.roundB;
     if(s.roundH!=null) document.getElementById("roundHSR").value=s.roundH;
     if(s.roastDate!=null) document.getElementById("roastDate").value=s.roastDate;
+    try{ const rd=document.getElementById("roastDate"); if(rd.value){ const dd=(Date.now()-new Date(rd.value).getTime())/86400000; if(dd>14) rd.value=new Date().toISOString().slice(0,10); } }catch(e9){}   // v30a: eski tarih bugüne çekilir
     if(s.sortKey) sortKey=s.sortKey; if(s.sortDir) sortDir=s.sortDir;
     render();
     return true;
@@ -920,9 +921,16 @@ document.getElementById('recDedupe').addEventListener('click',async()=>{ if(!REC
 let PRESDEV=''; try{ PRESDEV=localStorage.getItem('rpDevice')||''; }catch(e){}
 if(!PRESDEV){ PRESDEV='PC-'+Math.random().toString(36).slice(2,6).toUpperCase(); try{ localStorage.setItem('rpDevice',PRESDEV); }catch(e){} }
 const PRESLOG=[]; let PRESNOW='';
-window._presNote=function(t,item){ try{ const hh=new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}); PRESLOG.unshift(hh+' '+t); if(PRESLOG.length>8) PRESLOG.length=8; if(item) PRESNOW=item; clearTimeout(window._presT); window._presT=setTimeout(presBeat,4000); clearTimeout(window._autoT); window._autoT=setTimeout(cloudAutoSave,20000); }catch(e){} };
+window._presNote=function(t,item){ try{ const hh=new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}); PRESLOG.unshift({ts:Date.now(), s:hh+' '+t}); if(PRESLOG.length>8) PRESLOG.length=8; if(item) PRESNOW=item; clearTimeout(window._presT); window._presT=setTimeout(presBeat,4000); clearTimeout(window._autoT); window._autoT=setTimeout(cloudAutoSave,20000); }catch(e){} };
+// v2026-09-30a: entries older than 18h drop out; an entry from another day is prefixed DD.MM so yesterday's 16:36 never masquerades as today's
+function presRecent(){ const out=[], today=new Date().toDateString();
+  for(const e of PRESLOG){ if(!e||!e.ts||Date.now()-e.ts>64800000) continue;
+    const d=new Date(e.ts);
+    out.push(d.toDateString()===today ? e.s : (String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+' '+e.s));
+    if(out.length>=8) break; }
+  return out; }
 function presState(){ let bt=0,bd=0,di=0; DATA.forEach(o=>{ if(hasKids(o)){ bt+=o.children.length; bd+=o.children.filter(c=>c.done).length; } if(o.done) di++; });
-  return {day:planDay(), items:DATA.length, doneItems:di, batchDone:bd, batchTotal:bt, who:(ACCT&&ACCT.email)||'', now:PRESNOW, recent:PRESLOG.slice(0,8)}; }
+  return {day:planDay(), items:DATA.length, doneItems:di, batchDone:bd, batchTotal:bt, who:(ACCT&&ACCT.email)||'', now:PRESNOW, recent:presRecent()}; }
 async function presBeat(){ try{ if(!sbp||!ACCT) return; await sbp.from('roast_presence').upsert({owner:ACCT.id, device:PRESDEV, day:planDay(), seen_at:new Date().toISOString(), state:presState()}); }catch(e){} }
 function presAge(ts){ const x=Math.max(0,(Date.now()-new Date(ts).getTime())/1000); if(x<90) return 'şimdi'; if(x<3600) return Math.round(x/60)+' dk önce'; if(x<86400) return Math.round(x/3600)+' sa önce'; return Math.round(x/86400)+' gün önce'; }
 let PRESOTHERS=[];
@@ -955,7 +963,12 @@ async function bootIzle(){ try{ const q=new URLSearchParams(location.search); co
 async function presView(i){ try{ const r=PRESOTHERS[i]; if(!r||!sbp||!ACCT) return; if(r.owner===ACCT.id) return;
   const day=r.day||new Date().toISOString().slice(0,10);
   const {data,error}=await sbp.from('roast_plans').select('owner,day,updated_at,plan').eq('owner',r.owner).eq('day',day).maybeSingle();
-  if(error||!data||!data.plan||!data.plan.DATA){ alert('Bu hesabın '+day+' için buluta kaydedilmiş planı yok henüz.'); return; }
+  if(error||!data||!data.plan||!data.plan.DATA){
+    try{ const {data:last}=await sbp.from('roast_plans').select('owner,day,updated_at,plan').eq('owner',r.owner).order('day',{ascending:false}).limit(1);
+      if(last&&last[0]&&last[0].plan&&last[0].plan.DATA){
+        if(confirm('Bu hesabın '+day+' planı yok. Son kayıtlı günü açılsın mı: '+last[0].day+'? (İzleme)')){ HISTCACHE=[last[0]]; histLoad(0); }
+        return; } }catch(e2){}
+    alert('Bu hesabın buluta kaydedilmiş planı yok henüz.'); return; }
   HISTCACHE=[data]; histLoad(0);
 }catch(e){} }
 function viewPaint(){ const b=document.getElementById('save'); const vc=document.getElementById('viewChip');
@@ -969,6 +982,20 @@ document.getElementById('presName').addEventListener('change',async()=>{ const i
   try{ if(sbp&&ACCT) await sbp.from('roast_presence').delete().match({owner:ACCT.id, device:old}); }catch(e){}
   presBeat(); presPoll(); });
 setInterval(()=>{ presBeat(); presPoll(); },60000);
+// v2026-09-30a: a long-lived tab checks the deployed build every 30 min; a newer one shows the Yenile button.
+(function(){ try{
+  const own=((document.querySelector('.sub span')||{}).textContent||'').trim();
+  if(!/^https?:$/.test(location.protocol)||!own) return;
+  async function chk(){ try{
+    const t=await (await fetch(location.pathname+'?vchk='+Date.now(),{cache:'no-store'})).text();
+    const m=t.match(/opacity:\.5">(v20[0-9-]+[a-z])</);
+    if(m&&m[1]&&m[1]!==own){ let n=document.getElementById('verNag');
+      if(!n){ n=document.createElement('button'); n.id='verNag'; n.textContent='Yeni sürüm var · Yenile';
+        n.style.cssText='position:fixed;right:16px;bottom:16px;z-index:99;background:var(--accent);color:#1a1410;border:none;border-radius:999px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.5)';
+        n.onclick=function(){ location.reload(); }; document.body.appendChild(n); } } }catch(e){} }
+  setInterval(chk,1800000); setTimeout(chk,45000);
+}catch(e){} })();
+
 </script>
 </body>
 </html>

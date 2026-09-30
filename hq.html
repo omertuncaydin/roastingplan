@@ -64,7 +64,7 @@
 </head>
 <body>
   <div class="hdr">
-    <div><h1>Kavurma Günü · HQ</h1><div class="sub">canlı gün paneli · admin <span style="opacity:.5">v2026-09-28b</span></div></div>
+    <div><h1>Kavurma Günü · HQ</h1><div class="sub">canlı gün paneli · admin <span style="opacity:.5">v2026-09-30a</span></div></div>
     <div class="sp">
       <span id="who" class="sub"></span>
       <input type="date" id="day">
@@ -241,6 +241,20 @@ loadAll();
 // test hook: window.__mock({plans:[summary,...], pres:[...]}) renders fixtures without the cloud
 window.__mock=function(m){ ME={id:'me',email:ADMIN}; PLANS=m.plans||[]; PRES=m.pres||[]; SEL=m.sel||0; renderBoard();
   document.getElementById('upd').textContent='mock'; };
+// v2026-09-30a: a long-lived tab checks the deployed build every 30 min; a newer one shows the Yenile button.
+(function(){ try{
+  const own=((document.querySelector('.sub span')||{}).textContent||'').trim();
+  if(!/^https?:$/.test(location.protocol)||!own) return;
+  async function chk(){ try{
+    const t=await (await fetch(location.pathname+'?vchk='+Date.now(),{cache:'no-store'})).text();
+    const m=t.match(/opacity:\.5">(v20[0-9-]+[a-z])</);
+    if(m&&m[1]&&m[1]!==own){ let n=document.getElementById('verNag');
+      if(!n){ n=document.createElement('button'); n.id='verNag'; n.textContent='Yeni sürüm var · Yenile';
+        n.style.cssText='position:fixed;right:16px;bottom:16px;z-index:99;background:var(--accent);color:#1a1410;border:none;border-radius:999px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.5)';
+        n.onclick=function(){ location.reload(); }; document.body.appendChild(n); } } }catch(e){} }
+  setInterval(chk,1800000); setTimeout(chk,45000);
+}catch(e){} })();
+
 </script>
 </body>
 </html>
