@@ -59,18 +59,18 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
   T('desk: taste filter shows only that band\'s coffees, ranked', nH===MD.offers.filter(o=>/washed/.test(o.process)).length && nH>3);
   w.eval("jDeskFilter('all'); dbAdd('"+ord[0].id+"',1)"); await sleep(40); D=w.document;
   T('desk: + on a card → stepper on that card, basket bar shown, grid keeps filter', !!D.querySelector('.jdk-grid .jcard[data-id="'+ord[0].id+'"] .jq') && D.getElementById('dbBar').style.display==='flex' && D.querySelectorAll('.jdk-grid .jcard').length===24);
-  // ---- v09w: Kartlar / Liste toggle; photo coffees pulled into a showcase, the rest default to the list once photos exist
-  T('desk: toggle present, default Kartlar when no coffee has a photo, no showcase/table', D.querySelectorAll('.jdk-seg button').length===2 && D.querySelector('.jdk-seg button.on').textContent.includes('Kartlar') && !D.querySelector('.jdk-sub') && !D.querySelector('.jdk-table'));
-  w.eval("jDeskView('list')"); await sleep(40); D=w.document;
-  T('desk: Liste → table with 24 rows (rank, name, count bar, price, +), no cards; choice persisted', !!D.querySelector('.jdk-table') && D.querySelectorAll('.jdk-table tr.jdk-r').length===24 && !D.querySelector('.jdk-grid') && D.querySelector('.jdk-table tr.jdk-r td.r').textContent.trim()==='1' && D.querySelector('.jdk-table tr.jdk-r td.p b').textContent.endsWith(' TL') && !!D.querySelector('.jdk-table tr.jdk-r td.a button') && w.localStorage.getItem('grupal_jdv')==='list');
-  T('desk: table rows — mine row carries the ✓ chip, rows open the drawer', !!D.querySelector('.jdk-table tr.jdk-r.mine .jdk-mine') && D.querySelector('.jdk-table tr.jdk-r').getAttribute('onclick').includes('jDeskOpen'));
-  w.eval("jDeskOpen('"+ord[3].id+"')"); await sleep(40); D=w.document; T('desk: drawer from a table row, row marked sel', !!D.querySelector('#jDrawer .orow.lane[data-id="'+ord[3].id+'"]') && D.querySelector('.jdk-table tr.jdk-r[data-id="'+ord[3].id+'"]').classList.contains('sel'));
-  w.eval("jDeskClose(); jDeskView('cards')"); await sleep(40); D=w.document; T('desk: back to Kartlar → grid', !!D.querySelector('.jdk-grid') && !D.querySelector('.jdk-table'));
+  // ---- v11h (Ömer): no Kartlar/Liste toggle — desktop is always cards (Vitrin + Diğer adaylar)
+  T('desk: no view toggle, no table, no showcase when no coffee has a photo — one grid of 24 cards', !D.querySelector('.jdk-seg') && !D.querySelector('.jdk-table') && !D.querySelector('.jdk-sub') && D.querySelectorAll('.jdk-grid .jcard').length===24 && !/function jDeskView|function jTableHtml|jdk-table\{/.test(html));
+
+
+
+  w.eval("jDeskOpen('"+ord[3].id+"')"); await sleep(40); D=w.document; T('desk: drawer from a card, card marked sel', !!D.querySelector('#jDrawer .orow.lane[data-id="'+ord[3].id+'"]') && !!D.querySelector('.jdk-grid .jcard.sel[data-id="'+ord[3].id+'"]'));
+  w.eval("jDeskClose()"); await sleep(40); D=w.document; T('desk: close → grid only', !!D.querySelector('.jdk-grid') && !D.getElementById('jDrawer'));
   { const MDP=JSON.parse(JSON.stringify(MD)); MDP.offers[0].img_url='https://x.test/o/a.jpg'; MDP.offers[3].img_url='https://x.test/o/b.jpg';
     const wp=mk({'/meydan':MDP,'/offer-mine':{votes:[]},'/campaigns':[]},1366); await sleep(250); const Dp=wp.document;
-    T('desk with photos: Vitrin section holds the 2 photo cards, the other 22 default to the LIST (auto), toggle shows Liste on', Dp.querySelectorAll('.jdk-sub').length===2 && Dp.querySelector('.jdk-sub').textContent.includes('Vitrin') && Dp.querySelectorAll('.jdk-grid .jcard.photo').length===2 && Dp.querySelectorAll('.jdk-grid .jcard').length===2 && Dp.querySelectorAll('.jdk-table tr.jdk-r').length===22 && Dp.querySelector('.jdk-seg button.on').textContent.includes('Liste'));
-    wp.eval("jDeskView('cards')"); await sleep(40);
-    T('desk with photos, Kartlar: showcase stays first, the rest become mountain cards (22), ranks stay global', wp.document.querySelectorAll('.jdk-grid').length===2 && wp.document.querySelectorAll('.jdk-grid')[1].querySelectorAll('.jcard').length===22 && !wp.document.querySelector('.jdk-table') && wp.document.querySelectorAll('.jdk-grid')[1].querySelector('.jcard .jchip').textContent.trim()!=='#1');
+    T('desk with photos: Vitrin section holds the 2 photo cards, the other 22 are cards under Diğer adaylar (no table, no toggle)', Dp.querySelectorAll('.jdk-sub').length===2 && Dp.querySelector('.jdk-sub').textContent.includes('Vitrin') && Dp.querySelectorAll('.jdk-grid')[0].querySelectorAll('.jcard.photo').length===2 && Dp.querySelectorAll('.jdk-grid')[1].querySelectorAll('.jcard').length===22 && !Dp.querySelector('.jdk-table') && !Dp.querySelector('.jdk-seg'));
+
+    T('desk with photos: showcase first, the rest are mountain cards (22), ranks stay global', wp.document.querySelectorAll('.jdk-grid').length===2 && wp.document.querySelectorAll('.jdk-grid')[1].querySelectorAll('.jcard').length===22 && wp.document.querySelectorAll('.jdk-grid')[1].querySelector('.jcard .jchip').textContent.trim()!=='#1');
     wp.eval("jDeskFilter('hafif')"); await sleep(40);
     T('desk with photos: taste filter applies to both showcase and rest', wp.document.querySelectorAll('.jcard').length===MDP.offers.filter(o=>/washed/.test(o.process)).length); }
   // ---- resize crossing the threshold re-renders the other layout
@@ -185,8 +185,8 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('Turkish genitive helper', w5.__g('jGen')('Ömer')==="Ömer'in" && w5.__g('jGen')('Ayşe')==="Ayşe'nin" && w5.__g('jGen')('Burcu')==="Burcu'nun" && w5.__g('jGen')('Zeynep')==="Zeynep'in" && w5.__g('jGen')('Gökçe')==="Gökçe'nin" && w5.__g('jGen')('')==="Jüri'nin");
     w5.eval("jDeskClose(); jLaneOpen('"+ord[5].id+"')"); await sleep(40);
     T('desk list view row (no card on screen) → jLaneOpen falls back to the drawer', (()=>{ return true; })());
-    w5.eval("jDeskClose(); jLaneClose(); jDeskView('list')"); await sleep(40);
-    T('desk: lane coffees (photo = stock) sit in the Vitrin as cards with the two-price row; plain rows carry no Hemen-Al line', !!w5.document.querySelector('.jdk-grid .jcard[data-id="'+H0.id+'"] .jrow.j2') && w5.document.querySelectorAll('.jdk-table tr.jdk-r').length===21 && !w5.document.querySelector('.jdk-table tr.jdk-r td.p .hint'));
+    w5.eval("jDeskClose(); jLaneClose()"); await sleep(40);
+    T('desk: lane coffees (photo = stock) sit in the Vitrin as cards with the two-price row; plain cards keep one price', !!w5.document.querySelector('.jdk-grid .jcard[data-id="'+H0.id+'"] .jrow.j2') && w5.document.querySelectorAll('.jdk-grid')[1].querySelectorAll('.jcard').length===21 && !w5.document.querySelectorAll('.jdk-grid')[1].querySelector('.jcard .jchip.jhm'));
   }
   // ---- lobby untouched on desktop (no dep page → no jdesk)
   w=mk({'/meydan':MD,'/offer-mine':{votes:[]},'/campaigns':[]},1366,'https://grup-al.com/misafir'); await sleep(250); D=w.document;
@@ -241,7 +241,7 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     const wd=mk({'/meydan':MH,'/offer-mine':{votes:[],inv:[],hemen:[],me:{member:false,wa:false,ok:true}},'/campaigns':[]},1366); await sleep(250);
     T('desktop: no masonry left in the page (cards never move)', !/jMasonry|jmas\b/.test(html) && html.includes('body.jdesk .jcard.lopen{height:400px;min-height:0;overflow:visible;z-index:40}'));
     wd.eval("jLaneOpen('"+ord[3].id+"')"); await sleep(40);
-    T('desktop: opening a Vitrin card keeps the grid intact (6 photo cards + 18 list rows = 24, order unchanged, no drawer, no span style on any card)', !!wd.document.querySelector('.jdk-grid .jcard.lopen[data-id="'+ord[3].id+'"]') && wd.document.querySelectorAll('.jdk-grid .jcard').length===6 && wd.document.querySelectorAll('.jdk-table tr.jdk-r').length===18 && [...wd.document.querySelectorAll('.jdk-grid .jcard')].map(c=>c.dataset.id).join(',')===ord.slice(0,6).map(o=>o.id).join(',') && !wd.document.getElementById('jDrawer') && ![...wd.document.querySelectorAll('.jdk-grid .jcard')].some(c=>c.style.gridRowEnd));
+    T('desktop: opening a Vitrin card keeps the grid intact (6 photo cards + 18 mountain cards = 24, order unchanged, no drawer, no span style on any card)', !!wd.document.querySelector('.jdk-grid .jcard.lopen[data-id="'+ord[3].id+'"]') && wd.document.querySelectorAll('.jdk-grid')[0].querySelectorAll('.jcard').length===6 && wd.document.querySelectorAll('.jdk-grid')[1].querySelectorAll('.jcard').length===18 && [...wd.document.querySelectorAll('.jdk-grid')[0].querySelectorAll('.jcard')].map(c=>c.dataset.id).join(',')===ord.slice(0,6).map(o=>o.id).join(',') && !wd.document.getElementById('jDrawer') && ![...wd.document.querySelectorAll('.jdk-grid .jcard')].some(c=>c.style.gridRowEnd));
     // click on empty space (the main column background) → closes; click inside the open card → stays
     wd.document.querySelector('.jdk-grid .jcard.lopen .jlane.ga').dispatchEvent(new wd.MouseEvent('click',{bubbles:true})); await sleep(40);
     T('click inside the open card keeps it open', !!wd.document.querySelector('.jcard.lopen'));
@@ -286,8 +286,8 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('…and the card opens its lanes (Kapora koy for the next lot)', !!wl.document.querySelector('.jcard.lopen[data-id="'+ord[0].id+'"] .jlane.ga'));
     { const wr=mk({'/meydan':ML,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); wr.eval("jDeskOpen('"+ord[0].id+"')"); await sleep(60); const row=wr.document.querySelector('#jDrawer .orow[data-id="'+ord[0].id+'"]');   // v11f: satır yalnız masaüstü çekmecesinde
     T('detail row (desktop drawer): "🔥 Seçildi · 17 paket kavruluyor" (no "kilitli", no "kutu")', !!row && /🔥 Seçildi · 17 paket kavruluyor/.test(row.textContent) && !/kilitli|kutu/.test(row.textContent)); }
-    const wt=mk({'/meydan':ML,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); wt.eval("jDeskView('list')"); await sleep(60); const tr=wt.document.querySelector('.jdk-table tr.jdk-r[data-id="'+ord[0].id+'"]');
-    T('desktop table row: status chip under the name; bar/count = live next-lot counter (4/40)', !!tr && !!tr.querySelector('.jdk-lock .jchip.jlockb') && !tr.querySelector('td.n .bar i').classList.contains('hit') && tr.querySelector('td.n .bar i').style.width==='10%' && tr.querySelector('td.n b').textContent==='4/40');
+    const wt=mk({'/meydan':ML,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); const tc=wt.document.querySelector('.jdk-grid .jcard[data-id="'+ord[0].id+'"]');
+    T('desktop card of the locked coffee: status chip, CTA, ring = live next-lot counter (4)', !!tc && !!tc.querySelector('.jchip.jlockb') && !!tc.querySelector('.jchip.jlocknext') && tc.querySelector('.jtop svg text').textContent==='4');
     T('no "kutu"/"box" left in the page strings (Ömer: packages, not boxes) — only the checkbox idioms', !/\d+ kutu|kutu başına|kutun\b|kutular/.test(html) && (html.match(/[kK]utu/g)||[]).length<=3 && !/ boxes?[ .,;'·]/.test(html.replace(/tick the box\./g,''))); }
   // v30v: CoffeeNutz'ın 5'i comes from Ayarlar (offer_cfg.top5) when set; the page default stays as fallback
   { const M5=JSON.parse(JSON.stringify(MD)); M5.offer_cfg.top5=[ord[7].id, ord[8].name.slice(0,6)];   // admin sends ids; a name prefix still works
