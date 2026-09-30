@@ -19,6 +19,6 @@ await page.route('**/*',async route=>{ const u=route.request().url();
 await page.goto('https://grup-al.com/juri'); await page.waitForTimeout(1200);
 const shots=[]; async function snap(name){ await page.waitForTimeout(250); await page.screenshot({path:path.join(OUT,name+'.png')}); shots.push(name); }
 await page.evaluate(id=>{ jLaneOpen(id); jLaneKap(id); },o.id); await snap('gt1_sheet');
-await page.check('#jgWa'); await page.evaluate(()=>jGateWa()); await page.waitForTimeout(1500); await snap('gt2_after');
+await page.evaluate(()=>{ const c=document.getElementById('jgWa'); if(c){ c.checked=true; c.dispatchEvent(new Event('change',{bubbles:true})); } }); await page.evaluate(()=>jGateWa()); await page.waitForTimeout(1500); await snap('gt2_after');
 await page.evaluate(()=>jBindOpen()); await snap('gt3_bind');
 await browser.close(); console.log(shots.join(' '));

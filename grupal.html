@@ -233,7 +233,17 @@ body.jdesk .jcard .jname{font-size:22px}
 .jdk-dbody{padding:14px 16px 24px}
 .jdk-dbody .orow{cursor:default}
 body.jdesk #dbBar{left:auto !important;right:24px !important;bottom:24px !important;width:460px;border-radius:16px;border:1px solid var(--gold) !important}
-@media (max-width:959px){.jdk{display:block}}
+@media (max-width:959px){.jdk{display:block}
+  body.jdesk .wrap{padding:0 12px}
+  .jdk-side{position:static;max-height:none;overflow:visible;display:flex;flex-direction:column;gap:10px;margin-bottom:12px;padding-right:0}
+  .jdk-filt{display:flex;gap:6px;overflow-x:auto;padding:8px 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.jdk-filt::-webkit-scrollbar{display:none}.jdk-filt .jdk-h{display:none}
+  .jdk-filt .jdk-f{width:auto;flex:none;margin:0;padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px;white-space:nowrap}.jdk-filt .jdk-f b{margin-left:2px}
+  .jdk-head{align-items:flex-start;flex-direction:column;gap:8px}.jdk-t{font-size:19px}
+  .jdk-drawer{left:0;right:0;width:auto;max-width:none;top:5vh;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;animation:jdkUp .28s cubic-bezier(.2,.8,.2,1)}
+  @keyframes jdkUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+  body.jdesk.jnarrow #jSheet{left:0;right:0;bottom:0;width:auto;border-radius:22px 22px 0 0;border:0;border-top:1px solid #3a2f26}
+  body.jdesk.jnarrow #dbBar{left:0 !important;right:0 !important;bottom:0 !important;width:auto;border-radius:0;border:0 !important;border-top:2px solid var(--gold) !important}
+}   /* v11b: telefon/iPad = aynı ızgara; filtreler yatay çip şeridi, oturum kartı altta, çekmece alttan tam genişlik */
 #jTop .jtb{display:flex;align-items:center;gap:10px;cursor:pointer}
 #jTop .jtn{font-size:12px;font-weight:800;letter-spacing:2.5px;color:var(--accent)}
 #jTop .jts{font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;color:var(--muted);margin-top:1px}
@@ -737,7 +747,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30za';
+const VERSION='v2026-09-30zb';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -852,7 +862,7 @@ cyDoneBy:['Tamamlama: {d}\'e kadar','Complete by {d}'], cyForfeit:['süresi geç
 offForfeited:['kaporan yandı — süresinde tamamlanmadı','your deposit was forfeited — not completed in time'], offCredited:['kaporan Grup-Al kredine döndü — süresinde tamamlanmadı','your deposit became Grup-Al credit — not completed in time'],
 offBanned:['Jüri askıda: {d}\'e kadar ön sipariş veremezsin (tamamlanmayan kapora)','Jury suspended: no pre-orders until {d} (an uncompleted deposit)'],
 offTermsL:['Ön sipariş ve kapora şartları','Pre-order and deposit terms'], offTermsOk:['Okudum, kabul ediyorum — öde','I have read and accept — pay'], offTermsNo:['Vazgeç','Cancel'],
-jWelc:['Grup-Al: {g} ön sipariş hedefine ulaşınca kahve kavrulur — her {amt} TL kapora bir oydur. Oylar hedef gerçekleşene kadar geçerli olmaya devam eder, başka kahveye taşınabilir, kaybolmaz. Kahveyi alırken kapora fiyattan düşer; fiyat listenin %{p} altındadır. Her kapora aynı zamanda; kendinize veya başkalarına kullandırabileceğiniz {k} Hemen-Al davetiyesi açar.','Grup-Al: 40 pre-orders lock a coffee and it gets roasted — a {amt} TL deposit is one vote, movable until the lock, deducted from your package.'], jLgBusy:['bekle…','wait…'], jGWaT:['Jüri WhatsApp grubu','Jury WhatsApp group'], jGWaX:['Jüri bu grupta konuşur: kavurma günü, kargo, oylama. Kapora için gruba katılman gerekir — bir kez, şimdi.','The jury talks here: roast day, shipping, votes. Join once, now, before your first deposit.'], jGWaGo:['Gruba katıl','Join the group'], jGWaOk:['Gruba katıldım','I joined the group'], jGWaGo2:['Devam','Continue'], jGWaOnce:['Bir daha sorulmaz. Ömer numaraları grupla karşılaştırır; grupta olmayanın kaporası kapanır.','Asked only once. Ömer checks numbers against the group; deposits close for anyone missing.'], jGWaTick:['Önce gruba katıl, sonra kutuyu işaretle.','Join the group first, then tick the box.'], jGOk:['Tamam — Jüri\'desin. Kapora devam ediyor.','Done — you are in the jury. The deposit continues.'], jGErr:['Olmadı: {e}','Failed: {e}'], jGFlag:['WhatsApp grubunda görünmüyorsun. Gruba katıl, sonra Ömer\'e yaz — kapora o zaman açılır.','You are not showing in the WhatsApp group. Join, then message Ömer — deposits open after that.'], jGBindT:['Bu cihaza bağla','Link this device'], jGBindX:['Kaporaların başka telefonda mı? Siparişteki e-posta ve telefon yeter (ya da sipariş no).','Deposits on another phone? The e-mail and phone on your order are enough (or the order no).'], jGBindPhone:['Telefon (siparişteki)','Phone (on the order)'], jGBindOrdOpt:['ya da sipariş no','or the order no'], jGBindOrd:['Sipariş no','Order no'], jGBindMail:['E-posta','E-mail'], jGBindGo:['Bağla','Link'], jGBindBad:['E-posta ve telefon (ya da sipariş no) gerekli.','E-mail and phone (or the order no) required.'], jGBindNo:['Eşleşmedi — siparişteki e-posta ve telefonu kontrol et.','No match — check the e-mail and phone on the order.'], jGBindOk:['Bağlandı — kaporaların ve davetiyelerin burada.','Linked — your deposits and invitations are here.'], jDevBind:['📱 Kaporam başka cihazda · bu cihaza bağla','📱 My deposit is on another device · link this one'], jWelcOk:['Anladım','Got it'],
+jWelc:['Grup-Al: {g} ön sipariş hedefine ulaşınca kahve kavrulur — her {amt} TL kapora bir oydur. Oylar hedef gerçekleşene kadar geçerli olmaya devam eder, başka kahveye taşınabilir, kaybolmaz. Kahveyi alırken kapora fiyattan düşer; fiyat listenin %{p} altındadır. Her kapora aynı zamanda; kendinize veya başkalarına kullandırabileceğiniz {k} Hemen-Al davetiyesi açar.','Grup-Al: 40 pre-orders lock a coffee and it gets roasted — a {amt} TL deposit is one vote, movable until the lock, deducted from your package.'], jLgBusy:['bekle…','wait…'], jGWaT:['Jüri WhatsApp grubu','Jury WhatsApp group'], jGWaX:['Jüri bu grupta konuşur: kavurma günü, kargo, oylama. Kapora için gruba katılman gerekir — bir kez, şimdi.','The jury talks here: roast day, shipping, votes. Join once, now, before your first deposit.'], jGWaGo:['Gruba katıl','Join the group'], jGWaOk:['Gruba katıldım','I joined the group'], jGWaGo2:['Devam','Continue'], jGWaOnce:['Bir daha sorulmaz. Ömer numaraları grupla karşılaştırır; grupta olmayanın kaporası kapanır.','Asked only once. Ömer checks numbers against the group; deposits close for anyone missing.'], jGWaTick:['Önce gruba katıl, sonra kutuyu işaretle.','Join the group first, then tick the box.'], jGOk:['Tamam — Jüri\'desin. Kapora devam ediyor.','Done — you are in the jury. The deposit continues.'], jGErr:['Olmadı: {e}','Failed: {e}'], jGFlag:['WhatsApp grubunda görünmüyorsun. Gruba katıl, sonra Ömer\'e yaz — kapora o zaman açılır.','You are not showing in the WhatsApp group. Join, then message Ömer — deposits open after that.'], jGBindT:['Bu cihaza bağla','Link this device'], jGBindX:['Kaporaların başka telefonda mı? Siparişteki e-posta ve telefon yeter (ya da sipariş no).','Deposits on another phone? The e-mail and phone on your order are enough (or the order no).'], jGBindPhone:['Telefon (siparişteki)','Phone (on the order)'], jGBindOrdOpt:['ya da sipariş no','or the order no'], jGBindOrd:['Sipariş no','Order no'], jGBindMail:['E-posta','E-mail'], jGBindGo:['Bağla','Link'], jGBindBad:['E-posta ve telefon (ya da sipariş no) gerekli.','E-mail and phone (or the order no) required.'], jGBindNo:['Eşleşmedi — siparişteki e-posta ve telefonu kontrol et.','No match — check the e-mail and phone on the order.'], jGBindOk:['Bağlandı — kaporaların ve davetiyelerin burada.','Linked — your deposits and invitations are here.'], jDevBind:['📱 Kaporam başka cihazda · bu cihaza bağla','📱 My deposit is on another device · link this one'], jBound:['✓ Bağlandı','✓ Linked'], jWelcOk:['Anladım','Got it'],
 // v10a Grup-Al / Hemen-Al şeritleri · davetiye · masa
 jGA:['Grup-Al','Grup-Al'], jHA:['Hemen-Al','Hemen-Al'], jHLeft:['{n} kaldı','{n} left'], jHFull:['doldu','sold out'], jHTable:['masada {n}','{n} on the table'], jHRoast:['pazartesi kavrulur · salı kargoda','roasted Monday · ships Tuesday'], jHRoastD:['{d} kavrulur','roasted {d}'],
 jLaneGAt:['{g} olunca kavrulur.','Roasts when {g} is reached.'], jLaneGAx:['Kaporan fiyattan düşer · kilitlenene kadar taşınır, kaybolmaz.','Your deposit comes off the price · moves until locked, never lost.'], jLaneKap:['Kapora koy · {amt} TL','Deposit · {amt} TL'], jLaneMine:['Kaporan ×{n} · kilitlenince {p} TL\'den tamamla','Your deposit ×{n} · complete at {p} TL once locked'],
@@ -872,7 +882,7 @@ function applyLang(){
   document.querySelectorAll('[data-i18n-html]').forEach(function(el){ el.innerHTML=t(el.getAttribute('data-i18n-html')); });
   document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph'))); });
 }
-function setLang(l){ LANG=l; try{ localStorage.setItem('grupal_lang',l); }catch(e){} applyLang();
+function setLang(l){ LANG=l; try{ localStorage.setItem('grupal_lang',l); }catch(e){} applyLang(); if(typeof jBindChip==='function') jBindChip();
   // Çip susması yalnız KARGO PENCERESİ gerçeğine bakar: elle seçilen kırmızı tema çipleri asla silmez.
   renderThemeChips((typeof redWindow==='function')&&redWindow());
   const lc=document.getElementById('langChip'); if(lc) lc.textContent=(LANG==='en'?'TR':'EN');
@@ -1138,6 +1148,7 @@ function trNote(txt){ if(LANG!=='tr'||!txt) return txt||''; return String(txt).r
 function devId(){ let d=''; try{ d=localStorage.getItem('grupal_dev')||''; if(!/^[A-Z0-9]{8,16}$/.test(d)){ d=''; for(let i=0;i<10;i++) d+='ABCDEFGHJKLMNPRSTUVYZ0123456789'[Math.floor(Math.random()*31)]; localStorage.setItem('grupal_dev',d); } }catch(e){ d='NOSTORAGE0'; } return d; }
 // ===== v10o JÜRİ KAPISI (proxy v3.46): kayıt = Shopify siparişi. İlk kaporada BİR KEZ: "Jüri WhatsApp grubuna katıl" + "Katıldım" → /wa-ok {dev}. Sonra bir daha sorulmaz.
 //   Sunucu /offer-mine → me:{member, name, phone_tail, wa, ok}. Admin "Grupta değil" (ok:false) → kapora kapanır, sayfa gruba katıl uyarısı. Başka cihaz: sipariş no + e-posta → /dev-bind → asıl cihaz kimliği benimsenir. =====
+function jBindChip(){ const bc=$('bindChip'); if(!bc) return; const nm=(ME&&ME.member&&ME.name)?String(ME.name).split(' ')[0]:''; bc.textContent=(ME&&ME.member)?(t('jBound')+(nm?(' · '+nm):'')):t('jDevBind'); bc.style.color=(ME&&ME.member)?'#9fd3b2':'#e6c14b'; }   // v11b (Ömer): cihaz tanınınca çip 'Bağlandı'
 let ME=null, JGATE=null;   // ME = /offer-mine me · JGATE={mode:'wa'|'flag'|'bind', after:{type:'kap',id}|{type:'pay'}|null, busy, err, done}
 function jWaDone(){ if(ME&&ME.wa) return true; try{ return localStorage.getItem('grupal_waok')==='1'; }catch(e){ return false; } }
 function jJuryOk(){ return !(ME&&ME.ok===false) && jWaDone(); }
@@ -1155,7 +1166,7 @@ function jBindOpen(){ jGateOpen('bind',null); setTimeout(()=>{ const i=$('jgMail
 async function jBindGo(){ const order=(($('jgOrder')||{}).value||'').replace(/\D/g,''), phone=(($('jgPhone')||{}).value||'').replace(/[^0-9+]/g,''), email=(($('jgMail')||{}).value||'').trim().toLowerCase(); if((!order&&phone.replace(/\D/g,'').length<10)||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ jGateSet({err:t('jGBindBad')}); return; }
   jGateSet({busy:true,err:''}); try{ const r=await fetch(API+'/dev-bind',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({order,phone,email,dev:devId()})}); const j=await r.json().catch(()=>({}));
     if(!(j&&j.ok&&j.dev)){ jGateSet({busy:false,err:t('jGBindNo')}); return; }
-    try{ localStorage.setItem('grupal_dev',j.dev); if(j.me&&j.me.wa) localStorage.setItem('grupal_waok','1'); }catch(e){} if(j.me) ME=j.me;
+    try{ localStorage.setItem('grupal_dev',j.dev); if(j.me&&j.me.wa) localStorage.setItem('grupal_waok','1'); }catch(e){} if(j.me) ME=j.me; jBindChip();
     JSHEET=null; JGATE=null; jMsg(t('jGBindOk'),2600); renderOffers(STATE); if(STATE) offLoadMine(STATE); }
   catch(e){ jGateSet({busy:false,err:t('jGErr').replace('{e}',String(e).slice(0,60))}); } }
 function jGateHtml(){ if(!JGATE) return ''; const G=JGATE, cfg=offCfg(); const link=cfg.wa_group_url?('<a class="go" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box" href="'+escZ(cfg.wa_group_url)+'" target="_blank" rel="noopener">'+t('jGWaGo')+' ›</a>'):'';
@@ -1300,7 +1311,8 @@ function jShopUrl(o){ const u=String((o&&o.shop_url)||''); return /^https:\/\/(w
 function jWelcShow(){ try{ return localStorage.getItem('grupal_welcomed')!=='1'; }catch(e){ return true; } }
 function jWelcHtml(cfg){ if(!jWelcShow()) return ''; const pct=Math.round(100*(1-(cfg.ratio_jury||cfg.ratio200||0.6))); return '<div class="jwelc" id="jWelc"><span>'+t('jWelc').replace('{amt}',cfg.dep_amt||100).replace('{g}',cfg.goal).replace('{p}',pct).replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2))+'</span><button onclick="jWelcOk()">'+t('jWelcOk')+'</button></div>'; }
 function jWelcOk(){ try{ localStorage.setItem('grupal_welcomed','1'); }catch(e){} const e=$('jWelc'); if(e) e.remove(); const p=$('jP1'); if(p) p.classList.remove('haswelc'); }
-function jIsDesk(){ try{ if(window.matchMedia) return window.matchMedia('(min-width: 960px)').matches; }catch(e){} return (window.innerWidth||0)>=960; }
+function jWide(){ try{ if(window.matchMedia) return window.matchMedia('(min-width: 960px)').matches; }catch(e){} return (window.innerWidth||0)>=960; }   // v11b: iki sütun (kenar çubuğu + ızgara) eşiği
+function jIsDesk(){ return true; }   // v11b (Ömer): telefon/iPad de kart ızgarası — deste, kaydırma sayfaları ve bantlar kalktı
 let JSEL=null, JDF='all', JDV=null; try{ const v=localStorage.getItem('grupal_jdf'); if(v) JDF=v; const dv=localStorage.getItem('grupal_jdv'); if(dv==='cards'||dv==='list') JDV=dv; }catch(e){}
 function jDeskView(v){ JDV=v; try{ localStorage.setItem('grupal_jdv',v); }catch(e){} renderOffers(STATE); }
 function jHasImg(o){ return !!(o&&o.img_url&&/^https:\/\//.test(String(o.img_url))); }
@@ -1438,9 +1450,9 @@ function renderOffers(s){
   const early=depEarly(cfg), codeOk=gcodeOk(), gate=depMode&&depGate(cfg);
   const banned=!!(BANNED&&BANNED.getTime()>Date.now());
   const ctx={list,cfg,G,depMode,mine,pend,gate,banned};
-  const desk=depMode&&jIsDesk(); document.body.classList.toggle('jdesk',desk); if(!depMode) JSEL=null;
-  if(!window.__jRz){ window.__jRz=true; let was=jIsDesk(), tm=null; window.addEventListener('resize',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ const now=jIsDesk(); if(now!==was){ was=now; if(STATE) renderOffers(STATE); } },200); }); }   // v09v: eşik geçilince yeniden çiz
-  if(depMode){ h=desk?renderJuriDesk(s,list,ctx,early,codeOk):renderJuriPage(s,list,ctx,early,codeOk); }   // v09l: Jüri sayfası — Deste · Damak (akordeon) · v09v: masaüstü ızgara · Oturum
+  const desk=depMode; document.body.classList.toggle('jdesk',desk); document.body.classList.toggle('jnarrow',desk&&!jWide()); if(!depMode) JSEL=null;
+  if(!window.__jRz){ window.__jRz=true; let was=jWide(), tm=null; window.addEventListener('resize',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ const now=jWide(); if(now!==was){ was=now; if(STATE) renderOffers(STATE); } },200); }); }   // v09v: eşik geçilince yeniden çiz (kenar çubuğu yerleşimi)
+  if(depMode){ h=renderJuriDesk(s,list,ctx,early,codeOk); }   // v11b: her genişlikte ızgara   // v09l: Jüri sayfası — Deste · Damak (akordeon) · v09v: masaüstü ızgara · Oturum
   else {
     h+=renderCycle(s);   // v02v: döngü çubuğu + son sayımın kahveleri (varsa)
     const hits=list.filter(o=>(o.n||0)>=G);
@@ -1630,24 +1642,26 @@ function renderJuriDesk(s,list,ctx,early,codeOk){
   if(!keys.some(k=>k[0]===JDF)) JDF='all';
   const cur=keys.find(k=>k[0]===JDF); const shown=jDeckOrder(cur[3]);
   let h='<div class="jdk"><aside class="jdk-side">';
-  h+='<div class="jdk-card"><div class="jdk-h">'+t('jdFilt')+'</div>'+keys.map(k=>'<button class="jdk-f'+(JDF===k[0]?' on':'')+'" onclick="jDeskFilter(\''+k[0]+'\')"><i style="background:'+k[2]+'"></i><span>'+(k[0]==='top5'?'★ ':'')+escZ(k[1])+'</span><b>'+k[3].length+'</b></button>').join('')+'</div>';
+  h+='<div class="jdk-card jdk-filt"><div class="jdk-h">'+t('jdFilt')+'</div>'+keys.map(k=>'<button class="jdk-f'+(JDF===k[0]?' on':'')+'" onclick="jDeskFilter(\''+k[0]+'\')"><i style="background:'+k[2]+'"></i><span>'+(k[0]==='top5'?'★ ':'')+escZ(k[1])+'</span><b>'+k[3].length+'</b></button>').join('')+'</div>';
   h+=renderTicker(list,G);
   if(banned) h+='<div class="jdk-card" style="border-color:#e0705a;color:#e0705a;font-size:12px;font-weight:700">'+t('offBanned').replace('{d}',cyD(BANNED.toISOString()))+'</div>';
   if(early||cfg.code_always) h+='<div class="jdk-card">'+(codeOk?('<div style="font-size:12px;font-weight:700;color:var(--green)">'+t('offCodeOk')+'</div>')
     :('<div style="font-size:12px;font-weight:700;color:var(--gold)">'+(cfg.code_always?t('offCodeAlw'):t('offEarly').replace('{d}',fmtOpen(cfg.dep_open_at)))+'</div><div class="hint" style="margin-top:2px">'+(cfg.code_always?t('offCodeAlwH').replace('{ch}',(STATE&&STATE.chat_url)?('<a href="'+escZ(STATE.chat_url)+'" target="_blank" rel="noopener">'+t('chatL')+'</a>'):t('chatL')):t('offEarlyH'))+'</div>'
     +'<div style="display:flex;gap:6px;margin-top:6px"><input id="gcodeIn" placeholder="'+t('offCodeL')+'" style="flex:1;min-width:0;margin:0;padding:8px 10px;font-size:14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink)" onkeydown="if(event.key===\'Enter\'){gcodeSend();}"><button onclick="gcodeSend()" style="width:auto;margin:0;padding:8px 14px;font-size:13px">'+t('offCodeB')+'</button></div><div class="hint" id="gcodeMsg" style="margin-top:4px;color:#e0705a"></div>'))+'</div>';
-  h+='<div class="jdk-card"><div class="jdk-h">'+t('jSessT')+'</div>'+renderCycle(s)
+  const sess='<div class="jdk-card jdk-sess"><div class="jdk-h">'+t('jSessT')+'</div>'+renderCycle(s)
     +'<details class="jhow"><summary>'+t('jHowT')+'</summary><div class="hint" style="margin-top:6px;font-size:12px;line-height:1.55">'+escZ(t('offHD').split('{g}').join(G).split('{c}').join(cyCap()).split('{amt}').join(cfg.dep_amt||''))+'</div></details>'
     +'<div class="hint" style="margin-top:4px;font-size:11px;opacity:.75">'+t('offGoalD').split('{g}').join(G)+'</div>'
     +'<details style="margin-top:6px"><summary class="hint" style="cursor:pointer;font-size:11px">'+t('offTermsL')+'</summary><div class="hint" style="margin-top:4px;font-size:11px;line-height:1.5">'+t('offTerms').split('{amt}').join(cfg.dep_amt||'').split('{g}').join(G).split('{c}').join(cyCap()).split('{dd}').join(String((STATE&&STATE.offer_cfg&&parseInt(STATE.offer_cfg.done_days))||2))+'</div></details></div>';
+  if(jWide()) h+=sess;   // v11b: dar ekranda oturum kartı ızgaranın altına
   h+='</aside><main class="jdk-main">'+jWelcHtml(cfg)+jGuestHtml();
   { const tot=list.reduce((a,o)=>a+(o.dep||0),0), kk=list.filter(o=>(o.dep||0)>0).length, dg=parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.day_goal)||0)||0;
-    const feat=shown.filter(jHasImg), rest=shown.filter(o=>!jHasImg(o)); const view=JDV||(feat.length?'list':'cards');   // v09w: fotoğraflı kahveler vitrinde kart; gerisi seçime göre (fotoğraf varsa varsayılan liste — dağ kartları birbirine benzer)
+    const feat=shown.filter(jHasImg), rest=shown.filter(o=>!jHasImg(o)); const view=jWide()?(JDV||(feat.length?'list':'cards')):'cards';   // v11b: dar ekranda hep kart (tablo sığmaz; Ömer: telefonda karttan başka şey yok) · v09w: fotoğraflı kahveler vitrinde kart; gerisi seçime göre (fotoğraf varsa varsayılan liste — dağ kartları birbirine benzer)
     h+='<div class="jdk-head"><div><div class="jdk-t">'+escZ(cur[1])+' <span class="hint">· '+shown.length+' '+t('jCoffee')+' · '+t('jdSort')+'</span></div><div id="offTot" class="hint" style="margin-top:2px;font-weight:700">'+(dg?t('offTotG').replace('{sum}',tot).replace('{dg}',dg):t('offTot').replace('{sum}',tot))+(kk?(' · '+t('offTotK').replace('{k}',kk)):'')+'</div></div>'
-      +'<div class="jdk-seg" role="group"><button class="'+(view==='cards'?'on':'')+'" onclick="jDeskView(\'cards\')">▦ '+t('jdCards')+'</button><button class="'+(view==='list'?'on':'')+'" onclick="jDeskView(\'list\')">☰ '+t('jdList')+'</button></div></div>';
+      +(jWide()?('<div class="jdk-seg" role="group"><button class="'+(view==='cards'?'on':'')+'" onclick="jDeskView(\'cards\')">▦ '+t('jdCards')+'</button><button class="'+(view==='list'?'on':'')+'" onclick="jDeskView(\'list\')">☰ '+t('jdList')+'</button></div>'):'')+'</div>';
     const ord=jDeckOrder(list), card=o=>jCardHtml(o,ord.findIndex(x=>x.id===o.id),cfg,G,gate,banned);
     if(feat.length){ h+='<div class="jdk-sub">'+t('jdVitrin')+' <span class="hint">· '+feat.length+'</span></div><div class="jdk-grid">'+feat.map(card).join('')+'</div>'; if(rest.length) h+='<div class="jdk-sub" style="margin-top:18px">'+t('jdRest')+' <span class="hint">· '+rest.length+'</span></div>'; }
     if(rest.length) h+=(view==='list')?jTableHtml(rest,list,cfg,G,gate,banned):('<div class="jdk-grid">'+rest.map(card).join('')+'</div>'); }
+  if(!jWide()) h+='<div style="margin-top:18px">'+sess+'</div>';
   h+='</main>';
   // sağ çekmece: seçili kahvenin satırı (detay açık) — kulvar satırıyla aynı bileşen, tıklama kapatmasın diye satır onclick'i sökülür
   if(JSEL){ const o=list.find(x=>x.id===JSEL); if(o){ OFFOPEN.add(o.id); const rank=jDeckOrder(list).findIndex(x=>x.id===o.id)+1;
@@ -1770,7 +1784,7 @@ async function offLoadMine(s){
   if(!s||!Array.isArray(s.offers)||!s.offers.length) return;
   // v02v: Meydan'da her zaman sor (kaporalar cihaza bağlı) · v05h: kampanyada da sor — link kartı "Kaporan: …" satırını gösterir
   try{ const r=await fetch(API+'/offer-mine?dev='+encodeURIComponent(devId())); const j=await r.json();
-    if(j&&Array.isArray(j.votes)){ OFFMINE=j.votes; OFFINV=Array.isArray(j.inv)?j.inv:[]; OFFHEMEN=Array.isArray(j.hemen)?j.hemen:[]; if(j.me&&typeof j.me==='object'){ ME=j.me; if(ME.wa){ try{ localStorage.setItem('grupal_waok','1'); }catch(e){} } }   // v10o: kapı bilgisi BANNED=j.banned_until?new Date(j.banned_until):null; if(BANNED&&isNaN(BANNED.getTime())) BANNED=null;
+    if(j&&Array.isArray(j.votes)){ OFFMINE=j.votes; OFFINV=Array.isArray(j.inv)?j.inv:[]; OFFHEMEN=Array.isArray(j.hemen)?j.hemen:[]; if(j.me&&typeof j.me==='object'){ ME=j.me; if(ME.wa){ try{ localStorage.setItem('grupal_waok','1'); }catch(e){} } } jBindChip();   // v10o: kapı bilgisi BANNED=j.banned_until?new Date(j.banned_until):null; if(BANNED&&isNaN(BANNED.getTime())) BANNED=null;
       const paidIds=j.votes.filter(v=>v.paid).map(v=>v.id); if(paidIds.length){ try{ localStorage.setItem('grupal_odep', JSON.stringify(offPend().filter(id=>!paidIds.includes(id)))); }catch(e){} }
       renderOffers(s); } }catch(e){}
 }
@@ -2654,6 +2668,6 @@ boot();
 <span id="bindChip" onclick="jBindOpen()" data-i18n="jDevBind" style="display:inline-block;border:1px solid rgba(58,47,38,.9);border-radius:20px;padding:5px 10px;font-size:10px;font-weight:700;letter-spacing:.04em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:rgba(26,20,16,.78);color:#e6c14b;cursor:pointer;margin-right:6px"></span>
 <span id="verChip" style="display:inline-block;border:1px solid rgba(58,47,38,.9);border-radius:20px;padding:5px 10px;font-size:10px;font-weight:600;letter-spacing:.02em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:rgba(26,20,16,.78);color:#a8998a"></span>
 </div>
-<script>try{ document.getElementById('verChip').textContent=VERSION; const lc=document.getElementById('langChip'); if(lc) lc.textContent=(LANG==='en'?'TR':'EN'); const bc=document.getElementById('bindChip'); if(bc) bc.textContent=t('jDevBind'); }catch(e){}</script>
+<script>try{ document.getElementById('verChip').textContent=VERSION; const lc=document.getElementById('langChip'); if(lc) lc.textContent=(LANG==='en'?'TR':'EN'); if(typeof jBindChip==='function') jBindChip(); }catch(e){}</script>
 </body>
 </html>
