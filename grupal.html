@@ -737,7 +737,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30ze';
+const VERSION='v2026-09-30zf';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1320,9 +1320,9 @@ function jTableHtml(rows,list,cfg,G,gate,banned){ if(!rows.length) return ''; co
 function jDeskOpen(id){ JSEL=id; OFFOPEN.add(id); renderOffers(STATE); const d=$('jDrawer'); if(d) d.scrollTop=0; }
 function jDeskClose(){ JSEL=null; renderOffers(STATE); }
 function jDeskFilter(k){ JDF=k; try{ localStorage.setItem('grupal_jdf',k); }catch(e){} renderOffers(STATE); }
-function jGoRow(id){ if(jIsDesk()) return jDeskOpen(id); const o=((STATE&&STATE.offers)||[]).find(x=>x.id===id); if(!o) return; const k='all'; OFFOPEN.add(id); OFFALL=true;   // v11c: satır yalnız 'Tüm liste'de (tat grupları artık kart gösterir)
+function jGoRow(id){ if(jIsDesk()) return jDeskOpen(id); const o=((STATE&&STATE.offers)||[]).find(x=>x.id===id); if(!o) return; const k=tasteOf(o)||'top5';   // v11f: telefonda satır listesi yok → kahvenin tat grubu, kart o grupta
   if(JBAND!==k){ JBAND=k; try{ localStorage.setItem('grupal_jband',k); }catch(e){} } renderOffers(STATE);
-  const e=document.querySelector('#offList .orow[data-id="'+id+'"]'); if(e&&e.scrollIntoView) e.scrollIntoView({behavior:'smooth',block:'center'}); }
+  const e=document.querySelector('#jb_'+k+' .jcard[data-id="'+id+'"]'); if(e&&e.scrollIntoView) e.scrollIntoView({behavior:'smooth',block:'center',inline:'center'}); }
 function jGoCard(id){ if(jIsDesk()) return jDeskOpen(id); const dk=$('jDeck'); if(!dk) return; const c=dk.querySelector('.jcard[data-id="'+id+'"]'); if(!c) return; try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){}
   const x=c.offsetLeft-(dk.clientWidth-c.clientWidth)/2; try{ dk.scrollTo({left:x,behavior:'smooth'}); }catch(e){ dk.scrollLeft=x; } }
 function renderJTop(s,list){ const rb=document.querySelector('button[title="Refresh"]'); if(rb&&rb.parentElement&&rb.parentElement.id==='jTopR') document.body.appendChild(rb);   // v09n: yeniden çizimde düğme silinmesin
@@ -1353,7 +1353,7 @@ function jCardHtml(o,i,cfg,G,gate,banned){ const paid=(OFFMINE||[]).find(v=>v.id
      +'<div class="jtop"><div style="display:flex;gap:6px;min-width:0"><span class="jchip">#'+(i+1)+(tp?' <span style="color:#e6c14b" title="'+t('jTop5')+'">★</span>':'')+'</span>'+(paid?('<span class="jchip jminec">'+(paid.conv?'🔒 ':'')+t('jMineChip').replace('{n}',Math.max(1,parseInt(paid.qty)||1))+'</span>'+((!paid.conv&&!JMOVE&&!JBUSY&&((STATE&&STATE.offers)||[]).length>1)?('<span class="jchip jmvl" onclick="event.stopPropagation();jMoveStart(\''+escZ(o.id)+'\')">'+t('jMoveL')+'</span>'):'')):(tn?('<span class="jchip jtaste"><i style="background:'+tc+'"></i>'+(LANG==='en'?tn[2]:tn[1])+'</span>'):''))+'</div>'
      +'<svg width="50" height="50" viewBox="0 0 50 50" aria-hidden="true"><circle cx="25" cy="25" r="21" fill="rgba(22,19,15,.5)" stroke="rgba(243,237,228,.25)" stroke-width="4"/><circle cx="25" cy="25" r="21" fill="none" stroke="#e6c14b" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+(2*Math.PI*21*Math.min(1,(o.dep||0)/G)).toFixed(1)+' 999" transform="rotate(-90 25 25)"/><text x="25" y="29" text-anchor="middle" font-size="14" font-weight="800" fill="#f3ede4" font-family="-apple-system,Segoe UI,Roboto,sans-serif">'+(o.dep||0)+'</text></svg></div>'   // v10z (Ömer): halka her zaman canlı sayaç — kilitte sıfırlanır (sonraki parti); kilitli partinin adedi rozette
      +'<div class="jbody"><div class="jmeta">'+jMeta(o)+'</div><div class="jname">'+escZ(o.name)+'</div>'+(jDesc(o)?('<div class="jdesc">'+jDesc(o)+'</div>'):'')
-     +'<div class="jchips2">'+jLockBadge(o,true)+'<span class="jchip jgoto" onclick="event.stopPropagation();jGoRow(\''+escZ(o.id)+'\')">'+t(jIsDesk()?'jDetail':'jGoto')+'</span>'
+     +'<div class="jchips2">'+jLockBadge(o,true)+(jIsDesk()?('<span class="jchip jgoto" onclick="event.stopPropagation();jGoRow(\''+escZ(o.id)+'\')">'+t('jDetail')+'</span>'):'')   // v11f: telefonda 'Kahveye git' çipi yok (liste yok; kilitli kartta çipler 2 satır)
      +(jHemen(o)?jHemenChips(o):(jShopUrl(o)?('<a class="jchip jshop" href="'+escZ(jShopUrl(o))+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i></i>'+t('jShop')+(o.list_tl?(' <b>'+fmtTL(o.list_tl)+' TL</b>'):'')+'</a>'):''))+'</div>'
      +jPriceRow(o,cfg,paid,gate,banned,jury)+((JLANE&&JLANE.id===o.id)?('<div class="jlanes-w'+(JLANE.anim?'':' plus opened')+'" onclick="event.stopPropagation()"><div>'+jLanesHtml(o,JLANE.c)+'</div></div>'):'')+'</div></div>'; }   // v11e: yeniden çizimde (30 sn, sepet) panel bir daha kaymaz — bitiş sınıfları HTML'de
 // v10a: kartın fiyat satırı — Hemen-Al şeridi olan kahvede iki fiyat (Grup-Al · Hemen-Al), dokununca alt sayfa; yoksa eski tek satır
@@ -1588,7 +1588,7 @@ function renderJuriPage(s,list,ctx,early,codeOk){
   const clk=nc?jClockBoxes(nc):'';   // v09m: çerçeveli sayaç kartın üstünde (dağların hizasında)
   // SAYFA 1 — Deste: tüm kahveler, ön sipariş sırasına göre; sayaç kartın üstünde
   h+='<section class="jpage'+(jMineList(list).length?' hasmine':'')+(jWelcShow()?' haswelc':'')+'" id="jP1">'+jWelcHtml(cfg)+jGuestHtml()+renderTicker(list,G)+renderDeck(list,cfg,G,gate,banned,clk)
-    +'<div class="jnav"><button class="jnb" onclick="jOpenBand(\'top5\')">★ '+t('jTop5')+' ›</button><button class="jnb" onclick="jOpenBand(\'all\')">'+t('jAllList').replace('{n}',list.length)+' ›</button></div>'
+    +'<div class="jnav"><button class="jnb" onclick="jOpenBand(\'top5\')">★ '+t('jTop5')+' ›</button></div>'   // v11f (Ömer): 'Tüm liste' kalktı — deste zaten tüm kahveler
     +'</section>';   // v11c: 'yukarı kaydır' ipucu kalktı
   // SAYFA 2 — Damak akordeonu
   h+='<section class="jpage" id="jP2"><div class="jh2">'+t('jDamakT')+'</div>';
@@ -1598,7 +1598,7 @@ function renderJuriPage(s,list,ctx,early,codeOk){
       +'<div style="display:flex;gap:6px;margin-top:6px" onclick="event.stopPropagation()"><input id="gcodeIn" placeholder="'+t('offCodeL')+'" style="flex:1;min-width:0;margin:0;padding:8px 10px;font-size:14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink)" onkeydown="if(event.key===\'Enter\'){gcodeSend();}"><button onclick="gcodeSend()" style="width:auto;margin:0;padding:8px 14px;font-size:13px">'+t('offCodeB')+'</button></div><div class="hint" id="gcodeMsg" style="margin-top:4px;color:#e0705a"></div></div>');
   { const tot=list.reduce((a,o)=>a+(o.dep||0),0), kk=list.filter(o=>(o.dep||0)>0).length, dg=parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.day_goal)||0)||0;
   h+='<div id="offTot" style="margin:0 0 8px;padding:8px 10px;border-radius:10px;background:var(--panel2);font-size:12.5px;font-weight:700">'+(dg?t('offTotG').replace('{sum}',tot).replace('{dg}',dg):t('offTot').replace('{sum}',tot))+(kk?(' · '+t('offTotK').replace('{k}',kk)):'')+'</div>'; }
-  for(const [k,name,col,arr] of jBandKeys(list)){ if(!arr.length) continue; const open=JBAND===k; const prices=arr.map(o=>o.jury_tl||o.camp200_tl).filter(Boolean); const lo=Math.min(...prices), hi=Math.max(...prices);
+  for(const [k,name,col,arr] of jBandKeys(list)){ if(!arr.length||k==='all') continue; /* v11f: Tüm liste bandı yok */ const open=JBAND===k; const prices=arr.map(o=>o.jury_tl||o.camp200_tl).filter(Boolean); const lo=Math.min(...prices), hi=Math.max(...prices);
     let rows='';
     if(open){ const srt=arr.slice().sort((a,b)=>(k==='top5')?0:((b.dep||0)-(a.dep||0))); const fold=(k==='all')&&!OFFALL&&srt.length>OFFFOLD+2;
       const shown=fold?srt.filter((o,i)=>i<OFFFOLD||(o.dep||0)>0||mine.includes(o.id)||(OFFMINE||[]).some(v=>v.id===o.id&&v.paid)||pend.includes(o.id)):srt;

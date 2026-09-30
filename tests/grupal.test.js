@@ -27,7 +27,7 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
   // ---- phone (390): the swipe deck, untouched
   let w=mk({'/meydan':MD,'/offer-mine':{votes:MINE},'/campaigns':[]},390); await sleep(250); let D=w.document;
   T('phone: deck rendered, no desktop grid, body not jdesk', !!D.getElementById('jDeck') && !D.querySelector('.jdk-grid') && !D.body.classList.contains('jdesk') && D.querySelectorAll('#jDeck .jcard').length===24);
-  T('phone: second render after /offer-mine — mine line with "6. kart", gold card, taşı chip (regression: card builder must not reference the deck closure)', !!D.querySelector('.jtick .jtmine') && D.querySelector('.jtick .jtmine').textContent==='✓ Ön siparişin: Las Minas ×2 · 6. kart' && D.querySelectorAll('#jDeck .jcard.mine').length===1 && !!D.querySelector('#jDeck .jcard.mine .jchip.jmvl') && D.querySelector('#jDeck .jcard .jchip.jgoto').textContent==='Kahveye git ›');
+  T('phone: second render after /offer-mine — mine line with "6. kart", gold card, taşı chip (regression: card builder must not reference the deck closure)', !!D.querySelector('.jtick .jtmine') && D.querySelector('.jtick .jtmine').textContent==='✓ Ön siparişin: Las Minas ×2 · 6. kart' && D.querySelectorAll('#jDeck .jcard.mine').length===1 && !!D.querySelector('#jDeck .jcard.mine .jchip.jmvl') && !D.querySelector('#jDeck .jcard .jchip.jgoto'));   // v11f: telefonda Kahveye git çipi yok
   T('phone: three snap pages, accordion bands, Kahveye git chip label', !!D.getElementById('jP1') && !!D.getElementById('jP2') && !!D.getElementById('jP3') && D.querySelectorAll('.jband').length>=5);
   // v11c (Ömer): groups show CARDS — opening a taste band / CoffeeNutz'ın 5'i renders a horizontal deck of that group's cards (global rank numbers, counter); 'Tüm liste' stays a list; no snap paging, no swipe-up hint
   T('no page snapping and no "yukarı kaydır" hint any more', !D.querySelector('.jhint') && !/scroll-snap-type:y/.test(html) && !/\.jpage\{scroll-snap-align/.test(html));
@@ -35,12 +35,12 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
   { const b=D.getElementById('jb_hafif'); const n=MD.offers.filter(o=>/washed/.test(o.process)).length;
     T('taste band open → a deck of that band\'s cards inside the band (no rows), counter "n kahve · kaydır"', !!b && b.classList.contains('open') && !!b.querySelector('.jdeck.jdeck-b') && b.querySelectorAll('.jdeck-b .jcard').length===n && !b.querySelector('.orow') && b.querySelector('.jdots .jdn').textContent===n+' kahve · kaydır');
     const first=b.querySelector('.jdeck-b .jcard'); const gi=ord.findIndex(o=>o.id===first.getAttribute('data-id'));
-    T('band cards keep the GLOBAL rank number (#n of the full ranking) and the Kahveye git chip', first.querySelector('.jtop .jchip').textContent.startsWith('#'+(gi+1)) && first.querySelector('.jchip.jgoto').textContent==='Kahveye git ›'); }
+    T('band cards keep the GLOBAL rank number (#n of the full ranking) and the Kahveye git chip', first.querySelector('.jtop .jchip').textContent.startsWith('#'+(gi+1)) && !first.querySelector('.jchip.jgoto')); }
   w.eval("jOpenBand('top5')"); await sleep(60); D=w.document;
   T('CoffeeNutz\'ın 5\'i band → cards in star order', !!D.querySelector('#jb_top5.open .jdeck-b') && [...D.querySelectorAll('#jb_top5 .jdeck-b .jcard')].every((c,i)=>w.__g("jTop(STATE.offers.find(o=>o.id==='"+c.getAttribute('data-id')+"'))")===i+1));
-  w.eval("jOpenBand('all')"); await sleep(60); D=w.document;
-  T('Tüm liste band stays the ranked list (rows), not cards', !!D.querySelector('#jb_all.open .orow') && !D.querySelector('#jb_all .jdeck-b'));
-  w.eval("jToggleBand('all')"); await sleep(40); D=w.document;
+  T('v11f: no Tüm liste band and no Tüm liste button; only ★ CoffeeNutz\'ın 5\'i in the nav', !D.getElementById('jb_all') && D.querySelectorAll('.jnav .jnb').length===1 && /CoffeeNutz/.test(D.querySelector('.jnav .jnb').textContent));
+  w.eval("jGoRow('"+ord[0].id+"')"); await sleep(60); D=w.document;
+  T('jGoRow on the phone opens the coffee\'s taste group with its card inside', !!D.querySelector('.jband.open .jdeck-b .jcard[data-id="'+ord[0].id+'"]'));
   // ---- desktop (1366): grid + sidebar + drawer
   w=mk({'/meydan':MD,'/offer-mine':{votes:MINE},'/campaigns':[]},1366); await sleep(250); D=w.document;
   T('desk: body.jdesk, grid with all 24 cards in pre-order rank, no deck / no snap pages', D.body.classList.contains('jdesk') && !!D.querySelector('.jdk-grid') && D.querySelectorAll('.jdk-grid .jcard').length===24 && !D.getElementById('jDeck') && !D.getElementById('jP1') && D.querySelector('.jdk-grid .jcard').getAttribute('data-id')===ord[0].id);
@@ -283,8 +283,8 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('sonrakine katıl → jLaneOpen(id) (inline handlers do not run in jsdom: check the attribute, then call it)', (c0.querySelector('.jchip.jlocknext').getAttribute('onclick')||'').includes("jLaneOpen('"+ord[0].id+"')"));
     wl.eval("jLaneOpen('"+ord[0].id+"')"); await sleep(60);
     T('…and the card opens its lanes (Kapora koy for the next lot)', !!wl.document.querySelector('.jcard.lopen[data-id="'+ord[0].id+'"] .jlane.ga'));
-    wl.eval("jLaneClose(); jGoRow('"+ord[0].id+"')"); await sleep(60); const row=wl.document.querySelector('#jb_all .orow[data-id="'+ord[0].id+'"]');   // v11c: Kahveye git → Tüm liste bandındaki satır
-    T('list row: "🔥 Seçildi · 17 paket kavruluyor" (no "kilitli", no "kutu")', !!row && /🔥 Seçildi · 17 paket kavruluyor/.test(row.textContent) && !/kilitli|kutu/.test(row.textContent));
+    { const wr=mk({'/meydan':ML,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); wr.eval("jDeskOpen('"+ord[0].id+"')"); await sleep(60); const row=wr.document.querySelector('#jDrawer .orow[data-id="'+ord[0].id+'"]');   // v11f: satır yalnız masaüstü çekmecesinde
+    T('detail row (desktop drawer): "🔥 Seçildi · 17 paket kavruluyor" (no "kilitli", no "kutu")', !!row && /🔥 Seçildi · 17 paket kavruluyor/.test(row.textContent) && !/kilitli|kutu/.test(row.textContent)); }
     const wt=mk({'/meydan':ML,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); wt.eval("jDeskView('list')"); await sleep(60); const tr=wt.document.querySelector('.jdk-table tr.jdk-r[data-id="'+ord[0].id+'"]');
     T('desktop table row: status chip under the name; bar/count = live next-lot counter (4/40)', !!tr && !!tr.querySelector('.jdk-lock .jchip.jlockb') && !tr.querySelector('td.n .bar i').classList.contains('hit') && tr.querySelector('td.n .bar i').style.width==='10%' && tr.querySelector('td.n b').textContent==='4/40');
     T('no "kutu"/"box" left in the page strings (Ömer: packages, not boxes) — only the checkbox idioms', !/\d+ kutu|kutu başına|kutun\b|kutular/.test(html) && (html.match(/[kK]utu/g)||[]).length<=3 && !/ boxes?[ .,;'·]/.test(html.replace(/tick the box\./g,''))); }
