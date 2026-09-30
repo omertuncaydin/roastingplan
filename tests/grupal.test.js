@@ -246,5 +246,12 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('Tamamla → POST /done-link {id, dev} → navigates to the single-use cart link with attributes[done]=1', calls.length===1 && calls[0].id===H0.id && /^[A-Z0-9]{8,16}$/.test(calls[0].dev) && nav && nav.includes('discount=GAX1Y2Z3') && nav.includes('/cart/222:2') && nav.includes('attributes[done]=1'));
     wc.fetch=async(u,init)=>{ if(String(u).endsWith('/done-link')) return {ok:true,status:200,json:async()=>({ok:false,reason:'none'})}; return f0(u,init); }; nav=null; wc.eval("window.__jToast=null"); await wc.eval("offComplete('"+H0.id+"')"); await sleep(40);
     T('done-link refusal → toast, no navigation', nav===null && wc.__g('window.__jToast') && /Tamamlanacak kaporan görünmüyor/.test(wc.__g('window.__jToast').txt)); }
+  // v30s: the lock's own deposit (lock.dep_tl, proxy v3.49) drives the Tamamla amount — the setting (200) is ignored for a lot locked at 100
+  { const MH=JSON.parse(JSON.stringify(MD)); const H0=MH.offers.find(o=>o.id===ord[0].id); H0.img_url='https://x.test/o/a.jpg'; H0.hemen={url:'https://coffeenutz.net/cart/222:1',price:1280,base:2,sold:0,inv:0,left:2,green_left:null,table:[],roast_at:'2026-10-05T20:59:00.000Z'}; H0.list_tl=1600; H0.jury_tl=960; MH.offer_cfg.hemen_inv=2; MH.offer_cfg.hemen_inv_h=24;
+    const MLd=JSON.parse(JSON.stringify(MH)); MLd.offer_cfg.dep_amt=200; const HL=MLd.offers.find(o=>o.id===H0.id); HL.lock={at:'2026-09-22T10:00:00Z',n:3,dep:17,dep_tl:100,state:'locked'}; HL.won_at='2026-09-22T10:00:00Z';
+    const wd=mk({'/meydan':MLd,'/offer-mine':{votes:[{id:H0.id,paid:true,qty:2,conv:true,done:false}],inv:[],hemen:[],me:{member:true,wa:true,ok:true}},'/campaigns':[]},390); await sleep(250);
+    wd.eval("jLaneOpen('"+H0.id+"')"); await sleep(40); const cta=wd.document.querySelector('.jcard.lopen .jlane.ga .cta');
+    T('setting says 200 but the lock was made at 100 → "Tamamla · 1.720 TL" (2 × (960 − 100)), not 1.520', !!cta && cta.textContent==='Tamamla · 1.720 TL');
+    T('jLockDep falls back to the setting when the lock has no dep_tl', wd.eval("jLockDep({lock:{n:1}},{dep_amt:200})")===200 && wd.eval("jLockDep({lock:{n:1,dep_tl:100}},{dep_amt:200})")===100); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })().catch(e=>{ console.log('CRASH',e.message,e.stack.split('\n').slice(0,3).join(' / ')); process.exit(1); });

@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.48 tag', r.json && r.json.v === '3.48');
+T('v3.49 tag', r.json && r.json.v === '3.49');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -243,6 +243,22 @@ r = await px.call('GET', '/meydan'); T('/meydan offer_cfg carries login_required
   r = await hook({ offer: C, dev: 'JURY000001', done: '1' }, { id: 9500, email: 'jury1@example.com' });
   T('webhook done → both the base row and the derived row carry done_order', /done/.test(r.text) && px.DB.grupal_offer_votes.filter(v => v.offer_id === C && v.dev.startsWith('JURY000001')).every(v => String(v.done_order) === '9500'));
   r = await px.call('POST', '/done-link', { id: C, dev: 'JURY000001' }); T('after completion → none', r.json.ok === false && r.json.reason === 'none');
+  // ---- v3.49: the lock freezes its own deposit TL; "Kilitle şimdi" can override it (Recreo case: setting is 200 now, most payers paid 100)
+  { const D = '10000000-0000-4000-8000-0000000000ee';
+    px.DB.grupal_offers.push({ id: D, name: 'El Recreo', origin: 'Nikaragua', process: 'washed', active: true, sort: 10, pub: { name: 'El Recreo', origin: 'Nikaragua', process: 'washed' }, meta: { list_tl: 1600, jury_tl: 960, basket_tl: 1280, img_url: 'https://db.test/storage/v1/object/public/grupal/o/d.jpg', hemen_url: 'https://coffeenutz.net/cart/555:1' }, created_at: '2026-09-01T00:00:00Z' });
+    await hook({ offer: D, dev: 'RECREO0001' }, { id: 9601, qty: 2, email: 'recreo1@example.com' });
+    px.DB.grupal_settings.find(s => s.key === 'offer_dep_amt').value = '200';   // deposit raised after they paid
+    r = await px.call('POST', '/admin/offer-lock', { id: D, dep_tl: 'abc' }, { 'x-cc-key': 'adminkey' }); T('offer-lock: dep_tl must be a number 0–5000', r.status === 400 && !px.DB.grupal_settings.find(x => x.key === 'won_' + D));
+    r = await px.call('POST', '/admin/offer-lock', { id: D, dep_tl: 100 }, { 'x-cc-key': 'adminkey' });
+    T('offer-lock with dep_tl 100 → lock record carries dep_tl 100 (setting says 200)', r.json.ok && r.json.lock.dep_tl === 100 && JSON.parse(px.DB.grupal_settings.find(x => x.key === 'lock_' + D).value).dep_tl === 100);
+    r = await px.call('GET', '/meydan'); { const od = r.json.offers.find(o => o.id === D); T('/meydan lock.dep_tl = 100 for that coffee (page shows Tamamla with the right deposit)', !!od.lock && od.lock.dep_tl === 100 && r.json.offer_cfg.dep_amt === 200); }
+    NOW += 1000; r = await px.call('POST', '/done-link', { id: D, dev: 'RECREO0001' });
+    T('done-link uses the lock deposit: due 860 = 960 − 100 (not 760), 2 boxes → off (1600−860)×2', r.json.ok && r.json.due === 860 && r.json.dep_tl === 100 && r.json.total === 1720 && r.json.off === 1480);
+    px.DB.grupal_settings.find(s => s.key === 'offer_dep_amt').value = '300';   // changing the setting later never moves a locked lot
+    NOW += 1000; r = await px.call('POST', '/done-link', { id: D, dev: 'RECREO0001' }); T('deposit setting changed after the lock → due unchanged', r.json.ok && r.json.due === 860);
+    px.DB.grupal_settings.find(s => s.key === 'offer_dep_amt').value = '100';
+    r = await px.call('POST', '/admin/offer-lock', { id: C }, { 'x-cc-key': 'adminkey' }); T('(sanity) already-locked coffee still 409', r.status === 409);
+  }
   // members backfill: old payers (no mem_ record) become members with name/phone from Shopify customers
   px.DB.grupal_settings = px.DB.grupal_settings.filter(x => x.key !== 'mem_jury1@example.com' && x.key !== 'mem_jury2@example.com');
   px.DB.grupal_offer_votes.push({ offer_id: A, dev: 'OLDJURY001', seated: false, paid: true, qty: 1, order_id: 600, email: 'old.jury@example.com', created_at: '2026-09-20T10:00:00.000Z' });
@@ -252,4 +268,5 @@ r = await px.call('GET', '/meydan'); T('/meydan offer_cfg carries login_required
   r = await px.call('POST', '/admin/members-backfill', {}, { 'x-cc-key': 'adminkey' }); T('second backfill creates nothing', r.json.ok && r.json.created === 0); }
 
 Date.now = realNow;
+{ const locks = px.DB.grupal_settings.filter(x => x.key.startsWith('lock_')).map(x => JSON.parse(x.value)); T('v3.49: every lock record written in this run carries a numeric dep_tl (auto locks freeze the setting)', locks.length >= 2 && locks.every(l => Number.isFinite(l.dep_tl) && l.dep_tl >= 0)); }
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);

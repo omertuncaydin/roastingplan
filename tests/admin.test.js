@@ -17,7 +17,7 @@ function mk(variants){
   return w;
 }
 (async()=>{
-  T('admin version bumped', /const VERSION='v2026-09-30k';/.test(html));
+  T('admin version bumped', /const VERSION='v2026-09-30l';/.test(html));
   let w=mk(VARS); const g=w.__g;
   // 1. cart permalink passes through (www stripped)
   let r=await g('cartLinkFrom')('https://www.coffeenutz.net/cart/123:1','oe_hemen',1240); T('cart permalink accepted, www stripped', r==='https://coffeenutz.net/cart/123:1');
@@ -54,11 +54,17 @@ function mk(variants){
     await w.__g('userWa')('z@example.com',true); T('Grupta ✓ → POST /admin/user-flag {email, wa:true}', calls.some(c=>c.email==='z@example.com'&&c.wa===true));
     T('settings fields for login exist (s_login select · s_wagroup)', !!w.document.getElementById('s_login') && !!w.document.getElementById('s_wagroup') && /login_required:\$\('s_login'\)\.value/.test(html) && /wa_group_url:\$\('s_wagroup'\)/.test(html)); }
   // v30i: "Kilitle şimdi" appears only on published, unlocked coffees with kapora; posts /admin/offer-lock; members backfill button posts /admin/members-backfill
-  { const w=mk(VARS); const calls=[]; const f0=w.fetch; w.fetch=async(u,init)=>{ const s=String(u); if(s.endsWith('/admin/offer-lock')){ calls.push(['lock',JSON.parse(init.body)]); return {ok:true,status:200,json:async()=>({ok:true,lock:{n:3,dep:17},offers:[]})}; } if(s.endsWith('/admin/members-backfill')){ calls.push(['bf']); return {ok:true,status:200,json:async()=>({ok:true,created:12,skipped:2,looked:12,shopify:'ok'})}; } if(s.endsWith('/admin/users')) return {ok:true,status:200,json:async()=>({ok:true,n:0,users:[]})}; return f0(u,init); };
+  { const w=mk(VARS); const calls=[]; const f0=w.fetch; w.fetch=async(u,init)=>{ const s=String(u); if(s.endsWith('/admin/offer-lock')){ calls.push(['lock',JSON.parse(init.body)]); return {ok:true,status:200,json:async()=>({ok:true,lock:{n:3,dep:17,dep_tl:100},offers:[]})}; } if(s.endsWith('/admin/members-backfill')){ calls.push(['bf']); return {ok:true,status:200,json:async()=>({ok:true,created:12,skipped:2,looked:12,shopify:'ok'})}; } if(s.endsWith('/admin/users')) return {ok:true,status:200,json:async()=>({ok:true,n:0,users:[]})}; return f0(u,init); };
     w.__g("OFFERS=[{id:'11111111-1111-4111-8111-111111111111',name:'El Recreo',active:true,published:true,dep:17,n:17,seated:0,meta:{}},{id:'22222222-2222-4222-8222-222222222222',name:'Locked',active:true,published:true,dep:40,n:40,seated:0,lock:{n:2,dep:40,at:'2026-09-20T10:00:00Z',state:'locked'},meta:{}},{id:'33333333-3333-4333-8333-333333333333',name:'Draft',active:true,published:false,dep:3,n:3,seated:0,meta:{}}]; OFFCFG={goal:40,dep_url:'https://coffeenutz.net/cart/1:1'}; renderOffersAdmin();");
     const btns=[...w.document.querySelectorAll('#offList button')].filter(b=>/Kilitle şimdi/.test(b.textContent));
     T('Kilitle şimdi: only on El Recreo (published, kapora, not locked) — not on the locked one, not on the draft', btns.length===1 && /17 kapora/.test(btns[0].textContent) && btns[0].getAttribute('onclick').includes("offLockNow('11111111-1111-4111-8111-111111111111')"));
-    w.confirm=()=>true; await w.__g('offLockNow')('11111111-1111-4111-8111-111111111111'); T('Kilitle şimdi → POST /admin/offer-lock {id} + WhatsApp reminder alert', calls.some(c=>c[0]==='lock'&&c[1].id==='11111111-1111-4111-8111-111111111111') && w.alerts.some(a=>/Kilitlendi · oturum #3/.test(a)));
+    // v30l: the prompt asks the lock's deposit (prefilled with the setting); the typed value goes as dep_tl; cancel = nothing sent; bad value = alert, nothing sent
+    const prompts=[]; w.document.getElementById('s_depamt').value='200'; w.prompt=(msg,def)=>{ prompts.push([msg,def]); return '100'; };
+    await w.__g('offLockNow')('11111111-1111-4111-8111-111111111111'); T('Kilitle şimdi → prompt (prefilled 200 from settings) → typed 100 → POST /admin/offer-lock {id, dep_tl:100} + WhatsApp reminder alert', prompts.length===1 && prompts[0][1]==='200' && /kapora verenlerin GERÇEKTEN ödediği/.test(prompts[0][0]) && calls.some(c=>c[0]==='lock'&&c[1].id==='11111111-1111-4111-8111-111111111111'&&c[1].dep_tl===100) && w.alerts.some(a=>/Kilitlendi · oturum #3/.test(a) && /100 TL\/kutu/.test(a)));
+    w.__g("OFFERS=[{id:'11111111-1111-4111-8111-111111111111',name:'El Recreo',active:true,published:true,dep:17,n:17,seated:0,meta:{}},{id:'22222222-2222-4222-8222-222222222222',name:'Locked',active:true,published:true,dep:40,n:40,seated:0,lock:{n:2,dep:40,at:'2026-09-20T10:00:00Z',state:'locked'},meta:{}}];");   // the lock reply replaced OFFERS with []
+    calls.length=0; w.prompt=()=>null; await w.__g('offLockNow')('11111111-1111-4111-8111-111111111111'); T('prompt cancelled → no request', !calls.some(c=>c[0]==='lock'));
+    w.prompt=()=>'9999'; await w.__g('offLockNow')('11111111-1111-4111-8111-111111111111'); T('deposit outside 0–5000 → alert, no request', !calls.some(c=>c[0]==='lock') && w.alerts.some(a=>/0–5000/.test(a)));
+    w.__g("OFFERS[1].lock.dep_tl=100; renderOffersAdmin();"); T('locked row shows the lock deposit "100 TL/kutu"', /40 kapora · 100 TL\/kutu/.test(w.document.getElementById('offList').textContent));
     await w.__g('membersBackfill')(); T('Eski kaporalardan üye çıkar → POST /admin/members-backfill, message shows counts', calls.some(c=>c[0]==='bf') && /12 yeni üye · 2 zaten vardı/.test(w.document.getElementById('memBfMsg').textContent)); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })();

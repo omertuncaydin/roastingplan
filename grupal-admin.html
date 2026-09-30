@@ -11,7 +11,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
 <!-- grupal-admin.html · v2026-09-30f · UYGULA cevabındaki backfill (proxy v3.43) mesajda: "davetiye ×n" -->
 <!-- grupal-admin.html · v2026-09-30j · Jüri üyeleri açılır bölüm; WhatsApp sütunu: ✓ kendisi · ✓ admin · sorulmadı; satırda "Grupta ✓" (admin onayı → sayfa bir daha sormaz) · "Grupta değil" / "Onayla" -->
-<!-- grupal-admin.html · v2026-09-30i · ERKEN KİLİT (proxy v3.47): satırda "Kilitle şimdi" (40 beklemeden; kaporalar tamamlamaya açılır) · Jüri üyeleri: "Eski kaporalardan üye çıkar" (Shopify müşterisinden ad/telefon) -->
+<!-- grupal-admin.html · v2026-09-30l · Kilitle şimdi: kilidin kapora TL'si sorulur (proxy v3.49 dep_tl; ayar sonradan değişse de kilitli lotun Tamamla tutarı sabit) · kilit satırında 'n TL/kutu'
+     grupal-admin.html · v2026-09-30i · ERKEN KİLİT (proxy v3.47): satırda "Kilitle şimdi" (40 beklemeden; kaporalar tamamlamaya açılır) · Jüri üyeleri: "Eski kaporalardan üye çıkar" (Shopify müşterisinden ad/telefon) -->
 <!-- grupal-admin.html · v2026-09-30h · JÜRİ KAPISI (proxy v3.46): kayıt = Shopify siparişi; ilk kaporada bir kez WhatsApp grubu; üye listesi e-posta anahtarlı (Grupta değil / Onayla) -->
 <!-- grupal-admin.html · v2026-09-30g · JÜRİ GİRİŞİ (proxy v3.45): Ayarlar → "Jüri girişi" (zorunlu aç/kapa · WhatsApp grup linki · SMTP/şablon notu) · "Jüri üyeleri" paneli (e-posta · telefon · WhatsApp onayı · kutu · cihaz · askı · "Grupta değil" işareti) -->
 <!-- grupal-admin.html · v2026-09-30e · Ayarlar → Hemen-Al: "Eski kaporalara davetiye bas" (proxy v3.41 /admin/inv-backfill: v3.38 öncesi kaporalara kutu × davetiye, bir kez) -->
@@ -330,7 +331,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-30k';
+const VERSION='v2026-09-30l';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -457,11 +458,13 @@ async function loadUsers(){ const el=$('userList'); if(!el) return; try{ const r
           +(u.ok?((u.wa?'':'<button class="mini" onclick="userWa(\''+esc(u.email)+'\',true)" title="Grupta gördün: işaretle — sayfa bir daha sormaz">Grupta ✓</button> ')+'<button class="mini" onclick="userFlag(\''+esc(u.email)+'\',false)">Grupta değil</button>'):'<button class="mini" onclick="userFlag(\''+esc(u.email)+'\',true)">Onayla</button>')+'</span></div></div>'; }).join('')
       +'<div class="hint" style="margin-top:6px">"kendisi" = ilk kaporada Katıldım dedi · "sen onayladın" = Grupta ✓ · "sorulmadı" = bir sonraki Kapora koy\'da sorulur. "Grupta değil": kaporası kapanır, sayfada gruba katıl uyarısı · "Onayla": geri açar.</div>'; }catch(e){ el.textContent='üye listesi alınamadı: '+e; } }
 async function userWa(email,wa){ const r=await fetch(API+'/admin/user-flag',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({email,wa})}); const j=await r.json().catch(()=>({})); if(j.ok) loadUsers(); else alert('Olmadı: '+(j.error||r.status)); }
-// v30i: 40'ı beklemeden kilitle (proxy v3.47 /admin/offer-lock)
+// v30i: 40'ı beklemeden kilitle (proxy v3.47 /admin/offer-lock) · v30l: kilidin kaporası sorulur (proxy v3.49 dep_tl) — ayar 200 olsa da eski kaporalar 100 ise 100 yaz
 async function offLockNow(id){ const o=OFFERS.find(x=>x.id===id); if(!o) return;
-  if(!confirm('"'+o.name+'" ŞİMDİ kilitlensin mi? '+(o.dep||0)+' kapora dönüşür; kapora verenler sayfada "Tamamla" görür (Grup-Al fiyatı − kapora, tek kullanımlık kodla). Geri alınamaz.')) return;
-  const r=await fetch(API+'/admin/offer-lock',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({id})}); const j=await r.json().catch(()=>({}));
-  if(j.ok){ if(Array.isArray(j.offers)) OFFERS=j.offers; renderOffersAdmin(); alert('Kilitlendi · oturum #'+j.lock.n+' · '+j.lock.dep+' kapora. Şimdi WhatsApp grubuna yaz: "'+o.name+' kilitlendi — kaporası olanlar kartta Tamamla ile öder."'); } else alert('Olmadı: '+(j.error||r.status)); }
+  const cur=String($('s_depamt')&&$('s_depamt').value||'').trim()||'100';
+  const ans=prompt('"'+o.name+'" ŞİMDİ kilitlensin mi? '+(o.dep||0)+' kapora dönüşür; kapora verenler sayfada "Tamamla" görür (Grup-Al fiyatı − kapora, tek kullanımlık kodla). Geri alınamaz.\n\nBu kilidin KAPORASI (TL · kutu başına) — kapora verenlerin GERÇEKTEN ödediği tutar. Ayardaki güncel tutar '+cur+' TL; farklı ödemişlerse buraya onu yaz:',cur);
+  if(ans===null) return; const dep_tl=parseInt(String(ans).replace(/[^0-9]/g,''),10); if(!(dep_tl>=0&&dep_tl<=5000)){ alert('Kapora 0–5000 TL arası bir sayı olmalı.'); return; }
+  const r=await fetch(API+'/admin/offer-lock',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({id,dep_tl})}); const j=await r.json().catch(()=>({}));
+  if(j.ok){ if(Array.isArray(j.offers)) OFFERS=j.offers; renderOffersAdmin(); alert('Kilitlendi · oturum #'+j.lock.n+' · '+j.lock.dep+' kapora · kapora '+(j.lock.dep_tl!=null?j.lock.dep_tl:dep_tl)+' TL/kutu. Şimdi WhatsApp grubuna yaz: "'+o.name+' kilitlendi — kaporası olanlar kartta Tamamla ile öder."'); } else alert('Olmadı: '+(j.error||r.status)); }
 async function membersBackfill(){ const m=$('memBfMsg'); m.textContent='çıkarılıyor…';
   try{ const r=await fetch(API+'/admin/members-backfill',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:'{}'}); const j=await r.json().catch(()=>({}));
     if(j.ok){ m.textContent=j.created+' yeni üye · '+j.skipped+' zaten vardı · Shopify: '+j.shopify; loadUsers(); } else m.textContent='Olmadı: '+(j.error||r.status); }catch(e){ m.textContent='Olmadı: '+e; } }
@@ -628,7 +631,7 @@ function renderOffersAdmin(){ listSetSub();
       +'<div class="hint">'+[o.origin,WPROCN[o.process]||o.process,o.vendor,o.note].filter(Boolean).map(esc).join(' · ')+(o.shop_url?' · <a href="'+esc(o.shop_url)+'" target="_blank" rel="noopener" style="color:var(--green);font-weight:700">🛒 stokta</a>':'')+'</div>'
       +(metaLine(o.meta)?('<div class="hint" style="color:var(--gold);margin-top:2px">🔒 '+metaLine(o.meta)+'</div>'):'')
       +((o.list_tl&&(o.jury_tl||o.camp200_tl))?('<div class="hint" style="margin-top:2px"><s>'+o.list_tl+' ₺</s> <b style="color:var(--ink)">Jüri '+(o.jury_tl||o.camp200_tl)+' ₺</b> · Sepet '+(o.basket_tl||o.camp_tl)+' ₺'+(o.frozen?' · <span style="color:var(--gold)">🔒 kilitli</span>':((o.meta&&(o.meta.list_tl||o.meta.jury_tl||o.meta.basket_tl||o.meta.camp_tl))?' · <span style="color:var(--gold)">elle ezildi</span>':''))+'</div>'):(o.meta&&o.meta.usd_kg?'':'<div class="hint" style="margin-top:2px;opacity:.7">fiyat yok ($/kg girilmemiş)</div>'))
-      +(o.lock?('<div class="hint" style="margin-top:2px;color:var(--gold);font-weight:700">🔒 '+(o.lock.state==='production'?'üretimde':(o.lock.state==='carried'?'kilitli · sonraki oturuma taşındı':'kilitli'))+' · oturum #'+o.lock.n+' · '+o.lock.dep+' kapora · kilit '+new Date(o.lock.at).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'})+'</div>'):'')
+      +(o.lock?('<div class="hint" style="margin-top:2px;color:var(--gold);font-weight:700">🔒 '+(o.lock.state==='production'?'üretimde':(o.lock.state==='carried'?'kilitli · sonraki oturuma taşındı':'kilitli'))+' · oturum #'+o.lock.n+' · '+o.lock.dep+' kapora'+(o.lock.dep_tl>0?(' · '+o.lock.dep_tl+' TL/kutu'):'')+' · kilit '+new Date(o.lock.at).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'})+'</div>'):'')
       +((o.conv||o.won_at)?('<div class="hint" style="margin-top:2px;color:var(--green)">🏆 kilitlendi '+(o.won_at?new Date(o.won_at).toLocaleDateString('tr-TR',{day:'numeric',month:'short',timeZone:'Europe/Istanbul'}):'')+' · dönüşen kapora '+(o.conv||0)+' · tamamlanan '+(o.done||0)+(o.forfeit?(' · <span style="color:#e0705a">kapatılan '+o.forfeit+'</span>'):'')+(o.done_url?'':' · <span style="color:#e0705a">tamamlama linki yok (Düzenle)</span>')+'</div>'):'')
       +(o.hemen?('<div class="hint" style="margin-top:2px;color:#4f7f74;font-weight:700">⚡ Hemen-Al '+(o.hemen.price||'—')+' ₺ · açık koltuk '+o.hemen.left+'/'+o.hemen.base+' · bu tur kotadan '+o.hemen.sold+' · davetiyeyle '+o.hemen.inv+(o.hemen.table&&o.hemen.table.length?(' · masada '+o.hemen.table.length):'')+(o.hemen.green_left!=null?(' · yeşil kalan '+o.hemen.green_left+' kutu'):'')+'</div>'):((o.img_url&&!(o.meta&&o.meta.hemen_url))?'<div class="hint" style="margin-top:2px;color:#e0705a">görsel var ama Hemen-Al linki yok (Düzenle) — şerit kapalı</div>':''))
       +'<div class="hint" style="color:'+st[1]+';font-weight:700;margin-top:2px">'+st[0]+'</div>'

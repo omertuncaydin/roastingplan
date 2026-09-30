@@ -734,7 +734,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30r';
+const VERSION='v2026-09-30s';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1534,7 +1534,7 @@ function jLanesHtml(o,pick0){ const cfg=offCfg(), G=cfg.goal;
   h+='<div class="jlane ga"><div class="lt">'+t('jGA')+'</div><div class="lp" data-list="'+(o.list_tl||0)+'" data-jury="'+(jury||0)+'"><span class="n">'+(jury?fmtTL(jury):'—')+'</span><small>TL</small></div><div class="ls">'+(o.list_tl?('<s>'+t('offListP')+fmtTL(o.list_tl)+'</s>'):'')+(jPct(o.list_tl,jury)?('<span class="jpct">%'+jPct(o.list_tl,jury)+'</span>'):'')+'</div>'
     +'<div class="jmeter"><b style="width:'+pctG+'%"></b>'+(pctMe?('<b class="me" style="left:'+pctG+'%;--me:'+pctMe+'%"></b>'):'')+'</div><div class="jmtx"><span>'+dep+'/'+G+'</span>'+(pctMe?('<span class="you">'+t('jPlusYou').replace('{q}',q)+'</span>'):'')+'<span>'+Math.max(0,G-dep)+' '+t('jHLeft').replace('{n} ','')+'</span></div>'
     +'<div class="why"><em>'+t('jLaneGAt').replace('{g}',G)+'</em> '+t('jLaneGAx')+'</div>'
-    +(paid?((paid.conv&&!paid.done&&!paid.forfeited&&!paid.credited&&offCanComplete(o))?('<div class="st">'+t('offWonMine').replace('{n}',offConvQty(o.id)).split(' — ')[0]+'</div><button class="cta" data-done="'+escZ(o.id)+'" onclick="event.stopPropagation();offComplete(\''+escZ(o.id)+'\')">'+t('jLaneDone').replace('{p}',fmtTL(Math.max(0,(jury||0)-(cfg.dep_amt||0))*offConvQty(o.id)))+'</button>'):('<div class="st">'+t('jLaneMine').replace('{n}',Math.max(1,parseInt(paid.qty)||1)).replace('{p}',fmtTL(jury||0))+'</div>')):((dbGet()[o.id]||0)?('<button class="cta pay" onclick="event.stopPropagation();dbPay()">'+t('jLanePay').replace('{amt}',fmtTL((dbGet()[o.id]||0)*(cfg.dep_amt||0)))+'</button>'):('<button class="cta" onclick="jLaneKap(\''+escZ(o.id)+'\')">'+t('jLaneKap').replace('{amt}',cfg.dep_amt||'')+'</button>')))+'</div>';
+    +(paid?((paid.conv&&!paid.done&&!paid.forfeited&&!paid.credited&&offCanComplete(o))?('<div class="st">'+t('offWonMine').replace('{n}',offConvQty(o.id)).split(' — ')[0]+'</div><button class="cta" data-done="'+escZ(o.id)+'" onclick="event.stopPropagation();offComplete(\''+escZ(o.id)+'\')">'+t('jLaneDone').replace('{p}',fmtTL(Math.max(0,(jury||0)-jLockDep(o,cfg))*offConvQty(o.id)))+'</button>'):('<div class="st">'+t('jLaneMine').replace('{n}',Math.max(1,parseInt(paid.qty)||1)).replace('{p}',fmtTL(jury||0))+'</div>')):((dbGet()[o.id]||0)?('<button class="cta pay" onclick="event.stopPropagation();dbPay()">'+t('jLanePay').replace('{amt}',fmtTL((dbGet()[o.id]||0)*(cfg.dep_amt||0)))+'</button>'):('<button class="cta" onclick="jLaneKap(\''+escZ(o.id)+'\')">'+t('jLaneKap').replace('{amt}',cfg.dep_amt||'')+'</button>')))+'</div>';
   if(hm){ const full=!left&&!pick&&!myInv.length&&!tb.length; let cta='', code=null, cls='';
     if(pick){ code=pick; cls=' inv'; cta=t('jLaneBuyInv').replace('{p}',fmtTL(hm.price)); }
     else if(left){ cta=t('jLaneBuy').replace('{p}',fmtTL(hm.price)); }
@@ -1738,6 +1738,7 @@ async function jMoveTo(to){ if(!JMOVE||to===JMOVE||JBUSY) return; const from=JMO
 function jMsg(txt,ms){ ms=ms||3500; const tk={txt,until:Date.now()+ms}; window.__jToast=tk; setTimeout(()=>{ if(window.__jToast===tk){ window.__jToast=null; renderOffers(STATE); } },ms+50); const m=$('offMsg'); if(m){ m.textContent=txt; m.style.display='block'; setTimeout(()=>{ m.style.display='none'; },ms); } }   // skorbord satırı kısa süre mesajı gösterir
 // v07e: bu cihazın kilitlenmiş (dönüşmüş) ve henüz tamamlanmamış kapora adedi — tamamlama kutu sayısı ve tutarı bundan
 function offConvQty(id){ return (OFFMINE||[]).filter(v=>v.id===id&&v.paid&&v.conv&&!v.done&&!v.forfeited&&!v.credited).reduce((a,v)=>a+(Math.max(1,parseInt(v.qty)||1)),0)||1; }
+function jLockDep(o,cfg){ const d=o&&o.lock&&parseInt(o.lock.dep_tl); return (d>0)?d:((cfg||offCfg()).dep_amt||0); }   // v10s: kilidin kaporası (proxy v3.49 lock.dep_tl) — ayar değişse de kilitli lot sabit
 function offCanComplete(o){ return !!(o&&(o.done_url||jHemen(o))); }   // v10p: tamamlama linki YA DA Hemen-Al linki (normal varyant + tek kullanımlık kod, proxy v3.47 /done-link)
 async function offComplete(id){
   // kazanan kahvenin kaporası: Grup-Al fiyatı − kapora; attributes[done]=1 → webhook tamamlandı yazar
