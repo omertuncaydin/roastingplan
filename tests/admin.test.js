@@ -17,7 +17,7 @@ function mk(variants){
   return w;
 }
 (async()=>{
-  T('admin version bumped', /const VERSION='v2026-09-30n';/.test(html));
+  T('admin version bumped', /const VERSION='v2026-09-30o';/.test(html));
   let w=mk(VARS); const g=w.__g;
   // 1. cart permalink passes through (www stripped)
   let r=await g('cartLinkFrom')('https://www.coffeenutz.net/cart/123:1','oe_hemen',1240); T('cart permalink accepted, www stripped', r==='https://coffeenutz.net/cart/123:1');
@@ -53,7 +53,15 @@ function mk(variants){
     T('unasked member: "Grupta ✓" + "Grupta değil" buttons', el2.querySelectorAll('button').length===2 && el2.querySelectorAll('button')[0].textContent==='Grupta ✓');
     await w.__g('userWa')('z@example.com',true); T('Grupta ✓ → POST /admin/user-flag {email, wa:true}', calls.some(c=>c.email==='z@example.com'&&c.wa===true));
     T('settings fields for login exist (s_login select · s_wagroup)', !!w.document.getElementById('s_login') && !!w.document.getElementById('s_wagroup') && /login_required:\$\('s_login'\)\.value/.test(html) && /wa_group_url:\$\('s_wagroup'\)/.test(html));
-    T('v30n: CoffeeNutz\'ın 5\'i field (s_top5) loads from and saves to offer_top5', !!w.document.getElementById('s_top5') && /\$\('s_top5'\)\.value=st\.offer_top5/.test(html) && /offer_top5:\$\('s_top5'\)\.value\.trim\(\)/.test(html)); }
+    T('v30o: no Ayarlar field for the favourites; Ayarlar save never sends offer_top5', !w.document.getElementById('s_top5') && !/offer_top5:\$\(/.test(html)); }
+  // v30o: favourites live in Kahve listesi — each row: "☆ Favorilere ekle" / "★ n · çıkar"; toggle posts {offer_top5: ids}; max 5
+  { const w=mk(VARS); const posts=[]; const f0=w.fetch; w.fetch=async(u,init)=>{ const s=String(u); if(s.endsWith('/admin/settings')&&init&&init.method==='POST'){ posts.push(JSON.parse(init.body)); return {ok:true,status:200,json:async()=>({ok:true})}; } if(s.endsWith('/admin/settings')) return {ok:true,status:200,json:async()=>({ok:true,settings:{offer_top5:'22222222-2222-4222-8222-222222222222'}})}; if(s.endsWith('/admin/users')) return {ok:true,status:200,json:async()=>({ok:true,n:0,users:[]})}; return f0(u,init); };
+    w.__g("OFFERS=[{id:'11111111-1111-4111-8111-111111111111',name:'El Recreo',active:true,published:true,dep:17,n:17,seated:0,meta:{}},{id:'22222222-2222-4222-8222-222222222222',name:'Baho',active:true,published:true,dep:3,n:3,seated:0,meta:{}}]; OFFCFG={goal:40,dep_url:'https://coffeenutz.net/cart/1:1'};");
+    await w.__g('loadOfferSettings')(); const btn=id=>[...w.document.querySelectorAll('#offList button')].find(b=>(b.getAttribute('onclick')||'').includes("favToggle('"+id+"')"));
+    T('settings offer_top5 → Baho row shows "★ 1 · çıkar", El Recreo row shows "☆ Favorilere ekle"', btn('22222222-2222-4222-8222-222222222222').textContent==='★ 1 · çıkar' && btn('11111111-1111-4111-8111-111111111111').textContent==='☆ Favorilere ekle');
+    await w.__g('favToggle')('11111111-1111-4111-8111-111111111111'); T('☆ on El Recreo → POST /admin/settings {offer_top5:"baho-id,recreo-id"} and the row flips to "★ 2 · çıkar"', posts.length===1 && posts[0].offer_top5==='22222222-2222-4222-8222-222222222222,11111111-1111-4111-8111-111111111111' && btn('11111111-1111-4111-8111-111111111111').textContent==='★ 2 · çıkar');
+    await w.__g('favToggle')('22222222-2222-4222-8222-222222222222'); T('★ on Baho → removed; El Recreo becomes ★ 1', posts[1].offer_top5==='11111111-1111-4111-8111-111111111111' && btn('11111111-1111-4111-8111-111111111111').textContent==='★ 1 · çıkar' && btn('22222222-2222-4222-8222-222222222222').textContent==='☆ Favorilere ekle');
+    w.__g("TOP5=['a','b','c','d','e']"); posts.length=0; await w.__g('favToggle')('22222222-2222-4222-8222-222222222222'); T('sixth favourite → alert, nothing posted', posts.length===0 && w.alerts.some(a=>/5.i dolu/.test(a))); }
   // v30i: "Kilitle şimdi" appears only on published, unlocked coffees with kapora; posts /admin/offer-lock; members backfill button posts /admin/members-backfill
   { const w=mk(VARS); const calls=[]; const f0=w.fetch; w.fetch=async(u,init)=>{ const s=String(u); if(s.endsWith('/admin/offer-lock')){ calls.push(['lock',JSON.parse(init.body)]); return {ok:true,status:200,json:async()=>({ok:true,lock:{n:3,dep:17,dep_tl:100},offers:[]})}; } if(s.endsWith('/admin/members-backfill')){ calls.push(['bf']); return {ok:true,status:200,json:async()=>({ok:true,created:12,skipped:2,looked:12,shopify:'ok'})}; } if(s.endsWith('/admin/users')) return {ok:true,status:200,json:async()=>({ok:true,n:0,users:[]})}; return f0(u,init); };
     w.__g("OFFERS=[{id:'11111111-1111-4111-8111-111111111111',name:'El Recreo',active:true,published:true,dep:17,n:17,seated:0,meta:{}},{id:'22222222-2222-4222-8222-222222222222',name:'Locked',active:true,published:true,dep:40,n:40,seated:0,lock:{n:2,dep:40,at:'2026-09-20T10:00:00Z',state:'locked'},meta:{}},{id:'33333333-3333-4333-8333-333333333333',name:'Draft',active:true,published:false,dep:3,n:3,seated:0,meta:{}}]; OFFCFG={goal:40,dep_url:'https://coffeenutz.net/cart/1:1'}; renderOffersAdmin();");

@@ -11,7 +11,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
 <!-- grupal-admin.html · v2026-09-30f · UYGULA cevabındaki backfill (proxy v3.43) mesajda: "davetiye ×n" -->
 <!-- grupal-admin.html · v2026-09-30j · Jüri üyeleri açılır bölüm; WhatsApp sütunu: ✓ kendisi · ✓ admin · sorulmadı; satırda "Grupta ✓" (admin onayı → sayfa bir daha sormaz) · "Grupta değil" / "Onayla" -->
-<!-- grupal-admin.html · v2026-09-30n · Ayarlar: CoffeeNutz'ın 5'i (offer_top5, proxy v3.50)
+<!-- grupal-admin.html · v2026-09-30o · Kahve listesi: her satırda ☆ Favorilere ekle / ★n · çıkar (offer_top5 = id listesi, en çok 5, proxy v3.50) — Ayarlar alanı yok
+     grupal-admin.html · v2026-09-30n · Ayarlar: CoffeeNutz'ın 5'i (offer_top5, proxy v3.50)
      grupal-admin.html · v2026-09-30m · kutu → paket (Ömer: proje artık paket konuşur)
      grupal-admin.html · v2026-09-30l · Kilitle şimdi: kilidin kapora TL'si sorulur (proxy v3.49 dep_tl; ayar sonradan değişse de kilitli lotun Tamamla tutarı sabit) · kilit satırında 'n TL/paket'
      grupal-admin.html · v2026-09-30i · ERKEN KİLİT (proxy v3.47): satırda "Kilitle şimdi" (40 beklemeden; kaporalar tamamlamaya açılır) · Jüri üyeleri: "Eski kaporalardan üye çıkar" (Shopify müşterisinden ad/telefon) -->
@@ -268,7 +269,6 @@ details.set.card[open]>summary{margin-bottom:6px}
         <div class="g2">
           <div class="f"><span class="lbl">ilk kaporada WhatsApp grubu sor</span><select id="s_login"><option value="0">kapalı</option><option value="1">açık — ilk Kapora koy'da bir kez: "Gruba katıl" + "Katıldım"</option></select></div>
           <div class="f"><span class="lbl">Jüri WhatsApp grubu davet linki</span><input id="s_wagroup" placeholder="https://chat.whatsapp.com/…"></div>
-          <div class="f full"><span class="lbl">CoffeeNutz'ın 5'i (★ · virgülle, kahve adının başı yeter · en çok 5 · boş = sayfadaki varsayılan)</span><input id="s_top5" placeholder="AA Rung'eto, AA Inoi, Frinsa Honey Tempe, Baho, El Recreo"></div>
           <div class="note">Kayıt yok, giriş yok: <b>kapora siparişi = kayıt</b> (ad · e-posta · telefon Shopify'dan gelir). Sayfa yalnız ilk kaporada, bir kez "gruba katıl + katıldım" ister; link boşsa sormaz. Aynı e-postayla başka cihazdan ödeme kendiliğinden aynı üyeye bağlanır; üye isterse "sipariş no + e-posta" ile cihaz bağlar. WhatsApp üyeliği API ile doğrulanamaz: aşağıdaki listeyi grupla karşılaştır, olmayanı <b>Grupta değil</b> işaretle — kaporası o an kapanır, sayfada "gruba katıl, Ömer'e yaz" görür; <b>Onayla</b> geri açar.</div>
         </div>
         <div class="acts"><button class="mini" onclick="offSettingsSave()">Ayarları kaydet</button><span class="hint" id="offSetMsg"></span></div>
@@ -334,7 +334,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-30n';
+const VERSION='v2026-09-30o';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -448,7 +448,11 @@ async function houseSet(){
 const WNAME={ET:'Etiyopya',KE:'Kenya',RW:'Ruanda',BI:'Burundi',TZ:'Tanzanya',UG:'Uganda',CD:'Kongo DC',MW:'Malavi',ZM:'Zambiya',ZW:'Zimbabve',CM:'Kamerun',CI:'Fildişi Sahili',MG:'Madagaskar',MZ:'Mozambik',TG:'Togo',GN:'Gine',AO:'Angola',ST:'São Tomé',LR:'Liberya',SL:'Sierra Leone',NG:'Nijerya',GA:'Gabon',CF:'Orta Afrika Cum.',BR:'Brezilya',CO:'Kolombiya',PE:'Peru',EC:'Ekvador',BO:'Bolivya',VE:'Venezuela',GT:'Guatemala',CR:'Kosta Rika',HN:'Honduras',SV:'El Salvador',NI:'Nikaragua',PA:'Panama',MX:'Meksika',JM:'Jamaika',DO:'Dominik Cum.',CU:'Küba',HT:'Haiti',PR:'Porto Riko','US-HI':'Hawaii',PY:'Paraguay','ID-SUM':'Sumatra','ID-JAV':'Java','ID-SUL':'Sulawesi','ID-BAL':'Bali','ID-FLO':'Flores','ID-PAP':'Papua (Endonezya)',PG:'Papua Yeni Gine',VN:'Vietnam',TH:'Tayland',LA:'Laos',MM:'Myanmar',IN:'Hindistan',NP:'Nepal',CN:'Çin · Yunnan',PH:'Filipinler',TL:'Doğu Timor',YE:'Yemen',TW:'Tayvan',LK:'Sri Lanka',MY:'Malezya',KH:'Kamboçya',AU:'Avustralya',VU:'Vanuatu',ANY:'Fark etmez'};
 const WPROCN={washed:'Yıkanmış',natural:'Doğal',honey:'Honey',anaerobic:'Anaerobik',infused:'Infused',funky:'Fermente',any:'Fark etmez'};
 // TEKLİFLER (I/J/K): taslak liste · satır düzenleme · toplu ekle (tedarikçi başlıkları) · UYGULA · kapora ayarları
-let OFFERS=[], OFFEDIT=null, OFFCFG=null;
+let OFFERS=[], OFFEDIT=null, OFFCFG=null, TOP5=[];   // v30o: CoffeeNutz'ın 5'i — kahve id'leri, sıra = ekleme sırası (proxy v3.50 offer_top5)
+function favIdx(id){ return TOP5.indexOf(id)+1; }
+async function favToggle(id){ const i=TOP5.indexOf(id); if(i>=0) TOP5.splice(i,1); else { if(TOP5.length>=5){ alert('CoffeeNutz\'ın 5\'i dolu — önce birini çıkar.'); return; } TOP5.push(id); }
+  const r=await fetch(API+'/admin/settings',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({offer_top5:TOP5.join(',')})}); const j=await r.json().catch(()=>({}));
+  if(!r.ok||j.ok===false){ alert('Olmadı: '+(j.error||r.status)); await loadOfferSettings(); return; } renderOffersAdmin(); }
 // v30g: Jüri üyeleri — /admin/users; "Grupta değil" işareti /admin/user-flag
 async function loadUsers(){ const el=$('userList'); if(!el) return; try{ const r=await fetch(API+'/admin/users',{headers:{'x-cc-key':KEY}}); const j=await r.json().catch(()=>null); if(!j||!j.ok){ el.textContent='üye listesi alınamadı ('+((j&&j.error)||r.status)+') — proxy v3.46+ gerekir'; return; }
     const sub=$('memSetSub'); if(sub) sub.textContent=j.users.length+' üye · grupta '+j.users.filter(u=>u.wa).length+' · işaretli '+j.users.filter(u=>!u.ok).length;
@@ -484,7 +488,7 @@ async function loadOfferSettings(){
   try{ const r=await fetch(API+'/admin/settings',{headers:{'x-cc-key':KEY}}); const j=await r.json();
     if(j&&j.settings){ const st=j.settings; $('s_depurl').value=st.offer_dep_url||''; $('s_depamt').value=st.offer_dep_amt||''; $('s_goal').value=st.offer_goal||'';
       $('s_depcode').value=st.offer_dep_code||''; $('s_depopen').value='';   // v02y: açılış saati kaldırıldı (kod = her zaman)
-      $('s_cycledays').value=st.offer_cycle_days||''; $('s_capacity').value=st.offer_capacity||''; $('s_donedays').value=st.offer_done_days||''; $('s_sepetdays').value=st.offer_sepet_days||''; $('s_hbase').value=(st.offer_hemen_base!=null)?st.offer_hemen_base:''; $('s_hinv').value=(st.offer_hemen_inv!=null)?st.offer_hemen_inv:''; $('s_hinvh').value=st.offer_hemen_inv_h||''; $('s_forfeit').value=(st.offer_forfeit_mode==='credit'||st.offer_forfeit_mode==='burn')?st.offer_forfeit_mode:'tiered'; $('s_bancycles').value=(st.offer_ban_cycles!=null&&st.offer_ban_cycles!=='')?st.offer_ban_cycles:''; $('s_login').value=(st.login_required==='1')?'1':'0'; $('s_wagroup').value=st.wa_group_url||''; $('s_top5').value=st.offer_top5||'';   // v30g · v30n top5
+      $('s_cycledays').value=st.offer_cycle_days||''; $('s_capacity').value=st.offer_capacity||''; $('s_donedays').value=st.offer_done_days||''; $('s_sepetdays').value=st.offer_sepet_days||''; $('s_hbase').value=(st.offer_hemen_base!=null)?st.offer_hemen_base:''; $('s_hinv').value=(st.offer_hemen_inv!=null)?st.offer_hemen_inv:''; $('s_hinvh').value=st.offer_hemen_inv_h||''; $('s_forfeit').value=(st.offer_forfeit_mode==='credit'||st.offer_forfeit_mode==='burn')?st.offer_forfeit_mode:'tiered'; $('s_bancycles').value=(st.offer_ban_cycles!=null&&st.offer_ban_cycles!=='')?st.offer_ban_cycles:''; $('s_login').value=(st.login_required==='1')?'1':'0'; $('s_wagroup').value=st.wa_group_url||''; TOP5=String(st.offer_top5||'').split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean).slice(0,5); renderOffersAdmin();   // v30g · v30o: ★ listesi (id'ler) → satır düğmeleri
       $('s_refusd').value=st.offer_ref_usd||''; $('s_reflist').value=st.offer_ref_list||''; $('s_ref2usd').value=st.offer_ref2_usd||''; $('s_ref2list').value=st.offer_ref2_list||''; $('s_ref3usd').value=st.offer_ref3_usd||''; $('s_ref3list').value=st.offer_ref3_list||''; $('s_daygoal').value=st.offer_day_goal||''; $('s_rjury').value=st.offer_ratio_jury||st.offer_ratio_200||''; $('s_rbasket').value=st.offer_ratio_basket||st.offer_ratio_40||''; $('s_cycle').value=st.meydan_cycle_start?new Date(st.meydan_cycle_start).toLocaleString('sv',{timeZone:'Europe/Istanbul'}).slice(0,16).replace(' ','T'):'';
       $('s_showp').checked=st.offer_show_prices!=='0';   // v02t: varsayılan AÇIK
       OFFCFG=j.cfg||null; scalePreview(); renderOffersAdmin(); } }catch(e){}
@@ -493,7 +497,7 @@ async function offSettingsSave(){
   if(!(await resolveIfProduct('s_depurl'))) return;
   const body={offer_dep_url:$('s_depurl').value.trim(),offer_dep_amt:$('s_depamt').value.trim(),offer_goal:$('s_goal').value.trim(),
     offer_dep_code:$('s_depcode').value.trim(),offer_dep_open_at:'',offer_day_goal:$('s_daygoal').value.trim(),
-    offer_cycle_days:$('s_cycledays').value.trim(),offer_capacity:$('s_capacity').value.trim(),offer_done_days:$('s_donedays').value.trim(),offer_sepet_days:$('s_sepetdays').value.trim(),offer_hemen_base:$('s_hbase').value.trim(),offer_hemen_inv:$('s_hinv').value.trim(),offer_hemen_inv_h:$('s_hinvh').value.trim(),offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),login_required:$('s_login').value,wa_group_url:$('s_wagroup').value.trim(),offer_top5:$('s_top5').value.trim(),
+    offer_cycle_days:$('s_cycledays').value.trim(),offer_capacity:$('s_capacity').value.trim(),offer_done_days:$('s_donedays').value.trim(),offer_sepet_days:$('s_sepetdays').value.trim(),offer_hemen_base:$('s_hbase').value.trim(),offer_hemen_inv:$('s_hinv').value.trim(),offer_hemen_inv_h:$('s_hinvh').value.trim(),offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),login_required:$('s_login').value,wa_group_url:$('s_wagroup').value.trim(),
     offer_ref3_usd:$('s_ref3usd').value.trim().replace(',','.'),offer_ref3_list:$('s_ref3list').value.trim(),
     offer_ref_usd:$('s_refusd').value.trim().replace(',','.'),offer_ref_list:$('s_reflist').value.trim(),offer_ref2_usd:$('s_ref2usd').value.trim().replace(',','.'),offer_ref2_list:$('s_ref2list').value.trim(),offer_ratio_jury:$('s_rjury').value.trim().replace(',','.'),offer_ratio_basket:$('s_rbasket').value.trim().replace(',','.'),meydan_cycle_start:$('s_cycle').value?($('s_cycle').value+':00+03:00'):'',
     offer_show_prices:$('s_showp').checked?'1':'0'};
@@ -642,6 +646,7 @@ function renderOffersAdmin(){ listSetSub();
       +'<label class="mini" style="cursor:pointer" title="Görsel yüklenen kahve stokta sayılır: Hemen-Al linki de varsa şerit açılır">'+(o.img_url?'Görseli değiştir':'Görsel yükle')+'<input type="file" accept="image/*" style="display:none" onchange="offImg(\''+o.id+'\',this)"></label>'
       +(o.img_url?('<button class="mini" onclick="offImgRemove(\''+o.id+'\')">Görseli kaldır</button>'):'')+'</div>'   // v22a: kahve görseli (proxy v3.37)
       +'<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="mini" onclick="offEdit(\''+o.id+'\')">Düzenle</button>'
+      +'<button class="mini" style="'+(favIdx(o.id)?'background:var(--gold);color:#16130f;border-color:var(--gold)':'')+'" onclick="favToggle(\''+o.id+'\')" title="CoffeeNutz\'ın 5\'i: sayfada ★ ve kendi bandı · sıra = ekleme sırası · en çok 5">'+(favIdx(o.id)?('★ '+favIdx(o.id)+' · çıkar'):'☆ Favorilere ekle')+'</button>'   // v30o
       +'<button class="mini" onclick="offSet(\''+o.id+'\',{active:'+(!o.active)+'})">'+(o.active?'Pasife al':'Aktif et')+'</button>'
       +'<button class="mini" style="color:#e0705a" onclick="offDel(\''+o.id+'\')">Sil</button>'
       +((o.dep>0&&!o.lock&&!o.won_at&&o.published)?('<button class="mini" style="border-color:var(--gold);color:var(--gold)" onclick="offLockNow(\''+o.id+'\')" title="40\'ı beklemeden kilitle: kaporalar dönüşür, sayfada Tamamla açılır (Hemen-Al linki ya da tamamlama linki gerekir)">Kilitle şimdi · '+o.dep+' kapora</button>'):'')

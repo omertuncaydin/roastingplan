@@ -325,7 +325,8 @@ body.jdesk .jwelc{margin:0 0 14px;font-size:13.5px}
 body.th-red .jwelc{background:#f6efe1;color:#2a1410}
 .jcard.mine{border:2px solid #e6c14b;box-shadow:0 0 0 3px rgba(230,193,75,.28)}
 .jchip.jminec{background:#e6c14b;color:#16130f;border-color:#e6c14b}
-.jchip.jlockb{background:#4fc98a;color:#16130f;border-color:#4fc98a;max-width:100%;overflow:hidden;text-overflow:ellipsis}.jchip.jlocknext{color:#e6c14b;border-color:rgba(230,193,75,.7);cursor:pointer}.jdk-lock{margin-top:4px}.jdk-lock .jchip{padding:3px 9px;font-size:11px}
+.jchip.jlockb{background:#4fc98a;color:#16130f;border-color:#4fc98a;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.jcard.jlock .jchips2{gap:4px}.jcard.jlock .jchips2 .jchip{font-size:10.5px;padding:4px 8px}body.jdesk .jcard.jlock .jchips2{gap:5px}body.jdesk .jcard.jlock .jchips2 .jchip{font-size:10px;padding:4px 8px}   /* v10w: kilitli kartta 5 çip → 2 satır (285 px karta kadar) */.jchip.jlocknext{color:#e6c14b;border-color:rgba(230,193,75,.7);cursor:pointer}.jdk-lock{margin-top:4px}.jdk-lock .jchip{padding:3px 9px;font-size:11px}
 /* v09p (Ömer: taşıma kartta, en yalın): çipin yanında 'taşı →' → öteki kartlarda 'Buraya taşı' */
 .jchip.jmvl{color:#e6c14b;border-color:rgba(230,193,75,.7);cursor:pointer}
 /* v09r (Ömer 22.09): 'Kahveye git ›' çipi — kart → Damak sayfasında kahvenin satırı (bant açılır, detay açılır) */
@@ -735,7 +736,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30v';
+const VERSION='v2026-09-30w';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1265,7 +1266,7 @@ function jLand(origin,w,h,sun){ const [sky,far,near]=jHue(origin); const u='jg'+
 // CoffeeNutz'ın 5'i — Ömer'in seçimi (11.09: puana göre öneri; isim ön ekiyle eşleşir, sıra = kart sırası)
 const TOP5=["AA Rung'eto","AA Inoi","Frinsa Honey Tempe","Baho","El Recreo"];
 function jTopList(){ const c=STATE&&STATE.offer_cfg; return (c&&Array.isArray(c.top5)&&c.top5.length)?c.top5:TOP5; }   // v10v: Ayarlar → offer_top5 (proxy v3.50); boşsa sayfadaki varsayılan
-function jTop(o){ const n=String((o&&o.name)||'').toLowerCase(); const L=jTopList(); for(let i=0;i<L.length;i++){ if(n.startsWith(String(L[i]).toLowerCase())) return i+1; } return 0; }
+function jTop(o){ const n=String((o&&o.name)||'').toLowerCase(); const L=jTopList(); for(let i=0;i<L.length;i++){ const x=String(L[i]); if((o&&o.id===x)||n.startsWith(x.toLowerCase())) return i+1; } return 0; }   // v10w: admin Kahve listesi ★ → id listesi (offer_top5); ad başlangıcı da geçer
 function jScore(o){ const m=/(\d+(?:[.,]\d+)?)\s*puan/i.exec(o.note||''); return m?m[1]:''; }
 function jParts(o){ return String(o.note||'').split(' · ').map(x=>x.trim()).filter(Boolean); }
 function jMeta(o){ const sc=jScore(o); return [o.origin,sc?(sc+' puan'):''].filter(Boolean).map(escZ).join(' · '); }   // v09t (Ömer 22.09): bölge kartta yok — ülke · puan
@@ -1351,7 +1352,7 @@ function renderDeck(list,cfg,G,gate,banned,clk){ const all=jDeckOrder(list);   /
 function jCardHtml(o,i,cfg,G,gate,banned){ const paid=(OFFMINE||[]).find(v=>v.id===o.id&&v.paid); const jury=o.jury_tl||o.camp200_tl; const tk=tasteOf(o); const tn=TASTES.find(x=>x[0]===tk); const tc=tn?TASTECOL[tk]:''; const tp=jTop(o);
     const hasImg=!!(o.img_url&&/^https:\/\//.test(String(o.img_url)));   // v09s (22.09): kahvenin fotoğrafı varsa arka plan o; yoksa dağ+güneş (renk mantığı aynen)
     const bg=hasImg?('<img src="'+escZ(o.img_url)+'" alt="" loading="lazy" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover">'):jLand(o.origin,362,460,true);
-    return '<div class="jcard'+(paid?' mine':'')+(hasImg?' photo':'')+(JSEL===o.id?' sel':'')+((JLANE&&JLANE.id===o.id)?(' lopen'+(JLANE.anim?'':' lanim')):'')+'" data-i="'+i+'" data-id="'+escZ(o.id)+'"'+(jIsDesk()?(' onclick="jDeskOpen(\''+escZ(o.id)+'\')"'):'')+'><div class="jbg">'+bg+'</div><div class="jsh"></div><div class="jsh2"></div>'
+    return '<div class="jcard'+(paid?' mine':'')+(hasImg?' photo':'')+(o.lock?' jlock':'')+(JSEL===o.id?' sel':'')+((JLANE&&JLANE.id===o.id)?(' lopen'+(JLANE.anim?'':' lanim')):'')+'" data-i="'+i+'" data-id="'+escZ(o.id)+'"'+(jIsDesk()?(' onclick="jDeskOpen(\''+escZ(o.id)+'\')"'):'')+'><div class="jbg">'+bg+'</div><div class="jsh"></div><div class="jsh2"></div>'
      +'<div class="jtop"><div style="display:flex;gap:6px;min-width:0"><span class="jchip">#'+(i+1)+(tp?' <span style="color:#e6c14b" title="'+t('jTop5')+'">★</span>':'')+'</span>'+(paid?('<span class="jchip jminec">'+(paid.conv?'🔒 ':'')+t('jMineChip').replace('{n}',Math.max(1,parseInt(paid.qty)||1))+'</span>'+((!paid.conv&&!JMOVE&&!JBUSY&&((STATE&&STATE.offers)||[]).length>1)?('<span class="jchip jmvl" onclick="event.stopPropagation();jMoveStart(\''+escZ(o.id)+'\')">'+t('jMoveL')+'</span>'):'')):(tn?('<span class="jchip jtaste"><i style="background:'+tc+'"></i>'+(LANG==='en'?tn[2]:tn[1])+'</span>'):''))+'</div>'
      +'<svg width="50" height="50" viewBox="0 0 50 50" aria-hidden="true"><circle cx="25" cy="25" r="21" fill="rgba(22,19,15,.5)" stroke="rgba(243,237,228,.25)" stroke-width="4"/><circle cx="25" cy="25" r="21" fill="none" stroke="'+(o.lock?'#4fc98a':'#e6c14b')+'" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+(o.lock?(2*Math.PI*21).toFixed(1):(2*Math.PI*21*Math.min(1,(o.dep||0)/G)).toFixed(1))+' 999" transform="rotate(-90 25 25)"/><text x="25" y="29" text-anchor="middle" font-size="14" font-weight="800" fill="#f3ede4" font-family="-apple-system,Segoe UI,Roboto,sans-serif">'+(o.lock?jLockN(o):(o.dep||0))+'</text></svg></div>'
      +'<div class="jbody"><div class="jmeta">'+jMeta(o)+'</div><div class="jname">'+escZ(o.name)+'</div>'+(jDesc(o)?('<div class="jdesc">'+jDesc(o)+'</div>'):'')
@@ -1741,7 +1742,7 @@ function jMsg(txt,ms){ ms=ms||3500; const tk={txt,until:Date.now()+ms}; window._
 // v07e: bu cihazın kilitlenmiş (dönüşmüş) ve henüz tamamlanmamış kapora adedi — tamamlama paket sayısı ve tutarı bundan
 function offConvQty(id){ return (OFFMINE||[]).filter(v=>v.id===id&&v.paid&&v.conv&&!v.done&&!v.forfeited&&!v.credited).reduce((a,v)=>a+(Math.max(1,parseInt(v.qty)||1)),0)||1; }
 function jLockN(o){ return (o&&o.lock&&parseInt(o.lock.dep))||(o&&o.conv)||0; }   // v10t: kilitli lotun paket sayısı
-function jLockBadge(o,cta){ if(!o||!o.lock) return ''; const txt=t('jLockB').replace('{n}',jLockN(o)); return '<span class="jchip jlockb" title="'+escZ(txt)+'">🔥 '+escZ(txt)+'</span>'+(cta?('<span class="jchip jlocknext" onclick="event.stopPropagation();jLaneOpen(\''+escZ(o.id)+'\')">'+t('jLockNext')+'</span>'):''); }   // v10u (Ömer): tek durum — Seçildi · n paket kavruluyor · CTA: sonrakine katıl → şeritler (yeni kapora = sonraki parti)
+function jLockBadge(o,cta){ if(!o||!o.lock) return ''; const txt=t('jLockB').replace('{n}',jLockN(o)); return '<span class="jchip jlockb" title="'+escZ(txt)+'">'+escZ(txt)+'</span>'+(cta?('<span class="jchip jlocknext" onclick="event.stopPropagation();jLaneOpen(\''+escZ(o.id)+'\')">'+t('jLockNext')+'</span>'):''); }   // v10u (Ömer): tek durum — Seçildi · n paket kavruluyor · CTA: sonrakine katıl → şeritler (yeni kapora = sonraki parti)
 function jLockDep(o,cfg){ const d=o&&o.lock&&parseInt(o.lock.dep_tl); return (d>0)?d:((cfg||offCfg()).dep_amt||0); }   // v10s: kilidin kaporası (proxy v3.49 lock.dep_tl) — ayar değişse de kilitli lot sabit
 function offCanComplete(o){ return !!(o&&(o.done_url||jHemen(o))); }   // v10p: tamamlama linki YA DA Hemen-Al linki (normal varyant + tek kullanımlık kod, proxy v3.47 /done-link)
 async function offComplete(id){
