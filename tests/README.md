@@ -22,6 +22,7 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
     node tests/shot-desk.mjs && node tests/shot-lanes.mjs
 
 
-## v11b (2026-09-30) — one layout
-- Phone and iPad render the same card grid as the desktop (`renderJuriDesk` for every width). The swipe deck, the snap pages (jP1/jP2/jP3), the taste bands and the swipe-up hint are gone. Narrow screens (`body.jnarrow`, < 960 px): filter chips in one horizontal strip, session card under the grid, cards only (no Liste table), drawer / gate sheet / basket bar full width.
-- `tests/shot-grid-mobile.mjs` measures 390 / 768 / 1024 / 1366: no deck, no horizontal overflow, one filter row, session card below the grid, drawer + basket bar = viewport width.
+## v11c (2026-09-30) — groups show cards
+- Phone layout is the deck + groups + session page again (the v11b single-grid experiment was reverted the same day). Tapping a taste group or CoffeeNutz'ın 5'i opens a horizontal deck of that group's cards (global rank numbers, "n kahve · kaydır"); Tüm liste stays the ranked list; Kahveye git › opens the row in Tüm liste.
+- Page snapping (scroll-snap between the three pages) and the "yukarı kaydır" hint are gone. Footer chip shows "✓ Bağlandı · <name>" once the device is recognised.
+- `tests/shot-bands.mjs` renders an open group at 390 px and checks: cards not rows, deck scrollable, no snap, no hint.

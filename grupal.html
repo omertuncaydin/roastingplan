@@ -233,26 +233,16 @@ body.jdesk .jcard .jname{font-size:22px}
 .jdk-dbody{padding:14px 16px 24px}
 .jdk-dbody .orow{cursor:default}
 body.jdesk #dbBar{left:auto !important;right:24px !important;bottom:24px !important;width:460px;border-radius:16px;border:1px solid var(--gold) !important}
-@media (max-width:959px){.jdk{display:block}
-  body.jdesk .wrap{padding:0 12px}
-  .jdk-side{position:static;max-height:none;overflow:visible;display:flex;flex-direction:column;gap:10px;margin-bottom:12px;padding-right:0}
-  .jdk-filt{display:flex;gap:6px;overflow-x:auto;padding:8px 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.jdk-filt::-webkit-scrollbar{display:none}.jdk-filt .jdk-h{display:none}
-  .jdk-filt .jdk-f{width:auto;flex:none;margin:0;padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px;white-space:nowrap}.jdk-filt .jdk-f b{margin-left:2px}
-  .jdk-head{align-items:flex-start;flex-direction:column;gap:8px}.jdk-t{font-size:19px}
-  .jdk-drawer{left:0;right:0;width:auto;max-width:none;top:5vh;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;animation:jdkUp .28s cubic-bezier(.2,.8,.2,1)}
-  @keyframes jdkUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
-  body.jdesk.jnarrow #jSheet{left:0;right:0;bottom:0;width:auto;border-radius:22px 22px 0 0;border:0;border-top:1px solid #3a2f26}
-  body.jdesk.jnarrow #dbBar{left:0 !important;right:0 !important;bottom:0 !important;width:auto;border-radius:0;border:0 !important;border-top:2px solid var(--gold) !important}
-}   /* v11b: telefon/iPad = aynı ızgara; filtreler yatay çip şeridi, oturum kartı altta, çekmece alttan tam genişlik */
+@media (max-width:959px){.jdk{display:block}}
 #jTop .jtb{display:flex;align-items:center;gap:10px;cursor:pointer}
 #jTop .jtn{font-size:12px;font-weight:800;letter-spacing:2.5px;color:var(--accent)}
 #jTop .jts{font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;color:var(--muted);margin-top:1px}
 #jTop .jtc{display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:6px 11px;font-size:12px;font-weight:800;white-space:nowrap}
 body.jmode #offerCard{padding-top:12px}
-html.jmode{scroll-snap-type:y proximity;scroll-padding-top:56px}
+html.jmode{scroll-padding-top:56px}   /* v11c (Ömer): sayfa yapışması (kaydırınca sayfa atlama) kalktı */
 body.jmode #jTop{position:sticky;top:0;z-index:40;background:var(--bg);padding:10px 2px 8px}
 body.jmode #offerCard{border:0;padding:0;background:transparent}
-.jpage{scroll-snap-align:start;scroll-margin-top:56px;padding:2px 0 14px}
+.jpage{scroll-margin-top:56px;padding:2px 0 14px}
 #jP1{min-height:calc(100dvh - 150px);display:flex;flex-direction:column}
 #jP1 .jdeck{flex:1;min-height:0}
 .jcard{height:calc(100dvh - 330px);min-height:400px;max-height:600px}
@@ -301,7 +291,7 @@ body.th-red .jtick .jth a{color:#8a6a5c}
 .jband .jbb{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s cubic-bezier(.2,.8,.2,1);background:var(--panel)}
 .jband.open .jbb{grid-template-rows:1fr}
 .jband .jbi{overflow:hidden;min-height:0;padding:0 8px}
-.jband.open .jbi{padding:6px 8px 10px}
+.jband.open .jbi{padding:6px 8px 10px}.jdeck-b{margin:2px 0 0;padding:2px 2px 6px}.jdeck-b .jcard{flex:0 0 calc(100% - 4px)}   /* v11c: grup içi deste */
 .jband .jgo{transition:transform .45s cubic-bezier(.2,.8,.2,1)}
 .jband.open .jgo{transform:rotate(90deg)}
 .jband .jmore{width:auto !important;border:0 !important;margin-left:10px;font-size:11px;font-weight:700;opacity:.85;display:inline-flex !important;align-items:center}
@@ -747,7 +737,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30zb';
+const VERSION='v2026-09-30zc';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1148,7 +1138,7 @@ function trNote(txt){ if(LANG!=='tr'||!txt) return txt||''; return String(txt).r
 function devId(){ let d=''; try{ d=localStorage.getItem('grupal_dev')||''; if(!/^[A-Z0-9]{8,16}$/.test(d)){ d=''; for(let i=0;i<10;i++) d+='ABCDEFGHJKLMNPRSTUVYZ0123456789'[Math.floor(Math.random()*31)]; localStorage.setItem('grupal_dev',d); } }catch(e){ d='NOSTORAGE0'; } return d; }
 // ===== v10o JÜRİ KAPISI (proxy v3.46): kayıt = Shopify siparişi. İlk kaporada BİR KEZ: "Jüri WhatsApp grubuna katıl" + "Katıldım" → /wa-ok {dev}. Sonra bir daha sorulmaz.
 //   Sunucu /offer-mine → me:{member, name, phone_tail, wa, ok}. Admin "Grupta değil" (ok:false) → kapora kapanır, sayfa gruba katıl uyarısı. Başka cihaz: sipariş no + e-posta → /dev-bind → asıl cihaz kimliği benimsenir. =====
-function jBindChip(){ const bc=$('bindChip'); if(!bc) return; const nm=(ME&&ME.member&&ME.name)?String(ME.name).split(' ')[0]:''; bc.textContent=(ME&&ME.member)?(t('jBound')+(nm?(' · '+nm):'')):t('jDevBind'); bc.style.color=(ME&&ME.member)?'#9fd3b2':'#e6c14b'; }   // v11b (Ömer): cihaz tanınınca çip 'Bağlandı'
+function jBindChip(){ const bc=$('bindChip'); if(!bc) return; const nm=(ME&&ME.member&&ME.name)?String(ME.name).split(' ')[0]:''; bc.textContent=(ME&&ME.member)?(t('jBound')+(nm?(' · '+nm):'')):t('jDevBind'); bc.style.color=(ME&&ME.member)?'#9fd3b2':'#e6c14b'; }   // v11c (Ömer): cihaz tanınınca çip 'Bağlandı'
 let ME=null, JGATE=null;   // ME = /offer-mine me · JGATE={mode:'wa'|'flag'|'bind', after:{type:'kap',id}|{type:'pay'}|null, busy, err, done}
 function jWaDone(){ if(ME&&ME.wa) return true; try{ return localStorage.getItem('grupal_waok')==='1'; }catch(e){ return false; } }
 function jJuryOk(){ return !(ME&&ME.ok===false) && jWaDone(); }
@@ -1311,8 +1301,7 @@ function jShopUrl(o){ const u=String((o&&o.shop_url)||''); return /^https:\/\/(w
 function jWelcShow(){ try{ return localStorage.getItem('grupal_welcomed')!=='1'; }catch(e){ return true; } }
 function jWelcHtml(cfg){ if(!jWelcShow()) return ''; const pct=Math.round(100*(1-(cfg.ratio_jury||cfg.ratio200||0.6))); return '<div class="jwelc" id="jWelc"><span>'+t('jWelc').replace('{amt}',cfg.dep_amt||100).replace('{g}',cfg.goal).replace('{p}',pct).replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2))+'</span><button onclick="jWelcOk()">'+t('jWelcOk')+'</button></div>'; }
 function jWelcOk(){ try{ localStorage.setItem('grupal_welcomed','1'); }catch(e){} const e=$('jWelc'); if(e) e.remove(); const p=$('jP1'); if(p) p.classList.remove('haswelc'); }
-function jWide(){ try{ if(window.matchMedia) return window.matchMedia('(min-width: 960px)').matches; }catch(e){} return (window.innerWidth||0)>=960; }   // v11b: iki sütun (kenar çubuğu + ızgara) eşiği
-function jIsDesk(){ return true; }   // v11b (Ömer): telefon/iPad de kart ızgarası — deste, kaydırma sayfaları ve bantlar kalktı
+function jIsDesk(){ try{ if(window.matchMedia) return window.matchMedia('(min-width: 960px)').matches; }catch(e){} return (window.innerWidth||0)>=960; }
 let JSEL=null, JDF='all', JDV=null; try{ const v=localStorage.getItem('grupal_jdf'); if(v) JDF=v; const dv=localStorage.getItem('grupal_jdv'); if(dv==='cards'||dv==='list') JDV=dv; }catch(e){}
 function jDeskView(v){ JDV=v; try{ localStorage.setItem('grupal_jdv',v); }catch(e){} renderOffers(STATE); }
 function jHasImg(o){ return !!(o&&o.img_url&&/^https:\/\//.test(String(o.img_url))); }
@@ -1331,7 +1320,7 @@ function jTableHtml(rows,list,cfg,G,gate,banned){ if(!rows.length) return ''; co
 function jDeskOpen(id){ JSEL=id; OFFOPEN.add(id); renderOffers(STATE); const d=$('jDrawer'); if(d) d.scrollTop=0; }
 function jDeskClose(){ JSEL=null; renderOffers(STATE); }
 function jDeskFilter(k){ JDF=k; try{ localStorage.setItem('grupal_jdf',k); }catch(e){} renderOffers(STATE); }
-function jGoRow(id){ if(jIsDesk()) return jDeskOpen(id); const o=((STATE&&STATE.offers)||[]).find(x=>x.id===id); if(!o) return; const k=tasteOf(o)||'all'; OFFOPEN.add(id); if(k==='all') OFFALL=true;
+function jGoRow(id){ if(jIsDesk()) return jDeskOpen(id); const o=((STATE&&STATE.offers)||[]).find(x=>x.id===id); if(!o) return; const k='all'; OFFOPEN.add(id); OFFALL=true;   // v11c: satır yalnız 'Tüm liste'de (tat grupları artık kart gösterir)
   if(JBAND!==k){ JBAND=k; try{ localStorage.setItem('grupal_jband',k); }catch(e){} } renderOffers(STATE);
   const e=document.querySelector('#offList .orow[data-id="'+id+'"]'); if(e&&e.scrollIntoView) e.scrollIntoView({behavior:'smooth',block:'center'}); }
 function jGoCard(id){ if(jIsDesk()) return jDeskOpen(id); const dk=$('jDeck'); if(!dk) return; const c=dk.querySelector('.jcard[data-id="'+id+'"]'); if(!c) return; try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){}
@@ -1450,9 +1439,9 @@ function renderOffers(s){
   const early=depEarly(cfg), codeOk=gcodeOk(), gate=depMode&&depGate(cfg);
   const banned=!!(BANNED&&BANNED.getTime()>Date.now());
   const ctx={list,cfg,G,depMode,mine,pend,gate,banned};
-  const desk=depMode; document.body.classList.toggle('jdesk',desk); document.body.classList.toggle('jnarrow',desk&&!jWide()); if(!depMode) JSEL=null;
-  if(!window.__jRz){ window.__jRz=true; let was=jWide(), tm=null; window.addEventListener('resize',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ const now=jWide(); if(now!==was){ was=now; if(STATE) renderOffers(STATE); } },200); }); }   // v09v: eşik geçilince yeniden çiz (kenar çubuğu yerleşimi)
-  if(depMode){ h=renderJuriDesk(s,list,ctx,early,codeOk); }   // v11b: her genişlikte ızgara   // v09l: Jüri sayfası — Deste · Damak (akordeon) · v09v: masaüstü ızgara · Oturum
+  const desk=depMode&&jIsDesk(); document.body.classList.toggle('jdesk',desk); if(!depMode) JSEL=null;
+  if(!window.__jRz){ window.__jRz=true; let was=jIsDesk(), tm=null; window.addEventListener('resize',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ const now=jIsDesk(); if(now!==was){ was=now; if(STATE) renderOffers(STATE); } },200); }); }   // v09v: eşik geçilince yeniden çiz
+  if(depMode){ h=desk?renderJuriDesk(s,list,ctx,early,codeOk):renderJuriPage(s,list,ctx,early,codeOk); }   // v09l: Jüri sayfası — Deste · Damak (akordeon) · v09v: masaüstü ızgara · Oturum
   else {
     h+=renderCycle(s);   // v02v: döngü çubuğu + son sayımın kahveleri (varsa)
     const hits=list.filter(o=>(o.n||0)>=G);
@@ -1605,7 +1594,7 @@ function renderJuriPage(s,list,ctx,early,codeOk){
   // SAYFA 1 — Deste: tüm kahveler, ön sipariş sırasına göre; sayaç kartın üstünde
   h+='<section class="jpage'+(jMineList(list).length?' hasmine':'')+(jWelcShow()?' haswelc':'')+'" id="jP1">'+jWelcHtml(cfg)+jGuestHtml()+renderTicker(list,G)+renderDeck(list,cfg,G,gate,banned,clk)
     +'<div class="jnav"><button class="jnb" onclick="jOpenBand(\'top5\')">★ '+t('jTop5')+' ›</button><button class="jnb" onclick="jOpenBand(\'all\')">'+t('jAllList').replace('{n}',list.length)+' ›</button></div>'
-    +'<div class="jhint" onclick="jGo(\'jP2\')">⌃ '+t('jSwipeUp')+'</div></section>';
+    +'</section>';   // v11c: 'yukarı kaydır' ipucu kalktı
   // SAYFA 2 — Damak akordeonu
   h+='<section class="jpage" id="jP2"><div class="jh2">'+t('jDamakT')+'</div>';
   if(banned) h+='<div style="margin:0 0 8px;padding:8px 10px;border-radius:10px;border:1px solid #e0705a;color:#e0705a;font-size:12px;font-weight:700">'+t('offBanned').replace('{d}',cyD(BANNED.toISOString()))+'</div>';
@@ -1618,7 +1607,8 @@ function renderJuriPage(s,list,ctx,early,codeOk){
     let rows='';
     if(open){ const srt=arr.slice().sort((a,b)=>(k==='top5')?0:((b.dep||0)-(a.dep||0))); const fold=(k==='all')&&!OFFALL&&srt.length>OFFFOLD+2;
       const shown=fold?srt.filter((o,i)=>i<OFFFOLD||(o.dep||0)>0||mine.includes(o.id)||(OFFMINE||[]).some(v=>v.id===o.id&&v.paid)||pend.includes(o.id)):srt;
-      rows=shown.map((o,i)=>offRowHtml(o,Object.assign({},ctx,{rank:i+1}))).join('');
+      if(k==='all') rows=shown.map((o,i)=>offRowHtml(o,Object.assign({},ctx,{rank:i+1}))).join('');
+      else { const ordAll=jDeckOrder(list); rows='<div class="jdeck jdeck-b">'+shown.map(o=>jCardHtml(o,ordAll.findIndex(x=>x.id===o.id),cfg,G,gate,banned)).join('')+'</div>'+(shown.length>1?('<div class="jdots"><i class="on"></i><span class="jdn">'+shown.length+' '+t('jCoffee')+' · '+t('jSwipe')+'</span></div>'):''); }   // v11c (Ömer): gruba dokununca kartlar (yatay deste), sıra numarası genel sıra
       if(fold) rows+='<button onclick="event.stopPropagation();offShowAll()" style="margin-top:6px;padding:9px;font-size:13px;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">'+t('offMore').replace('{n}',srt.length-shown.length)+'</button>'; }
     h+='<div class="jband'+(open?' open':'')+'" id="jb_'+k+'"><div class="jbh" onclick="jToggleBand(\''+k+'\')"><div class="jbg">'+jLand(arr[0].origin,358,120)+'</div><div class="jsh"></div><div class="jbar" style="background:'+col+'"></div>'
       +'<div class="jbt"><div class="jbn">'+(k==='top5'?'★ ':'')+escZ(name)+'</div><div class="jbs">'+arr.length+' '+t('jCoffee')+(prices.length?(' · '+(lo===hi?fmtTL(lo):(fmtTL(lo)+'–'+fmtTL(hi)))+' TL'):'')+'</div>'
@@ -1642,26 +1632,24 @@ function renderJuriDesk(s,list,ctx,early,codeOk){
   if(!keys.some(k=>k[0]===JDF)) JDF='all';
   const cur=keys.find(k=>k[0]===JDF); const shown=jDeckOrder(cur[3]);
   let h='<div class="jdk"><aside class="jdk-side">';
-  h+='<div class="jdk-card jdk-filt"><div class="jdk-h">'+t('jdFilt')+'</div>'+keys.map(k=>'<button class="jdk-f'+(JDF===k[0]?' on':'')+'" onclick="jDeskFilter(\''+k[0]+'\')"><i style="background:'+k[2]+'"></i><span>'+(k[0]==='top5'?'★ ':'')+escZ(k[1])+'</span><b>'+k[3].length+'</b></button>').join('')+'</div>';
+  h+='<div class="jdk-card"><div class="jdk-h">'+t('jdFilt')+'</div>'+keys.map(k=>'<button class="jdk-f'+(JDF===k[0]?' on':'')+'" onclick="jDeskFilter(\''+k[0]+'\')"><i style="background:'+k[2]+'"></i><span>'+(k[0]==='top5'?'★ ':'')+escZ(k[1])+'</span><b>'+k[3].length+'</b></button>').join('')+'</div>';
   h+=renderTicker(list,G);
   if(banned) h+='<div class="jdk-card" style="border-color:#e0705a;color:#e0705a;font-size:12px;font-weight:700">'+t('offBanned').replace('{d}',cyD(BANNED.toISOString()))+'</div>';
   if(early||cfg.code_always) h+='<div class="jdk-card">'+(codeOk?('<div style="font-size:12px;font-weight:700;color:var(--green)">'+t('offCodeOk')+'</div>')
     :('<div style="font-size:12px;font-weight:700;color:var(--gold)">'+(cfg.code_always?t('offCodeAlw'):t('offEarly').replace('{d}',fmtOpen(cfg.dep_open_at)))+'</div><div class="hint" style="margin-top:2px">'+(cfg.code_always?t('offCodeAlwH').replace('{ch}',(STATE&&STATE.chat_url)?('<a href="'+escZ(STATE.chat_url)+'" target="_blank" rel="noopener">'+t('chatL')+'</a>'):t('chatL')):t('offEarlyH'))+'</div>'
     +'<div style="display:flex;gap:6px;margin-top:6px"><input id="gcodeIn" placeholder="'+t('offCodeL')+'" style="flex:1;min-width:0;margin:0;padding:8px 10px;font-size:14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink)" onkeydown="if(event.key===\'Enter\'){gcodeSend();}"><button onclick="gcodeSend()" style="width:auto;margin:0;padding:8px 14px;font-size:13px">'+t('offCodeB')+'</button></div><div class="hint" id="gcodeMsg" style="margin-top:4px;color:#e0705a"></div>'))+'</div>';
-  const sess='<div class="jdk-card jdk-sess"><div class="jdk-h">'+t('jSessT')+'</div>'+renderCycle(s)
+  h+='<div class="jdk-card"><div class="jdk-h">'+t('jSessT')+'</div>'+renderCycle(s)
     +'<details class="jhow"><summary>'+t('jHowT')+'</summary><div class="hint" style="margin-top:6px;font-size:12px;line-height:1.55">'+escZ(t('offHD').split('{g}').join(G).split('{c}').join(cyCap()).split('{amt}').join(cfg.dep_amt||''))+'</div></details>'
     +'<div class="hint" style="margin-top:4px;font-size:11px;opacity:.75">'+t('offGoalD').split('{g}').join(G)+'</div>'
     +'<details style="margin-top:6px"><summary class="hint" style="cursor:pointer;font-size:11px">'+t('offTermsL')+'</summary><div class="hint" style="margin-top:4px;font-size:11px;line-height:1.5">'+t('offTerms').split('{amt}').join(cfg.dep_amt||'').split('{g}').join(G).split('{c}').join(cyCap()).split('{dd}').join(String((STATE&&STATE.offer_cfg&&parseInt(STATE.offer_cfg.done_days))||2))+'</div></details></div>';
-  if(jWide()) h+=sess;   // v11b: dar ekranda oturum kartı ızgaranın altına
   h+='</aside><main class="jdk-main">'+jWelcHtml(cfg)+jGuestHtml();
   { const tot=list.reduce((a,o)=>a+(o.dep||0),0), kk=list.filter(o=>(o.dep||0)>0).length, dg=parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.day_goal)||0)||0;
-    const feat=shown.filter(jHasImg), rest=shown.filter(o=>!jHasImg(o)); const view=jWide()?(JDV||(feat.length?'list':'cards')):'cards';   // v11b: dar ekranda hep kart (tablo sığmaz; Ömer: telefonda karttan başka şey yok) · v09w: fotoğraflı kahveler vitrinde kart; gerisi seçime göre (fotoğraf varsa varsayılan liste — dağ kartları birbirine benzer)
+    const feat=shown.filter(jHasImg), rest=shown.filter(o=>!jHasImg(o)); const view=JDV||(feat.length?'list':'cards');   // v09w: fotoğraflı kahveler vitrinde kart; gerisi seçime göre (fotoğraf varsa varsayılan liste — dağ kartları birbirine benzer)
     h+='<div class="jdk-head"><div><div class="jdk-t">'+escZ(cur[1])+' <span class="hint">· '+shown.length+' '+t('jCoffee')+' · '+t('jdSort')+'</span></div><div id="offTot" class="hint" style="margin-top:2px;font-weight:700">'+(dg?t('offTotG').replace('{sum}',tot).replace('{dg}',dg):t('offTot').replace('{sum}',tot))+(kk?(' · '+t('offTotK').replace('{k}',kk)):'')+'</div></div>'
-      +(jWide()?('<div class="jdk-seg" role="group"><button class="'+(view==='cards'?'on':'')+'" onclick="jDeskView(\'cards\')">▦ '+t('jdCards')+'</button><button class="'+(view==='list'?'on':'')+'" onclick="jDeskView(\'list\')">☰ '+t('jdList')+'</button></div>'):'')+'</div>';
+      +'<div class="jdk-seg" role="group"><button class="'+(view==='cards'?'on':'')+'" onclick="jDeskView(\'cards\')">▦ '+t('jdCards')+'</button><button class="'+(view==='list'?'on':'')+'" onclick="jDeskView(\'list\')">☰ '+t('jdList')+'</button></div></div>';
     const ord=jDeckOrder(list), card=o=>jCardHtml(o,ord.findIndex(x=>x.id===o.id),cfg,G,gate,banned);
     if(feat.length){ h+='<div class="jdk-sub">'+t('jdVitrin')+' <span class="hint">· '+feat.length+'</span></div><div class="jdk-grid">'+feat.map(card).join('')+'</div>'; if(rest.length) h+='<div class="jdk-sub" style="margin-top:18px">'+t('jdRest')+' <span class="hint">· '+rest.length+'</span></div>'; }
     if(rest.length) h+=(view==='list')?jTableHtml(rest,list,cfg,G,gate,banned):('<div class="jdk-grid">'+rest.map(card).join('')+'</div>'); }
-  if(!jWide()) h+='<div style="margin-top:18px">'+sess+'</div>';
   h+='</main>';
   // sağ çekmece: seçili kahvenin satırı (detay açık) — kulvar satırıyla aynı bileşen, tıklama kapatmasın diye satır onclick'i sökülür
   if(JSEL){ const o=list.find(x=>x.id===JSEL); if(o){ OFFOPEN.add(o.id); const rank=jDeckOrder(list).findIndex(x=>x.id===o.id)+1;
