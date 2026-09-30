@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || 'x@y.z', customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.43 tag', r.json && r.json.v === '3.43');
+T('v3.44 tag', r.json && r.json.v === '3.44');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -48,6 +48,16 @@ r = await px.call('POST', '/inv-table', { c: code1, dev: 'FRIEND0001' }); T('inv
 r = await px.call('POST', '/inv-table', { c: code1, dev: 'DEV1AAAAAA' }); T('inv-table by owner → ok, st t', r.json.ok && r.json.st === 't');
 r = await px.call('GET', '/meydan'); oa = r.json.offers.find(o => o.id === A);
 T('meydan: table shows the invitation with the holder name', oa.hemen.table.length === 1 && oa.hemen.table[0].c === code1 && oa.hemen.table[0].n === 'Ömer');
+// ---- v3.44: geri al (untable) — owner only, back to private with a fresh 24 h; table order = oldest first
+r = await px.call('POST', '/inv-untable', { c: code1, dev: 'FRIEND0001' }); T('inv-untable by a stranger → 403', r.status === 403);
+r = await px.call('POST', '/inv-untable', { c: code1, dev: 'DEV1AAAAAA' }); T('inv-untable by owner → st p again', r.json.ok && r.json.st === 'p');
+r = await px.call('GET', '/offer-mine?dev=DEV1AAAAAA'); T('offer-mine: the ticket is private again, tat cleared, exp renewed', r.json.inv.find(i => i.c === code1).st === 'p' && !r.json.inv.find(i => i.c === code1).tat && new Date(r.json.inv.find(i => i.c === code1).exp).getTime() > NOW + 6 * 86400000);
+r = await px.call('POST', '/inv-untable', { c: code1, dev: 'DEV1AAAAAA' }); T('inv-untable when not on the table → 409', r.status === 409);
+NOW += 60000; r = await px.call('POST', '/inv-table', { c: code2, dev: 'DEV1AAAAAA' }); NOW += 60000; r = await px.call('POST', '/inv-table', { c: code1, dev: 'DEV1AAAAAA' });
+r = await px.call('GET', '/meydan'); oa = r.json.offers.find(o => o.id === A);
+T('table order: the one put on the table first comes first (code2 before code1), with tat', oa.hemen.table.length === 2 && oa.hemen.table[0].c === code2 && oa.hemen.table[1].c === code1 && !!oa.hemen.table[0].tat);
+r = await px.call('POST', '/inv-untable', { c: code2, dev: 'DEV1AAAAAA' }); r = await px.call('GET', '/meydan'); oa = r.json.offers.find(o => o.id === A);
+T('after taking code2 back only code1 stays on the table', oa.hemen.table.length === 1 && oa.hemen.table[0].c === code1);
 
 // ---- friend buys via the table invitation → I row, counted, invitation used, pool untouched
 r = await hook({ hemen: '1', offer: A, dev: 'FRIEND0001', inv: code1 }, { id: 9003, name: 'Ayşe', email: 'ayse@x.tr' });
