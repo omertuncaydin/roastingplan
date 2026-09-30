@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.49 tag', r.json && r.json.v === '3.49');
+T('v3.50 tag', r.json && r.json.v === '3.50');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -268,5 +268,9 @@ r = await px.call('GET', '/meydan'); T('/meydan offer_cfg carries login_required
   r = await px.call('POST', '/admin/members-backfill', {}, { 'x-cc-key': 'adminkey' }); T('second backfill creates nothing', r.json.ok && r.json.created === 0); }
 
 Date.now = realNow;
+// v3.50: CoffeeNutz'ın 5'i from settings (offer_top5) → /meydan offer_cfg.top5 (max 5, trimmed); empty → []
+{ r = await px.call('POST', '/admin/settings', { offer_top5: ' Baho , El Recreo,AA Inoi\nFrinsa, Kelloo, Sixth, Seventh ' }, { 'x-cc-key': 'adminkey' }); T('admin settings accept offer_top5', r.json && r.json.ok !== false);
+  r = await px.call('GET', '/meydan'); T('/meydan offer_cfg.top5 = first 5 trimmed names', JSON.stringify(r.json.offer_cfg.top5) === JSON.stringify(['Baho','El Recreo','AA Inoi','Frinsa','Kelloo']));
+  await px.call('POST', '/admin/settings', { offer_top5: '' }, { 'x-cc-key': 'adminkey' }); r = await px.call('GET', '/meydan'); T('empty offer_top5 → [] (page falls back to its default list)', Array.isArray(r.json.offer_cfg.top5) && r.json.offer_cfg.top5.length === 0); }
 { const locks = px.DB.grupal_settings.filter(x => x.key.startsWith('lock_')).map(x => JSON.parse(x.value)); T('v3.49: every lock record written in this run carries a numeric dep_tl (auto locks freeze the setting)', locks.length >= 2 && locks.every(l => Number.isFinite(l.dep_tl) && l.dep_tl >= 0)); }
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);

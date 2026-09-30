@@ -11,7 +11,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
 <!-- grupal-admin.html · v2026-09-30f · UYGULA cevabındaki backfill (proxy v3.43) mesajda: "davetiye ×n" -->
 <!-- grupal-admin.html · v2026-09-30j · Jüri üyeleri açılır bölüm; WhatsApp sütunu: ✓ kendisi · ✓ admin · sorulmadı; satırda "Grupta ✓" (admin onayı → sayfa bir daha sormaz) · "Grupta değil" / "Onayla" -->
-<!-- grupal-admin.html · v2026-09-30m · kutu → paket (Ömer: proje artık paket konuşur)
+<!-- grupal-admin.html · v2026-09-30n · Ayarlar: CoffeeNutz'ın 5'i (offer_top5, proxy v3.50)
+     grupal-admin.html · v2026-09-30m · kutu → paket (Ömer: proje artık paket konuşur)
      grupal-admin.html · v2026-09-30l · Kilitle şimdi: kilidin kapora TL'si sorulur (proxy v3.49 dep_tl; ayar sonradan değişse de kilitli lotun Tamamla tutarı sabit) · kilit satırında 'n TL/paket'
      grupal-admin.html · v2026-09-30i · ERKEN KİLİT (proxy v3.47): satırda "Kilitle şimdi" (40 beklemeden; kaporalar tamamlamaya açılır) · Jüri üyeleri: "Eski kaporalardan üye çıkar" (Shopify müşterisinden ad/telefon) -->
 <!-- grupal-admin.html · v2026-09-30h · JÜRİ KAPISI (proxy v3.46): kayıt = Shopify siparişi; ilk kaporada bir kez WhatsApp grubu; üye listesi e-posta anahtarlı (Grupta değil / Onayla) -->
@@ -267,6 +268,7 @@ details.set.card[open]>summary{margin-bottom:6px}
         <div class="g2">
           <div class="f"><span class="lbl">ilk kaporada WhatsApp grubu sor</span><select id="s_login"><option value="0">kapalı</option><option value="1">açık — ilk Kapora koy'da bir kez: "Gruba katıl" + "Katıldım"</option></select></div>
           <div class="f"><span class="lbl">Jüri WhatsApp grubu davet linki</span><input id="s_wagroup" placeholder="https://chat.whatsapp.com/…"></div>
+          <div class="f full"><span class="lbl">CoffeeNutz'ın 5'i (★ · virgülle, kahve adının başı yeter · en çok 5 · boş = sayfadaki varsayılan)</span><input id="s_top5" placeholder="AA Rung'eto, AA Inoi, Frinsa Honey Tempe, Baho, El Recreo"></div>
           <div class="note">Kayıt yok, giriş yok: <b>kapora siparişi = kayıt</b> (ad · e-posta · telefon Shopify'dan gelir). Sayfa yalnız ilk kaporada, bir kez "gruba katıl + katıldım" ister; link boşsa sormaz. Aynı e-postayla başka cihazdan ödeme kendiliğinden aynı üyeye bağlanır; üye isterse "sipariş no + e-posta" ile cihaz bağlar. WhatsApp üyeliği API ile doğrulanamaz: aşağıdaki listeyi grupla karşılaştır, olmayanı <b>Grupta değil</b> işaretle — kaporası o an kapanır, sayfada "gruba katıl, Ömer'e yaz" görür; <b>Onayla</b> geri açar.</div>
         </div>
         <div class="acts"><button class="mini" onclick="offSettingsSave()">Ayarları kaydet</button><span class="hint" id="offSetMsg"></span></div>
@@ -332,7 +334,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-30m';
+const VERSION='v2026-09-30n';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -482,7 +484,7 @@ async function loadOfferSettings(){
   try{ const r=await fetch(API+'/admin/settings',{headers:{'x-cc-key':KEY}}); const j=await r.json();
     if(j&&j.settings){ const st=j.settings; $('s_depurl').value=st.offer_dep_url||''; $('s_depamt').value=st.offer_dep_amt||''; $('s_goal').value=st.offer_goal||'';
       $('s_depcode').value=st.offer_dep_code||''; $('s_depopen').value='';   // v02y: açılış saati kaldırıldı (kod = her zaman)
-      $('s_cycledays').value=st.offer_cycle_days||''; $('s_capacity').value=st.offer_capacity||''; $('s_donedays').value=st.offer_done_days||''; $('s_sepetdays').value=st.offer_sepet_days||''; $('s_hbase').value=(st.offer_hemen_base!=null)?st.offer_hemen_base:''; $('s_hinv').value=(st.offer_hemen_inv!=null)?st.offer_hemen_inv:''; $('s_hinvh').value=st.offer_hemen_inv_h||''; $('s_forfeit').value=(st.offer_forfeit_mode==='credit'||st.offer_forfeit_mode==='burn')?st.offer_forfeit_mode:'tiered'; $('s_bancycles').value=(st.offer_ban_cycles!=null&&st.offer_ban_cycles!=='')?st.offer_ban_cycles:''; $('s_login').value=(st.login_required==='1')?'1':'0'; $('s_wagroup').value=st.wa_group_url||'';   // v30g
+      $('s_cycledays').value=st.offer_cycle_days||''; $('s_capacity').value=st.offer_capacity||''; $('s_donedays').value=st.offer_done_days||''; $('s_sepetdays').value=st.offer_sepet_days||''; $('s_hbase').value=(st.offer_hemen_base!=null)?st.offer_hemen_base:''; $('s_hinv').value=(st.offer_hemen_inv!=null)?st.offer_hemen_inv:''; $('s_hinvh').value=st.offer_hemen_inv_h||''; $('s_forfeit').value=(st.offer_forfeit_mode==='credit'||st.offer_forfeit_mode==='burn')?st.offer_forfeit_mode:'tiered'; $('s_bancycles').value=(st.offer_ban_cycles!=null&&st.offer_ban_cycles!=='')?st.offer_ban_cycles:''; $('s_login').value=(st.login_required==='1')?'1':'0'; $('s_wagroup').value=st.wa_group_url||''; $('s_top5').value=st.offer_top5||'';   // v30g · v30n top5
       $('s_refusd').value=st.offer_ref_usd||''; $('s_reflist').value=st.offer_ref_list||''; $('s_ref2usd').value=st.offer_ref2_usd||''; $('s_ref2list').value=st.offer_ref2_list||''; $('s_ref3usd').value=st.offer_ref3_usd||''; $('s_ref3list').value=st.offer_ref3_list||''; $('s_daygoal').value=st.offer_day_goal||''; $('s_rjury').value=st.offer_ratio_jury||st.offer_ratio_200||''; $('s_rbasket').value=st.offer_ratio_basket||st.offer_ratio_40||''; $('s_cycle').value=st.meydan_cycle_start?new Date(st.meydan_cycle_start).toLocaleString('sv',{timeZone:'Europe/Istanbul'}).slice(0,16).replace(' ','T'):'';
       $('s_showp').checked=st.offer_show_prices!=='0';   // v02t: varsayılan AÇIK
       OFFCFG=j.cfg||null; scalePreview(); renderOffersAdmin(); } }catch(e){}
@@ -491,7 +493,7 @@ async function offSettingsSave(){
   if(!(await resolveIfProduct('s_depurl'))) return;
   const body={offer_dep_url:$('s_depurl').value.trim(),offer_dep_amt:$('s_depamt').value.trim(),offer_goal:$('s_goal').value.trim(),
     offer_dep_code:$('s_depcode').value.trim(),offer_dep_open_at:'',offer_day_goal:$('s_daygoal').value.trim(),
-    offer_cycle_days:$('s_cycledays').value.trim(),offer_capacity:$('s_capacity').value.trim(),offer_done_days:$('s_donedays').value.trim(),offer_sepet_days:$('s_sepetdays').value.trim(),offer_hemen_base:$('s_hbase').value.trim(),offer_hemen_inv:$('s_hinv').value.trim(),offer_hemen_inv_h:$('s_hinvh').value.trim(),offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),login_required:$('s_login').value,wa_group_url:$('s_wagroup').value.trim(),
+    offer_cycle_days:$('s_cycledays').value.trim(),offer_capacity:$('s_capacity').value.trim(),offer_done_days:$('s_donedays').value.trim(),offer_sepet_days:$('s_sepetdays').value.trim(),offer_hemen_base:$('s_hbase').value.trim(),offer_hemen_inv:$('s_hinv').value.trim(),offer_hemen_inv_h:$('s_hinvh').value.trim(),offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),login_required:$('s_login').value,wa_group_url:$('s_wagroup').value.trim(),offer_top5:$('s_top5').value.trim(),
     offer_ref3_usd:$('s_ref3usd').value.trim().replace(',','.'),offer_ref3_list:$('s_ref3list').value.trim(),
     offer_ref_usd:$('s_refusd').value.trim().replace(',','.'),offer_ref_list:$('s_reflist').value.trim(),offer_ref2_usd:$('s_ref2usd').value.trim().replace(',','.'),offer_ref2_list:$('s_ref2list').value.trim(),offer_ratio_jury:$('s_rjury').value.trim().replace(',','.'),offer_ratio_basket:$('s_rbasket').value.trim().replace(',','.'),meydan_cycle_start:$('s_cycle').value?($('s_cycle').value+':00+03:00'):'',
     offer_show_prices:$('s_showp').checked?'1':'0'};

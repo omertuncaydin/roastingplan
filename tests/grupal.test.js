@@ -271,5 +271,11 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     const wt=mk({'/meydan':ML,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); wt.eval("jDeskView('list')"); await sleep(60); const tr=wt.document.querySelector('.jdk-table tr.jdk-r[data-id="'+ord[0].id+'"]');
     T('desktop table row: status chip under the name, bar full and green, count shows the lot (17/40)', !!tr && !!tr.querySelector('.jdk-lock .jchip.jlockb') && tr.querySelector('td.n .bar i').classList.contains('hit') && tr.querySelector('td.n .bar i').style.width==='100%' && tr.querySelector('td.n b').textContent==='17/40');
     T('no "kutu"/"box" left in the page strings (Ömer: packages, not boxes) — only the checkbox idioms', !/\d+ kutu|kutu başına|kutun\b|kutular/.test(html) && (html.match(/[kK]utu/g)||[]).length<=3 && !/ boxes?[ .,;'·]/.test(html.replace(/tick the box\./g,''))); }
+  // v30v: CoffeeNutz'ın 5'i comes from Ayarlar (offer_cfg.top5) when set; the page default stays as fallback
+  { const M5=JSON.parse(JSON.stringify(MD)); M5.offer_cfg.top5=[ord[7].name.slice(0,6), ord[8].name.slice(0,6)];
+    const w5=mk({'/meydan':M5,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},390); await sleep(250);
+    T('offer_cfg.top5 set → ★ goes to those coffees in that order, default list ignored', w5.__g("jTop(STATE.offers.find(o=>o.id==='"+ord[7].id+"'))")===1 && w5.__g("jTop(STATE.offers.find(o=>o.id==='"+ord[8].id+"'))")===2 && w5.__g("STATE.offers.filter(o=>jTop(o)).length")===2);
+    const M0=JSON.parse(JSON.stringify(MD)); M0.offer_cfg.top5=[]; const w0=mk({'/meydan':M0,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},390); await sleep(250);
+    T('empty top5 → page default list (TOP5) still marks its coffees', w0.__g("STATE.offers.filter(o=>jTop(o)).length")===MD.offers.filter(o=>["AA Rung'eto","AA Inoi","Frinsa Honey Tempe","Baho","El Recreo"].some(n=>o.name.toLowerCase().startsWith(n.toLowerCase()))).length && w0.__g("jTopList().length")===5); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })().catch(e=>{ console.log('CRASH',e.message,e.stack.split('\n').slice(0,3).join(' / ')); process.exit(1); });

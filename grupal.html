@@ -735,7 +735,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30u';
+const VERSION='v2026-09-30v';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1264,7 +1264,8 @@ function jLand(origin,w,h,sun){ const [sky,far,near]=jHue(origin); const u='jg'+
    +'<path d="M0 '+(h*0.78).toFixed(0)+' L'+(w*0.22).toFixed(0)+' '+(h*0.66).toFixed(0)+' L'+(w*0.45).toFixed(0)+' '+(h*0.80).toFixed(0)+' L'+(w*0.66).toFixed(0)+' '+(h*0.64).toFixed(0)+' L'+(w*0.84).toFixed(0)+' '+(h*0.76).toFixed(0)+' L'+w+' '+(h*0.70).toFixed(0)+' L'+w+' '+h+' L0 '+h+' Z" fill="'+near+'"/></svg>'; }
 // CoffeeNutz'ın 5'i — Ömer'in seçimi (11.09: puana göre öneri; isim ön ekiyle eşleşir, sıra = kart sırası)
 const TOP5=["AA Rung'eto","AA Inoi","Frinsa Honey Tempe","Baho","El Recreo"];
-function jTop(o){ const n=String((o&&o.name)||'').toLowerCase(); for(let i=0;i<TOP5.length;i++){ if(n.startsWith(TOP5[i].toLowerCase())) return i+1; } return 0; }
+function jTopList(){ const c=STATE&&STATE.offer_cfg; return (c&&Array.isArray(c.top5)&&c.top5.length)?c.top5:TOP5; }   // v10v: Ayarlar → offer_top5 (proxy v3.50); boşsa sayfadaki varsayılan
+function jTop(o){ const n=String((o&&o.name)||'').toLowerCase(); const L=jTopList(); for(let i=0;i<L.length;i++){ if(n.startsWith(String(L[i]).toLowerCase())) return i+1; } return 0; }
 function jScore(o){ const m=/(\d+(?:[.,]\d+)?)\s*puan/i.exec(o.note||''); return m?m[1]:''; }
 function jParts(o){ return String(o.note||'').split(' · ').map(x=>x.trim()).filter(Boolean); }
 function jMeta(o){ const sc=jScore(o); return [o.origin,sc?(sc+' puan'):''].filter(Boolean).map(escZ).join(' · '); }   // v09t (Ömer 22.09): bölge kartta yok — ülke · puan
