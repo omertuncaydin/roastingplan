@@ -22,7 +22,7 @@ async function shot(width,height,file,mine){
     if(u.includes('/offer-mine')) return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({votes:mine?[{id:ord[1].id,paid:true,qty:2,conv:true,done:false}]:[],inv:[],hemen:[],me:{member:true,wa:true,ok:true}})});
     if(u.includes('/campaigns')) return route.fulfill({status:200,contentType:'application/json',body:'[]'}); return route.fulfill({status:204,body:''}); });
   await page.goto('https://grup-al.com/juri'); await page.waitForTimeout(1200);
-  if(width<500){ await page.evaluate(i=>{ const el=document.querySelector('.jcard[data-i="'+i+'"]'); if(el) el.scrollIntoView({block:'center',inline:'center'}); },1); await page.waitForTimeout(400); }
+  if(width<500){ await page.evaluate(i=>{ const el=document.querySelector('.jcard[data-id="'+i+'"]'); if(el) el.scrollIntoView({block:'center',inline:'center'}); },ord[1].id); await page.waitForTimeout(400); }
   await page.screenshot({path:path.join(OUT,file)}); const txt=await page.evaluate(()=>[...document.querySelectorAll('.jchip.jlockb')].map(e=>e.textContent)); console.log(file,JSON.stringify(txt)); await ctx.close(); }
 await shot(390,844,'lock_phone.png',false);
 await shot(390,844,'lock_phone_mine.png',true);
