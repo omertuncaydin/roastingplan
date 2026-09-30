@@ -23,7 +23,7 @@ function mk(maps,width,url){
 }
 const MINE=[{id:ord[5].id,paid:true,qty:2}];
 (async()=>{
-  T('version tag present', /const VERSION='v2026-\d\d-\d\d[a-z]';/.test(html));
+  T('version tag present', /const VERSION='v2026-\d\d-\d\d[a-z]{1,2}';/.test(html));
   // ---- phone (390): the swipe deck, untouched
   let w=mk({'/meydan':MD,'/offer-mine':{votes:MINE},'/campaigns':[]},390); await sleep(250); let D=w.document;
   T('phone: deck rendered, no desktop grid, body not jdesk', !!D.getElementById('jDeck') && !D.querySelector('.jdk-grid') && !D.body.classList.contains('jdesk') && D.querySelectorAll('#jDeck .jcard').length===24);
@@ -186,7 +186,7 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     const w6=mk({'/meydan':ML,'/offer-mine':MINE0,'/campaigns':[]},390); await sleep(250);
     const f0=w6.fetch; w6.fetch=async(u,init)=>{ const s=String(u); const body=init&&init.body?JSON.parse(init.body):{};
       if(s.endsWith('/wa-ok')){ calls.push(['wa-ok',body.dev]); return {ok:true,status:200,json:async()=>({ok:true,wa:true,wa_at:new Date().toISOString(),me:null})}; }
-      if(s.endsWith('/dev-bind')){ calls.push(['bind',body]); return body.order==='1201'&&body.email==='ayse.kaya@example.com'?{ok:true,status:200,json:async()=>({ok:true,dev:'PHONE00001',me:{member:true,name:'Ayşe Kaya',phone_tail:'4567',wa:true,ok:true}})}:{ok:false,status:404,json:async()=>({ok:false,error:'nomatch'})}; }
+      if(s.endsWith('/dev-bind')){ calls.push(['bind',body]); return (body.order==='1201'||body.phone==='05321234567')&&body.email==='ayse.kaya@example.com'?{ok:true,status:200,json:async()=>({ok:true,dev:'PHONE00001',me:{member:true,name:'Ayşe Kaya',phone_tail:'4567',wa:true,ok:true}})}:{ok:false,status:404,json:async()=>({ok:false,error:'nomatch'})}; }
       return f0(u,init); };
     T('gate: no Giriş chip anywhere (registration is the Shopify order)', !w6.document.querySelector('#jTop .jlgc') && !/jLoginHtml/.test(html));
     w6.eval("jLaneOpen('"+H0.id+"'); jLaneKap('"+H0.id+"')"); await sleep(60);
@@ -209,10 +209,13 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('flagged member → sheet with "WhatsApp grubunda görünmüyorsun" + group link, nothing added', !!w9.document.getElementById('jSheet') && /WhatsApp grubunda görünmüyorsun/.test(w9.document.querySelector('#jSheet .err').textContent) && !!w9.document.querySelector('#jSheet a.go') && !(w9.__g('dbGet')()[H0.id]));
     // bind: order no + e-mail → adopt the primary dev
     const w10=mk({'/meydan':ML,'/offer-mine':MINE0,'/campaigns':[]},390); await sleep(250); w10.fetch=w6.fetch; // same mocks
-    T('device hint carries the "Bu cihaza bağla" link', /Bu cihaza bağla/.test(w10.document.querySelector('.jdevh').textContent));
-    w10.eval("jBindOpen()"); await sleep(60); w10.document.getElementById('jgOrder').value='#1201'; w10.document.getElementById('jgMail').value='ayse.kaya@example.com'; await w10.eval("jBindGo()"); await sleep(80);
-    T('bind → POST /dev-bind {order, email, dev} → local dev becomes PHONE00001, wa flag set, sheet closed', calls.some(c=>c[0]==='bind'&&c[1].order==='1201'&&c[1].email==='ayse.kaya@example.com') && w10.localStorage.getItem('grupal_dev')==='PHONE00001' && w10.localStorage.getItem('grupal_waok')==='1' && !w10.document.getElementById('jSheet'));
-    w10.eval("jBindOpen()"); await sleep(40); w10.document.getElementById('jgOrder').value='9'; w10.document.getElementById('jgMail').value='x@example.com'; await w10.eval("jBindGo()"); await sleep(60);
+    T('v11a: the bind link left the "Nasıl çalışır" block and sits in the footer next to the EN chip', !w10.document.querySelector('.jdevh') && !!w10.document.getElementById('bindChip') && w10.document.getElementById('bindChip').getAttribute('onclick')==='jBindOpen()' && w10.document.getElementById('bindChip').nextElementSibling.id==='verChip' && w10.document.getElementById('bindChip').previousElementSibling.id==='langChip');
+    w10.eval("jBindOpen()"); await sleep(60); T('bind sheet: e-mail + phone fields, order no optional (collapsed)', !!w10.document.getElementById('jgPhone') && !!w10.document.getElementById('jgMail') && !!w10.document.getElementById('jgOrder') && w10.document.getElementById('jgOrder').closest('details')!==null && w10.document.activeElement===w10.document.getElementById('jgMail'));
+    w10.document.getElementById('jgPhone').value='0532 123 45 67'; w10.document.getElementById('jgMail').value='ayse.kaya@example.com'; await w10.eval("jBindGo()"); await sleep(80);
+    T('bind → POST /dev-bind {phone, email, dev} → local dev becomes PHONE00001, wa flag set, sheet closed', calls.some(c=>c[0]==='bind'&&c[1].phone==='05321234567'&&c[1].email==='ayse.kaya@example.com'&&c[1].order==='') && w10.localStorage.getItem('grupal_dev')==='PHONE00001' && w10.localStorage.getItem('grupal_waok')==='1' && !w10.document.getElementById('jSheet'));
+    w10.eval("jBindOpen()"); await sleep(40); w10.document.getElementById('jgMail').value='x@example.com'; await w10.eval("jBindGo()"); await sleep(30);
+    T('e-mail without phone or order no → validation message, no request', /telefon \(ya da sipariş no\) gerekli/.test(w10.document.querySelector('#jSheet .err').textContent));
+    w10.document.getElementById('jgMail').value='x@example.com'; w10.document.getElementById('jgOrder').value='9'; await w10.eval("jBindGo()"); await sleep(60);
     T('bind with wrong data → "Eşleşmedi" stays on the sheet', !!w10.document.getElementById('jSheet') && /Eşleşmedi/.test(w10.document.querySelector('#jSheet .err').textContent));
     // gate off, or on without a group link: no sheet, Kapora koy works directly
     const MO=JSON.parse(JSON.stringify(MH)); MO.offer_cfg.login_required=false; const w7=mk({'/meydan':MO,'/offer-mine':MINE0,'/campaigns':[]},390); await sleep(250); w7.eval("jLaneOpen('"+H0.id+"'); jLaneKap('"+H0.id+"')"); await sleep(40);

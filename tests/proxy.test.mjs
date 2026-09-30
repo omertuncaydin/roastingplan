@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.51 tag', r.json && r.json.v === '3.51');
+T('v3.52 tag', r.json && r.json.v === '3.52');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -216,6 +216,11 @@ r = await px.call('POST', '/admin/user-flag', { email: 'ayse.kaya@example.com', 
 r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('offer-mine after clearing → wa false (page would ask again)', r.json.me.wa === false);
 r = await px.call('POST', '/admin/user-flag', { email: 'ayse.kaya@example.com', wa: true }, { 'x-cc-key': 'adminkey' }); T('admin marks Grupta ✓ → wa true', r.json.ok && r.json.me.wa === true);
 r = await px.call('GET', '/admin/users', null, { 'x-cc-key': 'adminkey' }); T('admin/users shows wa_by admin', r.json.users.find(u => u.email === 'ayse.kaya@example.com').wa_by === 'admin');
+// v3.52: e-mail + phone binds too (old kaporas have no ord_ record → the order-no path alone failed for the whole jury)
+px.DB.grupal_offer_votes.push({ offer_id: B2c, dev: 'WATCH00004', seated: false, paid: true, qty: 1, order_id: 9304, email: 'ayse.kaya@example.com', created_at: '2026-09-25T11:00:00.000Z' });
+r = await px.call('POST', '/dev-bind', { email: 'ayse.kaya@example.com', dev: 'WATCH00004' }); T('dev-bind: e-mail alone → input (400)', r.status === 400);
+r = await px.call('POST', '/dev-bind', { email: 'ayse.kaya@example.com', phone: '0532 999 99 99', dev: 'WATCH00004' }); T('dev-bind: wrong phone → nomatch', r.status === 404 && px.DB.grupal_offer_votes.some(v => v.dev === 'WATCH00004'));
+r = await px.call('POST', '/dev-bind', { email: 'Ayse.Kaya@example.com', phone: '0532 123 45 67', dev: 'WATCH00004' }); T('dev-bind: e-mail + phone on the order (any format) → primary dev, rows merged', r.json.ok && r.json.dev === 'PHONE00001' && !px.DB.grupal_offer_votes.some(v => v.dev === 'WATCH00004'));
 r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('offer-mine: wa true again without any device flag (admin approval counts)', r.json.me.wa === true);
 r = await px.call('POST', '/admin/settings', { login_required: '1', wa_group_url: 'https://chat.whatsapp.com/ABCdef123456' }, { 'x-cc-key': 'adminkey' });
 T('settings: login_required + wa_group_url accepted and published in cfg', r.json.ok && r.json.cfg.login_required === true && r.json.cfg.wa_group_url === 'https://chat.whatsapp.com/ABCdef123456');
