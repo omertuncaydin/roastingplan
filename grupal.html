@@ -464,8 +464,8 @@ body.th-red #pwaAdd{color:#e6c14b!important;border-color:#e6c14b!important}
 .jchip.jhm{border-color:rgba(159,211,178,.55);color:#9fd3b2}
 .jchip.jinv{border-color:rgba(230,193,75,.7);color:#e6c14b;cursor:pointer}
 .jchip.jtbl{border-color:rgba(159,211,178,.6);color:#9fd3b2;cursor:pointer}
-#jSheetBack{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:60}
-#jSheet{position:fixed;left:0;right:0;bottom:0;z-index:61;--panel:#221c15;--panel2:#1c1712;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--gold:#e6c14b;--btnink:#16130f;background:#16130f;color:#f3ede4;border-radius:22px 22px 0 0;border-top:1px solid #3a2f26;padding:14px 16px 22px;box-shadow:0 -20px 50px rgba(0,0,0,.5);max-height:88dvh;overflow:auto;animation:jUp .45s cubic-bezier(.2,.8,.2,1)}
+#jSheetBack{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:70}
+#jSheet{position:fixed;left:0;right:0;bottom:0;z-index:71;--panel:#221c15;--panel2:#1c1712;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--gold:#e6c14b;--btnink:#16130f;background:#16130f;color:#f3ede4;border-radius:22px 22px 0 0;border-top:1px solid #3a2f26;padding:14px 16px 22px;box-shadow:0 -20px 50px rgba(0,0,0,.5);max-height:88dvh;overflow:auto;animation:jUp .45s cubic-bezier(.2,.8,.2,1)}
 body.jdesk #jSheet{left:auto;right:24px;bottom:24px;width:520px;border-radius:18px;border:1px solid #3a2f26}
 #jSheetBack{background:rgba(0,0,0,.55)}
 .jlanes-w{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s cubic-bezier(.2,.8,.2,1);margin:0 -6px}
@@ -474,24 +474,15 @@ body.jdesk #jSheet{left:auto;right:24px;bottom:24px;width:520px;border-radius:18
 .jcard .jlanes{margin-top:6px;max-height:max(180px,calc(min(600px,max(400px,100dvh - 330px)) - 200px));overflow:auto;-webkit-overflow-scrolling:touch}   /* v10m: kart yüksekliğine bağlı — gövde karttan taşıp başlığı örtmesin (davetiye satırı eklendi) */
 .jcard .jlanes-w{--panel:#221c15;--panel2:#1c1712;--ink:#f3ede4;--muted:#b8a999;--line:#3a2f26;--gold:#e6c14b;--btnink:#16130f;--green:#9fd3b2;color:#f3ede4}
 .jcard .jlane{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);background:rgba(22,19,15,.72)}
-.jcard.lopen .jdesc,.jcard.lopen .jchips2,.jcard.lopen .jmeta{display:none}
-.jcard.lopen .jname{font-size:22px}
-.jcard.lopen .jbody{z-index:6;top:0;justify-content:flex-end;min-height:0;padding-top:58px}   /* v10m: gövde kartın tamamını kaplar (üstte çip satırına yer), alta yaslanır; şeritler sığmazsa KENDİ içinde kayar, alt satır (Kapat) hep görünür */
-.jcard.lopen .jlanes-w{flex:0 1 auto;min-height:0}.jcard.lopen .jlanes-w>div{min-height:0;display:flex;flex-direction:column}.jcard.lopen .jlanes{max-height:none;min-height:0;flex:0 1 auto}.jcard.lopen .jlfoot{flex:none}
-.jdeckw:has(.jcard.lopen) .jclock{display:none}
-.jcard.lopen .jrow.j2{background:rgba(243,237,228,.08)}
-body.jdesk .jcard.lopen{height:400px;min-height:0;overflow:visible;z-index:40}body.jdesk .jcard.lopen:hover{transform:none}
-body.jdesk .jcard.lopen>.jbg,body.jdesk .jcard.lopen>.jsh,body.jdesk .jcard.lopen>.jsh2{border-radius:20px;overflow:hidden}
 .jcard{container-type:inline-size}
 .jcard .jlane .cta{font-size:12.5px;padding:11px 6px}
 /* v10g (Ömer "mockup'taki tasarım nerede?"): masaüstü ızgara kartı (içerik ~280–320px) da mockup gibi İKİ ŞERİT yan yana — sıkı ölçek; yalnız 250px altında alt alta */
 @container (max-width:340px){.jcard .jplus{width:52px;height:52px}.jcard .jplus[aria-label="+"]::before{width:20px}.jcard .jplus[aria-label="+"]::after{height:20px}.jcard .jlanes{gap:6px}.jcard .jlane{padding:10px 8px;border-radius:14px}.jcard .jlane .lp{font-size:23px}.jcard .jlane .qt{font-size:13px}.jcard .jlane .qt b{font-size:19px}.jcard .jlane .why{font-size:10.5px}.jcard .jlane .cta{font-size:11.5px;padding:10px 4px}.jcard .jlane .cal{display:none}.jcard .jlane .ls{font-size:11px}}
 @container (max-width:250px){.jcard .jlanes{grid-template-columns:1fr}}
 .jcard .jrow.j2:has(.jq) .jnow{display:none}
-body.jdesk .jcard.lopen .jbody{position:absolute;top:0;left:0;right:0;bottom:auto;justify-content:flex-start;min-height:400px;padding:170px 14px 12px;background:linear-gradient(180deg,rgba(28,23,18,0) 0,rgba(28,23,18,0) 110px,rgba(28,23,18,.9) 190px,#1c1712 400px);border-radius:20px;box-shadow:0 26px 54px rgba(0,0,0,.5)}
-body.jdesk .jcard.lopen .jlanes-w{flex:none}body.jdesk .jcard.lopen .jlanes-w>div{display:block}
 body.jdesk .jcard .jlanes{max-height:none;overflow:visible}
-.jdk-drawer .jlanes-w{margin:6px 0 0}
+.jdk-drawer .jlanes-w{margin:0 0 4px}.jdk-dname{position:absolute;left:14px;right:60px;bottom:10px;color:#f3ede4;text-shadow:0 1px 8px rgba(0,0,0,.7)}.jdk-dname b{font-size:20px;font-weight:900;letter-spacing:-.2px}.jdk-dname span{margin-left:8px;font-size:12px;font-weight:800;opacity:.85}.jdk-dsub{font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:800;color:var(--muted);margin:14px 0 6px}
+body:not(.jdesk) .jdk-drawer{left:0;right:0;width:auto;max-width:none;top:6vh;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;animation:jdkUp .28s cubic-bezier(.2,.8,.2,1)}body:not(.jdesk) .jdk-dhead{height:140px}@keyframes jdkUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}   /* v11d: telefonda alttan tam genişlik kahve sayfası */
 .jdk-drawer .jlane{background:var(--panel2)}
 .jlfoot a{color:var(--muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .jlane{background:rgba(22,19,15,.72);border-color:rgba(243,237,228,.16)}
@@ -737,7 +728,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30zc';
+const VERSION='v2026-09-30zd';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1318,11 +1309,19 @@ function jTableHtml(rows,list,cfg,G,gate,banned){ if(!rows.length) return ''; co
   return '<table class="jdk-table"><thead><tr><th class="r">#</th><th class="c">'+t('jdColCoffee')+'</th><th class="n">'+t('jdColCount')+'</th><th class="p">'+t('jdColPrice')+'</th><th class="s"></th><th class="a"></th></tr></thead><tbody>'
    +rows.map(o=>jRowHtml(o,ord.findIndex(x=>x.id===o.id),cfg,G,gate,banned)).join('')+'</tbody></table>'; }
 function jDeskOpen(id){ JSEL=id; OFFOPEN.add(id); renderOffers(STATE); const d=$('jDrawer'); if(d) d.scrollTop=0; }
-function jDeskClose(){ JSEL=null; renderOffers(STATE); }
+function jDeskClose(){ JSEL=null; JLANE=null; renderOffers(STATE); }
+// v11d (Ömer): TEK KAHVE SAYFASI — her cihazda aynı bileşen: masaüstünde sağ panel, telefonda alttan tam genişlik sayfa. Üstte şeritler (Kapora koy / Tamamla / Sepete), altında detay satırı.
+// Kalıcı düğüm: liste yeniden çizilince (30 sn) içerik güncellenir, panel yeniden kaymaz. Kart içi kayan şerit paneli kalktı.
+function renderDrawer(list,ctx){ let back=$('jdkBack'), d=$('jDrawer'); const o=JSEL?list.find(x=>x.id===JSEL):null;
+  if(!o||!ctx.depMode){ if(back) back.remove(); if(d) d.remove(); return; }
+  OFFOPEN.add(o.id); const rank=jDeckOrder(list).findIndex(x=>x.id===o.id)+1; const hasImg=!!(o.img_url&&/^https:\/\//.test(String(o.img_url)));
+  if(!back){ back=document.createElement('div'); back.id='jdkBack'; back.className='jdk-back'; back.onclick=jDeskClose; document.body.appendChild(back); }
+  if(!d){ d=document.createElement('aside'); d.id='jDrawer'; d.className='jdk-drawer'; document.body.appendChild(d); }
+  d.innerHTML='<div class="jdk-dhead">'+(hasImg?('<img src="'+escZ(o.img_url)+'" alt="" style="display:block;width:100%;height:100%;object-fit:cover">'):jLand(o.origin,420,180))+'<div class="jdk-dname"><b>'+escZ(o.name)+'</b>'+(rank?('<span>#'+rank+'</span>'):'')+'</div><button class="jdk-x" onclick="jDeskClose()" title="'+t('jdClose')+'">✕</button></div>'
+    +'<div class="jdk-dbody"><div class="jlanes-w" onclick="event.stopPropagation()"><div>'+jLanesHtml(o,(JLANE&&JLANE.id===o.id)?JLANE.c:null)+'</div></div>'
+    +'<div class="jdk-dsub">'+t('jDetail').replace(' ›','')+'</div>'+offRowHtml(o,Object.assign({},ctx,{rank})).replace(/ onclick="offDetail\([^"]*\)"/,'')+'</div>'; }
 function jDeskFilter(k){ JDF=k; try{ localStorage.setItem('grupal_jdf',k); }catch(e){} renderOffers(STATE); }
-function jGoRow(id){ if(jIsDesk()) return jDeskOpen(id); const o=((STATE&&STATE.offers)||[]).find(x=>x.id===id); if(!o) return; const k='all'; OFFOPEN.add(id); OFFALL=true;   // v11c: satır yalnız 'Tüm liste'de (tat grupları artık kart gösterir)
-  if(JBAND!==k){ JBAND=k; try{ localStorage.setItem('grupal_jband',k); }catch(e){} } renderOffers(STATE);
-  const e=document.querySelector('#offList .orow[data-id="'+id+'"]'); if(e&&e.scrollIntoView) e.scrollIntoView({behavior:'smooth',block:'center'}); }
+function jGoRow(id){ return jDeskOpen(id); }   // v11d: her cihazda kahve sayfası
 function jGoCard(id){ if(jIsDesk()) return jDeskOpen(id); const dk=$('jDeck'); if(!dk) return; const c=dk.querySelector('.jcard[data-id="'+id+'"]'); if(!c) return; try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){}
   const x=c.offsetLeft-(dk.clientWidth-c.clientWidth)/2; try{ dk.scrollTo({left:x,behavior:'smooth'}); }catch(e){ dk.scrollLeft=x; } }
 function renderJTop(s,list){ const rb=document.querySelector('button[title="Refresh"]'); if(rb&&rb.parentElement&&rb.parentElement.id==='jTopR') document.body.appendChild(rb);   // v09n: yeniden çizimde düğme silinmesin
@@ -1354,13 +1353,13 @@ function renderDeck(list,cfg,G,gate,banned,clk){ const all=jDeckOrder(list);   /
 function jCardHtml(o,i,cfg,G,gate,banned){ const paid=(OFFMINE||[]).find(v=>v.id===o.id&&v.paid); const jury=o.jury_tl||o.camp200_tl; const tk=tasteOf(o); const tn=TASTES.find(x=>x[0]===tk); const tc=tn?TASTECOL[tk]:''; const tp=jTop(o);
     const hasImg=!!(o.img_url&&/^https:\/\//.test(String(o.img_url)));   // v09s (22.09): kahvenin fotoğrafı varsa arka plan o; yoksa dağ+güneş (renk mantığı aynen)
     const bg=hasImg?('<img src="'+escZ(o.img_url)+'" alt="" loading="lazy" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover">'):jLand(o.origin,362,460,true);
-    return '<div class="jcard'+(paid?' mine':'')+(hasImg?' photo':'')+(o.lock?' jlock':'')+(JSEL===o.id?' sel':'')+((JLANE&&JLANE.id===o.id)?(' lopen'+(JLANE.anim?'':' lanim')):'')+'" data-i="'+i+'" data-id="'+escZ(o.id)+'"'+(jIsDesk()?(' onclick="jDeskOpen(\''+escZ(o.id)+'\')"'):'')+'><div class="jbg">'+bg+'</div><div class="jsh"></div><div class="jsh2"></div>'
+    return '<div class="jcard'+(paid?' mine':'')+(hasImg?' photo':'')+(o.lock?' jlock':'')+(JSEL===o.id?' sel':'')+'" data-i="'+i+'" data-id="'+escZ(o.id)+'" onclick="jDeskOpen(\''+escZ(o.id)+'\')"><div class="jbg">'+bg+'</div><div class="jsh"></div><div class="jsh2"></div>'
      +'<div class="jtop"><div style="display:flex;gap:6px;min-width:0"><span class="jchip">#'+(i+1)+(tp?' <span style="color:#e6c14b" title="'+t('jTop5')+'">★</span>':'')+'</span>'+(paid?('<span class="jchip jminec">'+(paid.conv?'🔒 ':'')+t('jMineChip').replace('{n}',Math.max(1,parseInt(paid.qty)||1))+'</span>'+((!paid.conv&&!JMOVE&&!JBUSY&&((STATE&&STATE.offers)||[]).length>1)?('<span class="jchip jmvl" onclick="event.stopPropagation();jMoveStart(\''+escZ(o.id)+'\')">'+t('jMoveL')+'</span>'):'')):(tn?('<span class="jchip jtaste"><i style="background:'+tc+'"></i>'+(LANG==='en'?tn[2]:tn[1])+'</span>'):''))+'</div>'
      +'<svg width="50" height="50" viewBox="0 0 50 50" aria-hidden="true"><circle cx="25" cy="25" r="21" fill="rgba(22,19,15,.5)" stroke="rgba(243,237,228,.25)" stroke-width="4"/><circle cx="25" cy="25" r="21" fill="none" stroke="#e6c14b" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+(2*Math.PI*21*Math.min(1,(o.dep||0)/G)).toFixed(1)+' 999" transform="rotate(-90 25 25)"/><text x="25" y="29" text-anchor="middle" font-size="14" font-weight="800" fill="#f3ede4" font-family="-apple-system,Segoe UI,Roboto,sans-serif">'+(o.dep||0)+'</text></svg></div>'   // v10z (Ömer): halka her zaman canlı sayaç — kilitte sıfırlanır (sonraki parti); kilitli partinin adedi rozette
      +'<div class="jbody"><div class="jmeta">'+jMeta(o)+'</div><div class="jname">'+escZ(o.name)+'</div>'+(jDesc(o)?('<div class="jdesc">'+jDesc(o)+'</div>'):'')
-     +'<div class="jchips2">'+jLockBadge(o,true)+'<span class="jchip jgoto" onclick="event.stopPropagation();jGoRow(\''+escZ(o.id)+'\')">'+t(jIsDesk()?'jDetail':'jGoto')+'</span>'
+     +'<div class="jchips2">'+jLockBadge(o,true)+'<span class="jchip jgoto" onclick="event.stopPropagation();jGoRow(\''+escZ(o.id)+'\')">'+t('jDetail')+'</span>'
      +(jHemen(o)?jHemenChips(o):(jShopUrl(o)?('<a class="jchip jshop" href="'+escZ(jShopUrl(o))+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i></i>'+t('jShop')+(o.list_tl?(' <b>'+fmtTL(o.list_tl)+' TL</b>'):'')+'</a>'):''))+'</div>'
-     +jPriceRow(o,cfg,paid,gate,banned,jury)+((JLANE&&JLANE.id===o.id)?('<div class="jlanes-w" onclick="event.stopPropagation()"><div>'+jLanesHtml(o,JLANE.c)+'</div></div>'):'')+'</div></div>'; }
+     +jPriceRow(o,cfg,paid,gate,banned,jury)+'</div></div>'; }   // v11d: şeritler kartta değil, kahve sayfasında
 // v10a: kartın fiyat satırı — Hemen-Al şeridi olan kahvede iki fiyat (Grup-Al · Hemen-Al), dokununca alt sayfa; yoksa eski tek satır
 function jPriceRow(o,cfg,paid,gate,banned,jury){
   const strike=(o.list_tl&&jury&&o.list_tl>jury)?('<s>'+fmtTL(o.list_tl)+'</s>'):''; const pr=jury?(fmtTL(jury)+' TL'):'';
@@ -1456,7 +1455,7 @@ function renderOffers(s){
   const dk0=$('jDeck'), keepSL=dk0?dk0.scrollLeft:0;   // v09n: + basınca deste yerinde kalsın
   const openD=[...el.querySelectorAll('details[open]')].map(d=>{ const sm=d.querySelector('summary'); return sm?sm.textContent.trim():''; }).filter(Boolean);   // v11a: 30 sn yenilemede açık 'Nasıl çalışır?' kapanmasın
   el.innerHTML=h; card.style.display='block'; if(openD.length) el.querySelectorAll('details').forEach(d=>{ const sm=d.querySelector('summary'); if(sm&&openD.includes(sm.textContent.trim())) d.open=true; });
-  renderBasketBar(); renderSheet(); renderLanePanels(); cyStartClock();   // v09a: geri sayım saati · v10a: alt sayfa (şeritler / davetiyeler) · v10c: masaüstü ızgara paketleme
+  renderDrawer(list,ctx); renderBasketBar(); renderSheet(); renderLanePanels(); cyStartClock();   // v09a: geri sayım saati · v10a: alt sayfa (şeritler / davetiyeler) · v10c: masaüstü ızgara paketleme
   { const dk=$('jDeck'); if(dk&&keepSL){ dk.scrollLeft=keepSL; const n=Math.round(keepSL/Math.max(1,dk.clientWidth))+1; const dn=document.querySelector('.jdots .jdn'); if(dn) dn.textContent=n+' / '+dk.children.length+' · '+t('jSwipe'); } }
   { const dk=$('jDeck'); const mc=dk&&dk.querySelector('.jcard.mine'); if(mc&&!keepSL&&!window.__jMineOpened&&!(dk.__touched)){ window.__jMineOpened=true; const x=mc.offsetLeft-(dk.clientWidth-mc.clientWidth)/2; if(x>0){ dk.scrollLeft=x; const n=(parseInt(mc.getAttribute('data-i'))||0)+1; const dn=document.querySelector('.jdots .jdn'); if(dn) dn.textContent=n+' / '+dk.children.length+' · '+t('jSwipe'); } } }   // v09o: deste, senin kahvende açılır (bir kez; kaydırdıysan karışmaz
   if(window.__jPop){ const id=window.__jPop; window.__jPop=null; document.querySelectorAll('[data-id="'+id+'"] .jq,[data-id="'+id+'"] .oq,[data-id="'+id+'"] button.oc,[data-id="'+id+'"] .jminec,[data-id="'+id+'"] .jplus').forEach(e=>{ e.classList.add('pop'); }); const bar=$('dbBar'); if(bar){ bar.classList.remove('bump'); void bar.offsetWidth; bar.classList.add('bump'); } }   // v09n: dokunulan kontrol zıplar, sepet çubuğu vurgulanır
@@ -1467,18 +1466,16 @@ function renderOffers(s){
 
 
 // ===== v10a GRUP-AL / HEMEN-AL: alt sayfa (iki şerit · davetiye biletleri) · davetli görünümü · Hemen-Al sipariş linki =====
-function jLaneOpen(id,c){ if(JLANE&&JLANE.id===id&&!c){ return jLaneClose(); } JLANE={id,c:c||null,anim:true}; JSHEET=null;
-  if(jIsDesk()&&!document.querySelector('.jcard[data-id="'+id+'"]')){ return jDeskOpen(id); }   // masaüstü Liste görünümü: kart yok → çekmece (şeritler çekmecede)
-  renderOffers(STATE); if(!jIsDesk()) jGoCard(id); }
-function jLaneClose(){ JLANE=null; renderOffers(STATE); }
+function jLaneOpen(id,c){ JLANE={id,c:c||null,anim:true}; JSHEET=null; jDeskOpen(id); }   // v11d: şeritler kahve sayfasında (çekmece) açılır — kart içi panel yok
+function jLaneClose(){ jDeskClose(); }
 // v10p: masaüstü ızgarasında kartlar yer değiştirmez (paket yok); açık kartın paneli üstte açılır (CSS) · boş yere tıklayınca kapanır
-document.addEventListener('click',function(e){ if(!JLANE) return; const t=e.target; if(!(t&&t.closest)) return; if(t.closest('.jcard.lopen,#jSheet,#jSheetBack,.jdk-drawer,#dbBar,#termsModal,.jplus,.jrow.j2,.jq')) return; jLaneClose(); });
+// v11d: dış tıklama dinleyicisi kalktı — çekmecenin arka planı kapatır
 function jInvOpen(id){ JSHEET={mode:'inv',id:id||null}; renderOffers(STATE); }
 function jSheetClose(){ JSHEET=null; renderOffers(STATE); }
 function jLaneKap(id){ if(!jGate({type:'kap',id})) return; if(JLANE&&JLANE.id===id) JLANE.anim='kap'; dbAdd(id,1); }   // v10d: panel açık kalır, düğme Öde'ye döner · v10m: +q sen ve davetiye rozeti bu anda belirir · v10n: kapı
 function jHemenUrl(o,c){ if(!jHemen(o)) return ''; const u=String(o.hemen.url); return u+(u.includes('?')?'&':'?')+'attributes[offer]='+encodeURIComponent(o.id)+'&attributes[dev]='+encodeURIComponent(devId())+'&attributes[hemen]=1'+(c?('&attributes[inv]='+encodeURIComponent(c)):''); }
 async function jHemenGo(id,c){ const o=((STATE&&STATE.offers)||[]).find(x=>x.id===id); if(!jHemen(o)) return;
-  const btn=document.querySelector('.jcard.lopen .jlane.ha .cta,#jDrawer .jlane.ha .cta'); if(btn){ btn.disabled=true; btn.textContent=t('jHBusy'); }
+  const btn=document.querySelector('#jDrawer .jlane.ha .cta'); if(btn){ btn.disabled=true; btn.textContent=t('jHBusy'); }
   // v10e: 25 sn üst sınır — proxy/Shopify yanıt vermezse düğme "bağlanıyor…"da asılı kalmasın (AbortController; jsdom'da da var)
   const ac=(typeof AbortController!=='undefined')?new AbortController():null; const tm=ac?setTimeout(()=>ac.abort(),25000):null;
   try{ const r=await fetch(API+'/hemen-link',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id,dev:devId(),inv:c||null}),signal:ac?ac.signal:undefined}); const j=await r.json();
@@ -1566,11 +1563,11 @@ function renderSheet(){ let back=$('jSheetBack'), sh=$('jSheet'); const h=jSheet
   if(!back){ back=document.createElement('div'); back.id='jSheetBack'; back.onclick=jSheetClose; document.body.appendChild(back); }
   if(!sh){ sh=document.createElement('div'); sh.id='jSheet'; document.body.appendChild(sh); }
   sh.innerHTML=h; }
-// v10c: kart içi şerit paneli — açıkken kart .lopen; bir kare sonra .lanim (0fr → 1fr akordeon), sonra mockup animasyonu (çekmecede anında)
-function renderLanePanels(){ document.querySelectorAll('.jcard.lopen,.jdk-drawer .jlanes-w').forEach(el=>{ if(el.__lane) return; el.__lane=true; const isCard=el.classList.contains('jcard'); const w=isCard?(el.querySelector('.jlanes-w')||el):el;
-    const mode=JLANE?JLANE.anim:false; if(JLANE) JLANE.anim=false;
-    if(isCard&&mode&&!window.__jFast){ requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.classList.add('lanim'); jSheetAnim(w,mode==='kap'?{roll:false,plus:true}:{roll:true,plus:false}); })); }
-    else { el.classList.add('lanim'); w.classList.add('plus','opened'); } }); }
+// v11d: şerit paneli yalnız kahve sayfasında (çekmece); açılışta mockup animasyonu, sonraki çizimlerde anında
+function renderLanePanels(){ document.querySelectorAll('.jdk-drawer .jlanes-w').forEach(w=>{ if(w.__lane) return; w.__lane=true;
+    const mode=JLANE?JLANE.anim:false; if(JLANE) JLANE.anim=false; w.classList.add('lanim');
+    if(mode&&!window.__jFast){ requestAnimationFrame(()=>requestAnimationFrame(()=>{ jSheetAnim(w,mode==='kap'?{roll:false,plus:true}:{roll:true,plus:false}); })); }
+    else w.classList.add('plus','opened'); }); }   // v11d: yalnız kahve sayfası; animasyon yalnız açılışta (30 sn yenilemede tekrar kaymaz)
 // v10b: mockup animasyonu — fiyat listeden kaporalıya iner, sayaca +1 sen düşer, Hemen-Al'da +2 davetiye rozeti belirir (testte __jFast: anında)
 function jSheetAnim(sh,opts){ opts=opts||{roll:true,plus:true}; const lp=sh.querySelector('.jlane.ga .lp'); const fast=!!window.__jFast; const done=()=>{ sh.classList.add('plus'); }; const done2=()=>{ sh.classList.add('opened'); };
   if(fast||!lp){ done(); done2(); return; }
@@ -1593,7 +1590,7 @@ function renderJuriPage(s,list,ctx,early,codeOk){
   const clk=nc?jClockBoxes(nc):'';   // v09m: çerçeveli sayaç kartın üstünde (dağların hizasında)
   // SAYFA 1 — Deste: tüm kahveler, ön sipariş sırasına göre; sayaç kartın üstünde
   h+='<section class="jpage'+(jMineList(list).length?' hasmine':'')+(jWelcShow()?' haswelc':'')+'" id="jP1">'+jWelcHtml(cfg)+jGuestHtml()+renderTicker(list,G)+renderDeck(list,cfg,G,gate,banned,clk)
-    +'<div class="jnav"><button class="jnb" onclick="jOpenBand(\'top5\')">★ '+t('jTop5')+' ›</button><button class="jnb" onclick="jOpenBand(\'all\')">'+t('jAllList').replace('{n}',list.length)+' ›</button></div>'
+    +'<div class="jnav"><button class="jnb" onclick="jOpenBand(\'top5\')">★ '+t('jTop5')+' ›</button></div>'   // v11d: 'Tüm liste' kalktı (deste zaten tüm kahveler)
     +'</section>';   // v11c: 'yukarı kaydır' ipucu kalktı
   // SAYFA 2 — Damak akordeonu
   h+='<section class="jpage" id="jP2"><div class="jh2">'+t('jDamakT')+'</div>';
@@ -1603,7 +1600,7 @@ function renderJuriPage(s,list,ctx,early,codeOk){
       +'<div style="display:flex;gap:6px;margin-top:6px" onclick="event.stopPropagation()"><input id="gcodeIn" placeholder="'+t('offCodeL')+'" style="flex:1;min-width:0;margin:0;padding:8px 10px;font-size:14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink)" onkeydown="if(event.key===\'Enter\'){gcodeSend();}"><button onclick="gcodeSend()" style="width:auto;margin:0;padding:8px 14px;font-size:13px">'+t('offCodeB')+'</button></div><div class="hint" id="gcodeMsg" style="margin-top:4px;color:#e0705a"></div></div>');
   { const tot=list.reduce((a,o)=>a+(o.dep||0),0), kk=list.filter(o=>(o.dep||0)>0).length, dg=parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.day_goal)||0)||0;
   h+='<div id="offTot" style="margin:0 0 8px;padding:8px 10px;border-radius:10px;background:var(--panel2);font-size:12.5px;font-weight:700">'+(dg?t('offTotG').replace('{sum}',tot).replace('{dg}',dg):t('offTot').replace('{sum}',tot))+(kk?(' · '+t('offTotK').replace('{k}',kk)):'')+'</div>'; }
-  for(const [k,name,col,arr] of jBandKeys(list)){ if(!arr.length) continue; const open=JBAND===k; const prices=arr.map(o=>o.jury_tl||o.camp200_tl).filter(Boolean); const lo=Math.min(...prices), hi=Math.max(...prices);
+  for(const [k,name,col,arr] of jBandKeys(list)){ if(!arr.length||k==='all') continue; /* v11d: Tüm liste bandı yok */ const open=JBAND===k; const prices=arr.map(o=>o.jury_tl||o.camp200_tl).filter(Boolean); const lo=Math.min(...prices), hi=Math.max(...prices);
     let rows='';
     if(open){ const srt=arr.slice().sort((a,b)=>(k==='top5')?0:((b.dep||0)-(a.dep||0))); const fold=(k==='all')&&!OFFALL&&srt.length>OFFFOLD+2;
       const shown=fold?srt.filter((o,i)=>i<OFFFOLD||(o.dep||0)>0||mine.includes(o.id)||(OFFMINE||[]).some(v=>v.id===o.id&&v.paid)||pend.includes(o.id)):srt;
@@ -1652,11 +1649,7 @@ function renderJuriDesk(s,list,ctx,early,codeOk){
     if(rest.length) h+=(view==='list')?jTableHtml(rest,list,cfg,G,gate,banned):('<div class="jdk-grid">'+rest.map(card).join('')+'</div>'); }
   h+='</main>';
   // sağ çekmece: seçili kahvenin satırı (detay açık) — kulvar satırıyla aynı bileşen, tıklama kapatmasın diye satır onclick'i sökülür
-  if(JSEL){ const o=list.find(x=>x.id===JSEL); if(o){ OFFOPEN.add(o.id); const rank=jDeckOrder(list).findIndex(x=>x.id===o.id)+1;
-    const hasImg=!!(o.img_url&&/^https:\/\//.test(String(o.img_url)));
-    h+='<div class="jdk-back" onclick="jDeskClose()"></div><aside class="jdk-drawer" id="jDrawer"><div class="jdk-dhead">'+(hasImg?('<img src="'+escZ(o.img_url)+'" alt="" style="display:block;width:100%;height:100%;object-fit:cover">'):jLand(o.origin,420,180))+'<button class="jdk-x" onclick="jDeskClose()" title="'+t('jdClose')+'">✕</button></div>'
-      +'<div class="jdk-dbody">'+offRowHtml(o,Object.assign({},ctx,{rank})).replace(/ onclick="offDetail\([^"]*\)"/,'')+'<div class="jlanes-w" onclick="event.stopPropagation()"><div>'+jLanesHtml(o,(JLANE&&JLANE.id===o.id)?JLANE.c:null)+'</div></div></div></aside>'; } }
-  h+='</div>';
+  h+='</div>';   // v11d: çekmece artık her cihazda kalıcı düğüm (renderDrawer) — 30 sn yenilemede yeniden kaymaz
   return h;
 }
 // v02v DÖNGÜ ÇUBUĞU: sayım (Pazar 23:59) → toplama·numune·reçete → kavurucuya → kavurma → paketleme·kargo → sayım

@@ -26,3 +26,8 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - Phone layout is the deck + groups + session page again (the v11b single-grid experiment was reverted the same day). Tapping a taste group or CoffeeNutz'ın 5'i opens a horizontal deck of that group's cards (global rank numbers, "n kahve · kaydır"); Tüm liste stays the ranked list; Kahveye git › opens the row in Tüm liste.
 - Page snapping (scroll-snap between the three pages) and the "yukarı kaydır" hint are gone. Footer chip shows "✓ Bağlandı · <name>" once the device is recognised.
 - `tests/shot-bands.mjs` renders an open group at 390 px and checks: cards not rows, deck scrollable, no snap, no hint.
+
+
+## v11d (2026-09-30) — one coffee sheet
+- The in-card lane panel (which re-slid on every 30-second refresh) is gone. `+`, the price line and `Detay ›` all open the same **coffee sheet** on every device: a persistent `#jDrawer` node (right drawer on desktop, full-width bottom sheet on phones) with the Grup-Al / Hemen-Al lanes first (Kapora koy · Tamamla · Sepete) and the detail row below; backdrop or ✕ closes. Re-renders update its content in place, so it never re-animates.
+- Phone page: deck + groups (cards) + session; the 'Tüm liste' band and button are gone; no scroll snapping. `tests/shot-sheet.mjs` measures the sheet at 390 and 1366 (lanes first, CTA visible without scrolling, full width on phones). `shot-lanes*.mjs` / `shot-overlay.mjs` were removed with the in-card panel.
