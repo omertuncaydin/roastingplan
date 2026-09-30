@@ -10,6 +10,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="grupal-admin-icon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
 <!-- grupal-admin.html · v2026-09-30f · UYGULA cevabındaki backfill (proxy v3.43) mesajda: "davetiye ×n" -->
+<!-- grupal-admin.html · v2026-09-30i · ERKEN KİLİT (proxy v3.47): satırda "Kilitle şimdi" (40 beklemeden; kaporalar tamamlamaya açılır) · Jüri üyeleri: "Eski kaporalardan üye çıkar" (Shopify müşterisinden ad/telefon) -->
 <!-- grupal-admin.html · v2026-09-30h · JÜRİ KAPISI (proxy v3.46): kayıt = Shopify siparişi; ilk kaporada bir kez WhatsApp grubu; üye listesi e-posta anahtarlı (Grupta değil / Onayla) -->
 <!-- grupal-admin.html · v2026-09-30g · JÜRİ GİRİŞİ (proxy v3.45): Ayarlar → "Jüri girişi" (zorunlu aç/kapa · WhatsApp grup linki · SMTP/şablon notu) · "Jüri üyeleri" paneli (e-posta · telefon · WhatsApp onayı · kutu · cihaz · askı · "Grupta değil" işareti) -->
 <!-- grupal-admin.html · v2026-09-30e · Ayarlar → Hemen-Al: "Eski kaporalara davetiye bas" (proxy v3.41 /admin/inv-backfill: v3.38 öncesi kaporalara kutu × davetiye, bir kez) -->
@@ -197,6 +198,7 @@ details.set.card[open]>summary{margin-bottom:6px}
     <div class="card" id="offCard">
       <span class="lbl">JÜRİ ÜYELERİ · kapora verenler (proxy v3.46)</span>
       <div id="userList" class="hint" style="margin:6px 0 14px">—</div>
+      <div class="acts" style="margin:-8px 0 14px"><button class="mini" onclick="membersBackfill()" title="Jüri kapısından (v3.46) önce kapora verenler: e-postadan üye kaydı, ad/telefon Shopify müşterisinden. Bir kez; varsa atlar.">Eski kaporalardan üye çıkar</button><span class="hint" id="memBfMsg"></span></div>
       <span class="lbl">MEYDAN · teklifler · tedarikçi listeleri (global) · TASLAK → UYGULA</span>
       <div class="hint" style="margin:4px 0 8px">Sayfa yalnız <b>UYGULA</b> ile yayınladığın hâli görür; ekleme, düzenleme, pasife alma taslakta kalır. İki yapıştırma biçimi: (1) <code>## Tedarikçi</code> başlığı + <code>Ülke · Lot adı · İşlem · Tedarikçi · not… · {meta}</code> satırları; (2) Excel/Sheets'ten kopyalanan <b>sekmeli tablo</b> (başlık satırı: name/farm, process, region, score, price, descriptors, lot no, bags, quantity, variety, farmer, crop, altitude — ülke satırları tek hücre olabilir). İşlem otomatik eşlenir (anaerob→anaerobic, ferm→funky, washed/decaf→washed, natural, honey). Fiyat/çuval/kg yalnız admin'de kalır.</div>
       <!-- v02v (Ömer 04.09 "textbox işe yaramaz, dosya yükleme"): .txt (Grup-Al biçimi) · .tsv/.csv · .xlsx (SheetJS, cdnjs) → aynı ayrıştırıcı → önizleme → Taslağa ekle. PDF yok: sayfa düzeni sütunları karıştırır, dönüştürme bende. -->
@@ -325,7 +327,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-30h';
+const VERSION='v2026-09-30i';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -447,6 +449,14 @@ async function loadUsers(){ const el=$('userList'); if(!el) return; try{ const r
     el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:var(--muted);text-align:left"><th style="padding:4px 6px">ad · e-posta</th><th style="padding:4px 6px">telefon</th><th style="padding:4px 6px">WhatsApp</th><th style="padding:4px 6px">kutu</th><th style="padding:4px 6px">sipariş · cihaz</th><th style="padding:4px 6px">son kapora</th><th style="padding:4px 6px"></th></tr>'
       +j.users.map(u=>'<tr style="border-top:1px solid var(--line)'+(u.ok?'':';color:#e0705a')+'"><td style="padding:5px 6px"><b>'+esc(u.name||'')+'</b>'+(u.name?' · ':'')+esc(u.email)+(u.banned?' · <span style="color:#e0705a">askıda</span>':'')+(u.ok?'':' · <span style="color:#e0705a">grupta değil</span>')+'</td><td style="padding:5px 6px">'+esc(u.phone||'—')+'</td><td style="padding:5px 6px">'+(u.wa?('✓ '+d(u.wa_at)):'<span style="color:#e0705a">katılmadı</span>')+'</td><td style="padding:5px 6px">'+u.boxes+(u.hemen?(' · ⚡'+u.hemen):'')+'</td><td style="padding:5px 6px">'+(u.orders||0)+' · '+(u.devs||1)+'</td><td style="padding:5px 6px">'+d(u.last||u.first)+'</td><td style="padding:5px 6px;text-align:right"><button class="mini" onclick="userFlag(\''+esc(u.email)+'\','+(u.ok?'false':'true')+')">'+(u.ok?'Grupta değil':'Onayla')+'</button></td></tr>').join('')+'</table>'
       +'<div class="hint" style="margin-top:4px">'+j.users.length+' üye · WhatsApp sütunu üyenin "katıldım" dediği an; grupla karşılaştır. "Grupta değil": kaporası kapanır, sayfada gruba katıl uyarısı · "Onayla": geri açar.</div>'; }catch(e){ el.textContent='üye listesi alınamadı: '+e; } }
+// v30i: 40'ı beklemeden kilitle (proxy v3.47 /admin/offer-lock)
+async function offLockNow(id){ const o=OFFERS.find(x=>x.id===id); if(!o) return;
+  if(!confirm('"'+o.name+'" ŞİMDİ kilitlensin mi? '+(o.dep||0)+' kapora dönüşür; kapora verenler sayfada "Tamamla" görür (Grup-Al fiyatı − kapora, tek kullanımlık kodla). Geri alınamaz.')) return;
+  const r=await fetch(API+'/admin/offer-lock',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({id})}); const j=await r.json().catch(()=>({}));
+  if(j.ok){ if(Array.isArray(j.offers)) OFFERS=j.offers; renderOffersAdmin(); alert('Kilitlendi · oturum #'+j.lock.n+' · '+j.lock.dep+' kapora. Şimdi WhatsApp grubuna yaz: "'+o.name+' kilitlendi — kaporası olanlar kartta Tamamla ile öder."'); } else alert('Olmadı: '+(j.error||r.status)); }
+async function membersBackfill(){ const m=$('memBfMsg'); m.textContent='çıkarılıyor…';
+  try{ const r=await fetch(API+'/admin/members-backfill',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:'{}'}); const j=await r.json().catch(()=>({}));
+    if(j.ok){ m.textContent=j.created+' yeni üye · '+j.skipped+' zaten vardı · Shopify: '+j.shopify; loadUsers(); } else m.textContent='Olmadı: '+(j.error||r.status); }catch(e){ m.textContent='Olmadı: '+e; } }
 async function userFlag(email,ok){ if(!ok&&!confirm('Bu üyeyi "Grupta değil" işaretle? Kapora koyamaz; sayfada gruba katılıp sana yazması istenir.')) return;
   const r=await fetch(API+'/admin/user-flag',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({email,ok})}); const j=await r.json().catch(()=>({})); if(j.ok) loadUsers(); else alert('Olmadı: '+(j.error||r.status)); }
 async function loadOffers(){
@@ -620,6 +630,7 @@ function renderOffersAdmin(){ listSetSub();
       +'<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="mini" onclick="offEdit(\''+o.id+'\')">Düzenle</button>'
       +'<button class="mini" onclick="offSet(\''+o.id+'\',{active:'+(!o.active)+'})">'+(o.active?'Pasife al':'Aktif et')+'</button>'
       +'<button class="mini" style="color:#e0705a" onclick="offDel(\''+o.id+'\')">Sil</button>'
+      +((o.dep>0&&!o.lock&&!o.won_at&&o.published)?('<button class="mini" style="border-color:var(--gold);color:var(--gold)" onclick="offLockNow(\''+o.id+'\')" title="40\'ı beklemeden kilitle: kaporalar dönüşür, sayfada Tamamla açılır (Hemen-Al linki ya da tamamlama linki gerekir)">Kilitle şimdi · '+o.dep+' kapora</button>'):'')
       +(((dep?o.dep:o.n)>=G&&o.list_tl)?('<button class="mini" style="border-color:var(--gold);color:var(--gold)" onclick="campFromOffer(\''+o.id+'\')">Kampanya taslağı ↑</button>'):'')+'</div></div>'; }).join('');
 }
 // v30c: dondurulmuş (kaporalı) kahvelerin Kaporalı/Sepet fiyatlarını güncel oranlarla yeniden yaz — liste sabit

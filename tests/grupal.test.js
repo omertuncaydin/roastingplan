@@ -220,5 +220,31 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     const MN=JSON.parse(JSON.stringify(ML)); MN.offer_cfg.wa_group_url=''; const w11=mk({'/meydan':MN,'/offer-mine':MINE0,'/campaigns':[]},390); await sleep(250); w11.eval("jLaneOpen('"+H0.id+"'); jLaneKap('"+H0.id+"')"); await sleep(40);
     T('gate on but no group link configured → no gate (cannot ask to join nothing)', (w11.__g('dbGet')()[H0.id]||0)===1 && !w11.document.getElementById('jSheet'));
     T('welcome sentence carries Ömer\'s wording (hedefine ulaşınca · geçerli olmaya devam eder · kendinize veya başkalarına)', /hedefine ulaşınca/.test(html) && /geçerli olmaya devam eder/.test(html) && /kendinize veya başkalarına kullandırabileceğiniz/.test(html)); }
+  // ===== v10p: desktop overlay (no repositioning), click-outside closes, "sana özel" time, completion via /done-link
+  { const MH=JSON.parse(JSON.stringify(MD)); const H0=MH.offers.find(o=>o.id===ord[0].id); H0.img_url='https://x.test/o/a.jpg'; H0.hemen={url:'https://coffeenutz.net/cart/222:1',price:1280,base:2,sold:0,inv:0,left:2,green_left:null,table:[],roast_at:'2026-10-05T20:59:00.000Z'}; H0.list_tl=1600; H0.jury_tl=960; MH.offer_cfg.hemen_inv=2; MH.offer_cfg.hemen_inv_h=24; MH.offer_cfg.dep_amt=100;
+    for(const k of [1,2,3,4,5]){ const o=MH.offers.find(x=>x.id===ord[k].id); o.img_url='https://x.test/o/'+k+'.jpg'; }
+    const wd=mk({'/meydan':MH,'/offer-mine':{votes:[],inv:[],hemen:[],me:{member:false,wa:false,ok:true}},'/campaigns':[]},1366); await sleep(250);
+    T('desktop: no masonry left in the page (cards never move)', !/jMasonry|jmas\b/.test(html) && html.includes('body.jdesk .jcard.lopen{height:400px;min-height:0;overflow:visible;z-index:40}'));
+    wd.eval("jLaneOpen('"+ord[3].id+"')"); await sleep(40);
+    T('desktop: opening a Vitrin card keeps the grid intact (6 photo cards + 18 list rows = 24, order unchanged, no drawer, no span style on any card)', !!wd.document.querySelector('.jdk-grid .jcard.lopen[data-id="'+ord[3].id+'"]') && wd.document.querySelectorAll('.jdk-grid .jcard').length===6 && wd.document.querySelectorAll('.jdk-table tr.jdk-r').length===18 && [...wd.document.querySelectorAll('.jdk-grid .jcard')].map(c=>c.dataset.id).join(',')===ord.slice(0,6).map(o=>o.id).join(',') && !wd.document.getElementById('jDrawer') && ![...wd.document.querySelectorAll('.jdk-grid .jcard')].some(c=>c.style.gridRowEnd));
+    // click on empty space (the main column background) → closes; click inside the open card → stays
+    wd.document.querySelector('.jdk-grid .jcard.lopen .jlane.ga').dispatchEvent(new wd.MouseEvent('click',{bubbles:true})); await sleep(40);
+    T('click inside the open card keeps it open', !!wd.document.querySelector('.jcard.lopen'));
+    wd.document.querySelector('.jdk-main').dispatchEvent(new wd.MouseEvent('click',{bubbles:true})); await sleep(40);
+    T('click on empty space closes the open card', !wd.document.querySelector('.jcard.lopen'));
+    // özel time: at = now-1h, 24 h private → "23 sa sana özel, sonra masaya" (not the 7-day link life)
+    const now=new Date(2026,8,23,12,0,0).getTime(); const wp=mk({'/meydan':MH,'/offer-mine':{votes:[{id:H0.id,paid:true,qty:1}],inv:[{c:'INV9',id:H0.id,st:'p',at:new Date(now-3600000).toISOString(),exp:new Date(now+6*86400000).toISOString(),n:'Ömer'}],hemen:[],me:{member:true,wa:true,ok:true}},'/campaigns':[]},390); await sleep(250);
+    wp.eval("jLaneOpen('"+H0.id+"')"); await sleep(40); const tk=wp.document.querySelector('.jcard.lopen .jlane.ha .tk');
+    T('ticket row shows the private window (23 sa sana özel, sonra masaya), not "7 gün"', !!tk && /23 sa sana özel, sonra masaya/.test(tk.textContent) && !/gün/.test(tk.textContent));
+    // completion: locked coffee with a converted kapora and a Hemen-Al link → Tamamla button in the lane and on the card → /done-link → navigate
+    const MLk=JSON.parse(JSON.stringify(MH)); const HL=MLk.offers.find(o=>o.id===H0.id); HL.lock={at:'2026-09-22T10:00:00Z',n:3,dep:17,state:'locked'}; HL.won_at='2026-09-22T10:00:00Z';
+    const wc=mk({'/meydan':MLk,'/offer-mine':{votes:[{id:H0.id,paid:true,qty:2,conv:true,done:false}],inv:[],hemen:[],me:{member:true,wa:true,ok:true}},'/campaigns':[]},390); await sleep(250);
+    const calls=[]; let nav=null; wc.jNavigate=u=>{ nav=u; }; const f0=wc.fetch; wc.fetch=async(u,init)=>{ if(String(u).endsWith('/done-link')){ calls.push(JSON.parse(init.body)); return {ok:true,status:200,json:async()=>({ok:true,url:'https://coffeenutz.net/cart/222:2?discount=GAX1Y2Z3&attributes[offer]='+H0.id+'&attributes[dev]=X&attributes[done]=1',code:'GAX1Y2Z3',boxes:2,due:860,total:1720,off:1480})}; } return f0(u,init); };
+    wc.eval("jLaneOpen('"+H0.id+"')"); await sleep(40); const cta=wc.document.querySelector('.jcard.lopen .jlane.ga .cta');
+    T('locked coffee + converted kapora ×2 → lane shows "Tamamla · 1.720 TL" (2 × (960 − 100)) and the card has the completion button', !!cta && cta.textContent==='Tamamla · 1.720 TL' && cta.getAttribute('data-done')===H0.id && !!wc.document.querySelector('.jcard.lopen button[data-done="'+H0.id+'"]'));
+    await wc.eval("offComplete('"+H0.id+"')"); await sleep(40);
+    T('Tamamla → POST /done-link {id, dev} → navigates to the single-use cart link with attributes[done]=1', calls.length===1 && calls[0].id===H0.id && /^[A-Z0-9]{8,16}$/.test(calls[0].dev) && nav && nav.includes('discount=GAX1Y2Z3') && nav.includes('/cart/222:2') && nav.includes('attributes[done]=1'));
+    wc.fetch=async(u,init)=>{ if(String(u).endsWith('/done-link')) return {ok:true,status:200,json:async()=>({ok:false,reason:'none'})}; return f0(u,init); }; nav=null; wc.eval("window.__jToast=null"); await wc.eval("offComplete('"+H0.id+"')"); await sleep(40);
+    T('done-link refusal → toast, no navigation', nav===null && wc.__g('window.__jToast') && /Tamamlanacak kaporan görünmüyor/.test(wc.__g('window.__jToast').txt)); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })().catch(e=>{ console.log('CRASH',e.message,e.stack.split('\n').slice(0,3).join(' / ')); process.exit(1); });

@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.46 tag', r.json && r.json.v === '3.46');
+T('v3.47 tag', r.json && r.json.v === '3.47');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -214,6 +214,36 @@ r = await px.call('POST', '/admin/settings', { login_required: '1', wa_group_url
 T('settings: login_required + wa_group_url accepted and published in cfg', r.json.ok && r.json.cfg.login_required === true && r.json.cfg.wa_group_url === 'https://chat.whatsapp.com/ABCdef123456');
 r = await px.call('POST', '/admin/settings', { wa_group_url: 'https://evil.example/x' }, { 'x-cc-key': 'adminkey' }); T('settings: a non-WhatsApp link is dropped from cfg', r.json.cfg.wa_group_url === '');
 r = await px.call('GET', '/meydan'); T('/meydan offer_cfg carries login_required + wa_group_url', r.json.offer_cfg.login_required === true && 'wa_group_url' in r.json.offer_cfg);
+
+// ---- v3.47: forced lock (Recreo without 40) → done-link with a single-use fixed-amount code → webhook marks derived keys done
+{ const C = '10000000-0000-4000-8000-0000000000dd';   // a fresh published coffee with a Hemen-Al link (normal variant 1600) and a few kaporas, nowhere near 40
+  px.DB.grupal_offers.push({ id: C, name: 'Kello Bensa', origin: 'Etiyopya', process: 'natural', active: true, sort: 9, pub: { name: 'Kello Bensa', origin: 'Etiyopya', process: 'natural' }, meta: { list_tl: 1600, jury_tl: 960, basket_tl: 1280, img_url: 'https://db.test/storage/v1/object/public/grupal/o/c.jpg', hemen_url: 'https://coffeenutz.net/cart/555:1' }, created_at: '2026-09-01T00:00:00Z' });
+  px.DB.grupal_settings.find(s => s.key === 'offer_goal').value = '40';
+  await hook({ offer: C, dev: 'JURY000001' }, { id: 9401, qty: 2, email: 'jury1@example.com' });
+  await hook({ offer: C, dev: 'JURY000002' }, { id: 9402, email: 'jury2@example.com' });
+  r = await px.call('POST', '/done-link', { id: C, dev: 'JURY000001' }); T('done-link before the lock → notlocked', r.json.ok === false && r.json.reason === 'notlocked');
+  r = await px.call('POST', '/admin/offer-lock', { id: C }); T('offer-lock needs the admin key', r.status === 401);
+  r = await px.call('POST', '/admin/offer-lock', { id: C }, { 'x-cc-key': 'adminkey' });
+  T('offer-lock: locks now with dep 3, forced flag, session n, won_ + lock_ written', r.json.ok && r.json.lock.dep === 3 && r.json.lock.forced === true && typeof r.json.lock.n === 'number' && !!px.DB.grupal_settings.find(x => x.key === 'won_' + C) && !!px.DB.grupal_settings.find(x => x.key === 'lock_' + C));
+  r = await px.call('POST', '/admin/offer-lock', { id: C }, { 'x-cc-key': 'adminkey' }); T('offer-lock twice → 409', r.status === 409);
+  r = await px.call('GET', '/meydan'); { const oc = r.json.offers.find(o => o.id === C); T('/meydan shows the coffee locked (lock record, dep 3)', !!oc.lock && oc.lock.dep === 3); }
+  r = await px.call('GET', '/offer-mine?dev=JURY000001'); T('offer-mine: the kapora is converted (conv) and not done', r.json.votes.find(v => v.id === C).conv === true && r.json.votes.find(v => v.id === C).done === false);
+  NOW += 1000; r = await px.call('POST', '/done-link', { id: C, dev: 'JURY000001' });
+  T('done-link: 2 boxes · due 860 each (960 − 100) · fixed code (1600−860)×2 = 1480 off · cart link /cart/555:2 with attributes[done]=1', r.json.ok && r.json.boxes === 2 && r.json.due === 860 && r.json.total === 1720 && r.json.off === 1480 && /^GA[A-Z0-9]{6}$/.test(r.json.code) && r.json.url.startsWith('https://coffeenutz.net/cart/555:2?discount=' + r.json.code) && r.json.url.includes('attributes[done]=1') && r.json.url.includes('attributes[dev]=JURY000001'));
+  { const d = px.DB.__discounts[px.DB.__discounts.length - 1]; T('Shopify code: single use, fixed amount (not per item), only that product, 24 h', d.usageLimit === 1 && d.customerGets.value.discountAmount.appliesOnEachItem === false && d.customerGets.value.discountAmount.amount === '1480.00' && d.customerGets.items.products.productsToAdd[0] === 'gid://shopify/Product/777' && (new Date(d.endsAt).getTime() - new Date(d.startsAt).getTime()) > 23 * 3600000); }
+  r = await px.call('POST', '/done-link', { id: C, dev: 'JURY000003' }); T('done-link for a device without a kapora → none', r.json.ok === false && r.json.reason === 'none');
+  // completion order → webhook marks the row (and derived keys) done; a second done-link then says none
+  px.DB.grupal_offer_votes.push({ offer_id: C, dev: 'JURY0000012', seated: false, paid: true, qty: 1, order_id: 9403, email: 'jury1@example.com', created_at: '2026-09-27T21:30:00.000Z' });   // a derived-key kapora of the same device before the lock
+  r = await hook({ offer: C, dev: 'JURY000001', done: '1' }, { id: 9500, email: 'jury1@example.com' });
+  T('webhook done → both the base row and the derived row carry done_order', /done/.test(r.text) && px.DB.grupal_offer_votes.filter(v => v.offer_id === C && v.dev.startsWith('JURY000001')).every(v => String(v.done_order) === '9500'));
+  r = await px.call('POST', '/done-link', { id: C, dev: 'JURY000001' }); T('after completion → none', r.json.ok === false && r.json.reason === 'none');
+  // members backfill: old payers (no mem_ record) become members with name/phone from Shopify customers
+  px.DB.grupal_settings = px.DB.grupal_settings.filter(x => x.key !== 'mem_jury1@example.com' && x.key !== 'mem_jury2@example.com');
+  px.DB.grupal_offer_votes.push({ offer_id: A, dev: 'OLDJURY001', seated: false, paid: true, qty: 1, order_id: 600, email: 'old.jury@example.com', created_at: '2026-09-20T10:00:00.000Z' });
+  r = await px.call('POST', '/admin/members-backfill', {}, { 'x-cc-key': 'adminkey' });
+  T('members-backfill: creates members for old payers, skips existing, looks up Shopify customers', r.json.ok && r.json.created >= 3 && r.json.skipped >= 1 && r.json.shopify === 'ok');
+  { const m = JSON.parse(px.DB.grupal_settings.find(x => x.key === 'mem_old.jury@example.com').value); T('backfilled member: name + phone from Shopify, primary dev, first/last, bf flag', m.name === 'Deniz Kaçak' && m.phone === '+905331112233' && m.dev === 'OLDJURY001' && !!m.first && m.bf === 1 && m.ok === true); }
+  r = await px.call('POST', '/admin/members-backfill', {}, { 'x-cc-key': 'adminkey' }); T('second backfill creates nothing', r.json.ok && r.json.created === 0); }
 
 Date.now = realNow;
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);
