@@ -11,12 +11,12 @@ Checks for the Grup-Al Jüri page and the grupal-proxy edge function. They live 
 - `shot-lanes-desk.mjs` — desktop grid card with both lanes open at 1366 and 1728 px; asserts the lanes sit side by side without overflow (v10g).
 - `shot-desk.mjs` — Playwright screenshots at 1366 and 390 px, three themes.
 - `shot-lanes.mjs` — Playwright screenshots of the two-price card, the lanes sheet (open / sold out), the invitation sheet and the guest banner.
-- `proxy-harness.mjs` + `proxy.test.mjs` — the proxy `.ts` transpiled with `typescript` and run against an in-memory PostgREST (settings / offers / votes tables) with a fake `Deno`; covers the Hemen-Al lane, pool, invitations, table, counting toward 40, limits, expiry, admin settings, `/hemen-link` discount codes, `/admin/variants`, `/admin/inv-backfill`, jury gate (member = order, `/wa-ok`, `/dev-bind`, device merge, `/admin/users`; the dormant `/auth/*` OTP routes), forced lock (`/admin/offer-lock`), completion codes (`/done-link`), members backfill. Point `PROXY=` at the `.ts` (default `../proxy/proxy.ts`; the delivered copy is `deliver-grupal-proxy-function-v3_47.ts` in the CoffeeNutz folder).
+- `proxy-harness.mjs` + `proxy.test.mjs` — the proxy `.ts` transpiled with `typescript` and run against an in-memory PostgREST (settings / offers / votes tables) with a fake `Deno`; covers the Hemen-Al lane, pool, invitations, table, counting toward 40, limits, expiry, admin settings, `/hemen-link` discount codes, `/admin/variants`, `/admin/inv-backfill`, jury gate (member = order, `/wa-ok`, `/dev-bind`, device merge, `/admin/users`; the dormant `/auth/*` OTP routes), forced lock (`/admin/offer-lock`), completion codes (`/done-link`), members backfill. Point `PROXY=` at the `.ts` (default `../proxy/proxy.ts`; the delivered copy is `deliver-grupal-proxy-function-v3_48.ts` in the CoffeeNutz folder).
 
 Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewhere and point NODE_PATH at it; ESM files need a `node_modules` link next to the repo):
 
     NODE_PATH=/path/to/node_modules node tests/grupal.test.js
     NODE_PATH=/path/to/node_modules node tests/admin.test.js
     node tests/middleware.test.mjs
-    PROXY=/path/to/deliver-grupal-proxy-function-v3_47.ts node tests/proxy.test.mjs
+    PROXY=/path/to/deliver-grupal-proxy-function-v3_48.ts node tests/proxy.test.mjs
     node tests/shot-desk.mjs && node tests/shot-lanes.mjs

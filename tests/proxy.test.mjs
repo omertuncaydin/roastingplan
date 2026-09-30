@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.47 tag', r.json && r.json.v === '3.47');
+T('v3.48 tag', r.json && r.json.v === '3.48');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -210,6 +210,12 @@ r = await px.call('GET', '/admin/users', null, { 'x-cc-key': 'adminkey' }); { co
 r = await px.call('POST', '/admin/user-flag', { email: 'ayse.kaya@example.com', ok: false }, { 'x-cc-key': 'adminkey' }); T('admin flags Ayşe (not in the group) → ok false', r.json.ok && r.json.me.ok === false);
 r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('offer-mine reports ok:false after the flag (page blocks kapora)', r.json.me.ok === false);
 r = await px.call('POST', '/admin/user-flag', { email: 'ayse.kaya@example.com', ok: true }, { 'x-cc-key': 'adminkey' }); T('admin un-flags', r.json.me.ok === true);
+// v3.48: admin marks a member as seen in the group → wa true by admin; page will not ask; wa:false clears it (and the device flag)
+r = await px.call('POST', '/admin/user-flag', { email: 'ayse.kaya@example.com', wa: false }, { 'x-cc-key': 'adminkey' }); T('admin clears wa → member wa false, device flag removed', r.json.ok && r.json.me.wa === false && !px.DB.grupal_settings.find(x => x.key === 'waok_PHONE00001'));
+r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('offer-mine after clearing → wa false (page would ask again)', r.json.me.wa === false);
+r = await px.call('POST', '/admin/user-flag', { email: 'ayse.kaya@example.com', wa: true }, { 'x-cc-key': 'adminkey' }); T('admin marks Grupta ✓ → wa true', r.json.ok && r.json.me.wa === true);
+r = await px.call('GET', '/admin/users', null, { 'x-cc-key': 'adminkey' }); T('admin/users shows wa_by admin', r.json.users.find(u => u.email === 'ayse.kaya@example.com').wa_by === 'admin');
+r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('offer-mine: wa true again without any device flag (admin approval counts)', r.json.me.wa === true);
 r = await px.call('POST', '/admin/settings', { login_required: '1', wa_group_url: 'https://chat.whatsapp.com/ABCdef123456' }, { 'x-cc-key': 'adminkey' });
 T('settings: login_required + wa_group_url accepted and published in cfg', r.json.ok && r.json.cfg.login_required === true && r.json.cfg.wa_group_url === 'https://chat.whatsapp.com/ABCdef123456');
 r = await px.call('POST', '/admin/settings', { wa_group_url: 'https://evil.example/x' }, { 'x-cc-key': 'adminkey' }); T('settings: a non-WhatsApp link is dropped from cfg', r.json.cfg.wa_group_url === '');
