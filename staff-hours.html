@@ -65,7 +65,7 @@
   <button id="saveBtn">Kaydet · Save</button>
   <button class="ghost" id="refreshBtn">Yenile · Refresh</button>
   <span class="sub" style="margin:0" id="syncStat">yerel · local</span>
-  <span class="sub" style="margin:0;opacity:.55">v2026-10-01a</span>
+  <span class="sub" style="margin:0;opacity:.55">v2026-10-01b</span>
 </div>
 
 <div class="card">
@@ -109,7 +109,7 @@
   <div class="muted" style="margin-top:6px;">Target = workdays in month (Mon-Sat minus Resmi Tatil marks) × default hours. Adjust per employee via Edit. Sunday counts only when marked. Yevmiye = çalışılan saat ÷ günlük saat (yarım gün 0,5; fazla saat oranlı) + işaretli ödenen günler. Ödenecek = yevmiye × günlük net maaş.</div>
 </div>
 
-<footer>CoffeeNutz internal tool · v2026-10-01a · marks: click = apply · drag = paint · drag a mark off the calendar = delete · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
+<footer>CoffeeNutz internal tool · v2026-10-01b · marks: click = apply · drag = paint · drag a mark off the calendar = delete · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
 
 <script>
 "use strict";
@@ -303,25 +303,35 @@ function renderTotals(){
   const rows = monthStats();
   const t = document.getElementById("totals");
   const pc = Object.assign({izin:1, tatil:1, rapor:0}, db.pay||{});
+  const mkey = view.getFullYear()+"-"+pad(view.getMonth()+1), PDM=(db.paid||{})[mkey]||{};   // v10-01b: this month's "ödendi" flags
   ["payIzin","payTatil","payRapor"].forEach((id,i)=>{ const el=document.getElementById(id); if(el) el.checked=!![pc.izin,pc.tatil,pc.rapor][i]; });
   if (!rows.length){ t.innerHTML = ""; return; }
-  t.innerHTML = `<tr><th>Employee</th><th>Hours</th><th>Target</th><th>Diff</th><th>Days</th><th>İzin</th><th>Rapor</th><th>R.Tatil</th><th>Devamsız</th><th>₺/gün net</th><th>Yevmiye</th><th>Ödenecek</th></tr>` +
+  t.innerHTML = `<tr><th>Employee</th><th>Hours</th><th>Target</th><th>Diff</th><th>Days</th><th>İzin</th><th>Rapor</th><th>R.Tatil</th><th>Devamsız</th><th>₺/gün net</th><th>Yevmiye</th><th>Ödenecek</th><th>Ödendi</th></tr>` +
     rows.map(r=>{
       const diff = r.hours - r.target;
       const brk = r.units ? `${r.units.toFixed(2)} yevmiye × ${fmtTL(r.rate)}` : "işaret yok";
+      const pd = PDM[r.e.id];
       return `<tr><td><span class="dot" style="display:inline-block;background:${r.e.color}"></span> ${esc(r.e.name)}</td>
         <td><b>${r.hours.toFixed(1)}</b></td><td class="muted">${r.target.toFixed(0)}</td>
         <td class="${diff>=0?"pos":"neg"}">${diff>=0?"+":""}${diff.toFixed(1)}</td>
         <td>${r.workD}</td><td>${r.izin||""}</td><td>${r.rapor||""}</td><td>${r.tatil||""}</td><td>${r.yok||""}</td>
         <td><input type="number" data-rate="${r.e.id}" value="${r.rate||""}" min="0" step="10" style="width:84px" placeholder="0" title="günlük net maaş"></td>
         <td>${r.units?r.units.toFixed(2):""}</td>
-        <td title="${brk}"><b>${r.pay?fmtTL(r.pay):""}</b></td></tr>`;
+        <td title="${brk}"><b class="${pd&&pd.on?"pos":""}">${r.pay?fmtTL(r.pay):""}</b></td>
+        <td><label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" data-paid="${r.e.id}" ${pd&&pd.on?"checked":""} title="bu ayın maaşı ödendi · salary paid for this month">${pd&&pd.on&&pd.at?`<small class="muted">${new Date(pd.at).toLocaleDateString("tr-TR",{day:"2-digit",month:"2-digit"})}</small>`:""}</label></td></tr>`;
     }).join("") +
     `<tr><td><b>Total</b></td><td><b>${rows.reduce((a,r)=>a+r.hours,0).toFixed(1)}</b></td><td colspan="8"></td>
-      <td><b>${rows.reduce((a,r)=>a+r.units,0).toFixed(2)}</b></td><td><b>${fmtTL(rows.reduce((a,r)=>a+r.pay,0))}</b></td></tr>`;
+      <td><b>${rows.reduce((a,r)=>a+r.units,0).toFixed(2)}</b></td><td><b>${fmtTL(rows.reduce((a,r)=>a+r.pay,0))}</b></td>
+      <td class="muted">${(()=>{ const tot=rows.reduce((a,r)=>a+r.pay,0); if(!tot) return ""; const kal=rows.reduce((a,r)=>a+((PDM[r.e.id]&&PDM[r.e.id].on)?0:r.pay),0); return kal?("kalan "+fmtTL(kal)):"✓ hepsi ödendi"; })()}</td></tr>`;
   t.querySelectorAll("input[data-rate]").forEach(inp=>inp.addEventListener("change",()=>{
     const emp=db.emps.find(x=>x.id===inp.dataset.rate); if(!emp) return;
     emp.rate=Math.max(0,parseFloat(inp.value)||0); save(); renderTotals();
+  }));
+  t.querySelectorAll("input[data-paid]").forEach(inp=>inp.addEventListener("change",()=>{
+    if(!db.paid) db.paid={}; if(!db.paid[mkey]) db.paid[mkey]={};
+    if(inp.checked) db.paid[mkey][inp.dataset.paid]={on:1, at:Date.now()};
+    else { delete db.paid[mkey][inp.dataset.paid]; if(!Object.keys(db.paid[mkey]).length) delete db.paid[mkey]; }
+    save(); renderTotals();
   }));
 }
 
@@ -329,14 +339,14 @@ function renderTotals(){
 document.getElementById("csvBtn").addEventListener("click",()=>{
   const y = view.getFullYear(), m = view.getMonth();
   const dim = new Date(y,m+1,0).getDate();
-  let csv = "Employee;" + Array.from({length:dim},(_,i)=>i+1).join(";") + ";TotalHours;Target;RateTL;Yevmiye;PayTL\n";
+  let csv = "Employee;" + Array.from({length:dim},(_,i)=>i+1).join(";") + ";TotalHours;Target;RateTL;Yevmiye;PayTL;Paid\n";
   monthStats().forEach(r=>{
     const cells = [];
     for (let d=1; d<=dim; d++){
       const mk = (db.marks[key(y,m,d)]||{})[r.e.id];
       cells.push(!mk ? "" : mk.t==="work" ? String(mk.h).replace(".",",") : TYPES[mk.t].label);
     }
-    csv += `${r.e.name};${cells.join(";")};${String(r.hours.toFixed(1)).replace(".",",")};${r.target};${String(r.rate).replace(".",",")};${String(r.units.toFixed(2)).replace(".",",")};${String(r.pay.toFixed(2)).replace(".",",")}\n`;
+    csv += `${r.e.name};${cells.join(";")};${String(r.hours.toFixed(1)).replace(".",",")};${r.target};${String(r.rate).replace(".",",")};${String(r.units.toFixed(2)).replace(".",",")};${String(r.pay.toFixed(2)).replace(".",",")};${(((db.paid||{})[y+"-"+pad(m+1)]||{})[r.e.id]||{}).on?"EVET":""}\n`;
   });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8"}));
