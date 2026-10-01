@@ -722,7 +722,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-09-30zh';
+const VERSION='v2026-10-01a';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1438,7 +1438,7 @@ function renderOffers(s){
 // ===== v10a GRUP-AL / HEMEN-AL: alt sayfa (iki şerit · davetiye biletleri) · davetli görünümü · Hemen-Al sipariş linki =====
 function jLaneOpen(id,c){ if(JLANE&&JLANE.id===id&&!c){ return jLaneClose(); } JLANE={id,c:c||null,anim:true}; JSHEET=null;
   if(jIsDesk()&&!document.querySelector('.jcard[data-id="'+id+'"]')){ return jDeskOpen(id); }   // masaüstü Liste görünümü: kart yok → çekmece (şeritler çekmecede)
-  renderOffers(STATE); if(!jIsDesk()) jGoCard(id); }
+  renderOffers(STATE); if(!jIsDesk()) jGoCard(id); else { const c=document.querySelector('.jcard.lopen[data-id="'+id+'"]'); if(c&&c.scrollIntoView&&!c.closest('#jDrawer')){ try{ c.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){ c.scrollIntoView(); } } } }   // v11i: masaüstünde 'al ›' (skorbord) açılan kartı görünür yere kaydırır
 function jLaneClose(){ JLANE=null; renderOffers(STATE); }
 // v10p: masaüstü ızgarasında kartlar yer değiştirmez (paket yok); açık kartın paneli üstte açılır (CSS) · boş yere tıklayınca kapanır
 document.addEventListener('click',function(e){ if(!JLANE) return; const t=e.target; if(!(t&&t.closest)) return; if(t.closest('.jcard.lopen,#jSheet,#jSheetBack,.jdk-drawer,#dbBar,#termsModal,.jplus,.jrow.j2,.jq')) return; jLaneClose(); });

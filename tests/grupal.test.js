@@ -295,5 +295,12 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('offer_cfg.top5 set (id or name prefix) → ★ goes to those coffees in that order, default list ignored', w5.__g("jTop(STATE.offers.find(o=>o.id==='"+ord[7].id+"'))")===1 && w5.__g("jTop(STATE.offers.find(o=>o.id==='"+ord[8].id+"'))")===2 && w5.__g("STATE.offers.filter(o=>jTop(o)).length")===2);
     const M0=JSON.parse(JSON.stringify(MD)); M0.offer_cfg.top5=[]; const w0=mk({'/meydan':M0,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},390); await sleep(250);
     T('empty top5 → page default list (TOP5) still marks its coffees', w0.__g("STATE.offers.filter(o=>jTop(o)).length")===MD.offers.filter(o=>["AA Rung'eto","AA Inoi","Frinsa Honey Tempe","Baho","El Recreo"].some(n=>o.name.toLowerCase().startsWith(n.toLowerCase()))).length && w0.__g("jTopList().length")===5); }
+  // v11i: scoreboard "al ›" on the desktop opens the card's lane with the invitation picked AND scrolls that card into view (it was opening off-screen)
+  { const MA=JSON.parse(JSON.stringify(MD)); const A2=MA.offers.find(o=>o.id===ord[2].id); A2.img_url='https://x.test/o/c.jpg'; A2.hemen={url:'https://coffeenutz.net/cart/222:1',price:1280,base:2,sold:2,inv:0,left:0,green_left:null,table:[{c:'ABCD2345',n:'Cgrierdgn'}],roast_at:'2026-10-05T20:59:00.000Z'}; A2.list_tl=1600; MA.offer_cfg.hemen_inv=2; MA.offer_cfg.hemen_inv_h=24;
+    const wa=mk({'/meydan':MA,'/offer-mine':{votes:[],inv:[],hemen:[],me:{member:true,wa:true,ok:true}},'/campaigns':[]},1366); await sleep(250); let scrolled=null;
+    wa.eval("Element.prototype.scrollIntoView=function(o){ window.__sc=this.getAttribute('data-id'); }"); const a=wa.document.querySelector('.jtick .jttbl a');
+    T('desktop scoreboard shows "al ›" for the oldest table invitation with onclick jLaneOpen(id, code)', !!a && a.textContent==='al ›' && a.getAttribute('onclick')==="jLaneOpen('"+A2.id+"','ABCD2345')");
+    wa.eval(a.getAttribute('onclick')); await sleep(60); const oc=wa.document.querySelector('.jcard.lopen[data-id="'+A2.id+'"]');
+    T('al › → that card opens its lanes with "Davetiyeyle al" and the card is scrolled into view', !!oc && /Davetiyeyle al/.test(oc.querySelector('.jlane.ha .cta').textContent) && oc.querySelector('.jlane.ha .cta').getAttribute('onclick').includes("'ABCD2345'") && wa.__g('window.__sc')===A2.id); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })().catch(e=>{ console.log('CRASH',e.message,e.stack.split('\n').slice(0,3).join(' / ')); process.exit(1); });
