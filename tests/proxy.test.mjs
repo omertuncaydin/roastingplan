@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.53 tag', r.json && r.json.v === '3.53');
+T('v3.54 tag', r.json && r.json.v === '3.54');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -207,6 +207,12 @@ T('webhook from another device with the same e-mail → merged into the primary 
 const B2c = '10000000-0000-4000-8000-0000000000cc'; px.DB.grupal_offer_votes.push({ offer_id: B2c, dev: 'TABLET0003', seated: false, paid: true, qty: 1, order_id: 9303, email: 'ayse.kaya@example.com', created_at: '2026-09-25T10:00:00.000Z' });
 r = await px.call('POST', '/dev-bind', { order: '#1201', email: 'x@example.com', dev: 'TABLET0003' }); T('dev-bind: wrong e-mail → nomatch, nothing merged', r.status === 404 && px.DB.grupal_offer_votes.some(v => v.dev === 'TABLET0003'));
 r = await px.call('POST', '/dev-bind', { order: '#1201', email: 'AYSE.kaya@example.com', dev: 'TABLET0003' }); T('dev-bind: order no + e-mail → returns the primary dev, tablet rows merged', r.json.ok && r.json.dev === 'PHONE00001' && !px.DB.grupal_offer_votes.some(v => v.dev === 'TABLET0003') && px.DB.grupal_offer_votes.some(v => v.offer_id === B2c && v.dev === 'PHONE00001'));
+// v3.54: people per coffee (current run): first names from member records, package counts, arrival order, no e-mails; me.k matches
+{ r = await px.call('GET', '/meydan'); const oa = r.json.offers.find(o => (o.people || []).some(p => p.n === 'Ayşe'));
+  T('/meydan offers carry people[] with first names, q and k, never an e-mail (Ayşe found by first name)', !!oa && oa.people.every(p => typeof p.k === 'string' && p.q >= 1 && !/@/.test(String(p.n || ''))) && !JSON.stringify(r.json.offers).includes('@'));
+  const mine = await px.call('GET', '/offer-mine?dev=PHONE00001'); const ka = oa && oa.people.find(p => p.n === 'Ayşe');
+  T('offer-mine me.k equals the people entry k of the same member (page marks "sen")', typeof mine.json.me.k === 'string' && !!ka && ka.k === mine.json.me.k);
+  T('people sum (q) equals the live counter dep for that coffee', !!oa && oa.people.reduce((x, p) => x + p.q, 0) === oa.dep); }
 r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('offer-mine on the primary sees A, B and B2', r.json.votes.some(v => v.id === A) && r.json.votes.some(v => v.id === B) && r.json.votes.some(v => v.id === B2c));
 r = await px.call('GET', '/admin/users'); T('admin/users needs the key', r.status === 401);
 r = await px.call('GET', '/admin/users', null, { 'x-cc-key': 'adminkey' }); { const a = r.json.users.find(u => u.email === 'ayse.kaya@example.com');
