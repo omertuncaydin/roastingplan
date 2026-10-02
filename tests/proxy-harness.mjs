@@ -34,6 +34,7 @@ export async function boot(tsPath, seed = {}) {
     if (!s.includes('/rest/v1/')) return { ok: false, status: 404, text: async () => 'no', json: async () => ({}) };
     const { table, flt, sel, onConflict } = parse(s); if (!(table in DB)) return { ok: false, status: 404, text: async () => 'relation "' + table + '" does not exist', json: async () => ({}) };
     const rows = DB[table]; const method = init.method || 'GET';
+    if (DB.__cols && DB.__cols[table] && sel && sel !== '*') { const bad = sel.split(',').map(c => c.trim()).find(c => !DB.__cols[table].includes(c)); if (bad) return { ok: false, status: 400, json: async () => ({ code: '42703', message: 'column ' + table + '.' + bad + ' does not exist' }), text: async () => 'column ' + bad + ' does not exist' }; }   // optional: a table's real column list (PostgREST 400 on unknown columns)
     if (method === 'GET') { const out = rows.filter(r => flt.every(f => match(r, f))).map(r => project(r, sel)); return { ok: true, status: 200, json: async () => out, text: async () => JSON.stringify(out) }; }
     if (method === 'POST') { const body = JSON.parse(init.body || '{}'); const list = Array.isArray(body) ? body : [body]; for (const b of list) {
         const keys = (onConflict ? onConflict.split(',') : PK[table] || []); const ex = keys.length ? rows.find(r => keys.every(k => String(r[k]) === String(b[k]))) : null;

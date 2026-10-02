@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.56 tag', r.json && r.json.v === '3.56');
+T('v3.57 tag', r.json && r.json.v === '3.57');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -340,9 +340,21 @@ Date.now = realNow;
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.56');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.57');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
+  // v3.57: the live table has no `early` column → the old select chain dropped done_order AND email → names null, completed kaporas invisible.
+  // With the real column list enforced, /meydan must still carry names (member found by e-mail, or by device when the row has no e-mail) and done_order.
+  px.DB.__cols = { grupal_offer_votes: ['offer_id', 'dev', 'seated', 'paid', 'qty', 'created_at', 'done_order', 'email', 'order_id'] };
+  px.DB.grupal_offer_votes.push({ offer_id: A2, dev: 'OLDJURY001', seated: false, paid: true, qty: 2, order_id: 601, created_at: '2026-10-05T10:00:00.000Z' });   // no e-mail on the row (old webhook) — member known by device (Deniz Kaçak)
+  r = await px.call('GET', '/meydan'); { const oa = r.json.offers.find(o => o.id === A2);
+    T('no early column: people still named — member matched by device when the row carries no e-mail (Deniz ×2 in the next lot)', oa.people.some(p => p.n === 'Deniz' && p.q === 2) && oa.people.every(p => p.n !== null));
+    T('no early column: lock.people of the earlier lot still named', oa.lock && oa.lock.people.length > 0 && oa.lock.people.every(p => typeof p.n === 'string' && p.n.length > 0));
+    const od = r.json.offers.find(o => o.id === D); T('no early column: her completed row stays completed (done-link says none, lock.people lists her once)', od.lock.people.length === 1); }
+  r = await px.call('POST', '/done-link', { id: D, dev: 'RECREO0001' }); T('no early column: /done-link still sees done_order → none', r.json.ok === false && r.json.reason === 'none');
+  { const mine = await px.call('GET', '/offer-mine?dev=OLDJURY001'); const k = mine.json.me && mine.json.me.k; r = await px.call('GET', '/meydan'); const oa = r.json.offers.find(o => o.id === A2);
+    T('the figure key equals /offer-mine me.k for the member (page marks "sen")', !!k && oa.people.some(p => p.n === 'Deniz' && p.k === k)); }
+  delete px.DB.__cols;
   Date.now = realNow; }
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);
