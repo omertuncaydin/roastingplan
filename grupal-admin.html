@@ -11,6 +11,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="grupal-admin-icon-192.png">
 <!-- grupal-admin.html · v2026-09-30f · UYGULA cevabındaki backfill (proxy v3.43) mesajda: "davetiye ×n" -->
 <!-- grupal-admin.html · v2026-09-30j · Jüri üyeleri açılır bölüm; WhatsApp sütunu: ✓ kendisi · ✓ admin · sorulmadı; satırda "Grupta ✓" (admin onayı → sayfa bir daha sormaz) · "Grupta değil" / "Onayla" -->
+<!-- grupal-admin.html · v2026-10-02a · SİPARİŞ EŞLE (proxy v3.55, PayTR olayı: para çekildi, Shopify sipariş oluşturmadı): "Sipariş eşle" bölümü — son 7 günün Tamamla / Hemen-Al linkleri
+     (sipariş yok · bekliyor · ✓ sipariş geldi · yok sayıldı) + elle açılan Shopify siparişini proxy'ye saydıran form (tür · kahve · e-posta · sipariş id · paket · davetiye) -->
 <!-- grupal-admin.html · v2026-09-30p · Jüri üyeleri: 'n paket' üstüne gelince kahve dökümü (kahve × adet · kilitli · tamamlandı; proxy v3.51 coffees)
      grupal-admin.html · v2026-09-30o · Kahve listesi: her satırda ☆ Favorilere ekle / ★n · çıkar (offer_top5 = id listesi, en çok 5, proxy v3.50) — Ayarlar alanı yok
      grupal-admin.html · v2026-09-30n · Ayarlar: CoffeeNutz'ın 5'i (offer_top5, proxy v3.50)
@@ -208,6 +210,22 @@ details.set.card[open]>summary{margin-bottom:6px}
         <div id="userList" class="hint" style="margin:8px 0 10px">—</div>
         <div class="acts" style="margin:0 0 6px"><button class="mini" onclick="membersBackfill()" title="Jüri kapısından (v3.46) önce kapora verenler: e-postadan üye kaydı, ad/telefon Shopify müşterisinden. Bir kez; varsa atlar.">Eski kaporalardan üye çıkar</button><span class="hint" id="memBfMsg"></span></div>
       </details>
+      <!-- v2026-10-02a (proxy v3.55): PayTR parayı çekti, PayTR'nin Shopify bildirimi düşmedi → sipariş yok (Abandoned checkout), webhook yok, satır yok. Burçin · El Recreo · 825 TL · 02.10.2026 -->
+      <details class="set" id="lnkSet">
+        <summary class="set-t">Sipariş eşle<span class="sub" id="lnkSub">PayTR ödedi · Shopify sipariş yok</span></summary>
+        <div class="hint" style="margin:6px 0 8px">PayTR'nin "ödendi" bildirimi Shopify'a düşmezse para çekilir ama sipariş oluşmaz (Shopify → Orders → <b>Abandoned checkouts</b>); webhook gelmez, kapora / tamamlama / Hemen-Al sayılmaz. Liste, proxy'nin ürettiği Tamamla ve Hemen-Al linkleridir: <b>sipariş yok</b> = süresi doldu, sipariş gelmedi → PayTR panelinde o kişiyi ara. Para çekilmişse: Shopify → Orders → <b>Create order</b> (aynı ürün, müşteri, indirim, kargo) → <b>Mark as paid</b> → siparişin id'sini (URL'deki uzun sayı) aşağıya yaz → <b>Eşle ve say</b>; proxy siparişi webhook gelmiş gibi işler. Müşteri hiç ödemediyse <b>yok say</b>.</div>
+        <div id="lnkList" class="hint">—</div>
+        <span class="lbl" style="display:block;margin-top:10px">elle sipariş eşle</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+          <select id="om_kind" style="margin:0"><option value="done">Tamamla (kilitli kahve)</option><option value="hemen">Hemen-Al</option><option value="kapora">Kapora</option></select>
+          <select id="om_offer" style="margin:0"></select>
+          <input id="om_email" placeholder="üyenin e-postası (Shopify müşterisi)" style="margin:0">
+          <input id="om_order" inputmode="numeric" placeholder="Shopify sipariş id (URL'deki uzun sayı)" style="margin:0">
+          <input id="om_qty" inputmode="numeric" placeholder="paket (Hemen-Al / kapora)" value="1" style="margin:0">
+          <input id="om_inv" placeholder="davetiye kodu (Hemen-Al, varsa)" style="margin:0">
+        </div>
+        <div class="acts" style="margin:8px 0 6px"><button class="mini" onclick="orderMark()">Eşle ve say</button><span class="hint" id="omMsg"></span></div>
+      </details>
       <span class="lbl">MEYDAN · teklifler · tedarikçi listeleri (global) · TASLAK → UYGULA</span>
       <div class="hint" style="margin:4px 0 8px">Sayfa yalnız <b>UYGULA</b> ile yayınladığın hâli görür; ekleme, düzenleme, pasife alma taslakta kalır. İki yapıştırma biçimi: (1) <code>## Tedarikçi</code> başlığı + <code>Ülke · Lot adı · İşlem · Tedarikçi · not… · {meta}</code> satırları; (2) Excel/Sheets'ten kopyalanan <b>sekmeli tablo</b> (başlık satırı: name/farm, process, region, score, price, descriptors, lot no, bags, quantity, variety, farmer, crop, altitude — ülke satırları tek hücre olabilir). İşlem otomatik eşlenir (anaerob→anaerobic, ferm→funky, washed/decaf→washed, natural, honey). Fiyat/çuval/kg yalnız admin'de kalır.</div>
       <!-- v02v (Ömer 04.09 "textbox işe yaramaz, dosya yükleme"): .txt (Grup-Al biçimi) · .tsv/.csv · .xlsx (SheetJS, cdnjs) → aynı ayrıştırıcı → önizleme → Taslağa ekle. PDF yok: sayfa düzeni sütunları karıştırır, dönüştürme bende. -->
@@ -336,7 +354,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-09-30p';
+const VERSION='v2026-10-02a';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -467,6 +485,28 @@ async function loadUsers(){ const el=$('userList'); if(!el) return; try{ const r
           +'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;margin-top:3px"><span class="hint" style="font-size:11.5px">'+wa+' · <b class="tip" tabindex="0" data-tip="'+esc(tip(u)||'kapora yok')+'">'+u.boxes+' paket</b>'+(u.hemen?(' · ⚡'+u.hemen):'')+' · '+(u.orders||0)+' sipariş · '+(u.devs||1)+' cihaz · son '+d(u.last||u.first)+'</span><span style="white-space:nowrap">'
           +(u.ok?((u.wa?'':'<button class="mini" onclick="userWa(\''+esc(u.email)+'\',true)" title="Grupta gördün: işaretle — sayfa bir daha sormaz">Grupta ✓</button> ')+'<button class="mini" onclick="userFlag(\''+esc(u.email)+'\',false)">Grupta değil</button>'):'<button class="mini" onclick="userFlag(\''+esc(u.email)+'\',true)">Onayla</button>')+'</span></div></div>'; }).join('')
       +'<div class="hint" style="margin-top:6px">"kendisi" = ilk kaporada Katıldım dedi · "sen onayladın" = Grupta ✓ · "sorulmadı" = bir sonraki Kapora koy\'da sorulur. "Grupta değil": kaporası kapanır, sayfada gruba katıl uyarısı · "Onayla": geri açar.</div>'; }catch(e){ el.textContent='üye listesi alınamadı: '+e; } }
+// v2026-10-02a: Sipariş eşle — proxy v3.55 /admin/links-open · /admin/order-mark · /admin/link-dismiss (PayTR ödedi, Shopify sipariş oluşturmadı)
+let LINKS=[];
+async function loadLinks(){ const el=$('lnkList'); if(!el) return; try{ const r=await fetch(API+'/admin/links-open',{headers:{'x-cc-key':KEY}}); const j=await r.json().catch(()=>null); if(!j||!j.ok){ el.textContent='link listesi alınamadı ('+((j&&j.error)||r.status)+') — proxy v3.55+ gerekir'; return; }
+    LINKS=Array.isArray(j.links)?j.links:[]; const sel=$('om_offer'); if(sel&&Array.isArray(j.offers)){ const cur=sel.value; sel.innerHTML=j.offers.map(o=>'<option value="'+esc(o.id)+'">'+esc(o.name)+(o.locked?' · kilitli':'')+(o.pub?'':' · taslak')+'</option>').join(''); if(cur&&j.offers.some(o=>o.id===cur)) sel.value=cur; }
+    const sub=$('lnkSub'); if(sub) sub.textContent=(j.n_missing?(j.n_missing+' sipariş yok · '):'')+LINKS.length+' link · son 7 gün';
+    if(!LINKS.length){ el.textContent='son 7 günde Tamamla / Hemen-Al linki üretilmedi.'; return; }
+    const d=iso=>iso?new Date(iso).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'}):'—';
+    const ST={missing:'<b style="color:#e0705a">sipariş yok</b>',wait:'bekliyor',ok:'<span style="color:var(--green)">✓ sipariş geldi</span>',x:'<span style="color:var(--muted)">yok sayıldı</span>'};
+    el.innerHTML=LINKS.map(l=>'<div data-code="'+esc(l.code)+'" data-state="'+esc(l.state)+'" style="border-top:1px solid var(--line);padding:6px 0;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><span>'+d(l.at)+' · <b>'+(l.kind==='done'?'Tamamla':'Hemen-Al')+'</b> · '+esc(l.name||l.email||l.dev)+' · '+esc(l.coffee)+' · '+l.qty+' paket'+(l.total?(' · '+Number(l.total).toLocaleString('tr-TR')+' TL'):'')+(l.inv?' · davetiye':'')+' · '+(ST[l.state]||esc(l.state))+'</span><span style="white-space:nowrap">'
+      +(l.state==='ok'?'':('<button class="mini" onclick="omFill(\''+esc(l.code)+'\')" title="Formu bu linkle doldur; yalnız Shopify sipariş id kalır">Eşle…</button> '+(l.state==='x'?'<button class="mini" onclick="linkDismiss(\''+esc(l.code)+'\',true)">geri al</button>':'<button class="mini" onclick="linkDismiss(\''+esc(l.code)+'\',false)" title="Müşteri ödemedi, sepeti bıraktı: listeden düş">yok say</button>')))+'</span></div>').join('');
+  }catch(e){ el.textContent='link listesi alınamadı: '+e; } }
+function omFill(code){ const l=LINKS.find(x=>x.code===code); if(!l) return; $('om_kind').value=l.kind; if($('om_offer').querySelector('option[value="'+l.offer+'"]')) $('om_offer').value=l.offer; $('om_email').value=l.email||''; $('om_qty').value=l.qty||1; $('om_inv').value=l.inv||''; $('om_order').value=''; $('omMsg').textContent=l.email?'':'üye kaydı yok — Shopify siparişindeki e-postayı yaz'; try{ $('om_order').focus(); }catch(e){} }
+async function linkDismiss(code,undo){ const r=await fetch(API+'/admin/link-dismiss',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({code,undo:!!undo})}); const j=await r.json().catch(()=>({})); if(j.ok) loadLinks(); else alert('Olmadı: '+(j.error||r.status)); }
+const OM_REASON={dup:'bu sipariş zaten sayılmış',already:'zaten tamamlanmış',nomatch:'bu üyenin bu kahvede tamamlanacak kilitli kaporası yok',notlocked:'kahve kilitli değil'};
+async function orderMark(){ const m=$('omMsg'); const kind=$('om_kind').value, offer=$('om_offer').value, email=$('om_email').value.trim().toLowerCase(), order_id=$('om_order').value.replace(/[^0-9]/g,''), qty=parseInt($('om_qty').value,10)||1, inv=$('om_inv').value.trim();
+  if(!offer){ m.textContent='kahve seç'; return; } if(!order_id){ m.textContent='Shopify sipariş id gerekli (siparişin URL\'sindeki uzun sayı, #38329 değil)'; return; } if(!email&&kind==='done'){ m.textContent='e-posta gerekli'; return; }
+  const o=$('om_offer').options[$('om_offer').selectedIndex]; if(!confirm(({done:'Tamamla',hemen:'Hemen-Al',kapora:'Kapora'})[kind]+' · '+(o?o.text:'')+' · '+(email||'(e-posta yok)')+' · sipariş '+order_id+(kind!=='done'?(' · '+qty+' paket'):'')+'\n\nProxy bunu webhook gelmiş gibi sayar (satır, davetiye, üye kaydı). Devam?')) return;
+  m.textContent='işleniyor…';
+  try{ const r=await fetch(API+'/admin/order-mark',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({kind,offer,email,order_id,qty,inv})}); const j=await r.json().catch(()=>({}));
+    if(j.ok){ m.textContent='✓ sayıldı · '+j.result+(j.dev?(' · cihaz '+j.dev):''); $('om_order').value=''; loadLinks(); loadUsers(); loadOffers(); }
+    else m.textContent='Olmadı: '+(j.error||OM_REASON[j.reason]||j.reason||j.result||r.status);
+  }catch(e){ m.textContent='Olmadı: '+e; } }
 async function userWa(email,wa){ const r=await fetch(API+'/admin/user-flag',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({email,wa})}); const j=await r.json().catch(()=>({})); if(j.ok) loadUsers(); else alert('Olmadı: '+(j.error||r.status)); }
 // v30i: 40'ı beklemeden kilitle (proxy v3.47 /admin/offer-lock) · v30l: kilidin kaporası sorulur (proxy v3.49 dep_tl) — ayar 200 olsa da eski kaporalar 100 ise 100 yaz
 async function offLockNow(id){ const o=OFFERS.find(x=>x.id===id); if(!o) return;
@@ -944,7 +984,7 @@ async function unlock(){
   CAMPS=await r.json();
   localStorage.setItem('grupalKey',KEY);
   $('keyCard').style.display='none'; $('panel').style.display='block';
-  renderList(); loadOffers(); loadUsers();   // teklifler global: anahtar açılınca yüklenir · v30g: Jüri üyeleri
+  renderList(); loadOffers(); loadUsers(); loadLinks();   // teklifler global: anahtar açılınca yüklenir · v30g: Jüri üyeleri · v2026-10-02a: Sipariş eşle
 }
 let PUBBY={};   // v07c: /campaigns (sayfanın gördüğü) — keep_open + kilitli sayısı
 function endedOf(c){ return c&&c.status==='open'&&!!c.end_at&&new Date(c.end_at).getTime()<Date.now(); }   // v07c: durum "open" ama son gün geçti

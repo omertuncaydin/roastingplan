@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.54 tag', r.json && r.json.v === '3.54');
+T('v3.56 tag', r.json && r.json.v === '3.56');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -289,4 +289,60 @@ Date.now = realNow;
   r = await px.call('GET', '/meydan'); T('/meydan offer_cfg.top5 = first 5 trimmed names', JSON.stringify(r.json.offer_cfg.top5) === JSON.stringify(['Baho','El Recreo','AA Inoi','Frinsa','Kelloo']));
   await px.call('POST', '/admin/settings', { offer_top5: '' }, { 'x-cc-key': 'adminkey' }); r = await px.call('GET', '/meydan'); T('empty offer_top5 → [] (page falls back to its default list)', Array.isArray(r.json.offer_cfg.top5) && r.json.offer_cfg.top5.length === 0); }
 { const locks = px.DB.grupal_settings.filter(x => x.key.startsWith('lock_')).map(x => JSON.parse(x.value)); T('v3.49: every lock record written in this run carries a numeric dep_tl (auto locks freeze the setting)', locks.length >= 2 && locks.every(l => Number.isFinite(l.dep_tl) && l.dep_tl >= 0)); }
+// ---- v3.55: PayTR charged, Shopify never formed the order (Burçin, 2026-10-02) → admin marks the hand-made order; open links list
+{ Date.now = () => NOW; const D = '10000000-0000-4000-8000-0000000000ee', A2 = A; const KEYH = { 'x-cc-key': 'adminkey' };
+  r = await px.call('GET', '/admin/links-open'); T('links-open needs the admin key', r.status === 401);
+  r = await px.call('GET', '/admin/links-open', null, KEYH);
+  const L = r.json.links; const rec = L.find(l => l.kind === 'done' && l.dev === 'RECREO0001');
+  T('links-open: the RECREO0001 done-link is listed with coffee, 2 packages, total 1720, state wait (24 h not over), member e-mail resolved', r.json.ok && rec && rec.coffee === 'El Recreo' && rec.qty === 2 && rec.total === 1720 && rec.state === 'wait' && /^GA/.test(rec.code) && rec.email === 'recreo1@example.com');
+  T('links-open: JURY000001 completed by webhook 9500 → its done-link reads ok', L.some(l => l.kind === 'done' && l.dev === 'JURY000001' && l.state === 'ok'));
+  T('links-open: the B2 hemen-links of a week ago are outside the 7-day window', !L.some(l => l.dev === 'BUYER00002' || l.dev === 'QTYBUYER01'));
+  T('links-open: offers list for the admin select carries El Recreo (D) as locked', r.json.offers.some(o => o.id === D && o.locked === true && o.name === 'El Recreo'));
+  // fresh lane coffee E: two Hemen-Al links, one gets its order (ok), the other never does (wait → missing after 2 h)
+  const E = '10000000-0000-4000-8000-0000000000e5';
+  px.DB.grupal_offers.push({ id: E, name: 'Sidamo Bensa', origin: 'Etiyopya', process: 'natural', active: true, sort: 12, pub: { name: 'Sidamo Bensa', origin: 'Etiyopya', process: 'natural' }, meta: { list_tl: 1600, img_url: 'https://db.test/e.jpg', hemen_url: 'https://coffeenutz.net/cart/444:1', green_boxes: 5 }, created_at: '2026-09-01T00:00:00Z' });
+  r = await px.call('POST', '/hemen-link', { id: E, dev: 'HLTEST0001', qty: 2 }); T('(setup) hemen-link E for HLTEST0001 qty 2', r.json.ok && r.json.qty === 2);
+  { const hl = JSON.parse(px.DB.grupal_settings.find(s => s.key === 'hl_' + r.json.code).value); T('v3.55 hl_ record carries qty and total (2 × 1280)', hl.qty === 2 && hl.total === 2560); }
+  NOW += 1000; r = await px.call('POST', '/hemen-link', { id: E, dev: 'HLTEST0002' }); T('(setup) hemen-link E for HLTEST0002', r.json.ok);
+  NOW += 60000; await hook({ hemen: '1', offer: E, dev: 'HLTEST0001' }, { id: 9701, qty: 2, name: 'Mert' });
+  r = await px.call('GET', '/admin/links-open', null, KEYH);
+  T('hemen-link with its order → ok; the other → wait (2 h not over), qty 1, total 1280', r.json.links.find(l => l.dev === 'HLTEST0001').state === 'ok' && r.json.links.find(l => l.dev === 'HLTEST0002').state === 'wait' && r.json.links.find(l => l.dev === 'HLTEST0002').total === 1280 && r.json.links.find(l => l.dev === 'HLTEST0002').qty === 1);
+  NOW += 3 * 3600000; r = await px.call('GET', '/admin/links-open', null, KEYH); T('3 h later the unordered Hemen-Al link is missing', r.json.links.find(l => l.dev === 'HLTEST0002').state === 'missing');
+  NOW += 22 * 3600000; r = await px.call('GET', '/admin/links-open', null, KEYH); const rec2 = r.json.links.find(l => l.kind === 'done' && l.dev === 'RECREO0001');
+  T('25 h later without an order the done-link turns missing; n_missing counts it; missing rows come first', rec2.state === 'missing' && r.json.n_missing >= 2 && r.json.links[0].state === 'missing');
+  // dismiss / undo
+  r = await px.call('POST', '/admin/link-dismiss', { code: rec2.code }, KEYH); T('link-dismiss → x', r.json.ok && !!r.json.x);
+  r = await px.call('GET', '/admin/links-open', null, KEYH); T('dismissed link reads state x and sorts last', r.json.links.find(l => l.code === rec2.code).state === 'x' && r.json.links[r.json.links.length - 1].code === rec2.code);
+  r = await px.call('POST', '/admin/link-dismiss', { code: rec2.code, undo: true }, KEYH); r = await px.call('GET', '/admin/links-open', null, KEYH); T('undo → missing again', r.json.links.find(l => l.code === rec2.code).state === 'missing');
+  r = await px.call('POST', '/admin/link-dismiss', { code: 'NOPE' }, KEYH); T('dismiss unknown code → 404', r.status === 404);
+  // order-mark guards
+  r = await px.call('POST', '/admin/order-mark', { kind: 'done', offer: D, order_id: '19090156192048', email: 'recreo1@example.com' }); T('order-mark needs the admin key', r.status === 401);
+  r = await px.call('POST', '/admin/order-mark', { kind: 'refund', offer: D, order_id: '1' }, KEYH); T('order-mark: unknown kind → 400', r.status === 400);
+  r = await px.call('POST', '/admin/order-mark', { kind: 'done', offer: D, order_id: 'abc', email: 'recreo1@example.com' }, KEYH); T('order-mark: order_id must be digits', r.status === 400 && /order_id/.test(r.json.error));
+  r = await px.call('POST', '/admin/order-mark', { kind: 'done', offer: D, order_id: '19090156192048', email: 'nobody@example.com' }, KEYH); T('order-mark done: unknown e-mail, no dev → 404', r.status === 404);
+  r = await px.call('POST', '/admin/order-mark', { kind: 'done', offer: '10000000-0000-4000-8000-0000000000ff', order_id: '19090156192048', dev: 'RECREO0001' }, KEYH); T('order-mark done on an unlocked coffee → 409 notlocked', r.status === 409 && r.json.reason === 'notlocked');
+  r = await px.call('POST', '/admin/order-mark', { kind: 'done', offer: D, order_id: '19090156192048', dev: 'NOBODY0001' }, KEYH); T('order-mark done for a device without a locked kapora → 409 nomatch', r.status === 409 && r.json.reason === 'nomatch');
+  // the Burçin case: Shopify order made by hand (id from the URL) → proxy marks her converted row(s) done exactly like the webhook
+  const before = px.DB.grupal_offer_votes.filter(v => v.offer_id === D && v.dev.startsWith('RECREO0001') && v.done_order).length;
+  r = await px.call('POST', '/admin/order-mark', { kind: 'done', offer: D, order_id: '19090156192048', email: 'recreo1@example.com' }, KEYH);
+  T('order-mark done → ok (done), dev resolved from the member record', r.json.ok === true && r.json.result === 'ok (done)' && r.json.dev === 'RECREO0001' && before === 0);
+  T('her kapora row carries done_order = the Shopify order id', px.DB.grupal_offer_votes.filter(v => v.offer_id === D && v.dev.startsWith('RECREO0001')).every(v => String(v.done_order) === '19090156192048'));
+  r = await px.call('POST', '/done-link', { id: D, dev: 'RECREO0001' }); T('after the mark the page would say none (nothing left to complete)', r.json.ok === false && r.json.reason === 'none');
+  r = await px.call('POST', '/admin/order-mark', { kind: 'done', offer: D, order_id: '19090156192049', email: 'recreo1@example.com' }, KEYH); T('marking again → 409 already (rows are not overwritten)', r.status === 409 && r.json.reason === 'already' && /19090156192048/.test(r.json.error));
+  r = await px.call('GET', '/admin/links-open', null, KEYH); T('links-open: her done-link now reads ok', r.json.links.find(l => l.code === rec2.code).state === 'ok');
+  // Hemen-Al by hand: non-member buyer → ORD<id> device, H row, buyer first name stored, duplicate refused
+  r = await px.call('POST', '/admin/order-mark', { kind: 'hemen', offer: A2, order_id: '777001', email: 'new.buyer@example.com', name: 'Zeynep Ak' }, KEYH);
+  const hrow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777001H1');
+  T('order-mark hemen → ok (hemen), H row with order_id, counted', r.json.ok === true && /^ok \(hemen/.test(r.json.result) && hrow && hrow.paid && hrow.order_id === '777001' && hrow.done_order === '777001');
+  T('Hemen-Al buyer name stored for the walk (hn_)', px.DB.grupal_settings.some(s => s.key === 'hn_ORD777001H1' && s.value === 'Zeynep'));
+  r = await px.call('POST', '/admin/order-mark', { kind: 'hemen', offer: A2, order_id: '777001', email: 'new.buyer@example.com' }, KEYH); T('same order again → ok:false reason dup', r.json.ok === false && r.json.reason === 'dup');
+  // kapora by hand: row + member record + invitations exactly as the webhook would
+  r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
+  const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
+  T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.56');
+  // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
+  { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
+    const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
+  Date.now = realNow; }
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);

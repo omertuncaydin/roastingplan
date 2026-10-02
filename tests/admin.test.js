@@ -17,7 +17,7 @@ function mk(variants){
   return w;
 }
 (async()=>{
-  T('admin version bumped', /const VERSION='v2026-09-30p';/.test(html));
+  T('admin version bumped', /const VERSION='v2026-10-02a';/.test(html));
   let w=mk(VARS); const g=w.__g;
   // 1. cart permalink passes through (www stripped)
   let r=await g('cartLinkFrom')('https://www.coffeenutz.net/cart/123:1','oe_hemen',1240); T('cart permalink accepted, www stripped', r==='https://coffeenutz.net/cart/123:1');
@@ -76,5 +76,32 @@ function mk(variants){
     w.prompt=()=>'9999'; await w.__g('offLockNow')('11111111-1111-4111-8111-111111111111'); T('deposit outside 0–5000 → alert, no request', !calls.some(c=>c[0]==='lock') && w.alerts.some(a=>/0–5000/.test(a)));
     w.__g("OFFERS[1].lock.dep_tl=100; renderOffersAdmin();"); T('locked row shows the lock deposit "100 TL/paket"', /40 kapora · 100 TL\/paket/.test(w.document.getElementById('offList').textContent));
     await w.__g('membersBackfill')(); T('Eski kaporalardan üye çıkar → POST /admin/members-backfill, message shows counts', calls.some(c=>c[0]==='bf') && /12 yeni üye · 2 zaten vardı/.test(w.document.getElementById('memBfMsg').textContent)); }
+  // v2026-10-02a (proxy v3.55): "Sipariş eşle" — links list (sipariş yok / bekliyor / ✓ / yok sayıldı), Eşle… prefill, Eşle ve say → POST /admin/order-mark, yok say → /admin/link-dismiss
+  { const w=mk(VARS); const posts=[]; const OFF=[{id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',name:'El Recreo #1',pub:true,locked:true},{id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',name:'Baho',pub:true,locked:false}];
+    const LINKS=[{code:'GAKPGZ4Y',kind:'done',offer:OFF[0].id,coffee:'El Recreo #1',dev:'VGZPK1CBVR',email:'bkermen@gmail.com',name:'Burçin Kermen',at:'2026-10-02T07:02:00.000Z',exp:'2026-10-03T07:02:00.000Z',qty:1,total:645,off:595,inv:null,state:'missing',x:null},
+      {code:'HAQQQQQQ',kind:'hemen',offer:OFF[1].id,coffee:'Baho',dev:'ZZZZZZZZZZ',email:null,name:'',at:'2026-10-02T09:00:00.000Z',exp:'2026-10-02T11:00:00.000Z',qty:2,total:2560,off:640,inv:'ABCD',state:'wait',x:null},
+      {code:'GAOKOKOK',kind:'done',offer:OFF[0].id,coffee:'El Recreo #1',dev:'JURY000001',email:'j@example.com',name:'Jüri Bir',at:'2026-10-01T09:00:00.000Z',exp:'2026-10-02T09:00:00.000Z',qty:2,total:1290,off:1190,inv:null,state:'ok',x:null},
+      {code:'HAXXXXXX',kind:'hemen',offer:OFF[1].id,coffee:'Baho',dev:'YYYYYYYYYY',email:null,name:'Can',at:'2026-09-30T09:00:00.000Z',exp:'2026-09-30T11:00:00.000Z',qty:1,total:1280,off:320,inv:null,state:'x',x:'2026-10-01T00:00:00Z'}];
+    let markReply={ok:true,result:'ok (done)',dev:'VGZPK1CBVR',order_id:'19090156192048',kind:'done'};
+    w.fetch=async(u,init)=>{ const s=String(u); if(s.endsWith('/admin/links-open')) return {ok:true,status:200,json:async()=>({ok:true,links:LINKS,n_missing:1,offers:OFF})};
+      if(s.endsWith('/admin/order-mark')){ posts.push(['mark',JSON.parse(init.body)]); return {ok:true,status:200,json:async()=>markReply}; }
+      if(s.endsWith('/admin/link-dismiss')){ posts.push(['dismiss',JSON.parse(init.body)]); return {ok:true,status:200,json:async()=>({ok:true})}; }
+      if(s.endsWith('/admin/users')) return {ok:true,status:200,json:async()=>({ok:true,n:0,users:[]})}; if(s.endsWith('/admin/offers')) return {ok:true,status:200,json:async()=>[]};
+      return {ok:true,status:200,json:async()=>({ok:true})}; };
+    T('card exists in the page: Sipariş eşle details, list, form fields, Eşle ve say button', !!w.document.getElementById('lnkSet') && !!w.document.getElementById('lnkList') && ['om_kind','om_offer','om_email','om_order','om_qty','om_inv','omMsg'].every(id=>!!w.document.getElementById(id)) && /onclick="orderMark\(\)"/.test(html));
+    T('loadLinks is called when the key opens the admin', /loadUsers\(\); loadLinks\(\);/.test(html));
+    await w.__g('loadLinks')(); const el=w.document.getElementById('lnkList'); const rows=[...el.querySelectorAll('div[data-code]')];
+    T('four link rows, states rendered: sipariş yok (red), bekliyor, ✓ sipariş geldi, yok sayıldı', rows.length===4 && /sipariş yok/.test(rows[0].textContent) && /bekliyor/.test(rows[1].textContent) && /✓ sipariş geldi/.test(rows[2].textContent) && /yok sayıldı/.test(rows[3].textContent));
+    T('row text: time · Tamamla · Burçin Kermen · El Recreo #1 · 1 paket · 645 TL', /Tamamla · Burçin Kermen · El Recreo #1 · 1 paket · 645 TL/.test(rows[0].textContent) && /Hemen-Al · ZZZZZZZZZZ · Baho · 2 paket · 2\.560 TL · davetiye/.test(rows[1].textContent));
+    T('buttons: missing → Eşle… + yok say; ok → none; x → Eşle… + geri al', rows[0].querySelectorAll('button').length===2 && /yok say/.test(rows[0].textContent) && rows[2].querySelectorAll('button').length===0 && /geri al/.test(rows[3].textContent));
+    T('subtitle counts: "1 sipariş yok · 4 link · son 7 gün"; coffee select filled from the reply (locked marked)', w.document.getElementById('lnkSub').textContent==='1 sipariş yok · 4 link · son 7 gün' && w.document.getElementById('om_offer').options.length===2 && /El Recreo #1 · kilitli/.test(w.document.getElementById('om_offer').options[0].textContent));
+    w.__g('omFill')('GAKPGZ4Y'); T('Eşle… prefills kind/offer/e-mail/qty, clears the order id', w.document.getElementById('om_kind').value==='done' && w.document.getElementById('om_offer').value===OFF[0].id && w.document.getElementById('om_email').value==='bkermen@gmail.com' && w.document.getElementById('om_qty').value==='1' && w.document.getElementById('om_order').value==='');
+    w.__g('omFill')('HAQQQQQQ'); T('Eşle… on a non-member hemen link: e-mail empty + hint, invitation code carried', w.document.getElementById('om_email').value==='' && /e-postayı yaz/.test(w.document.getElementById('omMsg').textContent) && w.document.getElementById('om_inv').value==='ABCD' && w.document.getElementById('om_kind').value==='hemen');
+    w.__g('omFill')('GAKPGZ4Y'); w.confirm=()=>true; await w.__g('orderMark')(); T('without an order id nothing is sent, message asks for the URL number', posts.length===0 && /sipariş id gerekli/.test(w.document.getElementById('omMsg').textContent));
+    w.document.getElementById('om_order').value='19090156192048'; w.confirm=()=>false; await w.__g('orderMark')(); T('confirm cancelled → nothing sent', posts.length===0);
+    w.confirm=()=>true; await w.__g('orderMark')(); T('Eşle ve say → POST /admin/order-mark {kind done, offer, email, order_id, qty, inv}; success message; order id cleared', posts.length===1 && posts[0][0]==='mark' && posts[0][1].kind==='done' && posts[0][1].offer===OFF[0].id && posts[0][1].email==='bkermen@gmail.com' && posts[0][1].order_id==='19090156192048' && /✓ sayıldı · ok \(done\) · cihaz VGZPK1CBVR/.test(w.document.getElementById('omMsg').textContent) && w.document.getElementById('om_order').value==='');
+    markReply={ok:false,reason:'already',error:'zaten tamamlanmış (sipariş 19090156192048)'}; w.document.getElementById('om_order').value='5'; await w.__g('orderMark')(); T('server refusal shows its error text', /Olmadı: zaten tamamlanmış \(sipariş 19090156192048\)/.test(w.document.getElementById('omMsg').textContent));
+    markReply={ok:false,reason:'dup'}; await w.__g('orderMark')(); T('reason without error text → Turkish mapping (dup)', /Olmadı: bu sipariş zaten sayılmış/.test(w.document.getElementById('omMsg').textContent));
+    await w.__g('linkDismiss')('HAQQQQQQ',false); await w.__g('linkDismiss')('HAXXXXXX',true); T('yok say / geri al → POST /admin/link-dismiss {code, undo}', posts.filter(p=>p[0]==='dismiss').length===2 && posts.find(p=>p[0]==='dismiss'&&p[1].code==='HAQQQQQQ')[1].undo===false && posts.find(p=>p[0]==='dismiss'&&p[1].code==='HAXXXXXX')[1].undo===true); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })();

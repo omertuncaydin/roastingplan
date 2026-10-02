@@ -540,12 +540,15 @@ body.jdesk .jcard .jlanes{max-height:none;overflow:visible}
 .jself{display:block;text-align:center;margin-top:12px;font-size:12px;color:var(--muted);font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .jnote2{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.4}
 /* v10n JÜRİ GİRİŞİ */
-.jwb{position:relative;flex:none;height:30px;margin:2px 0 0}.jwb .jwdd{position:absolute;left:0;top:0;width:30px;height:30px}.jwdrum{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}.jwdrum text{font-variant-numeric:tabular-nums}
-.jwb .jwcnt{position:absolute;left:33px;top:0;line-height:30px;font-size:10.5px;color:#a8998a;font-weight:600;white-space:nowrap}.jwb .jwcnt b{display:inline-block;min-width:17px;text-align:right;font-size:13.5px;font-weight:800;color:#f3ede4;font-variant-numeric:tabular-nums}
-.jwb .jwslots{position:absolute;left:88px;right:0;top:8px;height:14px;display:flex;gap:2px}.jwb .jwslots i{flex:1 1 0;min-width:0;border-radius:2px;background:rgba(243,237,228,.16);transform-origin:50% 100%;transition:filter .15s}.jwb .jwslots i.on{background:#c98a3c}.jwb .jwslots i.on.me{background:#e6c14b}.jwb .jwslots i:hover{filter:brightness(1.4)}
-.jwb .jwlay,.jwc .jwlay{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none}.jwb.done .jwdd{display:none}.jwb.done .jwcnt{left:0}
+/* v11n HALKA AÇILIR (A): şerit halkanın arkasında açılır; figürler; ad; "n kaldı"; dokunma/hover alanı */
 .jwfig{position:absolute;left:0;top:0;border-radius:50%;background:#c98a3c;color:#16130f;font-weight:800;text-align:center;box-shadow:0 0 0 1.5px rgba(22,19,15,.75),0 2px 5px rgba(0,0,0,.5);opacity:0;pointer-events:none;will-change:transform,opacity;font-family:-apple-system,'Segoe UI',Roboto,sans-serif}.jwfig.me{background:#e6c14b}.jwfig b{position:absolute;left:50%;bottom:100%;margin-bottom:2px;transform:translateX(-50%);line-height:1;font-weight:800;color:#f3ede4;text-shadow:0 1px 2px #000;white-space:nowrap}
-.jwc{position:absolute;left:0;top:0;right:0;bottom:0;pointer-events:none;z-index:4}.jwc .jwgnd{position:absolute;left:12px;right:12px;height:1px;background:rgba(243,237,228,.22);opacity:0}.jwc .jwnl{position:absolute;white-space:nowrap;font-size:11px;line-height:14px;font-weight:700;color:#f3ede4;text-shadow:0 1px 2px rgba(0,0,0,.9);opacity:0;pointer-events:none}.jwc .jwnl.me{color:#e6c14b}
+.jwa{position:absolute;top:12px;left:12px;right:12px;height:50px;z-index:2;border-radius:25px;background:linear-gradient(180deg,#221b14,#17120d);box-shadow:inset 0 0 0 1px rgba(243,237,228,.22);overflow:hidden;visibility:hidden;pointer-events:none}
+.jwa .jwgnd{position:absolute;left:54px;right:14px;top:42px;height:1px;background:rgba(243,237,228,.16)}.jwa .jwlay{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none}
+.jwa .jwnl{position:absolute;left:58px;top:5px;white-space:nowrap;font-size:10.5px;line-height:13px;font-weight:700;color:#f3ede4;text-shadow:0 1px 2px rgba(0,0,0,.9);opacity:0;pointer-events:none}.jwa .jwnl.me{color:#e6c14b}
+.jwa .jwlf{position:absolute;right:16px;top:5px;font-size:10px;line-height:13px;color:#a8998a;font-weight:600;opacity:0;font-variant-numeric:tabular-nums;white-space:nowrap}
+.jcard .jring{position:relative;z-index:3;will-change:transform;flex:none;display:block}.jcard .jring text{font-variant-numeric:tabular-nums}
+.jwz{position:absolute;top:12px;right:12px;width:50px;height:50px;border-radius:25px;z-index:6;cursor:pointer;touch-action:manipulation;outline:none;-webkit-tap-highlight-color:transparent}.jwz:focus-visible{box-shadow:0 0 0 2px #e6c14b}
+.jcard.lopen .jwz,.jcard.lopen .jwa{display:none}
 .jlg{margin-top:12px}.jq.jqh{margin-top:2px}.jq.jqh button{width:32px;height:32px;font-size:17px}.jq.jqh b{font-size:15px;min-width:16px}.jhpr{margin-top:12px;font-size:15px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.jhpr b{font-size:24px;font-weight:900;color:var(--gold)}.jhpr s{color:var(--muted)}.jlg label{display:block;font-size:11px;letter-spacing:.6px;text-transform:uppercase;font-weight:800;color:var(--muted);margin:10px 0 4px}.jlg input{width:100%;box-sizing:border-box;margin:0;padding:12px 12px;font-size:16px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-family:inherit}.jlg input.code{font-size:24px;letter-spacing:8px;text-align:center;font-weight:900}.jlg .hint{margin-top:4px;font-size:11.5px;color:var(--muted);line-height:1.4}.jlg .go{margin-top:12px;width:100%;border:0;border-radius:12px;padding:13px;font-weight:900;font-size:14px;background:var(--gold);color:var(--btnink);font-family:inherit;cursor:pointer}.jlg .go.o{background:transparent;color:var(--ink);border:1px solid rgba(243,237,228,.35)}.jlg .go:disabled{opacity:.5}.jlg .err{margin-top:8px;font-size:12px;color:#e0705a;font-weight:700}.jlg .okm{margin-top:8px;font-size:12px;color:#9fd3b2;font-weight:700}.jlg .steps{display:flex;gap:6px;margin-top:8px}.jlg .steps i{flex:1;height:4px;border-radius:2px;background:var(--line)}.jlg .steps i.on{background:var(--gold)}.jlg .wa{margin-top:10px;border:1px dashed rgba(230,193,75,.7);border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.45}.jlg .wa b{color:var(--gold)}.jlg .chk{display:flex;gap:10px;align-items:center;margin-top:10px;font-size:13px;font-weight:700;cursor:pointer}.jlg .chk input{width:20px;height:20px;margin:0;accent-color:#e6c14b}
 .jtr.jlgc{margin-left:6px}#jTop .jlgc{font-size:11.5px;font-weight:800;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);cursor:pointer;white-space:nowrap;max-width:46vw;overflow:hidden;text-overflow:ellipsis}#jTop .jlgc.in{border-color:#9fd3b2;color:#9fd3b2}
 .jgb{margin:0 0 10px;border-radius:14px;padding:10px 12px;background:linear-gradient(90deg,rgba(230,193,75,.22),rgba(230,193,75,.08));border:1px solid rgba(230,193,75,.5);font-size:12.5px;line-height:1.35}
@@ -728,7 +731,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-10-01d';
+const VERSION='v2026-10-02b';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -847,7 +850,7 @@ jWelc:['Grup-Al: {g} ön sipariş hedefine ulaşınca kahve kavrulur — her {am
 // v10a Grup-Al / Hemen-Al şeritleri · davetiye · masa
 jGA:['Grup-Al','Grup-Al'], jHA:['Hemen-Al','Hemen-Al'], jHLeft:['{n} kaldı','{n} left'], jHFull:['doldu','sold out'], jHTable:['masada {n}','{n} on the table'], jHRoast:['pazartesi kavrulur · salı kargoda','roasted Monday · ships Tuesday'], jHRoastD:['{d} kavrulur','roasted {d}'],
 jLaneGAt:['{g} olunca kavrulur.','Roasts when {g} is reached.'], jLaneGAx:['Kaporan fiyattan düşer · kilitlenene kadar taşınır, kaybolmaz.','Your deposit comes off the price · moves until locked, never lost.'], jLaneKap:['Kapora koy · {amt} TL','Deposit · {amt} TL'], jLaneMine:['Kaporan ×{n} · kilitlenince {p} TL\'den tamamla','Your deposit ×{n} · complete at {p} TL once locked'],
-jLaneHAx:['Kaporasız, kesin. Paketin {g}\'a sayılır.','No deposit, certain. Your package counts toward {g}.'], jLaneBuy:['Sepete · {p} TL','Add to cart · {p} TL'], jwAnon:['Jüri','Jury'], jwYou:['sen','you'], jwEmpty:['{n} yuva boş · 40\'ta kavrulur','{n} seats empty · roasts at 40'], jLaneBuyGo:['Sepete git → {n} × {p} TL','Go to cart → {n} × {p} TL'], jHQMax:['{n} paket alınabilir','{n} packages available'], jHQInv:['davetiye = 1 paket','invitation = 1 package'], jHPopT:['Hemen-Al · {coffee}','Hemen-Al · {coffee}'], jHPopInv:['{n} koltuğu · masadan','{n} seat · from the table'], jLaneBuyInv:['Davetiyeyle al · {p} TL','Buy with the invitation · {p} TL'], jLaneTake:['Masadan al · {n}','Take from the table · {n}'], jLaneFull:['Hemen-Al doldu — kapora koy, +{k} davetiye','Sold out — deposit and get +{k} invitations'], jLaneFoot:['Bir kapora: sana %{a} · {k} Hemen-Al davetiyesi','One deposit: {a}% for you · {k} Hemen-Al invitations'], jLaneHAoffS:['Bu kahvede henüz yok','Not on this coffee yet'], jPlusYou:['+{q} sen','+{q} you'], jTkGhost:['+{k} davetiye','+{k} invitations'], jTkGhostS:['kapora ödeyince senin','yours once the deposit is paid'], jTkGhostX:['{k} arkadaşın kaporasız, %{p} ile alır.','{k} friends buy with no deposit, {p}% off.'], jTkMine:['{n} davetiyen','{n} invitations of yours'], jTkPriv:['{d} sana özel, sonra masaya','{d} private, then on the table'], jTkUsed:['{n} aldı · {w}','{n} took it · {w}'], jTkOnTbl:['{n} davetiyen masada','{n} of your invitations on the table'], jTkBack:['geri al','take back'], jTkAll:['tümü ›','all ›'], jTkLocked:['{k} davetiyen bu kahve stoğa girince düşer.','Your {k} invitations arrive when this coffee is in stock.'], jTblSeat:['Masadan al · {n} koltuğu','Take from the table · {n} seat'], jTblWhy:['Kota doldu; masada {n} davetiyesi var — ilk oturan alır.','Pool is full; {n} invitation is on the table — first to sit takes it.'], jTblMoreN:['+{k} daha masada','+{k} more on the table'], jWhenYest:['dün {t}','yesterday {t}'], jWhenToday:['bugün {t}','today {t}'], jHMine:['Hemen-Al paketin ×{n} · {d} kavrulur','Your Hemen-Al package ×{n} · roasted {d}'],
+jLaneHAx:['Kaporasız, kesin. Paketin {g}\'a sayılır.','No deposit, certain. Your package counts toward {g}.'], jLaneBuy:['Sepete · {p} TL','Add to cart · {p} TL'], jwAnon:['Jüri','Jury'], jwYou:['sen','you'], jwLeft:['{n} kaldı','{n} to go'], jwRoast:['kavruluyor','roasting'], jwNone:['henüz kimse yok · ilk sen ol','nobody yet · be the first'], jwRunA:['Sayaç halkası: {n} / {g} paket, {p} kişi. Aç','Counter ring: {n} / {g} packages, {p} people. Open'], jwLotA:['Kavrulan parti: {n} paket, {p} kişi. Aç','Lot being roasted: {n} packages, {p} people. Open'], jLaneBuyGo:['Sepete git → {n} × {p} TL','Go to cart → {n} × {p} TL'], jHQMax:['{n} paket alınabilir','{n} packages available'], jHQInv:['davetiye = 1 paket','invitation = 1 package'], jHPopT:['Hemen-Al · {coffee}','Hemen-Al · {coffee}'], jHPopInv:['{n} koltuğu · masadan','{n} seat · from the table'], jLaneBuyInv:['Davetiyeyle al · {p} TL','Buy with the invitation · {p} TL'], jLaneTake:['Masadan al · {n}','Take from the table · {n}'], jLaneFull:['Hemen-Al doldu — kapora koy, +{k} davetiye','Sold out — deposit and get +{k} invitations'], jLaneFoot:['Bir kapora: sana %{a} · {k} Hemen-Al davetiyesi','One deposit: {a}% for you · {k} Hemen-Al invitations'], jLaneHAoffS:['Bu kahvede henüz yok','Not on this coffee yet'], jPlusYou:['+{q} sen','+{q} you'], jTkGhost:['+{k} davetiye','+{k} invitations'], jTkGhostS:['kapora ödeyince senin','yours once the deposit is paid'], jTkGhostX:['{k} arkadaşın kaporasız, %{p} ile alır.','{k} friends buy with no deposit, {p}% off.'], jTkMine:['{n} davetiyen','{n} invitations of yours'], jTkPriv:['{d} sana özel, sonra masaya','{d} private, then on the table'], jTkUsed:['{n} aldı · {w}','{n} took it · {w}'], jTkOnTbl:['{n} davetiyen masada','{n} of your invitations on the table'], jTkBack:['geri al','take back'], jTkAll:['tümü ›','all ›'], jTkLocked:['{k} davetiyen bu kahve stoğa girince düşer.','Your {k} invitations arrive when this coffee is in stock.'], jTblSeat:['Masadan al · {n} koltuğu','Take from the table · {n} seat'], jTblWhy:['Kota doldu; masada {n} davetiyesi var — ilk oturan alır.','Pool is full; {n} invitation is on the table — first to sit takes it.'], jTblMoreN:['+{k} daha masada','+{k} more on the table'], jWhenYest:['dün {t}','yesterday {t}'], jWhenToday:['bugün {t}','today {t}'], jHMine:['Hemen-Al paketin ×{n} · {d} kavrulur','Your Hemen-Al package ×{n} · roasted {d}'],
 jInvChip:['✉ {n} davetiye','✉ {n} invitations'], jInvT:['Hemen-Al davetiyelerin','Your Hemen-Al invitations'], jInvSub:['Kaporan sana Hemen-Al davetiyesi verdi. Arkadaşına gönder ya da masaya bırak: ilk oturan alır. {h} saat sonra kendiliğinden masaya çıkar; davetiye kotaya bakmaz.','Your deposit gave you Hemen-Al invitations. Send one to a friend or leave it on the table: first come, first served. After {h} h it goes to the table by itself; an invitation ignores the pool.'], jInvSend:['Gönder','Send'], jInvTable:['Masaya bırak','Leave on the table'], jInvOnTable:['Masada · ilk oturan alır','On the table · first come'], jInvUsed:['✓ {n} aldı','✓ taken by {n}'], jInvExp:['süresi doldu','expired'], jInvSelf:['Birini kendin kullan ›','Use one yourself ›'], jInvNote:['Kendin kullanırsan paketin {g}\'a yine sayılır.','If you use one yourself, your package still counts toward {g}.'], jInvDays:['{d} gün','{d} days'], jInvHours:['{h} sa','{h} h'], jInvNone:['Davetiyen yok — kapora koy, {k} davetiye gelir.','No invitations yet — place a deposit and {k} arrive.'],
 jInvShare:['{me} {coffee} için kaporasını koydu · sana bir Hemen-Al davetiyesi: {p} TL (liste {l}), pazartesi kavrulur, kaporasız · {n}/{g} · ilk alan alır → {url}','{me} put a deposit on {coffee} · a Hemen-Al invitation for you: {p} TL (list {l}), roasted Monday, no deposit · {n}/{g} · first come → {url}'],
 jTblLine:['Masada: {n} → 1 Hemen-Al · {coffee}','On the table: 1 Hemen-Al from {n} · {coffee}'], jTblGo:['al ›','take ›'], jTblMore:['+{k} daha','+{k} more'],
@@ -1336,11 +1339,11 @@ function jCardHtml(o,i,cfg,G,gate,banned){ const paid=(OFFMINE||[]).find(v=>v.id
     const bg=hasImg?('<img src="'+escZ(o.img_url)+'" alt="" loading="lazy" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover">'):jLand(o.origin,362,460,true);
     return '<div class="jcard'+(paid?' mine':'')+(hasImg?' photo':'')+(o.lock?' jlock':'')+(JSEL===o.id?' sel':'')+((JLANE&&JLANE.id===o.id)?(' lopen'+(JLANE.anim?'':' lanim')):'')+'" data-i="'+i+'" data-id="'+escZ(o.id)+'"'+(jIsDesk()?(' onclick="jDeskOpen(\''+escZ(o.id)+'\')"'):'')+'><div class="jbg">'+bg+'</div><div class="jsh"></div><div class="jsh2"></div>'
      +'<div class="jtop"><div style="display:flex;gap:6px;min-width:0"><span class="jchip">#'+(i+1)+(tp?' <span style="color:#e6c14b" title="'+t('jTop5')+'">★</span>':'')+'</span>'+(paid?('<span class="jchip jminec">'+(paid.conv?'🔒 ':'')+t('jMineChip').replace('{n}',Math.max(1,parseInt(paid.qty)||1))+'</span>'+((!paid.conv&&!JMOVE&&!JBUSY&&((STATE&&STATE.offers)||[]).length>1)?('<span class="jchip jmvl" onclick="event.stopPropagation();jMoveStart(\''+escZ(o.id)+'\')">'+t('jMoveL')+'</span>'):'')):(tn?('<span class="jchip jtaste"><i style="background:'+tc+'"></i>'+(LANG==='en'?tn[2]:tn[1])+'</span>'):''))+'</div>'
-     +'<svg width="50" height="50" viewBox="0 0 50 50" aria-hidden="true"><circle cx="25" cy="25" r="21" fill="rgba(22,19,15,.5)" stroke="rgba(243,237,228,.25)" stroke-width="4"/><circle cx="25" cy="25" r="21" fill="none" stroke="#e6c14b" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+(2*Math.PI*21*Math.min(1,(o.dep||0)/G)).toFixed(1)+' 999" transform="rotate(-90 25 25)"/><text x="25" y="29" text-anchor="middle" font-size="14" font-weight="800" fill="#f3ede4" font-family="-apple-system,Segoe UI,Roboto,sans-serif">'+(o.dep||0)+'</text></svg></div>'   // v10z (Ömer): halka her zaman canlı sayaç — kilitte sıfırlanır (sonraki parti); kilitli partinin adedi rozette
+     +'<svg class="jring" width="50" height="50" viewBox="0 0 50 50" aria-hidden="true"><g class="rl"><circle cx="25" cy="25" r="21" fill="rgba(22,19,15,.5)" stroke="rgba(243,237,228,.25)" stroke-width="4"/><circle class="arc" cx="25" cy="25" r="21" fill="none" stroke="#e6c14b" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+(2*Math.PI*21*Math.min(1,(o.dep||0)/G)).toFixed(1)+' 999" transform="rotate(-90 25 25)"/></g><g class="cg"><text x="25" y="29" text-anchor="middle" font-size="14" font-weight="800" fill="#f3ede4" font-family="-apple-system,Segoe UI,Roboto,sans-serif">'+(o.dep||0)+'</text></g></svg></div>'   // v10z (Ömer): halka her zaman canlı sayaç — kilitte sıfırlanır (sonraki parti); kilitli partinin adedi rozette · v11n: halka = yürüyüşün tetiği (rl döner, cg zıplar)
      +'<div class="jbody"><div class="jmeta">'+jMeta(o)+'</div><div class="jname">'+escZ(o.name)+'</div>'+(jDesc(o)?('<div class="jdesc">'+jDesc(o)+'</div>'):'')
      +'<div class="jchips2">'+jLockBadge(o,true)+(jIsDesk()?('<span class="jchip jgoto" onclick="event.stopPropagation();jGoRow(\''+escZ(o.id)+'\')">'+t('jDetail')+'</span>'):'')   // v11f: telefonda 'Kahveye git' çipi yok (liste yok; kilitli kartta çipler 2 satır)
      +(jHemen(o)?jHemenChips(o):(jShopUrl(o)?('<a class="jchip jshop" href="'+escZ(jShopUrl(o))+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i></i>'+t('jShop')+(o.list_tl?(' <b>'+fmtTL(o.list_tl)+' TL</b>'):'')+'</a>'):''))+'</div>'
-     +(jIsDesk()?jWalkStripHtml(o):'')+jPriceRow(o,cfg,paid,gate,banned,jury)+((JLANE&&JLANE.id===o.id)?('<div class="jlanes-w'+(JLANE.anim?'':' plus opened')+'" onclick="event.stopPropagation()"><div>'+jLanesHtml(o,JLANE.c)+'</div></div>'):'')+'</div>'+((!jIsDesk()&&!(JLANE&&JLANE.id===o.id))?jWalkLayerHtml(o):'')+'</div>'; }   // v11k: B şeridi (masaüstü) · C katmanı (telefon)   // v11e: yeniden çizimde (30 sn, sepet) panel bir daha kaymaz — bitiş sınıfları HTML'de
+     +jPriceRow(o,cfg,paid,gate,banned,jury)+((JLANE&&JLANE.id===o.id)?('<div class="jlanes-w'+(JLANE.anim?'':' plus opened')+'" onclick="event.stopPropagation()"><div>'+jLanesHtml(o,JLANE.c)+'</div></div>'):'')+'</div></div>'; }   // v11n: B şeridi ve C katmanı kalktı — halka açılır (renderWalks kartı donatır)   // v11e: yeniden çizimde (30 sn, sepet) panel bir daha kaymaz — bitiş sınıfları HTML'de
 // v10a: kartın fiyat satırı — Hemen-Al şeridi olan kahvede iki fiyat (Grup-Al · Hemen-Al), dokununca alt sayfa; yoksa eski tek satır
 function jPriceRow(o,cfg,paid,gate,banned,jury){
   const strike=(o.list_tl&&jury&&o.list_tl>jury)?('<s>'+fmtTL(o.list_tl)+'</s>'):''; const pr=jury?(fmtTL(jury)+' TL'):'';
@@ -1562,15 +1565,16 @@ function jSheetAnim(sh,opts){ opts=opts||{roll:true,plus:true}; const lp=sh.quer
   if(opts.roll){ const L=parseInt(lp.getAttribute('data-list'))||0, J=parseInt(lp.getAttribute('data-jury'))||0, n=lp.querySelector('.n');
     if(n&&L>J&&J>0){ lp.classList.add('roll'); n.textContent=fmtTL(L); const t0=performance.now(), ms=1100; const step=tm=>{ const k=Math.min(1,(tm-t0)/ms), e=1-Math.pow(1-k,3); n.textContent=fmtTL(L+(J-L)*e); if(k<1) requestAnimationFrame(step); else { lp.classList.add('pulse'); setTimeout(()=>lp.classList.remove('pulse'),180); } }; requestAnimationFrame(step); } }
   if(opts.plus){ setTimeout(done,opts.roll?1250:150); setTimeout(done2,opts.roll?1900:700); } else { done(); done2(); } }
-// ===== v11k (Ömer 2026-10-01) KAVURUCUYA YÜRÜYÜŞ — her kapora kavurucuya bir adım: masaüstü B (fiyatın üstünde ince şerit: tambur + 40 yuva; kart görünür olunca bir kez yürür,
-// sonra sakin ilerleme çubuğu; yuvaya gelince ad), telefon C (desteye ortaya oturan kart canlanır: kişiler fotoğrafın alt kenarından sol alttaki tambura yürür, adlar belirir).
-// Veri: o.people (proxy v3.54: ilk ad · paket · anahtar; ME.k ile 'sen'); yoksa adsız noktalar. Yeniden çizimde (30 sn) oynanmış kart bitmiş halde çizilir, tekrar yürümez. =====
-const JWALK={played:{},center:null,runs:{},io:null};
+// ===== v11n (Ömer 2026-10-02) HALKA AÇILIR (A, her cihazda): sayaç halkası kartın saati — masaüstünde üstüne gelince, telefonda dokununca sola tekerlek gibi
+// yuvarlanır, arkasında şerit açılır; kişiler sağdan halkanın içine (tambur) yürür, sayı tırmanır, ad belirir; fare çıkınca / tekrar dokununca / 5 sn sonra
+// şerit halkaya geri sarılır, halka canlı sayaca döner. Kilitli kahvede partinin kişileri (lock.people) yürür, "kavruluyor" yazar; açık kahvede bu turun
+// kişileri ve "n kaldı". Veri: proxy v3.54/v3.56; eski proxyde adsız noktalar. Açıkken 30 sn yenilemesi bekletilir (kapanınca uygulanır). B şeridi ve C katmanı kalktı. =====
+const JWALK={rigs:{},open:null,pending:null};
 const JW_RM=(typeof matchMedia==='function')?matchMedia('(prefers-reduced-motion: reduce)'):{matches:false};
 function jwBez(x1,y1,x2,y2){ const cx=3*x1,bx=3*(x2-x1)-cx,ax=1-cx-bx,cy=3*y1,by=3*(y2-y1)-cy,ay=1-cy-by; const X=t=>((ax*t+bx)*t+cx)*t,D=t=>(3*ax*t+2*bx)*t+cx;
   return x=>{ if(x<=0) return 0; if(x>=1) return 1; let t=x; for(let i=0;i<8;i++){ const e=X(t)-x,d=D(t); if(Math.abs(e)<1e-5||Math.abs(d)<1e-6) break; t=Math.min(1,Math.max(0,t-e/d)); }
     if(Math.abs(X(t)-x)>1e-3){ let a=0,b=1; for(let i=0;i<24;i++){ t=(a+b)/2; if(X(t)<x) a=t; else b=t; } } return ((ay*t+by)*t+cy)*t; }; }
-const JW_EO=jwBez(.22,.8,.24,1), JW_EIN=jwBez(.55,0,.9,.55), JW_EPOP=jwBez(.3,1.35,.55,1), JW_LIN=x=>x;
+const JW_EO=jwBez(.22,.8,.24,1), JW_EIO=jwBez(.65,0,.35,1), JW_EIN=jwBez(.55,0,.9,.55), JW_EPOP=jwBez(.3,1.35,.55,1), JW_LIN=x=>x;
 const jwLerp=(a,b,t)=>a+(b-a)*t;
 function JwRun(){ this.q=[]; this.done=true; this.raf=0; }
 JwRun.prototype.add=function(d,dur,fn,e){ this.q.push({d,dur,fn,e:e||JW_EO,f:0,o:this.q.length}); return this; };
@@ -1582,79 +1586,75 @@ JwRun.prototype.go=function(cb){ if(JW_RM.matches||window.__jFast){ this.finish(
     if(left) this.raf=requestAnimationFrame(step); else { this.q=[]; this.done=true; this.raf=0; if(cb) cb(); } }; this.raf=requestAnimationFrame(step); };
 function jwSvg(t,a,p){ const e=document.createElementNS('http://www.w3.org/2000/svg',t); for(const k in a) e.setAttribute(k,a[k]); if(p) p.appendChild(e); return e; }
 const jwF2=v=>+(+v).toFixed(2);
-// tambur (mockup 3 çizimi, ölçeklenir): origin = tambur merkezi
-function jwDrum(r,o){ const pad=3,hop=o.hop||0,leg=o.leg||0,hw=r+pad,top=r+hop+pad,H2=top+r+leg+pad,W=2*hw;
-  const s=jwSvg('svg',{class:'jwdrum',width:jwF2(W),height:jwF2(H2),viewBox:jwF2(-hw)+' '+jwF2(-top)+' '+jwF2(W)+' '+jwF2(H2),'aria-hidden':'true'});
-  const ln={fill:'none',stroke:'#a8998a','stroke-width':o.sw||1.5,'stroke-linecap':'round','stroke-linejoin':'round',opacity:.75};
-  if(leg) jwSvg('path',Object.assign({d:'M'+jwF2(-r*.55)+' '+jwF2(r*.83)+'L'+jwF2(-r*.7)+' '+jwF2(r+leg)+'M'+jwF2(r*.55)+' '+jwF2(r*.83)+'L'+jwF2(r*.7)+' '+jwF2(r+leg)},ln),s);
-  if(hop){ const a=r*.475,m=r*.175,y0=-r-hop,y1=-r-hop*.29; jwSvg('path',Object.assign({d:'M'+jwF2(-a)+' '+jwF2(y0)+'H'+jwF2(a)+'L'+jwF2(m)+' '+jwF2(y1)+'V'+jwF2(-r)+'M'+jwF2(-a)+' '+jwF2(y0)+'L'+jwF2(-m)+' '+jwF2(y1)+'V'+jwF2(-r)},ln),s); }
-  jwSvg('circle',{r:r,fill:'#1c1712',stroke:'#a8998a','stroke-width':o.sw||1.5,'stroke-opacity':.65},s);
-  const rg=jwSvg('g',{},s),ri=r*.82,st=2*Math.PI*ri/30;
-  jwSvg('circle',{r:jwF2(ri),fill:'none',stroke:'#c98a3c','stroke-width':jwF2(Math.max(1.2,r*.045)),'stroke-dasharray':jwF2(st*.3)+' '+jwF2(st*.7),'stroke-linecap':'round',opacity:.6},rg);
-  jwSvg('circle',{cy:jwF2(-ri),r:jwF2(Math.max(1.5,r*.07)),fill:'#c98a3c'},rg);
-  const cg=jwSvg('g',{},s); let cnt=null;
-  if(o.fs){ const y=o.sub?o.fs*.15:o.fs*.36; cnt=jwSvg('text',{y:jwF2(y),'text-anchor':'middle','font-size':o.fs,'font-weight':800,fill:'#f3ede4','font-family':'-apple-system,Segoe UI,Roboto,sans-serif'},cg); cnt.textContent='0';
-    if(o.sub) jwSvg('text',{y:jwF2(y+o.sub+1.5),'text-anchor':'middle','font-size':o.sub,'font-weight':600,fill:'#a8998a','font-family':'-apple-system,Segoe UI,Roboto,sans-serif'},cg).textContent='/ '+(o.goal||40); }
-  return { svg:s,hw,top,r, set(n){ if(cnt) cnt.textContent=n; }, rot(a){ rg.setAttribute('transform','rotate('+a.toFixed(2)+')'); }, bump(e){ cg.setAttribute('transform','scale('+(1+.12*Math.sin(Math.PI*e)).toFixed(3)+')'); }, place(cx,cy){ s.style.left=(cx-hw).toFixed(1)+'px'; s.style.top=(cy-top).toFixed(1)+'px'; } }; }
-function jwPeople(o){ const G=offCfg().goal; let P=Array.isArray(o&&o.people)?o.people.filter(p=>p&&p.q>0):[]; if(!P.length&&(o&&o.dep)>0) P=[{n:null,q:Math.min(G,o.dep),k:''}];
-  let t=0; return P.map((p,i)=>{ const e={n:p.n||null,q:Math.max(1,parseInt(p.q)||1),k:p.k||'',me:!!(ME&&ME.k&&p.k&&p.k===ME.k),i,s0:t}; e.ini=e.n?e.n.charAt(0).toUpperCase():'✓'; t+=e.q; return e; }); }
+// kişiler: kilitli kahvede partinin kişileri (lock.people, v3.56), yoksa bu turun kişileri (people, v3.54), o da yoksa adsız noktalar (eski proxy)
+function jwPeopleOf(o){ const G=offCfg().goal; const lot=!!(o&&o.lock&&Array.isArray(o.lock.people)&&o.lock.people.length); let P=lot?o.lock.people.filter(p=>p&&p.q>0):(Array.isArray(o&&o.people)?o.people.filter(p=>p&&p.q>0):[]); if(!P.length&&(o&&o.dep)>0) P=[{n:null,q:Math.min(G,o.dep),k:''}];
+  let t=0; return {lot,P:P.map((p,i)=>{ const e={n:p.n||null,q:Math.max(1,parseInt(p.q)||1),k:p.k||'',me:!!(ME&&ME.k&&p.k&&p.k===ME.k),i,s0:t}; e.ini=e.n?e.n.charAt(0).toUpperCase():'✓'; t+=e.q; return e; })}; }
+function jwPeople(o){ return jwPeopleOf(o).P; }
 const jwName=p=>(p.n||t('jwAnon'))+(p.q>1?' ×'+p.q:'')+(p.me?' · '+t('jwYou'):'');
 const jwSay=p=>'+'+p.q+' '+(p.me?t('jwYou'):(p.n||t('jwAnon')));
 function jwFig(p,d,par){ const D=p.q>1?Math.round(d*1.16):d; const e=document.createElement('div'); e.className='jwfig'+(p.me?' me':''); e.textContent=p.ini; par.appendChild(e);
   e.style.cssText='width:'+D+'px;height:'+D+'px;margin-left:'+(-D/2)+'px;margin-top:'+(-D/2)+'px;font-size:'+(D*.55).toFixed(1)+'px;line-height:'+D+'px';
   if(p.q>1){ const b=document.createElement('b'); b.textContent='×'+p.q; b.style.fontSize=Math.max(8.5,d*.42).toFixed(1)+'px'; e.appendChild(b); } return {el:e,p,D}; }
 function jwFp(f,x,y,s,o){ f.el.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,0) scale('+s.toFixed(3)+')'; f.el.style.opacity=o.toFixed(3); }
-// ---- B · masaüstü şeridi: HTML (bitmiş ya da boş hal); animasyon renderWalks'ta
-function jWalkStripHtml(o){ const G=offCfg().goal, P=jwPeople(o), N=Math.min(G,P.reduce((a,p)=>a+p.q,0)), done=!!JWALK.played[o.id]||!N;
-  let slots=''; for(let j=0;j<G;j++){ const p=P.find(x=>j>=x.s0&&j<x.s0+x.q); slots+='<i'+(p?(' title="'+escZ(jwName(p))+'"'+(done?(' class="on'+(p.me?' me':'')+'"'):'')):(' title="'+escZ(t('jwEmpty').replace('{n}',G-N))+'"'))+'></i>'; }
-  return '<div class="jwb'+(done?' done':'')+'" data-w="'+escZ(o.id)+'" data-n="'+N+'"><span class="jwdd"></span><span class="jwcnt"><b>'+(done?N:0)+'</b> / '+G+'</span><div class="jwslots">'+slots+'</div><div class="jwlay"></div></div>'; }
-// ---- C · telefon katmanı: HTML (tambur + zemin + figür katmanı); geometri ve animasyon renderWalks'ta
-function jWalkLayerHtml(o){ const G=offCfg().goal, P=jwPeople(o), N=Math.min(G,P.reduce((a,p)=>a+p.q,0)); return '<div class="jwc" data-w="'+escZ(o.id)+'" data-n="'+N+'"><div class="jwgnd"></div><div class="jwlay"></div><div class="jwnl"></div></div>'; }
-function jWalkStop(id){ const r=JWALK.runs[id]; if(r){ r.stop(); delete JWALK.runs[id]; } }
-function jWalkPlayB(el){ const id=el.getAttribute('data-w'); const o=((STATE&&STATE.offers)||[]).find(x=>x.id===id); if(!o||el.__jw) return; el.__jw=true; jWalkStop(id);
-  const G=offCfg().goal, P=jwPeople(o); if(!P.length){ JWALK.played[id]=true; return; } const slots=[...el.querySelectorAll('.jwslots i')], lay=el.querySelector('.jwlay'), cntEl=el.querySelector('.jwcnt b'), dd=el.querySelector('.jwdd');
-  const dm=jwDrum(12,{sw:1.3,goal:G}); dd.appendChild(dm.svg); dm.place(15,15); const figs=P.map(p=>jwFig(p,12,lay)); figs.forEach(f=>jwFp(f,0,15,1,0));
-  const r=new JwRun(); JWALK.runs[id]=r; const Wst=el.clientWidth||306, X0=Wst+18, sl=el.querySelector('.jwslots');
-  const sx=j=>{ const s=slots[j]; return (s&&s.offsetWidth)?(sl.offsetLeft+s.offsetLeft+s.offsetWidth/2):(90+j*5.4); };
-  let st=140,cnt=0,ang=0;
-  P.forEach((p,i)=>{ if(i) st+=105; const f=figs[i], tx=(sx(p.s0)+sx(Math.min(G-1,p.s0+p.q-1)))/2, dist=Math.max(40,X0-tx), dur=Math.round(Math.min(1100,Math.max(420,dist/.26))), n=Math.max(2,Math.round(dist/26));
-    r.add(st,dur,v=>jwFp(f,jwLerp(X0,tx,v),15-1.1*Math.abs(Math.sin(Math.PI*n*v)),1,Math.min(1,v*5)),JW_LIN);
-    const tt=st+dur, c1=cnt+p.q, a0=ang, a1=ang+p.q*360/G; cnt=c1; ang=a1;
-    r.add(tt,200,v=>jwFp(f,tx,15,1-.7*v,1-v),JW_EIN);
-    r.at(tt,()=>{ cntEl.textContent=Math.min(G,c1); });
-    r.add(tt,280,v=>{ cntEl.style.transform='scale('+(1+.14*Math.sin(Math.PI*v)).toFixed(3)+')'; },JW_LIN);
-    r.add(tt,320,v=>dm.rot(jwLerp(a0,a1,v)),JW_EO);
-    for(let j=0;j<p.q;j++){ const s=slots[p.s0+j]; if(!s) continue; const d=tt+j*35; r.at(d,()=>{ s.classList.add('on'); if(p.me) s.classList.add('me'); }); r.add(d,280,v=>{ s.style.transform='scaleY('+jwLerp(.2,1,v).toFixed(3)+')'; },JW_EPOP); r.at(d+280,()=>{ s.style.transform=''; }); } });
-  r.go(()=>{ JWALK.played[id]=true; el.classList.add('done'); delete JWALK.runs[id]; }); }
-function jWalkPlayC(card){ const el=card.querySelector('.jwc'); if(!el) return; const id=el.getAttribute('data-w'); const o=((STATE&&STATE.offers)||[]).find(x=>x.id===id); if(!o) return; if(card.classList.contains('lopen')) return;
-  jWalkStop(id); el.innerHTML='<div class="jwgnd"></div><div class="jwlay"></div><div class="jwnl"></div>'; const G=offCfg().goal, P=jwPeople(o), N=Math.min(G,P.reduce((a,p)=>a+p.q,0));
-  const body=card.querySelector('.jbody'); const W=card.clientWidth||340, yg=(body?body.offsetTop:Math.round((card.clientHeight||460)*0.5))-3, cx=33, cy=yg-12-17;
-  const gnd=el.querySelector('.jwgnd'), lay=el.querySelector('.jwlay'), nl=el.querySelector('.jwnl'); const dm=jwDrum(17,{hop:13,leg:12,fs:13,sub:7.5,goal:G}); el.appendChild(dm.svg); dm.place(cx,cy); gnd.style.top=yg+'px'; nl.style.left=(cx+23)+'px'; nl.style.top=(cy-17-15)+'px';
-  dm.svg.style.pointerEvents='auto'; dm.svg.style.cursor='pointer'; dm.svg.addEventListener('click',ev=>{ ev.stopPropagation(); JWALK.played[id]=false; jWalkPlayC(card); });
-  if(!P.length||JWALK.played[id]){ dm.set(N); dm.rot(N*360/G); return; }   // oynanmış / boş: durgun tambur
-  const figs=P.map(p=>jwFig(p,16,lay)); const r=new JwRun(); JWALK.runs[id]=r; dm.set(0);
-  r.add(0,240,v=>{ gnd.style.opacity=(.9*v).toFixed(3); },JW_EO);
-  let st=120,cnt=0,ang=0,last=0,tok=0;
-  P.forEach((p,i)=>{ if(i) st+=86+4*i; const f=figs[i]; const x0=W+14, x1=cx+29, y=yg-f.D/2-1, xs=cx+6, ys=cy+5, n=Math.max(2,Math.round(Math.abs(x1-x0)/34));
-    r.add(st,800,v=>jwFp(f,jwLerp(x0,x1,v),y-1.6*Math.abs(Math.sin(Math.PI*n*v)),1,Math.min(1,v*6)),JW_LIN);
-    r.add(st+800,220,v=>jwFp(f,jwLerp(x1,xs,v),jwLerp(y,ys,v),1-.8*v,1-v*v),JW_LIN);
-    const tt=st+1020, c1=cnt+p.q, a0=ang, a1=ang+p.q*360/G, my=i+1; cnt=c1; ang=a1; last=tt;
-    r.at(tt,()=>{ dm.set(Math.min(G,c1)); nl.textContent=jwSay(p); nl.classList.toggle('me',p.me); tok=my; });
-    r.add(tt,170,v=>{ nl.style.opacity=v.toFixed(3); nl.style.transform='translate3d(0,'+(4*(1-v)).toFixed(1)+'px,0)'; },JW_EO);
-    r.add(tt+360,160,v=>{ if(tok===my) nl.style.opacity=(1-v).toFixed(3); },JW_LIN);
-    r.add(tt,300,v=>dm.bump(v),JW_LIN); r.add(tt,320,v=>dm.rot(jwLerp(a0,a1,v)),JW_EO); });
-  r.add(last+260,260,v=>{ gnd.style.opacity=(.9*(1-v)).toFixed(3); },JW_LIN);
-  r.go(()=>{ JWALK.played[id]=true; delete JWALK.runs[id]; }); }
-function jWalkCenterCard(){ const dk=$('jDeck'); if(!dk) return null; const r=dk.getBoundingClientRect(), m=r.left+r.width/2; let best=null,bd=1e9; dk.querySelectorAll('.jcard').forEach(c=>{ const q=c.getBoundingClientRect(); if(!q.width) return; const d=Math.abs(q.left+q.width/2-m); if(d<bd){ bd=d; best=c; } }); return best; }
-function jWalkSettle(){ const c=jWalkCenterCard(); if(!c) return; const id=c.getAttribute('data-id'); if(JWALK.center!==id){ JWALK.center=id; JWALK.played[id]=false; } jWalkPlayC(c); }
-// her çizimden sonra: masaüstü şeritleri (görünür olunca bir kez), telefon katmanları (ortadaki kart yürür, diğerleri durgun)
-function renderWalks(){ for(const id in JWALK.runs){ const r=JWALK.runs[id]; const live=document.querySelector('[data-w="'+id+'"]'); if(!live||!r||r.done){ if(r) r.stop(); delete JWALK.runs[id]; } }
-  const strips=document.querySelectorAll('.jwb:not(.done)'); if(strips.length){ if(!JWALK.io&&'IntersectionObserver' in window){ JWALK.io=new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting&&en.intersectionRatio>=.58){ JWALK.io.unobserve(en.target); jWalkPlayB(en.target); } }),{threshold:[0,.3,.6,.9,1]}); }
-    strips.forEach(el=>{ if(JWALK.io) JWALK.io.observe(el); else jWalkPlayB(el); }); }
-  const dk=$('jDeck'); if(dk){ dk.querySelectorAll('.jcard').forEach(c=>{ if(c.getAttribute('data-id')!==JWALK.center) jWalkPlayC(c); });
-    if(!dk.__jwScroll){ dk.__jwScroll=true; let st=0; dk.addEventListener('scroll',()=>{ clearTimeout(st); st=setTimeout(jWalkSettle,160); },{passive:true}); }
-    if(!JWALK.center) setTimeout(jWalkSettle,400); else { const c=dk.querySelector('.jcard[data-id="'+JWALK.center+'"]'); if(c) jWalkPlayC(c); } } }
-
+// ---- A · halka açılır: kartı donat (şerit + dokunma alanı), aç / kapat zaman çizelgeleri
+const jwSvgA=(e,a)=>{ for(const k in a) e.setAttribute(k,a[k]); return e; };
+function jWalkRig(card){ const id=card.getAttribute('data-id'); const o=((STATE&&STATE.offers)||[]).find(x=>x.id===id); const ring=card.querySelector('svg.jring'); if(!o||!ring||card.__jwa) return null;
+  const rl=ring.querySelector('.rl'), arc=ring.querySelector('.arc'), cg=ring.querySelector('.cg'), txt=cg&&cg.querySelector('text'); if(!rl||!arc||!cg||!txt) return null;
+  const G=offCfg().goal, PO=jwPeopleOf(o), P=PO.P, NP=Math.min(G,P.reduce((a,p)=>a+p.q,0)), N0=Math.min(G,parseInt(o.dep)||0);   // N0 = halkanın durgun sayısı (canlı sayaç) · NP = yürüyenlerin toplamı
+  const dr=jwSvg('g',{opacity:0},rl), ri=14.5, sp=2*Math.PI*ri/30;   // halkanın içindeki tambur izi (kesik halka + nokta), açılınca belirir
+  jwSvg('circle',{cx:25,cy:25,r:ri,fill:'none',stroke:'#c98a3c','stroke-width':1.3,'stroke-dasharray':jwF2(sp*.3)+' '+jwF2(sp*.7),'stroke-linecap':'round'},dr);
+  jwSvg('circle',{cx:25,cy:25-ri,r:1.6,fill:'#c98a3c'},dr);
+  const strip=document.createElement('div'); strip.className='jwa'; strip.setAttribute('aria-hidden','true'); strip.innerHTML='<div class="jwgnd"></div><div class="jwlay"></div><div class="jwnl"></div><div class="jwlf"></div>'; card.appendChild(strip);
+  const lay=strip.querySelector('.jwlay'), nl=strip.querySelector('.jwnl'), lf=strip.querySelector('.jwlf'); const figs=P.map(p=>jwFig(p,14,lay));
+  const zone=document.createElement('div'); zone.className='jwz'; zone.tabIndex=0; zone.setAttribute('role','button'); zone.setAttribute('aria-label',(PO.lot?t('jwLotA'):t('jwRunA')).replace('{n}',PO.lot?NP:N0).replace('{g}',G).replace('{p}',P.length)); card.appendChild(zone);
+  const rig={id,card,run:new JwRun(),tm:0,state:'closed',e:0,cnt:N0,lot:PO.lot};
+  let Ws=314;
+  const arcSet=v=>{ const L=2*Math.PI*21*Math.min(1,Math.max(0,v/G)); jwSvgA(arc,{'stroke-dasharray':L.toFixed(1)+' 999',opacity:L<.6?0:1}); };
+  const cntSet=v=>{ rig.cnt=v; txt.textContent=v; };
+  const roll=v=>{ rig.e=v; const d=(Ws-50)*v; ring.style.transform='translate3d('+(-d).toFixed(1)+'px,0,0)'; jwSvgA(rl,{transform:'rotate('+(-720*v).toFixed(1)+' 25 25)'});
+    const cp='inset(0 0 0 '+(Ws-50-d).toFixed(1)+'px round 25px)'; strip.style.clipPath=cp; strip.style.webkitClipPath=cp; strip.style.visibility=v>.002?'visible':'hidden'; };
+  const rot=a=>jwSvgA(dr,{transform:'rotate('+a.toFixed(2)+' 25 25)'});
+  const bump=v=>jwSvgA(cg,{transform:'translate(25 25) scale('+(1+.16*Math.sin(Math.PI*v)).toFixed(3)+') translate(-25 -25)'});
+  const lfTxt=c=>PO.lot?t('jwRoast'):t('jwLeft').replace('{n}',Math.max(0,G-c));
+  const rest=()=>{ rig.run.stop(); clearTimeout(rig.tm); rig.tm=0; rig.state='closed'; roll(0); rot(0); jwSvgA(dr,{opacity:0}); cntSet(N0); arcSet(N0); txt.style.opacity=1; figs.forEach(f=>jwFp(f,0,0,1,0)); nl.style.opacity=0; lf.style.opacity=0; zone.style.width=''; if(JWALK.open===rig) JWALK.open=null; };
+  rig.open=function(){ clearTimeout(rig.tm); rig.tm=0; if(rig.state==='opening'||rig.state==='open') return; if(card.classList.contains('lopen')) return;
+    if(JWALK.open&&JWALK.open!==rig) JWALK.open.close(true);
+    JWALK.open=rig; const r=rig.run; r.stop(); Ws=Math.max(200,(card.clientWidth||338)-24); zone.style.width=Ws+'px'; rig.state='opening';
+    const e0=rig.e, rd=Math.round(440*(1-e0))+40, c0=rig.cnt;
+    figs.forEach(f=>jwFp(f,Ws+12,34,1,0)); nl.style.opacity=0; lf.textContent=lfTxt(0);
+    r.add(0,rd,v=>roll(jwLerp(e0,1,v)),JW_EIO); r.add(0,rd*.8,v=>arcSet(c0*(1-v)),JW_EIO);
+    r.add(0,140,v=>{ txt.style.opacity=(1-v).toFixed(3); },JW_LIN); r.at(140,()=>cntSet(0)); r.add(rd-140,200,v=>{ txt.style.opacity=v.toFixed(3); },JW_LIN);
+    r.add(rd*.5,260,v=>jwSvgA(dr,{opacity:(.7*v).toFixed(3)}),JW_LIN); r.add(rd,220,v=>{ lf.style.opacity=v.toFixed(3); },JW_LIN);
+    let st=rd-40,cnt=0,ang=0,tok=0;
+    P.forEach((p,i)=>{ if(i) st+=84+3*i; const f=figs[i], y=41-f.D/2, x0=Ws+12, x1=62, n=Math.max(2,Math.round(Math.abs(x1-x0)/34)), my=i+1;
+      r.add(st,800,v=>jwFp(f,jwLerp(x0,x1,v),y-1.4*Math.abs(Math.sin(Math.PI*n*v)),1,Math.min(1,v*6)),JW_LIN);
+      r.add(st+800,220,v=>jwFp(f,jwLerp(x1,33,v),jwLerp(y,31,v),1-.8*v,1-v*v),JW_LIN);
+      const tt=st+1020, cA=cnt, c1=Math.min(G,cnt+p.q), aA=ang, a1=ang+p.q*360/G; cnt=c1; ang=a1;
+      r.at(tt,()=>{ cntSet(c1); nl.textContent=jwSay(p); nl.classList.toggle('me',p.me); lf.textContent=lfTxt(c1); tok=my; });
+      r.add(tt,180,v=>{ nl.style.opacity=(.3+.7*v).toFixed(3); nl.style.transform='translate3d(0,'+(3*(1-v)).toFixed(1)+'px,0)'; },JW_EO);
+      r.add(tt,280,bump,JW_LIN); r.add(tt,300,v=>rot(jwLerp(aA,a1,v)),JW_EO); r.add(tt,300,v=>arcSet(jwLerp(cA,c1,v)),JW_EO); });
+    if(!P.length){ r.at(rd,()=>{ nl.textContent=t('jwNone'); nl.classList.remove('me'); nl.style.opacity=1; }); }
+    r.go(()=>{ rig.state='open'; if(rig.auto) rig.tm=setTimeout(()=>{ rig.tm=0; rig.close(); },5000); }); };
+  rig.close=function(now){ clearTimeout(rig.tm); rig.tm=0; if(rig.state==='closed'||rig.state==='closing') return; if(now){ rest(); jWalkFlush(); return; }
+    const r=rig.run; r.stop(); rig.state='closing'; const e0=rig.e, rd=Math.round(400*e0)+40, c0=rig.cnt, n0=+nl.style.opacity||0, l0=+lf.style.opacity||0, d0=+(dr.getAttribute('opacity')||0); txt.style.opacity=1;
+    figs.forEach(f=>{ const a=+f.el.style.opacity||0; if(a>0) r.add(0,160,v=>{ f.el.style.opacity=(a*(1-v)).toFixed(3); },JW_LIN); });
+    r.add(0,160,v=>{ nl.style.opacity=(n0*(1-v)).toFixed(3); lf.style.opacity=(l0*(1-v)).toFixed(3); },JW_LIN);
+    r.add(0,Math.min(rd,300),v=>{ cntSet(Math.round(jwLerp(c0,N0,v))); arcSet(jwLerp(c0,N0,v)); },JW_EO);
+    r.add(0,rd,v=>roll(jwLerp(e0,0,v)),JW_EIO); r.add(0,220,v=>jwSvgA(dr,{opacity:(d0*(1-v)).toFixed(3)}),JW_LIN);
+    r.go(()=>{ rig.state='closed'; rot(0); zone.style.width=''; if(JWALK.open===rig) JWALK.open=null; jWalkFlush(); }); };
+  // tetik: fare → üstüne gelince aç (80 ms niyet), çıkınca kapat · dokunma/kalem → dokun aç (5 sn sonra kendiliğinden), tekrar dokun kapat · klavye → odak aç, Esc/odak kaybı kapat
+  let ht=0;
+  zone.addEventListener('pointerenter',e=>{ if(e.pointerType!=='mouse') return; clearTimeout(ht); rig.auto=false; ht=setTimeout(()=>rig.open(),80); });
+  zone.addEventListener('pointerleave',e=>{ if(e.pointerType!=='mouse') return; clearTimeout(ht); rig.close(); });
+  zone.addEventListener('click',e=>{ e.stopPropagation(); e.preventDefault(); if(e.pointerType==='mouse'||(e.detail&&!('ontouchstart' in window))) return; if(rig.state==='open'||rig.state==='opening') rig.close(); else { rig.auto=true; rig.open(); } });
+  zone.addEventListener('keydown',e=>{ if(e.key==='Escape') rig.close(); else if(e.key==='Enter'||e.key===' '){ e.preventDefault(); if(rig.state==='open'||rig.state==='opening') rig.close(); else { rig.auto=true; rig.open(); } } });
+  zone.addEventListener('blur',()=>{ if(rig.state==='open') rig.close(); });
+  card.__jwa=rig; JWALK.rigs[id]=rig; rest(); return rig; }
+function jWalkOpen(){ const r=JWALK.open; return !!(r&&r.state!=='closed'); }
+function jWalkFlush(){ if(JWALK.pending&&!jWalkOpen()){ const s=JWALK.pending; JWALK.pending=null; try{ applyMeydan(s); }catch(e){} } }
+// her çizimden sonra: yeni çizilen kartları donat; eski rig'leri bırak
+function renderWalks(){ for(const id in JWALK.rigs){ const r=JWALK.rigs[id]; if(!r.card.isConnected){ r.run.stop(); clearTimeout(r.tm); if(JWALK.open===r) JWALK.open=null; delete JWALK.rigs[id]; } }
+  document.querySelectorAll('.jcard[data-id]').forEach(c=>{ if(!c.__jwa) jWalkRig(c); }); }
 // ===== v09l JÜRİ SAYFASI: sayfa 1 Deste (tüm kahveler + sayaç) · sayfa 2 Damak akordeonu (tat bantları + CoffeeNutz'ın 5'i + Tüm liste) · sayfa 3 Oturum =====
 let JBAND=null; try{ const v=localStorage.getItem('grupal_jband'); if(v) JBAND=v; }catch(e){}
 function jBandKeys(list){ return [['top5',t('jTop5'),'#e6c14b',list.filter(o=>jTop(o)).sort((a,b)=>jTop(a)-jTop(b))]].concat(TASTES.filter(x=>x[0]!=='all').map(x=>[x[0],(LANG==='en'?x[2]:x[1]),TASTECOL[x[0]],list.filter(o=>tasteOf(o)===x[0])])).concat([['all',t('jBandAll'),'var(--accent)',list.slice()]]); }
@@ -2592,6 +2592,12 @@ async function startMeydan(){ loadMeydan(); setInterval(loadMeydan, 30000); docu
 async function loadMeydan(){
   try{
     const r=await fetch(API+'/meydan'); const s=await r.json(); if(s.error){ $('title').textContent=t('netErr'); return; }
+    if(typeof jWalkOpen==='function'&&jWalkOpen()){ JWALK.pending=s; return; }   // v11n: halka açıkken yeniden çizme — kapanınca uygulanır (jWalkFlush)
+    applyMeydan(s);
+  }catch(e){ $('title').textContent=t('netErr'); }
+}
+function applyMeydan(s){
+  try{
     STATE=s; document.body.classList.add('meydan');
     { const nn=(Array.isArray(s.offers)?s.offers.filter(o=>o&&o.active!==false):[]).length; $('title').textContent=t('mdTitle')+(nn?(' · '+t('mdCount').replace('{n}',nn)):''); }   // v05g (Ömer): başlıkta listedeki kahve sayısı
     $('lot').textContent=t('mdSub');
