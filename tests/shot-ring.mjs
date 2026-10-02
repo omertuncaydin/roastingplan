@@ -32,18 +32,19 @@ const state=(page,id)=>page.evaluate(id=>{ const c=document.querySelector('.jcar
 await run(1366,900,async page=>{
   const id0=ord[0].id, id1=ord[1].id, id2=ord[2].id;
   const s0=await state(page,id0); // closed: rig built, ring at rest with the live counter 0
-  const z=await page.$('.jcard[data-id="'+id0+'"] .jwz'); const bb=await z.boundingBox(); await page.mouse.move(bb.x+bb.width/2,bb.y+bb.height/2); await page.waitForTimeout(650);
+  const z=await page.$('.jcard[data-id="'+id0+'"]'); const bb=await z.boundingBox(); await page.mouse.move(bb.x+bb.width/2,bb.y+bb.height*0.55); await page.waitForTimeout(650);   // v11o: hover anywhere on the card
   const mid=await state(page,id0); await page.screenshot({path:path.join(OUT,'ring_desk_mid.png')});
   await page.waitForTimeout(3600); const open=await state(page,id0); await page.screenshot({path:path.join(OUT,'ring_desk_open.png')});
   // a refresh while open is deferred, then applied on close
   await page.evaluate(()=>loadMeydan()); await page.waitForTimeout(300); const pend=await state(page,id0);
   await page.mouse.move(5,5); await page.waitForTimeout(900); const closed=await state(page,id0); await page.screenshot({path:path.join(OUT,'ring_desk_closed.png')});
   // open run card: "n kaldı"; empty card: "henüz kimse yok"
-  const z1=await page.$('.jcard[data-id="'+id1+'"] .jwz'); const b1=await z1.boundingBox(); await page.mouse.move(b1.x+25,b1.y+25); await page.waitForTimeout(3000); const run1=await state(page,id1); await page.screenshot({path:path.join(OUT,'ring_desk_run.png')}); await page.mouse.move(5,5); await page.waitForTimeout(900);
-  const z2=await page.$('.jcard[data-id="'+id2+'"] .jwz'); const b2=await z2.boundingBox(); await page.mouse.move(b2.x+25,b2.y+25); await page.waitForTimeout(900); const run2=await state(page,id2); await page.mouse.move(5,5); await page.waitForTimeout(900);
+  const z1=await page.$('.jcard[data-id="'+id1+'"]'); const b1=await z1.boundingBox(); await page.mouse.move(b1.x+b1.width/2,b1.y+b1.height*0.55); await page.waitForTimeout(3000); const run1=await state(page,id1); await page.screenshot({path:path.join(OUT,'ring_desk_run.png')}); await page.mouse.move(5,5); await page.waitForTimeout(900);
+  const z2=await page.$('.jcard[data-id="'+id2+'"]'); const b2=await z2.boundingBox(); await page.mouse.move(b2.x+b2.width/2,b2.y+b2.height*0.55); await page.waitForTimeout(900); const run2=await state(page,id2); await page.mouse.move(5,5); await page.waitForTimeout(900);
   // the drawer must not open from the ring (click)
-  await page.mouse.move(bb.x+25,bb.y+25); await page.mouse.click(bb.x+25,bb.y+25); await page.waitForTimeout(300); const drawer=await page.evaluate(()=>!!document.querySelector('.jdrawer.open, #jDrawer.open, body.jdrawer-open'));
-  return {s0,mid,open,pend,closed,run1,run2,drawer,bad:!(s0.rig&&s0.st==='closed'&&s0.cnt==='0'&&mid.st==='opening'&&mid.strip==='visible'&&open.st==='open'&&open.cnt==='17'&&open.lot===true&&open.lf==='kavruluyor'&&open.figs===0&&pend.pending&&closed.st==='closed'&&closed.cnt==='0'&&closed.strip==='hidden'&&!closed.pending&&run1.st==='open'&&run1.cnt==='10'&&run1.lf==='30 kaldı'&&run2.nl.startsWith('henüz kimse yok'))}; });
+  const zz=await page.$('.jcard[data-id="'+id0+'"] .jwz'); const zb=await zz.boundingBox(); await page.mouse.move(zb.x+25,zb.y+25); await page.mouse.click(zb.x+25,zb.y+25); await page.waitForTimeout(300); const drawer=await page.evaluate(()=>!!document.getElementById('jDrawer'));
+  await page.mouse.click(bb.x+bb.width/2,bb.y+bb.height*0.45); await page.waitForTimeout(400); const drawer2=await page.evaluate(()=>!!document.getElementById('jDrawer')); await page.evaluate(()=>{ try{ jDeskClose(); }catch(e){} }); await page.waitForTimeout(300);
+  return {s0,mid,open,pend,closed,run1,run2,drawer,drawer2,bad:!(!drawer&&drawer2&&s0.rig&&s0.st==='closed'&&s0.cnt==='0'&&mid.st==='opening'&&mid.strip==='visible'&&open.st==='open'&&open.cnt==='17'&&open.lot===true&&open.lf==='kavruluyor'&&open.figs===0&&pend.pending&&closed.st==='closed'&&closed.cnt==='0'&&closed.strip==='hidden'&&!closed.pending&&run1.st==='open'&&run1.cnt==='10'&&run1.lf==='30 kaldı'&&run2.nl.startsWith('henüz kimse yok'))}; });
 await run(390,844,async page=>{
   const id0=ord[0].id;
   await page.evaluate(id=>{ document.querySelector('#jDeck .jcard[data-id="'+id+'"]').scrollIntoView({block:'center',inline:'center'}); },id0); await page.waitForTimeout(300);

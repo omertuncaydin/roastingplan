@@ -312,5 +312,14 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     wa.eval(a.getAttribute('onclick')); await sleep(60); const sh=wa.document.getElementById('jSheet');
     T('al › → the Hemen-Al popup with the one-tap "Davetiyeyle al" button (no card opened)', !!sh && !!sh.querySelector('.jhpop .go') && sh.querySelector('.jhpop .go').getAttribute('onclick')==="jHemenGo('"+A2.id+"','ABCD2345',1)" && !wa.document.querySelector('.jcard.lopen'));
     wa.eval("jLaneOpen('"+A2.id+"','ABCD2345')"); await sleep(60); T('(kept) jLaneOpen on desktop still scrolls the opened card into view', wa.__g('window.__sc')===A2.id); }
+  // v11o (2026-10-02): pending pre-order flag expires; drawer thumb shows the photo; ring rig: hover is on the card, tap is pointerup on the ring
+  { const MA=JSON.parse(JSON.stringify(MD)); const A2=MA.offers.find(o=>o.id===ord[2].id); const wp=mk({'/meydan':MA,'/offer-mine':{votes:[],inv:[],hemen:[],me:{member:true,wa:true,ok:true}},'/campaigns':[]},1366); await sleep(250);
+    wp.localStorage.setItem('grupal_odep', JSON.stringify([A2.id])); T('old plain-id pending records count as expired (no "kontrol ediliyor" forever)', wp.__g('offPend')().length===0);
+    wp.__g('offPendAdd')(A2.id); T('a fresh pending record is listed', wp.__g('offPend')().join()===A2.id);
+    wp.localStorage.setItem('grupal_odep', JSON.stringify([{id:A2.id,at:wp.__g('Date.now()')-21*60*1000}])); T('21 minutes later it is gone', wp.__g('offPend')().length===0);   // the harness freezes the page clock
+    T('jThumb: photo coffee → <img>, no photo → mountain&sun svg', /^<img /.test(wp.__g('jThumb')({img_url:'https://x.test/a.jpg',origin:'Kenya'},50,50)) && /<svg/.test(wp.__g('jThumb')({origin:'Kenya'},50,50)));
+    const c=wp.document.querySelector('.jcard[data-id="'+A2.id+'"]'); T('every card is rigged: strip + zone + ring groups; rig closed at rest', !!c && !!c.querySelector('.jwa') && !!c.querySelector('.jwz') && !!c.querySelector('svg.jring .rl') && !!c.querySelector('svg.jring .cg text') && c.__jwa && c.__jwa.state==='closed');
+    T('no B strip / C layer left in the markup', !wp.document.querySelector('.jwb') && !wp.document.querySelector('.jwc') && !/jWalkStripHtml|jWalkLayerHtml/.test(html));
+    T('page version bumped to v2026-10-02c', /const VERSION='v2026-10-02c';/.test(html)); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })().catch(e=>{ console.log('CRASH',e.message,e.stack.split('\n').slice(0,3).join(' / ')); process.exit(1); });

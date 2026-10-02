@@ -731,7 +731,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-10-02b';
+const VERSION='v2026-10-02c';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1254,11 +1254,18 @@ async function gcodeSend(){
 }
 function offMine(){ try{ const a=JSON.parse(localStorage.getItem('grupal_ovotes')||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
 function offSave(a){ try{ localStorage.setItem('grupal_ovotes', JSON.stringify(a.slice(-10))); }catch(e){} }
-function offPend(){ try{ const a=JSON.parse(localStorage.getItem('grupal_odep')||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+// v11o (Ömer 2026-10-02 "ön sipariş kontrol ediliyor sonsuza kadar kalıyor"): bekleyen ön sipariş işareti 20 dk sonra düşer (sepet bırakıldıysa);
+// kayıt {id,at} — eski düz-id kayıtları süresi dolmuş sayılır. Ödeme gelince /offer-mine zaten siler.
+const OD_MS=20*60*1000;
+function offPendRaw(){ try{ const a=JSON.parse(localStorage.getItem('grupal_odep')||'[]'); return Array.isArray(a)?a.map(x=>(x&&typeof x==='object'&&x.id)?x:{id:String(x),at:0}):[]; }catch(e){ return []; } }
+function offPendSave(a){ try{ localStorage.setItem('grupal_odep', JSON.stringify(a.slice(-20))); }catch(e){} }
+function offPendAdd(id){ const a=offPendRaw().filter(x=>x.id!==id); a.push({id,at:Date.now()}); offPendSave(a); }
+function offPend(){ const now=Date.now(); return offPendRaw().filter(x=>x.at&&now-x.at<OD_MS).map(x=>x.id); }
 // ===== v09j JÜRİ SAYFASI: menşe paleti + manzara (logo 'A' sırtları), CoffeeNutz'ın 5'i, deste, damak bantları, skorbord =====
 const JHUE={'kolombiya':['#8fb9cf','#3f6f5c','#22463a'],'kenya':['#e2a96f','#8a4a2a','#4d2716'],'etiyopya':['#e9cc86','#8c6a2c','#4d3914'],'endonezya':['#9dcbaa','#2f5f47','#1a3a2b'],'ruanda':['#a9c8dc','#3a5d73','#22394a'],'peru':['#cdaad8','#5a3d70','#31213f'],'honduras':['#f0b56b','#7a4a22','#46281a'],'brezilya':['#f2d96b','#7a5a14','#4a3a12'],'burundi':['#a8d0c3','#2f5f57','#1c3b36'],'guatemala':['#b9d6a6','#4a6b34','#2b4020'],'kosta rika':['#c8d9e8','#4a6a7d','#2c4352'],'default':['#b8a98f','#5a4a36','#33291d']};
 function jHue(origin){ const k=String(origin||'').toLowerCase().replace(/İ/g,'i').replace(/ı/g,'i'); for(const key in JHUE){ if(key!=='default'&&k.startsWith(key.replace(/ı/g,'i'))) return JHUE[key]; } return JHUE['default']; }
 let JUID=0;
+function jThumb(o,w,h){ return (o&&o.img_url&&/^https:\/\//.test(String(o.img_url)))?('<img src="'+escZ(o.img_url)+'" alt="" loading="lazy" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover">'):jLand(o&&o.origin,w,h); }   // v11o: fotoğrafı olan kahvede küçük resim de fotoğraf (dağ+güneş yalnız fotoğrafsızda)
 function jLand(origin,w,h,sun){ const [sky,far,near]=jHue(origin); const u='jg'+(++JUID);
   return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" style="display:block;width:100%;height:100%" aria-hidden="true"><defs><linearGradient id="'+u+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+sky+'"/><stop offset="1" stop-color="'+far+'"/></linearGradient></defs><rect width="'+w+'" height="'+h+'" fill="url(#'+u+')"/>'
    +'<circle class="jsun" cx="'+(w*0.74).toFixed(0)+'" cy="'+(h*0.28).toFixed(0)+'" r="'+(h*0.11).toFixed(0)+'" fill="#f3ede4" opacity=".75"/>'
@@ -1399,7 +1406,7 @@ function offRowHtml(o,ctx){
     const mv=(paid&&!paid.conv&&list.length>1)?('<div onclick="event.stopPropagation()"><a onclick="offMoveUI(\''+escZ(o.id)+'\')">'+t('offMove')+'</a><span id="mv_'+escZ(o.id)+'"></span></div>'):'';
     const laneNo=ctx.rank||0, topN=depMode?jTop(o):0;   // v09j: kulvar sırası + CoffeeNutz'ın 5'i yıldızı
     return '<div class="orow'+(rowMine?' mine':'')+(open?' open':'')+(depMode?' lane':'')+'" data-id="'+escZ(o.id)+'" onclick="offDetail(\''+escZ(o.id)+'\')">'
-      +(depMode?('<div class="orank'+(laneNo<=2?' top':'')+'">'+laneNo+'</div><div class="othumb" style="border-color:'+(TASTECOL[tasteOf(o)]||'var(--line)')+'">'+jLand(o.origin,50,50)+'</div>'):'')
+      +(depMode?('<div class="orank'+(laneNo<=2?' top':'')+'">'+laneNo+'</div><div class="othumb" style="border-color:'+(TASTECOL[tasteOf(o)]||'var(--line)')+'">'+jThumb(o,50,50)+'</div>'):'')
       +'<div class="ol1"><span class="on">'+escZ(o.name)+(topN?('<span class="ostar" title="'+t('jTop5')+'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></span>'):'')+'</span>'+(chip?('<span class="ochip">'+chip+'</span>'):'')+price+'</div>'
       +(meta?('<div class="hint om">'+meta+'</div>'):'')
       +'<div class="ol3"><span class="obar"><i class="'+(hit?'hit':'')+'" style="width:'+pct+'%"></i>'+(depMode?('<b class="omk" style="left:'+pct+'%"></b><b class="ogl"></b>'):'')+'</span><b class="ocnt'+(hit?' hit':'')+'">'+cnt+'/'+G+t(depMode?'offDepN':'offN')+'</b>'+ctl+'</div>'
@@ -1642,12 +1649,17 @@ function jWalkRig(card){ const id=card.getAttribute('data-id'); const o=((STATE&
     r.add(0,Math.min(rd,300),v=>{ cntSet(Math.round(jwLerp(c0,N0,v))); arcSet(jwLerp(c0,N0,v)); },JW_EO);
     r.add(0,rd,v=>roll(jwLerp(e0,0,v)),JW_EIO); r.add(0,220,v=>jwSvgA(dr,{opacity:(d0*(1-v)).toFixed(3)}),JW_LIN);
     r.go(()=>{ rig.state='closed'; rot(0); zone.style.width=''; if(JWALK.open===rig) JWALK.open=null; jWalkFlush(); }); };
-  // tetik: fare → üstüne gelince aç (80 ms niyet), çıkınca kapat · dokunma/kalem → dokun aç (5 sn sonra kendiliğinden), tekrar dokun kapat · klavye → odak aç, Esc/odak kaybı kapat
-  let ht=0;
-  zone.addEventListener('pointerenter',e=>{ if(e.pointerType!=='mouse') return; clearTimeout(ht); rig.auto=false; ht=setTimeout(()=>rig.open(),80); });
-  zone.addEventListener('pointerleave',e=>{ if(e.pointerType!=='mouse') return; clearTimeout(ht); rig.close(); });
-  zone.addEventListener('click',e=>{ e.stopPropagation(); e.preventDefault(); if(e.pointerType==='mouse'||(e.detail&&!('ontouchstart' in window))) return; if(rig.state==='open'||rig.state==='opening') rig.close(); else { rig.auto=true; rig.open(); } });
-  zone.addEventListener('keydown',e=>{ if(e.key==='Escape') rig.close(); else if(e.key==='Enter'||e.key===' '){ e.preventDefault(); if(rig.state==='open'||rig.state==='opening') rig.close(); else { rig.auto=true; rig.open(); } } });
+  // tetik (v11o, Ömer): fare → KARTIN üstüne gelince aç (80 ms niyet), karttan çıkınca kapat · dokunma/kalem → halkaya dokun aç (5 sn sonra kendiliğinden), tekrar dokun kapat
+  //   (pointerup ile: Safari'de click gecikmesi/yutulması olmasın; click yalnız yedek) · klavye → Enter/boşluk aç-kapat, Esc/odak kaybı kapat
+  let ht=0; const tog=()=>{ if(rig.state==='open'||rig.state==='opening') rig.close(); else { rig.auto=true; rig.open(); } };
+  card.addEventListener('pointerenter',e=>{ if(e.pointerType!=='mouse') return; clearTimeout(ht); rig.auto=false; ht=setTimeout(()=>rig.open(),80); });
+  card.addEventListener('pointerleave',e=>{ if(e.pointerType!=='mouse') return; clearTimeout(ht); rig.close(); });
+  let tp=null; rig.tapAt=0;
+  zone.addEventListener('pointerdown',e=>{ if(e.pointerType==='mouse') return; tp={id:e.pointerId,x:e.clientX,y:e.clientY,t:Date.now()}; });
+  zone.addEventListener('pointerup',e=>{ if(e.pointerType==='mouse'||!tp||tp.id!==e.pointerId) return; const ok=Math.hypot(e.clientX-tp.x,e.clientY-tp.y)<12&&Date.now()-tp.t<700; tp=null; if(!ok) return; rig.tapAt=Date.now(); e.stopPropagation(); e.preventDefault(); tog(); });
+  zone.addEventListener('pointercancel',()=>{ tp=null; });
+  zone.addEventListener('click',e=>{ e.stopPropagation(); e.preventDefault(); if(e.pointerType==='mouse') return; if(rig.tapAt&&Date.now()-rig.tapAt<900) return; if(!('ontouchstart' in window)&&!(navigator.maxTouchPoints>0)) return; tog(); });
+  zone.addEventListener('keydown',e=>{ if(e.key==='Escape') rig.close(); else if(e.key==='Enter'||e.key===' '){ e.preventDefault(); tog(); } });
   zone.addEventListener('blur',()=>{ if(rig.state==='open') rig.close(); });
   card.__jwa=rig; JWALK.rigs[id]=rig; rest(); return rig; }
 function jWalkOpen(){ const r=JWALK.open; return !!(r&&r.state!=='closed'); }
@@ -1851,7 +1863,7 @@ async function offLoadMine(s){
   // v02v: Meydan'da her zaman sor (kaporalar cihaza bağlı) · v05h: kampanyada da sor — link kartı "Kaporan: …" satırını gösterir
   try{ const r=await fetch(API+'/offer-mine?dev='+encodeURIComponent(devId())); const j=await r.json();
     if(j&&Array.isArray(j.votes)){ OFFMINE=j.votes; OFFINV=Array.isArray(j.inv)?j.inv:[]; OFFHEMEN=Array.isArray(j.hemen)?j.hemen:[]; if(j.me&&typeof j.me==='object'){ ME=j.me; if(ME.wa){ try{ localStorage.setItem('grupal_waok','1'); }catch(e){} } } jBindChip();   // v10o: kapı bilgisi BANNED=j.banned_until?new Date(j.banned_until):null; if(BANNED&&isNaN(BANNED.getTime())) BANNED=null;
-      const paidIds=j.votes.filter(v=>v.paid).map(v=>v.id); if(paidIds.length){ try{ localStorage.setItem('grupal_odep', JSON.stringify(offPend().filter(id=>!paidIds.includes(id)))); }catch(e){} }
+      const paidIds=j.votes.filter(v=>v.paid).map(v=>v.id); if(paidIds.length) offPendSave(offPendRaw().filter(x=>!paidIds.includes(x.id)));
       renderOffers(s); } }catch(e){}
 }
 // v2026-09-05a KAPORA SEPETİ (Ömer: "3 ayrı sepet ödemek zor"): kahveleri sepete ekle, TEK ödeme — /cart/VARIANT:TOPLAM + attributes[offers]=id:adet,…
@@ -1876,7 +1888,7 @@ function dbPay(){
   if(!jGate({type:'pay'})) return;   // v10n: Jüri girişi kapısı
   if(!termsOk()){ termsShow(); return; }
   const du=dbUrl(); if(!du) return;
-  try{ const a=offPend(); for(const id in dbGet()) if(!a.includes(id)) a.push(id); localStorage.setItem('grupal_odep', JSON.stringify(a.slice(-20))); }catch(e){}
+  try{ for(const id in dbGet()) offPendAdd(id); }catch(e){}
   openPayTab(du);
 }
 function termsShow(){
@@ -1909,7 +1921,7 @@ function offDepUrl(id){
 }
 function offDeposit(id){
   const du=offDepUrl(id); if(!du) return;
-  try{ const a=offPend(); if(!a.includes(id)) a.push(id); localStorage.setItem('grupal_odep', JSON.stringify(a.slice(-10))); }catch(e){}
+  try{ offPendAdd(id); }catch(e){}
   location.href=du;
 }
 async function offToggle(id){
