@@ -23,13 +23,13 @@ await page.evaluate(()=>{ window.__nav=[]; window.jNavigate=u=>{ window.__nav.pu
 // coffee A: open lane → Sepete → stepper 2 → Sepete git
 await page.evaluate(id=>jLaneOpen(id),A.id); await page.waitForTimeout(500);
 await page.evaluate(id=>{ jHemenPick(id); jHemenQty(id,1); },A.id); await page.waitForTimeout(300);
-await page.evaluate(id=>jHemenGo(id,null,2),A.id); await page.waitForTimeout(500);
+await page.evaluate(id=>jHemenGo(id,null,2),A.id); await page.waitForTimeout(400); await page.screenshot({path:path.join(OUT,'hbasket_added.png')}); await page.evaluate(()=>hbGo()); await page.waitForTimeout(500);
 // "back from Shopify": re-render → bar visible; open coffee B
 await page.evaluate(()=>{ jLaneClose(); renderOffers(STATE); }); await page.waitForTimeout(300);
 await page.evaluate(id=>{ document.querySelector('#jDeck .jcard[data-id="'+id+'"]').scrollIntoView({block:'center',inline:'center'}); jLaneOpen(id); },B.id); await page.waitForTimeout(600);
 await page.evaluate(id=>jHemenPick(id),B.id); await page.waitForTimeout(300);
 await page.screenshot({path:path.join(OUT,'hbasket_lane.png')});
-await page.evaluate(id=>jHemenGo(id,null,1),B.id); await page.waitForTimeout(500);
+await page.evaluate(id=>jHemenGo(id,null,1),B.id); await page.waitForTimeout(400); await page.evaluate(()=>hbGo()); await page.waitForTimeout(500);
 await page.evaluate(()=>{ jLaneClose(); renderOffers(STATE); }); await page.waitForTimeout(300);
 await page.screenshot({path:path.join(OUT,'hbasket_bar.png')});
 const st=await page.evaluate(()=>({nav:window.__nav, items:hbItems(), bar:document.getElementById('hbBar')&&document.getElementById('hbBar').textContent}));
