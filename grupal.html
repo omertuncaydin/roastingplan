@@ -731,7 +731,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-10-03c';
+const VERSION='v2026-10-03d';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1484,7 +1484,9 @@ function renderHbBar(){ let bar=$('hbBar'); const sum=hbSum(); const db=$('dbBar
   if(!sum.coffees){ if(bar) bar.style.display='none'; if(!dbOn) document.body.style.paddingBottom=''; return; }
   document.body.style.paddingBottom=dbOn?'156px':'80px';
   if(!bar){ bar=document.createElement('div'); bar.id='hbBar'; document.body.appendChild(bar); }
-  bar.style.cssText='position:fixed;left:0;right:0;bottom:'+(dbOn?'76px':'0')+';z-index:51;background:var(--panel);border-top:2px solid #9fd3b2;padding:9px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 -6px 20px rgba(0,0,0,.25)';
+  const desk=jIsDesk(); const dbH=(dbOn&&db)?(db.offsetHeight||70):0;   // v11s: masaüstünde kapora sepeti sağ altta yüzen kart (460px) — Hemen-Al sepeti aynı biçimde, onun ÜSTÜNE
+  bar.style.cssText='position:fixed;z-index:51;background:var(--panel);padding:9px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 -6px 20px rgba(0,0,0,.25);'
+    +(desk?('left:auto;right:24px;width:460px;border-radius:16px;border:1px solid #9fd3b2;bottom:'+(dbOn?(24+dbH+10):24)+'px'):('left:0;right:0;border-top:2px solid #9fd3b2;bottom:'+(dbOn?((dbH||74)+2):0)+'px'));
   bar.innerHTML='<div style="flex:1;min-width:0;font-size:13px"><b>'+t('hbTitle')+'</b> · '+t('hbSum').replace('{c}',sum.coffees).replace('{b}',sum.pk)+' · <b style="color:var(--gold)">'+fmtTL(sum.tl)+' TL</b><div class="hint" style="font-size:11.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+sum.names.map(escZ).join(' · ')+'</div></div>'
     +'<button onclick="hbClear()" style="width:auto;margin:0;padding:8px 10px;font-size:12px;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">'+t('hbClear')+'</button>'
     +'<button id="hbGoBtn" onclick="hbGo()" style="width:auto;margin:0;padding:10px 16px;font-size:14px;background:var(--gold);color:var(--panel);border:1px solid var(--gold);font-weight:800">'+t('hbGo')+'</button>';
