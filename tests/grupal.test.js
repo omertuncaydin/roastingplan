@@ -320,12 +320,40 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('jThumb: photo coffee → <img>, no photo → mountain&sun svg', /^<img /.test(wp.__g('jThumb')({img_url:'https://x.test/a.jpg',origin:'Kenya'},50,50)) && /<svg/.test(wp.__g('jThumb')({origin:'Kenya'},50,50)));
     const c=wp.document.querySelector('.jcard[data-id="'+A2.id+'"]'); T('every card is rigged: strip + zone + ring groups; rig closed at rest', !!c && !!c.querySelector('.jwa') && !!c.querySelector('.jwz') && !!c.querySelector('svg.jring .rl') && !!c.querySelector('svg.jring .cg text') && c.__jwa && c.__jwa.state==='closed');
     T('no B strip / C layer left in the markup', !wp.document.querySelector('.jwb') && !wp.document.querySelector('.jwc') && !/jWalkStripHtml|jWalkLayerHtml/.test(html));
-    T('page version bumped to v2026-10-03a', /const VERSION='v2026-10-03a';/.test(html));
+    T('page version bumped to v2026-10-03b', /const VERSION='v2026-10-03b';/.test(html));
     // v11p: the total line has no denominator any more — "Bu oturum n paket · k kahve · r kavruluyor"
     { const MT=JSON.parse(JSON.stringify(MD)); const L=MT.offers.find(o=>o.id===ord[0].id); L.lock={at:'2026-09-30T10:00:00Z',n:1,close:'2026-10-04T20:59:00Z',state:'locked',dep:17,dep_tl:100,forced:true,people:[]}; L.dep=0; L.conv=17; MT.offer_cfg.day_goal=40;
       const wt=mk({'/meydan':MT,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); const tot=MT.offers.reduce((a,o)=>a+(o.dep||0),0), kk=MT.offers.filter(o=>(o.dep||0)>0).length;
       T('desktop total line: "Bu oturum n paket · k kahve · 17 kavruluyor", no "/40"', wt.document.getElementById('offTot').textContent==='Bu oturum '+tot+' paket · '+kk+' kahve · 17 kavruluyor');
       const wp2=mk({'/meydan':MT,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},390); await sleep(250);
       T('phone total line: same text, no denominator', wp2.document.getElementById('offTot').textContent==='Bu oturum '+tot+' paket · '+kk+' kahve · 17 kavruluyor' && !/\/40/.test(wp2.document.getElementById('offTot').textContent)); } }
+  // v11q (Ömer 2026-10-03 "FIX IT"): Hemen-Al basket — a second coffee does not replace the first: the page remembers, one /hemen-link carries every item
+  { const MB=JSON.parse(JSON.stringify(MD)); const B0=MB.offers.find(o=>o.id===ord[0].id), B1=MB.offers.find(o=>o.id===ord[1].id), B2=MB.offers.find(o=>o.id===ord[2].id);
+    for(const [o,v,p] of [[B0,222,1280],[B1,333,990],[B2,444,880]]){ o.img_url='https://x.test/o/'+v+'.jpg'; o.hemen={url:'https://coffeenutz.net/cart/'+v+':1',price:p,base:3,sold:0,inv:0,left:3,green_left:null,table:[],roast_at:'2026-10-05T20:59:00.000Z'}; o.list_tl=1600; }
+    const wb=mk({'/meydan':MB,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},390); await sleep(250);
+    const calls=[]; let nav=null; wb.jNavigate=u=>{ nav=u; }; const f0=wb.fetch; wb.fetch=async(u,init)=>{ if(String(u).includes('/hemen-link')){ const b=JSON.parse(init.body); calls.push(b); return {ok:true,json:async()=>({ok:true,url:'https://coffeenutz.net/cart/'+b.items.map(i=>'V'+i.id.slice(-2)+':'+i.qty).join(',')+'?discount=HAMULTI1&attributes[hemen]=1',items:b.items})}; } return f0(u,init); };
+    T('empty basket at start, no bar', wb.__g('hbItems')().length===0 && !wb.document.getElementById('hbBar'));
+    wb.eval("jLaneOpen('"+B0.id+"')"); await sleep(40); await wb.eval("jHemenGo('"+B0.id+"',null,2)"); await sleep(40);
+    T('first Sepete git: basket = B0 ×2, /hemen-link items [{B0,2}] (+ legacy id/qty), navigates', calls.length===1 && calls[0].items.length===1 && calls[0].items[0].id===B0.id && calls[0].items[0].qty===2 && calls[0].id===B0.id && calls[0].qty===2 && nav && nav.includes('V'+B0.id.slice(-2)+':2') && wb.__g('hbItems')().length===1);
+    // back from Shopify (page re-rendered): the bar shows what is in the Shopify cart; second coffee joins the same cart
+    wb.__g("renderOffers(STATE)"); await sleep(40); const bar=wb.document.getElementById('hbBar');
+    T('basket bar: "⚡ Hemen-Al sepeti · 1 kahve · 2 paket · 2.560 TL", names, Temizle + Sepete git', !!bar && bar.style.display==='flex' && /⚡ Hemen-Al sepeti · 1 kahve · 2 paket · 2\.560 TL/.test(bar.textContent) && bar.textContent.includes(B0.name+' ×2') && !!bar.querySelector('#hbGoBtn'));
+    wb.eval("jLaneClose(); jLaneOpen('"+B1.id+"')"); await sleep(40);
+    T('the other coffee\'s lane says what is already in the basket', /\+ sepette: /.test(wb.document.querySelector('.jcard.lopen .jlane.ha .hbin').textContent) && wb.document.querySelector('.jcard.lopen .jlane.ha .hbin').textContent.includes(B0.name+' ×2'));
+    nav=null; await wb.eval("jHemenGo('"+B1.id+"',null,1)"); await sleep(40);
+    T('second Sepete git: one link with BOTH coffees (B0 ×2 + B1 ×1), nothing lost', calls.length===2 && calls[1].items.length===2 && calls[1].items.some(i=>i.id===B0.id&&i.qty===2) && calls[1].items.some(i=>i.id===B1.id&&i.qty===1) && nav && nav.includes('V'+B0.id.slice(-2)+':2') && nav.includes('V'+B1.id.slice(-2)+':1'));
+    wb.__g("renderOffers(STATE)"); await sleep(40); T('bar: 2 kahve · 3 paket · 3.550 TL', /2 kahve · 3 paket · 3\.550 TL/.test(wb.document.getElementById('hbBar').textContent));
+    // the bar's own Sepete git re-sends the whole basket without adding anything
+    nav=null; await wb.eval("hbGo()"); await sleep(40); T('bar Sepete git → same two items, navigates', calls.length===3 && calls[2].items.length===2 && !!nav);
+    // a coffee that no longer passes (proxy: full with its id) is dropped and the link retried once with the rest
+    wb.fetch=async(u,init)=>{ if(String(u).includes('/hemen-link')){ const b=JSON.parse(init.body); calls.push(b); if(b.items.some(i=>i.id===B0.id)) return {ok:true,json:async()=>({ok:false,reason:'full',id:B0.id})}; return {ok:true,json:async()=>({ok:true,url:'https://coffeenutz.net/cart/ok?discount=HARETRY1&attributes[hemen]=1'})}; } return f0(u,init); };
+    nav=null; wb.eval("window.__jToast=null"); await wb.eval("hbGo()"); await sleep(60);
+    T('B0 sold out meanwhile → dropped from the basket with a toast, retried with B1 only, navigates', wb.__g('hbItems')().length===1 && wb.__g('hbItems')()[0].id===B1.id && calls[calls.length-1].items.length===1 && nav && nav.includes('HARETRY1') && wb.__g('window.__jToast') && wb.__g('window.__jToast').txt.includes(B0.name) && /doldu/.test(wb.__g('window.__jToast').txt));
+    // paid → pruned: /offer-mine reports an H row for B1 created after it was put in the basket
+    wb.fetch=async(u,init)=>{ if(String(u).includes('/offer-mine')) return {ok:true,json:async()=>({votes:[],inv:[],hemen:[{id:B1.id,qty:1,at:new Date(wb.__g('Date.now()')+5000).toISOString(),via:'pool'}]})}; return f0(u,init); };
+    await wb.__g("offLoadMine(STATE)"); await sleep(40); T('after the order arrives the paid coffee leaves the basket, bar hidden', wb.__g('hbItems')().length===0 && wb.document.getElementById('hbBar').style.display==='none');
+    // expiry: a basket item older than the code's life (2 h) is ignored
+    wb.eval("hbAdd('"+B2.id+"',1,null); (function(){ const o=hbRaw(); o['"+B2.id+"'].at=Date.now()-3*3600000; hbSave(o); })()"); T('basket items older than 2 h expire', wb.__g('hbItems')().length===0);
+    T('BANNED is read from /offer-mine again (banned_until was swallowed by an inline comment)', /jBindChip\(\); \/\* v10o: kapı bilgisi \*\/ BANNED=j\.banned_until/.test(html)); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })().catch(e=>{ console.log('CRASH',e.message,e.stack.split('\n').slice(0,3).join(' / ')); process.exit(1); });

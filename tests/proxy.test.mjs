@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.57 tag', r.json && r.json.v === '3.57');
+T('v3.58 tag', r.json && r.json.v === '3.58');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -108,7 +108,7 @@ r = await px.call('GET', '/inv?c=' + code3 + '&dev=X000000001'); T('with green e
   r = await px.call('POST', '/hemen-link', { id: B2, dev: 'BUYER00001' });
   T('hemen-link (pool): ok, url = variant permalink + discount code + attributes, off = 1600 − 1280 = 320, via pool', r.json.ok && r.json.via === 'pool' && r.json.off === 320 && /^https:\/\/coffeenutz\.net\/cart\/333:1\?discount=HA[A-Z0-9]{6}&attributes\[offer\]=/.test(r.json.url) && r.json.url.includes('attributes[dev]=BUYER00001') && r.json.url.includes('attributes[hemen]=1') && !r.json.url.includes('attributes[inv]'));
   const d = px.DB.__discounts[px.DB.__discounts.length - 1];
-  T('discount created single-use, 2 h, product-restricted, fixed amount per item', d.usageLimit === 1 && d.appliesOncePerCustomer === true && d.customerGets.value.discountAmount.amount === '320.00' && d.customerGets.value.discountAmount.appliesOnEachItem === true && d.customerGets.items.products.productsToAdd[0] === 'gid://shopify/Product/777' && (new Date(d.endsAt) - new Date(d.startsAt)) <= 2 * 3600000 + 60000);
+  T('discount created single-use, 2 h, product-restricted, fixed TOTAL amount (v3.58: off × qty on the order, not per item)', d.usageLimit === 1 && d.appliesOncePerCustomer === true && d.customerGets.value.discountAmount.amount === '320.00' && d.customerGets.value.discountAmount.appliesOnEachItem === false && d.customerGets.items.products.productsToAdd[0] === 'gid://shopify/Product/777' && (new Date(d.endsAt) - new Date(d.startsAt)) <= 2 * 3600000 + 60000);
   T('hl_ record stored', px.DB.grupal_settings.some(s => s.key === 'hl_' + r.json.code));
   const before = nGql();
   // exhaust the pool (base 2): two pool purchases → full
@@ -340,7 +340,7 @@ Date.now = realNow;
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.57');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.58');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
@@ -356,5 +356,35 @@ Date.now = realNow;
   { const mine = await px.call('GET', '/offer-mine?dev=OLDJURY001'); const k = mine.json.me && mine.json.me.k; r = await px.call('GET', '/meydan'); const oa = r.json.offers.find(o => o.id === A2);
     T('the figure key equals /offer-mine me.k for the member (page marks "sen")', !!k && oa.people.some(p => p.n === 'Deniz' && p.k === k)); }
   delete px.DB.__cols;
+  Date.now = realNow; }
+// ---- v3.58: Hemen-Al basket — several coffees in one cart, one code, one order counted per coffee
+{ Date.now = () => NOW; const KEYH = { 'x-cc-key': 'adminkey' };
+  const E1 = '10000000-0000-4000-8000-00000000e001', E2 = '10000000-0000-4000-8000-00000000e002';
+  px.DB.grupal_offers.push({ id: E1, name: 'Kibo Peak', origin: 'Tanzanya', process: 'washed', active: true, sort: 20, pub: { name: 'Kibo Peak', origin: 'Tanzanya', process: 'washed' }, meta: { list_tl: 1600, img_url: 'https://db.test/e1.jpg', hemen_url: 'https://coffeenutz.net/cart/501:1', green_boxes: 9 }, created_at: '2026-09-01T00:00:00Z' },
+    { id: E2, name: 'Guji Natural', origin: 'Etiyopya', process: 'natural', active: true, sort: 21, pub: { name: 'Guji Natural', origin: 'Etiyopya', process: 'natural' }, meta: { list_tl: 1600, img_url: 'https://db.test/e2.jpg', hemen_url: 'https://coffeenutz.net/cart/502:1', green_boxes: 9 }, created_at: '2026-09-01T00:00:00Z' });
+  const nD = () => (px.DB.__discounts || []).length;
+  r = await px.call('POST', '/hemen-link', { dev: 'BASKET0001', items: [{ id: E1, qty: 2 }, { id: E2, qty: 1 }] });
+  T('multi hemen-link: ok, one cart link with both variants, attributes[offers]=E1:2,E2:1, hemen=1, dev', r.json.ok && /^https:\/\/coffeenutz\.net\/cart\/501:2,502:1\?discount=HA[A-Z0-9]{6}&attributes\[offers\]=/.test(r.json.url) && decodeURIComponent(r.json.url).includes('attributes[offers]=' + E1 + ':2,' + E2 + ':1') && r.json.url.includes('attributes[hemen]=1') && r.json.url.includes('attributes[dev]=BASKET0001'));
+  T('multi hemen-link: items echoed (qty, via pool, price 1280, off 320 each), total 3 × 1280, off 960', r.json.items.length === 2 && r.json.items[0].qty === 2 && r.json.items[1].qty === 1 && r.json.items.every(i => i.via === 'pool' && i.price === 1280 && i.off === 320) && r.json.total === 3840 && r.json.off === 960);
+  { const d = px.DB.__discounts[nD() - 1]; T('one Shopify code for both products, fixed total 960.00 on the order, 2 h, single use', d.customerGets.items.products.productsToAdd.length === 2 && d.customerGets.value.discountAmount.amount === '960.00' && d.customerGets.value.discountAmount.appliesOnEachItem === false && d.usageLimit === 1 && /Hemen-Al · 2 kahve/.test(d.title)); }
+  const codeM = r.json.code;
+  T('hl_ record lists both items and the total', (() => { const h = JSON.parse(px.DB.grupal_settings.find(x => x.key === 'hl_' + codeM).value); return h.items.length === 2 && h.qty === 3 && h.total === 3840; })());
+  r = await px.call('POST', '/hemen-link', { dev: 'BASKET0001', items: [{ id: E1, qty: 1 }, { id: '10000000-0000-4000-8000-0000000000ff', qty: 1 }] }); T('multi: a coffee without a lane fails the whole link with its id', r.json.ok === false && r.json.reason === 'nolane' && r.json.id === '10000000-0000-4000-8000-0000000000ff');
+  { const m0 = await px.call('GET', '/meydan'); const leftE1 = m0.json.offers.find(o => o.id === E1).hemen.left; r = await px.call('POST', '/hemen-link', { dev: 'BASKET0001', items: [{ id: E1, qty: 9 }, { id: E1, qty: 1 }] }); T('multi: duplicates collapse, qty capped at the seats left', r.json.ok && r.json.items.length === 1 && r.json.items[0].qty === leftE1 && leftE1 < 9); }
+  // the order arrives with both coffees → one H row per coffee, both counted, one response
+  r = await hook({ hemen: '1', offers: E1 + ':2,' + E2 + ':1', dev: 'BASKET0001' }, { id: 9801, qty: 3, name: 'Mert Kaya', email: 'mert@example.com' });
+  T('webhook hemen with offers list → "ok (hemen ×2)"', r.text === 'ok (hemen ×2)');
+  const r1 = px.DB.grupal_offer_votes.find(v => v.offer_id === E1 && v.dev === 'BASKET0001H1'), r2 = px.DB.grupal_offer_votes.find(v => v.offer_id === E2 && v.dev === 'BASKET0001H1');
+  T('H rows: Kibo ×2 and Guji ×1, both paid with the order id, buyer name stored for the walk', r1 && r1.qty === 2 && r1.order_id === '9801' && r2 && r2.qty === 1 && r2.order_id === '9801' && px.DB.grupal_settings.some(x => x.key === 'hn_BASKET0001H1' && x.value === 'Mert'));
+  r = await hook({ hemen: '1', offers: E1 + ':2,' + E2 + ':1', dev: 'BASKET0001' }, { id: 9801, qty: 3 }); T('same order again → already counted', r.text === 'ok (already counted)');
+  r = await px.call('GET', '/meydan'); { const e1 = r.json.offers.find(o => o.id === E1), e2 = r.json.offers.find(o => o.id === E2); T('/meydan: both coffees count the packages (dep 2 and 1), pool sold 2 / 1', e1.dep === 2 && e2.dep === 1 && e1.hemen.sold === 2 && e2.hemen.sold === 1); }
+  // invitation inside a basket: one coffee via invitation (qty forced to 1), the other from the pool; attributes[inv] carries the code
+  await hook({ offer: E2, dev: 'HOST000001' }, { id: 9802, name: 'Ece', email: 'ece@example.com' });
+  const invE2 = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).map(x => [x.key.slice(4), JSON.parse(x.value)]).find(([c, j]) => j.o === E2 && j.st === 'p')[0];
+  r = await px.call('POST', '/hemen-link', { dev: 'GUEST00001', items: [{ id: E2, qty: 3, inv: invE2 }, { id: E1, qty: 1 }] });
+  T('basket with an invitation: that coffee is 1 package via inv, the other from the pool; link carries attributes[inv]', r.json.ok && r.json.items[0].via === 'inv' && r.json.items[0].qty === 1 && r.json.items[1].via === 'pool' && r.json.url.includes('attributes[inv]=' + invE2));
+  r = await hook({ hemen: '1', offers: E2 + ':1,' + E1 + ':1', dev: 'GUEST00001', inv: invE2 }, { id: 9803, qty: 2, name: 'Deniz Ak' });
+  T('webhook: I row for the invited coffee, H row for the pool coffee, invitation used', r.text === 'ok (hemen ×2 · davetiye)' && !!px.DB.grupal_offer_votes.find(v => v.offer_id === E2 && v.dev === 'GUEST00001I1') && !!px.DB.grupal_offer_votes.find(v => v.offer_id === E1 && v.dev === 'GUEST00001H1') && JSON.parse(px.DB.grupal_settings.find(x => x.key === 'inv_' + invE2).value).st === 'u');
+  r = await px.call('GET', '/admin/links-open', null, KEYH); T('admin links-open: the basket link shows 3 packages, total 3.840, matched', (() => { const l = r.json.links.find(x => x.code === codeM); return l && l.qty === 3 && l.total === 3840 && l.state === 'ok'; })());
   Date.now = realNow; }
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);
