@@ -22,17 +22,16 @@ await page.goto('https://grup-al.com/juri'); await page.waitForTimeout(900);
 await page.evaluate(()=>{ window.__nav=[]; window.jNavigate=u=>{ window.__nav.push(u); }; });
 // coffee A: open lane → Sepete → stepper 2 → Sepete git
 await page.evaluate(id=>jLaneOpen(id),A.id); await page.waitForTimeout(500);
-await page.evaluate(id=>{ jHemenPick(id); jHemenQty(id,1); },A.id); await page.waitForTimeout(300);
-await page.evaluate(id=>jHemenGo(id,null,2),A.id); await page.waitForTimeout(400); await page.screenshot({path:path.join(OUT,'hbasket_added.png')}); await page.evaluate(()=>hbGo()); await page.waitForTimeout(500);
+await page.evaluate(id=>{ jHemenGo(id,null,1); hbQty(id,1); dbAdd(id,1); },A.id); await page.waitForTimeout(400);   // v11t: one tap adds 1, right stepper → 2; a kapora too → both steppers
+await page.screenshot({path:path.join(OUT,'hbasket_added.png')}); await page.evaluate(()=>hbGo()); await page.waitForTimeout(500);
 // "back from Shopify": re-render → bar visible; open coffee B
 await page.evaluate(()=>{ jLaneClose(); renderOffers(STATE); }); await page.waitForTimeout(300);
 await page.evaluate(id=>{ document.querySelector('#jDeck .jcard[data-id="'+id+'"]').scrollIntoView({block:'center',inline:'center'}); jLaneOpen(id); },B.id); await page.waitForTimeout(600);
-await page.evaluate(id=>jHemenPick(id),B.id); await page.waitForTimeout(300);
 await page.screenshot({path:path.join(OUT,'hbasket_lane.png')});
 await page.evaluate(id=>jHemenGo(id,null,1),B.id); await page.waitForTimeout(400); await page.evaluate(()=>hbGo()); await page.waitForTimeout(500);
 await page.evaluate(()=>{ jLaneClose(); renderOffers(STATE); }); await page.waitForTimeout(300);
 await page.screenshot({path:path.join(OUT,'hbasket_bar.png')});
 const st=await page.evaluate(()=>({nav:window.__nav, items:hbItems(), bar:document.getElementById('hbBar')&&document.getElementById('hbBar').textContent}));
 console.log(JSON.stringify({links:links.map(l=>l.items), ...st}));
-const ok=links.length===2&&links[1].items.length===2&&st.nav[1].includes('222:2,333:1')&&st.items.length===2&&/2 kahve · 3 paket · 2\.960 TL/.test(st.bar);
+const ok=links.length===2&&links[0].items.length===1&&links[1].items.length===2&&st.nav[1].includes('222:2,333:1')&&st.items.length===2&&/2 kahve · 3 paket · 2\.960 TL/.test(st.bar);
 await browser.close(); console.log(ok?'ok':'BAD');
