@@ -3,7 +3,9 @@
 import fs from 'fs'; import ts from 'typescript';
 export async function boot(tsPath, seed = {}) {
   const src = fs.readFileSync(tsPath, 'utf8');
-  const js = ts.transpileModule(src, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
+  const tr = ts.transpileModule(src, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext }, reportDiagnostics: true });
+  if (tr.diagnostics && tr.diagnostics.length) { const d = tr.diagnostics[0]; const pos = d.file && d.start != null ? d.file.getLineAndCharacterOfPosition(d.start) : null; throw new Error('proxy.ts syntax: ' + ts.flattenDiagnosticMessageText(d.messageText, ' ') + (pos ? (' at ' + (pos.line + 1) + ':' + (pos.character + 1)) : '')); }   // v3.59: the Supabase bundler refuses what TS cannot parse — fail here first
+  const js = tr.outputText;
   const DB = { grupal_settings: [], grupal_offers: [], grupal_offer_votes: [], grupal_campaigns: [], grupal_pledges: [], grupal_wishes: [], ...seed };
   const PK = { grupal_settings: ['key'], grupal_offers: ['id'], grupal_offer_votes: ['offer_id', 'dev'], grupal_campaigns: ['id'], grupal_pledges: ['id'] };
   let handler = null; const log = [];
