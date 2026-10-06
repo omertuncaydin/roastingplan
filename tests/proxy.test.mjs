@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.58 tag', r.json && r.json.v === '3.58');
+T('v3.59 tag', r.json && r.json.v === '3.59');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -340,7 +340,7 @@ Date.now = realNow;
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.58');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.59');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
@@ -387,4 +387,42 @@ Date.now = realNow;
   T('webhook: I row for the invited coffee, H row for the pool coffee, invitation used', r.text === 'ok (hemen ×2 · davetiye)' && !!px.DB.grupal_offer_votes.find(v => v.offer_id === E2 && v.dev === 'GUEST00001I1') && !!px.DB.grupal_offer_votes.find(v => v.offer_id === E1 && v.dev === 'GUEST00001H1') && JSON.parse(px.DB.grupal_settings.find(x => x.key === 'inv_' + invE2).value).st === 'u');
   r = await px.call('GET', '/admin/links-open', null, KEYH); T('admin links-open: the basket link shows 3 packages, total 3.840, matched', (() => { const l = r.json.links.find(x => x.code === codeM); return l && l.qty === 3 && l.total === 3840 && l.state === 'ok'; })());
   Date.now = realNow; }
+// ---- v3.59: "seçilmezse kaydır" — flag on the order, close-time move to the most popular coffee (join the race → lock in the closed session; join a selected lot → converted)
+{ Date.now = () => NOW; const KEYH = { 'x-cc-key': 'adminkey' };
+  const R2 = '10000000-0000-4000-8000-00000000f002', R3 = '10000000-0000-4000-8000-00000000f003';
+  px.DB.grupal_offers.push({ id: R2, name: 'Roll Two', origin: 'Peru', process: 'washed', active: true, sort: 30, pub: { name: 'Roll Two', origin: 'Peru', process: 'washed' }, meta: { list_tl: 1600 }, created_at: '2026-09-01T00:00:00Z' },
+    { id: R3, name: 'Roll Three', origin: 'Kenya', process: 'washed', active: true, sort: 31, pub: { name: 'Roll Three', origin: 'Kenya', process: 'washed' }, meta: { list_tl: 1600 }, created_at: '2026-09-01T00:00:00Z' });
+  const rk = (id, dev) => px.DB.grupal_settings.find(x => x.key === 'roll_' + id + '_' + dev);
+  // 38 deposits on R3 (most popular, unlocked), 2 roll-flagged deposits on R2
+  for (let i = 1; i <= 38; i++) await hook({ offer: R3, dev: 'RZ' + String(i).padStart(8, '0') }, { id: 97000 + i, name: 'Z' + i });
+  r = await hook({ offers: R2 + ':1', dev: 'RX00000001', roll: '1', terms: '1' }, { id: 97101, name: 'Rol Bir', email: 'rol1@example.com' });
+  T('kapora with attributes[roll]=1 → roll_ key for the row', r.text.startsWith('ok (kapora') && !!rk(R2, 'RX00000001') && JSON.parse(rk(R2, 'RX00000001').value).oid === '97101');
+  await hook({ offers: R2 + ':1', dev: 'RX00000004', roll: '1' }, { id: 97104, name: 'Rol Dört' });
+  await hook({ offers: R2 + ':1', dev: 'RX00000007' }, { id: 97107, name: 'Rol Yedi' });   // no flag → stays
+  r = await px.call('GET', '/offer-mine?dev=RX00000001'); T('/offer-mine marks the flagged vote roll:true', r.json.votes.find(v => v.id === R2).roll === true && Array.isArray(r.json.moved) && r.json.moved.length === 0);
+  r = await px.call('POST', '/offer-roll', { dev: 'RX00000004', id: R2, on: false }); T('/offer-roll off removes the key', r.json.ok && !rk(R2, 'RX00000004'));
+  r = await px.call('POST', '/offer-roll', { dev: 'RX00000004', id: R2, on: true }); T('/offer-roll on puts it back', r.json.ok && !!rk(R2, 'RX00000004'));
+  r = await px.call('POST', '/offer-roll', { dev: 'RX00000007', id: R3, on: true }); T('/offer-roll without a deposit on that coffee → 404', r.status === 404);
+  r = await px.call('GET', '/admin/offers', null, KEYH); T('admin row carries roll count (2 on Roll Two)', r.json.find(o => o.id === R2).roll === 2);
+  r = await px.call('GET', '/meydan'); { const top = r.json.offers.slice().sort((a, b) => (b.dep + (b.conv || 0)) - (a.dep + (a.conv || 0)))[0]; T('before close: Roll Three (38) is the most popular and not locked', top.id === R3 && !r.json.offers.find(o => o.id === R3).lock); }
+  // close: the two flagged votes move to Roll Three one second before close → 40 → lock in this close
+  // (closes 0 and 1 were already recorded by earlier admin tests → use close 2, Sun 2026-10-11 20:59Z)
+  const C1 = Date.UTC(2026, 9, 11, 20, 59, 0); Date.now = () => Date.UTC(2026, 9, 12, 9, 0, 0);
+  r = await px.call('GET', '/meydan');
+  const mv1 = px.DB.grupal_offer_votes.find(v => v.offer_id === R3 && v.dev === 'RX00000001'), mv4 = px.DB.grupal_offer_votes.find(v => v.offer_id === R3 && v.dev === 'RX00000004');
+  T('both flagged votes moved to Roll Three with created_at = close − 1 s; source rows gone; unflagged vote stayed', mv1 && mv4 && new Date(mv1.created_at).getTime() === C1 - 1000 && !px.DB.grupal_offer_votes.find(v => v.offer_id === R2 && v.dev === 'RX00000001') && !!px.DB.grupal_offer_votes.find(v => v.offer_id === R2 && v.dev === 'RX00000007'));
+  { const lk = px.DB.grupal_settings.find(x => x.key === 'lock_' + R3); const lj = lk && JSON.parse(lk.value); T('Roll Three locked by the consolidation: 40 packages, lock time = close − 1 s', !!lj && lj.dep === 40 && new Date(lj.at).getTime() === C1 - 1000); }
+  T('roll keys consumed', !rk(R2, 'RX00000001') && !rk(R2, 'RX00000004'));
+  r = await px.call('GET', '/offer-mine?dev=RX00000001'); T('/offer-mine: vote now on Roll Three, converted (Tamamla), moved[] says from Roll Two to Roll Three, race (lot:false)', r.json.votes.length === 1 && r.json.votes[0].id === R3 && r.json.votes[0].conv === true && r.json.moved.length === 1 && r.json.moved[0].from === R2 && r.json.moved[0].to === R3 && r.json.moved[0].fn === 'Roll Two' && r.json.moved[0].tn === 'Roll Three' && r.json.moved[0].lot === false);
+  r = await px.call('GET', '/meydan'); T('/meydan: Roll Two keeps 1 deposit, Roll Three is selected with 40', r.json.offers.find(o => o.id === R2).dep === 1 && r.json.offers.find(o => o.id === R3).conv === 40 && !!r.json.offers.find(o => o.id === R3).lock);
+  // session 2: a new flagged deposit on Roll Two; Roll Three (selected, lot in this/later session) is the most popular → the vote joins the lot
+  await hook({ offers: R2 + ':2', dev: 'RX00000005', roll: '1' }, { id: 97205, qty: 2, name: 'Rol Beş', email: 'rol5@example.com' });
+  await hook({ offers: R2 + ':1', dev: 'RZ00000003', roll: '1' }, { id: 97203, name: 'Z3' });   // already in Roll Three's lot → must not be touched
+  const C2 = Date.UTC(2026, 9, 18, 20, 59, 0); Date.now = () => Date.UTC(2026, 9, 19, 9, 0, 0);
+  r = await px.call('GET', '/meydan');
+  { const m5 = px.DB.grupal_offer_votes.find(v => v.offer_id === R3 && v.dev === 'RX00000005'); const lj = JSON.parse(px.DB.grupal_settings.find(x => x.key === 'lock_' + R3).value);
+    T('close 2: the flagged ×2 vote joined Roll Three\'s lot (created_at = lock time, converted), lot 40 → 42', m5 && m5.qty === 2 && new Date(m5.created_at).getTime() === C1 - 1000 && lj.dep === 42);
+    const z3 = px.DB.grupal_offer_votes.find(v => v.offer_id === R2 && v.dev === 'RZ00000003'); T('a voter already in the lot keeps the Roll Two vote and the flag', !!z3 && !!rk(R2, 'RZ00000003')); }
+  r = await px.call('GET', '/offer-mine?dev=RX00000005'); T('/offer-mine for the lot-joiner: converted on Roll Three, moved[] lot:true', r.json.votes.find(v => v.id === R3).conv === true && r.json.moved[0].lot === true && r.json.moved[0].q === 2);
+  Date.now = () => NOW; }
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);

@@ -354,7 +354,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-10-02a';
+const VERSION='v2026-10-06a';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -677,7 +677,7 @@ function renderOffersAdmin(){ listSetSub();
       +'<div style="display:flex;gap:6px;margin-top:8px"><button class="mini" onclick="offEditSave(\''+o.id+'\')">Taslağa kaydet</button><button class="mini" onclick="offEdit(null)">Vazgeç</button></div></div>';
     const st=offState(o);
     return '<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;'+(o.active?'':'opacity:.6')+'">'
-      +'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>'+esc(o.name)+'</b><span class="hint">'+(dep?('<b'+(o.dep>=G?' style="color:var(--gold)"':'')+'>'+o.dep+'/'+G+' kapora</b>'+(o.early?(' · erken '+o.early):'')+' · ilgi '+o.n):('<b'+(o.n>=G?' style="color:var(--gold)"':'')+'>'+o.n+'/'+G+' oy</b>'))+' · masadan '+o.seated+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>'+esc(o.name)+'</b><span class="hint">'+(dep?('<b'+(o.dep>=G?' style="color:var(--gold)"':'')+'>'+o.dep+'/'+G+' kapora</b>'+(o.early?(' · erken '+o.early):'')+(o.roll?(' · ↪ '+o.roll+' seçilmezse kayar'):'')+' · ilgi '+o.n):('<b'+(o.n>=G?' style="color:var(--gold)"':'')+'>'+o.n+'/'+G+' oy</b>'))+' · masadan '+o.seated+'</span></div>'
       +'<div class="hint">'+[o.origin,WPROCN[o.process]||o.process,o.vendor,o.note].filter(Boolean).map(esc).join(' · ')+(o.shop_url?' · <a href="'+esc(o.shop_url)+'" target="_blank" rel="noopener" style="color:var(--green);font-weight:700">🛒 stokta</a>':'')+'</div>'
       +(metaLine(o.meta)?('<div class="hint" style="color:var(--gold);margin-top:2px">🔒 '+metaLine(o.meta)+'</div>'):'')
       +((o.list_tl&&(o.jury_tl||o.camp200_tl))?('<div class="hint" style="margin-top:2px"><s>'+o.list_tl+' ₺</s> <b style="color:var(--ink)">Jüri '+(o.jury_tl||o.camp200_tl)+' ₺</b> · Sepet '+(o.basket_tl||o.camp_tl)+' ₺'+(o.frozen?' · <span style="color:var(--gold)">🔒 kilitli</span>':((o.meta&&(o.meta.list_tl||o.meta.jury_tl||o.meta.basket_tl||o.meta.camp_tl))?' · <span style="color:var(--gold)">elle ezildi</span>':''))+'</div>'):(o.meta&&o.meta.usd_kg?'':'<div class="hint" style="margin-top:2px;opacity:.7">fiyat yok ($/kg girilmemiş)</div>'))

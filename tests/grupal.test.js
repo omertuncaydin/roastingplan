@@ -327,7 +327,7 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('jThumb: photo coffee → <img>, no photo → mountain&sun svg', /^<img /.test(wp.__g('jThumb')({img_url:'https://x.test/a.jpg',origin:'Kenya'},50,50)) && /<svg/.test(wp.__g('jThumb')({origin:'Kenya'},50,50)));
     const c=wp.document.querySelector('.jcard[data-id="'+A2.id+'"]'); T('every card is rigged: strip + zone + ring groups; rig closed at rest', !!c && !!c.querySelector('.jwa') && !!c.querySelector('.jwz') && !!c.querySelector('svg.jring .rl') && !!c.querySelector('svg.jring .cg text') && c.__jwa && c.__jwa.state==='closed');
     T('no B strip / C layer left in the markup', !wp.document.querySelector('.jwb') && !wp.document.querySelector('.jwc') && !/jWalkStripHtml|jWalkLayerHtml/.test(html));
-    T('page version bumped to v2026-10-06e', /const VERSION='v2026-10-06e';/.test(html));
+    T('page version bumped to v2026-10-06f', /const VERSION='v2026-10-06f';/.test(html));
     // v11p: the total line has no denominator any more — "Bu oturum n paket · k kahve · r kavruluyor"
     { const MT=JSON.parse(JSON.stringify(MD)); const L=MT.offers.find(o=>o.id===ord[0].id); L.lock={at:'2026-09-30T10:00:00Z',n:1,close:'2026-10-04T20:59:00Z',state:'locked',dep:17,dep_tl:100,forced:true,people:[]}; L.dep=0; L.conv=17; MT.offer_cfg.day_goal=40;
       const wt=mk({'/meydan':MT,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); const tot=MT.offers.reduce((a,o)=>a+(o.dep||0),0), kk=MT.offers.filter(o=>(o.dep||0)>0).length;
@@ -362,6 +362,38 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     // expiry: a basket item older than the code's life (2 h) is ignored
     wb.eval("hbAdd('"+B2.id+"',1,null); (function(){ const o=hbRaw(); o['"+B2.id+"'].at=Date.now()-3*3600000; hbSave(o); })()"); T('basket items older than 2 h expire', wb.__g('hbItems')().length===0);
     T('BANNED is read from /offer-mine again (banned_until was swallowed by an inline comment)', /jBindChip\(\); \/\* v10o: kapı bilgisi \*\/ BANNED=j\.banned_until/.test(html)); }
+  // v11w (Ömer): "Seçilmezse oyumu en popüler kahveye kaydır" (default off, remembered, attributes[roll]=1) · lane toggle via /offer-roll · moved notice · Hemen-Al grind note (note=Öğütüm: …)
+  { const MR=JSON.parse(JSON.stringify(MD)); const R0=MR.offers.find(o=>o.id===ord[0].id), R1=MR.offers.find(o=>o.id===ord[1].id), R2=MR.offers.find(o=>o.id===ord[2].id);
+    for(const [o,v,p] of [[R0,222,1280],[R1,333,990]]){ o.img_url='https://x.test/o/'+v+'.jpg'; o.hemen={url:'https://coffeenutz.net/cart/'+v+':1',price:p,base:3,sold:0,inv:0,left:3,green_left:null,table:[],roast_at:'2026-10-05T20:59:00.000Z'}; o.list_tl=1600; }
+    const wr=mk({'/meydan':MR,'/offer-mine':{votes:[{id:R2.id,paid:true,qty:1},{id:R1.id,paid:true,qty:1,roll:true}],inv:[],hemen:[],moved:[]},'/campaigns':[]},390); await sleep(250);
+    wr.eval("dbAdd('"+R0.id+"',1)"); await sleep(40); const db=wr.document.getElementById('dbBar');
+    T('kapora bar carries the tickbox, unticked by default, with Ömer\'s sentence', !!db && !!db.querySelector('#dbRoll') && !db.querySelector('#dbRoll').checked && /Seçilmezse oyumu en popüler kahveye kaydır/.test(db.textContent));
+    T('unticked → the kapora link has no roll attribute', !/attributes\[roll\]/.test(wr.__g('dbUrl')()));
+    wr.eval("rollSet(true)"); wr.__g("renderOffers(STATE)"); await sleep(40);
+    T('ticked → attributes[roll]=1 on the kapora link, box stays ticked after a re-render (remembered)', /&attributes\[roll\]=1/.test(wr.__g('dbUrl')()) && wr.document.getElementById('dbRoll').checked);
+    wr.eval("rollSet(false)"); T('untick → gone again', !/attributes\[roll\]/.test(wr.__g('dbUrl')()));
+    // lane of a paid (not converted) kapora: status line + toggle
+    wr.eval("jLaneOpen('"+R2.id+"')"); await sleep(40); let ln=wr.document.querySelector('.jcard.lopen .jlane.ga .jroll');
+    T('lane (deposit without the flag): "Seçilmezse oyun burada kalır · en popülere kaydır"', !!ln && /Seçilmezse oyun burada kalır/.test(ln.textContent) && ln.querySelector('a').textContent==='en popülere kaydır');
+    const rc=[]; const f0=wr.fetch; wr.fetch=async(u,init)=>{ if(String(u).includes('/offer-roll')){ const b=JSON.parse(init.body); rc.push(b); return {ok:true,json:async()=>({ok:true,roll:b.on,n:1})}; } return f0(u,init); };
+    await wr.eval("jRollToggle('"+R2.id+"',true)"); await sleep(40); ln=wr.document.querySelector('.jcard.lopen .jlane.ga .jroll');
+    T('toggle → POST /offer-roll {dev,id,on:true}; lane now "Seçilmezse en popülere kayar ✓ · kalsın"', rc.length===1 && rc[0].id===R2.id && rc[0].on===true && rc[0].dev===wr.__g('devId')() && !!ln && /en popülere kayar ✓/.test(ln.textContent) && ln.querySelector('a').textContent==='kalsın');
+    wr.eval("jLaneClose(); jLaneOpen('"+R1.id+"')"); await sleep(40); ln=wr.document.querySelector('.jcard.lopen .jlane.ga .jroll');
+    T('a deposit flagged at checkout shows ✓ straight from /offer-mine', !!ln && /en popülere kayar ✓/.test(ln.textContent));
+    // moved notice: /offer-mine says the vote moved at close → one toast, remembered as seen
+    wr.fetch=async(u,init)=>{ if(String(u).includes('/offer-mine')) return {ok:true,json:async()=>({votes:[{id:R0.id,paid:true,qty:1,conv:true}],inv:[],hemen:[],moved:[{from:R2.id,to:R0.id,fn:R2.name,tn:R0.name,q:1,at:'2026-09-23T09:00:00.000Z',lot:true,n:1}]})}; return f0(u,init); };
+    wr.eval("window.__jToast=null"); await wr.__g("offLoadMine(STATE)"); await sleep(40);
+    T('moved → toast "Oyun A → B kaydı: seçildi, tamamlayabilirsin ›"', !!wr.__g('window.__jToast') && wr.__g('window.__jToast').txt.includes('kaydı: seçildi') && wr.__g('window.__jToast').txt.includes(wr.__g('jShort')(R0.name)));
+    wr.eval("window.__jToast=null"); await wr.__g("offLoadMine(STATE)"); await sleep(40); T('the same move is not announced twice', !wr.__g('window.__jToast'));
+    // Hemen-Al grind: select in the basket bar (whole bean default, Ömer's 8 methods), note= on the Shopify link, never on the kapora link
+    wr.eval("jHemenGo('"+R0.id+"',null,1)"); await sleep(40); const hb=wr.document.getElementById('hbBar'); const sel=hb&&hb.querySelector('select.hbgrind');
+    T('Hemen-Al bar: "Öğütüm" select, default Çekirdek, then French Press … Türk Kahvesi (8)', !!sel && sel.value==='' && sel.options.length===9 && sel.options[0].textContent==='Çekirdek (öğütülmemiş)' && [...sel.options].slice(1).map(o=>o.value).join('|')==='French Press|Cold Brew|Metal Filtre|Kağıt Filtre|AeroPress|Moka Pot|Espresso|Türk Kahvesi');
+    T('whole bean → link untouched', wr.__g('grindUrl')('https://coffeenutz.net/cart/222:1?discount=HAX')==='https://coffeenutz.net/cart/222:1?discount=HAX');
+    wr.eval("grindSet('Türk Kahvesi')"); let nav=null; wr.jNavigate=u=>{ nav=u; }; wr.fetch=async(u,init)=>{ if(String(u).includes('/hemen-link')) return {ok:true,json:async()=>({ok:true,url:'https://coffeenutz.net/cart/222:1?discount=HAX&attributes[hemen]=1'})}; return f0(u,init); };
+    await wr.eval("hbGo()"); await sleep(40);
+    T('grind chosen → Shopify link gets note=Öğütüm: Türk Kahvesi (order note), choice remembered', nav==='https://coffeenutz.net/cart/222:1?discount=HAX&attributes[hemen]=1&note='+encodeURIComponent('Öğütüm: Türk Kahvesi') && wr.__g('grindGet')()==='Türk Kahvesi');
+    T('kapora link never carries a grind note (jury buys beans later, at Tamamla)', !/note=/.test(wr.__g('dbUrl')()||'x'));
+    wr.eval("jLaneClose(); jLaneOpen('"+R0.id+"')"); await sleep(40); T('the lane\'s in-basket block and the Benim için seç sheet show the same select', !!wr.document.querySelector('.jcard.lopen .jlane.ha select.hbgrind') && (wr.eval("jSecOpen('all')"), true) && !!wr.document.querySelector('#jSheet select.hbgrind')); }
   // v11u (Ömer: B): "Benim için seç" — taste → the jury's pick (locked lot > votes > CoffeeNutz'ın 5'i) among coffees with an open Hemen-Al door → quantity → basket
   { const MS=JSON.parse(JSON.stringify(MD)); const S=[ord[0],ord[1],ord[2],ord[3],ord[4]].map(o=>MS.offers.find(x=>x.id===o.id));
     const mkLane=(o,v,p,left)=>{ o.img_url='https://x.test/o/'+v+'.jpg'; o.hemen={url:'https://coffeenutz.net/cart/'+v+':1',price:p,base:3,sold:3-left,inv:0,left,green_left:null,table:[],roast_at:'2026-10-05T20:59:00.000Z'}; o.list_tl=Math.round(p/0.8); o.jury_tl=Math.round(p/0.8*0.6); };
@@ -384,6 +416,6 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('Sepete ekle → basket has it (2), sheet stays open with "Sepete git → 1.710 TL" + başka kahve seç + sepetten çıkar; bar shown', ws.__g('hbItems')().length===1 && ws.__g('hbItems')()[0].qty===2 && !!ws.document.querySelector('#jSheet .jsec') && ws.document.querySelector('#jSheet .rc .go').textContent==='Sepete git → 1.710 TL' && ws.document.querySelector('#jSheet .rc .go').getAttribute('onclick')==='hbGo()' && /başka kahve seç/.test(ws.document.querySelector('#jSheet .rc .alt').textContent) && ws.document.getElementById('hbBar').style.display==='flex');
     ws.eval("jSecK('cn')"); await sleep(40); T("CoffeeNutz'ın 5'i filter lists only starred coffees with an open door", ws.__g("jSecList('cn')").every(o=>ws.__g("jTop(STATE.offers.find(x=>x.id==='"+o.id+"'))")));
     const wd=mk({'/meydan':MS,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); T('desktop (D1): filled block is the first thing in the sidebar; sheet renders the same card', !!wd.document.querySelector('.jdk-side .jsecb.jsecd') && wd.document.querySelector('.jdk-side').firstElementChild.classList.contains('jsecd') && /Jürinin seçimi/.test(wd.document.querySelector('.jdk-side .jsecd').textContent) && (wd.eval("jSecOpen()"), true) && !!wd.document.querySelector('#jSheet .jsec .rc'));
-    T('page version bumped to v2026-10-06e', /const VERSION='v2026-10-06e';/.test(html)); }
+    T('page version bumped to v2026-10-06f', /const VERSION='v2026-10-06f';/.test(html)); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })().catch(e=>{ console.log('CRASH',e.message,e.stack.split('\n').slice(0,3).join(' / ')); process.exit(1); });
