@@ -18,7 +18,7 @@ async function shot(name,md,mine,steps){
     if(u.includes('/meydan')) return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(md)});
     if(u.includes('/offer-mine')) return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(mine)});
     if(u.includes('/campaigns')) return route.fulfill({status:200,contentType:'application/json',body:'[]'}); return route.fulfill({status:204,body:''}); });
-  await page.goto('https://grup-al.com/juri'); await page.waitForTimeout(1200); await page.evaluate(id=>jLaneOpen(id),H0.id); await page.waitForTimeout(1500); if(steps) await steps(page);
+  await page.goto('https://grup-al.com/juri'); await page.waitForTimeout(1200); await page.evaluate(id=>{ if(JSHEET) jSheetClose(); if(!(JLANE&&JLANE.id===id)) jLaneOpen(id); },H0.id); await page.waitForTimeout(1500);   // v11x: fresh invitations open the lane (and the sheet) by themselves if(steps) await steps(page);
   const el=await page.$('.jcard.lopen'); await el.screenshot({path:path.join(OUT,name+'.png')}); console.log(name); await ctx.close(); }
 const E={votes:[],inv:[],hemen:[]};
 await shot('tk1_none',mk(),E);

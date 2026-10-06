@@ -87,3 +87,9 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - **Sheet stub**: "23 sa sana özel" first, "6 gün geçerli" as small print (was only the expiry).
 - `tests/shot-invarrive.mjs` (phone + desktop: lane → pop → sheet); page tests 172.
 - **v2026-10-06h (Ömer: "grind default çekirdek")**: the Hemen-Al grind choice is no longer remembered on the device — every page load starts at Çekirdek; the choice lives only for the current basket.
+
+## v11y (2026-10-06) — golden ticket (Ömer: T2, "the roast it admits to")
+- Both tickets — the sheet's and the lane's mini one — are now the **golden ticket**: gold paper, scalloped top/bottom edges and the perforation notches cut with CSS masks (true cut-outs on any background), ✂ at the perforation, "DAVETİYE" along the stub. **The only number on the ticket is the roast it admits to**: `KAVRUM · Pzt 12 Eki` (from `hemen.roast_at`, `jRoastStamp`). No serial, no barcode, nothing decorative.
+- Sheet ticket: HEMEN-AL DAVETİYESİ · coffee · price / list / %20 · "1 paket · salı kargoda · kaporasız"; stub: `23 sa` sana özel · Gönder · masaya bırak · "6 gün geçerli". On the table: 🪑 "Masada · ilk oturan alır" + **geri al** (new in the sheet); used: ✓ Ayşe aldı + when; expired: süresi doldu.
+- Lane mini ticket: DAVETİYE · KAVRUM · Pzt 12 Eki · n davetiyen · sana özel, sonra masaya; stub: countdown + Gönder + masaya bırak. The arrival pop (v11x) still applies.
+- `shot-tickets.mjs` no longer toggles the lane closed when fresh invitations already opened it.
