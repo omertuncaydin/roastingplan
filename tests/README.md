@@ -93,3 +93,4 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - Sheet ticket: HEMEN-AL DAVETİYESİ · coffee · price / list / %20 · "1 paket · salı kargoda · kaporasız"; stub: `23 sa` sana özel · Gönder · masaya bırak · "6 gün geçerli". On the table: 🪑 "Masada · ilk oturan alır" + **geri al** (new in the sheet); used: ✓ Ayşe aldı + when; expired: süresi doldu.
 - Lane mini ticket: DAVETİYE · KAVRUM · Pzt 12 Eki · n davetiyen · sana özel, sonra masaya; stub: countdown + Gönder + masaya bırak. The arrival pop (v11x) still applies.
 - `shot-tickets.mjs` no longer toggles the lane closed when fresh invitations already opened it.
+- **v2026-10-06j (Ömer's wording)**: the locked Hemen-Al lane's help line reads "Sen de yardım et: Kapora koy · 2 Hemen-Al biletin olsun ›" (the number follows the `hemen_inv` setting).
