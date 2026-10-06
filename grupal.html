@@ -755,7 +755,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-10-06g';
+const VERSION='v2026-10-06h';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1552,8 +1552,9 @@ function renderHbBar(){ let bar=$('hbBar'); const sum=hbSum(); const db=$('dbBar
   bar.style.display='flex'; }
 // v11w (Ömer): öğütüm — yalnız Hemen-Al; varsayılan çekirdek (mağazadaki kural), seçim Shopify sipariş notuna (note=) gider
 const GRINDS=['French Press','Cold Brew','Metal Filtre','Kağıt Filtre','AeroPress','Moka Pot','Espresso','Türk Kahvesi'];
-function grindGet(){ try{ const g=localStorage.getItem('grupal_grind')||''; return GRINDS.includes(g)?g:''; }catch(e){ return ''; } }
-function grindSet(v){ try{ if(GRINDS.includes(v)) localStorage.setItem('grupal_grind',v); else localStorage.removeItem('grupal_grind'); }catch(e){} document.querySelectorAll('select.hbgrind').forEach(el=>{ el.value=grindGet(); }); }
+let GRIND='';   // v11y (Ömer): her sayfa açılışında çekirdek — seçim yalnız bu sepet için, cihazda tutulmaz
+function grindGet(){ return GRINDS.includes(GRIND)?GRIND:''; }
+function grindSet(v){ GRIND=GRINDS.includes(v)?v:''; document.querySelectorAll('select.hbgrind').forEach(el=>{ el.value=grindGet(); }); }
 function grindHtml(){ const g=grindGet(); return '<label class="hbgl" onclick="event.stopPropagation()">'+t('hbGrind')+': <select class="hbgrind" onchange="grindSet(this.value)"><option value=""'+(g?'':' selected')+'>'+t('hbGrindBean')+'</option>'+GRINDS.map(x=>'<option value="'+escZ(x)+'"'+(g===x?' selected':'')+'>'+escZ(x)+'</option>').join('')+'</select></label>'; }
 function grindUrl(u){ const g=grindGet(); if(!g||!u) return u; return u+(u.includes('?')?'&':'?')+'note='+encodeURIComponent('Öğütüm: '+g); }
 async function hbGo(){ const items=hbItems(); if(!items.length) return; const btn=$('hbGoBtn'); if(btn){ btn.disabled=true; btn.textContent=t('jHBusy'); } await jHemenLink(items,null); }

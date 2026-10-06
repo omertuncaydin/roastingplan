@@ -86,3 +86,4 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - **Lane mini ticket** replaces the dashed text box: left "🎟 n davetiyen · sana özel, sonra masaya", perforation with notches, stub with the private countdown ("23 sa"), green **Gönder** (opens the ticket sheet) and "masaya bırak". Used/table states unchanged.
 - **Sheet stub**: "23 sa sana özel" first, "6 gün geçerli" as small print (was only the expiry).
 - `tests/shot-invarrive.mjs` (phone + desktop: lane → pop → sheet); page tests 172.
+- **v2026-10-06h (Ömer: "grind default çekirdek")**: the Hemen-Al grind choice is no longer remembered on the device — every page load starts at Çekirdek; the choice lives only for the current basket.
