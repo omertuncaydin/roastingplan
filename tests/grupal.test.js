@@ -323,13 +323,13 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('jThumb: photo coffee → <img>, no photo → mountain&sun svg', /^<img /.test(wp.__g('jThumb')({img_url:'https://x.test/a.jpg',origin:'Kenya'},50,50)) && /<svg/.test(wp.__g('jThumb')({origin:'Kenya'},50,50)));
     const c=wp.document.querySelector('.jcard[data-id="'+A2.id+'"]'); T('every card is rigged: strip + zone + ring groups; rig closed at rest', !!c && !!c.querySelector('.jwa') && !!c.querySelector('.jwz') && !!c.querySelector('svg.jring .rl') && !!c.querySelector('svg.jring .cg text') && c.__jwa && c.__jwa.state==='closed');
     T('no B strip / C layer left in the markup', !wp.document.querySelector('.jwb') && !wp.document.querySelector('.jwc') && !/jWalkStripHtml|jWalkLayerHtml/.test(html));
-    T('page version bumped to v2026-10-03d', /const VERSION='v2026-10-03d';/.test(html));
+    T('page version bumped to v2026-10-06a', /const VERSION='v2026-10-06a';/.test(html));
     // v11p: the total line has no denominator any more — "Bu oturum n paket · k kahve · r kavruluyor"
     { const MT=JSON.parse(JSON.stringify(MD)); const L=MT.offers.find(o=>o.id===ord[0].id); L.lock={at:'2026-09-30T10:00:00Z',n:1,close:'2026-10-04T20:59:00Z',state:'locked',dep:17,dep_tl:100,forced:true,people:[]}; L.dep=0; L.conv=17; MT.offer_cfg.day_goal=40;
       const wt=mk({'/meydan':MT,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); const tot=MT.offers.reduce((a,o)=>a+(o.dep||0),0), kk=MT.offers.filter(o=>(o.dep||0)>0).length;
-      T('desktop total line: "Bu oturum n paket · k kahve · 17 kavruluyor", no "/40"', wt.document.getElementById('offTot').textContent==='Bu oturum '+tot+' paket · '+kk+' kahve · 17 kavruluyor');
+      T('desktop total line: "Bu oturum n paket · k kahve · önceki oturumdan 17 paket seçildi", no "/40"', wt.document.getElementById('offTot').textContent==='Bu oturum '+tot+' paket · '+kk+' kahve · önceki oturumdan 17 paket seçildi');
       const wp2=mk({'/meydan':MT,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},390); await sleep(250);
-      T('phone total line: same text, no denominator', wp2.document.getElementById('offTot').textContent==='Bu oturum '+tot+' paket · '+kk+' kahve · 17 kavruluyor' && !/\/40/.test(wp2.document.getElementById('offTot').textContent)); } }
+      T('phone total line: same text, no denominator', wp2.document.getElementById('offTot').textContent==='Bu oturum '+tot+' paket · '+kk+' kahve · önceki oturumdan 17 paket seçildi' && !/\/40/.test(wp2.document.getElementById('offTot').textContent)); } }
   // v11q (Ömer 2026-10-03 "FIX IT"): Hemen-Al basket — a second coffee does not replace the first: the page remembers, one /hemen-link carries every item
   { const MB=JSON.parse(JSON.stringify(MD)); const B0=MB.offers.find(o=>o.id===ord[0].id), B1=MB.offers.find(o=>o.id===ord[1].id), B2=MB.offers.find(o=>o.id===ord[2].id);
     for(const [o,v,p] of [[B0,222,1280],[B1,333,990],[B2,444,880]]){ o.img_url='https://x.test/o/'+v+'.jpg'; o.hemen={url:'https://coffeenutz.net/cart/'+v+':1',price:p,base:3,sold:0,inv:0,left:3,green_left:null,table:[],roast_at:'2026-10-05T20:59:00.000Z'}; o.list_tl=1600; }
