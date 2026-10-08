@@ -154,7 +154,7 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
       w.eval("hbDel('"+H0.id+"')"); await sleep(40); T('sepetten çıkar → basket empty, lane back to Sepete ekle · price, bar hidden', w.__g('hbItems')().length===0 && w.document.querySelector('.jcard.lopen .jlane.ha .cta').textContent==='Sepete ekle · 1.280 TL' && w.document.getElementById('hbBar').style.display==='none');
       w.fetch=f0; w.eval("window.__jToast=null; jLaneClose()"); await sleep(40); }
     w.eval("dbClear(); jLaneOpen('"+H1.id+"')"); await sleep(40); sh=w.document.querySelector('.jcard.lopen .jlanes-w');
-    T('no-ticket lane (v12l tickets only): full, CTA off says "bilet kalmadı", status invites a kapora (+2 bilet)', sh.querySelector('.jlane.ha').classList.contains('full') && sh.querySelector('.jlane.ha .cta').classList.contains('off') && sh.querySelector('.jlane.ha .cta').textContent==='bilet kalmadı' && !sh.querySelector('.jlane.ha .cta').getAttribute('onclick') && sh.querySelector('.jlane.ha .st').textContent.includes('Bilet kalmadı — kapora koy, +2 bilet'));
+    T('no-ticket lane (v12m ticket = Hemen-Al): full, CTA "Kapora koy · 2 bilet senin" → jLaneKap, status "Bilet kalmadı — kapora koy, +2 bilet"', sh.querySelector('.jlane.ha').classList.contains('full') && sh.querySelector('.jlane.ha .cta').classList.contains('gate') && sh.querySelector('.jlane.ha .cta').textContent==='Kapora koy · 2 bilet senin' && sh.querySelector('.jlane.ha .cta').getAttribute('onclick').includes('jLaneKap') && sh.querySelector('.jlane.ha .st').textContent.includes('Bilet kalmadı — kapora koy, +2 bilet'));
     w.eval("jLaneOpen('"+H2.id+"','ABCD2345')"); await sleep(40); sh=w.document.querySelector('.jcard.lopen .jlanes-w');
     T('table pick: Hemen-Al lane marked davetli, CTA Biletle al with the code', sh.querySelector('.jlane.ha .lt').textContent==='Hemen-Al · davetli' && sh.querySelector('.jlane.ha .cta').textContent==='Biletle al · 1.280 TL' && sh.querySelector('.jlane.ha .cta').getAttribute('onclick').includes("jHemenGo('"+H2.id+"','ABCD2345')") && !sh.querySelector('.jlane.ha').classList.contains('full'));
     w.eval("jLaneClose(); jLaneOpen('"+H2.id+"')"); await sleep(40); sh=w.document.querySelector('.jcard.lopen .jlanes-w');
@@ -330,7 +330,7 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('jThumb: photo coffee → <img>, no photo → mountain&sun svg', /^<img /.test(wp.__g('jThumb')({img_url:'https://x.test/a.jpg',origin:'Kenya'},50,50)) && /<svg/.test(wp.__g('jThumb')({origin:'Kenya'},50,50)));
     const c=wp.document.querySelector('.jcard[data-id="'+A2.id+'"]'); T('every card is rigged: strip + zone + ring groups; rig closed at rest', !!c && !!c.querySelector('.jwa') && !!c.querySelector('.jwz') && !!c.querySelector('svg.jring .rl') && !!c.querySelector('svg.jring .cg text') && c.__jwa && c.__jwa.state==='closed');
     T('no B strip / C layer left in the markup', !wp.document.querySelector('.jwb') && !wp.document.querySelector('.jwc') && !/jWalkStripHtml|jWalkLayerHtml/.test(html));
-    T('page version bumped to v2026-10-08h', /const VERSION='v2026-10-08l';/.test(html));
+    T('page version bumped to v2026-10-08h', /const VERSION='v2026-10-08m';/.test(html));
     // v11p: the total line has no denominator any more — "Bu oturum n paket · k kahve · r kavruluyor"
     { const MT=JSON.parse(JSON.stringify(MD)); const L=MT.offers.find(o=>o.id===ord[0].id); L.lock={at:'2026-09-30T10:00:00Z',n:1,close:'2026-10-04T20:59:00Z',state:'locked',dep:17,dep_tl:100,forced:true,people:[]}; L.dep=0; L.conv=17; MT.offer_cfg.day_goal=40;
       const wt=mk({'/meydan':MT,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); const tot=MT.offers.reduce((a,o)=>a+(o.dep||0),0), kk=MT.offers.filter(o=>(o.dep||0)>0).length;
@@ -431,10 +431,18 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('130 on the table, list of 12 → chip "130 kaldı"', /130 kaldı/.test(tag(P1.id)));
     T('no tickets at all: chip "bilet kalmadı"', /bilet kalmadı/.test(tag(P2.id)));
     wp.eval("jLaneOpen('"+P0.id+"')"); await sleep(40); let lp=wp.document.querySelector('.jcard.lopen .jlane.ha');
-    T('private-phase lane: status "Biletler jüride — 24 saat içinde masaya", CTA off "biletler jüride"', /Biletler jüride — 24 saat içinde masaya/.test(lp.querySelector('.st').textContent) && lp.querySelector('.cta').textContent==='biletler jüride' && lp.querySelector('.cta').classList.contains('off'));
+    T('private-phase lane: status "Biletler jüride — 24 saat içinde masaya", CTA still "Kapora koy · 2 bilet senin"', /Biletler jüride — 24 saat içinde masaya/.test(lp.querySelector('.st').textContent) && lp.querySelector('.cta').textContent==='Kapora koy · 2 bilet senin' && !lp.querySelector('.cta').classList.contains('off'));
+    T('no-ticket lanes carry the quiet ask link (no gate needed)', !!lp.querySelector('.why.hask a'));
     wp.eval("jLaneClose(); jLaneOpen('"+P1.id+"')"); await sleep(40); lp=wp.document.querySelector('.jcard.lopen .jlane.ha');
     T('table lane: "130 kaldı", Masadan al, "+129 daha masada"', /^130/.test(lp.querySelector('.qt').textContent) && /Masadan al/.test(lp.querySelector('.cta').textContent) && /\+129 daha masada/.test(lp.querySelector('.why').textContent));
-    T('plain page counts the same 130 and skips the private-only and empty coffees', (()=>{ const L=wp.__g("jSecList('all')"); return L.some(o=>o.id===P1.id) && !L.some(o=>o.id===P0.id) && !L.some(o=>o.id===P2.id); })() && !/kota dolu/.test(html)); }
+    T('plain page counts the same 130 and skips the private-only and empty coffees', (()=>{ const L=wp.__g("jSecList('all')"); return L.some(o=>o.id===P1.id) && !L.some(o=>o.id===P0.id) && !L.some(o=>o.id===P2.id); })() && !/kota dolu/.test(html));
+    // v12m: bilet = 1 paket — a juror with 3 private tickets buys up to 3 with them; a stranger's table ticket stays 1
+    const wq=mk({'/meydan':MP,'/offer-mine':{votes:[{id:P0.id,paid:true,qty:1}],inv:[{c:'MY1',id:P0.id,st:'p',at:'2026-09-23T10:00:00Z',exp:'2026-09-30T10:00:00Z',n:'Ömer'},{c:'MY2',id:P0.id,st:'p',at:'2026-09-23T10:00:00Z',exp:'2026-09-30T10:00:00Z',n:'Ömer'},{c:'MY3',id:P0.id,st:'t',at:'2026-09-22T10:00:00Z',exp:'2026-09-30T10:00:00Z',n:'Ömer'}],hemen:[]},'/campaigns':[]},390); await sleep(250);
+    T('jTicketMax: own ticket → 3 (p + t), stranger table code → 1', wq.__g("jTicketMax(STATE.offers.find(o=>o.id==='"+P0.id+"'),'MY1')")===3 && wq.__g("jTicketMax(STATE.offers.find(o=>o.id==='"+P1.id+"'),'T0')")===1);
+    wq.eval("jHemenGo('"+P0.id+"','MY1',1)"); await sleep(40); wq.eval("hbQty('"+P0.id+"',1); hbQty('"+P0.id+"',1); hbQty('"+P0.id+"',1)"); await sleep(40);
+    T('basket with own ticket: + + + → 3, capped at the tickets held; /hemen-link items carry qty 3 + the code', wq.__g('hbItems')()[0].qty===3 && wq.__g('hbItems')()[0].inv==='MY1');
+    wq.eval("jHemenGo('"+P1.id+"','T0',1)"); await sleep(40); wq.eval("hbQty('"+P1.id+"',1)"); await sleep(40);
+    T('stranger with a table ticket: + does nothing (1)', wq.__g('hbItems')().find(i=>i.id===P1.id).qty===1); }
   // v12a (Ömer, forum link): grup-al.com/juri?hemen=1 opens the Hemen-Al picker (Benim için seç) by itself; without the param nothing opens
   { const MB=JSON.parse(JSON.stringify(MD)); const B0=MB.offers.find(o=>o.id===ord[0].id); B0.img_url='https://x.test/o/1.jpg'; B0.hemen={url:'https://coffeenutz.net/cart/222:1',price:990,base:3,sold:0,inv:0,left:3,green_left:null,table:[],roast_at:'2026-10-05T20:59:00.000Z'}; B0.list_tl=1240;
     const wl=mk({'/meydan':MB,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},390,'https://grup-al.com/juri?hemen=1'); await sleep(600);
@@ -473,6 +481,6 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('Sepete ekle → basket has it (2), sheet stays open with "Sepete git → 1.710 TL" + başka kahve seç + sepetten çıkar; bar shown', ws.__g('hbItems')().length===1 && ws.__g('hbItems')()[0].qty===2 && !!ws.document.querySelector('#jSheet .jsec') && ws.document.querySelector('#jSheet .rc .go').textContent==='Sepete git → 1.710 TL' && ws.document.querySelector('#jSheet .rc .go').getAttribute('onclick')==='hbGo()' && /başka kahve seç/.test(ws.document.querySelector('#jSheet .rc .alt').textContent) && ws.document.getElementById('hbBar').style.display==='flex');
     ws.eval("jSecK('cn')"); await sleep(40); T("CoffeeNutz'ın 5'i filter lists only starred coffees with an open door", ws.__g("jSecList('cn')").every(o=>ws.__g("jTop(STATE.offers.find(x=>x.id==='"+o.id+"'))")));
     const wd=mk({'/meydan':MS,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); T('desktop (D1): filled block is the first thing in the sidebar; sheet renders the same card', !!wd.document.querySelector('.jdk-side .jsecb.jsecd') && wd.document.querySelector('.jdk-side').firstElementChild.classList.contains('jsecd') && /Jürinin seçimi/.test(wd.document.querySelector('.jdk-side .jsecd').textContent) && (wd.eval("jSecOpen()"), true) && !!wd.document.querySelector('#jSheet .jsec .rc'));
-    T('page version bumped to v2026-10-08h', /const VERSION='v2026-10-08l';/.test(html)); }
+    T('page version bumped to v2026-10-08h', /const VERSION='v2026-10-08m';/.test(html)); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })().catch(e=>{ console.log('CRASH',e.message,e.stack.split('\n').slice(0,3).join(' / ')); process.exit(1); });

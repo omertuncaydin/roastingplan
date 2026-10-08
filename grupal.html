@@ -791,7 +791,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-10-08l';
+const VERSION='v2026-10-08m';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1429,6 +1429,7 @@ function jHemen(o){ return !!(o&&o.hemen&&o.hemen.url&&Number(o.hemen.price)>0);
 function jHemenLeft(o){ return jHemen(o)?Math.max(0,parseInt(o.hemen.left)||0):0; }
 function jTableOf(o){ return (jHemen(o)&&Array.isArray(o.hemen.table))?o.hemen.table.filter(x=>x&&x.c):[]; }
 function jMyInv(id){ return (OFFINV||[]).filter(i=>i&&i.id===id&&(i.st==='p'||i.st==='t')); }
+function jTicketMax(o,c){ if(!o||!c) return 1; const mine=jMyInv(o.id); return mine.some(i=>i.c===c)?Math.max(1,Math.min(6,mine.length)):1; }   // v12m (proxy v3.64): bilet = 1 paket — kendi biletlerin kadar, başkasının masa bileti 1
 // v10i (Ömer "masaya bıraktım, 2 kaldı değişmedi"): açık koltuk = kota + masadaki davetiyeler (ikisi de ilk gelenin) — tek sayı; masadakiler ayrıca not düşülür
 function jTableN(o){ const n=jHemen(o)?parseInt(o.hemen.table_n):NaN; return isNaN(n)?jTableOf(o).length:Math.max(n,jTableOf(o).length); }   // v12l (proxy v3.63): masadaki toplam — liste 12 ile sınırlı
 function jHemenPriv(o){ return jHemen(o)?Math.max(0,parseInt(o.hemen.priv)||0):0; }   // v12l: henüz jüride (özel) biletler
@@ -1589,7 +1590,7 @@ function hbRaw(){ try{ const o=JSON.parse(localStorage.getItem('grupal_hbasket')
 function hbSave(o){ try{ localStorage.setItem('grupal_hbasket',JSON.stringify(o)); }catch(e){} }
 function hbGet(){ const o=hbRaw(), now=Date.now(), list=(STATE&&STATE.offers)||[]; const out={}; for(const id in o){ const it=o[id]; if(!it||!(now-(parseInt(it.at)||0)<HB_MS)) continue; if(STATE&&!jHemen(list.find(x=>x.id===id))) continue; out[id]=it; } return out; }
 function hbAdd(id,q,c){ const o=hbRaw(); o[id]={q:Math.max(1,parseInt(q)||1),c:c||null,at:Date.now()}; hbSave(o); }
-function hbQty(id,d){ const o=hbRaw(); const it=o[id]; if(!it) return; const of=((STATE&&STATE.offers)||[]).find(x=>x.id===id); const q=(parseInt(it.q)||1)+(d||0); if(q<=0){ hbDel(id); return; } it.q=Math.min(it.c?1:jHemenMax(of),q); it.at=Date.now(); hbSave(o); renderOffers(STATE); }   // v11t: sağ sayaç — sepetteki Hemen-Al adedi (davetiye = 1)
+function hbQty(id,d){ const o=hbRaw(); const it=o[id]; if(!it) return; const of=((STATE&&STATE.offers)||[]).find(x=>x.id===id); const q=(parseInt(it.q)||1)+(d||0); if(q<=0){ hbDel(id); return; } it.q=Math.min(it.c?jTicketMax(of,it.c):jHemenMax(of),q); it.at=Date.now(); hbSave(o); renderOffers(STATE); }   // v11t: sağ sayaç — sepetteki Hemen-Al adedi · v12m: bilet = 1 paket, kendi biletlerin kadar
 function hbDel(id,quiet){ const o=hbRaw(); delete o[id]; hbSave(o); if(!quiet) renderOffers(STATE); }
 function hbClear(){ hbSave({}); renderOffers(STATE); }
 function hbPrune(){ const o=hbRaw(); let ch=false; for(const id in o){ const at=parseInt(o[id]&&o[id].at)||0; if((OFFHEMEN||[]).some(h=>h.id===id&&h.at&&new Date(h.at).getTime()>at-60000)){ delete o[id]; ch=true; } } if(ch) hbSave(o); }   // ödendi → sepetten düş
@@ -1625,7 +1626,7 @@ async function jHemenLink(items,retried){ const ac=(typeof AbortController!=='un
     jMsg(t(k).replace('{n}',(j&&j.taker)||'')+((j&&j.error)?(' · '+String(j.error).slice(0,90)):''),(j&&j.error)?6000:3200); renderOffers(STATE); return false; }   // v10f: proxy hata metni toast'ta (teşhis)
   catch(e){ jMsg(t((e&&e.name==='AbortError')?'jHSlow':'jHErr'),3200); renderOffers(STATE); return false; }
   finally{ if(tm) clearTimeout(tm); } }
-async function jHemenGo(id,c,qty){ const o=((STATE&&STATE.offers)||[]).find(x=>x.id===id); if(!jHemen(o)) return; qty=c?1:Math.max(1,Math.min(jHemenMax(o),parseInt(qty)||1));
+async function jHemenGo(id,c,qty){ const o=((STATE&&STATE.offers)||[]).find(x=>x.id===id); if(!jHemen(o)) return; qty=c?Math.max(1,Math.min(jTicketMax(o,c),parseInt(qty)||1)):Math.max(1,Math.min(jHemenMax(o),parseInt(qty)||1));   // v12m: biletle N paket
   hbAdd(id,qty,c); JHQ=null; if(JLANE&&JLANE.id===id) JLANE.anim='kap'; if(JSHEET&&JSHEET.mode==='hemen') JSHEET=null; renderOffers(STATE); }   // v11u: 'sec' sayfası açık kalır → Sepete git / başka kahve   // v11r (Ömer): kapora gibi — sepete ekle, sayfada kal; Shopify'a çubuktaki "Sepete git →" götürür (sepetteki her şey, tek kod)
 function jNavigate(u){ location.href=u; }   // v10d: tek kullanımlık indirim kodlu sepet linki (proxy v3.39); testte ezilir
 function jRoastD(o){ const d=o&&o.hemen&&o.hemen.roast_at; if(!d) return ''; try{ return cyD(new Date(d).toISOString()); }catch(e){ return ''; } }
@@ -1665,7 +1666,7 @@ function jSheetHtml(){ if(!JSHEET) return ''; const list=(STATE&&STATE.offers)||
   if(JSHEET.mode==='sec') return jSecHtml();   // v11u: Benim için seç (maket B)
   if(JSHEET.mode==='hemen'){ const o=list.find(x=>x.id===JSHEET.id); if(!o||!jHemen(o)) return ''; const hm=o.hemen; const tb=jTableOf(o); const seat=JSHEET.c?tb.find(x=>x.c===JSHEET.c):null; const rd=jRoastD(o);   // v11j: 'al ›' → doğrudan satın alma
     return '<div class="jhpop"><div class="jsh-h"><b>'+t('jHPopT').replace('{coffee}',escZ(jShort(o.name)))+'</b><span class="x" onclick="jSheetClose()">✕ '+t('jSheetX')+'</span></div><div class="jsh-sub">'+(seat?(t('jHPopInv').replace('{n}',escZ(jGen(seat.n)))+' · '):'')+'✓ '+t('jHRoast')+'</div>'
-      +'<div class="jhpr"><b>'+fmtTL(hm.price)+' TL</b>'+(o.list_tl?('<s>'+fmtTL(o.list_tl)+'</s>'):'')+(jPct(o.list_tl,hm.price)?('<span class="jpct">%'+jPct(o.list_tl,hm.price)+'</span>'):'')+'<span class="hint">· 250 g · '+(JSHEET.c?t('jHQInv'):t('jHQMax').replace('{n}',jHemenMax(o)))+'</span></div>'
+      +'<div class="jhpr"><b>'+fmtTL(hm.price)+' TL</b>'+(o.list_tl?('<s>'+fmtTL(o.list_tl)+'</s>'):'')+(jPct(o.list_tl,hm.price)?('<span class="jpct">%'+jPct(o.list_tl,hm.price)+'</span>'):'')+'<span class="hint">· 250 g · '+(JSHEET.c?((jTicketMax(o,JSHEET.c)>1?(t('jHQMax').replace('{n}',jTicketMax(o,JSHEET.c))+' · '):'')+t('jHQInv')):t('jHQMax').replace('{n}',jHemenMax(o)))+'</span></div>'
       +'<div class="jlg"><button class="go" onclick="jHemenGo(\''+escZ(o.id)+'\','+(JSHEET.c?('\''+escZ(JSHEET.c)+'\''):'null')+',1)">'+(JSHEET.c?t('jLaneBuyInv'):t('jLaneBuy')).replace('{p}',fmtTL(hm.price))+'</button></div></div>'; }
   return ''; }
 // v10c: şeritler — kartın içinde (deste + ızgara) ve masaüstü çekmecesinde aynı yapı
@@ -1715,7 +1716,7 @@ function jLanesHtml(o,pick0){ const cfg=offCfg(), G=cfg.goal;
     else if(myInv.length){ code=myInv[0].c; cls=' inv'; cta=t('jLaneBuyInv').replace('{p}',fmtTL(hm.price)); }
     else if(tb.length){ code=tb[0].c; cls=' inv'; cta=t('jTblSeat').replace('{n}',escZ(jGen(tb[0].n))); }   // v10m: en eski masadaki koltuk, sahibinin adıyla
     else if(jHemenGate(o)){ cta=t('jLaneGateCta').replace('{k}',kInv); cls=' gate'; }   // v12e (proxy v3.60 jüri açar): kapı kapalı → kapora koy
-    else { cta=jHemenPriv(o)?t('jHPriv'):t('jHFull'); cls=' off'; }   // v12l: yalnız bilet — özel biletler masaya düşene kadar 'biletler jüride'
+    else { cta=t('jLaneGateCta').replace('{k}',kInv); cls=' gate'; }   // v12m: bilet yoksa tek yol kapora — düğme hiç 'kapalı' olmaz (durum satırı neden yok diyor)
     const rd=jRoastD(o);
     h+='<div class="jlane ha'+(full?' full':'')+'">'+(rd?('<span class="cal">Pzt<b>'+escZ(rd)+'</b></span>'):'')+'<div class="lt">'+t('jHA')+(pick?(' · '+t('jHAInv')):'')+'</div><div class="lp">'+fmtTL(hm.price)+'<small>TL</small></div><div class="ls">'+(o.list_tl?('<s>'+t('offListP')+fmtTL(o.list_tl)+'</s>'):'')+(jPct(o.list_tl,hm.price)?('<span class="jpct">%'+jPct(o.list_tl,hm.price)+'</span>'):'')+'</div>'
       +'<div class="qt"><b>'+jHemenOpen(o)+'</b> '+t('jHLeft').replace('{n} ','')+'</div>'

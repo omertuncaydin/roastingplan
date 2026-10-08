@@ -134,3 +134,9 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - **Page**: card chip and lane: "biletler jüride" while tickets are private (status "Biletler jüride — 24 saat içinde masaya"), "bilet kalmadı" when none (was "doldu"); all counts use `table_n` (130 kaldı, +129 daha masada); "kota" wording removed from the ticket/table texts.
 - **Plumbing for volume**: `pgAll` pages every full read of `grupal_settings` and `grupal_offer_votes` in 1000s (Supabase max‑rows silently truncated past 1000 — raise "Max rows" in Supabase → Project Settings → API as well); Shopify GraphQL THROTTLED/429 → 1 s wait, 2 retries.
 - Tests: page 196, proxy 225 (1311 table tickets / 1100 Hemen‑Al rows read in full; throttle retry), admin 48, middleware 11.
+
+## v12m (2026-10-08) — ticket = Hemen-Al (proxy v3.64) · admin v2026-10-08d
+- **Bilet = 1 paket (Ömer)**: a juror buys N packages with N of her own tickets — `/hemen-link {id, qty, inv}` takes `qty` of the device's own private/table tickets (`attributes[inv]` carries them all), the webhook marks all of them used; a stranger's table ticket stays one per coffee per cycle (kişi başı kural unchanged). Page: basket stepper goes up to the tickets held (`jTicketMax`), sheet hint "en çok n · bilet = 1 paket".
+- **No quota, no gate controls**: admin Ayarlar lost "açık koltuk" and "jüri açar"; the offer form lost "Hemen-Al açık koltuk" and "Hemen-Al'ı aç" (saving an offer clears `meta.hemen_base/hemen_open`). The proxy still honours a hand-set `offer_hemen_base` (default 0) so the old pool tests keep running; nothing in the UI can set it.
+- **Lane**: the Hemen-Al button is never disabled — with no ticket to take it is always "Kapora koy · k bilet senin"; the status line says why (Jüri açar / Biletler jüride / Bilet kalmadı); the quiet "Hemen-Al istiyorum ›" sits under it whenever the table is empty (proxy `/offer-ask` no longer requires the gate).
+- Tests: page 200, proxy 234, admin 48.

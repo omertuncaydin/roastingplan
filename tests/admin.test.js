@@ -17,7 +17,7 @@ function mk(variants){
   return w;
 }
 (async()=>{
-  T('admin version bumped', /const VERSION='v2026-10-08c';/.test(html));
+  T('admin version bumped', /const VERSION='v2026-10-08d';/.test(html));
   let w=mk(VARS); const g=w.__g;
   // 1. cart permalink passes through (www stripped)
   let r=await g('cartLinkFrom')('https://www.coffeenutz.net/cart/123:1','oe_hemen',1240); T('cart permalink accepted, www stripped', r==='https://coffeenutz.net/cart/123:1');
@@ -109,7 +109,7 @@ function mk(variants){
     w.__g("OFFERS=[{id:'11111111-1111-4111-8111-111111111111',name:'El Recreo',active:true,published:true,dep:0,n:2,seated:0,ask:3,meta:{}},{id:'22222222-2222-4222-8222-222222222222',name:'Baho',active:true,published:true,dep:3,n:3,seated:0,ask:0,meta:{}}]; OFFCFG={goal:40,dep_url:'https://coffeenutz.net/cart/1:1'}; renderOffersAdmin();");
     const L=w.document.getElementById('offList').textContent; T('row shows "✋ 3 Hemen-Al isteği" only where asks exist', /✋ 3 Hemen-Al isteği/.test(L) && (L.match(/Hemen-Al isteği/g)||[]).length===1);
     w.__g("offEdit('11111111-1111-4111-8111-111111111111')"); const b=[...w.document.querySelectorAll('#offList button')].find(x=>/İsteyenlere bilet ver/.test(x.textContent));
-    T('edit form: "İsteyenlere bilet ver · 3 kişi" button next to the Hemen-Al\'ı aç checkbox', !!b && b.textContent==='İsteyenlere bilet ver · 3 kişi' && !!w.document.getElementById('oe_hopen'));
+    T('edit form: "İsteyenlere bilet ver · 3 kişi" button; no quota input, no "Hemen-Al\'ı aç" checkbox any more (v2026-10-08d ticket = Hemen-Al)', !!b && b.textContent==='İsteyenlere bilet ver · 3 kişi' && !w.document.getElementById('oe_hopen') && !w.document.getElementById('oe_hbase') && !w.document.getElementById('s_hbase') && !w.document.getElementById('s_hopen') && !!w.document.getElementById('oe_green'));
     w.confirm=()=>false; await w.__g('askGrant')('11111111-1111-4111-8111-111111111111'); T('confirm cancelled → nothing sent', calls.length===0);
     w.confirm=()=>true; await w.__g('askGrant')('11111111-1111-4111-8111-111111111111'); T('→ POST /admin/ask-grant {id}; alert "3 bilet · 3 kişi · atlanan … 1"', calls.length===1 && calls[0].id==='11111111-1111-4111-8111-111111111111' && w.alerts.some(a=>/^3 bilet · 3 kişi · atlanan \(zaten bileti\/kaporası var\) 1$/.test(a)));
     w.__g("offEdit('22222222-2222-4222-8222-222222222222')"); T('no asks → no button', ![...w.document.querySelectorAll('#offList button')].some(x=>/İsteyenlere bilet ver/.test(x.textContent))); }

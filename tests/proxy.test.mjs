@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.63 tag', r.json && r.json.v === '3.63');
+T('v3.64 tag', r.json && r.json.v === '3.64');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -340,7 +340,7 @@ Date.now = realNow;
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.63');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.64');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
@@ -501,4 +501,23 @@ Date.now = realNow;
   const G2 = '10000000-0000-4000-8000-00000000a002'; r = await px.call('POST', '/admin/settings', { offer_hemen_base: '3' }, KEYH); px.DB.__throttle = 2; px.DB.__throttled = 0;   // a quota again, so the walk-in link path (discount mutation) runs
   r = await px.call('POST', '/hemen-link', { dev: 'THROTTLE01', items: [{ id: G2, qty: 1 }] }); T('THROTTLED twice → retried, link created', r.json.ok === true && px.DB.__throttled === 2 && /discount=/.test(r.json.url));
   NOW -= 25 * 3600000; Date.now = () => NOW; r = await px.call('POST', '/admin/settings', { offer_hemen_inv: '2', offer_hemen_base: '3' }, KEYH); px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '0'; }
+// ---- v3.64: ticket = Hemen-Al — one ticket is one package: a juror buys N packages with N of her own tickets; a stranger's table ticket stays 1; ask allowed whenever the table is empty
+{ Date.now = () => NOW; const KEYH = { 'x-cc-key': 'adminkey' };
+  const G4 = '10000000-0000-4000-8000-00000000a004'; px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '1';
+  r = await px.call('POST', '/admin/settings', { offer_hemen_base: '' }, KEYH);   // no quota (default)
+  r = await px.call('GET', '/offer-mine?dev=TKONLY0001'); const mine = r.json.inv.filter(i => i.id === G4 && i.st === 'p'); T('fixture: the juror holds 11 private tickets on G4', mine.length === 11);
+  r = await px.call('POST', '/hemen-link', { dev: 'TKONLY0001', items: [{ id: G4, qty: 3, inv: mine[0].c }] });
+  T('own tickets: qty 3 with one code → 3 tickets taken, /cart/604:3, attributes[inv] carries 3 codes, via inv', r.json.ok === true && r.json.qty === 3 && /\/cart\/604:3\?/.test(r.json.url) && decodeURIComponent((/attributes\[inv\]=([^&]+)/.exec(r.json.url) || [])[1] || '').split(',').length === 3 && r.json.via === 'inv');
+  const codes3 = decodeURIComponent((/attributes\[inv\]=([^&]+)/.exec(r.json.url) || [])[1]).split(',');
+  r = await hook({ hemen: '1', offer: G4, dev: 'TKONLY0001', inv: codes3.join(',') }, { id: 98301, name: 'Ten', email: 'ten@example.com', qty: 3 });
+  T('webhook: 3 packages → the 3 tickets are marked used', /^ok/.test(r.text) && codes3.every(c => JSON.parse(px.DB.grupal_settings.find(x => x.key === 'inv_' + c).value).st === 'u'));
+  r = await px.call('GET', '/offer-mine?dev=TKONLY0001'); T('the juror has 8 private tickets left', r.json.inv.filter(i => i.id === G4 && i.st === 'p').length === 8);
+  r = await px.call('POST', '/hemen-link', { dev: 'TKONLY0001', items: [{ id: G4, qty: 20, inv: r.json.inv.find(i => i.id === G4 && i.st === 'p').c }] }); T('qty above the tickets held is capped (8 left, asked 20 → capped by the request cap 6)', r.json.ok === true && r.json.qty === 6);
+  // a stranger on the table: still one ticket per coffee per cycle
+  NOW += 25 * 3600000; r = await px.call('GET', '/meydan'); let g4 = r.json.offers.find(o => o.id === G4); T('25 h later the 8 are on the table', g4.hemen.table_n === 8);
+  r = await px.call('POST', '/hemen-link', { dev: 'STRANGER01', items: [{ id: G4, qty: 3, inv: g4.hemen.table[0].c }] }); T('a stranger asking 3 from the table gets 1 (kişi başı kural)', r.json.ok === true && r.json.qty === 1);
+  r = await px.call('POST', '/offer-ask', { dev: 'STRANGER02', id: G4 }); T('ask refused while tickets sit on the table (reason open)', r.json.ok === false && r.json.reason === 'open');
+  const G2 = '10000000-0000-4000-8000-00000000a002'; r = await px.call('GET', '/meydan'); const g2 = r.json.offers.find(o => o.id === G2);
+  r = await px.call('POST', '/offer-ask', { dev: 'STRANGER03', id: G2 }); T('ask allowed on an open coffee whose table is empty (no gate condition any more)', g2.hemen.table_n === 0 && g2.hemen.left === 0 && r.json.ok === true);
+  NOW -= 25 * 3600000; Date.now = () => NOW; px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '0'; }
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);
