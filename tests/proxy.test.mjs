@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.66 tag', r.json && r.json.v === '3.66');
+T('v3.67 tag', r.json && r.json.v === '3.67');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 10 (seeded) / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 10 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -177,7 +177,7 @@ r = await px.call('POST', '/admin/inv-backfill', {}, { 'x-cc-key': 'adminkey' })
 T('backfill mints 10×qty for old kapora rows without invitations (30 = 20 + 10), skips forfeited, no-lane and already-minted', r.json.ok && r.json.minted === 30 && r.json.devs === 2 && r.json.skipped.done === 1 && r.json.skipped.nolane === 1 && r.json.skipped.had >= 3 && r.json.skipped.hemen === 7);
 const mine = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).map(x => JSON.parse(x.value)).filter(j => j.dev === 'OLDDEV0001');
 T('20 private invitations for OLDDEV0001 on A, named from the e-mail, flagged bf', mine.length === 20 && mine.every(j => j.o === A && j.st === 'p' && j.n === 'Ayse' && j.bf === 1));
-r = await px.call('GET', '/offer-mine?dev=OLDDEV0001'); T('/offer-mine shows the backfilled tickets to that device', r.json && Array.isArray(r.json.inv) && r.json.inv.filter(i => i.id === A && i.st === 'p').length === 20);
+r = await px.call('GET', '/offer-mine?dev=OLDDEV0001'); T('/offer-mine shows the backfilled tickets to that device — v3.67: dated from the kapora, so already on the table (t), 7 days from now', r.json && Array.isArray(r.json.inv) && r.json.inv.filter(i => i.id === A && i.st === 't').length === 20 && r.json.inv.filter(i => i.id === A).every(i => new Date(i.exp).getTime() === NOW + 7 * 86400000));
 r = await px.call('POST', '/admin/inv-backfill', {}, { 'x-cc-key': 'adminkey' }); T('second run mints nothing', r.json.ok && r.json.minted === 0 && px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).length === invBefore + 30);
 
 // ---- v3.43: the lane opens later (photo + link via Düzenle, then UYGULA) → the kapora paid on that coffee gets its invitations at UYGULA
@@ -185,7 +185,7 @@ r = await px.call('POST', '/admin/inv-backfill', {}, { 'x-cc-key': 'adminkey' })
   r = await px.call('POST', '/admin/offer-upsert', { id: B, name: ob.name, active: true, sort: ob.sort || 0, meta }, { 'x-cc-key': 'adminkey' }); T('admin sets B\'s photo + Hemen-Al link', r.json.ok);
   r = await px.call('POST', '/admin/offers-apply', {}, { 'x-cc-key': 'adminkey' });
   T('UYGULA mints the missing invitations for the newly opened lane (NOLANE0001 ×1 box → 10)', r.json.ok && r.json.backfill && r.json.backfill.ok && r.json.backfill.minted === 10 && r.json.backfill.devs === 1);
-  r = await px.call('GET', '/offer-mine?dev=NOLANE0001'); T('the kapora payer on B now sees 10 private tickets on B', r.json && r.json.inv.filter(i => i.id === B && i.st === 'p').length === 10);
+  r = await px.call('GET', '/offer-mine?dev=NOLANE0001'); T('the kapora payer on B now sees 10 tickets on B (private or table depending on the kapora age)', r.json && r.json.inv.filter(i => i.id === B && (i.st === 'p' || i.st === 't')).length === 10);
   r = await px.call('POST', '/admin/offers-apply', {}, { 'x-cc-key': 'adminkey' }); T('a second UYGULA mints nothing more', r.json.ok && r.json.backfill.minted === 0); }
 
 // ---- v3.45 auth proxy (dormant, still answers) — a quick smoke only
@@ -342,7 +342,7 @@ Date.now = realNow;
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.66');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.67');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
@@ -530,7 +530,14 @@ Date.now = realNow;
   px.DB.grupal_settings.push({ key: 'mem_meric.k@example.com', value: JSON.stringify({ email: 'meric.k@example.com', dev: 'OLDSESS001', name: 'Meriç Kaya', ok: true }) });
   r = await px.call('POST', '/admin/inv-backfill', { top: 1 }, KEYH);
   const oldTk = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_') && JSON.parse(x.value).dev === 'OLDSESS001').map(x => JSON.parse(x.value));
-  T('v3.66 top-up: TKONLY0001 back to 10; the previous-session kapora gets its 10 too, ticket name = member first name (Meriç), top flag echoed', r.json.ok === true && r.json.top === true && r.json.minted >= 14 && px.DB.grupal_settings.filter(x => x.key.startsWith('inv_') && JSON.parse(x.value).o === G4 && JSON.parse(x.value).dev === 'TKONLY0001').length === 10 && oldTk.length === 10 && oldTk.every(j => j.n === 'Meriç' && j.st === 'p'));
+  T('v3.66 top-up: TKONLY0001 back to 10; the previous-session kapora gets its 10 too, ticket name = member first name (Meriç), top flag echoed', r.json.ok === true && r.json.top === true && r.json.minted >= 14 && px.DB.grupal_settings.filter(x => x.key.startsWith('inv_') && JSON.parse(x.value).o === G4 && JSON.parse(x.value).dev === 'TKONLY0001').length === 10 && oldTk.length === 10 && oldTk.every(j => j.n === 'Meriç'));
+  T('v3.67: tickets for a kapora paid on 20 Sep carry at = 2026-09-20 (24 h long gone → on the table now), exp = now + 7 days', oldTk.every(j => j.at === '2026-09-20T10:00:00.000Z' && new Date(j.exp).getTime() === NOW + 7 * 86400000));
+  r = await px.call('GET', '/meydan'); T('… so /meydan shows them on G4\'s table immediately', r.json.offers.find(o => o.id === G4).hemen.table_n >= 10);
+  // a ticket minted earlier by the button (bf, private, at = today) for an old kapora is re-dated by the top-up
+  px.DB.grupal_settings.push({ key: 'inv_REDATE01', value: JSON.stringify({ o: G4, dev: 'OLDSESS001', n: 'Meriç', at: new Date(NOW).toISOString(), exp: new Date(NOW + 7 * 86400000).toISOString(), st: 'p', oid: null, bf: 1 }) });
+  r = await px.call('POST', '/admin/inv-backfill', { top: 1 }, KEYH); const rd = JSON.parse(px.DB.grupal_settings.find(x => x.key === 'inv_REDATE01').value);
+  T('re-dated: at pulled back to the kapora date, redated counted, nothing extra minted for that kapora', r.json.redated >= 1 && rd.at === '2026-09-20T10:00:00.000Z' && px.DB.grupal_settings.filter(x => x.key.startsWith('inv_') && JSON.parse(x.value).dev === 'OLDSESS001').length === 11);
+  px.DB.grupal_settings = px.DB.grupal_settings.filter(x => x.key !== 'inv_REDATE01');
   r = await px.call('POST', '/admin/inv-backfill', { top: 1 }, KEYH); T('second top-up mints nothing', r.json.ok === true && r.json.minted === 0);
   px.DB.grupal_offer_votes = px.DB.grupal_offer_votes.filter(v => v.dev !== 'OLDSESS001'); px.DB.grupal_settings = px.DB.grupal_settings.filter(x => x.key !== 'mem_meric.k@example.com'); }
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);
