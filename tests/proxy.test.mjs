@@ -11,14 +11,14 @@ let NOW = Date.UTC(2026, 8, 29, 12, 0, 0); const realNow = Date.now; Date.now = 
 const px = await boot(PROXY, {
   grupal_settings: [
     { key: 'meydan_cycle_start', value: '2026-09-27T20:59:00.000Z' }, { key: 'offer_goal', value: '40' }, { key: 'offer_dep_amt', value: '100' },
-    { key: 'offer_dep_url', value: 'https://coffeenutz.net/cart/111:1' }, { key: 'offer_hemen_base', value: '2' } ],
+    { key: 'offer_dep_url', value: 'https://coffeenutz.net/cart/111:1' }, { key: 'offer_hemen_base', value: '2' }, { key: 'offer_hemen_open', value: '0' } /* v3.60: the older fixtures assume lanes open without votes; the jury gate has its own block */ ],
   grupal_offers: [
     { id: A, name: 'El Recreo', origin: 'Kolombiya', process: 'washed', active: true, sort: 1, pub: { name: 'El Recreo', origin: 'Kolombiya', process: 'washed' }, meta: { list_tl: 1600, img_url: 'https://db.test/storage/v1/object/public/grupal/o/a.jpg', hemen_url: 'https://coffeenutz.net/cart/222:1', green_boxes: 4 }, created_at: '2026-09-01T00:00:00Z' },
     { id: B, name: 'Nuwa Senchi', origin: 'Peru', process: 'washed', active: true, sort: 2, pub: { name: 'Nuwa Senchi', origin: 'Peru', process: 'washed' }, meta: { list_tl: 1500 }, created_at: '2026-09-01T00:00:00Z' } ] });
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.59 tag', r.json && r.json.v === '3.59');
+T('v3.60 tag', r.json && r.json.v === '3.60');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -340,7 +340,7 @@ Date.now = realNow;
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.59');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.60');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
@@ -424,5 +424,28 @@ Date.now = realNow;
     T('close 2: the flagged ×2 vote joined Roll Three\'s lot (created_at = lock time, converted), lot 40 → 42', m5 && m5.qty === 2 && new Date(m5.created_at).getTime() === C1 - 1000 && lj.dep === 42);
     const z3 = px.DB.grupal_offer_votes.find(v => v.offer_id === R2 && v.dev === 'RZ00000003'); T('a voter already in the lot keeps the Roll Two vote and the flag', !!z3 && !!rk(R2, 'RZ00000003')); }
   r = await px.call('GET', '/offer-mine?dev=RX00000005'); T('/offer-mine for the lot-joiner: converted on Roll Three, moved[] lot:true', r.json.votes.find(v => v.id === R3).conv === true && r.json.moved[0].lot === true && r.json.moved[0].q === 2);
+  Date.now = () => NOW; }
+// ---- v3.60: "jüri açar" — the Hemen-Al quota opens only on a coffee with jury votes (offer_hemen_open, default 1); tickets and table seats ignore it; meta.hemen_open overrides
+{ Date.now = () => NOW; const KEYH = { 'x-cc-key': 'adminkey' };
+  const G1 = '10000000-0000-4000-8000-00000000a001', G2 = '10000000-0000-4000-8000-00000000a002';
+  px.DB.grupal_offers.push({ id: G1, name: 'Gate One', origin: 'Peru', process: 'washed', active: true, sort: 40, pub: { name: 'Gate One', origin: 'Peru', process: 'washed' }, meta: { list_tl: 1600, img_url: 'https://db.test/g1.jpg', hemen_url: 'https://coffeenutz.net/cart/601:1' }, created_at: '2026-09-01T00:00:00Z' },
+    { id: G2, name: 'Gate Two', origin: 'Peru', process: 'washed', active: true, sort: 41, pub: { name: 'Gate Two', origin: 'Peru', process: 'washed' }, meta: { list_tl: 1600, img_url: 'https://db.test/g2.jpg', hemen_url: 'https://coffeenutz.net/cart/602:1', hemen_open: true }, created_at: '2026-09-01T00:00:00Z' });
+  px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '1';
+  r = await px.call('GET', '/meydan'); let g1 = r.json.offers.find(o => o.id === G1), g2 = r.json.offers.find(o => o.id === G2);
+  T('no votes → lane exists but quota closed: base 0, left 0, gate jury, need 1; cfg carries hemen_open 1', g1.hemen && g1.hemen.base === 0 && g1.hemen.left === 0 && g1.hemen.gate === 'jury' && g1.hemen.need === 1 && r.json.offer_cfg.hemen_open === 1);
+  const BASE = parseInt(px.DB.grupal_settings.find(x => x.key === 'offer_hemen_base').value);   // an earlier block set it to 3
+  T('meta.hemen_open → open without votes (admin override)', g2.hemen && g2.hemen.base === BASE && g2.hemen.left === BASE && !g2.hemen.gate);
+  r = await px.call('POST', '/hemen-link', { dev: 'GATEDEV001', items: [{ id: G1, qty: 1 }] }); T('pool link on a gated coffee → full', r.json.ok === false && r.json.reason === 'full');
+  // the first kapora opens the door and mints tickets; a ticket works even while the door is shut
+  r = await hook({ offer: G1, dev: 'GATEHOST01' }, { id: 98001, name: 'Gate Host', email: 'gatehost@example.com' }); T('kapora on the gated coffee counted + tickets', r.text === 'ok (kapora · davetiye ×2)');
+  r = await px.call('GET', '/meydan'); g1 = r.json.offers.find(o => o.id === G1);
+  T('one vote → quota open: base = setting, left = setting, no gate', g1.hemen.base === BASE && g1.hemen.left === BASE && !g1.hemen.gate);
+  px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '3';
+  r = await px.call('GET', '/meydan'); g1 = r.json.offers.find(o => o.id === G1);
+  T('threshold 3 → shut again with need 2', g1.hemen.gate === 'jury' && g1.hemen.need === 2 && g1.hemen.left === 0);
+  const invG = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).map(x => [x.key.slice(4), JSON.parse(x.value)]).find(([c, j]) => j.o === G1 && j.st === 'p')[0];
+  r = await px.call('POST', '/hemen-link', { dev: 'GATEGUEST1', items: [{ id: G1, qty: 1, inv: invG }] }); T('a ticket opens the shut door (via inv)', r.json.ok === true && r.json.items[0].via === 'inv');
+  px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '0';
+  r = await px.call('GET', '/meydan'); g1 = r.json.offers.find(o => o.id === G1); T('setting 0 → old behaviour, always open', !g1.hemen.gate && g1.hemen.left === BASE);
   Date.now = () => NOW; }
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);

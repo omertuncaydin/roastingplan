@@ -280,6 +280,7 @@ details.set.card[open]>summary{margin-bottom:6px}
         <div class="sh">Hemen-Al · beklemeden, %20 (proxy v3.38)</div>
         <div class="g2">
           <div class="f"><span class="lbl">açık koltuk · kahve başına, haftalık (davetiye kotaya bakmaz)</span><input id="s_hbase" inputmode="numeric" placeholder="2"></div>
+          <div class="f"><span class="lbl">jüri açar · kota için en az kaç kapora (0 = oy şartı yok)</span><input id="s_hopen" inputmode="numeric" placeholder="1"></div>
           <div class="f"><span class="lbl">kapora başına davetiye (0 = kapalı, en çok 6/sipariş)</span><input id="s_hinv" inputmode="numeric" placeholder="2"></div>
           <div class="f"><span class="lbl">davetiye özel kalma süresi (saat · sonra masaya çıkar)</span><input id="s_hinvh" inputmode="numeric" placeholder="24"></div>
           <div class="note">Hemen-Al şeridi yalnız <b>görseli</b> ve <b>Hemen-Al linki</b> (Düzenle) olan kahvede görünür: görsel yüklenen kahve stokta sayılır. Sipariş sıradaki Pazartesi kavrulur, 40'a bakmaz; her paket sayıma sayılır. Fiyat = liste × Sepet oranı (%20 için 0,80); Kaporalı fiyat = liste × Kaporalı oranı (%40 için 0,60). Boş alan = varsayılan (2 · 2 · 24).</div>
@@ -354,7 +355,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-10-06a';
+const VERSION='v2026-10-08a';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -531,7 +532,7 @@ async function loadOfferSettings(){
   try{ const r=await fetch(API+'/admin/settings',{headers:{'x-cc-key':KEY}}); const j=await r.json();
     if(j&&j.settings){ const st=j.settings; $('s_depurl').value=st.offer_dep_url||''; $('s_depamt').value=st.offer_dep_amt||''; $('s_goal').value=st.offer_goal||'';
       $('s_depcode').value=st.offer_dep_code||''; $('s_depopen').value='';   // v02y: açılış saati kaldırıldı (kod = her zaman)
-      $('s_cycledays').value=st.offer_cycle_days||''; $('s_capacity').value=st.offer_capacity||''; $('s_donedays').value=st.offer_done_days||''; $('s_sepetdays').value=st.offer_sepet_days||''; $('s_hbase').value=(st.offer_hemen_base!=null)?st.offer_hemen_base:''; $('s_hinv').value=(st.offer_hemen_inv!=null)?st.offer_hemen_inv:''; $('s_hinvh').value=st.offer_hemen_inv_h||''; $('s_forfeit').value=(st.offer_forfeit_mode==='credit'||st.offer_forfeit_mode==='burn')?st.offer_forfeit_mode:'tiered'; $('s_bancycles').value=(st.offer_ban_cycles!=null&&st.offer_ban_cycles!=='')?st.offer_ban_cycles:''; $('s_login').value=(st.login_required==='1')?'1':'0'; $('s_wagroup').value=st.wa_group_url||''; TOP5=String(st.offer_top5||'').split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean).slice(0,5); renderOffersAdmin();   // v30g · v30o: ★ listesi (id'ler) → satır düğmeleri
+      $('s_cycledays').value=st.offer_cycle_days||''; $('s_capacity').value=st.offer_capacity||''; $('s_donedays').value=st.offer_done_days||''; $('s_sepetdays').value=st.offer_sepet_days||''; $('s_hbase').value=(st.offer_hemen_base!=null)?st.offer_hemen_base:''; $('s_hopen').value=(st.offer_hemen_open!=null)?st.offer_hemen_open:''; $('s_hinv').value=(st.offer_hemen_inv!=null)?st.offer_hemen_inv:''; $('s_hinvh').value=st.offer_hemen_inv_h||''; $('s_forfeit').value=(st.offer_forfeit_mode==='credit'||st.offer_forfeit_mode==='burn')?st.offer_forfeit_mode:'tiered'; $('s_bancycles').value=(st.offer_ban_cycles!=null&&st.offer_ban_cycles!=='')?st.offer_ban_cycles:''; $('s_login').value=(st.login_required==='1')?'1':'0'; $('s_wagroup').value=st.wa_group_url||''; TOP5=String(st.offer_top5||'').split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean).slice(0,5); renderOffersAdmin();   // v30g · v30o: ★ listesi (id'ler) → satır düğmeleri
       $('s_refusd').value=st.offer_ref_usd||''; $('s_reflist').value=st.offer_ref_list||''; $('s_ref2usd').value=st.offer_ref2_usd||''; $('s_ref2list').value=st.offer_ref2_list||''; $('s_ref3usd').value=st.offer_ref3_usd||''; $('s_ref3list').value=st.offer_ref3_list||''; $('s_daygoal').value=st.offer_day_goal||''; $('s_rjury').value=st.offer_ratio_jury||st.offer_ratio_200||''; $('s_rbasket').value=st.offer_ratio_basket||st.offer_ratio_40||''; $('s_cycle').value=st.meydan_cycle_start?new Date(st.meydan_cycle_start).toLocaleString('sv',{timeZone:'Europe/Istanbul'}).slice(0,16).replace(' ','T'):'';
       $('s_showp').checked=st.offer_show_prices!=='0';   // v02t: varsayılan AÇIK
       OFFCFG=j.cfg||null; scalePreview(); renderOffersAdmin(); } }catch(e){}
@@ -540,7 +541,7 @@ async function offSettingsSave(){
   if(!(await resolveIfProduct('s_depurl'))) return;
   const body={offer_dep_url:$('s_depurl').value.trim(),offer_dep_amt:$('s_depamt').value.trim(),offer_goal:$('s_goal').value.trim(),
     offer_dep_code:$('s_depcode').value.trim(),offer_dep_open_at:'',offer_day_goal:$('s_daygoal').value.trim(),
-    offer_cycle_days:$('s_cycledays').value.trim(),offer_capacity:$('s_capacity').value.trim(),offer_done_days:$('s_donedays').value.trim(),offer_sepet_days:$('s_sepetdays').value.trim(),offer_hemen_base:$('s_hbase').value.trim(),offer_hemen_inv:$('s_hinv').value.trim(),offer_hemen_inv_h:$('s_hinvh').value.trim(),offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),login_required:$('s_login').value,wa_group_url:$('s_wagroup').value.trim(),
+    offer_cycle_days:$('s_cycledays').value.trim(),offer_capacity:$('s_capacity').value.trim(),offer_done_days:$('s_donedays').value.trim(),offer_sepet_days:$('s_sepetdays').value.trim(),offer_hemen_base:$('s_hbase').value.trim(),offer_hemen_open:$('s_hopen').value.trim(),offer_hemen_inv:$('s_hinv').value.trim(),offer_hemen_inv_h:$('s_hinvh').value.trim(),offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),login_required:$('s_login').value,wa_group_url:$('s_wagroup').value.trim(),
     offer_ref3_usd:$('s_ref3usd').value.trim().replace(',','.'),offer_ref3_list:$('s_ref3list').value.trim(),
     offer_ref_usd:$('s_refusd').value.trim().replace(',','.'),offer_ref_list:$('s_reflist').value.trim(),offer_ref2_usd:$('s_ref2usd').value.trim().replace(',','.'),offer_ref2_list:$('s_ref2list').value.trim(),offer_ratio_jury:$('s_rjury').value.trim().replace(',','.'),offer_ratio_basket:$('s_rbasket').value.trim().replace(',','.'),meydan_cycle_start:$('s_cycle').value?($('s_cycle').value+':00+03:00'):'',
     offer_show_prices:$('s_showp').checked?'1':'0'};
@@ -674,6 +675,7 @@ function renderOffersAdmin(){ listSetSub();
       +'<input id="oe_hemen" value="'+esc((o.meta&&o.meta.hemen_url)?String(o.meta.hemen_url):'')+'" placeholder="Hemen-Al linki: ürün sayfası linkini yapıştır (Sonraki Kavrulma varyantı seçilir) ya da https://coffeenutz.net/cart/VARYANT_ID:1" style="margin:0;grid-column:1/-1">'
       +'<input id="oe_green" value="'+esc((o.meta&&o.meta.green_boxes!=null)?String(o.meta.green_boxes):'')+'" placeholder="elde yeşil (paket · Hemen-Al tavanı, boş = tavan yok)" style="margin:0" inputmode="numeric">'
       +'<input id="oe_hbase" value="'+esc((o.meta&&o.meta.hemen_base!=null)?String(o.meta.hemen_base):'')+'" placeholder="Hemen-Al açık koltuk (boş = genel ayar)" style="margin:0" inputmode="numeric"></div>'
+      +'<label style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px"><input type="checkbox" id="oe_hopen"'+((o.meta&&(o.meta.hemen_open===true||String(o.meta.hemen_open)==='1'))?' checked':'')+' style="width:auto;margin:0"> Hemen-Al\'ı aç — jüri oyu şartı olmadan (proxy v3.60 jüri açar)</label>'
       +'<div style="display:flex;gap:6px;margin-top:8px"><button class="mini" onclick="offEditSave(\''+o.id+'\')">Taslağa kaydet</button><button class="mini" onclick="offEdit(null)">Vazgeç</button></div></div>';
     const st=offState(o);
     return '<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;'+(o.active?'':'opacity:.6')+'">'
@@ -789,6 +791,7 @@ async function offEditSave(id){
   const gb=num($('oe_green').value), hb=$('oe_hbase').value.trim();
   if(gb) meta.green_boxes=Math.round(gb); else delete meta.green_boxes;
   if(hb!==''&&isFinite(Number(hb))) meta.hemen_base=Math.max(0,Math.round(Number(hb))); else delete meta.hemen_base;
+  if($('oe_hopen')&&$('oe_hopen').checked) meta.hemen_open=true; else delete meta.hemen_open;   // v2026-10-08a: jüri açar istisnası
   await offSet(id,{name:$('oe_name').value.trim(),origin:$('oe_origin').value.trim()||null,process:$('oe_proc').value||null,vendor:$('oe_vendor').value.trim()||null,note:$('oe_note').value.trim()||null,meta:meta}); }
 async function offDel(id){
   const o=OFFERS.find(x=>x.id===id); if(!o) return;

@@ -1,24 +1,28 @@
-// v10o: the one-time WhatsApp gate on the real page (phone 390): sheet on first Kapora koy · after Devam · bind sheet
+// v12e: "jüri açar" — gated Hemen-Al lane (no votes) on the card + lane; taste icons (B) on the bands and picker chips (phone 390)
 import { chromium } from 'playwright-core'; import fs from 'fs'; import path from 'path';
 const here=path.dirname(new URL(import.meta.url).pathname);
 const html=fs.readFileSync(path.join(here,'..','grupal.html'),'utf8');
 const MD=JSON.parse(fs.readFileSync(path.join(here,'mock-meydan.json'),'utf8'));
 const ord=MD.offers.slice().sort((a,b)=>((b.dep||0)-(a.dep||0)));
-const M=JSON.parse(JSON.stringify(MD)); const o=M.offers.find(x=>x.id===ord[0].id); o.img_url='https://x.test/o/a.jpg'; o.hemen={url:'https://coffeenutz.net/cart/222:1',price:885,base:2,sold:0,inv:0,left:2,green_left:null,table:[],roast_at:'2026-10-05T20:59:00.000Z'}; o.list_tl=1105; o.jury_tl=665; o.basket_tl=885; M.offer_cfg.hemen_inv=2; M.offer_cfg.dep_amt=200; M.offer_cfg.login_required=true; M.offer_cfg.wa_group_url='https://chat.whatsapp.com/ABCdef123456';
+const MG=JSON.parse(JSON.stringify(MD)); const G0=MG.offers.find(o=>o.id===ord[3].id); G0.name='Nuwa Senchi #3'; G0.img_url='https://x.test/o/701.jpg'; G0.hemen={url:'https://coffeenutz.net/cart/701:1',price:865,base:0,sold:0,inv:0,left:0,green_left:null,table:[],roast_at:'2026-10-05T20:59:00.000Z',gate:'jury',need:1}; G0.list_tl=1080; G0.jury_tl=650; G0.dep=0;
+if(MG.cycle) MG.cycle.next_close=new Date(Date.now()+5*86400000).toISOString();
 const photo=fs.existsSync(path.join(here,'..','..','_shots','fakephoto.b64'))?fs.readFileSync(path.join(here,'..','..','_shots','fakephoto.b64'),'utf8'):'';
 const browser=await chromium.launch({executablePath:'/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell',args:['--no-sandbox']});
-const OUT=path.join(here,'..','..','_shots'); fs.mkdirSync(OUT,{recursive:true});
-const ctx=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,locale:'tr-TR'}); await ctx.addInitScript(()=>{ try{ localStorage.clear(); localStorage.setItem('grupal_welcomed','1'); }catch(e){} }); const page=await ctx.newPage();
+const OUT=path.join(here,'..','..','_shots'); let bad=0;
+const ctx=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,locale:'tr-TR',isMobile:true,hasTouch:true}); await ctx.addInitScript(()=>{ try{ localStorage.clear(); localStorage.setItem('grupal_welcomed','1'); localStorage.setItem('grupal_dev','DEVTEST001'); }catch(e){} }); const page=await ctx.newPage();
 await page.route('**/*',async route=>{ const u=route.request().url();
   if(u.startsWith('https://grup-al.com/')&&!u.includes('/functions/')) return route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html});
   if(u.includes('x.test/o/')) return photo?route.fulfill({status:200,contentType:'image/jpeg',body:Buffer.from(photo.split(',')[1],'base64')}):route.fulfill({status:404,body:''});
-  if(u.includes('/meydan')) return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(M)});
-  if(u.includes('/offer-mine')) return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({votes:[],inv:[],hemen:[],me:{member:false,name:'',phone_tail:null,wa:false,ok:true}})});
-  if(u.endsWith('/wa-ok')) return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,wa:true,wa_at:new Date().toISOString(),me:null})});
+  if(u.includes('/meydan')) return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(MG)});
+  if(u.includes('/offer-mine')) return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({votes:[],inv:[],hemen:[],me:{member:true,name:'Ömer',wa:true,ok:true,k:'k6'}})});
   if(u.includes('/campaigns')) return route.fulfill({status:200,contentType:'application/json',body:'[]'}); return route.fulfill({status:204,body:''}); });
-await page.goto('https://grup-al.com/juri'); await page.waitForTimeout(1200);
-const shots=[]; async function snap(name){ await page.waitForTimeout(250); await page.screenshot({path:path.join(OUT,name+'.png')}); shots.push(name); }
-await page.evaluate(id=>{ jLaneOpen(id); jLaneKap(id); },o.id); await snap('gt1_sheet');
-await page.evaluate(()=>{ const c=document.getElementById('jgWa'); if(c){ c.checked=true; c.dispatchEvent(new Event('change',{bubbles:true})); } }); await page.evaluate(()=>jGateWa()); await page.waitForTimeout(1500); await snap('gt2_after');
-await page.evaluate(()=>jBindOpen()); await snap('gt3_bind');
-await browser.close(); console.log(shots.join(' '));
+await page.goto('https://grup-al.com/juri'); await page.waitForTimeout(1300);
+await page.evaluate(id=>{ document.querySelector('#jDeck .jcard[data-id="'+id+'"]').scrollIntoView({block:'center',inline:'center'}); },G0.id); await page.waitForTimeout(400);
+const card=await page.$('#jDeck .jcard[data-id="'+G0.id+'"]'); await card.screenshot({path:path.join(OUT,'gate_card.png')});
+await page.evaluate(id=>jLaneOpen(id),G0.id); await page.waitForTimeout(700); const c2=await page.$('.jcard.lopen'); await c2.screenshot({path:path.join(OUT,'gate_lane.png')});
+const st=await page.evaluate(()=>({tag:document.querySelector('.jcard.lopen .jnow .jpl').textContent, cta:document.querySelector('.jcard.lopen .jlane.ha .cta').textContent, st:document.querySelector('.jcard.lopen .jlane.ha .st').textContent}));
+console.log(JSON.stringify(st)); if(!(/jüri açar/.test(st.tag)&&/Kapora koy · 2 bilet senin/.test(st.cta))) bad++;
+await page.evaluate(()=>{ jLaneClose(); document.getElementById('jP2').scrollIntoView({block:'start'}); }); await page.waitForTimeout(400);
+const p2=await page.$('#jP2'); const bb=await p2.boundingBox(); await page.screenshot({path:path.join(OUT,'gate_bands.png'),clip:{x:bb.x,y:bb.y,width:bb.width,height:Math.min(900,bb.height)}});
+await page.evaluate(()=>jSecOpen('all')); await page.waitForTimeout(500); await page.screenshot({path:path.join(OUT,'gate_picker.png')});
+await browser.close(); console.log(bad?'BAD':'ok');
