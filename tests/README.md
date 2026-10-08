@@ -140,3 +140,8 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - **No quota, no gate controls**: admin Ayarlar lost "açık koltuk" and "jüri açar"; the offer form lost "Hemen-Al açık koltuk" and "Hemen-Al'ı aç" (saving an offer clears `meta.hemen_base/hemen_open`). The proxy still honours a hand-set `offer_hemen_base` (default 0) so the old pool tests keep running; nothing in the UI can set it.
 - **Lane**: the Hemen-Al button is never disabled — with no ticket to take it is always "Kapora koy · k bilet senin"; the status line says why (Jüri açar / Biletler jüride / Bilet kalmadı); the quiet "Hemen-Al istiyorum ›" sits under it whenever the table is empty (proxy `/offer-ask` no longer requires the gate).
 - Tests: page 200, proxy 234, admin 48.
+
+## v12n (2026-10-08) — the ticket view for everyone
+- **"Daha mı indirim lazım? Jüri ol …"** on /hemen-al (Ömer's wording).
+- **Ticket view (Ömer)**: every "Hemen-Al · n kaldı" chip, the 🪑 masada chip, the scoreboard "al ›" and the lane's "Masadan al" button open one sheet, "Hemen-Al biletleri · {coffee}": the viewer's own tickets first (Gönder / masaya bırak / geri al, as before), then the tickets on the table as golden tickets — "Barış'ın bileti · masada", **Al** → basket (the ticket gets a dark frame "sepette ✓", "Sepete git → … TL", sepetten çıkar and the grind select sit at the top). "+n daha masada" past the first 12. No ticket anywhere → "Masada bilet yok — kapora koy, k bilet senin" with the kapora button and the quiet ask link. The old direct-buy popup (`jHemenPop`) now opens this view; `jTkCard`/`jTkStubMine` are shared by the juror sheet.
+- Tests: page 205; `tests/shot-tblview.mjs` (phone + desktop, before/after Al).
