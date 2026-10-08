@@ -27,6 +27,6 @@ for(const [w,h,file,mobile] of [[390,844,'sec_phone.png',true],[1366,900,'sec_de
   await page.evaluate(()=>{ jSecOpen(); jSecK('dolgun'); }); await page.waitForTimeout(500);
   await page.screenshot({path:path.join(OUT,file)});
   const st=await page.evaluate(()=>({tag:document.querySelector('#jSheet .rc .tag').textContent, nm:document.querySelector('#jSheet .rc .nm').textContent, go:document.querySelector('#jSheet .rc .go').textContent, chips:[...document.querySelectorAll('#jSheet .chip')].map(c=>c.textContent)}));
-  console.log(w, JSON.stringify(st)); if(!(st.tag==='🔥 Seçildi · 17 paket'&&st.nm==='El Recreo #1'&&/Sepete ekle · 1 × 990 TL/.test(st.go)&&st.chips.length===5)) bad++;
+  console.log(w, JSON.stringify(st)); if(!(st.tag==='🔥 Seçildi · 17 paket'&&st.nm==='El Recreo #1'&&/Sepete ekle · 1 × 990 TL/.test(st.go)&&st.chips.length===5&&st.chips.join('')==='☕🥝🍓🍷🎷')) bad++;   // v12e: chips carry icons + short labels
   await ctx.close(); }
 await browser.close(); console.log(bad?'BAD':'ok');

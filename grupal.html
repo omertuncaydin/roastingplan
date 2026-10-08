@@ -591,7 +591,7 @@ body.jdesk .jcard .jlanes{max-height:none;overflow:visible}
 body.jmode:not(.jdesk) #jTop .jtr{padding:6px 8px;font-size:0}body.jmode:not(.jdesk) #jTop .jts{letter-spacing:.3px}body.jmode:not(.jdesk) #jTop .jtr::before{content:'↻';font-size:14px;line-height:1}
 .jdk-side .jsecb.jsecd{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;line-height:1.15;margin:0;padding:13px 16px;font-size:16px;border:0;border-radius:14px;background:linear-gradient(135deg,#f3d66a,#e6c14b);color:#2a1f0c;box-shadow:0 6px 18px rgba(138,109,21,.28)}.jsecd small{display:block;font-size:11px;font-weight:700;opacity:.78;margin-top:3px}.jsecd b{font-size:22px;line-height:1;opacity:.9}
 .jsec .lbl{font-size:11px;letter-spacing:.6px;text-transform:uppercase;font-weight:800;color:var(--muted);margin:12px 0 6px}.jsec .lbl .hint{letter-spacing:0;text-transform:none}
-.jsec .chips{display:flex;flex-wrap:wrap;gap:6px}.jsec .chip{border:1px solid var(--line);border-radius:999px;padding:7px 11px;font-size:12.5px;font-weight:700;color:var(--ink);background:var(--panel2);cursor:pointer;display:inline-flex;align-items:center;gap:6px;user-select:none}.jsec .chip i{width:9px;height:9px;border-radius:50%;display:inline-block}.jsec .chip.on{border-color:var(--gold);color:var(--gold)}
+.jsec .chips{display:flex;flex-wrap:wrap;gap:6px}.jsec .chip{border:1px solid var(--line);border-radius:999px;padding:7px 11px;font-size:12.5px;font-weight:700;color:var(--ink);background:var(--panel2);cursor:pointer;display:inline-flex;align-items:center;gap:6px;user-select:none}.jsec .chip i{width:9px;height:9px;border-radius:50%;display:inline-block}.jsec .chip.ic{font-size:20px;line-height:1;padding:8px 13px;gap:0}.jsec .chip.ic.on{background:rgba(230,193,75,.14);box-shadow:0 0 0 1px var(--gold) inset}.jsec .chip.on{border-color:var(--gold);color:var(--gold)}
 .jsec .rc{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel2)}.jsec .rc .ph{height:120px;position:relative;background:#1d120b}.jsec .rc .ph img,.jsec .rc .ph svg{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 35%}.jsec .rc .bd{padding:10px 12px 12px}
 .jsec .tag{display:inline-block;border-radius:12px;padding:4px 9px;font-size:11px;font-weight:800;border:1px solid rgba(243,237,228,.28);margin-bottom:6px;color:var(--ink)}.jsec .tag.j{color:var(--gold);border-color:rgba(230,193,75,.6)}.jsec .tag.r{color:#9fd3b2;border-color:rgba(159,211,178,.6)}
 .jsec .nm{font-size:20px;font-weight:900;letter-spacing:-.3px;line-height:1.1}.jsec .ds{font-size:12px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.jsec .st{font-size:11.5px;color:#9fd3b2;font-weight:700;margin-top:4px}
@@ -779,7 +779,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-10-08e';
+const VERSION='v2026-10-08f';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1535,7 +1535,7 @@ function jSecList(k){ const list=((STATE&&STATE.offers)||[]).filter(o=>o&&o.acti
 function jSecTag(o){ if(o.lock) return '<span class="tag r">'+t('jSecLock').replace('{n}',jLockN(o))+'</span>'; if((o.dep||0)>0) return '<span class="tag j">'+t('jSecJury').replace('{n}',o.dep)+'</span>'; return '<span class="tag">'+t('jSecCN')+'</span>'; }
 function jSecHtml(){ if(!JSEC) return ''; const L=jSecList(JSEC.k); const o=L.length?L[JSEC.ix%L.length]:null;
   let h='<div class="jsec"><div class="jsh-h"><b>'+t('jSecT')+'</b><span class="x" onclick="jSheetClose()">✕ '+t('jSheetX')+'</span></div><div class="jsh-sub">'+t('jSecSub')+'</div>';
-  h+='<div class="lbl">'+t('jSecS1')+'</div><div class="chips">'+[['all','☕ '+t('jSecAll'),'']].concat(TASTES.filter(x=>x[0]!=='all').map(x=>[x[0],tIcon(x)+' '+tShort(x),TASTECOL[x[0]]||''])).map(x=>'<span class="chip'+(JSEC.k===x[0]?' on':'')+'" onclick="jSecK(\''+x[0]+'\')">'+(x[2]?('<i style="background:'+x[2]+'"></i>'):'')+escZ(x[1])+'</span>').join('')+'</div>';
+  h+='<div class="lbl">'+t('jSecS1')+'</div><div class="chips">'+TASTES.map(x=>'<span class="chip ic'+(JSEC.k===x[0]?' on':'')+'" onclick="jSecK(\''+x[0]+'\')" title="'+escZ(x[0]==='all'?t('jSecAll'):tFull(x))+'" aria-label="'+escZ(x[0]==='all'?t('jSecAll'):tFull(x))+'">'+tIcon(x)+'</span>').join('')   /* v12f (Ömer): yalnız ikon — kelime ve renk noktası yok */+'</div>';
   h+='<div class="lbl">'+t('jSecS2')+(L.length?(' <span class="hint">· '+(JSEC.ix%L.length+1)+'/'+L.length+'</span>'):'')+'</div>';
   if(!o) return h+'<div class="jnote2" style="text-align:left;margin-top:6px">'+t('jSecNone')+'</div></div>';
   const hm=o.hemen, left=jHemenLeft(o)+jTableOf(o).length, mx=jHemenMax(o), inB=hbGet()[o.id], q=Math.min(mx,JSEC.q||1);
