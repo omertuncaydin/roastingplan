@@ -123,3 +123,8 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - **"Hemen-Al istiyorum ›"** (Ömer "closed voting"): a quiet link under the gate CTA of a shut-door lane (jüri açar, no kapora/basket on this device). Tap → `POST /offer-ask {dev,id}` → `hask_<offer>_<dev>` = {at, n}; the line becomes "İstek alındı ✓" (server `asked[]` in `/offer-mine` + localStorage `grupal_hask`). No count anywhere on the page, nothing on the card chip, no toast; the plain `/hemen-al` page is untouched. The proxy refuses an ask on an open door (`reason:'open'`).
 - **Admin**: offer row "✋ n Hemen-Al isteği"; edit form button "İsteyenlere bilet ver · n kişi" → `POST /admin/ask-grant {id}` → every asking device gets `offer_hemen_ask_inv` private tickets (Ayarlar "istek başına bilet", default **1**, 0–3; `inv_` records carry `ask:true`, 24 h private then table, 7 days), devices that already hold a ticket or a kapora on the coffee are skipped, the asks are deleted. The door itself stays a separate decision ("Hemen-Al'ı aç"). `hask_` rows are swept after 28 days.
 - Tests: page 188, proxy 215, admin 48; `tests/shot-gate.mjs` captures the ask line before/after.
+
+## v12j (2026-10-08) — plain page count
+- **grup-al.com/hemen-al** rows said "2 kaldı" on every coffee: the row used the quota alone (`hemen.left`) while the card chip counts quota + table tickets (`jHemenOpen`). Now both show the same number (El Recreo 7, Nuwa 4 …). Tests: page 190.
+
+- **v2026-10-08k (Ömer)**: /hemen-al subtitle "Jürinin oyladığı **ve stoğumuzda olan** kahveler · %20 indirim · …".
