@@ -154,3 +154,9 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - **v2026-10-08p (hotfix)**: seat tickets used the class `seat`, which the old table-chair widget styles as a 64 px column — every seat ticket rendered as a thin strip (desktop and phone). Class renamed `kseat`; `tests/shot-tblview.mjs` now asserts the seat ticket is full width. Page tests 209.
 
 - **admin v2026-10-08f**: Kaydet writes `offer_hemen_base` = "0" and `offer_hemen_open` = "1" explicitly (a blank meant 2 seats on proxy ≤ 3.62, which is still live). Admin tests 49.
+
+## v12q (2026-10-08) — one chip, 10 tickets per kapora, no Hemen-Al settings (proxy v3.65 · admin v2026-10-08g)
+- **Proxy v3.65**: constants in code — **every kapora mints packages × 10 tickets**, 24 h private then the table, 7 days valid, 1 ticket per granted ask, no opener bonus. `offer_hemen_inv / _inv_h / _ask_inv / _open_bonus` are no longer read (nothing you saved earlier can change this). `POST /admin/inv-backfill {top:1}` tops this session's kaporas up to packages × 10 (counts every ticket ever minted per device+coffee; previous sessions untouched).
+- **Page**: the only chip is **"Hemen-Al · n kaldı"** (n = tickets you can take now, 0 included); the 🪑 masada chip is gone; a lane with nothing to take says "Şu an bilet yok · her kapora 10 bilet" with the kapora button.
+- **Admin**: Ayarlar has no Hemen-Al inputs any more — one note and one button "Bu oturumun kaporalarına 10 bilet tamamla". Kaydet still writes quota 0 / threshold 1 to clean old values.
+- Tests: page 209, proxy 237, admin 50.

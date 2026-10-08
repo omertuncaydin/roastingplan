@@ -277,14 +277,9 @@ details.set.card[open]>summary{margin-bottom:6px}
           <div class="f"><span class="lbl">Sepet satış penceresi (gün · oturum bitişinden sonra)</span><input id="s_sepetdays" inputmode="numeric" placeholder="3"></div>
           <div class="note">Oturum bitince: tamamlama 2 gün (Salı 23:59), Sepet 3 gün (Çarşamba 23:59), yeşil alımı Perşembe; süresi dolanlar "Tamamlanmayanları kapat" ile kademeli işlem görür.</div>
         </div>
-        <div class="sh">Hemen-Al · beklemeden, %20 (proxy v3.38)</div>
-        <div class="g2">
-          <div class="f"><span class="lbl">istek başına bilet · kapalı kapıya "Hemen-Al istiyorum" diyene, sen basınca (0–3)</span><input id="s_hask" inputmode="numeric" placeholder="1"></div>
-          <div class="f"><span class="lbl">kapora başına bilet (0–20 · sipariş başına en çok 60)</span><input id="s_hinv" inputmode="numeric" placeholder="2"></div>
-          <div class="f"><span class="lbl">davetiye özel kalma süresi (saat · sonra masaya çıkar)</span><input id="s_hinvh" inputmode="numeric" placeholder="24"></div>
-          <div class="note">Hemen-Al şeridi yalnız <b>görseli</b> ve <b>Hemen-Al linki</b> (Düzenle) olan kahvede görünür: görsel yüklenen kahve stokta sayılır. Sipariş sıradaki Pazartesi kavrulur, 40'a bakmaz; her paket sayıma sayılır. Fiyat = liste × Sepet oranı (%20 için 0,80); Kaporalı fiyat = liste × Kaporalı oranı (%40 için 0,60). Boş alan = varsayılan (2 · 2 · 24).</div>
-        </div>
-        <div class="acts" style="margin-top:6px"><button class="mini" onclick="invBackfill()" title="Davetiye sistemi (v3.38) açılmadan önce ödenmiş kaporalara, şeridi açık kahvelerde paket × davetiye basar; aynı cihaz+kahve ikinci kez basılmaz. 24 saat özel, sonra masaya.">Eski kaporalara davetiye bas</button><span class="hint" id="invBfMsg"></span></div>
+        <div class="sh">Hemen-Al · bilet = paket (proxy v3.65)</div>
+        <div class="note">Ayar yok. <b>Her kapora paket × 10 bilet</b>; bilet 24 saat kaporayı verene özel, sonra masaya; 7 gün geçerli; "Hemen-Al istiyorum" diyene sen basınca 1 bilet. Hemen-Al yalnız <b>görseli</b> ve <b>Hemen-Al linki</b> olan kahvede (Düzenle); "elde yeşil" tek fiziksel tavan. Fiyat = liste × Sepet oranı (%20 için 0,80).</div>
+        <div class="acts" style="margin-top:6px"><button class="mini" onclick="invBackfill(1)" title="Bu oturumun (son kapanıştan sonraki) kaporalarına eksik biletleri basar: paket × 10'a tamamlar; önceki oturumlara dokunmaz.">Bu oturumun kaporalarına 10 bilet tamamla</button><span class="hint" id="invBfMsg"></span></div>
         <div class="sh" style="margin-top:14px">Jüri kapısı · WhatsApp (proxy v3.46)</div>
         <div class="g2">
           <div class="f"><span class="lbl">ilk kaporada WhatsApp grubu sor</span><select id="s_login"><option value="0">kapalı</option><option value="1">açık — ilk Kapora koy'da bir kez: "Gruba katıl" + "Katıldım"</option></select></div>
@@ -354,7 +349,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-10-08f';
+const VERSION='v2026-10-08g';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -531,7 +526,7 @@ async function loadOfferSettings(){
   try{ const r=await fetch(API+'/admin/settings',{headers:{'x-cc-key':KEY}}); const j=await r.json();
     if(j&&j.settings){ const st=j.settings; $('s_depurl').value=st.offer_dep_url||''; $('s_depamt').value=st.offer_dep_amt||''; $('s_goal').value=st.offer_goal||'';
       $('s_depcode').value=st.offer_dep_code||''; $('s_depopen').value='';   // v02y: açılış saati kaldırıldı (kod = her zaman)
-      $('s_cycledays').value=st.offer_cycle_days||''; $('s_capacity').value=st.offer_capacity||''; $('s_donedays').value=st.offer_done_days||''; $('s_sepetdays').value=st.offer_sepet_days||''; $('s_hask').value=(st.offer_hemen_ask_inv!=null)?st.offer_hemen_ask_inv:''; $('s_hinv').value=(st.offer_hemen_inv!=null)?st.offer_hemen_inv:''; $('s_hinvh').value=st.offer_hemen_inv_h||''; $('s_forfeit').value=(st.offer_forfeit_mode==='credit'||st.offer_forfeit_mode==='burn')?st.offer_forfeit_mode:'tiered'; $('s_bancycles').value=(st.offer_ban_cycles!=null&&st.offer_ban_cycles!=='')?st.offer_ban_cycles:''; $('s_login').value=(st.login_required==='1')?'1':'0'; $('s_wagroup').value=st.wa_group_url||''; TOP5=String(st.offer_top5||'').split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean).slice(0,5); renderOffersAdmin();   // v30g · v30o: ★ listesi (id'ler) → satır düğmeleri
+      $('s_cycledays').value=st.offer_cycle_days||''; $('s_capacity').value=st.offer_capacity||''; $('s_donedays').value=st.offer_done_days||''; $('s_sepetdays').value=st.offer_sepet_days||'';  $('s_forfeit').value=(st.offer_forfeit_mode==='credit'||st.offer_forfeit_mode==='burn')?st.offer_forfeit_mode:'tiered'; $('s_bancycles').value=(st.offer_ban_cycles!=null&&st.offer_ban_cycles!=='')?st.offer_ban_cycles:''; $('s_login').value=(st.login_required==='1')?'1':'0'; $('s_wagroup').value=st.wa_group_url||''; TOP5=String(st.offer_top5||'').split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean).slice(0,5); renderOffersAdmin();   // v30g · v30o: ★ listesi (id'ler) → satır düğmeleri
       $('s_refusd').value=st.offer_ref_usd||''; $('s_reflist').value=st.offer_ref_list||''; $('s_ref2usd').value=st.offer_ref2_usd||''; $('s_ref2list').value=st.offer_ref2_list||''; $('s_ref3usd').value=st.offer_ref3_usd||''; $('s_ref3list').value=st.offer_ref3_list||''; $('s_daygoal').value=st.offer_day_goal||''; $('s_rjury').value=st.offer_ratio_jury||st.offer_ratio_200||''; $('s_rbasket').value=st.offer_ratio_basket||st.offer_ratio_40||''; $('s_cycle').value=st.meydan_cycle_start?new Date(st.meydan_cycle_start).toLocaleString('sv',{timeZone:'Europe/Istanbul'}).slice(0,16).replace(' ','T'):'';
       $('s_showp').checked=st.offer_show_prices!=='0';   // v02t: varsayılan AÇIK
       OFFCFG=j.cfg||null; scalePreview(); renderOffersAdmin(); } }catch(e){}
@@ -540,7 +535,7 @@ async function offSettingsSave(){
   if(!(await resolveIfProduct('s_depurl'))) return;
   const body={offer_dep_url:$('s_depurl').value.trim(),offer_dep_amt:$('s_depamt').value.trim(),offer_goal:$('s_goal').value.trim(),
     offer_dep_code:$('s_depcode').value.trim(),offer_dep_open_at:'',offer_day_goal:$('s_daygoal').value.trim(),
-    offer_cycle_days:$('s_cycledays').value.trim(),offer_capacity:$('s_capacity').value.trim(),offer_done_days:$('s_donedays').value.trim(),offer_sepet_days:$('s_sepetdays').value.trim(),offer_hemen_ask_inv:$('s_hask').value.trim(),offer_hemen_inv:$('s_hinv').value.trim(),offer_hemen_base:'0',offer_hemen_open:'1',   /* v2026-10-08f: kota ve kapı eşiği alanları kalktı — kayıtta açıkça 0 koltuk / eşik 1 yazılır (boş, eski proxy'de 2 demekti) */ offer_hemen_inv_h:$('s_hinvh').value.trim(),offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),login_required:$('s_login').value,wa_group_url:$('s_wagroup').value.trim(),
+    offer_cycle_days:$('s_cycledays').value.trim(),offer_capacity:$('s_capacity').value.trim(),offer_done_days:$('s_donedays').value.trim(),offer_sepet_days:$('s_sepetdays').value.trim(),offer_hemen_base:'0',offer_hemen_open:'1',   /* v2026-10-08f/g: Hemen-Al ayarları kalktı — kayıtta açıkça 0 koltuk / eşik 1 yazılır (eski proxy'de boş = 2 demekti) */ offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),login_required:$('s_login').value,wa_group_url:$('s_wagroup').value.trim(),
     offer_ref3_usd:$('s_ref3usd').value.trim().replace(',','.'),offer_ref3_list:$('s_ref3list').value.trim(),
     offer_ref_usd:$('s_refusd').value.trim().replace(',','.'),offer_ref_list:$('s_reflist').value.trim(),offer_ref2_usd:$('s_ref2usd').value.trim().replace(',','.'),offer_ref2_list:$('s_ref2list').value.trim(),offer_ratio_jury:$('s_rjury').value.trim().replace(',','.'),offer_ratio_basket:$('s_rbasket').value.trim().replace(',','.'),meydan_cycle_start:$('s_cycle').value?($('s_cycle').value+':00+03:00'):'',
     offer_show_prices:$('s_showp').checked?'1':'0'};
@@ -705,11 +700,11 @@ async function askGrant(id){   // v2026-10-08b (proxy v3.62): kapalı kapıya "H
     if(j.ok){ alert(j.minted+' bilet · '+j.devs+' kişi'+(j.skipped?(' · atlanan (zaten bileti/kaporası var) '+j.skipped):'')); loadOffers(); }
     else if(m) m.textContent='Olmadı: '+(j.error||r.status); }
   catch(e){ if(m) m.textContent='Olmadı: '+e; } }
-async function invBackfill(){
-  if(!confirm('Davetiyesi hiç basılmamış kaporalara (şeridi açık kahvelerde) paket × davetiye basılsın mı? Sahipleri sayfayı açınca biletleri görür; 24 saat sonra masaya çıkar.')) return;
+async function invBackfill(top){   // v2026-10-08g (proxy v3.65): top=1 → bu oturumun kaporalarını paket × 10 bilete tamamla
+  if(!confirm(top?'Bu oturumun kaporalarına eksik biletler basılsın mı? (paket × 10\'a tamamlar; önceki oturumlara dokunmaz) Sahipleri sayfayı açınca biletleri görür; 24 saat sonra masaya çıkar.':'Davetiyesi hiç basılmamış kaporalara (şeridi açık kahvelerde) paket × bilet basılsın mı?')) return;
   const m=$('invBfMsg'); m.textContent='basılıyor…';
-  try{ const r=await fetch(API+'/admin/inv-backfill',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:'{}'}); const j=await r.json().catch(()=>({}));
-    if(j.ok){ const sk=j.skipped||{}; m.textContent=j.minted+' davetiye · '+j.devs+' cihaz'+(j.minted?'':' — basılacak kapora yok')+' · atlanan: zaten var '+(sk.had||0)+', şeritsiz '+(sk.nolane||0)+', yanan/kredi '+(sk.done||0); loadOffers(); }
+  try{ const r=await fetch(API+'/admin/inv-backfill',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify(top?{top:1}:{})}); const j=await r.json().catch(()=>({}));
+    if(j.ok){ const sk=j.skipped||{}; m.textContent=j.minted+' bilet · '+j.devs+' cihaz'+(j.minted?'':' — eksik yok')+' · atlanan: tamam '+(sk.had||0)+', şeritsiz '+(sk.nolane||0)+', yanan/kredi '+(sk.done||0)+(sk.old?(', önceki oturum '+sk.old):''); loadOffers(); }
     else m.textContent='Olmadı: '+(j.error||r.status); }
   catch(e){ m.textContent='Olmadı: '+e; } }
 async function ratiosApplyAll(){
