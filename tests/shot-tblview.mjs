@@ -25,5 +25,9 @@ for(const [w,h,tag,mobile] of [[390,844,'phone',true],[1366,900,'desk',false]]){
   await page.screenshot({path:path.join(OUT,'tblview_'+tag+'.png')});
   await page.evaluate(()=>{ const b=document.querySelector('#jSheet .jtk.gt.pub .snd'); b&&eval(b.getAttribute('onclick')); }); await page.waitForTimeout(400);
   await page.screenshot({path:path.join(OUT,'tblview_'+tag+'_inb.png')});
+  // v12p: quota seats (proxy still reporting left 2) render as full-width seat tickets
+  await page.evaluate(id=>{ const o=STATE.offers.find(x=>x.id===id); o.hemen.left=2; o.hemen.table=[]; o.hemen.table_n=0; hbDel(id); jTblOpen(id); },T0.id); await page.waitForTimeout(400);
+  const sw=await page.evaluate(()=>{ const e=document.querySelector('#jSheet .jtk.gt.kseat'); return e?e.getBoundingClientRect().width:0; }); if(sw<300) bad++;
+  await page.screenshot({path:path.join(OUT,'tblview_'+tag+'_seat.png')});
   await ctx.close(); }
 await browser.close(); console.log(bad?'BAD':'ok');

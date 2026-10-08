@@ -792,7 +792,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-10-08o';
+const VERSION='v2026-10-08p';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1672,7 +1672,7 @@ function jSheetHtml(){ if(!JSHEET) return ''; const list=(STATE&&STATE.offers)||
     for(const inv of mine) h+=jTkCard(o,inv.st,inv.c,jTkStubMine(inv));
     for(const x of tb){ const inThis=!!(inB&&inB.c===x.c); h+=jTkCard(o,'t pub'+(inThis?' inb':''),x.c,'<div class="tm">🪑</div><div class="tms">'+t('jTkOf').replace('{n}',escZ(jGen(x.n)))+'</div>'+(inThis?('<div class="done">'+t('jTkInB')+'</div>'):('<button class="snd" onclick="jHemenGo(\''+escZ(o.id)+'\',\''+escZ(x.c)+'\',1)">'+t('jTkTake')+'</button><div class="xp">'+t('jTkFirst')+'</div>'))); }
     if(jTableN(o)>jTableOf(o).length) h+='<div class="jnote2">'+t('jTblMoreN').replace('{k}',jTableN(o)-jTableOf(o).length)+'</div>';
-    { const qIn=(inB&&!inB.c)?(parseInt(inB.q)||1):0; for(let i=0;i<Math.min(left,6);i++){ const got=i<qIn; h+=jTkCard(o,'t pub seat'+(got?' inb':''),'','<div class="tm">☕</div><div class="tms">'+t('jTkSeat')+'</div>'+(got?('<div class="done">'+t('jTkInB')+'</div>'):('<button class="snd" onclick="'+(qIn?('hbQty(\''+escZ(o.id)+'\',1)'):('jHemenGo(\''+escZ(o.id)+'\',null,1)'))+'">'+t('jTkTake')+'</button>'))); } }
+    { const qIn=(inB&&!inB.c)?(parseInt(inB.q)||1):0; for(let i=0;i<Math.min(left,6);i++){ const got=i<qIn; h+=jTkCard(o,'t pub kseat'+(got?' inb':''),'','<div class="tm">☕</div><div class="tms">'+t('jTkSeat')+'</div>'+(got?('<div class="done">'+t('jTkInB')+'</div>'):('<button class="snd" onclick="'+(qIn?('hbQty(\''+escZ(o.id)+'\',1)'):('jHemenGo(\''+escZ(o.id)+'\',null,1)'))+'">'+t('jTkTake')+'</button>'))); } }
     if(!mine.length&&!tb.length&&!left){ h+='<div class="jnote2" style="margin-top:14px">'+t('jTblNone').replace('{k}',kInv)+'</div>'+((paid||(dbGet()[o.id]||0))?'':('<div class="jlg"><button class="go" onclick="jSheetClose();jLaneKap(\''+escZ(o.id)+'\')">'+t('jTblKap').replace('{k}',kInv)+'</button></div>'+((jHemenOpen(o)===0)?('<div class="jnote2 hask">'+(jAsked(o.id)?t('jAskOk'):('<a onclick="jAsk(\''+escZ(o.id)+'\')">'+t('jAskL')+'</a>'))+'</div>'):''))); }
     return h; }
   if(JSHEET.mode==='gate') return jGateHtml();   // v10o

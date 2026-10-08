@@ -150,3 +150,5 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - Live still carried `offer_hemen_base = 2` (saved before the field was removed), so the chip said "2 kaldı" while the ticket view found no table ticket and showed only "Kapora koy". Now quota seats the proxy reports (`left`) appear in the view as tickets "açık koltuk · CoffeeNutz" with **Al** (pool path; a second Al adds +1). The kapora-only screen appears only when there is nothing at all to take.
 - Admin v2026-10-08e: saving Ayarlar sends `offer_hemen_base = ''` and `offer_hemen_open = ''` so the stale quota clears on the next save (blank = 0 seats, threshold 1).
 - Tests: page 208, admin 48.
+
+- **v2026-10-08p (hotfix)**: seat tickets used the class `seat`, which the old table-chair widget styles as a 64 px column — every seat ticket rendered as a thin strip (desktop and phone). Class renamed `kseat`; `tests/shot-tblview.mjs` now asserts the seat ticket is full width. Page tests 209.
