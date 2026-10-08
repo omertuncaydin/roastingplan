@@ -145,3 +145,8 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - **"Daha mı indirim lazım? Jüri ol …"** on /hemen-al (Ömer's wording).
 - **Ticket view (Ömer)**: every "Hemen-Al · n kaldı" chip, the 🪑 masada chip, the scoreboard "al ›" and the lane's "Masadan al" button open one sheet, "Hemen-Al biletleri · {coffee}": the viewer's own tickets first (Gönder / masaya bırak / geri al, as before), then the tickets on the table as golden tickets — "Barış'ın bileti · masada", **Al** → basket (the ticket gets a dark frame "sepette ✓", "Sepete git → … TL", sepetten çıkar and the grind select sit at the top). "+n daha masada" past the first 12. No ticket anywhere → "Masada bilet yok — kapora koy, k bilet senin" with the kapora button and the quiet ask link. The old direct-buy popup (`jHemenPop`) now opens this view; `jTkCard`/`jTkStubMine` are shared by the juror sheet.
 - Tests: page 205; `tests/shot-tblview.mjs` (phone + desktop, before/after Al).
+
+## v12o (2026-10-08) — hotfix: the ticket view must never force a kapora
+- Live still carried `offer_hemen_base = 2` (saved before the field was removed), so the chip said "2 kaldı" while the ticket view found no table ticket and showed only "Kapora koy". Now quota seats the proxy reports (`left`) appear in the view as tickets "açık koltuk · CoffeeNutz" with **Al** (pool path; a second Al adds +1). The kapora-only screen appears only when there is nothing at all to take.
+- Admin v2026-10-08e: saving Ayarlar sends `offer_hemen_base = ''` and `offer_hemen_open = ''` so the stale quota clears on the next save (blank = 0 seats, threshold 1).
+- Tests: page 208, admin 48.
