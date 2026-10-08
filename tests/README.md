@@ -118,3 +118,8 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - **No chip on the result card**: the "Seçildi" / popularity tag chip is gone from the picker card (`jSecTag` kept, unused).
 - **Dropdown**: a `select.secsel` at the end of the "1 · Damağın" icon row lists every open Hemen-Al coffee (name · price TL, placeholder "Kahve seç…"); `jSecPick(id)` jumps to it, switching the taste to ☕ Hepsi when the coffee is outside the current band.
 - Tests: page 181 (pill/title text, no `.rc .tag`, select options + `jSecPick`).
+
+## v12i (2026-10-08) — silent ask (proxy v3.62) · admin v2026-10-08b
+- **"Hemen-Al istiyorum ›"** (Ömer "closed voting"): a quiet link under the gate CTA of a shut-door lane (jüri açar, no kapora/basket on this device). Tap → `POST /offer-ask {dev,id}` → `hask_<offer>_<dev>` = {at, n}; the line becomes "İstek alındı ✓" (server `asked[]` in `/offer-mine` + localStorage `grupal_hask`). No count anywhere on the page, nothing on the card chip, no toast; the plain `/hemen-al` page is untouched. The proxy refuses an ask on an open door (`reason:'open'`).
+- **Admin**: offer row "✋ n Hemen-Al isteği"; edit form button "İsteyenlere bilet ver · n kişi" → `POST /admin/ask-grant {id}` → every asking device gets `offer_hemen_ask_inv` private tickets (Ayarlar "istek başına bilet", default **1**, 0–3; `inv_` records carry `ask:true`, 24 h private then table, 7 days), devices that already hold a ticket or a kapora on the coffee are skipped, the asks are deleted. The door itself stays a separate decision ("Hemen-Al'ı aç"). `hask_` rows are swept after 28 days.
+- Tests: page 188, proxy 215, admin 48; `tests/shot-gate.mjs` captures the ask line before/after.

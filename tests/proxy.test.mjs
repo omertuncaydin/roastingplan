@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.61 tag', r.json && r.json.v === '3.61');
+T('v3.62 tag', r.json && r.json.v === '3.62');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -340,7 +340,7 @@ Date.now = realNow;
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.61');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.62');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
@@ -448,5 +448,30 @@ Date.now = realNow;
   r = await px.call('POST', '/hemen-link', { dev: 'GATEGUEST1', items: [{ id: G1, qty: 1, inv: invG }] }); T('a ticket opens the shut door (via inv)', r.json.ok === true && r.json.items[0].via === 'inv');
   px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '0';
   r = await px.call('GET', '/meydan'); g1 = r.json.offers.find(o => o.id === G1); T('setting 0 → old behaviour, always open', !g1.hemen.gate && g1.hemen.left === BASE);
+  Date.now = () => NOW; }
+// ---- v3.62: silent ask — a device leaves "Hemen-Al istiyorum" on a shut door; the count never reaches the page; admin grants private tickets
+{ Date.now = () => NOW; const KEYH = { 'x-cc-key': 'adminkey' };
+  const G3 = '10000000-0000-4000-8000-00000000a003';
+  px.DB.grupal_offers.push({ id: G3, name: 'Gate Three', origin: 'Peru', process: 'natural', active: true, sort: 42, pub: { name: 'Gate Three', origin: 'Peru', process: 'natural' }, meta: { list_tl: 1600, img_url: 'https://db.test/g3.jpg', hemen_url: 'https://coffeenutz.net/cart/603:1' }, created_at: '2026-09-01T00:00:00Z' });
+  px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '1';
+  r = await px.call('POST', '/offer-ask', { dev: 'ASKDEV0001', id: G3 }); T('ask on a shut door → ok, hask_ row written', r.json.ok === true && r.json.asked === true && px.DB.grupal_settings.some(x => x.key === 'hask_' + G3 + '_ASKDEV0001'));
+  r = await px.call('POST', '/offer-ask', { dev: 'ASKDEV0001', id: G3 }); T('asking twice is one row (dup)', r.json.ok === true && r.json.dup === true && px.DB.grupal_settings.filter(x => x.key.startsWith('hask_' + G3 + '_')).length === 1);
+  r = await px.call('POST', '/offer-ask', { dev: 'ASKDEV0002', id: G3 }); r = await px.call('POST', '/offer-ask', { dev: 'GATEHOST02', id: G3 });
+  r = await px.call('POST', '/offer-ask', { dev: 'ASKDEV0009', id: '10000000-0000-4000-8000-00000000a002' }); T('ask on an open door is refused (reason open)', r.json.ok === false && r.json.reason === 'open');
+  r = await px.call('GET', '/meydan'); let g3 = r.json.offers.find(o => o.id === G3); T('/meydan carries no ask count and no hask keys', !('ask' in g3) && !JSON.stringify(r.json).includes('hask_') && !JSON.stringify(r.json).includes('ASKDEV'));
+  r = await px.call('GET', '/offer-mine?dev=ASKDEV0001'); T('/offer-mine asked[] lists only my own asks', Array.isArray(r.json.asked) && r.json.asked.length === 1 && r.json.asked[0] === G3);
+  r = await px.call('GET', '/offer-mine?dev=ASKDEV0009'); T('another device sees no asks', Array.isArray(r.json.asked) && r.json.asked.length === 0);
+  r = await px.call('GET', '/admin/offers', null, KEYH); g3 = r.json.find(o => o.id === G3); T('admin row carries ask = 3', g3.ask === 3);
+  r = await px.call('POST', '/admin/settings', { offer_hemen_ask_inv: '2' }, KEYH); T('Ayarlar accepts offer_hemen_ask_inv', r.json.ok === true && r.json.cfg.hemen_ask_inv === 2);
+  r = await px.call('POST', '/admin/ask-grant', { id: G3 }, KEYH);
+  T('grant → 2 tickets per asking device, GATEHOST02 (has a kapora elsewhere, none here) included: 3 devices, 6 tickets, asks cleared', r.json.ok === true && r.json.devs === 3 && r.json.minted === 6 && r.json.per === 2 && px.DB.grupal_settings.filter(x => x.key.startsWith('hask_' + G3 + '_')).length === 0);
+  const tk = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).map(x => JSON.parse(x.value)).filter(j => j.o === G3);
+  T('tickets are private (p), ask:true, 7 days, no order id', tk.length === 6 && tk.every(j => j.st === 'p' && j.ask === true && j.oid === null && new Date(j.exp).getTime() - NOW === 7 * 86400000));
+  r = await px.call('GET', '/offer-mine?dev=ASKDEV0001'); T('the asker now holds 2 private tickets for the coffee and the ask is gone', r.json.inv.filter(i => i.id === G3 && i.st === 'p').length === 2 && r.json.asked.length === 0);
+  const code = r.json.inv.find(i => i.id === G3).c;
+  r = await px.call('POST', '/hemen-link', { dev: 'ASKDEV0001', items: [{ id: G3, qty: 1, inv: code }] }); T('the granted ticket opens the shut door', r.json.ok === true && r.json.items[0].via === 'inv');
+  r = await px.call('POST', '/offer-ask', { dev: 'ASKDEV0001', id: G3 }); r = await px.call('POST', '/admin/ask-grant', { id: G3 }, KEYH); T('a device that already holds tickets is skipped on a second grant', r.json.ok === true && r.json.devs === 0 && r.json.skipped === 1);
+  r = await px.call('POST', '/admin/ask-grant', { id: G3 }, KEYH); T('nothing to grant → 0/0', r.json.ok === true && r.json.devs === 0 && r.json.minted === 0);
+  px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '0';
   Date.now = () => NOW; }
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);

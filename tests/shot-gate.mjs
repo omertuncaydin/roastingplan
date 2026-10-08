@@ -20,6 +20,14 @@ await page.goto('https://grup-al.com/juri'); await page.waitForTimeout(1300);
 await page.evaluate(id=>{ document.querySelector('#jDeck .jcard[data-id="'+id+'"]').scrollIntoView({block:'center',inline:'center'}); },G0.id); await page.waitForTimeout(400);
 const card=await page.$('#jDeck .jcard[data-id="'+G0.id+'"]'); await card.screenshot({path:path.join(OUT,'gate_card.png')});
 await page.evaluate(id=>jLaneOpen(id),G0.id); await page.waitForTimeout(700); const c2=await page.$('.jcard.lopen'); await c2.screenshot({path:path.join(OUT,'gate_lane.png')});
+// v12i: quiet "Hemen-Al istiyorum ›" under the gate CTA → "İstek alındı ✓" (lane element, scrolled into view)
+await page.evaluate(()=>{ const e=document.querySelector('.jcard.lopen .jlane.ha'); e&&e.scrollIntoView({block:'center'}); }); await page.waitForTimeout(300);
+const askTxt=await page.evaluate(()=>{ const e=document.querySelector('.jcard.lopen .jlane.ha .why.hask'); return e?e.textContent:''; }); if(askTxt!=='Hemen-Al istiyorum ›') bad++;
+const scrollLanes=()=>page.evaluate(()=>{ const e=document.querySelector('.jcard.lopen .jlanes'); if(e) e.scrollTop=e.scrollHeight; });
+await scrollLanes(); await page.waitForTimeout(200); const la=await page.$('.jcard.lopen .jlanes'); if(la) await la.screenshot({path:path.join(OUT,'gate_ask.png')});
+await page.route('**/offer-ask',r=>r.fulfill({status:200,contentType:'application/json',body:'{"ok":true,"asked":true}'})); await page.evaluate(id=>jAsk(id),G0.id); await page.waitForTimeout(400);
+const askTxt2=await page.evaluate(()=>{ const e=document.querySelector('.jcard.lopen .jlane.ha .why.hask'); return e?e.textContent:''; }); if(askTxt2!=='İstek alındı ✓') bad++;
+await scrollLanes(); await page.waitForTimeout(200); const la2=await page.$('.jcard.lopen .jlanes'); if(la2) await la2.screenshot({path:path.join(OUT,'gate_asked.png')});
 const st=await page.evaluate(()=>({tag:document.querySelector('.jcard.lopen .jnow .jpl').textContent, cta:document.querySelector('.jcard.lopen .jlane.ha .cta').textContent, st:document.querySelector('.jcard.lopen .jlane.ha .st').textContent}));
 console.log(JSON.stringify(st)); if(!(/jüri açar/.test(st.tag)&&/Kapora koy · 2 bilet senin/.test(st.cta))) bad++;
 await page.evaluate(()=>{ jLaneClose(); document.getElementById('jP2').scrollIntoView({block:'start'}); }); await page.waitForTimeout(400);

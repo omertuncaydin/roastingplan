@@ -17,7 +17,7 @@ function mk(variants){
   return w;
 }
 (async()=>{
-  T('admin version bumped', /const VERSION='v2026-10-08a';/.test(html));
+  T('admin version bumped', /const VERSION='v2026-10-08b';/.test(html));
   let w=mk(VARS); const g=w.__g;
   // 1. cart permalink passes through (www stripped)
   let r=await g('cartLinkFrom')('https://www.coffeenutz.net/cart/123:1','oe_hemen',1240); T('cart permalink accepted, www stripped', r==='https://coffeenutz.net/cart/123:1');
@@ -103,5 +103,15 @@ function mk(variants){
     markReply={ok:false,reason:'already',error:'zaten tamamlanmış (sipariş 19090156192048)'}; w.document.getElementById('om_order').value='5'; await w.__g('orderMark')(); T('server refusal shows its error text', /Olmadı: zaten tamamlanmış \(sipariş 19090156192048\)/.test(w.document.getElementById('omMsg').textContent));
     markReply={ok:false,reason:'dup'}; await w.__g('orderMark')(); T('reason without error text → Turkish mapping (dup)', /Olmadı: bu sipariş zaten sayılmış/.test(w.document.getElementById('omMsg').textContent));
     await w.__g('linkDismiss')('HAQQQQQQ',false); await w.__g('linkDismiss')('HAXXXXXX',true); T('yok say / geri al → POST /admin/link-dismiss {code, undo}', posts.filter(p=>p[0]==='dismiss').length===2 && posts.find(p=>p[0]==='dismiss'&&p[1].code==='HAQQQQQQ')[1].undo===false && posts.find(p=>p[0]==='dismiss'&&p[1].code==='HAXXXXXX')[1].undo===true); }
+  // v2026-10-08b (proxy v3.62, Ömer "closed voting"): Ayarlar "istek başına bilet" → offer_hemen_ask_inv; row "✋ n Hemen-Al isteği"; form button "İsteyenlere bilet ver · n kişi" → POST /admin/ask-grant {id}; silent elsewhere
+  { const w=mk(VARS); const calls=[]; const f0=w.fetch; w.fetch=async(u,init)=>{ const s=String(u); if(s.endsWith('/admin/ask-grant')){ calls.push(JSON.parse(init.body)); return {ok:true,status:200,json:async()=>({ok:true,devs:3,minted:3,skipped:1,per:1})}; } if(s.endsWith('/admin/settings')&&init&&init.method==='POST'){ calls.push(['settings',JSON.parse(init.body)]); return {ok:true,status:200,json:async()=>({ok:true,settings:{},cfg:{}})}; } if(s.endsWith('/admin/offers')) return {ok:true,status:200,json:async()=>[]}; return f0(u,init); };
+    T('Ayarlar has the "istek başına bilet" field (s_hask)', !!w.document.getElementById('s_hask'));
+    w.__g("OFFERS=[{id:'11111111-1111-4111-8111-111111111111',name:'El Recreo',active:true,published:true,dep:0,n:2,seated:0,ask:3,meta:{}},{id:'22222222-2222-4222-8222-222222222222',name:'Baho',active:true,published:true,dep:3,n:3,seated:0,ask:0,meta:{}}]; OFFCFG={goal:40,dep_url:'https://coffeenutz.net/cart/1:1'}; renderOffersAdmin();");
+    const L=w.document.getElementById('offList').textContent; T('row shows "✋ 3 Hemen-Al isteği" only where asks exist', /✋ 3 Hemen-Al isteği/.test(L) && (L.match(/Hemen-Al isteği/g)||[]).length===1);
+    w.__g("offEdit('11111111-1111-4111-8111-111111111111')"); const b=[...w.document.querySelectorAll('#offList button')].find(x=>/İsteyenlere bilet ver/.test(x.textContent));
+    T('edit form: "İsteyenlere bilet ver · 3 kişi" button next to the Hemen-Al\'ı aç checkbox', !!b && b.textContent==='İsteyenlere bilet ver · 3 kişi' && !!w.document.getElementById('oe_hopen'));
+    w.confirm=()=>false; await w.__g('askGrant')('11111111-1111-4111-8111-111111111111'); T('confirm cancelled → nothing sent', calls.length===0);
+    w.confirm=()=>true; await w.__g('askGrant')('11111111-1111-4111-8111-111111111111'); T('→ POST /admin/ask-grant {id}; alert "3 bilet · 3 kişi · atlanan … 1"', calls.length===1 && calls[0].id==='11111111-1111-4111-8111-111111111111' && w.alerts.some(a=>/^3 bilet · 3 kişi · atlanan \(zaten bileti\/kaporası var\) 1$/.test(a)));
+    w.__g("offEdit('22222222-2222-4222-8222-222222222222')"); T('no asks → no button', ![...w.document.querySelectorAll('#offList button')].some(x=>/İsteyenlere bilet ver/.test(x.textContent))); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })();
