@@ -128,3 +128,9 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - **grup-al.com/hemen-al** rows said "2 kaldı" on every coffee: the row used the quota alone (`hemen.left`) while the card chip counts quota + table tickets (`jHemenOpen`). Now both show the same number (El Recreo 7, Nuwa 4 …). Tests: page 190.
 
 - **v2026-10-08k (Ömer)**: /hemen-al subtitle "Jürinin oyladığı **ve stoğumuzda olan** kahveler · %20 indirim · …".
+
+## v12l (2026-10-08) — only tickets, no quotas (proxy v3.63) · admin v2026-10-08c
+- **Yalnız bilet (Ömer)**: `offer_hemen_base` defaults to **0** — Hemen‑Al is bought only with a ticket (24 h private to the juror, then the table). A quota can still be set in Ayarlar or per coffee. Tickets per kapora up to **20** (`offer_hemen_inv`, 60 per order). Proxy sends `hemen.priv` (tickets still private) and `hemen.table_n` (total on the table; the `table` list stays 12).
+- **Page**: card chip and lane: "biletler jüride" while tickets are private (status "Biletler jüride — 24 saat içinde masaya"), "bilet kalmadı" when none (was "doldu"); all counts use `table_n` (130 kaldı, +129 daha masada); "kota" wording removed from the ticket/table texts.
+- **Plumbing for volume**: `pgAll` pages every full read of `grupal_settings` and `grupal_offer_votes` in 1000s (Supabase max‑rows silently truncated past 1000 — raise "Max rows" in Supabase → Project Settings → API as well); Shopify GraphQL THROTTLED/429 → 1 s wait, 2 retries.
+- Tests: page 196, proxy 225 (1311 table tickets / 1100 Hemen‑Al rows read in full; throttle retry), admin 48, middleware 11.

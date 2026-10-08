@@ -279,10 +279,10 @@ details.set.card[open]>summary{margin-bottom:6px}
         </div>
         <div class="sh">Hemen-Al · beklemeden, %20 (proxy v3.38)</div>
         <div class="g2">
-          <div class="f"><span class="lbl">açık koltuk · kahve başına, haftalık (davetiye kotaya bakmaz)</span><input id="s_hbase" inputmode="numeric" placeholder="2"></div>
+          <div class="f"><span class="lbl">açık koltuk (kota) · kahve başına, haftalık · 0 = yalnız biletle (varsayılan, proxy v3.63)</span><input id="s_hbase" inputmode="numeric" placeholder="0"></div>
           <div class="f"><span class="lbl">jüri açar · kota için en az kaç kapora (0 = oy şartı yok)</span><input id="s_hopen" inputmode="numeric" placeholder="1"></div>
           <div class="f"><span class="lbl">istek başına bilet · kapalı kapıya "Hemen-Al istiyorum" diyene, sen basınca (0–3)</span><input id="s_hask" inputmode="numeric" placeholder="1"></div>
-          <div class="f"><span class="lbl">kapora başına davetiye (0 = kapalı, en çok 6/sipariş)</span><input id="s_hinv" inputmode="numeric" placeholder="2"></div>
+          <div class="f"><span class="lbl">kapora başına bilet (0–20 · sipariş başına en çok 60)</span><input id="s_hinv" inputmode="numeric" placeholder="2"></div>
           <div class="f"><span class="lbl">davetiye özel kalma süresi (saat · sonra masaya çıkar)</span><input id="s_hinvh" inputmode="numeric" placeholder="24"></div>
           <div class="note">Hemen-Al şeridi yalnız <b>görseli</b> ve <b>Hemen-Al linki</b> (Düzenle) olan kahvede görünür: görsel yüklenen kahve stokta sayılır. Sipariş sıradaki Pazartesi kavrulur, 40'a bakmaz; her paket sayıma sayılır. Fiyat = liste × Sepet oranı (%20 için 0,80); Kaporalı fiyat = liste × Kaporalı oranı (%40 için 0,60). Boş alan = varsayılan (2 · 2 · 24).</div>
         </div>
@@ -356,7 +356,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-10-08b';
+const VERSION='v2026-10-08c';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme

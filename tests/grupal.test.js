@@ -147,18 +147,18 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
       await w.eval("hbGo()"); await sleep(40);
       T('Sepete git → POST /hemen-link {dev, items:[{H0,1}] (+ legacy id/inv/qty)} → navigates to the discount link returned by the proxy', calls.length===1 && calls[0].items.length===1 && calls[0].items[0].id===H0.id && calls[0].id===H0.id && /^[A-Z0-9]{8,16}$/.test(calls[0].dev) && calls[0].inv===null && nav && nav.includes('discount=HAABC123') && nav.includes('attributes[hemen]=1'));
       w.fetch=async(u,init)=>{ if(String(u).includes('/hemen-link')) return {ok:true,json:async()=>({ok:false,reason:'full'})}; return f0(u,init); }; nav=null; await w.eval("hbGo()"); await sleep(40);
-      T('proxy says full → no navigation, toast "Hemen-Al doldu."', nav===null && w.__g('window.__jToast') && w.__g('window.__jToast').txt==='Hemen-Al doldu.');
+      T('proxy says full → no navigation, toast "Bilet kalmadı."', nav===null && w.__g('window.__jToast') && w.__g('window.__jToast').txt==='Bilet kalmadı.');
       // v10e: the request carries an abort signal; an AbortError (25 s timeout) resets the button with its own toast instead of hanging on "bağlanıyor…"
       let sig=null; w.fetch=async(u,init)=>{ if(String(u).includes('/hemen-link')){ sig=init.signal; const e=new Error('aborted'); e.name='AbortError'; throw e; } return f0(u,init); }; nav=null; w.eval("window.__jToast=null"); await w.eval("hbGo()"); await sleep(40);
       T('hemen-link timeout: signal attached, AbortError → "Shopify yanıt vermedi" toast, CTA back to Sepete git', !!sig && nav===null && w.__g('window.__jToast') && /Shopify yanıt vermedi/.test(w.__g('window.__jToast').txt) && /Sepete git/.test(w.document.querySelector('.jcard.lopen .jlane.ha .cta').textContent));
       w.eval("hbDel('"+H0.id+"')"); await sleep(40); T('sepetten çıkar → basket empty, lane back to Sepete ekle · price, bar hidden', w.__g('hbItems')().length===0 && w.document.querySelector('.jcard.lopen .jlane.ha .cta').textContent==='Sepete ekle · 1.280 TL' && w.document.getElementById('hbBar').style.display==='none');
       w.fetch=f0; w.eval("window.__jToast=null; jLaneClose()"); await sleep(40); }
     w.eval("dbClear(); jLaneOpen('"+H1.id+"')"); await sleep(40); sh=w.document.querySelector('.jcard.lopen .jlanes-w');
-    T('sold-out lane: full, CTA off says doldu, status invites a kapora (+2 bilet)', sh.querySelector('.jlane.ha').classList.contains('full') && sh.querySelector('.jlane.ha .cta').classList.contains('off') && sh.querySelector('.jlane.ha .cta').textContent==='doldu' && !sh.querySelector('.jlane.ha .cta').getAttribute('onclick') && sh.querySelector('.jlane.ha .st').textContent.includes('kapora koy, +2 bilet'));
+    T('no-ticket lane (v12l tickets only): full, CTA off says "bilet kalmadı", status invites a kapora (+2 bilet)', sh.querySelector('.jlane.ha').classList.contains('full') && sh.querySelector('.jlane.ha .cta').classList.contains('off') && sh.querySelector('.jlane.ha .cta').textContent==='bilet kalmadı' && !sh.querySelector('.jlane.ha .cta').getAttribute('onclick') && sh.querySelector('.jlane.ha .st').textContent.includes('Bilet kalmadı — kapora koy, +2 bilet'));
     w.eval("jLaneOpen('"+H2.id+"','ABCD2345')"); await sleep(40); sh=w.document.querySelector('.jcard.lopen .jlanes-w');
     T('table pick: Hemen-Al lane marked davetli, CTA Biletle al with the code', sh.querySelector('.jlane.ha .lt').textContent==='Hemen-Al · davetli' && sh.querySelector('.jlane.ha .cta').textContent==='Biletle al · 1.280 TL' && sh.querySelector('.jlane.ha .cta').getAttribute('onclick').includes("jHemenGo('"+H2.id+"','ABCD2345')") && !sh.querySelector('.jlane.ha').classList.contains('full'));
     w.eval("jLaneClose(); jLaneOpen('"+H2.id+"')"); await sleep(40); sh=w.document.querySelector('.jcard.lopen .jlanes-w');
-    T('sold-out but table has a seat: CTA "Masadan al · Ömer\'in koltuğu" with that code, why-line names the holder', sh.querySelector('.jlane.ha .cta').textContent==="Masadan al · Ömer'in koltuğu" && sh.querySelector('.jlane.ha .cta').getAttribute('onclick').includes("'ABCD2345'") && /masada Ömer'in bileti var/.test(sh.querySelector('.jlane.ha .why').textContent));
+    T('sold-out but table has a seat: CTA "Masadan al · Ömer\'in koltuğu" with that code, why-line names the holder', sh.querySelector('.jlane.ha .cta').textContent==="Masadan al · Ömer'in koltuğu" && sh.querySelector('.jlane.ha .cta').getAttribute('onclick').includes("'ABCD2345'") && /Masada Ömer'in bileti var/.test(sh.querySelector('.jlane.ha .why').textContent));
     w.eval("jLaneClose()"); await sleep(40); T('close removes the panel', !w.document.querySelector('.jcard.lopen') && !w.document.querySelector('.jlanes-w'));
     // ---- my invitations
     const exp=new Date(new Date(2026,8,23,12,0,0).getTime()+3*86400000).toISOString();   // test clock is frozen at 2026-09-23 12:00
@@ -330,7 +330,7 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('jThumb: photo coffee → <img>, no photo → mountain&sun svg', /^<img /.test(wp.__g('jThumb')({img_url:'https://x.test/a.jpg',origin:'Kenya'},50,50)) && /<svg/.test(wp.__g('jThumb')({origin:'Kenya'},50,50)));
     const c=wp.document.querySelector('.jcard[data-id="'+A2.id+'"]'); T('every card is rigged: strip + zone + ring groups; rig closed at rest', !!c && !!c.querySelector('.jwa') && !!c.querySelector('.jwz') && !!c.querySelector('svg.jring .rl') && !!c.querySelector('svg.jring .cg text') && c.__jwa && c.__jwa.state==='closed');
     T('no B strip / C layer left in the markup', !wp.document.querySelector('.jwb') && !wp.document.querySelector('.jwc') && !/jWalkStripHtml|jWalkLayerHtml/.test(html));
-    T('page version bumped to v2026-10-08h', /const VERSION='v2026-10-08k';/.test(html));
+    T('page version bumped to v2026-10-08h', /const VERSION='v2026-10-08l';/.test(html));
     // v11p: the total line has no denominator any more — "Bu oturum n paket · k kahve · r kavruluyor"
     { const MT=JSON.parse(JSON.stringify(MD)); const L=MT.offers.find(o=>o.id===ord[0].id); L.lock={at:'2026-09-30T10:00:00Z',n:1,close:'2026-10-04T20:59:00Z',state:'locked',dep:17,dep_tl:100,forced:true,people:[]}; L.dep=0; L.conv=17; MT.offer_cfg.day_goal=40;
       const wt=mk({'/meydan':MT,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); const tot=MT.offers.reduce((a,o)=>a+(o.dep||0),0), kk=MT.offers.filter(o=>(o.dep||0)>0).length;
@@ -358,7 +358,7 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     // a coffee that no longer passes (proxy: full with its id) is dropped and the link retried once with the rest
     wb.fetch=async(u,init)=>{ if(String(u).includes('/hemen-link')){ const b=JSON.parse(init.body); calls.push(b); if(b.items.some(i=>i.id===B0.id)) return {ok:true,json:async()=>({ok:false,reason:'full',id:B0.id})}; return {ok:true,json:async()=>({ok:true,url:'https://coffeenutz.net/cart/ok?discount=HARETRY1&attributes[hemen]=1'})}; } return f0(u,init); };
     nav=null; wb.eval("window.__jToast=null"); await wb.eval("hbGo()"); await sleep(60);
-    T('B0 sold out meanwhile → dropped from the basket with a toast, retried with B1 only, navigates', wb.__g('hbItems')().length===1 && wb.__g('hbItems')()[0].id===B1.id && calls[calls.length-1].items.length===1 && nav && nav.includes('HARETRY1') && wb.__g('window.__jToast') && wb.__g('window.__jToast').txt.includes(B0.name) && /doldu/.test(wb.__g('window.__jToast').txt));
+    T('B0 sold out meanwhile → dropped from the basket with a toast, retried with B1 only, navigates', wb.__g('hbItems')().length===1 && wb.__g('hbItems')()[0].id===B1.id && calls[calls.length-1].items.length===1 && nav && nav.includes('HARETRY1') && wb.__g('window.__jToast') && wb.__g('window.__jToast').txt.includes(B0.name) && /Bilet kalmadı/.test(wb.__g('window.__jToast').txt));
     // paid → pruned: /offer-mine reports an H row for B1 created after it was put in the basket
     wb.fetch=async(u,init)=>{ if(String(u).includes('/offer-mine')) return {ok:true,json:async()=>({votes:[],inv:[],hemen:[{id:B1.id,qty:1,at:new Date(wb.__g('Date.now()')+5000).toISOString(),via:'pool'}]})}; return f0(u,init); };
     await wb.__g("offLoadMine(STATE)"); await sleep(40); T('after the order arrives the paid coffee leaves the basket, bar hidden', wb.__g('hbItems')().length===0 && wb.document.getElementById('hbBar').style.display==='none');
@@ -421,6 +421,20 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     wg.eval("jLaneClose(); jLaneOpen('"+G1.id+"')"); await sleep(40); T('a gated lane with a table ticket shows no ask line', !wg.document.querySelector('.jcard.lopen .jlane.ha .why.hask'));
     const wk=mk({'/meydan':MG,'/offer-mine':{votes:[],inv:[],hemen:[],asked:[G0.id]},'/campaigns':[]},390); await sleep(250); wk.eval("jLaneOpen('"+G0.id+"')"); await sleep(40);
     T('/offer-mine asked[] → "İstek alındı ✓" on a fresh device state', wk.document.querySelector('.jcard.lopen .jlane.ha .why.hask').textContent==='İstek alındı ✓'); }
+  // v12l (proxy v3.63, Ömer "only tickets, no quotas"): quota 0 everywhere — card/lane say "biletler jüride" while tickets are private, "bilet kalmadı" when none; counts use table_n (list capped at 12)
+  { const MP=JSON.parse(JSON.stringify(MD)); const P0=MP.offers.find(o=>o.id===ord[3].id), P1=MP.offers.find(o=>o.id===ord[4].id), P2=MP.offers.find(o=>o.id===ord[5].id);
+    for(const [o,v] of [[P0,801],[P1,802],[P2,803]]){ o.img_url='https://x.test/o/'+v+'.jpg'; o.hemen={url:'https://coffeenutz.net/cart/'+v+':1',price:865,base:0,sold:0,inv:0,left:0,green_left:null,table:[],table_n:0,priv:0,roast_at:'2026-10-05T20:59:00.000Z'}; o.list_tl=1080; o.dep=3; }
+    P0.hemen.priv=11; P1.hemen.table=Array.from({length:12},(_,i)=>({c:'T'+i,n:'Ad'+i,tat:'2026-09-22T1'+i%10+':00:00Z'})); P1.hemen.table_n=130; MP.offer_cfg.hemen_inv_h=24;
+    const wp=mk({'/meydan':MP,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},390); await sleep(250);
+    const tag=id=>wp.document.querySelector('#jDeck .jcard[data-id="'+id+'"] .jnow .jpl').textContent;
+    T('private phase: chip "Hemen-Al · biletler jüride"', /biletler jüride/.test(tag(P0.id)) && !/doldu/.test(tag(P0.id)));
+    T('130 on the table, list of 12 → chip "130 kaldı"', /130 kaldı/.test(tag(P1.id)));
+    T('no tickets at all: chip "bilet kalmadı"', /bilet kalmadı/.test(tag(P2.id)));
+    wp.eval("jLaneOpen('"+P0.id+"')"); await sleep(40); let lp=wp.document.querySelector('.jcard.lopen .jlane.ha');
+    T('private-phase lane: status "Biletler jüride — 24 saat içinde masaya", CTA off "biletler jüride"', /Biletler jüride — 24 saat içinde masaya/.test(lp.querySelector('.st').textContent) && lp.querySelector('.cta').textContent==='biletler jüride' && lp.querySelector('.cta').classList.contains('off'));
+    wp.eval("jLaneClose(); jLaneOpen('"+P1.id+"')"); await sleep(40); lp=wp.document.querySelector('.jcard.lopen .jlane.ha');
+    T('table lane: "130 kaldı", Masadan al, "+129 daha masada"', /^130/.test(lp.querySelector('.qt').textContent) && /Masadan al/.test(lp.querySelector('.cta').textContent) && /\+129 daha masada/.test(lp.querySelector('.why').textContent));
+    T('plain page counts the same 130 and skips the private-only and empty coffees', (()=>{ const L=wp.__g("jSecList('all')"); return L.some(o=>o.id===P1.id) && !L.some(o=>o.id===P0.id) && !L.some(o=>o.id===P2.id); })() && !/kota dolu/.test(html)); }
   // v12a (Ömer, forum link): grup-al.com/juri?hemen=1 opens the Hemen-Al picker (Benim için seç) by itself; without the param nothing opens
   { const MB=JSON.parse(JSON.stringify(MD)); const B0=MB.offers.find(o=>o.id===ord[0].id); B0.img_url='https://x.test/o/1.jpg'; B0.hemen={url:'https://coffeenutz.net/cart/222:1',price:990,base:3,sold:0,inv:0,left:3,green_left:null,table:[],roast_at:'2026-10-05T20:59:00.000Z'}; B0.list_tl=1240;
     const wl=mk({'/meydan':MB,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},390,'https://grup-al.com/juri?hemen=1'); await sleep(600);
@@ -459,6 +473,6 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('Sepete ekle → basket has it (2), sheet stays open with "Sepete git → 1.710 TL" + başka kahve seç + sepetten çıkar; bar shown', ws.__g('hbItems')().length===1 && ws.__g('hbItems')()[0].qty===2 && !!ws.document.querySelector('#jSheet .jsec') && ws.document.querySelector('#jSheet .rc .go').textContent==='Sepete git → 1.710 TL' && ws.document.querySelector('#jSheet .rc .go').getAttribute('onclick')==='hbGo()' && /başka kahve seç/.test(ws.document.querySelector('#jSheet .rc .alt').textContent) && ws.document.getElementById('hbBar').style.display==='flex');
     ws.eval("jSecK('cn')"); await sleep(40); T("CoffeeNutz'ın 5'i filter lists only starred coffees with an open door", ws.__g("jSecList('cn')").every(o=>ws.__g("jTop(STATE.offers.find(x=>x.id==='"+o.id+"'))")));
     const wd=mk({'/meydan':MS,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); T('desktop (D1): filled block is the first thing in the sidebar; sheet renders the same card', !!wd.document.querySelector('.jdk-side .jsecb.jsecd') && wd.document.querySelector('.jdk-side').firstElementChild.classList.contains('jsecd') && /Jürinin seçimi/.test(wd.document.querySelector('.jdk-side .jsecd').textContent) && (wd.eval("jSecOpen()"), true) && !!wd.document.querySelector('#jSheet .jsec .rc'));
-    T('page version bumped to v2026-10-08h', /const VERSION='v2026-10-08k';/.test(html)); }
+    T('page version bumped to v2026-10-08h', /const VERSION='v2026-10-08l';/.test(html)); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })().catch(e=>{ console.log('CRASH',e.message,e.stack.split('\n').slice(0,3).join(' / ')); process.exit(1); });
