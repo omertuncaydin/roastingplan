@@ -354,7 +354,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-10-08e';
+const VERSION='v2026-10-08f';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -540,7 +540,7 @@ async function offSettingsSave(){
   if(!(await resolveIfProduct('s_depurl'))) return;
   const body={offer_dep_url:$('s_depurl').value.trim(),offer_dep_amt:$('s_depamt').value.trim(),offer_goal:$('s_goal').value.trim(),
     offer_dep_code:$('s_depcode').value.trim(),offer_dep_open_at:'',offer_day_goal:$('s_daygoal').value.trim(),
-    offer_cycle_days:$('s_cycledays').value.trim(),offer_capacity:$('s_capacity').value.trim(),offer_done_days:$('s_donedays').value.trim(),offer_sepet_days:$('s_sepetdays').value.trim(),offer_hemen_ask_inv:$('s_hask').value.trim(),offer_hemen_inv:$('s_hinv').value.trim(),offer_hemen_base:'',offer_hemen_open:'',   /* v2026-10-08e: kota ve kapı eşiği alanları kalktı — kayıtta eski değer temizlenir (boş = 0 koltuk, eşik 1) */ offer_hemen_inv_h:$('s_hinvh').value.trim(),offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),login_required:$('s_login').value,wa_group_url:$('s_wagroup').value.trim(),
+    offer_cycle_days:$('s_cycledays').value.trim(),offer_capacity:$('s_capacity').value.trim(),offer_done_days:$('s_donedays').value.trim(),offer_sepet_days:$('s_sepetdays').value.trim(),offer_hemen_ask_inv:$('s_hask').value.trim(),offer_hemen_inv:$('s_hinv').value.trim(),offer_hemen_base:'0',offer_hemen_open:'1',   /* v2026-10-08f: kota ve kapı eşiği alanları kalktı — kayıtta açıkça 0 koltuk / eşik 1 yazılır (boş, eski proxy'de 2 demekti) */ offer_hemen_inv_h:$('s_hinvh').value.trim(),offer_forfeit_mode:$('s_forfeit').value,offer_ban_cycles:$('s_bancycles').value.trim(),login_required:$('s_login').value,wa_group_url:$('s_wagroup').value.trim(),
     offer_ref3_usd:$('s_ref3usd').value.trim().replace(',','.'),offer_ref3_list:$('s_ref3list').value.trim(),
     offer_ref_usd:$('s_refusd').value.trim().replace(',','.'),offer_ref_list:$('s_reflist').value.trim(),offer_ref2_usd:$('s_ref2usd').value.trim().replace(',','.'),offer_ref2_list:$('s_ref2list').value.trim(),offer_ratio_jury:$('s_rjury').value.trim().replace(',','.'),offer_ratio_basket:$('s_rbasket').value.trim().replace(',','.'),meydan_cycle_start:$('s_cycle').value?($('s_cycle').value+':00+03:00'):'',
     offer_show_prices:$('s_showp').checked?'1':'0'};

@@ -17,7 +17,7 @@ function mk(variants){
   return w;
 }
 (async()=>{
-  T('admin version bumped', /const VERSION='v2026-10-08e';/.test(html));
+  T('admin version bumped', /const VERSION='v2026-10-08f';/.test(html));
   let w=mk(VARS); const g=w.__g;
   // 1. cart permalink passes through (www stripped)
   let r=await g('cartLinkFrom')('https://www.coffeenutz.net/cart/123:1','oe_hemen',1240); T('cart permalink accepted, www stripped', r==='https://coffeenutz.net/cart/123:1');
@@ -106,6 +106,7 @@ function mk(variants){
   // v2026-10-08b (proxy v3.62, Ömer "closed voting"): Ayarlar "istek başına bilet" → offer_hemen_ask_inv; row "✋ n Hemen-Al isteği"; form button "İsteyenlere bilet ver · n kişi" → POST /admin/ask-grant {id}; silent elsewhere
   { const w=mk(VARS); const calls=[]; const f0=w.fetch; w.fetch=async(u,init)=>{ const s=String(u); if(s.endsWith('/admin/ask-grant')){ calls.push(JSON.parse(init.body)); return {ok:true,status:200,json:async()=>({ok:true,devs:3,minted:3,skipped:1,per:1})}; } if(s.endsWith('/admin/settings')&&init&&init.method==='POST'){ calls.push(['settings',JSON.parse(init.body)]); return {ok:true,status:200,json:async()=>({ok:true,settings:{},cfg:{}})}; } if(s.endsWith('/admin/offers')) return {ok:true,status:200,json:async()=>[]}; return f0(u,init); };
     T('Ayarlar has the "istek başına bilet" field (s_hask)', !!w.document.getElementById('s_hask'));
+    await w.__g('offSettingsSave')(); const sv=calls.find(c=>c[0]==='settings'); T('v2026-10-08f: Kaydet writes offer_hemen_base "0" and offer_hemen_open "1" explicitly (clears the stale quota on any proxy version)', !!sv && sv[1].offer_hemen_base==='0' && sv[1].offer_hemen_open==='1'); calls.length=0;
     w.__g("OFFERS=[{id:'11111111-1111-4111-8111-111111111111',name:'El Recreo',active:true,published:true,dep:0,n:2,seated:0,ask:3,meta:{}},{id:'22222222-2222-4222-8222-222222222222',name:'Baho',active:true,published:true,dep:3,n:3,seated:0,ask:0,meta:{}}]; OFFCFG={goal:40,dep_url:'https://coffeenutz.net/cart/1:1'}; renderOffersAdmin();");
     const L=w.document.getElementById('offList').textContent; T('row shows "✋ 3 Hemen-Al isteği" only where asks exist', /✋ 3 Hemen-Al isteği/.test(L) && (L.match(/Hemen-Al isteği/g)||[]).length===1);
     w.__g("offEdit('11111111-1111-4111-8111-111111111111')"); const b=[...w.document.querySelectorAll('#offList button')].find(x=>/İsteyenlere bilet ver/.test(x.textContent));

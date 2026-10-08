@@ -152,3 +152,5 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - Tests: page 208, admin 48.
 
 - **v2026-10-08p (hotfix)**: seat tickets used the class `seat`, which the old table-chair widget styles as a 64 px column — every seat ticket rendered as a thin strip (desktop and phone). Class renamed `kseat`; `tests/shot-tblview.mjs` now asserts the seat ticket is full width. Page tests 209.
+
+- **admin v2026-10-08f**: Kaydet writes `offer_hemen_base` = "0" and `offer_hemen_open` = "1" explicitly (a blank meant 2 seats on proxy ≤ 3.62, which is still live). Admin tests 49.
