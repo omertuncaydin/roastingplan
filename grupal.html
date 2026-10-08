@@ -767,6 +767,7 @@ let SLUG=new URLSearchParams(location.search).get('k')||(/^\/(meydan|juri)\/?$/.
 const MEYDAN=(SLUG==='meydan');
 const MD_HREF=/(^|\.)grup-al\.com$/.test(location.hostname)?'/juri':'?k=meydan';   // v09g: grup-al.com'da Jüri kapısı /juri'ye gider (adres çubuğunda meydan görünmesin); guide host'ta ?k=meydan   // v02v: kampanyasız Meydan sayfası (?k=meydan) — Jüri seçer, sayım 2 haftada bir
 const REF=new URLSearchParams(location.search).get('ref')||'';
+const HEMEN_LINK=new URLSearchParams(location.search).get('hemen')==='1';   // v12a: ?hemen=1 derin bağlantı
 // HEDİYE LİNKİ: ?g=GREF — hediye alan kişi koltuğu bu cihaza alır (adoptGift)
 const GREF=String(new URLSearchParams(location.search).get('g')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12);
 // KOLTUK LİNKİ: ?s=KOD — paket etiketindeki QR (adına kavrulmuş paket) koltuğu bu cihaza alır; kendi geçerli koltuğu varsa dokunmaz
@@ -777,7 +778,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-10-06l';
+const VERSION='v2026-10-08a';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -2768,6 +2769,7 @@ function applyMeydan(s){
     ['heroBox','deadline','roasterLine','dealLine','attCard','youCard','lvlCard','joinCard','paidCard','zincirCard','giftCard','payBlock','closedCard','annCard','howBox','shareRow'].forEach(id=>{ const el=$(id); if(el) el.style.display='none'; });
     try{ document.title='Grup-Al® Jüri · sıradaki kahveyi sen seç'; }catch(e){}
     renderOffers(s); offLoadMine(s); jInvBoot(); renderWishes(s); renderChan(); renderChat(); renderChips();
+    if(HEMEN_LINK&&!window.__hemenLinked){ window.__hemenLinked=true; setTimeout(()=>{ try{ if(!JSHEET) jSecOpen('all'); }catch(e){} },250); }   // v12a (Ömer, forum): grup-al.com/juri?hemen=1 → Hemen-Al seçicisi (Benim için seç) açık gelir
     const wc=$('wishCard'); if(wc&&(!s.offers||!s.offers.length)) wc.style.display='block';
     // v05c: paylaşım satırı Meydan linkiyle (davet/kilit satırları gizli) + açık masalar
     { const sb=$('shareBox'); if(sb){ sb.style.display='block'; ['lockRow','cardBtn','davSlots','davTxt'].forEach(id=>{ const e=$(id); if(e) e.style.display='none'; }); const dl=sb.querySelector('[data-i18n="davLbl"]'); if(dl) dl.textContent=t(shMine()?'shMineL':'mdShareL'); $('shareLink').textContent=location.origin+'/juri'; /* v09f: dışarıya /juri */ }

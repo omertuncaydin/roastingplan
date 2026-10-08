@@ -96,3 +96,6 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - **v2026-10-06j (Ömer's wording)**: the locked Hemen-Al lane's help line reads "Sen de yardım et: Kapora koy · 2 Hemen-Al biletin olsun ›" (the number follows the `hemen_inv` setting).
 - **v2026-10-06k (Ömer: "bilet, not davetiye")**: one word for the Hemen-Al invitation on the page — *bilet* (biletin, biletlerin, biletle, bileti…) in every Turkish string, *ticket* in English; the share text and the ticket header (HEMEN-AL BİLETİ) included. Admin labels untouched (internal).
 - **v2026-10-06l (Ömer)**: (1) the grind select reads "Çekirdek" (no "öğütülmemiş") and is smaller on phones (bar and lane). (2) The lane shows the **gold ticket in every state** — private (countdown · Gönder · masaya bırak), on the table (🪑 · "n biletin masada" · geri al), used (dimmed, "✓ Ayşe aldı · dün 21:14", at most two, then "tümü ›"); the old text rows are gone. Same stamp on all: KAVRUM · Pzt d Eki.
+
+## v12a (2026-10-08) — deep link for the forum
+- `grup-al.com/juri?hemen=1` opens the Hemen-Al picker ("Benim için seç") as soon as the page is up; plain `/juri` unchanged. Nothing else.

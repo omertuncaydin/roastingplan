@@ -162,7 +162,7 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     w.eval("jLaneClose()"); await sleep(40); T('close removes the panel', !w.document.querySelector('.jcard.lopen') && !w.document.querySelector('.jlanes-w'));
     // ---- my invitations
     const exp=new Date(new Date(2026,8,23,12,0,0).getTime()+3*86400000).toISOString();   // test clock is frozen at 2026-09-23 12:00
-    const w2=mk({'/meydan':MH,'/offer-mine':{votes:[{id:H0.id,paid:true,qty:1}],inv:[{c:'INV1',id:H0.id,st:'p',at:new Date().toISOString(),exp,n:'Ömer'},{c:'INV2',id:H0.id,st:'u',at:new Date().toISOString(),exp,n:'Ömer',taker:'Ayşe'}],hemen:[]},'/campaigns':[],'/inv-table':{ok:true,c:'INV1',st:'t'}},390); await sleep(250);
+    const w2=mk({'/meydan':MH,'/offer-mine':{votes:[{id:H0.id,paid:true,qty:1}],inv:[{c:'INV1',id:H0.id,st:'p',at:new Date().toISOString(),exp,n:'Ömer'},{c:'INV2',id:H0.id,st:'u',at:new Date().toISOString(),exp,n:'Ömer',taker:'Ayşe'}],hemen:[]},'/campaigns':[],'/inv-table':{ok:true,c:'INV1',st:'t'}},390); await sleep(500);
     const cc=w2.document.querySelector('#jDeck .jcard[data-id="'+H0.id+'"]');
     T('holder: card shows ✉ 1 bilet chip (only usable ones counted) next to the Hemen-Al chip', cc.querySelector('.jchip.jinv').textContent==='✉ 1 bilet' && cc.querySelector('.jchip.jinv').getAttribute('onclick').includes("jInvOpen('"+H0.id+"')") && !!cc.querySelector('.jchip.jhm'));
     // v11x: a fresh private invitation (not seen on this device) → the lane opens by itself and the ticket sheet follows (fast mode: at once); the codes are then remembered
@@ -330,7 +330,7 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('jThumb: photo coffee → <img>, no photo → mountain&sun svg', /^<img /.test(wp.__g('jThumb')({img_url:'https://x.test/a.jpg',origin:'Kenya'},50,50)) && /<svg/.test(wp.__g('jThumb')({origin:'Kenya'},50,50)));
     const c=wp.document.querySelector('.jcard[data-id="'+A2.id+'"]'); T('every card is rigged: strip + zone + ring groups; rig closed at rest', !!c && !!c.querySelector('.jwa') && !!c.querySelector('.jwz') && !!c.querySelector('svg.jring .rl') && !!c.querySelector('svg.jring .cg text') && c.__jwa && c.__jwa.state==='closed');
     T('no B strip / C layer left in the markup', !wp.document.querySelector('.jwb') && !wp.document.querySelector('.jwc') && !/jWalkStripHtml|jWalkLayerHtml/.test(html));
-    T('page version bumped to v2026-10-06l', /const VERSION='v2026-10-06l';/.test(html));
+    T('page version bumped to v2026-10-08a', /const VERSION='v2026-10-08a';/.test(html));
     // v11p: the total line has no denominator any more — "Bu oturum n paket · k kahve · r kavruluyor"
     { const MT=JSON.parse(JSON.stringify(MD)); const L=MT.offers.find(o=>o.id===ord[0].id); L.lock={at:'2026-09-30T10:00:00Z',n:1,close:'2026-10-04T20:59:00Z',state:'locked',dep:17,dep_tl:100,forced:true,people:[]}; L.dep=0; L.conv=17; MT.offer_cfg.day_goal=40;
       const wt=mk({'/meydan':MT,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); const tot=MT.offers.reduce((a,o)=>a+(o.dep||0),0), kk=MT.offers.filter(o=>(o.dep||0)>0).length;
@@ -397,6 +397,12 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('grind chosen → Shopify link gets note=Öğütüm: Türk Kahvesi (order note); v11y: not stored on the device — a fresh page starts at Çekirdek', nav==='https://coffeenutz.net/cart/222:1?discount=HAX&attributes[hemen]=1&note='+encodeURIComponent('Öğütüm: Türk Kahvesi') && wr.__g('grindGet')()==='Türk Kahvesi' && !/grupal_grind/.test(html));
     T('kapora link never carries a grind note (jury buys beans later, at Tamamla)', !/note=/.test(wr.__g('dbUrl')()||'x'));
     wr.eval("jLaneClose(); jLaneOpen('"+R0.id+"')"); await sleep(40); T('the lane\'s in-basket block and the Benim için seç sheet show the same select', !!wr.document.querySelector('.jcard.lopen .jlane.ha select.hbgrind') && (wr.eval("jSecOpen('all')"), true) && !!wr.document.querySelector('#jSheet select.hbgrind')); }
+  // v12a (Ömer, forum link): grup-al.com/juri?hemen=1 opens the Hemen-Al picker (Benim için seç) by itself; without the param nothing opens
+  { const MB=JSON.parse(JSON.stringify(MD)); const B0=MB.offers.find(o=>o.id===ord[0].id); B0.img_url='https://x.test/o/1.jpg'; B0.hemen={url:'https://coffeenutz.net/cart/222:1',price:990,base:3,sold:0,inv:0,left:3,green_left:null,table:[],roast_at:'2026-10-05T20:59:00.000Z'}; B0.list_tl=1240;
+    const wl=mk({'/meydan':MB,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},390,'https://grup-al.com/juri?hemen=1'); await sleep(600);
+    T('?hemen=1 → the Benim için seç sheet is open with the jury\'s pick', wl.__g('JSHEET&&JSHEET.mode')==='sec' && !!wl.document.querySelector('#jSheet .rc .nm'));
+    const wn=mk({'/meydan':MB,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},390); await sleep(600);
+    T('plain /juri → no sheet', wn.__g('JSHEET')===null); }
   // v11u (Ömer: B): "Benim için seç" — taste → the jury's pick (locked lot > votes > CoffeeNutz'ın 5'i) among coffees with an open Hemen-Al door → quantity → basket
   { const MS=JSON.parse(JSON.stringify(MD)); const S=[ord[0],ord[1],ord[2],ord[3],ord[4]].map(o=>MS.offers.find(x=>x.id===o.id));
     const mkLane=(o,v,p,left)=>{ o.img_url='https://x.test/o/'+v+'.jpg'; o.hemen={url:'https://coffeenutz.net/cart/'+v+':1',price:p,base:3,sold:3-left,inv:0,left,green_left:null,table:[],roast_at:'2026-10-05T20:59:00.000Z'}; o.list_tl=Math.round(p/0.8); o.jury_tl=Math.round(p/0.8*0.6); };
@@ -419,6 +425,6 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('Sepete ekle → basket has it (2), sheet stays open with "Sepete git → 1.710 TL" + başka kahve seç + sepetten çıkar; bar shown', ws.__g('hbItems')().length===1 && ws.__g('hbItems')()[0].qty===2 && !!ws.document.querySelector('#jSheet .jsec') && ws.document.querySelector('#jSheet .rc .go').textContent==='Sepete git → 1.710 TL' && ws.document.querySelector('#jSheet .rc .go').getAttribute('onclick')==='hbGo()' && /başka kahve seç/.test(ws.document.querySelector('#jSheet .rc .alt').textContent) && ws.document.getElementById('hbBar').style.display==='flex');
     ws.eval("jSecK('cn')"); await sleep(40); T("CoffeeNutz'ın 5'i filter lists only starred coffees with an open door", ws.__g("jSecList('cn')").every(o=>ws.__g("jTop(STATE.offers.find(x=>x.id==='"+o.id+"'))")));
     const wd=mk({'/meydan':MS,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); T('desktop (D1): filled block is the first thing in the sidebar; sheet renders the same card', !!wd.document.querySelector('.jdk-side .jsecb.jsecd') && wd.document.querySelector('.jdk-side').firstElementChild.classList.contains('jsecd') && /Jürinin seçimi/.test(wd.document.querySelector('.jdk-side .jsecd').textContent) && (wd.eval("jSecOpen()"), true) && !!wd.document.querySelector('#jSheet .jsec .rc'));
-    T('page version bumped to v2026-10-06l', /const VERSION='v2026-10-06l';/.test(html)); }
+    T('page version bumped to v2026-10-08a', /const VERSION='v2026-10-08a';/.test(html)); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })().catch(e=>{ console.log('CRASH',e.message,e.stack.split('\n').slice(0,3).join(' / ')); process.exit(1); });
