@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.60 tag', r.json && r.json.v === '3.60');
+T('v3.61 tag', r.json && r.json.v === '3.61');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 2 / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 2 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -340,7 +340,7 @@ Date.now = realNow;
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.60');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.61');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
@@ -437,12 +437,13 @@ Date.now = realNow;
   T('meta.hemen_open → open without votes (admin override)', g2.hemen && g2.hemen.base === BASE && g2.hemen.left === BASE && !g2.hemen.gate);
   r = await px.call('POST', '/hemen-link', { dev: 'GATEDEV001', items: [{ id: G1, qty: 1 }] }); T('pool link on a gated coffee → full', r.json.ok === false && r.json.reason === 'full');
   // the first kapora opens the door and mints tickets; a ticket works even while the door is shut
-  r = await hook({ offer: G1, dev: 'GATEHOST01' }, { id: 98001, name: 'Gate Host', email: 'gatehost@example.com' }); T('kapora on the gated coffee counted + tickets', r.text === 'ok (kapora · davetiye ×2)');
+  r = await hook({ offer: G1, dev: 'GATEHOST01' }, { id: 98001, name: 'Gate Host', email: 'gatehost@example.com' }); T('v3.61: the kapora that opens the door mints 3 tickets (2 + opener bonus), reply says kapı açıldı', r.text === 'ok (kapora · davetiye ×3 · kapı açıldı)' && px.DB.grupal_settings.filter(x => x.key.startsWith('inv_') && JSON.parse(x.value).o === G1 && JSON.parse(x.value).ob === true).length === 3);
+  r = await hook({ offer: G1, dev: 'GATEHOST02' }, { id: 98002, name: 'Second', email: 'second@example.com' }); T('the second kapora on an open door mints the normal 2', r.text === 'ok (kapora · davetiye ×2)');
   r = await px.call('GET', '/meydan'); g1 = r.json.offers.find(o => o.id === G1);
   T('one vote → quota open: base = setting, left = setting, no gate', g1.hemen.base === BASE && g1.hemen.left === BASE && !g1.hemen.gate);
   px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '3';
   r = await px.call('GET', '/meydan'); g1 = r.json.offers.find(o => o.id === G1);
-  T('threshold 3 → shut again with need 2', g1.hemen.gate === 'jury' && g1.hemen.need === 2 && g1.hemen.left === 0);
+  T('threshold 3 → shut again with need 1 (two kaporas so far)', g1.hemen.gate === 'jury' && g1.hemen.need === 1 && g1.hemen.left === 0);
   const invG = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).map(x => [x.key.slice(4), JSON.parse(x.value)]).find(([c, j]) => j.o === G1 && j.st === 'p')[0];
   r = await px.call('POST', '/hemen-link', { dev: 'GATEGUEST1', items: [{ id: G1, qty: 1, inv: invG }] }); T('a ticket opens the shut door (via inv)', r.json.ok === true && r.json.items[0].via === 'inv');
   px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '0';

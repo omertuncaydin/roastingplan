@@ -107,3 +107,14 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - **Icons (Ömer: B)**: ☕ Hepsi · 🥝 Hafif · 🍓 Dolgun · 🍷 Fermente · 🎷 Funky. Phone bands and picker chips use icon + short label (Hafif / Dolgun / Fermente / Funky); the desktop sidebar keeps icon + full name; header "Damağın?". `TASTES` rows now carry [key, TR, EN, icon, short TR, short EN] with `tIcon/tShort/tFull`.
 - Tests: page 178, proxy 200 (older lane fixtures run with `offer_hemen_open=0`; the gate has its own block), admin 42; `tests/shot-gate.mjs`.
 - **v2026-10-08f (Ömer)**: picker chips are icon-only (☕ 🥝 🍓 🍷 🎷, no words, no colour dots; the taste name sits in the chip's title/aria-label, the chosen one gets the gold ring). Bands keep icon + short label.
+
+## v12g (2026-10-08) — plain Hemen-Al page · opener bonus (proxy v3.61)
+- **grup-al.com/hemen-al** (also `/juri?hemen=1`): the same page in plain mode — header "HEMEN-AL · %20", one sentence, then every coffee with an open door (quota seats or table tickets) as a row: photo, taste icon + name, origin · puan · notes, price / list / %20, "n kaldı" or "masadan · n bilet", **Sepete ekle** (stepper once in the basket), the Hemen-Al basket bar with the grind select, and at the bottom "Daha ucuzu mu lazım? Jüri ol …" → /juri. No deck, ring, scoreboard, kapora or ticket vocabulary. Middleware v7 routes `/hemen-al` to the page.
+- **Opener bonus (proxy v3.61)**: the kapora that takes a coffee from below the jüri-açar threshold to the threshold mints `hemen_inv + offer_hemen_open_bonus` tickets (3 by default; bonus setting 0–4), `inv_` records carry `ob:true`, the webhook answers "… · kapı açıldı". Later kaporas mint the normal 2.
+- Tests: page 180, proxy 201, middleware 11; `tests/shot-hemenplain.mjs`.
+
+## v12h (2026-10-08) — "Benim için seç" → Hemen-Al · coffee dropdown
+- **Rename (Ömer)**: header pill and desktop block "⚡ Hemen-Al", sheet title "Hemen-Al", subline "Damağını seç, jürinin seçimi gelsin · %20 · kaporasız · pazartesi kavrulur, salı kargoda". No "Benim için seç" left on the page (`jSec*` ids unchanged).
+- **No chip on the result card**: the "Seçildi" / popularity tag chip is gone from the picker card (`jSecTag` kept, unused).
+- **Dropdown**: a `select.secsel` at the end of the "1 · Damağın" icon row lists every open Hemen-Al coffee (name · price TL, placeholder "Kahve seç…"); `jSecPick(id)` jumps to it, switching the taste to ☕ Hepsi when the coffee is outside the current band.
+- Tests: page 181 (pill/title text, no `.rc .tag`, select options + `jSecPick`).

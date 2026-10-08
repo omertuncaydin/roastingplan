@@ -14,4 +14,5 @@ r=await run('https://grup-al.com/meydan?x=1'); T('/meydan → 301 /juri, query k
 r=await run('https://www.grup-al.com/juri'); T('www → apex 301', r.res.status===301 && r.loc==='https://grup-al.com/juri');
 r=await run('https://grup-al.com/roast-guide'); T('other paths pass through', r.nexted && r.body==='NEXT');
 r=await run('https://guide.coffeenutz.net/'); T('guide host untouched', r.nexted);
+r=await run('https://grup-al.com/hemen-al'); T('v7: /hemen-al serves the Grup-Al page (plain Hemen-Al mode is decided by the page)', !r.nexted && r.res.status===200 && !r.loc && r.body.includes('GRUPAL'));
 console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
