@@ -792,7 +792,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-10-08q';
+const VERSION='v2026-10-08r';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1369,7 +1369,7 @@ function jShopUrl(o){ const u=String((o&&o.shop_url)||''); return /^https:\/\/(w
 // ===== v09v MASAÜSTÜ (≥960px): aynı veri, başka arayüz — sol: sayaç·skorbord·filtreler·oturum; orta: kart ızgarası; sağ: detay çekmecesi =====
 // v09x: ilk gelene tek cümle — bir kez, 'Anladım' ile kalıcı kapanır
 function jWelcShow(){ try{ return localStorage.getItem('grupal_welcomed')!=='1'; }catch(e){ return true; } }
-function jWelcHtml(cfg){ if(!jWelcShow()) return ''; const pct=Math.round(100*(1-(cfg.ratio_jury||cfg.ratio200||0.6))); return '<div class="jwelc" id="jWelc"><span>'+t('jWelc').replace('{amt}',cfg.dep_amt||100).replace('{g}',cfg.goal).replace('{p}',pct).replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2))+'</span><button onclick="jWelcOk()">'+t('jWelcOk')+'</button></div>'; }
+function jWelcHtml(cfg){ if(!jWelcShow()) return ''; const pct=Math.round(100*(1-(cfg.ratio_jury||cfg.ratio200||0.6))); return '<div class="jwelc" id="jWelc"><span>'+t('jWelc').replace('{amt}',cfg.dep_amt||100).replace('{g}',cfg.goal).replace('{p}',pct).replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||5))+'</span><button onclick="jWelcOk()">'+t('jWelcOk')+'</button></div>'; }
 function jWelcOk(){ try{ localStorage.setItem('grupal_welcomed','1'); }catch(e){} const e=$('jWelc'); if(e) e.remove(); const p=$('jP1'); if(p) p.classList.remove('haswelc'); }
 function jIsDesk(){ try{ if(window.matchMedia) return window.matchMedia('(min-width: 960px)').matches; }catch(e){} return (window.innerWidth||0)>=960; }
 let JSEL=null, JDF='all'; try{ const v=localStorage.getItem('grupal_jdf'); if(v) JDF=v; }catch(e){}   // v11h (Ömer): Kartlar/Liste seçimi kalktı — masaüstü hep kart
@@ -1658,13 +1658,13 @@ async function jInvTable(c){ const inv=(OFFINV||[]).find(x=>x.c===c); if(!inv||i
 function jSheetHtml(){ if(!JSHEET) return ''; const list=(STATE&&STATE.offers)||[]; const cfg=offCfg(), G=cfg.goal;
   if(JSHEET.mode==='inv'){ const ORD={p:0,t:1,u:2,x:3}; const mine=(OFFINV||[]).filter(i=>i&&(!JSHEET.id||i.id===JSHEET.id)).sort((a,b)=>((a.st in ORD)?ORD[a.st]:9)-((b.st in ORD)?ORD[b.st]:9));
     let h='<div class="jsh-h"><b>'+t('jInvT')+'</b><span class="x" onclick="jSheetClose()">✕ '+t('jSheetX')+'</span></div><div class="jsh-sub">'+t('jInvSub').replace('{h}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv_h)||24))+'</div>';
-    if(!mine.length) return h+'<div class="jnote2" style="margin-top:14px">'+t('jInvNone').replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2))+'</div>';
+    if(!mine.length) return h+'<div class="jnote2" style="margin-top:14px">'+t('jInvNone').replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||5))+'</div>';
     let usable=null;
     for(const inv of mine){ const o=list.find(x=>x.id===inv.id); if(!o) continue; if(!usable&&(inv.st==='p'||inv.st==='t')&&jHemen(o)) usable=inv;
       h+=jTkCard(o,inv.st,inv.c,jTkStubMine(inv)); }   // v11y (Ömer: T2 + kavrum) · v12n: ortak kart
     if(usable) h+='<a class="jself" onclick="jHemenGo(\''+escZ(usable.id)+'\',\''+escZ(usable.c)+'\')">'+t('jInvSelf')+'</a><div class="jnote2">'+t('jInvNote').replace('{g}',G)+'</div>';
     return h; }
-  if(JSHEET.mode==='tbl'){ const o=list.find(x=>x.id===JSHEET.id); if(!o||!jHemen(o)) return ''; const kInv=parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2);   // v12n (Ömer): bilet görünümü herkese
+  if(JSHEET.mode==='tbl'){ const o=list.find(x=>x.id===JSHEET.id); if(!o||!jHemen(o)) return ''; const kInv=parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||5);   // v12n (Ömer): bilet görünümü herkese
     const mine=jMyInv(o.id), mineC=new Set(mine.map(i=>i.c)), tb=jTableOf(o).filter(x=>!mineC.has(x.c)), inB=hbGet()[o.id]||null, paid=jPaidOf(o), left=jHemenLeft(o);   // v12o: kota koltukları da bilet olarak (proxy ne diyorsa o) — kimseyi kaporaya zorlama
     let h='<div class="jsh-h"><b>'+t('jTblT').replace('{coffee}',escZ(jShort(o.name)))+'</b><span class="x" onclick="jSheetClose()">✕ '+t('jSheetX')+'</span></div><div class="jsh-sub">✓ '+t('jHRoast')+' · '+t('jTkNoDep')+(tb.length?(' · '+t('jTblSub')):'')+'</div>';
     if(inB) h+='<div class="jlg"><button class="go" onclick="hbGo()">'+t('hbInLane').replace('{t}',fmtTL(hbSum().tl))+'</button></div><div class="jnote2"><a onclick="hbDel(\''+escZ(o.id)+'\')">'+t('hbRm')+'</a></div>'+grindHtml();   // sepetteyse en üstte
@@ -1715,7 +1715,7 @@ async function jInvUntable(c){ const inv=(OFFINV||[]).find(x=>x.c===c); if(!inv|
 function jLanesHtml(o,pick0){ const cfg=offCfg(), G=cfg.goal;
   const jury=o.jury_tl||o.camp200_tl, paid=jPaidOf(o), dep=o.dep||0, hm=jHemen(o)?o.hemen:null, left=hm?jHemenLeft(o):0, tb=hm?jTableOf(o):[];
   const myInv=jMyInv(o.id); const guestC=(JINV&&JINV.ok&&JINV.id===o.id)?JINV.c:null; const pick=pick0||guestC||null;
-  const q=dbGet()[o.id]||0, kInv=parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2);   // v10m: ön izleme (+q sen · +k davetiye) yalnız kapora SEPETTEYKEN
+  const q=dbGet()[o.id]||0, kInv=parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||5);   // v10m: ön izleme (+q sen · +k davetiye) yalnız kapora SEPETTEYKEN
   const pctG=Math.min(100,Math.round(100*dep/G)), pctMe=(paid||!q)?0:Math.min(100-pctG,Math.round(100*q/G));
   let h='<div class="jlanes">';
   h+='<div class="jlane ga"><div class="lt">'+t('jGA')+'</div><div class="lp" data-list="'+(o.list_tl||0)+'" data-jury="'+(jury||0)+'"><span class="n">'+(jury?fmtTL(jury):'—')+'</span><small>TL</small></div><div class="ls">'+(o.list_tl?('<s>'+t('offListP')+fmtTL(o.list_tl)+'</s>'):'')+(jPct(o.list_tl,jury)?('<span class="jpct">%'+jPct(o.list_tl,jury)+'</span>'):'')+'</div>'
@@ -1743,8 +1743,8 @@ function jLanesHtml(o,pick0){ const cfg=offCfg(), G=cfg.goal;
     h+='<div class="jlane ha locked"><div class="lt">'+t('jHA')+'</div><div class="lp">'+(bp?fmtTL(bp):'—')+'<small>TL</small></div><div class="ls">'+(o.list_tl&&bp?('<s>'+t('offListP')+fmtTL(o.list_tl)+'</s>'):'')+(jPct(o.list_tl,bp)?('<span class="jpct">%'+jPct(o.list_tl,bp)+'</span>'):'')+'</div>'
       +'<div class="st">🔒 '+t('jLaneHAoffS').replace('{n}',o.dep||0).replace('{g}',G)+'</div>'
       +((paid||q)?('<div class="why">'+t('jLaneHAoffMine').replace('{n}',o.dep||0).replace('{g}',G)+'</div>'):('<div class="why"><a onclick="event.stopPropagation();jLaneKap(\''+escZ(o.id)+'\')">'+t('jLaneHAoffHelp').replace('{k}',kInv)+'</a></div>'))   // v11u (Ömer): "henüz yok" yerine nasıl yardım edilir — kapora
-      +(paid?('<div class="tk used">🎟 '+t('jTkLocked').replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2))+'</div>'):'')+'</div>'; }
-  h+='</div><div class="jlfoot">'+t('jLaneFoot').replace('{a}',jPct(o.list_tl,jury)).replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||2))+' · <a onclick="event.stopPropagation();jLaneClose()">'+t('jSheetX')+'</a></div>';
+      +(paid?('<div class="tk used">🎟 '+t('jTkLocked').replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||5))+'</div>'):'')+'</div>'; }
+  h+='</div><div class="jlfoot">'+t('jLaneFoot').replace('{a}',jPct(o.list_tl,jury)).replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||5))+' · <a onclick="event.stopPropagation();jLaneClose()">'+t('jSheetX')+'</a></div>';
   return h; }
 
 function renderSheet(){ let back=$('jSheetBack'), sh=$('jSheet'); const h=jSheetHtml();

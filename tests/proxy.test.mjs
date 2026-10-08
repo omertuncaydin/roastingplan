@@ -11,17 +11,17 @@ let NOW = Date.UTC(2026, 8, 29, 12, 0, 0); const realNow = Date.now; Date.now = 
 const px = await boot(PROXY, {
   grupal_settings: [
     { key: 'meydan_cycle_start', value: '2026-09-27T20:59:00.000Z' }, { key: 'offer_goal', value: '40' }, { key: 'offer_dep_amt', value: '100' },
-    { key: 'offer_dep_url', value: 'https://coffeenutz.net/cart/111:1' }, { key: 'offer_hemen_base', value: '2' }, { key: 'offer_hemen_open', value: '0' } /* v3.60: the older fixtures assume lanes open without votes; the jury gate has its own block */ ],
+    { key: 'offer_dep_url', value: 'https://coffeenutz.net/cart/111:1' }, { key: 'offer_hemen_base', value: '2' }, { key: 'offer_hemen_open', value: '0' }, { key: 'offer_hemen_inv', value: '10' } /* v3.66: the suite runs at 10 per kapora; the default (5) has its own test */ /* v3.60: the older fixtures assume lanes open without votes; the jury gate has its own block */ ],
   grupal_offers: [
     { id: A, name: 'El Recreo', origin: 'Kolombiya', process: 'washed', active: true, sort: 1, pub: { name: 'El Recreo', origin: 'Kolombiya', process: 'washed' }, meta: { list_tl: 1600, img_url: 'https://db.test/storage/v1/object/public/grupal/o/a.jpg', hemen_url: 'https://coffeenutz.net/cart/222:1', green_boxes: 4 }, created_at: '2026-09-01T00:00:00Z' },
     { id: B, name: 'Nuwa Senchi', origin: 'Peru', process: 'washed', active: true, sort: 2, pub: { name: 'Nuwa Senchi', origin: 'Peru', process: 'washed' }, meta: { list_tl: 1500 }, created_at: '2026-09-01T00:00:00Z' } ] });
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.65 tag', r.json && r.json.v === '3.65');
+T('v3.66 tag', r.json && r.json.v === '3.66');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
-T('B (no photo) has no lane; cfg carries hemen_inv 10 (v3.65 fixed) / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 10 && r.json.offer_cfg.hemen_inv_h === 24);
+T('B (no photo) has no lane; cfg carries hemen_inv 10 (seeded) / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 10 && r.json.offer_cfg.hemen_inv_h === 24);
 
 // ---- kapora on A → 2 invitations minted, private
 r = await hook({ offer: A, dev: 'DEV1AAAAAA', terms: '1' }, { id: 9001, name: 'Ömer', email: 'omer@x.tr' });
@@ -142,10 +142,12 @@ T('Hemen-Al boxes count toward the lock (lock record present, dep ≥ 5)', !!oa.
 
 // ---- admin settings allowlist accepts the three new keys
 r = await px.call('POST', '/admin/settings', { offer_hemen_base: '3', offer_hemen_inv: '2', offer_hemen_inv_h: '24' }, { 'x-cc-key': 'adminkey' });
-T('admin settings: hemen_base still saved (dormant); hemen_inv/_h are fixed and no longer stored', r.json.ok && r.json.cfg.hemen_base === 3 && r.json.settings.offer_hemen_inv_h === undefined && r.json.cfg.hemen_inv === 10);
+T('admin settings: hemen_base still saved (dormant); hemen_inv saved (2 here, restored below); _h is fixed and not stored', r.json.ok && r.json.cfg.hemen_base === 3 && r.json.settings.offer_hemen_inv_h === undefined && r.json.cfg.hemen_inv === 2);
 // v3.40 (BA): Ayarlar saved with the Hemen-Al fields left blank must NOT zero the pool / invitations (live bug: "doldu" on every lane)
 r = await px.call('POST', '/admin/settings', { offer_hemen_base: '', offer_hemen_inv: '', offer_hemen_inv_h: '', offer_ban_cycles: '' }, { 'x-cc-key': 'adminkey' });
-T('blank Hemen-Al settings fall back to defaults 0 (tickets only) / 10 / 24 h / ban 1', r.json.ok && r.json.cfg.hemen_base === 0 && r.json.cfg.hemen_inv === 10 && r.json.cfg.hemen_inv_h === 24 && r.json.cfg.ban_cycles === 1);
+T('blank Hemen-Al settings fall back to defaults 0 (tickets only) / 5 per kapora (v3.66) / 24 h / ban 1', r.json.ok && r.json.cfg.hemen_base === 0 && r.json.cfg.hemen_inv === 5 && r.json.cfg.hemen_inv_h === 24 && r.json.cfg.ban_cycles === 1);
+r = await px.call('POST', '/admin/settings', { offer_hemen_inv: '0' }, { 'x-cc-key': 'adminkey' }); T('a stored 0 also means the default 5', r.json.cfg.hemen_inv === 5);
+r = await px.call('POST', '/admin/settings', { offer_hemen_inv: '10' }, { 'x-cc-key': 'adminkey' }); T('back to 10 for the rest of the suite', r.json.cfg.hemen_inv === 10);
 r = await px.call('POST', '/admin/settings', { offer_hemen_base: '0' }, { 'x-cc-key': 'adminkey' }); T('an explicit "0" is still zero', r.json.ok && r.json.cfg.hemen_base === 0);
 r = await px.call('POST', '/admin/settings', { offer_hemen_base: '3' }, { 'x-cc-key': 'adminkey' });
 
@@ -340,7 +342,7 @@ Date.now = realNow;
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.65');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.66');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
@@ -480,7 +482,7 @@ Date.now = realNow;
   px.DB.grupal_offers.push({ id: G4, name: 'Gate Four', origin: 'Kenya', process: 'washed', active: true, sort: 43, pub: { name: 'Gate Four', origin: 'Kenya', process: 'washed' }, meta: { list_tl: 1600, img_url: 'https://db.test/g4.jpg', hemen_url: 'https://coffeenutz.net/cart/604:1' }, created_at: '2026-09-01T00:00:00Z' });
   px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '1';
   r = await px.call('POST', '/admin/settings', { offer_hemen_inv: '10', offer_hemen_base: '' }, KEYH); T('Ayarlar: kapora başına bilet 10 accepted (cap 20), blank quota = 0', r.json.ok === true && r.json.cfg.hemen_inv === 10 && r.json.cfg.hemen_base === 0);
-  r = await px.call('POST', '/admin/settings', { offer_hemen_inv: '99' }, KEYH); T('v3.65: offer_hemen_inv is ignored — 10 per kapora, fixed', r.json.cfg.hemen_inv === 10);
+  r = await px.call('POST', '/admin/settings', { offer_hemen_inv: '99' }, KEYH); T('offer_hemen_inv is capped at 20', r.json.cfg.hemen_inv === 20);
   r = await px.call('POST', '/admin/settings', { offer_hemen_inv: '10' }, KEYH);
   r = await hook({ offer: G4, dev: 'TKONLY0001' }, { id: 98101, name: 'Ten Tickets', email: 'ten@example.com' }); T('one kapora → 10 tickets (old cap was 6)', r.text === 'ok (kapora · davetiye ×10 · kapı açıldı)');
   r = await px.call('GET', '/meydan'); let g4 = r.json.offers.find(o => o.id === G4);
@@ -521,12 +523,14 @@ Date.now = realNow;
   r = await px.call('POST', '/offer-ask', { dev: 'STRANGER03', id: G2 }); T('ask allowed on an open coffee whose table is empty (no gate condition any more)', g2.hemen.table_n === 0 && g2.hemen.left === 0 && r.json.ok === true);
   NOW -= 25 * 3600000; Date.now = () => NOW; px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '0'; }
 // ---- v3.65: top-up backfill {top:1} — this session's kaporas are completed to packages × 10 (counting every ticket ever minted for that device+coffee); older sessions untouched
-{ Date.now = () => NOW; const KEYH = { 'x-cc-key': 'adminkey' }; const G4 = '10000000-0000-4000-8000-00000000a004';
+{ Date.now = () => NOW; const KEYH = { 'x-cc-key': 'adminkey' }; const G4 = '10000000-0000-4000-8000-00000000a004'; r = await px.call('POST', '/admin/settings', { offer_hemen_inv: '10' }, KEYH);
   const mineK = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_') && JSON.parse(x.value).o === G4 && JSON.parse(x.value).dev === 'TKONLY0001'); T('fixture: TKONLY0001 has 10 tickets on G4 (3 used)', mineK.length === 10);
   for (const k of mineK.slice(0, 4)) px.DB.grupal_settings = px.DB.grupal_settings.filter(x => x !== k);   // pretend 4 were never minted (2-per-kapora era)
-  px.DB.grupal_offer_votes.push({ offer_id: G4, dev: 'OLDSESS001', seated: false, paid: true, qty: 1, created_at: '2026-09-20T10:00:00Z', email: 'old@example.com' });   // previous session, no tickets
+  px.DB.grupal_offer_votes.push({ offer_id: G4, dev: 'OLDSESS001', seated: false, paid: true, qty: 1, created_at: '2026-09-20T10:00:00Z', email: 'meric.k@example.com' });   // previous session, no tickets
+  px.DB.grupal_settings.push({ key: 'mem_meric.k@example.com', value: JSON.stringify({ email: 'meric.k@example.com', dev: 'OLDSESS001', name: 'Meriç Kaya', ok: true }) });
   r = await px.call('POST', '/admin/inv-backfill', { top: 1 }, KEYH);
-  T('top-up completes TKONLY0001 back to 10 (4 minted for it; other fixture kaporas of this session get theirs too), previous-session kaporas skipped (old ≥ 1), top flag echoed', r.json.ok === true && r.json.top === true && r.json.minted >= 4 && r.json.skipped.old >= 1 && px.DB.grupal_settings.filter(x => x.key.startsWith('inv_') && JSON.parse(x.value).o === G4 && JSON.parse(x.value).dev === 'TKONLY0001').length === 10 && !px.DB.grupal_settings.some(x => x.key.startsWith('inv_') && JSON.parse(x.value).dev === 'OLDSESS001'));
+  const oldTk = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_') && JSON.parse(x.value).dev === 'OLDSESS001').map(x => JSON.parse(x.value));
+  T('v3.66 top-up: TKONLY0001 back to 10; the previous-session kapora gets its 10 too, ticket name = member first name (Meriç), top flag echoed', r.json.ok === true && r.json.top === true && r.json.minted >= 14 && px.DB.grupal_settings.filter(x => x.key.startsWith('inv_') && JSON.parse(x.value).o === G4 && JSON.parse(x.value).dev === 'TKONLY0001').length === 10 && oldTk.length === 10 && oldTk.every(j => j.n === 'Meriç' && j.st === 'p'));
   r = await px.call('POST', '/admin/inv-backfill', { top: 1 }, KEYH); T('second top-up mints nothing', r.json.ok === true && r.json.minted === 0);
-  px.DB.grupal_offer_votes = px.DB.grupal_offer_votes.filter(v => v.dev !== 'OLDSESS001'); }
+  px.DB.grupal_offer_votes = px.DB.grupal_offer_votes.filter(v => v.dev !== 'OLDSESS001'); px.DB.grupal_settings = px.DB.grupal_settings.filter(x => x.key !== 'mem_meric.k@example.com'); }
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);

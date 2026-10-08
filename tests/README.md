@@ -160,3 +160,8 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - **Page**: the only chip is **"Hemen-Al · n kaldı"** (n = tickets you can take now, 0 included); the 🪑 masada chip is gone; a lane with nothing to take says "Şu an bilet yok · her kapora 10 bilet" with the kapora button.
 - **Admin**: Ayarlar has no Hemen-Al inputs any more — one note and one button "Bu oturumun kaporalarına 10 bilet tamamla". Kaydet still writes quota 0 / threshold 1 to clean old values.
 - Tests: page 209, proxy 237, admin 50.
+
+## v12r (2026-10-08) — 5 per kapora, one setting, launch top-up (proxy v3.66 · admin v2026-10-08h)
+- **One Hemen-Al setting**: Ayarlar "kapora başına bilet" (`offer_hemen_inv`, 1–20, blank/0 = **5**). Everything else stays fixed in code (24 h private, 7 days, 1 per ask, no bonus).
+- **Launch top-up**: "Tüm kaporalara bilet tamamla (paket × ayar)" → `POST /admin/inv-backfill {top:1}` over **all sessions** (forfeited/credited excluded, no-lane coffees skipped): each kapora is completed to packages × setting, counting every ticket ever minted for that device + coffee. Ticket names come from the member record (`mem_` name → `hn_` → e-mail), the same first names the walk animation shows — e.g. Kelloo Bensa: Michael 5 + Meriç 5.
+- Page fallback when the proxy sends no ratio: 5. Tests: page 209, proxy 239, admin 50.
