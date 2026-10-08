@@ -99,4 +99,4 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 
 ## v12a (2026-10-08) — deep link for the forum
 - `grup-al.com/juri?hemen=1` opens the Hemen-Al picker ("Benim için seç") as soon as the page is up; plain `/juri` unchanged. Nothing else.
-- **v2026-10-08b (Ömer: "up-center")**: every Grup-Al photo crop anchors at the top-center (`object-position: 50% 0`) — card, desktop drawer head, thumbnail, Benim için seç picker — because the images are composed that way.
+- **v2026-10-08b (Ömer: "up-center")**: every Grup-Al photo crop anchors 15 % above centre (`object-position: 50% 35%`, v2026-10-08c; 08b had top-centre) — card, desktop drawer head, thumbnail, Benim için seç picker — because the images are composed that way.
