@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.68 tag', r.json && r.json.v === '3.68');
+T('v3.69 tag', r.json && r.json.v === '3.69');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 10 (seeded) / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 10 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -342,7 +342,7 @@ Date.now = realNow;
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.68');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.69');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
@@ -554,8 +554,12 @@ Date.now = realNow;
   NOW = new Date(batch.done_by).getTime() + 3600000; r = await px.call('POST', '/done-link', { id: L, dev: 'LATEDEV001' }); T('after done_by: late completion — due 1180 (1280 − 100), late true, 2 boxes → total 2360', r.json.ok === true && r.json.due === 1180 && r.json.late === true && r.json.total === 2360);
   r = await px.call('POST', '/admin/cycle-forfeit', { n: lockN }, KEYH); T('forfeit before late_by → 409 with late_by', r.status === 409 && !!r.json.late_by);
   NOW = new Date(batch.late_by).getTime() + 3600000; r = await px.call('POST', '/done-link', { id: L, dev: 'LATEDEV001' }); T('after late_by: done-link refused (late_over)', r.json.ok === false && r.json.reason === 'late_over');
+  // v3.69: kademe 2 runs by itself on the first /meydan after late_by — no button
+  r = await px.call('GET', '/meydan'); const recA = JSON.parse(px.DB.grupal_settings.find(x => x.key === 'meydan_cycle_' + lockN).value);
+  T('auto-forfeit on /meydan: 2 rows FORFEIT, forfeited_at written, burned 2, 3 house tickets, forfeit_run guard set', px.DB.grupal_offer_votes.filter(v => v.offer_id === L && v.done_order === 'FORFEIT').length === 2 && !!recA.forfeited_at && recA.burned === 2 && !!px.DB.grupal_settings.find(x => x.key === 'forfeit_run_' + lockN));
+  r = await px.call('GET', '/meydan'); T('second /meydan does not forfeit again (forfeited_at set)', px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).map(x => JSON.parse(x.value)).filter(j => j.o === L && j.dev === 'HOUSE').length === 3);
   r = await px.call('POST', '/admin/cycle-forfeit', { n: lockN }, KEYH);
-  T('forfeit after late_by: 2 devices marked FORFEIT (burned, not credited), 3 boxes → 3 house tickets on the table, both banned', r.json.ok === true && r.json.marked === 2 && r.json.burned === 2 && r.json.credited === 0 && r.json.boxes === 3 && r.json.tabled === 3 && r.json.banned === 2 && px.DB.grupal_offer_votes.filter(v => v.offer_id === L && v.done_order === 'FORFEIT').length === 2);
+  T('the admin button afterwards finds nothing left to mark (idempotent)', r.json.ok === true && r.json.marked === 0 && r.json.tabled === 0);
   const house = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).map(x => JSON.parse(x.value)).filter(j => j.o === L && j.dev === 'HOUSE');
   T('house tickets: n CoffeeNutz, st t, ff flag, 7 days', house.length === 3 && house.every(j => j.n === 'CoffeeNutz' && j.st === 't' && j.ff === 1 && new Date(j.exp).getTime() === NOW + 7 * 86400000));
   r = await px.call('GET', '/meydan'); T('/meydan: the 3 sit on Late Lot\'s table for anyone', r.json.offers.find(o => o.id === L).hemen.table_n >= 3);

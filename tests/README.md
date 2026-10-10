@@ -173,3 +173,7 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - **2nd kademe = burn**: "Tamamlanmayanları kapat" works only after `late_by` (409 before, `force` aside); marks FORFEIT (CREDIT only in credit mode — the first-miss credit is gone), suspends the device one cycle, and puts every burned package on the coffee's table as a house ticket (`inv_` dev HOUSE, n CoffeeNutz, st t, 7 days).
 - **Page**: lane and detail row read the phase from `lock.close`: on time → "Tamamla · 1.490 TL"; late → "Geç tamamlama · Hemen-Al fiyatı − kapora · n gün kaldı" + red "Tamamla · 1.780 TL"; over → "Tamamlama süresi doldu — kapora yandı, paket masaya çıkar", no button.
 - Tests: page 212, proxy 253, admin 50.
+
+## v12t (2026-10-10) — kademeler otomatik (proxy v3.69 · admin v2026-10-08j)
+- Tier 1 was already automatic (price by time). Tier 2 now runs by itself: on the first `/meydan` after a batch's `late_by`, `autoForfeit` burns the unpaid won packages, suspends the devices one cycle and puts the packages on the table (same `forfeitCycle` body as the admin button; `forfeit_run_<n>` 10‑minute guard; records older than 60 days untouched; `forfeited_at` stops reruns). "Tamamlanmayanları kapat" stays for an early close with `force`.
+- Tests: proxy 256, admin 50.
