@@ -180,3 +180,5 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 
 ## v12u (2026-10-10) — 7 completion days by rule (proxy v3.70 · page v2026-10-08t · admin v2026-10-08k)
 - `offer_done_days` default **7** (was 2; max 14): close Sunday 23:59 → %40 completion until the next Sunday 23:59 → 7 late days at Hemen-Al − deposit → auto-burn. The setting stays for changes (Ayarlar "tamamlama süresi", blank = 7). Page: `offCfg()` now carries `done_days`/`late_days` from the proxy (the phase helper had been using its fallback). Tests: page 212, proxy 255, admin 50.
+
+- **proxy v3.71 · admin v2026-10-08l**: jury suspension default **0** (no suspension on burn); Ayarlar "Jüri askısı" blank = none, set a number to switch it on later. Proxy tests 257.

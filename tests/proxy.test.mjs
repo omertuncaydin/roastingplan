@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.70 tag', r.json && r.json.v === '3.70');
+T('v3.71 tag', r.json && r.json.v === '3.71');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 10 (seeded) / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 10 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -145,7 +145,7 @@ r = await px.call('POST', '/admin/settings', { offer_hemen_base: '3', offer_heme
 T('admin settings: hemen_base still saved (dormant); hemen_inv saved (2 here, restored below); _h is fixed and not stored', r.json.ok && r.json.cfg.hemen_base === 3 && r.json.settings.offer_hemen_inv_h === undefined && r.json.cfg.hemen_inv === 2);
 // v3.40 (BA): Ayarlar saved with the Hemen-Al fields left blank must NOT zero the pool / invitations (live bug: "doldu" on every lane)
 r = await px.call('POST', '/admin/settings', { offer_hemen_base: '', offer_hemen_inv: '', offer_hemen_inv_h: '', offer_ban_cycles: '' }, { 'x-cc-key': 'adminkey' });
-T('blank Hemen-Al settings fall back to defaults 0 (tickets only) / 5 per kapora (v3.66) / 24 h / ban 1', r.json.ok && r.json.cfg.hemen_base === 0 && r.json.cfg.hemen_inv === 5 && r.json.cfg.hemen_inv_h === 24 && r.json.cfg.ban_cycles === 1);
+T('blank Hemen-Al settings fall back to defaults 0 (tickets only) / 5 per kapora (v3.66) / 24 h / ban 0 (v3.71: no suspension)', r.json.ok && r.json.cfg.hemen_base === 0 && r.json.cfg.hemen_inv === 5 && r.json.cfg.hemen_inv_h === 24 && r.json.cfg.ban_cycles === 0);
 r = await px.call('POST', '/admin/settings', { offer_hemen_inv: '0' }, { 'x-cc-key': 'adminkey' }); T('a stored 0 also means the default 5', r.json.cfg.hemen_inv === 5);
 r = await px.call('POST', '/admin/settings', { offer_hemen_inv: '10' }, { 'x-cc-key': 'adminkey' }); T('back to 10 for the rest of the suite', r.json.cfg.hemen_inv === 10);
 r = await px.call('POST', '/admin/settings', { offer_hemen_base: '0' }, { 'x-cc-key': 'adminkey' }); T('an explicit "0" is still zero', r.json.ok && r.json.cfg.hemen_base === 0);
@@ -342,7 +342,7 @@ Date.now = realNow;
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.70');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.71');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
@@ -544,6 +544,7 @@ Date.now = realNow;
 { Date.now = () => NOW; const KEYH = { 'x-cc-key': 'adminkey' }; const L = '10000000-0000-4000-8000-00000000c001';
   px.DB.grupal_offers.push({ id: L, name: 'Late Lot', origin: 'Peru', process: 'washed', active: true, sort: 60, pub: { name: 'Late Lot', origin: 'Peru', process: 'washed' }, meta: { list_tl: 1600, jury_tl: 960, basket_tl: 1280, img_url: 'https://db.test/l.jpg', hemen_url: 'https://coffeenutz.net/cart/901:1' }, created_at: '2026-09-01T00:00:00Z' });
   px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '1'; px.DB.grupal_settings = px.DB.grupal_settings.filter(x => !x.key.startsWith('ban_'));
+  r = await px.call('POST', '/admin/settings', { offer_ban_cycles: '1' }, KEYH); T('fixture: suspension switched on for this block (default is 0 since v3.71)', r.json.cfg.ban_cycles === 1);
   r = await hook({ offer: L, dev: 'LATEDEV001' }, { id: 99801, qty: 2, email: 'late1@example.com' }); r = await hook({ offer: L, dev: 'LATEDEV002' }, { id: 99802, email: 'late2@example.com' });
   r = await px.call('POST', '/admin/offer-lock', { id: L }, KEYH); T('fixture: Late Lot locked (dep 3)', r.json.ok && r.json.lock.dep === 3); const lockN = r.json.lock.n;
   r = await px.call('GET', '/meydan'); T('pubCfg carries late_days 7', r.json.offer_cfg.late_days === 7);
@@ -564,5 +565,6 @@ Date.now = realNow;
   T('house tickets: n CoffeeNutz, st t, ff flag, 7 days', house.length === 3 && house.every(j => j.n === 'CoffeeNutz' && j.st === 't' && j.ff === 1 && new Date(j.exp).getTime() === NOW + 7 * 86400000));
   r = await px.call('GET', '/meydan'); T('/meydan: the 3 sit on Late Lot\'s table for anyone', r.json.offers.find(o => o.id === L).hemen.table_n >= 3);
   r = await px.call('GET', '/offer-mine?dev=LATEDEV001'); T('/offer-mine: forfeited + banned_until set', r.json.votes.find(v => v.id === L).forfeited === true && !!r.json.banned_until);
+  r = await px.call('POST', '/admin/settings', { offer_ban_cycles: '' }, KEYH); T('suspension back to the default: 0', r.json.cfg.ban_cycles === 0);
   NOW = Date.UTC(2026, 8, 29, 12, 0, 0); Date.now = () => NOW; px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '0'; }
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);

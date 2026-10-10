@@ -267,7 +267,7 @@ details.set.card[open]>summary{margin-bottom:6px}
         <div class="g2">
           <div class="f"><span class="lbl">Jüri kodu · boş = kod yok, kapora herkese açık</span><input id="s_depcode" placeholder="ör. juri2026" autocapitalize="off"></div>
           <input id="s_depopen" type="hidden" value="">
-          <div class="f"><span class="lbl">Jüri askısı (oturum · 0 = yok)</span><input id="s_bancycles" inputmode="numeric" placeholder="1"></div>
+          <div class="f"><span class="lbl">Jüri askısı (oturum · boş = yok, proxy v3.71)</span><input id="s_bancycles" inputmode="numeric" placeholder="0"></div>
           <div class="f full"><span class="lbl">tamamlanmayan kapora</span><select id="s_forfeit" style="margin:0"><option value="tiered">kademeli · ilk kaçırma krediye döner, sonraki yanar</option><option value="burn">hep yanar</option><option value="credit">hep krediye döner</option></select></div>
           <div class="note">Kod dolu = Jüri olmak için kod şart (kodu WhatsApp GRUBUNUN açıklamasında paylaş; kod sayfaya hiç gitmez). Kodu boşaltıp kaydedersen kapora herkese açılır.</div>
         </div>
@@ -352,7 +352,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-10-08k';
+const VERSION='v2026-10-08l';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
