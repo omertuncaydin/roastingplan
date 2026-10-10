@@ -177,3 +177,6 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 ## v12t (2026-10-10) — kademeler otomatik (proxy v3.69 · admin v2026-10-08j)
 - Tier 1 was already automatic (price by time). Tier 2 now runs by itself: on the first `/meydan` after a batch's `late_by`, `autoForfeit` burns the unpaid won packages, suspends the devices one cycle and puts the packages on the table (same `forfeitCycle` body as the admin button; `forfeit_run_<n>` 10‑minute guard; records older than 60 days untouched; `forfeited_at` stops reruns). "Tamamlanmayanları kapat" stays for an early close with `force`.
 - Tests: proxy 256, admin 50.
+
+## v12u (2026-10-10) — 7 completion days by rule (proxy v3.70 · page v2026-10-08t · admin v2026-10-08k)
+- `offer_done_days` default **7** (was 2; max 14): close Sunday 23:59 → %40 completion until the next Sunday 23:59 → 7 late days at Hemen-Al − deposit → auto-burn. The setting stays for changes (Ayarlar "tamamlama süresi", blank = 7). Page: `offCfg()` now carries `done_days`/`late_days` from the proxy (the phase helper had been using its fallback). Tests: page 212, proxy 255, admin 50.

@@ -793,7 +793,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-10-08s';
+const VERSION='v2026-10-08t';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1304,7 +1304,7 @@ function renderMeydanLink(card, el, list, cfg, s){
 }   // v02s: iki tedarikçi = ~50 satır; ilk 8 (kapora·oy sırası) + "tümünü gör"
 function offShowAll(){ OFFALL=true; renderOffers(STATE); }
 function fmtTL(n){ return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }   // 1015 → 1.015
-function offCfg(){ const c=(STATE&&STATE.offer_cfg)||{}; const oa=c.dep_open_at?new Date(c.dep_open_at):null; return { goal:Math.max(5,parseInt(c.goal)||40), dep_url:c.dep_url||'', dep_amt:parseInt(c.dep_amt)||0, dep_open_at:(oa&&!isNaN(oa.getTime()))?oa:null, code_always:!!c.code_always, ratio_jury:parseFloat(c.ratio_jury)||0, login_required:!!c.login_required, wa_group_url:(/^https:\/\/chat\.whatsapp\.com\//.test(String(c.wa_group_url||''))?String(c.wa_group_url):'') }; }   // v10n: giriş bayrakları
+function offCfg(){ const c=(STATE&&STATE.offer_cfg)||{}; const oa=c.dep_open_at?new Date(c.dep_open_at):null; return { done_days:Math.max(1,parseInt(c.done_days)||7), late_days:Math.max(1,parseInt(c.late_days)||7), goal:Math.max(5,parseInt(c.goal)||40), dep_url:c.dep_url||'', dep_amt:parseInt(c.dep_amt)||0, dep_open_at:(oa&&!isNaN(oa.getTime()))?oa:null, code_always:!!c.code_always, ratio_jury:parseFloat(c.ratio_jury)||0, login_required:!!c.login_required, wa_group_url:(/^https:\/\/chat\.whatsapp\.com\//.test(String(c.wa_group_url||''))?String(c.wa_group_url):'') }; }   // v10n: giriş bayrakları
 // v02v: kapora kapısı — kod her zaman (Jüri kodu kanalda) ya da erken pencere; ikisinde de kodu girmiş cihaz geçer
 function depGate(cfg){ cfg=cfg||offCfg(); if(!cfg.dep_url) return false; if(gcodeOk()) return false; return cfg.code_always||depEarly(cfg); }
 // v02t (Ömer: gruba katılma teşviki): kapora herkese açılmadan önce yalnız Grup-Al® WhatsApp grubunda paylaşılan kodu girmiş cihaz kapora koyabilir
@@ -1983,7 +1983,7 @@ function renderCycle(s){
   for(const l of locks) h+='<div style="margin-top:4px;font-size:12px;font-weight:700;color:var(--gold)">'+t(l.carried?'cyCarried':'cyLocked').replace('{name}',escZ(l.name)).replace('{dep}',l.dep||0).replace('{d}',cyD(l.close))+'</div>';
   if(!locks.length&&!batches.length) h+='<div class="hint" style="margin-top:4px;font-size:12px">'+t('cyEmptyNow')+'</div>';
   // v09d (Ömer "günlere göre ne olacağı geri gelsin"): bu oturumda kilitlenen kahvenin takvimi — proxy batchStages ile aynı formül, kapanıştan tam gün
-  { const dn=Math.max(1,parseInt(c.done_days)||2), sp=Math.max(1,parseInt(c.sepet_days)||3), g=Math.max(dn,sp)+1;
+  { const dn=Math.max(1,parseInt(c.done_days)||7), sp=Math.max(1,parseInt(c.sepet_days)||3), g=Math.max(dn,sp)+1;
     const plan=[['tamamla',0,dn],['yesil',dn,g],['recete',g,7],['kavur',7,12],['kargo',12,14]].map(([k,a,b])=>({key:k,from:nc+a*DMS,to:nc+b*DMS}));
     const rng=(a,b)=>{ const A=cyD(new Date(a).toISOString()), B=cyD(new Date(b).toISOString()); const ma=A.split(' ')[1], mb=B.split(' ')[1]; return (ma===mb?A.split(' ')[0]:A)+'–'+B; };
     h+='<div style="margin-top:8px;font-size:12px"><b>'+t('cyPlanT')+'</b> <span class="hint">'+t('cyPlanH').replace('{d}',cyD(c.next_close))+'</span></div>';
@@ -2036,7 +2036,7 @@ function jLockN(o){ return (o&&o.lock&&parseInt(o.lock.dep))||(o&&o.conv)||0; } 
 function jLockBadge(o,cta){ if(!o||!o.lock) return ''; const txt=t('jLockB').replace('{n}',jLockN(o)); const b='<span class="jchip jlockb" title="'+escZ(txt)+'">'+escZ(txt)+'</span>'; const nx=t('jLockNext');   // v10z: sayaç halkada (kilitte sıfırlanır); CTA sade
   return cta?('<span class="jlockrow">'+b+'<span class="jchip jlocknext" onclick="event.stopPropagation();jLaneOpen(\''+escZ(o.id)+'\')" title="'+escZ(t('jLockNextT').replace('{g}',offCfg().goal))+'">'+nx+'</span></span>'):b; }   // v10x (Ömer): kendi satırı — durum gerekirse '…' ile kesilir, CTA asla; yazı boyu diğer çiplerle aynı   // v10u (Ömer): tek durum — Seçildi · n paket kavruluyor · CTA: sonrakine katıl → şeritler (yeni kapora = sonraki parti)
 function jLockDep(o,cfg){ const d=o&&o.lock&&parseInt(o.lock.dep_tl); return (d>0)?d:((cfg||offCfg()).dep_amt||0); }   // v10s: kilidin kaporası (proxy v3.49 lock.dep_tl) — ayar değişse de kilitli lot sabit
-function jLotPhase(o,cfg){ cfg=cfg||offCfg(); const c=o&&o.lock&&o.lock.close?new Date(o.lock.close).getTime():0; if(!c) return {k:'open'}; const D=86400000, doneBy=c+(parseInt(cfg.done_days)||2)*D, lateBy=doneBy+(parseInt(cfg.late_days)||7)*D, now=Date.now();   // v12s (proxy v3.68): tamamlama evresi — zamanında / geç (Hemen-Al − kapora) / süre doldu
+function jLotPhase(o,cfg){ cfg=cfg||offCfg(); const c=o&&o.lock&&o.lock.close?new Date(o.lock.close).getTime():0; if(!c) return {k:'open'}; const D=86400000, doneBy=c+(parseInt(cfg.done_days)||7)*D, lateBy=doneBy+(parseInt(cfg.late_days)||7)*D, now=Date.now();   // v12s (proxy v3.68): tamamlama evresi — zamanında / geç (Hemen-Al − kapora) / süre doldu
   if(now<=doneBy) return {k:'on',doneBy,lateBy}; if(now<=lateBy) return {k:'late',doneBy,lateBy,days:Math.max(1,Math.ceil((lateBy-now)/D))}; return {k:'over',doneBy,lateBy}; }
 function jLotPrice(o,cfg){ const ph=jLotPhase(o,cfg); const jury=o.jury_tl||o.camp200_tl||0, basket=o.basket_tl||(jHemen(o)?o.hemen.price:0)||0; return ph.k==='late'?basket:jury; }   // v12s: geç tamamlamada Hemen-Al fiyatı
 function offCanComplete(o){ return !!(o&&(o.done_url||jHemen(o))); }   // v10p: tamamlama linki YA DA Hemen-Al linki (normal varyant + tek kullanımlık kod, proxy v3.47 /done-link)

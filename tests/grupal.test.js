@@ -342,7 +342,7 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('jThumb: photo coffee → <img>, no photo → mountain&sun svg', /^<img /.test(wp.__g('jThumb')({img_url:'https://x.test/a.jpg',origin:'Kenya'},50,50)) && /<svg/.test(wp.__g('jThumb')({origin:'Kenya'},50,50)));
     const c=wp.document.querySelector('.jcard[data-id="'+A2.id+'"]'); T('every card is rigged: strip + zone + ring groups; rig closed at rest', !!c && !!c.querySelector('.jwa') && !!c.querySelector('.jwz') && !!c.querySelector('svg.jring .rl') && !!c.querySelector('svg.jring .cg text') && c.__jwa && c.__jwa.state==='closed');
     T('no B strip / C layer left in the markup', !wp.document.querySelector('.jwb') && !wp.document.querySelector('.jwc') && !/jWalkStripHtml|jWalkLayerHtml/.test(html));
-    T('page version bumped to v2026-10-08h', /const VERSION='v2026-10-08s';/.test(html));
+    T('page version bumped to v2026-10-08h', /const VERSION='v2026-10-08t';/.test(html));
     // v11p: the total line has no denominator any more — "Bu oturum n paket · k kahve · r kavruluyor"
     { const MT=JSON.parse(JSON.stringify(MD)); const L=MT.offers.find(o=>o.id===ord[0].id); L.lock={at:'2026-09-30T10:00:00Z',n:1,close:'2026-10-04T20:59:00Z',state:'locked',dep:17,dep_tl:100,forced:true,people:[]}; L.dep=0; L.conv=17; MT.offer_cfg.day_goal=40;
       const wt=mk({'/meydan':MT,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); const tot=MT.offers.reduce((a,o)=>a+(o.dep||0),0), kk=MT.offers.filter(o=>(o.dep||0)>0).length;
@@ -510,6 +510,6 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('Sepete ekle → basket has it (2), sheet stays open with "Sepete git → 1.710 TL" + başka kahve seç + sepetten çıkar; bar shown', ws.__g('hbItems')().length===1 && ws.__g('hbItems')()[0].qty===2 && !!ws.document.querySelector('#jSheet .jsec') && ws.document.querySelector('#jSheet .rc .go').textContent==='Sepete git → 1.710 TL' && ws.document.querySelector('#jSheet .rc .go').getAttribute('onclick')==='hbGo()' && /başka kahve seç/.test(ws.document.querySelector('#jSheet .rc .alt').textContent) && ws.document.getElementById('hbBar').style.display==='flex');
     ws.eval("jSecK('cn')"); await sleep(40); T("CoffeeNutz'ın 5'i filter lists only starred coffees with an open door", ws.__g("jSecList('cn')").every(o=>ws.__g("jTop(STATE.offers.find(x=>x.id==='"+o.id+"'))")));
     const wd=mk({'/meydan':MS,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); T('desktop (D1): filled block is the first thing in the sidebar; sheet renders the same card', !!wd.document.querySelector('.jdk-side .jsecb.jsecd') && wd.document.querySelector('.jdk-side').firstElementChild.classList.contains('jsecd') && /Jürinin seçimi/.test(wd.document.querySelector('.jdk-side .jsecd').textContent) && (wd.eval("jSecOpen()"), true) && !!wd.document.querySelector('#jSheet .jsec .rc'));
-    T('page version bumped to v2026-10-08h', /const VERSION='v2026-10-08s';/.test(html)); }
+    T('page version bumped to v2026-10-08h', /const VERSION='v2026-10-08t';/.test(html)); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })().catch(e=>{ console.log('CRASH',e.message,e.stack.split('\n').slice(0,3).join(' / ')); process.exit(1); });
