@@ -167,3 +167,9 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - Page fallback when the proxy sends no ratio: 5. Tests: page 209, proxy 239, admin 50.
 
 - **proxy v3.67**: backfill / top-up tickets carry `at` = the kapora date (the 24 h private window counts from the kapora, so a kapora older than a day puts its tickets on the table at once), `exp` = now + 7 days; private tickets minted earlier by the button are re-dated the same way (`redated` in the reply). Fixes the launch showing "0 kaldı" for a day. Proxy tests 242.
+
+## v12s (2026-10-10) — "kapora yanmaz, indirim yanar" (proxy v3.68 · admin v2026-10-08i)
+- **1st kademe = late completion**: after `done_by` (close + 2 days) the won package stays the juror's for **7 more days** at the **Hemen-Al price − deposit** (`/done-link` → `late:true`, El Recreo: 745 → 890); after `late_by` the link answers `late_over`. `batch.late_by`, `pubCfg.late_days`.
+- **2nd kademe = burn**: "Tamamlanmayanları kapat" works only after `late_by` (409 before, `force` aside); marks FORFEIT (CREDIT only in credit mode — the first-miss credit is gone), suspends the device one cycle, and puts every burned package on the coffee's table as a house ticket (`inv_` dev HOUSE, n CoffeeNutz, st t, 7 days).
+- **Page**: lane and detail row read the phase from `lock.close`: on time → "Tamamla · 1.490 TL"; late → "Geç tamamlama · Hemen-Al fiyatı − kapora · n gün kaldı" + red "Tamamla · 1.780 TL"; over → "Tamamlama süresi doldu — kapora yandı, paket masaya çıkar", no button.
+- Tests: page 212, proxy 253, admin 50.

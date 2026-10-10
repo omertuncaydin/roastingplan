@@ -275,7 +275,7 @@ details.set.card[open]>summary{margin-bottom:6px}
         <div class="g2">
           <div class="f"><span class="lbl">tamamlama süresi (gün · oturum bitişinden sonra)</span><input id="s_donedays" inputmode="numeric" placeholder="2"></div>
           <div class="f"><span class="lbl">Sepet satış penceresi (gün · oturum bitişinden sonra)</span><input id="s_sepetdays" inputmode="numeric" placeholder="3"></div>
-          <div class="note">Oturum bitince: tamamlama 2 gün (Salı 23:59), Sepet 3 gün (Çarşamba 23:59), yeşil alımı Perşembe; süresi dolanlar "Tamamlanmayanları kapat" ile kademeli işlem görür.</div>
+          <div class="note">Oturum bitince: tamamlama 2 gün (Salı 23:59) kaporalı fiyattan; sonra 7 gün <b>geç tamamlama</b> Hemen-Al fiyatı − kapora (proxy v3.68); sonra "Tamamlanmayanları kapat": kapora yanar, cihaz bir tur askıya alınır, yanan her paket masaya bilet olarak çıkar. Sepet 3 gün (Çarşamba 23:59), yeşil alımı Perşembe.</div>
         </div>
         <div class="sh">Hemen-Al · bilet = paket (proxy v3.66)</div>
         <div class="g2">
@@ -352,7 +352,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-10-08h';
+const VERSION='v2026-10-08i';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -603,10 +603,10 @@ async function cycleCloseNow(){
   if(j.ok){ await loadOffers(); loadCycles(); }
 }
 async function cycleForfeit(){
-  if(!confirm('Son sayımın süresi dolmuş, tamamlanmamış kaporaları kapat? (ayara göre YANAR ya da krediye döner; cihazlar askıya alınır)')) return;
+  if(!confirm('Geç tamamlama süresi de dolmuş, tamamlanmamış kaporaları kapat? Kapora YANAR (kredi modu seçiliyse krediye döner), cihazlar bir tur askıya alınır, yanan paketler masaya bilet olarak çıkar.')) return;
   const r=await fetch(API+'/admin/cycle-forfeit',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({})});
   const j=await r.json().catch(()=>({}));
-  $('cycleMsg').textContent=j.ok?('kapatıldı · '+j.marked+' kapora ('+j.boxes+' paket) · krediye '+(j.credited||0)+' · yanan '+(j.burned||0)+' · askı: '+j.banned+' cihaz'+((j.credited||0)?' — krediler için "Krediye dönenleri Shopify\'a yaz"':'')):('Olmadı: '+(j.error||r.status)+(j.done_by?(' · süre '+new Date(j.done_by).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'})+' bitiyor'):''));
+  $('cycleMsg').textContent=j.ok?('kapatıldı · '+j.marked+' kapora ('+j.boxes+' paket) · krediye '+(j.credited||0)+' · yanan '+(j.burned||0)+' · masaya '+(j.tabled||0)+' bilet · askı: '+j.banned+' cihaz'+((j.credited||0)?' — krediler için "Krediye dönenleri Shopify\'a yaz"':'')):('Olmadı: '+(j.error||r.status)+((j.late_by||j.done_by)?(' · süre '+new Date(j.late_by||j.done_by).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'})+' bitiyor'):''));
   if(j.ok){ await loadOffers(); loadCycles(); }
 }
 async function kaporaCredit(){
