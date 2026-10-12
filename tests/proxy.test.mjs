@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.72 tag', r.json && r.json.v === '3.72');
+T('v3.73 tag', r.json && r.json.v === '3.73');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 10 (seeded) / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 10 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -174,11 +174,11 @@ r = await px.call('POST', '/admin/inv-backfill', {}); T('inv-backfill needs the 
 const invBefore = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).length;
 r = await px.call('POST', '/admin/inv-backfill', {}, { 'x-cc-key': 'adminkey' });
 // expected: OLDDEV0001 ×2 boxes → 4, plus DEV2BBBBBB (kapora paid on lane-less B, later moved to A, never minted) → 2; derived key folded, forfeited / no-lane / already-minted rows skipped
-T('backfill mints 10×qty for old kapora rows without invitations (30 = 20 + 10), skips forfeited, no-lane and already-minted', r.json.ok && r.json.minted === 30 && r.json.devs === 2 && r.json.skipped.done === 1 && r.json.skipped.nolane === 1 && r.json.skipped.had >= 3 && r.json.skipped.hemen === 7);
+T('backfill mints 10×qty for old kapora rows without invitations (20 for OLDDEV0001 ×2; DEV2BBBBBB already got its 10 at the v3.73 close-time top-up), skips forfeited, no-lane and already-minted', r.json.ok && r.json.minted === 20 && r.json.devs === 1 && r.json.skipped.done === 1 && r.json.skipped.nolane === 1 && r.json.skipped.had >= 3 && r.json.skipped.hemen === 7);
 const mine = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).map(x => JSON.parse(x.value)).filter(j => j.dev === 'OLDDEV0001');
 T('20 private invitations for OLDDEV0001 on A, named from the e-mail, flagged bf', mine.length === 20 && mine.every(j => j.o === A && j.st === 'p' && j.n === 'Ayse' && j.bf === 1));
 r = await px.call('GET', '/offer-mine?dev=OLDDEV0001'); T('/offer-mine shows the backfilled tickets to that device — v3.67: dated from the kapora, so already on the table (t), 7 days from now', r.json && Array.isArray(r.json.inv) && r.json.inv.filter(i => i.id === A && i.st === 't').length === 20 && r.json.inv.filter(i => i.id === A).every(i => new Date(i.exp).getTime() === NOW + 7 * 86400000));
-r = await px.call('POST', '/admin/inv-backfill', {}, { 'x-cc-key': 'adminkey' }); T('second run mints nothing', r.json.ok && r.json.minted === 0 && px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).length === invBefore + 30);
+r = await px.call('POST', '/admin/inv-backfill', {}, { 'x-cc-key': 'adminkey' }); T('second run mints nothing', r.json.ok && r.json.minted === 0 && px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).length === invBefore + 20);
 
 // ---- v3.43: the lane opens later (photo + link via Düzenle, then UYGULA) → the kapora paid on that coffee gets its invitations at UYGULA
 { const ob = px.DB.grupal_offers.find(o => o.id === B); const meta = { ...(ob.meta || {}), img_url: 'https://x.test/o/b.jpg', hemen_url: 'https://coffeenutz.net/cart/333:1', list_tl: 1200 };
@@ -342,7 +342,7 @@ Date.now = () => NOW;   /* v3.72: never the real clock — a real Sunday close (
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.72');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.73');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
@@ -574,4 +574,21 @@ Date.now = () => NOW;   /* v3.72: never the real clock — a real Sunday close (
   r = await px.call('GET', '/meydan');   // closes happen (with the sweep)
   T('after the close: the live ticket with a 6-week-old `at` survives (exp in 5 days); the one expired 9 days ago is swept', !!px.DB.grupal_settings.find(x => x.key === 'inv_OLDAT0001') && !px.DB.grupal_settings.find(x => x.key === 'inv_DEADX0001'));
   NOW = Date.UTC(2026, 8, 29, 12, 0, 0); Date.now = () => NOW; px.DB.grupal_settings = px.DB.grupal_settings.filter(x => x.key !== 'inv_OLDAT0001'); }
+// ---- v3.73: active kaporas never drop below packages × ratio — expired/swept tickets are re-minted at the close; finished lots are left alone
+{ const G5 = '10000000-0000-4000-8000-00000000a005'; NOW = Date.UTC(2026, 8, 29, 12, 0, 0) + 77 * 86400000; Date.now = () => NOW; const KEYH = { 'x-cc-key': 'adminkey' };
+  px.DB.grupal_offers.push({ id: G5, name: 'Gate Five', origin: 'Peru', process: 'washed', active: true, sort: 70, pub: { name: 'Gate Five', origin: 'Peru', process: 'washed' }, meta: { list_tl: 1600, img_url: 'https://db.test/g5.jpg', hemen_url: 'https://coffeenutz.net/cart/905:1' }, created_at: '2026-09-01T00:00:00Z' });
+  r = await px.call('POST', '/admin/settings', { offer_hemen_inv: '10' }, KEYH); px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '1';
+  r = await hook({ offer: G5, dev: 'ACTIVE0001' }, { id: 99901, email: 'active@example.com' }); T('fixture: a fresh open kapora on Gate Five mints 10', /davetiye ×10/.test(r.text));
+  // the week passes: every ticket expires (nothing used)
+  for (const x of px.DB.grupal_settings) { if (!x.key.startsWith('inv_')) continue; const j = JSON.parse(x.value); if (j.o === G5) { j.exp = new Date(NOW - 86400000).toISOString(); x.value = JSON.stringify(j); } }
+  r = await px.call('GET', '/meydan');   // this request closes the pending Sunday → sweep → top-up heals at once
+  { const h = r.json.offers.find(o => o.id === G5).hemen; const recs = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).map(x => JSON.parse(x.value)).filter(j => j.o === G5);
+    T('healed on the very next close: 10 live tickets again (fresh kapora → private first), the 10 expired ones still on file', h.priv + h.table_n === 10 && recs.length === 20 && recs.filter(j => new Date(j.exp).getTime() > NOW).length === 10); }
+  NOW += 7 * 86400000 + 3600000; r = await px.call('GET', '/meydan');   // next Sunday: the healed ones expired too → re-minted; the first batch (expired > 7 days) swept
+  const live2 = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).map(x => JSON.parse(x.value)).filter(j => j.o === G5 && new Date(j.exp).getTime() > NOW);
+  const all2 = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).map(x => JSON.parse(x.value)).filter(j => j.o === G5);
+  T('a week later: 10 live again (7 days from now, on the table since the kapora is older than a day), the oldest batch swept', live2.length === 10 && live2.every(j => new Date(j.exp).getTime() === NOW + 7 * 86400000) && r.json.offers.find(o => o.id === G5).hemen.table_n === 10 && all2.length === 20);
+  const g4 = '10000000-0000-4000-8000-00000000a004'; const g4live = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_')).map(x => JSON.parse(x.value)).filter(j => j.o === g4 && new Date(j.exp).getTime() > NOW);
+  T('Gate Four (a lot finished weeks ago) gets nothing', g4live.length === 0);
+  NOW = Date.UTC(2026, 8, 29, 12, 0, 0); Date.now = () => NOW; px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '0'; }
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);
