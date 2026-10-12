@@ -17,7 +17,7 @@ function mk(variants){
   return w;
 }
 (async()=>{
-  T('admin version bumped', /const VERSION='v2026-10-08m';/.test(html));
+  T('admin version bumped', /const VERSION='v2026-10-08n';/.test(html));
   T('v2026-10-08m: "Siparişi geri al" button next to "Eşle ve say" → orderUndo() → /admin/order-undo {order_id}, confirm first', /onclick="orderUndo\(\)"[^>]*>Siparişi geri al</.test(html) && /async function orderUndo\(\)/.test(html) && /API\+'\/admin\/order-undo'/.test(html) && /confirm\('Sipariş '\+order_id\+' geri alınsın mı\?/.test(html));
   let w=mk(VARS); const g=w.__g;
   // 1. cart permalink passes through (www stripped)

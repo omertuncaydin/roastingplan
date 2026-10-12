@@ -220,7 +220,7 @@ details.set.card[open]>summary{margin-bottom:6px}
           <select id="om_kind" style="margin:0"><option value="done">Tamamla (kilitli kahve)</option><option value="hemen">Hemen-Al</option><option value="kapora">Kapora</option></select>
           <select id="om_offer" style="margin:0"></select>
           <input id="om_email" placeholder="üyenin e-postası (Shopify müşterisi)" style="margin:0">
-          <input id="om_order" inputmode="numeric" placeholder="Shopify sipariş id (URL'deki uzun sayı)" style="margin:0">
+          <input id="om_order" inputmode="numeric" placeholder="Shopify sipariş id (URL'deki uzun sayı) · geri alma için #38356 de olur" style="margin:0">
           <input id="om_qty" inputmode="numeric" placeholder="paket (Hemen-Al / kapora)" value="1" style="margin:0">
           <input id="om_inv" placeholder="davetiye kodu (Hemen-Al, varsa)" style="margin:0">
         </div>
@@ -352,7 +352,7 @@ details.set.card[open]>summary{margin-bottom:6px}
 
 <script>
 const API='https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/grupal-proxy';
-const VERSION='v2026-10-08m';
+const VERSION='v2026-10-08n';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 // v09a: TEMA (sayfayla aynı: otomatik · gece · gündüz · kırmızı) — grupal_admin_theme
@@ -497,11 +497,11 @@ async function loadLinks(){ const el=$('lnkList'); if(!el) return; try{ const r=
 function omFill(code){ const l=LINKS.find(x=>x.code===code); if(!l) return; $('om_kind').value=l.kind; if($('om_offer').querySelector('option[value="'+l.offer+'"]')) $('om_offer').value=l.offer; $('om_email').value=l.email||''; $('om_qty').value=l.qty||1; $('om_inv').value=l.inv||''; $('om_order').value=''; $('omMsg').textContent=l.email?'':'üye kaydı yok — Shopify siparişindeki e-postayı yaz'; try{ $('om_order').focus(); }catch(e){} }
 async function linkDismiss(code,undo){ const r=await fetch(API+'/admin/link-dismiss',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({code,undo:!!undo})}); const j=await r.json().catch(()=>({})); if(j.ok) loadLinks(); else alert('Olmadı: '+(j.error||r.status)); }
 const OM_REASON={dup:'bu sipariş zaten sayılmış',already:'zaten tamamlanmış',nomatch:'bu üyenin bu kahvede tamamlanacak kilitli kaporası yok',notlocked:'kahve kilitli değil'};
-async function orderUndo(){ const m=$('omMsg'); const order_id=$('om_order').value.replace(/[^0-9]/g,''); if(!order_id){ m.textContent='Shopify sipariş id gerekli (siparişin URL\'sindeki uzun sayı)'; return; }   // v2026-10-08m (proxy v3.79)
+async function orderUndo(){ const m=$('omMsg'); const order_id=$('om_order').value.replace(/[^0-9]/g,''); if(!order_id){ m.textContent='Sipariş numarası (#38356) ya da Shopify sipariş id gerekli'; return; }   // v2026-10-08m (proxy v3.79) · v2026-10-08n: numara da olur (proxy v3.81)
   if(!confirm('Sipariş '+order_id+' geri alınsın mı?\n\nKapora paketleri düşer (satır sıfırlanırsa silinir), Hemen-Al satırları ve bu siparişin kullanılmamış biletleri silinir. Shopify\'daki sipariş değişmez — orada ayrıca iptal/iade et.')) return;
   m.textContent='işleniyor…';
   try{ const r=await fetch(API+'/admin/order-undo',{method:'POST',headers:{'content-type':'application/json','x-cc-key':KEY},body:JSON.stringify({order_id})}); const j=await r.json().catch(()=>({}));
-    if(j.ok){ m.textContent='✓ '+j.result; $('om_order').value=''; loadLinks(); loadUsers(); loadOffers(); } else m.textContent='Olmadı: '+(j.error||j.reason||r.status); }catch(e){ m.textContent='Olmadı: '+e.message; } }
+    if(j.ok){ m.textContent='✓ '+j.result; $('om_order').value=''; loadLinks(); loadUsers(); loadOffers(); } else m.textContent='Olmadı: '+(j.hint||j.error||j.reason||r.status); }catch(e){ m.textContent='Olmadı: '+e.message; } }
 async function orderMark(){ const m=$('omMsg'); const kind=$('om_kind').value, offer=$('om_offer').value, email=$('om_email').value.trim().toLowerCase(), order_id=$('om_order').value.replace(/[^0-9]/g,''), qty=parseInt($('om_qty').value,10)||1, inv=$('om_inv').value.trim();
   if(!offer){ m.textContent='kahve seç'; return; } if(!order_id){ m.textContent='Shopify sipariş id gerekli (siparişin URL\'sindeki uzun sayı, #38329 değil)'; return; } if(!email&&kind==='done'){ m.textContent='e-posta gerekli'; return; }
   const o=$('om_offer').options[$('om_offer').selectedIndex]; if(!confirm(({done:'Tamamla',hemen:'Hemen-Al',kapora:'Kapora'})[kind]+' · '+(o?o.text:'')+' · '+(email||'(e-posta yok)')+' · sipariş '+order_id+(kind!=='done'?(' · '+qty+' paket'):'')+'\n\nProxy bunu webhook gelmiş gibi sayar (satır, davetiye, üye kaydı). Devam?')) return;
