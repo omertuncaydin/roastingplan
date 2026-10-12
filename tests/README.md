@@ -208,3 +208,4 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - Phone: the share box ("Jüri'yi paylaş") and the Gruba katıl card come right after the deck; the takvim page (`#jP3`) is moved below them into its own card (`#jP3x`) after each render. Tests: page 215.
 
 - **v12z (page v2026-10-08y)**: Ömer's correction — the "40'a yarış" scoreboard lives *inside* "Ön sipariş ve kapora şartları" on every device (`jRulesHtml(cfg,G,list)` → `.jrtick` at the top of the terms details): desktop foot, phone takvim card, and the takvim sheet. It is no longer on page 1 / under the head. Phone page 3 now uses the shared rules block. Tests: page 215.
+- **page v2026-10-08z**: gap under the phone deck — `#jP1` had a forced `min-height:calc(100dvh - 150px)` from the snap-paging days, and the deck wrapper (`flex:1`) stretched to fill it once the top bar grew by two rows and the scoreboard left page 1. Min-height removed; the dots now follow the card.
