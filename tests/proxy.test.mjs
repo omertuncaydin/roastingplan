@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.81 tag', r.json && r.json.v === '3.81');
+T('v3.82 tag', r.json && r.json.v === '3.82');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 10 (seeded) / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 10 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -166,6 +166,15 @@ r = await px.call('POST', '/offer-move', { dev: 'DEV2BBBBBB', from: B, to: A });
   T('coffee product with BOTH flags → discount prefix HA decides: Hemen-Al, not completion', /^ok \(hemen/.test(r.text) || /hemen/i.test(r.text));
   r = await px.call('POST', '/admin/settings', { offer_dep_url: '' }, KEYH);
   px.DB.grupal_offer_votes = px.DB.grupal_offer_votes.filter(v => !/^STALEDEV0[12]/.test(String(v.dev))); px.DB.grupal_settings = px.DB.grupal_settings.filter(x => !(x.key.startsWith('inv_') && /9880[12]/.test(String(JSON.parse(x.value).oid))) && !/^mem_stale2?@example\.com$/.test(x.key) && !/^ord_/.test(x.key) || !/9880[12]/.test(x.value)); }   // fixture cleanup
+// ---- v3.82: admin deletes a member's deposit on a coffee directly (no order number): packages drop, tickets and roll mark go, locks recomputed
+{ const B2 = '10000000-0000-4000-8000-0000000000cc'; const KEYH = { 'x-cc-key': 'adminkey' };
+  r = await hook({ offers: B2 + ':3', dev: 'KDELDEV001', roll: '1' }, { id: 98901, name: 'Kdel', email: 'kdel@example.com', qty: 3 }); T('(setup) 3 packages on B2 with tickets', /^ok \(kapora/.test(r.text));
+  const tixOf = () => px.DB.grupal_settings.filter(x => x.key.startsWith('inv_') && JSON.parse(x.value).dev === 'KDELDEV001' && JSON.parse(x.value).o === B2).length; const t0 = tixOf();
+  r = await px.call('POST', '/admin/kapora-delete', { email: 'kdel@example.com', offer: B2, q: 1 }, KEYH); T('delete 1 of 3 → row qty 2, hemen_inv tickets removed, roll kept', r.json.ok === true && r.json.packages === 1 && px.DB.grupal_offer_votes.find(v => v.offer_id === B2 && v.dev === 'KDELDEV001').qty === 2 && tixOf() === t0 - 10 && !!px.DB.grupal_settings.find(x => x.key === 'roll_' + B2 + '_KDELDEV001'));
+  r = await px.call('POST', '/admin/kapora-delete', { email: 'kdel@example.com', offer: B2 }, KEYH); T('delete the rest (no q) → row gone, all its tickets gone, roll mark gone', r.json.ok === true && r.json.packages === 2 && !px.DB.grupal_offer_votes.find(v => v.offer_id === B2 && v.dev === 'KDELDEV001') && tixOf() === 0 && !px.DB.grupal_settings.find(x => x.key === 'roll_' + B2 + '_KDELDEV001'));
+  r = await px.call('POST', '/admin/kapora-delete', { email: 'kdel@example.com', offer: B2 }, KEYH); T('nothing left → 404 no_deposit', r.status === 404 && r.json.error === 'no_deposit');
+  r = await px.call('POST', '/admin/kapora-delete', { email: 'nobody@example.com', offer: B2 }, KEYH); T('unknown member → 404 no_member', r.status === 404 && r.json.error === 'no_member');
+  r = await px.call('POST', '/admin/kapora-delete', { email: 'kdel@example.com', offer: B2 }); T('no key → 401', r.status === 401); }
 // v3.79: cancel of an order placed from a SECOND device of a member — rows live under the member's primary dev, the cancel payload carries the second device
 { const B2 = '10000000-0000-4000-8000-0000000000cc'; const cancel = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, cancelled_at: '2026-09-23T13:00:00.000Z', financial_status: 'voided', email: order.email, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
   r = await hook({ offers: A + ':1', dev: 'PRIMDEV001' }, { id: 98701, name: 'Multi', email: 'multi@example.com', qty: 1 }); T('(setup) first kapora from the primary device', /^ok \(kapora/.test(r.text));
@@ -270,7 +279,8 @@ r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('offer-mine on the pri
 r = await px.call('GET', '/admin/users'); T('admin/users needs the key', r.status === 401);
 r = await px.call('GET', '/admin/users', null, { 'x-cc-key': 'adminkey' }); { const a = r.json.users.find(u => u.email === 'ayse.kaya@example.com');
   T('admin/users: Ayşe Kaya, phone, wa with time, boxes 3 (A + B + B2), orders 2, devs 3, ok', r.json.ok && !!a && a.name === 'Ayşe Kaya' && a.phone === '+905321234567' && a.wa === true && !!a.wa_at && a.boxes === 3 && a.orders === 2 && a.devs === 3 && a.ok === true);
-  T('v3.51: coffees breakdown — 3 coffees × 1 package, names from the offers, no hemen', Array.isArray(a.coffees) && a.coffees.length === 3 && a.coffees.every(c => c.q === 1 && c.hemen === 0 && typeof c.name === 'string' && c.name.length > 0) && a.coffees.reduce((x, c) => x + c.q, 0) === a.boxes); }
+  T('v3.51: coffees breakdown — 3 coffees × 1 package, names from the offers, no hemen', Array.isArray(a.coffees) && a.coffees.length === 3 && a.coffees.every(c => c.q === 1 && c.hemen === 0 && typeof c.name === 'string' && c.name.length > 0) && a.coffees.reduce((x, c) => x + c.q, 0) === a.boxes);
+  T('v3.82: each coffee carries its id', a.coffees.every(c => /^[0-9a-f-]{36}$/.test(c.id))); }
 r = await px.call('POST', '/admin/user-flag', { email: 'ayse.kaya@example.com', ok: false }, { 'x-cc-key': 'adminkey' }); T('admin flags Ayşe (not in the group) → ok false', r.json.ok && r.json.me.ok === false);
 r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('offer-mine reports ok:false after the flag (page blocks kapora)', r.json.me.ok === false);
 r = await px.call('POST', '/admin/user-flag', { email: 'ayse.kaya@example.com', ok: true }, { 'x-cc-key': 'adminkey' }); T('admin un-flags', r.json.me.ok === true);
@@ -393,7 +403,7 @@ Date.now = () => NOW;   /* v3.72: never the real clock — a real Sunday close (
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.81');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.82');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
