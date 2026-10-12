@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.74 tag', r.json && r.json.v === '3.74');
+T('v3.75 tag', r.json && r.json.v === '3.75');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 10 (seeded) / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 10 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -342,7 +342,7 @@ Date.now = () => NOW;   /* v3.72: never the real clock — a real Sunday close (
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.74');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.75');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
@@ -522,6 +522,21 @@ Date.now = () => NOW;   /* v3.72: never the real clock — a real Sunday close (
   const G2 = '10000000-0000-4000-8000-00000000a002'; r = await px.call('GET', '/meydan'); const g2 = r.json.offers.find(o => o.id === G2);
   r = await px.call('POST', '/offer-ask', { dev: 'STRANGER03', id: G2 }); T('ask allowed on an open coffee whose table is empty (no gate condition any more)', g2.hemen.table_n === 0 && g2.hemen.left === 0 && r.json.ok === true);
   NOW -= 25 * 3600000; Date.now = () => NOW; px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '0'; }
+
+// ---- v3.75: "Sepete git" without a code — the server picks the ticket: own tickets first (up to qty), else the oldest table ticket (kişi başı 1), else the quota path (0 → full)
+{ Date.now = () => NOW; const G4 = '10000000-0000-4000-8000-00000000a004', G2 = '10000000-0000-4000-8000-00000000a002';
+  NOW += 25 * 3600000; Date.now = () => NOW;
+  r = await px.call('GET', '/meydan'); let g4 = r.json.offers.find(o => o.id === G4); T('fixture: 7 tickets on the G4 table, quota 0', g4.hemen.table_n === 7 && g4.hemen.left === 0);
+  r = await px.call('POST', '/hemen-link', { dev: 'TKONLY0001', items: [{ id: G4, qty: 2 }] });
+  const own2 = decodeURIComponent((/attributes\[inv\]=([^&]+)/.exec(r.json.url) || [])[1] || '').split(',').filter(Boolean);
+  T('juror, no code, qty 2 → ok via inv with 2 of her own tickets picked by the server', r.json.ok === true && r.json.via === 'inv' && r.json.qty === 2 && own2.length === 2 && own2.every(c => JSON.parse(px.DB.grupal_settings.find(x => x.key === 'inv_' + c).value).dev === 'TKONLY0001'));
+  r = await px.call('POST', '/hemen-link', { dev: 'NOCODE0001', items: [{ id: G4, qty: 3 }] });
+  const tk1 = decodeURIComponent((/attributes\[inv\]=([^&]+)/.exec(r.json.url) || [])[1] || '');
+  T('stranger, no code, asks 3 → ok with 1 (the oldest table ticket), via inv', r.json.ok === true && r.json.via === 'inv' && r.json.qty === 1 && tk1 === g4.hemen.table[0].c);
+  r = await hook({ hemen: '1', offer: G4, dev: 'NOCODE0001', inv: tk1 }, { id: 98401, name: 'Walk In', email: 'walkin@example.com', qty: 1 }); T('(setup) the stranger pays → ticket used', /^ok/.test(r.text));
+  r = await px.call('POST', '/hemen-link', { dev: 'NOCODE0001', items: [{ id: G4, qty: 1 }] }); T('the same stranger again this cycle → limit (kişi başı 1)', r.json.ok === false && r.json.reason === 'limit');
+  r = await px.call('POST', '/hemen-link', { dev: 'NOCODE0002', items: [{ id: G2, qty: 1 }] }); T('a coffee with no tickets at all → full (quota 0)', r.json.ok === false && r.json.reason === 'full');
+  NOW -= 25 * 3600000; Date.now = () => NOW; }
 // ---- v3.65: top-up backfill {top:1} — this session's kaporas are completed to packages × 10 (counting every ticket ever minted for that device+coffee); older sessions untouched
 { Date.now = () => NOW; const KEYH = { 'x-cc-key': 'adminkey' }; const G4 = '10000000-0000-4000-8000-00000000a004'; r = await px.call('POST', '/admin/settings', { offer_hemen_inv: '10' }, KEYH);
   const mineK = px.DB.grupal_settings.filter(x => x.key.startsWith('inv_') && JSON.parse(x.value).o === G4 && JSON.parse(x.value).dev === 'TKONLY0001'); T('fixture: TKONLY0001 has 10 tickets on G4 (3 used)', mineK.length === 10);

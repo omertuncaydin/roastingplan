@@ -195,8 +195,15 @@ body.jdesk #offerCard{padding-top:16px}
 .jdk-filt{display:inline-flex;gap:6px;margin:0 6px 0 0}
 .jdk-f.ico{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin:0;padding:0;border-radius:50%;background:var(--panel);color:var(--ink);border:1px solid var(--line);font-size:17px;line-height:1;font-family:inherit;cursor:pointer}
 .jdk-f.ico:hover{background:var(--panel2)}.jdk-f.ico.on{background:var(--panel2);border-color:var(--gold);box-shadow:0 0 0 2px rgba(230,193,75,.25)}
-#themeChipsTop{margin:0 4px 0 6px;gap:5px;flex-wrap:nowrap}#themeChipsTop .tchip{padding:3px;border-radius:50%;line-height:0;font-size:0}#themeChipsTop .tchip .tdot{width:12px;height:12px;margin:0}#themeChipsTop .tchip.on .tdot{width:12px;height:12px;margin:0;box-shadow:inset 0 0 0 1px rgba(120,100,80,.35),0 0 0 2px var(--accent)}
-body.jdesk #themeChips{display:none}   /* v12w: masaüstünde tema noktaları üst çubukta */
+#themeChipsTop{margin:0;gap:5px;flex-wrap:nowrap}#themeChipsTop .tchip{padding:3px;border-radius:50%;line-height:0;font-size:0}#themeChipsTop .tchip .tdot{width:12px;height:12px;margin:0}#themeChipsTop .tchip.on .tdot{width:12px;height:12px;margin:0;box-shadow:inset 0 0 0 1px rgba(120,100,80,.35),0 0 0 2px var(--accent)}
+body.jmode:not(.hplain) #themeChips{display:none}   /* v12w/x: tema noktaları üst çubukta (telefon + masaüstü); sade /hemen-al sayfası altta tutar */
+#jTop2{display:flex;align-items:center;gap:8px}
+body.jdesk #jTop .jtb{order:0}body.jdesk #jTop2{order:1;margin-left:auto}body.jdesk #jTop #jTopR{order:2}
+body.jmode:not(.jdesk) #jTop{flex-wrap:wrap}
+body.jmode:not(.jdesk) #jTop2{order:3;flex-basis:100%;justify-content:space-between;margin-top:6px}
+body.jmode:not(.jdesk) .jdk-filt{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding:2px 0;margin:0;min-width:0}body.jmode:not(.jdesk) .jdk-filt::-webkit-scrollbar{display:none}
+body.jmode:not(.jdesk) .jdk-f.ico{width:32px;height:32px;font-size:15px;flex:none}
+body.jmode:not(.jdesk) #themeChipsTop{flex:none}body.jmode:not(.jdesk) #themeChipsTop .tchip .tdot,body.jmode:not(.jdesk) #themeChipsTop .tchip.on .tdot{width:11px;height:11px}
 .jdk-cyc{display:inline-flex;align-items:center;gap:8px;width:auto;margin:0;padding:8px 12px;border-radius:999px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);font-size:13px;font-weight:800;font-family:inherit;white-space:nowrap;cursor:pointer;flex:none}
 .jdk-cyc i{width:9px;height:9px;border-radius:50%;background:var(--green);display:inline-block}.jdk-cyc span{opacity:.6;font-weight:700}
 .jdk-foot{margin:26px 0 0;padding:14px 0 0;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 24px;font-size:12px;color:var(--muted)}
@@ -797,7 +804,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-10-08v';
+const VERSION='v2026-10-08w';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -940,7 +947,7 @@ function setLang(l){ LANG=l; try{ localStorage.setItem('grupal_lang',l); }catch(
 let THEMEPREF='auto'; try{ THEMEPREF=localStorage.getItem('grupal_theme')||'auto'; }catch(e){}
 if(THEMEPREF==='gece') THEMEPREF='isik'; if(THEMEPREF==='krema') THEMEPREF='kraft'; // emekli temalardan göç
 const THEMES=[['auto','thAuto'],['isik','thIsik'],['kraft','thKraft'],['krem','thKrem'],['red','thRed']]; // Gece+Krema emekli (Ömer 2026-08-31) · v12w: Krem (krem beyaz)
-const THEMEDOT={auto:'linear-gradient(135deg,#e7d9c3 50%,#16130f 50%)',
+const THEMEDOT={auto:'linear-gradient(135deg,#faf7f0 50%,#16130f 50%)',
   isik:'radial-gradient(circle at 50% 42%, #e6c14b 0%, #4a3510 45%, #16130f 72%)',
   kraft:'#e7d9c3', krem:'#faf7f0', red:'#8F0101'};
 function applyTheme(){ try{
@@ -948,7 +955,7 @@ function applyTheme(){ try{
   const h=new Date().getHours();
   let mode=THEMEPREF;
   if(redWin) mode='red';
-  else if(mode==='auto') mode=(h>=7&&h<19)?'kraft':'isik';
+  else if(mode==='auto') mode=(h>=7&&h<19)?'krem':'isik';   // v12x (Ömer): gündüz = Krem
   document.body.classList.toggle('th-red',mode==='red');
   document.body.classList.toggle('th-day',mode==='kraft');
   document.body.classList.toggle('th-krem',mode==='krem');   // v12w
@@ -1202,7 +1209,7 @@ function devId(){ let d=''; try{ d=localStorage.getItem('grupal_dev')||''; if(!/
 //   Sunucu /offer-mine → me:{member, name, phone_tail, wa, ok}. Admin "Grupta değil" (ok:false) → kapora kapanır, sayfa gruba katıl uyarısı. Başka cihaz: sipariş no + e-posta → /dev-bind → asıl cihaz kimliği benimsenir. =====
 function jBindChip(){ const bc=$('bindChip'); if(!bc) return; const nm=(ME&&ME.member&&ME.name)?String(ME.name).split(' ')[0]:''; bc.textContent=(ME&&ME.member)?(t('jBound')+(nm?(' · '+nm):'')):t('jDevBind'); bc.style.color=(ME&&ME.member)?'#9fd3b2':'#e6c14b'; }   // v11c (Ömer): cihaz tanınınca çip 'Bağlandı'
 let JHQ=null;   // v11j (Ömer): Hemen-Al adet — 'Sepete' → adet + 'Sepete git' (kapora mantığı); davetiye hep 1
-function jHemenMax(o){ return Math.max(1, Math.min(6, (o&&o.hemen)?(jHemenLeft(o)+((o.hemen.green_left!=null)?0:0)):1)); }
+function jHemenMax(o){ const mine=o?jMyInv(o.id).length:0; return Math.max(1, Math.min(6, mine||((o&&o.hemen)?jHemenLeft(o):0)||1)); }   // v12x: kendi biletlerin kadar (proxy v3.75 kodu kendisi seçer); yoksa 1 (masadan)
 function jHemenPick(id){ jHemenGo(id,null,1); }   // v11t: tek dokunuş — ayrı 'seç' adımı yok
 function jHemenQty(id,d){ hbQty(id,d); }   // v11t: sepet sayacı
 function jHemenPop(id,c){ jTblOpen(id); }   // 'al ›' → v12n: bilet görünümü (eski doğrudan pencere kullanılmıyor)
@@ -1386,10 +1393,9 @@ function jHasImg(o){ return !!(o&&o.img_url&&/^https:\/\//.test(String(o.img_url
 function jDeskOpen(id){ JSEL=id; OFFOPEN.add(id); renderOffers(STATE); const d=$('jDrawer'); if(d) d.scrollTop=0; }
 function jDeskClose(){ JSEL=null; renderOffers(STATE); }
 function jDeskFilter(k){ JDF=k; try{ localStorage.setItem('grupal_jdf',k); }catch(e){} renderOffers(STATE); }
-function jGoRow(id){ if(jIsDesk()) return jDeskOpen(id); const o=((STATE&&STATE.offers)||[]).find(x=>x.id===id); if(!o) return; const k=tasteOf(o)||'top5';   // v11f: telefonda satır listesi yok → kahvenin tat grubu, kart o grupta
-  if(JBAND!==k){ JBAND=k; try{ localStorage.setItem('grupal_jband',k); }catch(e){} } renderOffers(STATE);
-  const e=document.querySelector('#jb_'+k+' .jcard[data-id="'+id+'"]'); if(e&&e.scrollIntoView) e.scrollIntoView({behavior:'smooth',block:'center',inline:'center'}); }
-function jGoCard(id){ if(jIsDesk()) return jDeskOpen(id); const dk=$('jDeck'); if(!dk) return; const c=dk.querySelector('.jcard[data-id="'+id+'"]'); if(!c) return; try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){}
+function jGoRow(id){ if(jIsDesk()) return jDeskOpen(id); return jGoCard(id); }   // v11f: telefonda satır listesi yok · v12x: Damak akordeonu da yok → destedeki karta (süzgeç gerekirse açılır)
+function jGoCard(id){ if(jIsDesk()) return jDeskOpen(id); let dk=$('jDeck'); if(!dk) return; let c=dk.querySelector('.jcard[data-id="'+id+'"]'); if(!c&&JDF!=='all'){ jDeskFilter('all'); dk=$('jDeck'); c=dk&&dk.querySelector('.jcard[data-id="'+id+'"]'); }   // v12x: süzgeç dışındaki karta giderken süzgeç açılır
+  if(!c) return; try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){}
   const x=c.offsetLeft-(dk.clientWidth-c.clientWidth)/2; try{ dk.scrollTo({left:x,behavior:'smooth'}); }catch(e){ dk.scrollLeft=x; } }
 function jDeskKeys(list){ const paidIds=(OFFMINE||[]).filter(v=>v.paid).map(v=>v.id);
   const keys=[['all',t('jdAll'),'var(--accent)',list.slice(),'☕']].concat(jBandKeys(list).filter(k=>k[0]!=='all').map(k=>k.concat([k[0]==='top5'?'★':tIcon(TASTES.find(x=>x[0]===k[0]))])));
@@ -1399,7 +1405,8 @@ function renderJTop(s,list,keys){ const rb=document.querySelector('button[title=
   let bar=$('jTop'); if(!bar){ bar=document.createElement('div'); bar.id='jTop'; const w=document.querySelector('.wrap'); const first=$('liveLogo'); if(w&&first) w.insertBefore(bar,first); else return; }
   const c=s&&s.cycle; let clock=''; if(c&&c.next_close){ const v=cyClockVals(new Date(c.next_close).getTime()); clock=v.left>0?(v.d+t('uDayS')+' '+v.h+t('uHourS')):t('cyClockEnd'); }
   bar.innerHTML='<div class="jtb" onclick="location.href=(/(^|\\.)grup-al\\.com$/.test(location.hostname)?\'/\':location.pathname)"><svg width="34" height="34" viewBox="0 0 100 100" aria-hidden="true"><path d="M 80.6 29.3 A 36 36 0 1 0 85.65 55.01" fill="none" style="stroke:var(--accent)" stroke-width="7" stroke-linecap="round"/><path d="M 34 72 L 50 26 L 66 72" fill="none" style="stroke:var(--accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="85.65" cy="55.01" r="6.5" style="fill:var(--gold)"/></svg><div><div class="jtn">GRUP-AL</div><div class="jts">'+t('mdTitle')+' · '+t('mdCount').replace('{n}',list.length)+'</div></div></div>'
-   +'<span id="jTopR">'+(keys?jDeskChips(keys):'')+'<button class="jsecb jsecp" onclick="jSecOpen()">'+t('jSecBtnS')+'</button>'+(keys?'<span class="tchips" id="themeChipsTop"></span>':'')+'</span>';   // v11v: Hemen-Al rozeti başlık çubuğunda · v12w: masaüstünde damak ikonları + tema noktaları da burada
+   +'<span id="jTopR"><button class="jsecb jsecp" onclick="jSecOpen()">'+t('jSecBtnS')+'</button></span>'
+   +(keys?('<div id="jTop2">'+jDeskChips(keys)+'<span class="tchips" id="themeChipsTop"></span></div>'):'');   // v11v: Hemen-Al rozeti başlık çubuğunda · v12w/x (Ömer): damak ikonları + tema noktaları — masaüstünde aynı satır, telefonda ikinci satır
   if(keys&&typeof renderThemeChips==='function') renderThemeChips((typeof redWindow==='function')&&redWindow());
   { const slot=bar.querySelector('#jTopR'); if(rb&&slot){ slot.appendChild(rb); rb.classList.add('jtr'); rb.style.cssText=''; } }   // v09n: Refresh düğmesi sayaç çipinin yerinde (sayaç kartta)
   document.body.classList.add('jmode'); document.documentElement.classList.add('jmode');
@@ -1412,9 +1419,10 @@ function jCtl(o,cfg,paid,gate,banned){
   if(JMOVE) return (o.id===JMOVE)?('<button class="jmvx" onclick="event.stopPropagation();jMoveCancel()">'+t('jMoveX')+'</button>'):((paid&&paid.conv)?'':('<button class="jmvb" onclick="event.stopPropagation();jMoveTo(\''+escZ(o.id)+'\')">'+t('jMoveHere')+' →</button>'));   // v09p: taşıma modu
   if((paid&&paid.conv&&!paid.done)||banned) return ''; if(gate) return '<button class="jplus" style="font-size:20px" onclick="event.stopPropagation();gcodeFocus()">🔒</button>';
   return '<button class="jplus" onclick="event.stopPropagation();jLaneOpen(\''+escZ(o.id)+'\')" title="'+t(paid?'offDepMore':'offDep').replace('{amt}',cfg.dep_amt||'')+'" aria-label="+">+</button>'; }   // v10b: + → şeritler · v11t: kapora sayacı artık fiyat satırının solunda (jPriceRow)
-function renderDeck(list,cfg,G,gate,banned,clk){ const all=jDeckOrder(list);   // v09l: tüm kahveler, ön sipariş sırasına göre
-  const cards=all.map((o,i)=>jCardHtml(o,i,cfg,G,gate,banned)).join('');
-  return '<div class="jdeckw"><div class="jdeck" id="jDeck">'+cards+'</div>'+(clk||'')+'</div><div class="jdots"><i class="on"></i><span class="jdn">1 / '+all.length+' · '+t('jSwipe')+'</span></div>'; }
+function renderDeck(list,cfg,G,gate,banned,clk,sub){ const all=jDeckOrder(list);   // v09l: tüm kahveler, ön sipariş sırasına göre · v12x: sub = süzülmüş alt küme (sıra numarası genel sıra)
+  const show=sub?all.filter(o=>sub.some(x=>x.id===o.id)):all;
+  const cards=show.map(o=>jCardHtml(o,all.findIndex(x=>x.id===o.id),cfg,G,gate,banned)).join('');
+  return '<div class="jdeckw"><div class="jdeck" id="jDeck">'+cards+'</div>'+(clk||'')+'</div><div class="jdots"><i class="on"></i><span class="jdn">1 / '+show.length+' · '+t('jSwipe')+'</span></div>'; }
 // v09v (23.09): kart üreticisi — deste (telefon) ve ızgara (masaüstü) aynı kartı kullanır
 function jCardHtml(o,i,cfg,G,gate,banned){ const paid=(OFFMINE||[]).find(v=>v.id===o.id&&v.paid); const jury=o.jury_tl||o.camp200_tl; const tk=tasteOf(o); const tn=TASTES.find(x=>x[0]===tk); const tc=tn?TASTECOL[tk]:''; const tp=jTop(o);
     const hasImg=!!(o.img_url&&/^https:\/\//.test(String(o.img_url)));   // v09s (22.09): kahvenin fotoğrafı varsa arka plan o; yoksa dağ+güneş (renk mantığı aynen)
@@ -1885,32 +1893,20 @@ function jClockBoxes(nc){ const v=cyClockVals(nc); if(v.left<=0) return '<div cl
 function jClockTxt(nc){ const v=cyClockVals(nc); if(v.left<=0) return t('cyClockEnd'); return (v.d?(v.d+t('uDayS')+' '):'')+v.h+t('uHourS')+' '+v.m+t('uMinS'); }
 function renderJuriPage(s,list,ctx,early,codeOk){
   const {cfg,G,mine,pend,gate,banned}=ctx; let h='';
-  renderJTop(s,list);
+  const keys=jDeskKeys(list); if(!keys.some(k=>k[0]===JDF)) JDF='all'; const cur=keys.find(k=>k[0]===JDF);   // v12x (Ömer): damak ikonları üst çubukta desteyi süzer — 2. sayfa (Damağın?) kalktı
+  renderJTop(s,list,keys);
   const c=s&&s.cycle, nc=(c&&c.next_close)?new Date(c.next_close).getTime():0;
   const clk=nc?jClockBoxes(nc):'';   // v09m: çerçeveli sayaç kartın üstünde (dağların hizasında)
   // SAYFA 1 — Deste: tüm kahveler, ön sipariş sırasına göre; sayaç kartın üstünde
-  h+='<section class="jpage'+(jMineList(list).length?' hasmine':'')+(jWelcShow()?' haswelc':'')+'" id="jP1">'+jWelcHtml(cfg)+jGuestHtml()+renderTicker(list,G)+renderDeck(list,cfg,G,gate,banned,clk)
-    +'<div class="jnav"><button class="jnb" onclick="jOpenBand(\'top5\')">★ '+t('jTop5')+' ›</button></div>'   // v11f (Ömer): 'Tüm liste' kalktı — deste zaten tüm kahveler
-    +'</section>';   // v11c: 'yukarı kaydır' ipucu kalktı
-  // SAYFA 2 — Damak akordeonu
-  h+='<section class="jpage" id="jP2"><div class="jh2">'+t('jDamakT')+'</div>';   // v11v: Benim için seç düğmesi başlık çubuğuna taşındı (P3)
-  if(banned) h+='<div style="margin:0 0 8px;padding:8px 10px;border-radius:10px;border:1px solid #e0705a;color:#e0705a;font-size:12px;font-weight:700">'+t('offBanned').replace('{d}',cyD(BANNED.toISOString()))+'</div>';
-  if(early||cfg.code_always) h+=codeOk?('<div style="margin:0 0 8px;font-size:12px;font-weight:700;color:var(--green)">'+t('offCodeOk')+'</div>')
+  let pre='';   // v12x: 2. sayfadan taşınanlar — yasak notu, erken kod kartı, dürüst toplam
+  if(banned) pre+='<div style="margin:0 0 8px;padding:8px 10px;border-radius:10px;border:1px solid #e0705a;color:#e0705a;font-size:12px;font-weight:700">'+t('offBanned').replace('{d}',cyD(BANNED.toISOString()))+'</div>';
+  if(early||cfg.code_always) pre+=codeOk?('<div style="margin:0 0 8px;font-size:12px;font-weight:700;color:var(--green)">'+t('offCodeOk')+'</div>')
     :('<div style="margin:0 0 8px;padding:9px 10px;border-radius:10px;border:1px dashed var(--gold)"><div style="font-size:12px;font-weight:700;color:var(--gold)">'+(cfg.code_always?t('offCodeAlw'):t('offEarly').replace('{d}',fmtOpen(cfg.dep_open_at)))+'</div><div class="hint" style="margin-top:2px">'+(cfg.code_always?t('offCodeAlwH').replace('{ch}',(STATE&&STATE.chat_url)?('<a href="'+escZ(STATE.chat_url)+'" target="_blank" rel="noopener">'+t('chatL')+'</a>'):t('chatL')):t('offEarlyH'))+'</div>'
       +'<div style="display:flex;gap:6px;margin-top:6px" onclick="event.stopPropagation()"><input id="gcodeIn" placeholder="'+t('offCodeL')+'" style="flex:1;min-width:0;margin:0;padding:8px 10px;font-size:14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink)" onkeydown="if(event.key===\'Enter\'){gcodeSend();}"><button onclick="gcodeSend()" style="width:auto;margin:0;padding:8px 14px;font-size:13px">'+t('offCodeB')+'</button></div><div class="hint" id="gcodeMsg" style="margin-top:4px;color:#e0705a"></div></div>');
   { const tot=list.reduce((a,o)=>a+(o.dep||0),0), kk=list.filter(o=>(o.dep||0)>0).length, roast=list.filter(o=>o.lock).reduce((a,o)=>a+jLockN(o),0);   // v11p (Ömer 'dürüst'): payda yok — bu oturumun kaporası · kaç kahve · kilitli partide kaç paket
-  h+='<div id="offTot" style="margin:0 0 8px;padding:8px 10px;border-radius:10px;background:var(--panel2);font-size:12.5px;font-weight:700">'+t('offTot1').replace('{sum}',tot).replace('{k}',kk)+(roast?(' · '+t('offTotR').replace('{r}',roast)):'')+'</div>'; }
-  for(const [k,name,col,arr] of jBandKeys(list)){ if(!arr.length||k==='all') continue; /* v11f: Tüm liste bandı yok */ const open=JBAND===k; const prices=arr.map(o=>o.jury_tl||o.camp200_tl).filter(Boolean); const lo=Math.min(...prices), hi=Math.max(...prices);
-    let rows='';
-    if(open){ const srt=arr.slice().sort((a,b)=>(k==='top5')?0:((b.dep||0)-(a.dep||0))); const fold=(k==='all')&&!OFFALL&&srt.length>OFFFOLD+2;
-      const shown=fold?srt.filter((o,i)=>i<OFFFOLD||(o.dep||0)>0||mine.includes(o.id)||(OFFMINE||[]).some(v=>v.id===o.id&&v.paid)||pend.includes(o.id)):srt;
-      if(k==='all') rows=shown.map((o,i)=>offRowHtml(o,Object.assign({},ctx,{rank:i+1}))).join('');
-      else { const ordAll=jDeckOrder(list); rows='<div class="jdeck jdeck-b">'+shown.map(o=>jCardHtml(o,ordAll.findIndex(x=>x.id===o.id),cfg,G,gate,banned)).join('')+'</div>'+(shown.length>1?('<div class="jdots"><i class="on"></i><span class="jdn">'+shown.length+' '+t('jCoffee')+' · '+t('jSwipe')+'</span></div>'):''); }   // v11c (Ömer): gruba dokununca kartlar (yatay deste), sıra numarası genel sıra
-      if(fold) rows+='<button onclick="event.stopPropagation();offShowAll()" style="margin-top:6px;padding:9px;font-size:13px;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">'+t('offMore').replace('{n}',srt.length-shown.length)+'</button>'; }
-    h+='<div class="jband'+(open?' open':'')+'" id="jb_'+k+'"><div class="jbh" onclick="jToggleBand(\''+k+'\')"><div class="jbg">'+jLand(arr[0].origin,358,120)+'</div><div class="jsh"></div><div class="jbar" style="background:'+col+'"></div>'
-      +'<div class="jbt"><div class="jbn">'+(k==='top5'?'★ ':'')+escZ((()=>{ const tx=TASTES.find(x=>x[0]===k); return tx?(tIcon(tx)+' '+tShort(tx)):name; })())+'</div><div class="jbs">'+arr.length+' '+t('jCoffee')+(prices.length?(' · '+(lo===hi?fmtTL(lo):(fmtTL(lo)+'–'+fmtTL(hi)))+' TL'):'')+'</div>'
-      +'<div class="jth">'+arr.slice(0,3).map(o=>'<span>'+jLand(o.origin,40,40)+'</span>').join('')+(arr.length>3?('<span class="jmore">+'+(arr.length-3)+'</span>'):'')+'</div></div><div class="jgo">›</div></div>'
-      +'<div class="jbb"><div class="jbi">'+rows+'</div></div></div>'; }
+  const dd=t('offTotD').replace('{sum}',tot); pre+='<div id="offTot" style="margin:0 0 8px;padding:8px 10px;border-radius:10px;background:var(--panel2);font-size:12.5px;font-weight:700">'+dd.charAt(0).toLocaleUpperCase('tr-TR')+dd.slice(1)+(roast?(' · '+t('offTotR').replace('{r}',roast)):'')+'</div>'; }   // v12x: telefonda da "n kahve" yok
+  h+='<section class="jpage'+(jMineList(list).length?' hasmine':'')+(jWelcShow()?' haswelc':'')+'" id="jP1">'+jWelcHtml(cfg)+jGuestHtml()+pre+renderTicker(list,G)+renderDeck(list,cfg,G,gate,banned,clk,cur?cur[3]:null)
+    +'</section>';   // v11c: 'yukarı kaydır' ipucu kalktı · v11f: 'Tüm liste' kalktı · v12x: ★ düğmesi ve Damak akordeonu kalktı (üst çubuktaki ikonlar süzer)
   h+='</section>';
   // SAYFA 3 — Oturum · takvim · kurallar
   h+='<section class="jpage jp3" id="jP3"><div class="jh2">'+t('jSessT')+'</div>'+renderCycle(s)
