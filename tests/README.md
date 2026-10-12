@@ -191,3 +191,8 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 
 ## v12v (2026-10-12) — desktop without the left column (page v2026-10-08u)
 - Ömer: "the left menu bar is unnecessary". Desktop (`body.jdesk`) is one column now: the gold Hemen-Al button is the top-bar `jsecp` (the CSS that hid it on desktop is gone; the sidebar `jsecd` block is gone), taste filters are a chip row (`.jdk-filt`) under the grid head, the race + countdown is one pill (`.jdk-cyc` "31 / 40 · 2g 23s · takvim ›" → `jCycOpen()` → sheet mode `cyc` with the day strip, countdown and rules), how-it-works + terms sit in `.jdk-foot` at the end of the grid (`jRulesHtml`). The scoreboard/ticker is phone-only now. Ban notice and early-code card render above the head (`.jdk-note`). Phone layout untouched. Tests: page 213.
+
+## v12w (2026-10-12) — Krem theme, icon filters in the top bar, one-line head (page v2026-10-08v)
+- Theme **Krem** (`th-krem`, cream white: bg #faf7f0, white panels) joins oto / Gece Işık / Kraft / Red. On desktop the theme dots sit in the top bar (`#themeChipsTop`, dots only, active ringed); the footer row is hidden there (phone unchanged).
+- Desktop top bar, one row: taste filters as icon-only chips (`.jdk-f.ico` ☕ ✓ ★ 🥝 🍓 🍷 🎷, name · count in the tooltip) · Hemen-Al · theme dots · ↻. Only the race/countdown "takvim ›" pill stays in the head row.
+- Head is one line: "Tüm kahveler · 24 kahve · ön sipariş sırasına göre · bu oturum 31 paket · önceki oturumdan 17 paket seçildi" (`offTotD`, no "k kahve" count on desktop; phone keeps `offTot1`). Tests: page 214.
