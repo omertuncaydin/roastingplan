@@ -352,7 +352,7 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('jThumb: photo coffee → <img>, no photo → mountain&sun svg', /^<img /.test(wp.__g('jThumb')({img_url:'https://x.test/a.jpg',origin:'Kenya'},50,50)) && /<svg/.test(wp.__g('jThumb')({origin:'Kenya'},50,50)));
     const c=wp.document.querySelector('.jcard[data-id="'+A2.id+'"]'); T('every card is rigged: strip + zone + ring groups; rig closed at rest', !!c && !!c.querySelector('.jwa') && !!c.querySelector('.jwz') && !!c.querySelector('svg.jring .rl') && !!c.querySelector('svg.jring .cg text') && c.__jwa && c.__jwa.state==='closed');
     T('no B strip / C layer left in the markup', !wp.document.querySelector('.jwb') && !wp.document.querySelector('.jwc') && !/jWalkStripHtml|jWalkLayerHtml/.test(html));
-    T('page version bumped to v2026-10-09b', /const VERSION='v2026-10-09b';/.test(html) && !/#jP1\{min-height:calc\(100dvh - 150px\)/.test(html));
+    T('page version bumped to v2026-10-09c', /const VERSION='v2026-10-09c';/.test(html) && !/#jP1\{min-height:calc\(100dvh - 150px\)/.test(html));
     // v11p: the total line has no denominator any more — "Bu oturum n paket · k kahve · r kavruluyor"
     { const MT=JSON.parse(JSON.stringify(MD)); const L=MT.offers.find(o=>o.id===ord[0].id); L.lock={at:'2026-09-30T10:00:00Z',n:1,close:'2026-10-04T20:59:00Z',state:'locked',dep:17,dep_tl:100,forced:true,people:[]}; L.dep=0; L.conv=17; MT.offer_cfg.day_goal=40;
       const wt=mk({'/meydan':MT,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); const tot=MT.offers.reduce((a,o)=>a+(o.dep||0),0), kk=MT.offers.filter(o=>(o.dep||0)>0).length;
@@ -393,10 +393,10 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     const wr=mk({'/meydan':MR,'/offer-mine':{votes:[{id:R2.id,paid:true,qty:1},{id:R1.id,paid:true,qty:1,roll:true}],inv:[],hemen:[],moved:[]},'/campaigns':[]},390); await sleep(250);
     wr.eval("dbAdd('"+R0.id+"',1)"); await sleep(40); const db=wr.document.getElementById('dbBar');
     T('kapora bar carries the tickbox, unticked by default, with Ömer\'s sentence', !!db && !!db.querySelector('#dbRoll') && !db.querySelector('#dbRoll').checked && /Seçilmezse oyumu en popüler kahveye kaydır/.test(db.textContent));
-    T('unticked → the kapora link has no roll attribute', !/attributes\[roll\]/.test(wr.__g('dbUrl')()));
+    T('unticked → the kapora link writes roll EMPTY (v12ad: Shopify keeps cart attributes from earlier links) and blanks offer/hemen/inv/done', /&attributes\[roll\]=(&|$)/.test(wr.__g('dbUrl')()) && !/attributes\[roll\]=1/.test(wr.__g('dbUrl')()) && /&attributes\[offer\]=&attributes\[hemen\]=&attributes\[inv\]=&attributes\[done\]=$/.test(wr.__g('dbUrl')()));
     wr.eval("rollSet(true)"); wr.__g("renderOffers(STATE)"); await sleep(40);
     T('ticked → attributes[roll]=1 on the kapora link, box stays ticked after a re-render (remembered)', /&attributes\[roll\]=1/.test(wr.__g('dbUrl')()) && wr.document.getElementById('dbRoll').checked);
-    wr.eval("rollSet(false)"); T('untick → gone again', !/attributes\[roll\]/.test(wr.__g('dbUrl')()));
+    wr.eval("rollSet(false)"); T('untick → roll written empty again', !/attributes\[roll\]=1/.test(wr.__g('dbUrl')()) && /attributes\[roll\]=(&|$)/.test(wr.__g('dbUrl')()));
     // lane of a paid (not converted) kapora: status line + toggle
     wr.eval("jLaneOpen('"+R2.id+"')"); await sleep(40); let ln=wr.document.querySelector('.jcard.lopen .jlane.ga .jroll');
     T('lane (deposit without the flag): "Seçilmezse oyun burada kalır · en popülere kaydır"', !!ln && /Seçilmezse oyun burada kalır/.test(ln.textContent) && ln.querySelector('a').textContent==='en popülere kaydır');
@@ -523,6 +523,6 @@ const MINE=[{id:ord[5].id,paid:true,qty:2}];
     T('Sepete ekle → basket has it (2), sheet stays open with "Sepete git → 1.710 TL" + başka kahve seç + sepetten çıkar; bar shown', ws.__g('hbItems')().length===1 && ws.__g('hbItems')()[0].qty===2 && !!ws.document.querySelector('#jSheet .jsec') && ws.document.querySelector('#jSheet .rc .go').textContent==='Sepete git → 1.710 TL' && ws.document.querySelector('#jSheet .rc .go').getAttribute('onclick')==='hbGo()' && /başka kahve seç/.test(ws.document.querySelector('#jSheet .rc .alt').textContent) && ws.document.getElementById('hbBar').style.display==='flex');
     ws.eval("jSecK('cn')"); await sleep(40); T("CoffeeNutz'ın 5'i filter lists only starred coffees with an open door", ws.__g("jSecList('cn')").every(o=>ws.__g("jTop(STATE.offers.find(x=>x.id==='"+o.id+"'))")));
     const wd=mk({'/meydan':MS,'/offer-mine':{votes:[],inv:[],hemen:[]},'/campaigns':[]},1366); await sleep(250); T('desktop (v12v): the gold Hemen-Al button is the top-bar jsecp (no sidebar block); sheet renders the same card', !wd.document.querySelector('.jsecd') && !!wd.document.querySelector('#jTop .jsecb.jsecp') && /Hemen-Al/.test(wd.document.querySelector('#jTop .jsecp').textContent) && (wd.eval("jSecOpen()"), true) && !!wd.document.querySelector('#jSheet .jsec .rc'));
-    T('page version bumped to v2026-10-09b', /const VERSION='v2026-10-09b';/.test(html) && !/#jP1\{min-height:calc\(100dvh - 150px\)/.test(html)); }
+    T('page version bumped to v2026-10-09c', /const VERSION='v2026-10-09c';/.test(html) && !/#jP1\{min-height:calc\(100dvh - 150px\)/.test(html)); }
   console.log(pass+' pass, '+fail+' fail'); process.exit(fail?1:0);
 })().catch(e=>{ console.log('CRASH',e.message,e.stack.split('\n').slice(0,3).join(' / ')); process.exit(1); });
