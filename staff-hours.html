@@ -65,7 +65,7 @@
   <button id="saveBtn">Kaydet · Save</button>
   <button class="ghost" id="refreshBtn">Yenile · Refresh</button>
   <span class="sub" style="margin:0" id="syncStat">yerel · local</span>
-  <span class="sub" style="margin:0;opacity:.55">v2026-10-12b</span>
+  <span class="sub" style="margin:0;opacity:.55">v2026-10-12c</span>
 </div>
 
 <div class="card">
@@ -75,7 +75,6 @@
     <input type="number" id="newHours" value="9" min="1" max="16" step="0.5" title="default daily hours">
     <input type="number" id="newRate" min="0" step="10" placeholder="₺/gün net" style="width:92px" title="günlük net maaş · daily net salary (₺)">
     <input type="number" id="newYol" min="0" step="10" placeholder="yol ₺/gün" style="width:92px" title="günlük yol parası, ofis günleri için · daily transport allowance for on-site days (₺)">
-    <input type="number" id="newOsx" min="0" step="10" placeholder="dış ₺/gün" style="width:92px" title="Off-Site günlük iş gideri · daily off-site work expense (₺)">
     <button class="ghost" id="addEmp">+ Add employee</button>
     <span class="flexspace"></span>
     <button class="ghost" id="editEmp">Edit selected</button>
@@ -109,10 +108,10 @@
     <label><input type="checkbox" id="payTatil"> Resmi tatil</label>
     <label><input type="checkbox" id="payRapor"> Rapor</label>
   </div>
-  <div class="muted" style="margin-top:6px;">Target = workdays in month (Mon-Sat minus Resmi Tatil marks) × default hours. Adjust per employee via Edit. Sunday counts only when marked. Yevmiye = çalışılan saat ÷ günlük saat (yarım gün 0,5; fazla saat oranlı) + işaretli ödenen günler. Maaş = yevmiye × günlük net maaş. Yol = (ofis + Off-Site günü) × yol ₺/gün; Home office günlerinde yol yok. Dış gider = Off-Site günü × dış ₺/gün. Ödenecek = Maaş + Yol + Dış gider.</div>
+  <div class="muted" style="margin-top:6px;">Target = workdays in month (Mon-Sat minus Resmi Tatil marks) × default hours. Adjust per employee via Edit. Sunday counts only when marked. Yevmiye = çalışılan saat ÷ günlük saat (yarım gün 0,5; fazla saat oranlı) + işaretli ödenen günler. Maaş = yevmiye × günlük net maaş. Yol = (ofis + Off-Site günü) × yol ₺/gün; Home office günlerinde yol yok. Dış Gider = o ayın Off-Site iş gideri, elle girilir. Ödenecek = Maaş + Yol + Dış Gider.</div>
 </div>
 
-<footer>CoffeeNutz internal tool · v2026-10-12b · marks: click = apply · drag = paint · drag a mark off the calendar = delete · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
+<footer>CoffeeNutz internal tool · v2026-10-12c · marks: click = apply · drag = paint · drag a mark off the calendar = delete · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
 
 <script>
 "use strict";
@@ -164,9 +163,8 @@ document.getElementById("addEmp").addEventListener("click",()=>{
   const hours = parseFloat(document.getElementById("newHours").value) || 9;
   const rate = parseFloat(document.getElementById("newRate").value) || 0;
   const yol = parseFloat(document.getElementById("newYol").value) || 0;
-  const osx = parseFloat(document.getElementById("newOsx").value) || 0;
   if (!name) return alert("Name?");
-  const e = {id:uid(), name, hours, rate, yol, osx, color: COLORS[db.emps.length % COLORS.length]};
+  const e = {id:uid(), name, hours, rate, yol, color: COLORS[db.emps.length % COLORS.length]};
   db.emps.push(e); selEmp = e.id;
   document.getElementById("newName").value = "";
   save(); renderAll();
@@ -189,8 +187,6 @@ document.getElementById("editEmp").addEventListener("click",()=>{
   if (rr!==null && rr!=="" && isFinite(parseFloat(rr))) e.rate = Math.max(0,parseFloat(rr));
   const yy = prompt("Günlük yol parası ₺ (ofis günleri) · daily transport allowance:", e.yol||0);
   if (yy!==null && yy!=="" && isFinite(parseFloat(yy))) e.yol = Math.max(0,parseFloat(yy));
-  const ox = prompt("Off-Site günlük iş gideri ₺ · daily off-site expense:", e.osx||0);
-  if (ox!==null && ox!=="" && isFinite(parseFloat(ox))) e.osx = Math.max(0,parseFloat(ox));
   save(); renderAll();
 });
 
@@ -308,9 +304,9 @@ function monthStats(){
       else if (mk.t==="yok") yok++;
     }
     const rate=Math.max(0,parseFloat(e.rate)||0), yol=Math.max(0,parseFloat(e.yol)||0);
-    const osx=Math.max(0,parseFloat(e.osx)||0);
-    const yolDays=onsite+offsite, pay=units*rate, transport=yolDays*yol, osExp=offsite*osx;
-    return {e, hours, workD, izin, rapor, tatil, yok, target: targetDays*e.hours, units, rate, pay, onsite, ho, offsite, yolDays, yol, transport, osx, osExp, total: pay+transport+osExp};
+    const osExp=Math.max(0,parseFloat((((db.osexp||{})[`${y}-${pad(m+1)}`]||{})[e.id]))||0);   // v12c: typed per employee per month (no standard rate exists)
+    const yolDays=onsite+offsite, pay=units*rate, transport=yolDays*yol;
+    return {e, hours, workD, izin, rapor, tatil, yok, target: targetDays*e.hours, units, rate, pay, onsite, ho, offsite, yolDays, yol, transport, osExp, total: pay+transport+osExp};
   });
 }
 function fmtTL(n){ return (Math.round(n*100)/100).toLocaleString("tr-TR",{maximumFractionDigits:2}) + " ₺"; }
@@ -333,21 +329,20 @@ function renderTotals(){
     }).join("") +
     `<tr><td><b>Total</b></td><td><b>${sum(r=>r.hours).toFixed(1)}</b></td><td colspan="10"></td></tr>`;
   // 2) payroll: Maaş (yevmiye × ₺/gün) + Yol (ofis günü × yol ₺/gün) = Ödenecek
-  p.innerHTML = `<tr><th>Employee</th><th>₺/gün net</th><th>Yevmiye</th><th>Maaş</th><th>Yol ₺/gün</th><th>Yol gün</th><th>Yol</th><th>Dış ₺/gün</th><th>Dış gider</th><th>Ödenecek</th><th>Ödendi</th></tr>` +
+  p.innerHTML = `<tr><th>Employee</th><th>₺/gün net</th><th>Yevmiye</th><th>Maaş</th><th>Yol ₺/gün</th><th>Yol gün</th><th>Yol</th><th>Dış Gider</th><th>Ödenecek</th><th>Ödendi</th></tr>` +
     rows.map(r=>{
       const pd = PDM[r.e.id];
-      const brk = `${r.units.toFixed(2)} yevmiye × ${fmtTL(r.rate)} = ${fmtTL(r.pay)} · ${r.yolDays} yol günü (ofis + dış) × ${fmtTL(r.yol)} = ${fmtTL(r.transport)} · ${r.offsite} Off-Site günü × ${fmtTL(r.osx)} = ${fmtTL(r.osExp)}`;
+      const brk = `${r.units.toFixed(2)} yevmiye × ${fmtTL(r.rate)} = ${fmtTL(r.pay)} · ${r.yolDays} yol günü (ofis + dış) × ${fmtTL(r.yol)} = ${fmtTL(r.transport)} · Dış Gider ${fmtTL(r.osExp)} (elle)`;
       return `<tr><td><span class="dot" style="display:inline-block;background:${r.e.color}"></span> ${esc(r.e.name)}</td>
         <td><input type="number" data-rate="${r.e.id}" value="${r.rate||""}" min="0" step="10" style="width:84px" placeholder="0" title="günlük net maaş"></td>
         <td>${r.units?r.units.toFixed(2):""}</td><td>${r.pay?fmtTL(r.pay):""}</td>
         <td><input type="number" data-yol="${r.e.id}" value="${r.yol||""}" min="0" step="10" style="width:84px" placeholder="0" title="günlük yol parası · ofis günleri için, evden çalışmada 0"></td>
         <td>${r.yolDays||""}</td><td>${r.transport?fmtTL(r.transport):""}</td>
-        <td><input type="number" data-osx="${r.e.id}" value="${r.osx||""}" min="0" step="10" style="width:84px" placeholder="0" title="Off-Site günlük iş gideri"></td>
-        <td>${r.osExp?fmtTL(r.osExp):""}</td>
+        <td><input type="number" data-osexp="${r.e.id}" value="${r.osExp||""}" min="0" step="10" style="width:96px" placeholder="0" title="bu ayın Off-Site iş gideri, elle girilir · this month's off-site expenses, typed"></td>
         <td title="${brk}"><b class="${pd&&pd.on?"pos":""}">${r.total?fmtTL(r.total):""}</b></td>
         <td><label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" data-paid="${r.e.id}" ${pd&&pd.on?"checked":""} title="bu ayın ödemesi yapıldı · paid for this month">${pd&&pd.on&&pd.at?`<small class="muted">${new Date(pd.at).toLocaleDateString("tr-TR",{day:"2-digit",month:"2-digit"})}</small>`:""}</label></td></tr>`;
     }).join("") +
-    `<tr><td><b>Total</b></td><td></td><td><b>${sum(r=>r.units).toFixed(2)}</b></td><td><b>${fmtTL(sum(r=>r.pay))}</b></td><td></td><td><b>${sum(r=>r.yolDays)||""}</b></td><td><b>${fmtTL(sum(r=>r.transport))}</b></td><td></td><td><b>${fmtTL(sum(r=>r.osExp))}</b></td><td><b>${fmtTL(sum(r=>r.total))}</b></td>
+    `<tr><td><b>Total</b></td><td></td><td><b>${sum(r=>r.units).toFixed(2)}</b></td><td><b>${fmtTL(sum(r=>r.pay))}</b></td><td></td><td><b>${sum(r=>r.yolDays)||""}</b></td><td><b>${fmtTL(sum(r=>r.transport))}</b></td><td><b>${fmtTL(sum(r=>r.osExp))}</b></td><td><b>${fmtTL(sum(r=>r.total))}</b></td>
       <td class="muted">${(()=>{ const tot=sum(r=>r.total); if(!tot) return ""; const kal=sum(r=>(PDM[r.e.id]&&PDM[r.e.id].on)?0:r.total); return kal?("kalan "+fmtTL(kal)):"✓ hepsi ödendi"; })()}</td></tr>`;
   p.querySelectorAll("input[data-rate]").forEach(inp=>inp.addEventListener("change",()=>{
     const emp=db.emps.find(x=>x.id===inp.dataset.rate); if(!emp) return;
@@ -357,9 +352,11 @@ function renderTotals(){
     const emp=db.emps.find(x=>x.id===inp.dataset.yol); if(!emp) return;
     emp.yol=Math.max(0,parseFloat(inp.value)||0); save(); renderTotals();
   }));
-  p.querySelectorAll("input[data-osx]").forEach(inp=>inp.addEventListener("change",()=>{
-    const emp=db.emps.find(x=>x.id===inp.dataset.osx); if(!emp) return;
-    emp.osx=Math.max(0,parseFloat(inp.value)||0); save(); renderTotals();
+  p.querySelectorAll("input[data-osexp]").forEach(inp=>inp.addEventListener("change",()=>{
+    if(!db.osexp) db.osexp={}; if(!db.osexp[mkey]) db.osexp[mkey]={};
+    const v=Math.max(0,parseFloat(inp.value)||0);
+    if(v) db.osexp[mkey][inp.dataset.osexp]=v; else { delete db.osexp[mkey][inp.dataset.osexp]; if(!Object.keys(db.osexp[mkey]).length) delete db.osexp[mkey]; }
+    save(); renderTotals();
   }));
   p.querySelectorAll("input[data-paid]").forEach(inp=>inp.addEventListener("change",()=>{
     if(!db.paid) db.paid={}; if(!db.paid[mkey]) db.paid[mkey]={};
