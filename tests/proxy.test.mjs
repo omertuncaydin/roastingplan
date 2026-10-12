@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.78 tag', r.json && r.json.v === '3.78');
+T('v3.79 tag', r.json && r.json.v === '3.79');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 10 (seeded) / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 10 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -139,6 +139,19 @@ r = await px.call('POST', '/offer-move', { dev: 'DEV2BBBBBB', from: B, to: A });
   r = await px.call('POST', '/offer-move', { dev: 'MOVEQ00001', from: G2, to: G5, q: 9 }); T('q above what is held → moves what is there (1), source row gone', r.json.ok === true && r.json.moved === 1 && r.json.left === 0);
   r = await px.call('GET', '/offer-mine?dev=MOVEQ00001'); T('all 3 on G5, nothing on G2', !r.json.votes.find(v => v.id === G2) && r.json.votes.find(v => v.id === G5).qty === 3);
   r = await px.call('POST', '/offer-move', { dev: 'MOVEQ00001', from: G5, to: G2 }); T('no q → whole row moves as before (3)', r.json.ok === true && r.json.moved === 3 && r.json.left === 0); }
+// ---- v3.79: Shopify "Cancel order" undoes what the order created (packages, tickets, roll); admin order-undo does the same by order id
+{ const B2 = '10000000-0000-4000-8000-0000000000cc'; const cancel = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, cancelled_at: '2026-09-23T13:00:00.000Z', financial_status: 'refunded', email: order.email, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
+  const tix = oid => px.DB.grupal_settings.filter(x => x.key.startsWith('inv_') && String(JSON.parse(x.value).oid) === String(oid)).length;
+  r = await hook({ offers: B2 + ':2', dev: 'CANCL00001', roll: '1' }, { id: 98601, name: 'Cancel', email: 'cancl@example.com', qty: 2 }); T('(setup) kapora ×2 on B2 with tickets and roll', /^ok \(kapora/.test(r.text) && tix(98601) > 0 && !!px.DB.grupal_settings.find(x => x.key === 'roll_' + B2 + '_CANCL00001'));
+  const t1 = tix(98601);
+  r = await hook({ offers: B2 + ':1', dev: 'CANCL00001' }, { id: 98602, name: 'Cancel', email: 'cancl@example.com', qty: 1 }); T('(setup) second order ×1 → row qty 3', /^ok \(kapora/.test(r.text) && px.DB.grupal_offer_votes.find(v => v.offer_id === B2 && v.dev === 'CANCL00001').qty === 3);
+  r = await cancel({ offers: B2 + ':2', dev: 'CANCL00001', roll: '1' }, { id: 98601, email: 'cancl@example.com', qty: 2 });
+  T('cancel the first order → "ok (iptal · kapora −2 …)", row drops to 1, its tickets gone, the second order\'s tickets stay, roll stays (row still there)', /^ok \(iptal · kapora −2 · hemen −0 · bilet −/.test(r.text) && px.DB.grupal_offer_votes.find(v => v.offer_id === B2 && v.dev === 'CANCL00001').qty === 1 && tix(98601) === 0 && tix(98602) > 0 && t1 > 0 && !!px.DB.grupal_settings.find(x => x.key === 'roll_' + B2 + '_CANCL00001'));
+  r = await cancel({ offers: B2 + ':1', dev: 'CANCL00001' }, { id: 98602, email: 'cancl@example.com', qty: 1 });
+  T('cancel the second → row deleted, its tickets gone, roll mark removed', /kapora −1/.test(r.text) && !px.DB.grupal_offer_votes.find(v => v.offer_id === B2 && v.dev === 'CANCL00001') && tix(98602) === 0 && !px.DB.grupal_settings.find(x => x.key === 'roll_' + B2 + '_CANCL00001'));
+  r = await hook({ offers: A + ':1', dev: 'CANCL00002' }, { id: 98603, name: 'Undo', email: 'undo@example.com', qty: 1 }); T('(setup) kapora on A for the admin undo', /^ok \(kapora/.test(r.text));
+  r = await px.call('POST', '/admin/order-undo', { order_id: '98603' }, { 'x-cc-key': 'adminkey' }); T('admin order-undo by order id → ok, row gone', r.json.ok === true && r.json.packages === 1 && !px.DB.grupal_offer_votes.find(v => v.offer_id === A && v.dev === 'CANCL00002'));
+  r = await px.call('POST', '/admin/order-undo', { order_id: '98603' }); T('admin order-undo without the key → 401', r.status === 401); }
 
 // ---- expiry: after 7 days the record is expired
 NOW += 7 * 86400000 + 60000;
@@ -359,7 +372,7 @@ Date.now = () => NOW;   /* v3.72: never the real clock — a real Sunday close (
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.78');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.79');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }

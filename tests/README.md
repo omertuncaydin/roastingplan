@@ -219,3 +219,7 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 ## v12ab (2026-10-12) — one member, many devices (page v2026-10-09b · proxy v3.78)
 - "Bağlandı" phone did not show the kaporas the desktop had: `/offer-mine` answered only for the asking device key. Now, when the device belongs to a member (primary or bound), the reply unifies **all** the member's devices — kaporas, Hemen-Al rows, tickets — pulls any row that landed on a bound device onto the primary (`mergeDev`) and returns `me.dev` = primary; the page adopts that key (`grupal_dev`) so later actions (Sepete git, taşı, tamamla) use the same key. `devId()` accepts 6–16 chars like the proxy.
 - Ticket view (Hemen-Al · n kaldı): the buyable table tickets (Al) come first; your own to-send tickets after. Tests: page 222, proxy 278.
+
+## v12ac (2026-10-12) — deleting test orders (proxy v3.79 · admin v2026-10-08m)
+- Shopify **Cancel order** now undoes what the order created: the kapora packages (row qty drops; row deleted at zero), Hemen-Al H/I rows, the unused tickets that order minted, the completion/roll marks and the `ord_` record. Needs a third webhook in Shopify: **Order cancellation** → same URL. Refund without cancel is not a trigger.
+- Fallback without the webhook: admin "Sipariş eşle → Siparişi geri al" (`/admin/order-undo {order_id}`) does the same from the order id. Neither touches the Shopify order itself. Tests: proxy 285, admin 51.
