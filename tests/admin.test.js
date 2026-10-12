@@ -18,6 +18,7 @@ function mk(variants){
 }
 (async()=>{
   T('admin version bumped', /const VERSION='v2026-10-08n';/.test(html));
+  T('v2026-10-08n: the order form (kind · coffee · e-mail · order · qty · inv + buttons) sits ABOVE the link list inside "Sipariş eşle"', html.indexOf('id="om_order"') < html.indexOf('id="lnkList"') && html.indexOf('onclick="orderUndo()"') < html.indexOf('id="lnkList"'));
   T('v2026-10-08m: "Siparişi geri al" button next to "Eşle ve say" → orderUndo() → /admin/order-undo {order_id}, confirm first', /onclick="orderUndo\(\)"[^>]*>Siparişi geri al</.test(html) && /async function orderUndo\(\)/.test(html) && /API\+'\/admin\/order-undo'/.test(html) && /confirm\('Sipariş '\+order_id\+' geri alınsın mı\?/.test(html));
   let w=mk(VARS); const g=w.__g;
   // 1. cart permalink passes through (www stripped)
