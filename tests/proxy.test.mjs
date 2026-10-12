@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.77 tag', r.json && r.json.v === '3.77');
+T('v3.78 tag', r.json && r.json.v === '3.78');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 10 (seeded) / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 10 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -218,6 +218,14 @@ T('webhook from another device with the same e-mail → merged into the primary 
 const B2c = '10000000-0000-4000-8000-0000000000cc'; px.DB.grupal_offer_votes.push({ offer_id: B2c, dev: 'TABLET0003', seated: false, paid: true, qty: 1, order_id: 9303, email: 'ayse.kaya@example.com', created_at: '2026-09-25T10:00:00.000Z' });
 r = await px.call('POST', '/dev-bind', { order: '#1201', email: 'x@example.com', dev: 'TABLET0003' }); T('dev-bind: wrong e-mail → nomatch, nothing merged', r.status === 404 && px.DB.grupal_offer_votes.some(v => v.dev === 'TABLET0003'));
 r = await px.call('POST', '/dev-bind', { order: '#1201', email: 'AYSE.kaya@example.com', dev: 'TABLET0003' }); T('dev-bind: order no + e-mail → returns the primary dev, tablet rows merged', r.json.ok && r.json.dev === 'PHONE00001' && !px.DB.grupal_offer_votes.some(v => v.dev === 'TABLET0003') && px.DB.grupal_offer_votes.some(v => v.offer_id === B2c && v.dev === 'PHONE00001'));
+// ---- v3.78: a bound device sees everything the member holds — rows that landed on a bound (non-primary) device are pulled to the primary and the page is told the primary dev
+{ const B3 = '10000000-0000-4000-8000-0000000000dd'; px.DB.grupal_offer_votes.push({ offer_id: B3, dev: 'TABLET0003', seated: false, paid: true, qty: 2, order_id: 9304, email: 'ayse.kaya@example.com', created_at: '2026-09-26T10:00:00.000Z' });   // stray row on the bound tablet (e.g. admin order-mark with that dev)
+  r = await px.call('GET', '/offer-mine?dev=TABLET0003'); const ids = r.json.votes.map(v => v.id);
+  T('bound tablet asks → sees the phone\'s kaporas (A, B, B2c) AND its own stray B3; me.dev = primary PHONE00001', ids.includes(A) && ids.includes(B) && ids.includes(B2c) && ids.includes(B3) && r.json.me.member === true && r.json.me.dev === 'PHONE00001');
+  T('the stray tablet row was pulled onto the primary device', px.DB.grupal_offer_votes.some(v => v.offer_id === B3 && v.dev === 'PHONE00001') && !px.DB.grupal_offer_votes.some(v => v.dev === 'TABLET0003'));
+  r = await px.call('GET', '/offer-mine?dev=PHONE00001'); T('the phone itself sees the same four, me.dev = itself', r.json.votes.length === 4 && r.json.me.dev === 'PHONE00001');
+  r = await px.call('GET', '/offer-mine?dev=STRANGER99'); T('an unbound device still sees only its own (nothing), no me.dev', r.json.votes.length === 0 && r.json.me.member === false && !r.json.me.dev);
+  px.DB.grupal_offer_votes = px.DB.grupal_offer_votes.filter(v => v.offer_id !== B3); }   // fixture cleanup: later blocks count Ayşe's packages
 // v3.54: people per coffee (current run): first names from member records, package counts, arrival order, no e-mails; me.k matches
 { r = await px.call('GET', '/meydan'); const oa = r.json.offers.find(o => (o.people || []).some(p => p.n === 'Ayşe'));
   T('/meydan offers carry people[] with first names, q and k, never an e-mail (Ayşe found by first name)', !!oa && oa.people.every(p => typeof p.k === 'string' && p.q >= 1 && !/@/.test(String(p.n || ''))) && !JSON.stringify(r.json.offers).includes('@'));
@@ -351,7 +359,7 @@ Date.now = () => NOW;   /* v3.72: never the real clock — a real Sunday close (
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.77');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.78');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }

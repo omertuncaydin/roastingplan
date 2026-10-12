@@ -215,3 +215,7 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - "taşı →" opens a sheet instead of the card hunt: **Kaç paket?** stepper (shown when you hold more than one; default all) and **Nereye?** select with "★ en popüler" (race leader, unlocked) preselected; the button reads "Taşı → {coffee} · n paket". Partial moves leave the rest on the source card. Proxy `/offer-move {q}` (blank = all) PATCHes the source qty for a partial move, copies the roll mark to the target (removes it from the source on a full move) and replies `moved` + `left`.
 - Walk animation (people on the ring) opens on mouse‑over of the ring only, not the whole card — the top chips ("taşı →") were being covered the moment the mouse entered a card. Touch behaviour unchanged.
 - Tests: page 220, proxy 274.
+
+## v12ab (2026-10-12) — one member, many devices (page v2026-10-09b · proxy v3.78)
+- "Bağlandı" phone did not show the kaporas the desktop had: `/offer-mine` answered only for the asking device key. Now, when the device belongs to a member (primary or bound), the reply unifies **all** the member's devices — kaporas, Hemen-Al rows, tickets — pulls any row that landed on a bound device onto the primary (`mergeDev`) and returns `me.dev` = primary; the page adopts that key (`grupal_dev`) so later actions (Sepete git, taşı, tamamla) use the same key. `devId()` accepts 6–16 chars like the proxy.
+- Ticket view (Hemen-Al · n kaldı): the buyable table tickets (Al) come first; your own to-send tickets after. Tests: page 222, proxy 278.
