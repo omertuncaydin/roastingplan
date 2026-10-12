@@ -69,7 +69,7 @@
   <span class="flexspace"></span>
   <span class="sub" style="margin:0" id="whoChip"></span>
   <button class="ghost" id="outBtn" style="display:none">Çıkış</button>
-  <span class="sub" style="margin:0;opacity:.55">v2026-10-12d</span>
+  <span class="sub" style="margin:0;opacity:.55">v2026-10-12e</span>
 </div>
 <div class="card" id="gate" style="display:none">
   <div class="row"><b>Giriş · Sign in</b><span class="sub" style="margin:0">Guide hesabınla · same account as the Guide · yönetici tam görür, personel yalnız takvimi görür</span></div>
@@ -85,7 +85,7 @@
   <div class="row" id="empRow"></div>
   <div class="row" style="margin-top:8px;">
     <input type="text" id="newName" placeholder="Employee name">
-    <input type="number" id="newHours" value="9" min="1" max="16" step="0.5" title="default daily hours">
+    <input type="number" id="newHours" value="8" min="1" max="16" step="0.5" title="default daily hours (standard 8)">
     <input type="number" id="newRate" min="0" step="10" placeholder="₺/gün net" style="width:92px" title="günlük net maaş · daily net salary (₺)">
     <input type="number" id="newYol" min="0" step="10" placeholder="yol ₺/gün" style="width:92px" title="günlük yol parası, ofis günleri için · daily transport allowance for on-site days (₺)">
     <button class="ghost" id="addEmp">+ Add employee</button>
@@ -124,12 +124,12 @@
   <div class="muted" style="margin-top:6px;">Target = workdays in month (Mon-Sat minus Resmi Tatil marks) × default hours. Adjust per employee via Edit. Sunday counts only when marked. Yevmiye = çalışılan saat ÷ günlük saat (yarım gün 0,5; fazla saat oranlı) + işaretli ödenen günler. Maaş = yevmiye × günlük net maaş. Yol = (ofis + Off-Site günü) × yol ₺/gün; Home office günlerinde yol yok. Dış Gider = o ayın Off-Site iş gideri, elle girilir. Ödenecek = Maaş + Yol + Dış Gider.</div>
 </div>
 
-<footer>CoffeeNutz internal tool · v2026-10-12d · marks: click = apply · drag = paint · drag a mark off the calendar = delete · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
+<footer>CoffeeNutz internal tool · v2026-10-12e · marks: click = apply · drag = paint · drag a mark off the calendar = delete · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
 
 <script>
 "use strict";
 const LS = "emphours_v1";
-const APP_VER = "v2026-10-12d";
+const APP_VER = "v2026-10-12e";
 let MODE = "gate", CUR = null;   // v12d: gate | admin (full) | limited (hq_staff: read-only, no money) | none (signed in, no access)
 const TYPES = {
   full:  {label:"Full day",  cls:""},
@@ -175,7 +175,7 @@ function renderEmps(){
 }
 document.getElementById("addEmp").addEventListener("click",()=>{
   const name = document.getElementById("newName").value.trim();
-  const hours = parseFloat(document.getElementById("newHours").value) || 9;
+  const hours = parseFloat(document.getElementById("newHours").value) || 8;
   const rate = parseFloat(document.getElementById("newRate").value) || 0;
   const yol = parseFloat(document.getElementById("newYol").value) || 0;
   if (!name) return alert("Name?");
@@ -313,7 +313,7 @@ function monthStats(){
       const isTatil = mk && mk.t==="tatil";
       if (dow!==0 && !isTatil) targetDays++;
       if (!mk) continue;
-      if (mk.t==="work"){ hours+=mk.h; workD++; units += mk.h/(e.hours||9); if(mk.ho) ho++; else if(mk.os) offsite++; else onsite++; }   // half day = 0.5 yevmiye, overtime pro-rata; office or off-site day = 1 transport, home office = none
+      if (mk.t==="work"){ hours+=mk.h; workD++; units += mk.h/(e.hours||8); if(mk.ho) ho++; else if(mk.os) offsite++; else onsite++; }   // half day = 0.5 yevmiye, overtime pro-rata; office or off-site day = 1 transport, home office = none
       else if (mk.t==="izin"){ izin++; if(pc.izin) units++; }
       else if (mk.t==="rapor"){ rapor++; if(pc.rapor) units++; }
       else if (mk.t==="tatil"){ tatil++; if(pc.tatil) units++; }
@@ -346,10 +346,10 @@ function renderTotals(){
     `<tr><td><b>Total</b></td><td><b>${sum(r=>r.hours).toFixed(1)}</b></td><td colspan="10"></td></tr>`;
   if (MODE!=="admin"){ p.innerHTML=""; return; }   // limited view: attendance only
   // 2) payroll: Maaş (yevmiye × ₺/gün) + Yol (ofis günü × yol ₺/gün) = Ödenecek
-  p.innerHTML = `<tr><th>Employee</th><th>₺/gün net</th><th>Yevmiye</th><th>Maaş</th><th>Yol ₺/gün</th><th>Yol gün</th><th>Yol</th><th>Dış Gider</th><th>Ödenecek</th><th>Ödendi</th></tr>` +
+  p.innerHTML = `<tr><th>Employee</th><th>₺/gün net</th><th>Yevmiye</th><th>Maaş</th><th>Yol ₺/gün</th><th>Yol gün</th><th>Yol</th><th>+ Dış Gider</th><th>Ödenecek</th><th>Ödendi</th></tr>` +
     rows.map(r=>{
       const pd = PDM[r.e.id];
-      const brk = `${r.units.toFixed(2)} yevmiye × ${fmtTL(r.rate)} = ${fmtTL(r.pay)} · ${r.yolDays} yol günü (ofis + dış) × ${fmtTL(r.yol)} = ${fmtTL(r.transport)} · Dış Gider ${fmtTL(r.osExp)} (elle)`;
+      const brk = `${r.units.toFixed(2)} yevmiye × ${fmtTL(r.rate)} = ${fmtTL(r.pay)} · ${r.yolDays} yol günü (ofis + dış) × ${fmtTL(r.yol)} = ${fmtTL(r.transport)} · + Dış Gider ${fmtTL(r.osExp)} (elle)`;
       return `<tr><td><span class="dot" style="display:inline-block;background:${r.e.color}"></span> ${esc(r.e.name)}</td>
         <td><input type="number" data-rate="${r.e.id}" value="${r.rate||""}" min="0" step="10" style="width:84px" placeholder="0" title="günlük net maaş"></td>
         <td>${r.units?r.units.toFixed(2):""}</td><td>${r.pay?fmtTL(r.pay):""}</td>
