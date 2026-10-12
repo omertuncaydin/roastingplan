@@ -20,7 +20,7 @@
   button.ghost{background:transparent; color:var(--dim); border:1px solid var(--line); font-weight:400;}
   button.ghost.on{border-color:var(--accent); color:var(--accent);}
   .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
-  input[type=text],input[type=number]{background:var(--panel2); border:1px solid var(--line); border-radius:8px; color:var(--text); padding:7px 10px; font-size:13px;}
+  input[type=text],input[type=number],input[type=password]{background:var(--panel2); border:1px solid var(--line); border-radius:8px; color:var(--text); padding:7px 10px; font-size:13px;}
   input[type=number]{width:70px;}
   /* employees */
   .emp{display:inline-flex; align-items:center; gap:7px; padding:6px 12px; border-radius:20px; border:2px solid var(--line); cursor:pointer; margin:3px 4px 3px 0; font-size:13px; background:var(--panel2);}
@@ -60,15 +60,28 @@
 <body>
 
 <h1>Personel Saatleri · Employee Hours</h1>
-<div class="sub">Pick an employee, pick a brush, then click or drag across the calendar to mark. İşareti takvim dışına sürükle = sil · drag a mark off the calendar to delete it.</div>
-<div class="row" style="margin-bottom:12px">
+<div class="sub" id="howto">Pick an employee, pick a brush, then click or drag across the calendar to mark. İşareti takvim dışına sürükle = sil · drag a mark off the calendar to delete it.</div>
+<div class="row" style="margin-bottom:12px" id="topRow">
   <button id="saveBtn">Kaydet · Save</button>
-  <button class="ghost" id="refreshBtn">Yenile · Refresh</button>
+  <button class="ghost" id="refreshBtn" title="buluttaki son kaydı çeker · pulls the latest cloud copy">Bulutu çek · Pull</button>
+  <button class="ghost" id="reloadBtn" title="uygulamayı yeniden yükler, yeni sürümü alır · reloads the app">&#8635; Uygulamayı yenile</button>
   <span class="sub" style="margin:0" id="syncStat">yerel · local</span>
-  <span class="sub" style="margin:0;opacity:.55">v2026-10-12c</span>
+  <span class="flexspace"></span>
+  <span class="sub" style="margin:0" id="whoChip"></span>
+  <button class="ghost" id="outBtn" style="display:none">Çıkış</button>
+  <span class="sub" style="margin:0;opacity:.55">v2026-10-12d</span>
+</div>
+<div class="card" id="gate" style="display:none">
+  <div class="row"><b>Giriş · Sign in</b><span class="sub" style="margin:0">Guide hesabınla · same account as the Guide · yönetici tam görür, personel yalnız takvimi görür</span></div>
+  <div class="row" style="margin-top:8px">
+    <input type="text" id="gEmail" placeholder="e-posta" autocomplete="username" style="width:24ch">
+    <input type="password" id="gPass" placeholder="şifre" autocomplete="current-password" style="width:18ch">
+    <button id="gGo">Gir</button>
+    <span class="sub" style="margin:0" id="gMsg"></span>
+  </div>
 </div>
 
-<div class="card">
+<div class="card" id="empCard">
   <div class="row" id="empRow"></div>
   <div class="row" style="margin-top:8px;">
     <input type="text" id="newName" placeholder="Employee name">
@@ -82,11 +95,11 @@
   </div>
 </div>
 
-<div class="card">
+<div class="card" id="brushCard">
   <div class="row" id="brushRow"></div>
 </div>
 
-<div class="card">
+<div class="card" id="calCard">
   <div class="monthbar">
     <button class="ghost" id="prevM">←</button>
     <h2 id="mTitle"></h2>
@@ -100,10 +113,10 @@
   <div class="cal" id="cal"></div>
 </div>
 
-<div class="card">
+<div class="card" id="totCard">
   <table id="totals"></table>
   <table id="payroll" style="margin-top:14px"></table>
-  <div class="row" style="margin-top:8px;font-size:12.5px;color:var(--dim)">Ödenen günler · paid days:
+  <div class="row" id="payCfgRow" style="margin-top:8px;font-size:12.5px;color:var(--dim)">Ödenen günler · paid days:
     <label><input type="checkbox" id="payIzin"> Yıllık izin</label>
     <label><input type="checkbox" id="payTatil"> Resmi tatil</label>
     <label><input type="checkbox" id="payRapor"> Rapor</label>
@@ -111,11 +124,13 @@
   <div class="muted" style="margin-top:6px;">Target = workdays in month (Mon-Sat minus Resmi Tatil marks) × default hours. Adjust per employee via Edit. Sunday counts only when marked. Yevmiye = çalışılan saat ÷ günlük saat (yarım gün 0,5; fazla saat oranlı) + işaretli ödenen günler. Maaş = yevmiye × günlük net maaş. Yol = (ofis + Off-Site günü) × yol ₺/gün; Home office günlerinde yol yok. Dış Gider = o ayın Off-Site iş gideri, elle girilir. Ödenecek = Maaş + Yol + Dış Gider.</div>
 </div>
 
-<footer>CoffeeNutz internal tool · v2026-10-12c · marks: click = apply · drag = paint · drag a mark off the calendar = delete · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
+<footer>CoffeeNutz internal tool · v2026-10-12d · marks: click = apply · drag = paint · drag a mark off the calendar = delete · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
 
 <script>
 "use strict";
 const LS = "emphours_v1";
+const APP_VER = "v2026-10-12d";
+let MODE = "gate", CUR = null;   // v12d: gate | admin (full) | limited (hq_staff: read-only, no money) | none (signed in, no access)
 const TYPES = {
   full:  {label:"Full day",  cls:""},
   half:  {label:"½ day",     cls:""},
@@ -141,7 +156,7 @@ function load(){
   try{ const r = localStorage.getItem(LS); if (r) return JSON.parse(r); }catch(e){}
   return {emps:[], marks:{}};
 }
-function save(localOnly){ db.up=db.up||0; if(!localOnly) db.up=Date.now(); try{ localStorage.setItem(LS, JSON.stringify(db)); }catch(e){ console.warn(e); } if(!localOnly) cloudPush(); }
+function save(localOnly){ if(MODE!=="admin") return; db.up=db.up||0; if(!localOnly) db.up=Date.now(); try{ localStorage.setItem(LS, JSON.stringify(db)); }catch(e){ console.warn(e); } if(!localOnly) cloudPush(); }
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function ymd(d){ return d.toISOString().slice(0,10); }
 function pad(n){ return String(n).padStart(2,"0"); }
@@ -202,6 +217,7 @@ function renderBrushes(){
 
 /* ---------- marking ---------- */
 function applyBrush(dateKey, isClick){
+  if (MODE!=="admin") return;
   if (!selEmp){ alert("Add/select an employee first."); return; }
   const emp = db.emps.find(e=>e.id===selEmp);
   if (!db.marks[dateKey]) db.marks[dateKey] = {};
@@ -262,7 +278,7 @@ document.addEventListener("mouseup",()=>painting=false);
 /* ---------- v24e: drag a mark off the calendar to delete it ---------- */
 let DRAG=null, GHOST=null;
 function calRect(){ return document.getElementById("cal").getBoundingClientRect(); }
-function dragStart(ch,x,y){ DRAG={dk:ch.dataset.dk, emp:ch.dataset.emp};
+function dragStart(ch,x,y){ if(MODE!=="admin") return; DRAG={dk:ch.dataset.dk, emp:ch.dataset.emp};
   GHOST=ch.cloneNode(true);
   GHOST.style.cssText+=";position:fixed;pointer-events:none;z-index:99;opacity:.9;background:var(--panel2);border:1px solid var(--accent);padding:2px 8px;border-radius:6px;transform:translate(-50%,-130%);";
   GHOST.style.left=x+"px"; GHOST.style.top=y+"px";
@@ -328,6 +344,7 @@ function renderTotals(){
         <td>${r.workD}</td><td>${r.onsite||""}</td><td>${r.ho?("🏠 "+r.ho):""}</td><td>${r.offsite?("📍 "+r.offsite):""}</td><td>${r.izin||""}</td><td>${r.rapor||""}</td><td>${r.tatil||""}</td><td>${r.yok||""}</td></tr>`;
     }).join("") +
     `<tr><td><b>Total</b></td><td><b>${sum(r=>r.hours).toFixed(1)}</b></td><td colspan="10"></td></tr>`;
+  if (MODE!=="admin"){ p.innerHTML=""; return; }   // limited view: attendance only
   // 2) payroll: Maaş (yevmiye × ₺/gün) + Yol (ofis günü × yol ₺/gün) = Ödenecek
   p.innerHTML = `<tr><th>Employee</th><th>₺/gün net</th><th>Yevmiye</th><th>Maaş</th><th>Yol ₺/gün</th><th>Yol gün</th><th>Yol</th><th>Dış Gider</th><th>Ödenecek</th><th>Ödendi</th></tr>` +
     rows.map(r=>{
@@ -397,11 +414,21 @@ document.getElementById("impFile").addEventListener("change",e=>{
 });
 
 function renderAll(){ renderEmps(); renderBrushes(); renderCal(); renderTotals(); }
+function applyMode(){
+  const show=(id,on)=>{ const el=document.getElementById(id); if(el) el.style.display=on?"":"none"; };
+  const admin=MODE==="admin", lim=MODE==="limited", gate=(MODE==="gate"||MODE==="none");
+  show("gate", gate); show("empCard", admin); show("brushCard", admin); show("calCard", admin||lim); show("totCard", admin||lim);
+  show("payroll", admin); show("payCfgRow", admin); show("howto", admin);
+  ["saveBtn","refreshBtn","csvBtn","expBtn","impBtn"].forEach(id=>show(id, admin));
+  show("outBtn", !!CUR);
+  const g=document.getElementById("gMsg"); if(g) g.textContent = (MODE==="none") ? "Bu hesabın erişimi yok · no access for this account (admin: hq_staff listesine ekle)" : (g.textContent==="…"?"":g.textContent);
+  const w=document.getElementById("whoChip"); if(w) w.textContent = (CUR&&CUR.email) ? ("👤 "+CUR.email+(lim?" · sınırlı görünüm · limited view":"")) : "";
+}
 [["payIzin","izin"],["payTatil","tatil"],["payRapor","rapor"]].forEach(([id,k])=>{
   const el=document.getElementById(id); if(!el) return;
   el.addEventListener("change",()=>{ db.pay=Object.assign({izin:1,tatil:1,rapor:0},db.pay||{}); db.pay[k]=el.checked?1:0; save(); renderTotals(); });
 });
-renderAll();
+applyMode();   // v12d: nothing renders before the session is known
 
 /* ---------- cloud (v2026-08-24a): one jar in Supabase, admin account only, newest wins ----------
    Table: staff_hours (id=1, data jsonb, updated_at) · RLS: admin email only.
@@ -418,11 +445,21 @@ function setStat(m){ const el=document.getElementById("syncStat"); if(!el) retur
   else { el.textContent="yerel mod · Guide girişiyle buluta eşitlenir · local mode"; el.style.color="var(--dim)"; } }
 async function cloudUser(){ try{ if(!SB) return null; const u=await SB.auth.getUser(); return (u&&u.data&&u.data.user)||null; }catch(e){ return null; } }
 async function cloudPull(){ try{
-  const u=await cloudUser(); if(!u||u.email!==ADMIN_EMAIL){ setStat("yerel"); return; }
-  const {data,error}=await SB.from("staff_hours").select("data,updated_at").eq("id",1).maybeSingle();
-  if(error) throw error;
-  if(data&&data.data&&((data.data.up||0)>(db.up||0))){ db=data.data; selEmp=db.emps[0]?db.emps[0].id:null; save(1); renderAll(); }
-  setStat("bulut");
+  if(!SB){ MODE="admin"; CUR=null; applyMode(); renderAll(); setStat("yerel"); return; }   // no cloud library: local mode as before
+  const u=await cloudUser(); CUR=u;
+  if(!u){ MODE="gate"; applyMode(); setStat("yerel"); return; }
+  if(u.email===ADMIN_EMAIL){
+    MODE="admin"; applyMode();
+    const {data,error}=await SB.from("staff_hours").select("data,updated_at").eq("id",1).maybeSingle();
+    if(error) throw error;
+    if(data&&data.data&&((data.data.up||0)>(db.up||0))){ db=data.data; selEmp=db.emps[0]?db.emps[0].id:null; save(1); }
+    renderAll(); setStat("bulut"); return;
+  }
+  // v12d: staff account → salary-free projection from the server (staff_hours_public strips rate/yol, omits paid/osexp)
+  const {data:pub,error:perr}=await SB.rpc("staff_hours_public");
+  if(perr) throw perr;
+  if(!pub){ MODE="none"; applyMode(); setStat("yerel"); return; }
+  MODE="limited"; db={emps:pub.emps||[], marks:pub.marks||{}, up:pub.up||0}; selEmp=null; applyMode(); renderAll(); setStat("bulut");
 }catch(e){ setStat("hata"); } }
 async function cloudPushRun(){ try{
   const u=await cloudUser(); if(!u||u.email!==ADMIN_EMAIL){ setStat("yerel"); return; }
@@ -433,7 +470,22 @@ function cloudPush(){ clearTimeout(pushT); pushT=setTimeout(cloudPushRun,1200); 
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden) cloudPull(); });
 setTimeout(cloudPull,600);
 document.getElementById("saveBtn").addEventListener("click",()=>{ setStat("..."); save(1); db.up=Date.now(); clearTimeout(pushT); cloudPushRun(); });
-document.getElementById("refreshBtn").addEventListener("click",async()=>{ setStat("..."); await cloudPull(); renderAll(); });
+document.getElementById("refreshBtn").addEventListener("click",async()=>{ setStat("..."); await cloudPull(); });
+document.getElementById("reloadBtn").addEventListener("click",()=>{ location.reload(); });
+document.getElementById("gGo").addEventListener("click",async()=>{ const e=document.getElementById("gEmail").value.trim(), p=document.getElementById("gPass").value, m=document.getElementById("gMsg");
+  if(!SB){ m.textContent="bulut yok"; return; } if(!e||!p){ m.textContent="e-posta ve şifre"; return; } m.textContent="…";
+  try{ const {error}=await SB.auth.signInWithPassword({email:e,password:p}); if(error){ m.textContent="Olmadı: "+error.message; return; }
+    document.getElementById("gPass").value=""; m.textContent=""; await cloudPull(); }catch(x){ m.textContent="Hata: "+x.message; } });
+document.getElementById("gPass").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("gGo").click(); });
+document.getElementById("outBtn").addEventListener("click",async()=>{ try{ if(SB) await SB.auth.signOut(); }catch(e){} CUR=null; MODE="gate"; applyMode(); setStat("yerel"); });
+// v12d: a long-lived tab checks the deployed build every 30 min; a newer one shows the reload button in gold
+(function(){ try{ if(!/^https?:$/.test(location.protocol)) return;
+  async function chk(){ try{ const t=await (await fetch(location.pathname+"?vchk="+Date.now(),{cache:"no-store"})).text();
+    const m=t.match(/opacity:\.55">(v20[0-9-]+[a-z])</); if(m&&m[1]&&m[1]!==APP_VER){ let n=document.getElementById("verNag");
+      if(!n){ n=document.createElement("button"); n.id="verNag"; n.textContent="Yeni sürüm var · Yenile";
+        n.style.cssText="position:fixed;right:16px;bottom:16px;z-index:99;background:var(--accent);color:#1a1408;border:none;border-radius:999px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.5)";
+        n.onclick=function(){ location.reload(); }; document.body.appendChild(n); } } }catch(e){} }
+  setInterval(chk,1800000); setTimeout(chk,45000); }catch(e){} })();
 </script>
 </body>
 </html>
