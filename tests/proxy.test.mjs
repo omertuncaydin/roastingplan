@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.71 tag', r.json && r.json.v === '3.71');
+T('v3.72 tag', r.json && r.json.v === '3.72');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 10 (seeded) / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 10 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -285,7 +285,7 @@ r = await px.call('GET', '/meydan'); T('/meydan offer_cfg carries login_required
   { const m = JSON.parse(px.DB.grupal_settings.find(x => x.key === 'mem_old.jury@example.com').value); T('backfilled member: name + phone from Shopify, primary dev, first/last, bf flag', m.name === 'Deniz Kaçak' && m.phone === '+905331112233' && m.dev === 'OLDJURY001' && !!m.first && m.bf === 1 && m.ok === true); }
   r = await px.call('POST', '/admin/members-backfill', {}, { 'x-cc-key': 'adminkey' }); T('second backfill creates nothing', r.json.ok && r.json.created === 0); }
 
-Date.now = realNow;
+Date.now = () => NOW;   /* v3.72: never the real clock — a real Sunday close (12 Oct) used to record cycle 2 before the roll block */
 // v3.50: CoffeeNutz'ın 5'i from settings (offer_top5) → /meydan offer_cfg.top5 (max 5, trimmed); empty → []
 { r = await px.call('POST', '/admin/settings', { offer_top5: ' Baho , El Recreo,AA Inoi\nFrinsa, Kelloo, Sixth, Seventh ' }, { 'x-cc-key': 'adminkey' }); T('admin settings accept offer_top5', r.json && r.json.ok !== false);
   r = await px.call('GET', '/meydan'); T('/meydan offer_cfg.top5 = first 5 trimmed names', JSON.stringify(r.json.offer_cfg.top5) === JSON.stringify(['Baho','El Recreo','AA Inoi','Frinsa','Kelloo']));
@@ -342,7 +342,7 @@ Date.now = realNow;
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.71');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.72');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
@@ -358,7 +358,7 @@ Date.now = realNow;
   { const mine = await px.call('GET', '/offer-mine?dev=OLDJURY001'); const k = mine.json.me && mine.json.me.k; r = await px.call('GET', '/meydan'); const oa = r.json.offers.find(o => o.id === A2);
     T('the figure key equals /offer-mine me.k for the member (page marks "sen")', !!k && oa.people.some(p => p.n === 'Deniz' && p.k === k)); }
   delete px.DB.__cols;
-  Date.now = realNow; }
+  Date.now = () => NOW;   /* v3.72: never the real clock — a real Sunday close (12 Oct) used to record cycle 2 before the roll block */ }
 // ---- v3.58: Hemen-Al basket — several coffees in one cart, one code, one order counted per coffee
 { Date.now = () => NOW; const KEYH = { 'x-cc-key': 'adminkey' };
   const E1 = '10000000-0000-4000-8000-00000000e001', E2 = '10000000-0000-4000-8000-00000000e002';
@@ -388,7 +388,7 @@ Date.now = realNow;
   r = await hook({ hemen: '1', offers: E2 + ':1,' + E1 + ':1', dev: 'GUEST00001', inv: invE2 }, { id: 9803, qty: 2, name: 'Deniz Ak' });
   T('webhook: I row for the invited coffee, H row for the pool coffee, invitation used', r.text === 'ok (hemen ×2 · davetiye)' && !!px.DB.grupal_offer_votes.find(v => v.offer_id === E2 && v.dev === 'GUEST00001I1') && !!px.DB.grupal_offer_votes.find(v => v.offer_id === E1 && v.dev === 'GUEST00001H1') && JSON.parse(px.DB.grupal_settings.find(x => x.key === 'inv_' + invE2).value).st === 'u');
   r = await px.call('GET', '/admin/links-open', null, KEYH); T('admin links-open: the basket link shows 3 packages, total 3.840, matched', (() => { const l = r.json.links.find(x => x.code === codeM); return l && l.qty === 3 && l.total === 3840 && l.state === 'ok'; })());
-  Date.now = realNow; }
+  Date.now = () => NOW;   /* v3.72: never the real clock — a real Sunday close (12 Oct) used to record cycle 2 before the roll block */ }
 // ---- v3.59: "seçilmezse kaydır" — flag on the order, close-time move to the most popular coffee (join the race → lock in the closed session; join a selected lot → converted)
 { Date.now = () => NOW; const KEYH = { 'x-cc-key': 'adminkey' };
   const R2 = '10000000-0000-4000-8000-00000000f002', R3 = '10000000-0000-4000-8000-00000000f003';
@@ -410,7 +410,7 @@ Date.now = realNow;
   // close: the two flagged votes move to Roll Three one second before close → 40 → lock in this close
   // (closes 0 and 1 were already recorded by earlier admin tests → use close 2, Sun 2026-10-11 20:59Z)
   const C1 = Date.UTC(2026, 9, 11, 20, 59, 0); Date.now = () => Date.UTC(2026, 9, 12, 9, 0, 0);
-  r = await px.call('GET', '/meydan');
+  r = await px.call('GET', '/meydan'); 
   const mv1 = px.DB.grupal_offer_votes.find(v => v.offer_id === R3 && v.dev === 'RX00000001'), mv4 = px.DB.grupal_offer_votes.find(v => v.offer_id === R3 && v.dev === 'RX00000004');
   T('both flagged votes moved to Roll Three with created_at = close − 1 s; source rows gone; unflagged vote stayed', mv1 && mv4 && new Date(mv1.created_at).getTime() === C1 - 1000 && !px.DB.grupal_offer_votes.find(v => v.offer_id === R2 && v.dev === 'RX00000001') && !!px.DB.grupal_offer_votes.find(v => v.offer_id === R2 && v.dev === 'RX00000007'));
   { const lk = px.DB.grupal_settings.find(x => x.key === 'lock_' + R3); const lj = lk && JSON.parse(lk.value); T('Roll Three locked by the consolidation: 40 packages, lock time = close − 1 s', !!lj && lj.dep === 40 && new Date(lj.at).getTime() === C1 - 1000); }
@@ -567,4 +567,11 @@ Date.now = realNow;
   r = await px.call('GET', '/offer-mine?dev=LATEDEV001'); T('/offer-mine: forfeited + banned_until set', r.json.votes.find(v => v.id === L).forfeited === true && !!r.json.banned_until);
   r = await px.call('POST', '/admin/settings', { offer_ban_cycles: '' }, KEYH); T('suspension back to the default: 0', r.json.cfg.ban_cycles === 0);
   NOW = Date.UTC(2026, 8, 29, 12, 0, 0); Date.now = () => NOW; px.DB.grupal_settings.find(x => x.key === 'offer_hemen_open').value = '0'; }
+// ---- v3.72: the close sweep must not delete live tickets whose `at` is the (old) kapora date — it goes by exp now
+{ const G4 = '10000000-0000-4000-8000-00000000a004'; NOW = Date.UTC(2026, 8, 29, 12, 0, 0) + 70 * 86400000; Date.now = () => NOW;   // far ahead: the lazy close runs for the sessions in between
+  px.DB.grupal_settings.push({ key: 'inv_OLDAT0001', value: JSON.stringify({ o: G4, dev: 'SWEEPDEV01', n: 'Michael', at: '2026-09-01T10:00:00Z', exp: new Date(NOW + 5 * 86400000).toISOString(), st: 't', tat: '2026-09-02T10:00:00Z', bf: 1 }) });
+  px.DB.grupal_settings.push({ key: 'inv_DEADX0001', value: JSON.stringify({ o: G4, dev: 'SWEEPDEV02', n: 'Eski', at: '2026-09-01T10:00:00Z', exp: new Date(NOW - 9 * 86400000).toISOString(), st: 'p', bf: 1 }) });
+  r = await px.call('GET', '/meydan');   // closes happen (with the sweep)
+  T('after the close: the live ticket with a 6-week-old `at` survives (exp in 5 days); the one expired 9 days ago is swept', !!px.DB.grupal_settings.find(x => x.key === 'inv_OLDAT0001') && !px.DB.grupal_settings.find(x => x.key === 'inv_DEADX0001'));
+  NOW = Date.UTC(2026, 8, 29, 12, 0, 0); Date.now = () => NOW; px.DB.grupal_settings = px.DB.grupal_settings.filter(x => x.key !== 'inv_OLDAT0001'); }
 console.log(pass + ' pass, ' + fail + ' fail'); process.exit(fail ? 1 : 0);

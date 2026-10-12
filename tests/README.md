@@ -182,3 +182,5 @@ Run from the repo root (once: `npm i -D jsdom playwright-core typescript` somewh
 - `offer_done_days` default **7** (was 2; max 14): close Sunday 23:59 → %40 completion until the next Sunday 23:59 → 7 late days at Hemen-Al − deposit → auto-burn. The setting stays for changes (Ayarlar "tamamlama süresi", blank = 7). Page: `offCfg()` now carries `done_days`/`late_days` from the proxy (the phase helper had been using its fallback). Tests: page 212, proxy 255, admin 50.
 
 - **proxy v3.71 · admin v2026-10-08l**: jury suspension default **0** (no suspension on burn); Ayarlar "Jüri askısı" blank = none, set a number to switch it on later. Proxy tests 257.
+
+- **proxy v3.72 (hotfix, 12 Oct)**: Sunday's close swept the launch tickets — the sweep deleted `inv_` records whose `at` was older than 14 days, and v3.67 had set `at` to the kapora date (Kelloo: Michael + Meriç → "0 kaldı"). The sweep now goes by `exp` (deleted 7 days after expiry). Re-press "Tüm kaporalara bilet tamamla" once after deploying to re-mint what was lost. Test clock pinned everywhere in `proxy.test.mjs` (a real Sunday close had started recording cycle 2 before the roll block). Proxy tests 258.
