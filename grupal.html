@@ -208,7 +208,7 @@ body.jmode:not(.jdesk) #themeChipsTop{flex:none;order:1;justify-content:center}b
 .jdk-cyc i{width:9px;height:9px;border-radius:50%;background:var(--green);display:inline-block}.jdk-cyc span{opacity:.6;font-weight:700}
 .jdk-foot{margin:26px 0 0;padding:14px 0 0;border-top:1px solid var(--line);display:flex;flex-direction:column;align-items:flex-start;gap:6px;font-size:12px;color:var(--muted)}   /* v12y: alt alta, sola hizalı (yan yana kayıyordu) */
 .jdk-foot details{max-width:640px}.jdk-foot .jhow{margin:0}.jdk-foot summary{cursor:pointer;font-weight:700;font-size:12px}.jdk-foot .jhow summary{font-size:12px;color:var(--muted)}
-.jdk-tick{max-width:720px;margin:0 0 14px}
+.jrtick{margin:8px 0 2px}.jrtick .jtick{margin:0}
 body.jdesk .jclock{position:static;left:auto;right:auto;top:auto;pointer-events:auto;text-align:center}
 body.jdesk .jclock .tlbl,body.jdesk .jclock .tlab{color:var(--muted);text-shadow:none;opacity:1}
 .jdk-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 0 14px}.jdk-head .jdk-t .hint{font-size:13px;font-weight:700}
@@ -805,7 +805,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-10-08x';
+const VERSION='v2026-10-08y';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -1679,7 +1679,7 @@ async function jInvTable(c){ const inv=(OFFINV||[]).find(x=>x.c===c); if(!inv||i
   try{ const r=await fetch(API+'/inv-table',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({c,dev:devId()})}); const j=await r.json();
     if(j&&j.ok){ inv.st='t'; const o=((STATE&&STATE.offers)||[]).find(x=>x.id===inv.id); if(o&&jHemen(o)){ o.hemen.table=(Array.isArray(o.hemen.table)?o.hemen.table:[]).concat([{c,n:inv.n||''}]); } jMsg(t('jInvOnTable'),2100); renderOffers(STATE); } }catch(e){} }
 function jSheetHtml(){ if(!JSHEET) return ''; const list=(STATE&&STATE.offers)||[]; const cfg=offCfg(), G=cfg.goal;
-  if(JSHEET.mode==='cyc') return '<div class="jsh-h"><b>'+t('jSessT')+'</b><span class="x" onclick="jSheetClose()">✕ '+t('jSheetX')+'</span></div><div style="margin-top:12px">'+renderCycle(STATE)+'</div><div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">'+jRulesHtml(cfg,G)+'</div>';   // v12v: takvim rozeti → oturum kartı
+  if(JSHEET.mode==='cyc') return '<div class="jsh-h"><b>'+t('jSessT')+'</b><span class="x" onclick="jSheetClose()">✕ '+t('jSheetX')+'</span></div><div style="margin-top:12px">'+renderCycle(STATE)+'</div><div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">'+jRulesHtml(cfg,G,list)+'</div>';   // v12v: takvim rozeti → oturum kartı
   if(JSHEET.mode==='inv'){ const ORD={p:0,t:1,u:2,x:3}; const mine=(OFFINV||[]).filter(i=>i&&(!JSHEET.id||i.id===JSHEET.id)).sort((a,b)=>((a.st in ORD)?ORD[a.st]:9)-((b.st in ORD)?ORD[b.st]:9));
     let h='<div class="jsh-h"><b>'+t('jInvT')+'</b><span class="x" onclick="jSheetClose()">✕ '+t('jSheetX')+'</span></div><div class="jsh-sub">'+t('jInvSub').replace('{h}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv_h)||24))+'</div>';
     if(!mine.length) return h+'<div class="jnote2" style="margin-top:14px">'+t('jInvNone').replace('{k}',parseInt((STATE&&STATE.offer_cfg&&STATE.offer_cfg.hemen_inv)||5))+'</div>';
@@ -1908,15 +1908,11 @@ function renderJuriPage(s,list,ctx,early,codeOk){
       +'<div style="display:flex;gap:6px;margin-top:6px" onclick="event.stopPropagation()"><input id="gcodeIn" placeholder="'+t('offCodeL')+'" style="flex:1;min-width:0;margin:0;padding:8px 10px;font-size:14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink)" onkeydown="if(event.key===\'Enter\'){gcodeSend();}"><button onclick="gcodeSend()" style="width:auto;margin:0;padding:8px 14px;font-size:13px">'+t('offCodeB')+'</button></div><div class="hint" id="gcodeMsg" style="margin-top:4px;color:#e0705a"></div></div>');
   { const tot=list.reduce((a,o)=>a+(o.dep||0),0), kk=list.filter(o=>(o.dep||0)>0).length, roast=list.filter(o=>o.lock).reduce((a,o)=>a+jLockN(o),0);   // v11p (Ömer 'dürüst'): payda yok — bu oturumun kaporası · kaç kahve · kilitli partide kaç paket
   const dd=t('offTotD').replace('{sum}',tot); pre+='<div id="offTot" style="margin:0 0 8px;padding:8px 10px;border-radius:10px;background:var(--panel2);font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+dd.charAt(0).toLocaleUpperCase('tr-TR')+dd.slice(1)+(roast?(' · '+t('offTotRS').replace('{r}',roast)):'')+'</div>'; }   // v12x: telefonda da "n kahve" yok · v12y: tek satır (kısa kavrum metni + taşma noktası)
-  h+='<section class="jpage'+(jMineList(list).length?' hasmine':'')+(jWelcShow()?' haswelc':'')+'" id="jP1">'+jWelcHtml(cfg)+jGuestHtml()+pre+renderTicker(list,G)+renderDeck(list,cfg,G,gate,banned,clk,cur?cur[3]:null)
+  h+='<section class="jpage'+(jMineList(list).length?' hasmine':'')+(jWelcShow()?' haswelc':'')+'" id="jP1">'+jWelcHtml(cfg)+jGuestHtml()+pre+renderDeck(list,cfg,G,gate,banned,clk,cur?cur[3]:null)
     +'</section>';   // v11c: 'yukarı kaydır' ipucu kalktı · v11f: 'Tüm liste' kalktı · v12x: ★ düğmesi ve Damak akordeonu kalktı (üst çubuktaki ikonlar süzer)
   h+='</section>';
   // SAYFA 3 — Oturum · takvim · kurallar
-  h+='<section class="jpage jp3" id="jP3"><div class="jh2">'+t('jSessT')+'</div>'+renderCycle(s)
-    +'<details class="jhow"><summary>'+t('jHowT')+'</summary><div class="hint" style="margin-top:6px;font-size:12px;line-height:1.55">'+escZ(t('offHD').split('{g}').join(G).split('{c}').join(cyCap()).split('{amt}').join(cfg.dep_amt||''))+'</div></details>'
-    +'<div class="hint" style="margin-top:4px;font-size:11px;opacity:.75">'+t('offGoalD').split('{g}').join(G)+'</div>'
-    ;   // v09o/v10o: cihaz bağlama linki sayfa altına taşındı (EN çipinin yanı, v11a)
-  h+='<details style="margin-top:6px"><summary class="hint" style="cursor:pointer;font-size:11px">'+t('offTermsL')+'</summary><div class="hint" style="margin-top:4px;font-size:11px;line-height:1.5">'+t('offTerms').split('{amt}').join(cfg.dep_amt||'').split('{g}').join(G).split('{c}').join(cyCap()).split('{dd}').join(String((STATE&&STATE.offer_cfg&&parseInt(STATE.offer_cfg.done_days))||2))+'</div></details>';
+  h+='<section class="jpage jp3" id="jP3"><div class="jh2">'+t('jSessT')+'</div>'+renderCycle(s)+'<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">'+jRulesHtml(cfg,G,list)+'</div>';   // v12z: ortak kurallar bloğu — 40'a yarış şartların içinde
   h+='</section>';
   return h;
 }
@@ -1925,7 +1921,7 @@ function renderJuriDesk(s,list,ctx,early,codeOk){
   const keys=jDeskKeys(list); if(!keys.some(k=>k[0]===JDF)) JDF='all';
   renderJTop(s,list,keys);   // v12w: damak ikonları üst çubukta
   const cur=keys.find(k=>k[0]===JDF); const shown=jDeckOrder(cur[3]);
-  const rules=jRulesHtml(cfg,G);   // v12v: nasıl çalışır + şartlar — sayfa altı ve takvim sayfası
+  const rules=jRulesHtml(cfg,G,list);   // v12v: nasıl çalışır + şartlar — sayfa altı ve takvim sayfası · v12z: skorbord şartların içinde
   let h='<div class="jdk"><main class="jdk-main">'+jWelcHtml(cfg)+jGuestHtml();   // v12v (Ömer): sol sütun yok — Hemen-Al üst çubukta (jsecp), süzgeçler çip, sayaç rozet, skorbord yalnız telefonda
   if(banned) h+='<div class="jdk-card jdk-note" style="border-color:#e0705a;color:#e0705a;font-size:12px;font-weight:700">'+t('offBanned').replace('{d}',cyD(BANNED.toISOString()))+'</div>';
   if(early||cfg.code_always) h+='<div class="jdk-card jdk-note">'+(codeOk?('<div style="font-size:12px;font-weight:700;color:var(--green)">'+t('offCodeOk')+'</div>')
@@ -1935,7 +1931,6 @@ function renderJuriDesk(s,list,ctx,early,codeOk){
     const feat=shown.filter(jHasImg), rest=shown.filter(o=>!jHasImg(o)); // v11h: hep kart (Vitrin + Diğer adaylar)
     h+='<div class="jdk-head"><div class="jdk-t">'+escZ(cur[1])+' <span class="hint">· '+shown.length+' '+t('jCoffee')+' · '+t('jdSort')+' · <span id="offTot">'+t('offTotD').replace('{sum}',tot)+(roast?(' · '+t('offTotR').replace('{r}',roast)):'')+'</span></span></div>'
       +jCycPill(s,tot,G)+'</div>';   // v12w (Ömer): tek satır, "n kahve" sayısı yok — kk sadece telefonda
-    h+='<div class="jdk-tick">'+renderTicker(list,G)+'</div>';   // v12y (Ömer "where's the 40'a yarış on desktop"): skorbord her platformda
     const ord=jDeckOrder(list), card=o=>jCardHtml(o,ord.findIndex(x=>x.id===o.id),cfg,G,gate,banned);
     if(feat.length){ h+='<div class="jdk-sub">'+t('jdVitrin')+' <span class="hint">· '+feat.length+'</span></div><div class="jdk-grid">'+feat.map(card).join('')+'</div>'; if(rest.length) h+='<div class="jdk-sub" style="margin-top:18px">'+t('jdRest')+' <span class="hint">· '+rest.length+'</span></div>'; }
     if(rest.length) h+='<div class="jdk-grid">'+rest.map(card).join('')+'</div>';
@@ -1971,8 +1966,8 @@ function cyTick(){ const el=$('cyClock'); if(!el){ if(CYCT){ clearInterval(CYCT)
   if(v.left>0){ const p=n=>String(n).padStart(2,'0'); document.querySelectorAll('.jck').forEach(b=>{ b.textContent=p(v[b.dataset.k]); }); }   // v09m: kart üstü çerçeveli sayaç
   if(v.left<=0&&!CYCDONE){ CYCDONE=true; try{ if(MEYDAN) loadMeydan(); else load(); }catch(e){} } }
 function cyStartClock(){ if(!CYCT&&$('cyClock')) CYCT=setInterval(cyTick,1000); }
-function jRulesHtml(cfg,G){ return '<details class="jhow"><summary>'+t('jHowT')+'</summary><div class="hint" style="margin-top:6px;font-size:12px;line-height:1.55">'+escZ(t('offHD').split('{g}').join(G).split('{c}').join(cyCap()).split('{amt}').join(cfg.dep_amt||''))+'</div><div class="hint" style="margin-top:4px;font-size:11px;opacity:.75">'+t('offGoalD').split('{g}').join(G)+'</div></details>'
-    +'<details><summary class="hint" style="cursor:pointer;font-size:11px">'+t('offTermsL')+'</summary><div class="hint" style="margin-top:4px;font-size:11px;line-height:1.5">'+t('offTerms').split('{amt}').join(cfg.dep_amt||'').split('{g}').join(G).split('{c}').join(cyCap()).split('{dd}').join(String((STATE&&STATE.offer_cfg&&parseInt(STATE.offer_cfg.done_days))||7))+'</div></details>'; }   // v12v
+function jRulesHtml(cfg,G,list){ return '<details class="jhow"><summary>'+t('jHowT')+'</summary><div class="hint" style="margin-top:6px;font-size:12px;line-height:1.55">'+escZ(t('offHD').split('{g}').join(G).split('{c}').join(cyCap()).split('{amt}').join(cfg.dep_amt||''))+'</div><div class="hint" style="margin-top:4px;font-size:11px;opacity:.75">'+t('offGoalD').split('{g}').join(G)+'</div></details>'
+    +'<details class="jterms"><summary class="hint" style="cursor:pointer;font-size:11px">'+t('offTermsL')+'</summary>'+(list?('<div class="jrtick">'+renderTicker(list,G)+'</div>'):'')+'<div class="hint" style="margin-top:4px;font-size:11px;line-height:1.5">'+t('offTerms').split('{amt}').join(cfg.dep_amt||'').split('{g}').join(G).split('{c}').join(cyCap()).split('{dd}').join(String((STATE&&STATE.offer_cfg&&parseInt(STATE.offer_cfg.done_days))||7))+'</div></details>'; }   // v12v · v12z (Ömer): 40'a yarış skorbordu şartların içinde — her cihazda
 function jCycPill(s,tot,G){ const c=s&&s.cycle; if(!c||!c.next_close) return ''; const v=cyClockVals(new Date(c.next_close).getTime());
   return '<button class="jdk-cyc" onclick="jCycOpen()"><i></i>'+tot+' / '+G+' · '+(v.left>0?(v.d+t('uDayS')+' '+v.h+t('uHourS')):t('cyClockEnd'))+' <span>· '+t('jdCal')+' ›</span></button>'; }   // v12v: yarış + sayaç tek rozet → takvim sayfası
 function jCycOpen(){ JSHEET={mode:'cyc'}; JLANE=null; renderOffers(STATE); }
