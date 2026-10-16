@@ -73,6 +73,10 @@ button{font:inherit;cursor:pointer}
 .arow.gone{opacity:.5}
 .abtns{display:flex;gap:6px;flex-wrap:wrap}
 .pill.danger{color:var(--red);border-color:var(--red)}
+.seats{display:inline-flex;align-items:center;gap:6px;vertical-align:middle}
+.step{width:26px;height:26px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-weight:700;font-size:15px;line-height:1;padding:0}
+.step:disabled{opacity:.35}
+.seats b{min-width:34px;text-align:center}
 .cta.danger{background:var(--red);color:#fff}
 .inp{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);color-scheme:dark;font:inherit}
 .lbl{display:block;margin:10px 0 4px}
@@ -123,7 +127,7 @@ const FEED = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/public-train
 const OFFER = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/date-offer";
 const WA = "905333321414"; // offer pings land on Ömer's WhatsApp, sent from the visitor's own number
 const OFFER_TRAININGS = ["SCA Barista F+I","SCA Barista Pro","SCA Roasting F+I","SCA Roasting Pro","SCA Sensory F+I","SCA Sensory Pro","Q Grader Sertifikasyon"];
-const APP_VERSION = "v2026-09-17a";
+const APP_VERSION = "v2026-10-16a";
 const SITE = "https://www.coffeenutz.net";
 const IG = "https://ig.me/m/coffeenutznet"; // opens the DM thread directly, not the profile
 
@@ -189,7 +193,10 @@ const STR = {
   adListTitle:["Takvimdeki eğitimler","Trainings on the calendar"],
   adListEmpty:["Takvimde yaklaşan eğitim yok.","No upcoming trainings on the calendar."],
   adSeats:["Kayıt","Booked"],
-  adSeatsHint:["Kayıt sayısı Academy Management'tan yönetilir.","Booked seats are managed in Academy Management."],
+  adSeatsHint:["Kayıt = ödemesi onaylanmış öğrenci sayısı; kontenjanı aşamaz.","Booked = students whose payment is confirmed; cannot exceed the cap."],
+  adBookedLbl:["Kayıt (ödeme onaylı)","Booked (payment confirmed)"],
+  adBookedSet:["Kayıt güncellendi: ","Booked updated: "],
+  adBookedOver:["Kayıt sayısı kontenjanı aşamaz.","Booked seats cannot exceed the cap."],
   adEdit:["Düzenle","Edit"],
   adDel:["Sil","Delete"],
   adCancel:["İptal et","Cancel class"],
@@ -508,6 +515,7 @@ function adminErr(e){
   else if (m === "unauthorized" || m === "renew" || m === "nosession") toast(t("adExpired"));
   else if (m === "duplicate") toast(LANG === "en" ? "That training already has a class on that start date." : "Bu eğitimin o başlangıç tarihinde zaten bir sınıfı var.");
   else if (m === "has registrations") toast(LANG === "en" ? "Booked students exist: use Cancel class instead." : "Kayıtlı öğrenci var: bunun yerine İptal et kullanın.");
+  else if (m === "booked over cap" || m === "booked") toast(t("adBookedOver"));
   else toast(t("adErr") + " " + m);
   renderAdmin();
 }
@@ -621,6 +629,7 @@ function renderAdmin(){
 }
 function adminRow(r, i){
   const booked = Number(r.booked) > 0 ? Number(r.booked) : 0;
+  const cap = Number(r.cap) > 0 ? Number(r.cap) : 0;
   const cancelled = r.status === "Cancelled";
   const canDel = booked === 0 && r.status !== "In progress" && r.status !== "Delivered";
   const act = canDel ? `<button class="pill danger" onclick="askRemove(${i})">${t("adDel")}</button>`
@@ -628,7 +637,8 @@ function adminRow(r, i){
   return `<div class="arow${cancelled ? " gone" : ""}" data-row="${r.rowId}">
     <span class="dotc" style="background:var(--c-${typeOf(r.name)})"></span>
     <div style="flex:1; min-width:180px"><b>${esc(shortName(r.name))}</b> <span class="chip">${esc(langName(r.lang))}</span> <span class="chip ${cancelled ? "" : adStatusCls(r.status)}">${adStatusTxt(r.status)}</span>
-      <div class="meta">${esc(r.start)} → ${esc(r.end)} · ${t("adSeats")}: ${booked}/${esc(r.cap || "?")}${r.price ? " · " + esc(fmtPrice(r.price)) : ""}</div></div>
+      <div class="meta">${esc(r.start)} → ${esc(r.end)}${r.price ? " · " + esc(fmtPrice(r.price)) : ""} · ${t("adSeats")}:
+        <span class="seats"><button class="step" onclick="adBooked(${i}, -1)"${booked <= 0 ? " disabled" : ""} aria-label="-1">−</button><b>${booked}/${esc(r.cap || "?")}</b><button class="step" onclick="adBooked(${i}, 1)"${cap && booked >= cap ? " disabled" : ""} aria-label="+1">+</button></span></div></div>
     <div class="abtns"><button class="pill" onclick="openAdminForm(${i})">${t("adEdit")}</button>${act}</div>
   </div>`;
 }
@@ -665,7 +675,7 @@ function openAdminForm(i, prefill){
     <input type="url" id="adUrl" class="inp" value="${esc(f.url)}">
     <label class="meta lbl">${t("adNotes")}</label>
     <textarea id="adNotes" class="inp" rows="3">${esc(f.notes)}</textarea>
-    ${r ? `<p class="meta">${t("adSeats")}: ${Number(r.booked) > 0 ? Number(r.booked) : 0}/${esc(r.cap || "?")} · ${t("adSeatsHint")}</p>` : ""}
+    ${r ? `<div class="grid2"><div><label class="meta lbl">${t("adBookedLbl")}</label><input type="number" id="adBooked" class="inp" min="0" max="30" step="1" value="${Number(r.booked) > 0 ? Number(r.booked) : 0}"></div><div class="meta" style="align-self:end; padding-bottom:12px">${t("adSeatsHint")}</div></div>` : ""}
     <input type="hidden" id="adRowId" value="${r ? r.rowId : ""}">
     <div class="foot">
       <button class="cta" id="adSave" onclick="saveAdminForm()">${t("adSave")}</button>
@@ -700,6 +710,12 @@ async function saveAdminForm(){
   const g = id => (document.getElementById(id).value || "").trim();
   const f = { training:g("adTraining"), start:g("adStart"), end:g("adEnd"), lang:g("adLang"), status:g("adStatus"), cap:g("adCap"), price:g("adPrice"), url:g("adUrl"), notes:g("adNotes") };
   const rowId = g("adRowId");
+  const bookedEl = document.getElementById("adBooked");
+  if (bookedEl){
+    const cur = (AROWS || []).find(x => String(x.rowId) === rowId);
+    const b = bookedEl.value.trim();
+    if (b !== "" && (!cur || Number(b) !== (Number(cur.booked) > 0 ? Number(cur.booked) : 0))) f.booked = Number(b);
+  }
   const missing = [];
   if (!f.training) missing.push(t("adTraining"));
   if (!f.start) missing.push(t("adStart"));
@@ -707,6 +723,7 @@ async function saveAdminForm(){
   if (!f.cap) missing.push(t("adCap"));
   if (missing.length){ toast(t("offerMissing") + missing.join(", ")); return; }
   if (f.end < f.start){ toast(t("adEndErr")); return; }
+  if (f.booked !== undefined && (!Number.isInteger(f.booked) || f.booked < 0 || f.booked > Number(f.cap))){ toast(t("adBookedOver")); return; }
   const btn = document.getElementById("adSave"); btn.disabled = true;
   try{
     if (rowId) await adminApi("update", Object.assign({ rowId: Number(rowId) }, f));
@@ -714,6 +731,20 @@ async function saveAdminForm(){
     closeModal(); toast(t("adSaved"));
     await afterWrite({ name:f.training, start:f.start, gone: f.status === "Cancelled" || f.status === "Delivered" });
   }catch(e){ btn.disabled = false; adminErr(e); }
+}
+// one tap = one seat; the sheet is the truth, so the list is re-read after every write
+async function adBooked(i, delta){
+  const r = (AROWS || [])[i]; if (!r) return;
+  const cur = Number(r.booked) > 0 ? Number(r.booked) : 0, cap = Number(r.cap) > 0 ? Number(r.cap) : 30;
+  const next = cur + delta;
+  if (next < 0 || next > cap){ toast(t("adBookedOver")); return; }
+  document.querySelectorAll(`[data-row="${r.rowId}"] .step`).forEach(b => b.disabled = true);
+  try{
+    await adminApi("update", { rowId: r.rowId, booked: next });
+    const j = await adminApi("list"); AROWS = j.trainings || [];
+    renderAdmin();
+    toast(t("adBookedSet") + next + "/" + (r.cap || "?"));
+  }catch(e){ adminErr(e); }
 }
 function askRemove(i){
   const r = AROWS[i]; if (!r) return;
