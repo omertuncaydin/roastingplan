@@ -1,4 +1,4 @@
-// CoffeeNutz egitim-takvimi-schema.js  v2026-09-28a
+// CoffeeNutz egitim-takvimi-schema.js  v2026-10-16a
 // Sync-free Course + CourseInstance JSON-LD for coffeenutz.net. Three modes, decided by the URL:
 //   /pages/sca-egitim-takvimi      -> ItemList of all 7 SCA courses with their live cohorts
 //   /products/<course handle>      -> that single Course with its live cohorts
@@ -135,8 +135,14 @@
     const v = foldTr(title).replace(/\(.*?\)/g, " ").replace(/\s+/g, " ").trim();
     let m;
     if ((m = v.match(/(\d{1,2})\s*[-–—]\s*(\d{1,2})\s+([a-z]+)\.?,?\s+(\d{4})/))) {
-      const a = isoDay(m[4], MON[m[3]], +m[1]), b = isoDay(m[4], MON[m[3]], +m[2]);
+      const mo = MON[m[3]];
+      const a = isoDay(m[4], mo, +m[1]), b = isoDay(m[4], mo, +m[2]);
       if (a && b && b >= a) return { start: a, end: b };
+      if (mo && +m[1] > +m[2]) { // "30 - 05 December 2026": the first day belongs to the month before
+        const py = mo === 1 ? +m[4] - 1 : +m[4], pm = mo === 1 ? 12 : mo - 1;
+        const a2 = isoDay(py, pm, +m[1]);
+        if (a2 && b) return { start: a2, end: b };
+      }
     }
     if ((m = v.match(/(\d{1,2})\s+([a-z]+)\.?\s*[-–—]\s*(\d{1,2})\s+([a-z]+)\.?,?\s+(\d{4})/))) {
       const a = isoDay(m[5], MON[m[2]], +m[1]), b = isoDay(m[5], MON[m[4]], +m[3]);

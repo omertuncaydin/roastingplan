@@ -127,7 +127,7 @@ const FEED = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/public-train
 const OFFER = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/date-offer";
 const WA = "905333321414"; // offer pings land on Ömer's WhatsApp, sent from the visitor's own number
 const OFFER_TRAININGS = ["SCA Barista F+I","SCA Barista Pro","SCA Roasting F+I","SCA Roasting Pro","SCA Sensory F+I","SCA Sensory Pro","Q Grader Sertifikasyon"];
-const APP_VERSION = "v2026-10-16a";
+const APP_VERSION = "v2026-10-16b";
 const SITE = "https://www.coffeenutz.net";
 const IG = "https://ig.me/m/coffeenutznet"; // opens the DM thread directly, not the profile
 
@@ -555,8 +555,14 @@ function parseVariantDates(title){
   const s = foldTr(title).replace(/\(.*?\)/g, " ").replace(/\s+/g, " ").trim();
   let m;
   if ((m = s.match(/(\d{1,2})\s*[-–—]\s*(\d{1,2})\s+([a-z]+)\.?,?\s+(\d{4})/))){       // 15 - 17 eylul 2026
-    const a = isoDay(m[4], MON[m[3]], +m[1]), b = isoDay(m[4], MON[m[3]], +m[2]);
+    const mo = MON[m[3]];
+    const a = isoDay(m[4], mo, +m[1]), b = isoDay(m[4], mo, +m[2]);
     if (a && b && b >= a) return { start:a, end:b };
+    if (mo && +m[1] > +m[2]){                                                              // 30 - 05 december 2026: first day is in the month before
+      const py = mo === 1 ? +m[4] - 1 : +m[4], pm = mo === 1 ? 12 : mo - 1;
+      const a2 = isoDay(py, pm, +m[1]);
+      if (a2 && b) return { start:a2, end:b };
+    }
   }
   if ((m = s.match(/(\d{1,2})\s+([a-z]+)\.?\s*[-–—]\s*(\d{1,2})\s+([a-z]+)\.?,?\s+(\d{4})/))){ // 30 kasim - 2 aralik 2026
     const a = isoDay(m[5], MON[m[2]], +m[1]), b = isoDay(m[5], MON[m[4]], +m[3]);
