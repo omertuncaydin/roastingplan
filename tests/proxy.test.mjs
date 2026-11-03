@@ -18,7 +18,7 @@ const px = await boot(PROXY, {
 const hook = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, financial_status: 'paid', email: order.email || (String(attrs.dev || 'x').toLowerCase() + '@test.example') /* v3.46: e-mail = identity, so each test device gets its own */, customer: { first_name: order.name || 'Ömer' }, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
 
 let r = await px.call('GET', '/meydan');
-T('v3.82 tag', r.json && r.json.v === '3.82');
+T('v3.83 tag', r.json && r.json.v === '3.83');
 let oa = r.json.offers.find(o => o.id === A), ob = r.json.offers.find(o => o.id === B);
 T('A (photo + hemen_url) carries the lane: url, price 1280, base 2, left 2, sold 0, empty table, roast_at = next close + 1 day', oa.hemen && oa.hemen.url === 'https://coffeenutz.net/cart/222:1' && oa.hemen.price === 1280 && oa.hemen.base === 2 && oa.hemen.left === 2 && oa.hemen.sold === 0 && oa.hemen.table.length === 0 && oa.hemen.roast_at === '2026-10-05T20:59:00.000Z');
 T('B (no photo) has no lane; cfg carries hemen_inv 10 (seeded) / hemen_inv_h 24', !ob.hemen && r.json.offer_cfg.hemen_inv === 10 && r.json.offer_cfg.hemen_inv_h === 24);
@@ -175,6 +175,14 @@ r = await px.call('POST', '/offer-move', { dev: 'DEV2BBBBBB', from: B, to: A });
   r = await px.call('POST', '/admin/kapora-delete', { email: 'kdel@example.com', offer: B2 }, KEYH); T('nothing left → 404 no_deposit', r.status === 404 && r.json.error === 'no_deposit');
   r = await px.call('POST', '/admin/kapora-delete', { email: 'nobody@example.com', offer: B2 }, KEYH); T('unknown member → 404 no_member', r.status === 404 && r.json.error === 'no_member');
   r = await px.call('POST', '/admin/kapora-delete', { email: 'kdel@example.com', offer: B2 }); T('no key → 401', r.status === 401); }
+// ---- v3.83 (Rıdvan: 2 orders, 3 packages): the same Shopify order can never be counted twice, even after a second order overwrote the row's order_id
+{ const B2 = '10000000-0000-4000-8000-0000000000cc';
+  r = await hook({ offers: B2 + ':1', dev: 'DUPDEV0001' }, { id: 99101, name: 'Dup', email: 'dup@example.com', qty: 1 }); T('(setup) order 99101 → 1 package', /^ok \(kapora/.test(r.text) && px.DB.grupal_offer_votes.find(v => v.offer_id === B2 && v.dev === 'DUPDEV0001').qty === 1 && !!px.DB.grupal_settings.find(x => x.key === 'seen_99101'));
+  r = await hook({ offers: B2 + ':1', dev: 'DUPDEV0001' }, { id: 99102, name: 'Dup', email: 'dup@example.com', qty: 1 }); T('(setup) order 99102 → row qty 2, order_id now 99102', px.DB.grupal_offer_votes.find(v => v.offer_id === B2 && v.dev === 'DUPDEV0001').qty === 2 && String(px.DB.grupal_offer_votes.find(v => v.offer_id === B2 && v.dev === 'DUPDEV0001').order_id) === '99102');
+  r = await hook({ offers: B2 + ':1', dev: 'DUPDEV0001' }, { id: 99101, name: 'Dup', email: 'dup@example.com', qty: 1 }); T('Shopify re-delivers 99101 (retry) → "already counted", row stays at 2 (old code would have made it 3)', r.text === 'ok (already counted)' && px.DB.grupal_offer_votes.find(v => v.offer_id === B2 && v.dev === 'DUPDEV0001').qty === 2);
+  const [ra, rb] = await Promise.all([hook({ offers: B2 + ':1', dev: 'DUPDEV0002' }, { id: 99103, name: 'Race', email: 'race@example.com', qty: 1 }), hook({ offers: B2 + ':1', dev: 'DUPDEV0002' }, { id: 99103, name: 'Race', email: 'race@example.com', qty: 1 })]);
+  T('create + paid arriving together for one order → exactly one counts, the other answers already counted', [ra.text, rb.text].filter(t => /^ok \(kapora/.test(t)).length === 1 && [ra.text, rb.text].includes('ok (already counted)') && px.DB.grupal_offer_votes.find(v => v.offer_id === B2 && v.dev === 'DUPDEV0002').qty === 1);
+  px.DB.grupal_settings.push({ key: 'seen_OLD1', value: JSON.stringify({ at: new Date(NOW - 100 * 86400000).toISOString() }) }); }
 // v3.79: cancel of an order placed from a SECOND device of a member — rows live under the member's primary dev, the cancel payload carries the second device
 { const B2 = '10000000-0000-4000-8000-0000000000cc'; const cancel = (attrs, order) => px.call('POST', '/shopify-hook', { id: order.id, cancelled_at: '2026-09-23T13:00:00.000Z', financial_status: 'voided', email: order.email, line_items: [{ quantity: order.qty || 1 }], note_attributes: Object.entries(attrs).map(([name, value]) => ({ name, value: String(value) })) });
   r = await hook({ offers: A + ':1', dev: 'PRIMDEV001' }, { id: 98701, name: 'Multi', email: 'multi@example.com', qty: 1 }); T('(setup) first kapora from the primary device', /^ok \(kapora/.test(r.text));
@@ -403,7 +411,7 @@ Date.now = () => NOW;   /* v3.72: never the real clock — a real Sunday close (
   r = await px.call('POST', '/admin/order-mark', { kind: 'kapora', offer: A2, order_id: '777002', email: 'kap.buyer@example.com', name: 'Ali Veli', qty: 2 }, KEYH);
   const krow = px.DB.grupal_offer_votes.find(v => v.offer_id === A2 && v.dev === 'ORD777002');
   T('order-mark kapora → ok (kapora…), row qty 2 with e-mail, member record created with the name', r.json.ok === true && /^ok \(kapora/.test(r.json.result) && krow && krow.paid && krow.qty === 2 && krow.email === 'kap.buyer@example.com' && px.DB.grupal_settings.some(s => s.key === 'mem_kap.buyer@example.com' && JSON.parse(s.value).name === 'Ali Veli'));
-  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.82');
+  r = await px.call('GET', '/meydan'); T('/meydan is unaffected in shape (no e-mails, people names only)', !JSON.stringify(r.json).includes('@') && r.json.v === '3.83');
   // v3.56: the locked coffee carries the lot's people (converted kaporas) in lock.people; the run's people stay separate
   { const od = r.json.offers.find(o => o.id === D); T('locked El Recreo: lock.people = the lot (RECREO0001 ×2, completed rows included), people (next lot) empty, dep 0', !!od.lock && Array.isArray(od.lock.people) && od.lock.people.length === 1 && od.lock.people[0].q === 2 && typeof od.lock.people[0].k === 'string' && od.lock.people[0].k.length > 0 && Array.isArray(od.people) && od.people.length === 0 && od.dep === 0);
     const oa = r.json.offers.find(o => o.id === A2); T('coffee A (locked earlier in this run): lock.people = that lot (Ayşe ×3 first), people = the next lot (hand-marked kapora Ali ×2 + Hemen-Al buyer Zeynep)', !!oa.lock && oa.lock.people[0].n === 'Ayşe' && oa.lock.people[0].q === 3 && oa.people.some(p => p.n === 'Zeynep' && p.h === true) && oa.people.some(p => p.n === 'Ali' && p.q === 2) && !oa.people.some(p => p.q === 3)); }
@@ -649,6 +657,7 @@ Date.now = () => NOW;   /* v3.72: never the real clock — a real Sunday close (
   px.DB.grupal_settings.push({ key: 'inv_DEADX0001', value: JSON.stringify({ o: G4, dev: 'SWEEPDEV02', n: 'Eski', at: '2026-09-01T10:00:00Z', exp: new Date(NOW - 9 * 86400000).toISOString(), st: 'p', bf: 1 }) });
   r = await px.call('GET', '/meydan');   // closes happen (with the sweep)
   T('after the close: the live ticket with a 6-week-old `at` survives (exp in 5 days); the one expired 9 days ago is swept', !!px.DB.grupal_settings.find(x => x.key === 'inv_OLDAT0001') && !px.DB.grupal_settings.find(x => x.key === 'inv_DEADX0001'));
+  T('v3.83: the close sweep drops order locks older than 90 days and keeps the fresh ones', !px.DB.grupal_settings.find(x => x.key === 'seen_OLD1') && !!px.DB.grupal_settings.find(x => x.key === 'seen_99101'));
   NOW = Date.UTC(2026, 8, 29, 12, 0, 0); Date.now = () => NOW; px.DB.grupal_settings = px.DB.grupal_settings.filter(x => x.key !== 'inv_OLDAT0001'); }
 // ---- v3.73: active kaporas never drop below packages × ratio — expired/swept tickets are re-minted at the close; finished lots are left alone
 { const G5 = '10000000-0000-4000-8000-00000000a005'; NOW = Date.UTC(2026, 8, 29, 12, 0, 0) + 77 * 86400000; Date.now = () => NOW; const KEYH = { 'x-cc-key': 'adminkey' };
