@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Kahve Seçme Çarkı · CoffeeNutz</title>
+<!-- v2026-11-03a -->
+<style>
+:root{ --bg:#1A1310; --panel:#241a14; --panel2:#2e2219; --line:#3f3127; --ink:#F3ECDC; --muted:#b9a992; --red:#AF272F; --amber:#e8a33d; --green:#7fb069; }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font:15px/1.5 -apple-system,'Segoe UI',Roboto,Inter,sans-serif;padding:14px;padding-top:calc(12px + env(safe-area-inset-top));padding-bottom:calc(28px + env(safe-area-inset-bottom));max-width:720px;margin:0 auto;min-height:100vh}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}
+.brand{font-weight:800;letter-spacing:.3px}
+.brand .a{color:var(--amber)}
+.close{display:none;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:99px;width:34px;height:34px;font-size:18px;line-height:1;cursor:pointer}
+body.embed .close{display:inline-flex;align-items:center;justify-content:center}
+.intro{color:var(--muted);font-size:14px;margin:0 0 14px}
+.intro b{color:var(--ink);font-weight:600}
+
+.stage{position:relative;width:min(92vw,520px);margin:0 auto;aspect-ratio:1}
+.pointer{position:absolute;left:50%;top:-6px;transform:translateX(-50%);width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-top:30px solid var(--ink);filter:drop-shadow(0 3px 4px rgba(0,0,0,.5));z-index:3}
+.pointer:after{content:"";position:absolute;left:-10px;top:-31px;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:18px solid var(--red)}
+svg.wheel{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 10px 40px rgba(0,0,0,.55), inset 0 0 0 6px #120d09;transition:transform 4.2s cubic-bezier(.12,.82,.2,1);transform:rotate(0deg);will-change:transform;touch-action:manipulation}
+svg.wheel path.seg{cursor:pointer;stroke:#120d09;stroke-width:2;transition:filter .2s}
+svg.wheel path.seg:hover{filter:brightness(1.15)}
+svg.wheel.spinning path.seg{cursor:default}
+svg.wheel text{pointer-events:none;fill:var(--ink);font-weight:700;letter-spacing:.3px}
+svg.wheel text.sub{font-weight:500;opacity:.8}
+.hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:23%;aspect-ratio:1;border-radius:50%;border:4px solid #120d09;background:var(--ink);color:var(--bg);font-weight:900;font-size:clamp(11px,2.6vw,14px);letter-spacing:.06em;cursor:pointer;z-index:2;box-shadow:0 4px 16px rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.1;padding:4px}
+.hub:active{transform:translate(-50%,-50%) scale(.97)}
+.hub small{display:block;font-weight:600;font-size:.72em;letter-spacing:.02em;opacity:.7}
+
+.result{margin:18px auto 0;max-width:560px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;opacity:0;transform:translateY(8px);transition:opacity .4s,transform .4s;display:none}
+.result.show{display:block;opacity:1;transform:none}
+.result .lbl{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:4px}
+.result h2{margin:0 0 4px;font-size:22px;line-height:1.15}
+.result .blurb{color:var(--muted);font-size:14px;margin:0 0 12px}
+.pick{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.pick img{width:54px;height:54px;object-fit:cover;border-radius:10px;background:var(--panel2);flex:none}
+.pick .ph{width:54px;height:54px;border-radius:10px;background:var(--panel2);flex:none}
+.pick .t{flex:1;min-width:0}
+.pick .n{font-weight:700;font-size:15px}
+.pick .m{font-size:12px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:99px;padding:2px 8px;border:1px solid var(--line);color:var(--muted)}
+.badge.ok{color:var(--green);border-color:rgba(127,176,105,.5)}
+.badge.next{color:var(--amber);border-color:rgba(232,163,61,.5)}
+.badge.soon{color:var(--muted)}
+.go{background:var(--red);color:var(--ink);border:none;border-radius:10px;padding:10px 14px;font-weight:800;font-size:13px;text-decoration:none;white-space:nowrap}
+.go.dis{background:var(--panel2);color:var(--muted);pointer-events:none}
+.again{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+.again button{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:10px 14px;font-weight:700;font-size:13px;cursor:pointer}
+.again button.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.legend{margin:18px auto 0;max-width:560px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.chip{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:99px;padding:7px 12px;font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip i{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.chip:active{transform:scale(.97)}
+footer{color:var(--muted);font-size:10.5px;text-align:center;margin-top:18px}
+footer a{color:var(--muted)}
+@media (prefers-reduced-motion: reduce){ svg.wheel{transition-duration:.6s} }
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div>
+    <div class="brand"><span>CoffeeNutz</span> <span class="a">Kahve Seçme Çarkı</span></div>
+  </div>
+  <button class="close" id="closeBtn" title="Kapat" aria-label="Kapat">&times;</button>
+</div>
+<p class="intro"><b>Hangi kahve sana göre?</b> Sana en yakın gelen dilime dokun, çark dönsün, kahveni göstersin. Kararsızsan ortadaki düğme senin yerine seçer.</p>
+
+<div class="stage">
+  <div class="pointer" aria-hidden="true"></div>
+  <svg class="wheel" id="wheel" viewBox="-250 -250 500 500" role="img" aria-label="Kahve seçme çarkı"></svg>
+  <button class="hub" id="hub" title="Şaşırt beni"><span>ŞAŞIRT<br>BENİ</span><small>rastgele</small></button>
+</div>
+
+<section class="result" id="result" aria-live="polite"></section>
+<div class="legend" id="legend"></div>
+
+<footer>CoffeeNutz® · <a href="https://coffeenutz.net" target="_top">coffeenutz.net</a> · v2026-11-03a</footer>
+
+<script>
+/* ------------------------------------------------------------------ config
+   SEGMENTS: the wheel, clockwise from the top. weight = relative size.
+   picks: product handles on coffeenutz.net; titles/prices/stock come live from the shop.
+   The values here are placeholders from the sketch (3 Nov 2026); edit freely. */
+const SHOP = 'https://coffeenutz.net';
+const SEGMENTS = [
+  { id:'klasik',  label:'Home Klasik', sub:'Macera gerek yok', weight:3, color:'#AF272F',
+    blurb:'Herkese tanıdık gelen, günün her saatine uyan harman. Eve dönüş kahvesi.',
+    picks:['home'] },
+  { id:'decaf',   label:'Home Decaf', sub:'Kafein de olmasın', weight:3, color:'#7d1d23',
+    blurb:'Aynı Home karakteri, kafeinsiz. Hazırlanıyor.',
+    picks:[], soon:'Home Decaf yakında. Şimdilik Home Klasik ile başlayabilirsin.', fallback:['home'] },
+  { id:'cikolata', label:'Çikolata & Fındık', weight:1, color:'#5a3d26',
+    blurb:'Yuvarlak gövde, tatlı bitiş. Sütle de sade de kendini belli eder.',
+    picks:['etiyopya-yaye-natural','peru-nuwa-senchi','home'] },
+  { id:'meyve',   label:'Meyvemsi', weight:1, color:'#8a5a2b',
+    blurb:'Parlak, meyveli, filtrede açılan kahveler.',
+    picks:['etiyopya-yaye-natural-fruity','etiyopya-rumudamo-yikanmis-anaerobik','kolombiya-la-sirena-honey-peach','endonezya-frinsa-honey-tempe-1'] },
+  { id:'simarik', label:'"Şımarık" Seçkisi', weight:1, color:'#3a2618',
+    blurb:'Kendine bir iyilik yap. Nadir lotlar, küçük partiler.',
+    picks:['kolombiya-jose-espinoza-recreo-1','kolombiya-la-soledad-pink-bourbon-honey','etiyopya-kelloo-benso-setamo-3','kolombiya-alto-cielo-geisha-natural'] },
+  { id:'surpriz', label:'Rengarenk', sub:'Şaşırt beni', weight:1, color:'rainbow', surprise:true,
+    blurb:'Çark senin yerine seçti.' },
+  { id:'espresso', label:'Modern Espresso', weight:1, color:'#c98a3c',
+    blurb:'Espresso için ayrı kavrulmuş, sütlü içeceklerde de dik duran kahveler.',
+    picks:['espresso-icin-optimize-edilmis-etiyopya-hambela','espresso-icin-optimize-edilmis-kolombiya-pink-bourbon','espresso-icin-optimize-edilmis-burundi-fw15','espresso-icin-optimize-edilmis-guatemala-retana'] },
+  { id:'italyan', label:'İtalyan', sub:'Koyu, tatlı', weight:1, color:'#4a3220',
+    blurb:'Koyu kavrum, kalın gövde, moka ve espresso için.',
+    picks:['super-harman','ofis-kahvesi-no-3-test'] },
+  { id:'nitro',   label:'Nitro Brew', weight:1, color:'#a86f3c',
+    blurb:'Nitro Brew® için harmanlanmış espresso.',
+    picks:['nitrobrewd'] },
+  { id:'bitter',  label:'BitterSweet', sub:'Ofis No.2', weight:1, color:'#2e1d14',
+    blurb:'Ofis kahvesinin karakterlisi.',
+    picks:['ofis-kahvesi-no-2-bittersweet'] },
+  { id:'harman',  label:'Harman', sub:'Ofis No.1', weight:1, color:'#6b4a2a',
+    blurb:'Her gün içilen, yormayan ofis harmanı.',
+    picks:['ofis-kahvesi-no-1-harman'] },
+];
+const RAINBOW = ['#AF272F','#e8a33d','#7fb069','#4a90c2','#b05fa0','#F3ECDC'];
+
+/* ------------------------------------------------------------------ state */
+const EMBED = /[?&]embed=1/.test(location.search) || window.self !== window.top;
+if (EMBED) document.body.classList.add('embed');
+const wheel = document.getElementById('wheel');
+const hub = document.getElementById('hub');
+const resultEl = document.getElementById('result');
+const legendEl = document.getElementById('legend');
+let rotation = 0;           // cumulative degrees applied to the svg
+let spinning = false;
+let catalog = null;         // handle -> {title, price, status, image, url}
+let geometry = [];          // [{seg, start, end, mid}] in degrees, 0 = top, clockwise
+
+/* ------------------------------------------------------------------ wheel drawing */
+function polar(r, deg){ const a = (deg - 90) * Math.PI / 180; return [r * Math.cos(a), r * Math.sin(a)]; }
+function wedge(r0, r1, a0, a1){
+  const [x0, y0] = polar(r1, a0), [x1, y1] = polar(r1, a1), [x2, y2] = polar(r0, a1), [x3, y3] = polar(r0, a0);
+  const big = (a1 - a0) > 180 ? 1 : 0;
+  return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${r1} ${r1} 0 ${big} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} L${x2.toFixed(2)} ${y2.toFixed(2)} A${r0} ${r0} 0 ${big} 0 ${x3.toFixed(2)} ${y3.toFixed(2)} Z`;
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+function buildWheel(){
+  const total = SEGMENTS.reduce((a, s) => a + s.weight, 0);
+  let a = 0, parts = [];
+  geometry = [];
+  SEGMENTS.forEach((seg, i) => {
+    const span = 360 * seg.weight / total;
+    const start = a, end = a + span, mid = a + span / 2;
+    geometry.push({ seg, start, end, mid });
+    if (seg.color === 'rainbow') {
+      const n = RAINBOW.length, step = span / n;
+      for (let k = 0; k < n; k++) parts.push(`<path class="seg" data-i="${i}" d="${wedge(60, 248, start + k * step, start + (k + 1) * step)}" fill="${RAINBOW[k]}"/>`);
+    } else {
+      parts.push(`<path class="seg" data-i="${i}" d="${wedge(60, 248, start, end)}" fill="${seg.color}"/>`);
+    }
+    // labels: all radial. Right half reads outward from the hub, left half reads inward from the rim,
+    // so nothing is ever upside down. Big slices get bigger type.
+    const fill = seg.color === 'rainbow' ? '#1A1310' : '#F3ECDC';
+    const left = mid > 180;
+    const r = left ? 236 : 74;
+    const [x, y] = polar(r, mid);
+    const rot = left ? mid + 90 : mid - 90;
+    const big = span >= 50;
+    const fs = big ? 24 : (seg.label.length > 15 ? 12 : 13.5);
+    const subFs = big ? 13 : 10;
+    const dy = seg.sub ? (big ? -6 : -3) : 5;
+    parts.push(`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" dy="${dy}" transform="rotate(${rot.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)})" text-anchor="start" font-size="${fs}" fill="${fill}">${esc(seg.label)}</text>`);
+    if (seg.sub) parts.push(`<text class="sub" x="${x.toFixed(1)}" y="${y.toFixed(1)}" dy="${big ? 14 : 11}" transform="rotate(${rot.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)})" text-anchor="start" font-size="${subFs}" fill="${fill}">${esc(seg.sub)}</text>`);
+    a = end;
+  });
+  parts.push('<circle cx="0" cy="0" r="60" fill="#120d09"/>');
+  wheel.innerHTML = parts.join('');
+  wheel.querySelectorAll('path.seg').forEach(p => p.addEventListener('click', () => choose(+p.dataset.i)));
+  legendEl.innerHTML = SEGMENTS.map((s, i) => `<button class="chip" data-i="${i}"><i style="background:${s.color === 'rainbow' ? 'linear-gradient(90deg,' + RAINBOW.join(',') + ')' : s.color}"></i>${esc(s.label)}</button>`).join('');
+  legendEl.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => choose(+b.dataset.i)));
+}
+
+/* ------------------------------------------------------------------ catalogue (live from the shop, optional) */
+async function loadCatalog(){
+  try {
+    const r = await fetch(SHOP + '/collections/all/products.json?limit=250', { mode: 'cors' });
+    const j = await r.json();
+    const map = {};
+    j.products.forEach(p => {
+      const stock = p.variants.filter(v => v.available && !/sonraki/i.test(v.title));
+      const next = p.variants.filter(v => v.available && /sonraki/i.test(v.title));
+      const vs = stock.length ? stock : next;
+      const price = vs.length ? Math.min(...vs.map(v => parseFloat(v.price))) : null;
+      map[p.handle] = {
+        title: p.title,
+        status: stock.length ? 'stock' : (next.length ? 'next' : 'off'),
+        price,
+        image: (p.images && p.images[0]) ? p.images[0].src.replace(/(\.[a-z]+)(\?|$)/i, '_200x200$1$2') : null,
+        url: SHOP + '/products/' + p.handle
+      };
+    });
+    catalog = map;
+  } catch (e) { catalog = null; }
+}
+function info(handle){
+  if (catalog && catalog[handle]) return catalog[handle];
+  return { title: handle.replace(/-/g, ' '), status: 'unknown', price: null, image: null, url: SHOP + '/products/' + handle };
+}
+function fmt(p){ return p == null ? '' : '₺' + Math.round(p).toLocaleString('tr-TR'); }
+function rank(st){ return st === 'stock' ? 0 : st === 'next' ? 1 : st === 'unknown' ? 2 : 3; }
+
+/* ------------------------------------------------------------------ choosing + spinning */
+function choose(i){
+  if (spinning) return;
+  const seg = SEGMENTS[i];
+  if (seg.surprise) return surprise();
+  spinTo(i, () => showResult(seg, pickList(seg), false));
+}
+function pickList(seg){
+  const list = (seg.picks || []).map(h => ({ handle: h, ...info(h) })).filter(p => p.status !== 'off');
+  list.sort((a, b) => rank(a.status) - rank(b.status));
+  return list;
+}
+function surprise(){
+  if (spinning) return;
+  // pool: everything that is in stock now; fall back to next-roast; then anything
+  const pool = [];
+  SEGMENTS.forEach((s, i) => (s.picks || []).forEach(h => pool.push({ segIndex: i, handle: h, ...info(h) })));
+  const stock = pool.filter(p => p.status === 'stock');
+  const next = pool.filter(p => p.status === 'next');
+  const from = stock.length ? stock : (next.length ? next : pool.filter(p => p.status !== 'off'));
+  if (!from.length) return;
+  const pick = from[Math.floor(Math.random() * from.length)];
+  spinTo(pick.segIndex, () => showResult(SEGMENTS[pick.segIndex], [pick], true));
+}
+function spinTo(i, done){
+  const g = geometry[i];
+  const span = g.end - g.start;
+  const jitter = (Math.random() - 0.5) * span * 0.7;        // land somewhere inside the slice, not always dead centre
+  const target = g.mid + jitter;                             // angle of the slice, 0 = top, clockwise
+  const current = ((rotation % 360) + 360) % 360;
+  // we rotate the wheel clockwise by R; the slice at angle t ends up at (t + R). We want t + R ≡ 0 (top).
+  let need = (360 - ((target + current) % 360)) % 360;
+  const turns = 4 + Math.floor(Math.random() * 2);
+  rotation += turns * 360 + need;
+  spinning = true;
+  wheel.classList.add('spinning');
+  hideResult();
+  wheel.style.transform = `rotate(${rotation}deg)`;
+  const finish = () => {
+    spinning = false; wheel.classList.remove('spinning');
+    // keep the angle small so a long session never accumulates float drift
+    rotation = ((rotation % 360) + 360) % 360;
+    wheel.style.transition = 'none'; wheel.style.transform = `rotate(${rotation}deg)`; void wheel.offsetWidth; wheel.style.transition = '';
+    done && done();
+  };
+  const onEnd = (e) => { if (e.propertyName === 'transform') { wheel.removeEventListener('transitionend', onEnd); finish(); } };
+  wheel.addEventListener('transitionend', onEnd);
+  setTimeout(() => { if (spinning) { wheel.removeEventListener('transitionend', onEnd); finish(); } }, 4800); // safety net
+}
+
+/* ------------------------------------------------------------------ result card */
+function hideResult(){ resultEl.classList.remove('show'); }
+function showResult(seg, picks, isSurprise){
+  const tgt = EMBED ? '_top' : '_blank';
+  let html = `<div class="lbl">${isSurprise ? 'Sürpriz' : 'Senin dilimin'}</div><h2>${esc(seg.label)}${seg.sub ? ' <span style="font-weight:500;color:var(--muted);font-size:15px">· ' + esc(seg.sub) + '</span>' : ''}</h2><p class="blurb">${esc(seg.blurb || '')}</p>`;
+  if (!picks.length) {
+    html += `<p class="blurb">${esc(seg.soon || 'Bu dilimde şu an kahve yok.')}</p>`;
+    (seg.fallback || []).forEach(h => { html += pickRow({ handle: h, ...info(h) }, tgt); });
+  } else {
+    picks.forEach(p => { html += pickRow(p, tgt); });
+  }
+  html += `<div class="again"><button class="pri" onclick="surprise()">Şaşırt beni</button><button onclick="hideResult()">Başka bir dilim seç</button></div>`;
+  resultEl.innerHTML = html;
+  resultEl.classList.add('show');
+  resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function pickRow(p, tgt){
+  const badge = p.status === 'stock' ? '<span class="badge ok">Stokta</span>'
+              : p.status === 'next' ? '<span class="badge next">Sonraki kavrum</span>'
+              : p.status === 'unknown' ? '' : '<span class="badge soon">Yakında</span>';
+  const img = p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : '<div class="ph"></div>';
+  return `<div class="pick">${img}<div class="t"><div class="n">${esc(p.title)}</div><div class="m">${badge}${p.price != null ? '<span>' + fmt(p.price) + "'den</span>" : ''}</div></div><a class="go" href="${esc(p.url)}" target="${tgt}" rel="noopener">Ürüne git</a></div>`;
+}
+
+/* ------------------------------------------------------------------ boot */
+hub.addEventListener('click', surprise);
+document.getElementById('closeBtn').addEventListener('click', () => {
+  try { window.parent.postMessage({ type: 'cark-close' }, '*'); } catch (e) {}
+});
+buildWheel();
+loadCatalog();
+</script>
+</body>
+</html>
