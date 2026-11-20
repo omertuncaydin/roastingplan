@@ -80,7 +80,7 @@
   <span class="flexspace"></span>
   <span class="sub" style="margin:0" id="whoChip"></span>
   <button class="ghost" id="outBtn" style="display:none">Çıkış</button>
-  <span class="sub" style="margin:0;opacity:.55">v2026-11-20a</span>
+  <span class="sub" style="margin:0;opacity:.55">v2026-11-20b</span>
 </div>
 <div class="card" id="gate" style="display:none">
   <div class="row"><b>Giriş · Sign in</b><span class="sub" style="margin:0">Guide hesabınla · same account as the Guide · yönetici tam görür, personel yalnız takvimi görür</span></div>
@@ -136,13 +136,13 @@
   <div class="muted" style="margin-top:6px;">Target = workdays in month (Mon-Sat minus Resmi Tatil) × default hours. Sunday counts only when marked. Yevmiye = çalışılan saat ÷ günlük saat (yarım gün 0,5; fazla saat oranlı; aynı gündeki etiketler toplanır, 8 + 4 saat = 1,5) + ödenen günler. Ödenecek Maaş = yevmiye × günlük net maaş. Yol = yol günü × yol ₺/gün: bir günde kaç etiket olursa olsun tek yol sayılır, yalnız Home office olan günde yol yok. Ödenecek Gider = Yol + Dış Gider (o ayın Off-Site gideri, elle girilir). Resmi tatiller takvimde kendiliğinden görünür ve Kasım 2026'dan itibaren o gün etiketi olmayan personelin R.Tatil sütununa sayılır (pazar hariç, yarım günler yalnız gösterilir); maaşa ancak "Takvimdeki resmi tatiller" kutusu işaretliyse girer, girmeyenler sütunda parantez içinde durur. Günlük maaş ve yol tutarı yukarıda, seçili personelin kutularından değişir.</div>
 </div>
 
-<footer>CoffeeNutz internal tool · v2026-11-20a · marks: click = apply · drag = paint · click a tag = note · drag a mark off the calendar = delete · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
+<footer>CoffeeNutz internal tool · v2026-11-20b · marks: click = apply · drag = paint · click a tag = note · drag a mark off the calendar = delete · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
 
 <script>
 "use strict";
 const LS = "emphours_v1";
 const LS_SND = "emphours_snd";   // "0" = delete sound off, on this device only
-const APP_VER = "v2026-11-20a";
+const APP_VER = "v2026-11-20b";
 let MODE = "gate", CUR = null;   // v12d: gate | admin (full) | limited (hq_staff: read-only, no money) | none (signed in, no access)
 const TYPES = {
   full:  {label:"Full day",  cls:""},
@@ -366,7 +366,7 @@ function calRect(){ return document.getElementById("cal").getBoundingClientRect(
 function dragStart(ch,x,y){ if(MODE!=="admin") return; DRAG={dk:ch.dataset.dk, emp:ch.dataset.emp, ix:+ch.dataset.ix, el:ch, x0:x, y0:y, moved:false}; }
 function dragMove(x,y){ if(!DRAG) return;
   if(!DRAG.moved){ if(Math.abs(x-DRAG.x0)+Math.abs(y-DRAG.y0)<6) return;   // still a click
-    DRAG.moved=true; GHOST=DRAG.el.cloneNode(true);
+    DRAG.moved=true; setTimeout(readyCrumple, 0); GHOST=DRAG.el.cloneNode(true);
     GHOST.style.cssText+=";position:fixed;pointer-events:none;z-index:99;opacity:.9;background:var(--panel2);border:1px solid var(--accent);padding:2px 8px;border-radius:6px;transform:translate(-50%,-130%);";
     document.body.appendChild(GHOST); }
   GHOST.style.left=x+"px"; GHOST.style.top=y+"px";
@@ -421,21 +421,76 @@ function openNote(dk, empId, ix, rect){
   ta.focus();
 }
 
-/* ---------- v11-20a: a short paper crumple when a tag is dragged off the calendar (made in the browser, no sound file) ---------- */
-let AC=null;
+/* ---------- v11-20b: the sound of a tag thrown away: a sheet of paper being crumpled ----------
+   Calculated in the browser. It is not a recording and not a file. Crumpling paper is hundreds of tiny cracks, most of
+   them faint and a few loud, each with its own colour, thickest as the hand closes, over the dry rustle of the sheet,
+   heard in a small room. That is what is built here, afresh for every throw, so no two sound the same. */
+let AC=null, CRUMPLE=null, ROOM=null;
+function makeCrumple(sr){
+  const n=Math.floor(sr*1.12), L=new Float32Array(n), R=new Float32Array(n), tmp=new Float32Array(Math.ceil(sr*0.12));
+  const rnd=Math.random, rr=(a,b)=>a+(b-a)*rnd();
+  // one crack: a burst of noise that dies away, coloured by a resonance, placed somewhere between left and right
+  const crack=(t0, fc, q, tau, amp, pan)=>{
+    const len=Math.min(tmp.length, Math.ceil(tau*6)), r=Math.exp(-Math.PI*(fc/q)/sr), a1=2*r*Math.cos(2*Math.PI*fc/sr), a2=-r*r, die=Math.exp(-1/tau);
+    let y1=0, y2=0, x1=0, x2=0, peak=1e-9, env=1;
+    for(let i=0;i<len;i++){ const x=(rnd()*2-1)*env*(i<3?(i+1)/4:1), y=x-x2+a1*y1+a2*y2; env*=die; x2=x1; x1=x; y2=y1; y1=y; tmp[i]=y; const m=y<0?-y:y; if(m>peak) peak=m; }
+    const g=amp/peak, gl=g*Math.cos((pan+1)*Math.PI/4), gr=g*Math.sin((pan+1)*Math.PI/4), i0=Math.floor(t0*sr);
+    for(let i=0;i<len&&i0+i<n;i++){ L[i0+i]+=tmp[i]*gl; R[i0+i]+=tmp[i]*gr; }
+  };
+  // the hand closes once, long and loud, then packs the ball with a few shorter, weaker squeezes, never twice in the same rhythm
+  const squeezes=[]; let at=0;
+  for(let nth=0; at<.8&&nth<6; nth++){
+    const len=nth?rr(.11,.21):rr(.30,.40), lev=nth?Math.max(.28,.74-.12*nth)*rr(.75,1.2):1, m=Math.round(1000*len*(.45+.55*lev)*rr(.85,1.15));
+    for(let e=0;e<m;e++){
+      const big=Math.pow(rnd(),4), amp=lev*Math.pow(10,(-36+36*big)/20);    // most cracks faint, a few loud
+      const t0=at+len*Math.pow(rnd(),nth?1.7:1.35);                          // crowded when the squeeze begins
+      const fc=1800*Math.pow(12000/1800, Math.pow(rnd(),1+.8*big));          // loud cracks come from larger folds and sit a little lower
+      const tau=sr*(0.0005+0.0035*rnd()*rnd())*(1+2.2*big), pan=rr(-.75,.75);
+      crack(t0, fc, rr(.8,3.2), tau, amp, pan);
+      if(big>.7) crack(t0, rr(350,800), 1, sr*rr(.008,.018), amp*.12, pan*.5);     // the sheet gives a faint thud under the loudest cracks
+      for(let k=0, more=rnd()<.2+.5*big?1+Math.floor(rnd()*3):0, t=t0; k<more; k++){   // one fold giving way sets off its neighbours
+        t+=rr(.0008,.006); crack(t, fc*rr(.9,1.7), rr(.8,3.2), tau*rr(.4,.9), amp*rr(.25,.65), pan+rr(-.2,.2)); }
+    }
+    squeezes.push([at, len, lev]);
+    at+=len*rr(.62,.95)+(rnd()<.35?rr(.03,.09):0);   // the next squeeze begins before this one is over, now and then after a short pause
+  }
+  // under the cracks, the dry rustle of the sheet moving in the hand: countless tiny ticks, thickest while the hand closes
+  const swell=new Float32Array(n);
+  for(const [a0,ln,lv] of squeezes){ const i0=Math.floor(a0*sr), up=sr*.012, fall=Math.exp(-1/(ln*.5*sr)); let v=lv;
+    for(let i=i0;i<n&&v>1e-4;i++){ swell[i]+=v*Math.min(1,(i-i0)/up); v*=fall; } }
+  const br=Math.exp(-Math.PI*(3200/.7)/sr), b1=2*br*Math.cos(2*Math.PI*3200/sr), b2=-br*br;
+  for(const ch of [L,R]){ let y1=0, y2=0, x1=0, x2=0, drift=.5;
+    for(let i=0;i<n;i++){ drift+=.002*((rnd()<.5?0:1)-drift);
+      const s=swell[i], u=rnd(), x=rnd()<.08*s?(rnd()*2-1)*u*u*u*(.5+.5*s)*(.4+1.2*drift)*.5:0, y=x-x2+b1*y1+b2*y2; x2=x1; x1=x; y2=y1; y1=y; ch[i]+=y; } }
+  // no rumble, no glassy top
+  const lo=1/(1+2*Math.PI*300/sr), hi=1-Math.exp(-2*Math.PI*13000/sr);
+  for(const ch of [L,R]){ let px=0, h1=0, ph=0, h2=0, lp=0; for(let i=0;i<n;i++){ const x=ch[i]; h1=lo*(h1+x-px); px=x; h2=lo*(h2+h1-ph); ph=h1; lp+=hi*(h2-lp); ch[i]=lp; } }
+  // the loudest tenth of a second sets the level, so every throw is about as loud as the last;
+  // the highest peaks are rounded off the way a small speaker would
+  const win=Math.floor(sr*.1); let sum=0, top=1e-12;
+  for(let i=0;i<n;i++){ sum+=L[i]*L[i]+R[i]*R[i]; if(i>=win) sum-=L[i-win]*L[i-win]+R[i-win]*R[i-win]; if(sum>top) top=sum; }
+  const ref=5*Math.sqrt(top/(2*win)), fade=Math.floor(sr*.04);
+  for(const ch of [L,R]) for(let i=0;i<n;i++){ const f=i>n-fade?(n-i)/fade:1; ch[i]=.3*Math.tanh(ch[i]/ref)*f; }
+  return {sr, L, R};
+}
+function roomOf(ac){   // a small quiet room: a tenth of a second of fading echoes
+  if(ROOM&&ROOM.sampleRate===ac.sampleRate) return ROOM;
+  const sr=ac.sampleRate, n=Math.floor(sr*.11), b=ac.createBuffer(2,n,sr), pre=Math.floor(sr*.004);
+  for(let c=0;c<2;c++){ const d=b.getChannelData(c); let lp=0; for(let i=pre;i<n;i++){ lp+=.45*((Math.random()*2-1)*Math.exp(-(i-pre)/(sr*.024))-lp); d[i]=lp; } }
+  return (ROOM=b);
+}
 function buildTrash(ac, t0){
-  const dur=0.38, sr=ac.sampleRate, len=Math.floor(sr*dur), buf=ac.createBuffer(1,len,sr), d=buf.getChannelData(0);
-  let env=0;
-  for(let i=0;i<len;i++){ const p=i/len;
-    if(Math.random() < 0.010*(1-p)+0.0012) env=Math.max(env, (0.35+0.65*Math.random())*(1-p)*(1-p));   // crackles, thinning out
-    env*=0.9972; d[i]=(Math.random()*2-1)*env; }
-  const src=ac.createBufferSource(); src.buffer=buf;
-  const hp=ac.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=700;
-  const bp=ac.createBiquadFilter(); bp.type="bandpass"; bp.Q.value=0.7; bp.frequency.setValueAtTime(4200,t0); bp.frequency.exponentialRampToValueAtTime(1100,t0+dur);
-  const g=ac.createGain(); g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(0.32,t0+0.012); g.gain.setValueAtTime(0.32,t0+dur*0.55); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
-  src.connect(hp); hp.connect(bp); bp.connect(g); g.connect(ac.destination); src.start(t0); src.stop(t0+dur);
+  const c=CRUMPLE||makeCrumple(44100); CRUMPLE=null;   // 44.1 kHz whatever the device runs at: the browser resamples
+  const buf=ac.createBuffer(2,c.L.length,c.sr); buf.getChannelData(0).set(c.L); buf.getChannelData(1).set(c.R);
+  const src=ac.createBufferSource(); src.buffer=buf; src.playbackRate.value=.97+.06*Math.random();
+  const wet=ac.createGain(); wet.gain.value=.25;
+  const room=ac.createConvolver(); room.buffer=roomOf(ac);
+  src.connect(ac.destination); src.connect(room); room.connect(wet); wet.connect(ac.destination);
+  src.start(t0);
+  setTimeout(readyCrumple, 500);   // the next one is worked out while this one plays
 }
 function sndOn(){ try{ return localStorage.getItem(LS_SND)!=="0"; }catch(e){ return true; } }
+function readyCrumple(){ try{ if(!CRUMPLE && sndOn()) CRUMPLE=makeCrumple(44100); }catch(e){} }   // worked out ahead, so the drop itself never waits
 function trashSound(){ if(!sndOn()) return;
   try{ const C=window.AudioContext||window.webkitAudioContext; if(!C) return; AC=AC||new C(); if(AC.state==="suspended") AC.resume(); buildTrash(AC, AC.currentTime+0.01); }catch(e){} }
 function renderSnd(){ const b=document.getElementById("sndBtn"); if(!b) return; b.textContent=sndOn()?"🔊":"🔇"; b.classList.toggle("on", sndOn()); }
