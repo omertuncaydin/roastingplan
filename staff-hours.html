@@ -22,14 +22,17 @@
   .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
   input[type=text],input[type=number],input[type=password]{background:var(--panel2); border:1px solid var(--line); border-radius:8px; color:var(--text); padding:7px 10px; font-size:13px;}
   input[type=number]{width:70px;}
+  input:disabled{opacity:.45;}
   /* employees */
   .emp{display:inline-flex; align-items:center; gap:7px; padding:6px 12px; border-radius:20px; border:2px solid var(--line); cursor:pointer; margin:3px 4px 3px 0; font-size:13px; background:var(--panel2);}
   .emp.sel{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
   .dot{width:11px; height:11px; border-radius:50%;}
   .emp small{color:var(--dim);}
+  .fld{display:inline-flex; align-items:center; gap:6px; color:var(--dim); font-size:12px;}
   /* brushes */
   .brush{padding:6px 12px; border-radius:8px; border:2px solid var(--line); cursor:pointer; font-size:12.5px; background:var(--panel2); color:var(--text);}
   .brush.sel{border-color:var(--accent); color:var(--accent); font-weight:700;}
+  #addArm.on{background:var(--accent); color:#1a1408;}
   /* calendar */
   .monthbar{display:flex; align-items:center; gap:12px; margin-bottom:8px;}
   .monthbar h2{font-size:16px; min-width:170px; text-align:center;}
@@ -38,14 +41,21 @@
   .day{background:var(--panel); border:1px solid var(--line); border-radius:8px; min-height:74px; padding:4px 5px; cursor:pointer; position:relative;}
   .day.we{background:#17140f;}
   .day.out{opacity:.25; cursor:default;}
+  .day.hday{background:#1a1b1e;}
   .day.today{border-color:var(--accent);}
   .dnum{font-size:11px; color:var(--dim); margin-bottom:3px;}
+  .hol{font-size:9.5px; line-height:1.3; color:var(--tatil); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:0; min-width:100%;}   /* width 0 + min-width 100%: fills the day, never widens the column */
   .chip{display:flex; align-items:center; gap:4px; font-size:10.5px; line-height:1.35; border-radius:4px; padding:0 4px; margin-bottom:2px; background:var(--panel2);}
   .chip .dot{width:7px; height:7px; flex:none;}
   .chip[data-dk]{cursor:grab; touch-action:none;}
   .chip b{font-weight:600;}
+  .chip .nt{margin-left:auto; color:var(--accent); font-size:10px;}
   .chip.t-izin{color:var(--izin);} .chip.t-rapor{color:var(--rapor);}
   .chip.t-tatil{color:var(--tatil);} .chip.t-yok{color:var(--bad);} .chip.t-ho{color:#8fd0c2;} .chip.t-os{color:#d9b26a;}
+  /* note on a tag */
+  #noteBack{position:fixed; top:0; left:0; right:0; bottom:0; z-index:119;}
+  #notePop{position:fixed; z-index:120; width:300px; max-width:calc(100vw - 16px); background:var(--panel); border:1px solid var(--accent); border-radius:10px; padding:10px; box-shadow:0 10px 30px rgba(0,0,0,.6);}
+  #notePop textarea{display:block; width:100%; min-height:76px; background:var(--panel2); border:1px solid var(--line); border-radius:8px; color:var(--text); padding:7px 9px; font:13px/1.4 -apple-system,'Segoe UI',Roboto,sans-serif; resize:vertical; -webkit-user-select:text; user-select:text;}
   /* totals */
   table{width:100%; border-collapse:collapse; font-size:13px;}
   th{font-size:10.5px; text-transform:uppercase; letter-spacing:.8px; color:var(--dim); text-align:left; padding:7px 9px; border-bottom:1px solid var(--line);}
@@ -54,22 +64,23 @@
   .muted{color:var(--dim); font-size:12px;}
   .flexspace{flex:1;}
   footer{color:var(--dim); font-size:11px; margin-top:14px; text-align:center;}
-  @media (max-width:700px){ .day{min-height:58px;} .chip small{display:none;} }
+  @media (max-width:700px){ .day{min-height:58px;} .chip small{display:none;} .hol{font-size:8.5px;} }
 </style>
 </head>
 <body>
 
 <h1>Personel Saatleri · Employee Hours</h1>
-<div class="sub" id="howto">Pick an employee, pick a brush, then click or drag across the calendar to mark. İşareti takvim dışına sürükle = sil · drag a mark off the calendar to delete it.</div>
+<div class="sub" id="howto">Pick an employee, pick a brush, then click or drag across the calendar to mark. Etikete tıkla = not yaz · click a tag to write a note. ＋ Ek etiket (ya da Shift+tık) = aynı güne ikinci etiket · a second tag on the same day. İşareti takvim dışına sürükle = sil · drag a mark off the calendar to delete it.</div>
 <div class="row" style="margin-bottom:12px" id="topRow">
   <button id="saveBtn">Kaydet · Save</button>
   <button class="ghost" id="refreshBtn" title="buluttaki son kaydı çeker · pulls the latest cloud copy">Bulutu çek · Pull</button>
   <button class="ghost" id="reloadBtn" title="uygulamayı yeniden yükler, yeni sürümü alır · reloads the app">&#8635; Uygulamayı yenile</button>
+  <button class="ghost" id="sndBtn" title="silme sesi açık/kapalı (yalnız bu cihaz) · delete sound on/off (this device only)" style="display:none">🔊</button>
   <span class="sub" style="margin:0" id="syncStat">yerel · local</span>
   <span class="flexspace"></span>
   <span class="sub" style="margin:0" id="whoChip"></span>
   <button class="ghost" id="outBtn" style="display:none">Çıkış</button>
-  <span class="sub" style="margin:0;opacity:.55">v2026-10-12e</span>
+  <span class="sub" style="margin:0;opacity:.55">v2026-11-20a</span>
 </div>
 <div class="card" id="gate" style="display:none">
   <div class="row"><b>Giriş · Sign in</b><span class="sub" style="margin:0">Guide hesabınla · same account as the Guide · yönetici tam görür, personel yalnız takvimi görür</span></div>
@@ -83,14 +94,13 @@
 
 <div class="card" id="empCard">
   <div class="row" id="empRow"></div>
-  <div class="row" style="margin-top:8px;">
-    <input type="text" id="newName" placeholder="Employee name">
-    <input type="number" id="newHours" value="8" min="1" max="16" step="0.5" title="default daily hours (standard 8)">
-    <input type="number" id="newRate" min="0" step="10" placeholder="₺/gün net" style="width:92px" title="günlük net maaş · daily net salary (₺)">
-    <input type="number" id="newYol" min="0" step="10" placeholder="yol ₺/gün" style="width:92px" title="günlük yol parası, ofis günleri için · daily transport allowance for on-site days (₺)">
-    <button class="ghost" id="addEmp">+ Add employee</button>
+  <div class="row" style="margin-top:8px;" id="empEdit">
+    <input type="text" id="eName" placeholder="Ad · name" title="seçili personelin adı · selected employee's name" style="width:20ch">
+    <label class="fld">saat/gün <input type="number" id="eHours" min="1" max="16" step="0.5" title="günlük standart saat (8) · default daily hours"></label>
+    <label class="fld">₺/gün net <input type="number" id="eRate" min="0" step="10" placeholder="0" style="width:92px" title="günlük net maaş · daily net salary (₺)"></label>
+    <label class="fld">yol ₺/gün <input type="number" id="eYol" min="0" step="10" placeholder="0" style="width:92px" title="günlük yol parası: ofis ve Off-Site günleri için, evden çalışmada yok · daily transport allowance (₺)"></label>
     <span class="flexspace"></span>
-    <button class="ghost" id="editEmp">Edit selected</button>
+    <button class="ghost" id="addEmp">+ Add employee</button>
     <button class="ghost" id="delEmp">Remove selected</button>
   </div>
 </div>
@@ -118,18 +128,21 @@
   <table id="payroll" style="margin-top:14px"></table>
   <div class="row" id="payCfgRow" style="margin-top:8px;font-size:12.5px;color:var(--dim)">Ödenen günler · paid days:
     <label><input type="checkbox" id="payIzin"> Yıllık izin</label>
-    <label><input type="checkbox" id="payTatil"> Resmi tatil</label>
+    <label><input type="checkbox" id="payTatil"> Resmi tatil (etiketli)</label>
     <label><input type="checkbox" id="payRapor"> Rapor</label>
+    <label title="işaretliyse: takvimdeki resmi tatil, o gün etiketi olmayan personele 1 yevmiye yazar · işaretlendiği aydan itibaren geçerlidir"><input type="checkbox" id="payAuto"> Takvimdeki resmi tatiller (otomatik)<span id="payAutoFrom"></span></label>
+    <span id="holNote" style="color:var(--warn)"></span>
   </div>
-  <div class="muted" style="margin-top:6px;">Target = workdays in month (Mon-Sat minus Resmi Tatil marks) × default hours. Adjust per employee via Edit. Sunday counts only when marked. Yevmiye = çalışılan saat ÷ günlük saat (yarım gün 0,5; fazla saat oranlı) + işaretli ödenen günler. Maaş = yevmiye × günlük net maaş. Yol = (ofis + Off-Site günü) × yol ₺/gün; Home office günlerinde yol yok. Dış Gider = o ayın Off-Site iş gideri, elle girilir. Ödenecek = Maaş + Yol + Dış Gider.</div>
+  <div class="muted" style="margin-top:6px;">Target = workdays in month (Mon-Sat minus Resmi Tatil) × default hours. Sunday counts only when marked. Yevmiye = çalışılan saat ÷ günlük saat (yarım gün 0,5; fazla saat oranlı; aynı gündeki etiketler toplanır, 8 + 4 saat = 1,5) + ödenen günler. Ödenecek Maaş = yevmiye × günlük net maaş. Yol = yol günü × yol ₺/gün: bir günde kaç etiket olursa olsun tek yol sayılır, yalnız Home office olan günde yol yok. Ödenecek Gider = Yol + Dış Gider (o ayın Off-Site gideri, elle girilir). Resmi tatiller takvimde kendiliğinden görünür ve Kasım 2026'dan itibaren o gün etiketi olmayan personelin R.Tatil sütununa sayılır (pazar hariç, yarım günler yalnız gösterilir); maaşa ancak "Takvimdeki resmi tatiller" kutusu işaretliyse girer, girmeyenler sütunda parantez içinde durur. Günlük maaş ve yol tutarı yukarıda, seçili personelin kutularından değişir.</div>
 </div>
 
-<footer>CoffeeNutz internal tool · v2026-10-12e · marks: click = apply · drag = paint · drag a mark off the calendar = delete · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
+<footer>CoffeeNutz internal tool · v2026-11-20a · marks: click = apply · drag = paint · click a tag = note · drag a mark off the calendar = delete · Sil brush = erase · bulut: admin hesabı (Guide girişi) ile eşitlenir</footer>
 
 <script>
 "use strict";
 const LS = "emphours_v1";
-const APP_VER = "v2026-10-12e";
+const LS_SND = "emphours_snd";   // "0" = delete sound off, on this device only
+const APP_VER = "v2026-11-20a";
 let MODE = "gate", CUR = null;   // v12d: gate | admin (full) | limited (hq_staff: read-only, no money) | none (signed in, no access)
 const TYPES = {
   full:  {label:"Full day",  cls:""},
@@ -145,12 +158,17 @@ const TYPES = {
 };
 const COLORS = ["#e8a33d","#7fb069","#7fa8c9","#c96f9a","#c96f4a","#b8b06a","#8fd0c2","#a98fd0"];
 
-let db = load(); // {emps:[{id,name,hours,color}], marks:{ "yyyy-mm-dd":{empId:{t,h}} }}
+/* db = {emps:[{id,name,hours,rate,yol,color}], marks:{ "yyyy-mm-dd":{empId: tag | [tag, tag]} }, notes:{tagId:"text"}, pay, osexp, paid, up}
+   tag = {t,h,ho?,os?,i?}. v11-20a: one tag on a day is stored bare, exactly as before; several are stored as a list.
+   i is the id that ties a note to its tag. Notes live in db.notes, outside marks, so the staff view (staff_hours_public) never receives them. */
+let db = load();
 let selEmp = db.emps[0] ? db.emps[0].id : null;
 let brush = "full";
 let customH = 4;
 let view = new Date(); view.setDate(1);
 let painting = false;
+let addArm = false;   // v11-20a: armed = the next stroke ADDS a tag beside the existing ones instead of replacing them
+let stroke = null;    // the stroke in progress: {add, seen:{day:1}}
 
 function load(){
   try{ const r = localStorage.getItem(LS); if (r) return JSON.parse(r); }catch(e){}
@@ -162,46 +180,100 @@ function ymd(d){ return d.toISOString().slice(0,10); }
 function pad(n){ return String(n).padStart(2,"0"); }
 function key(y,m,d){ return `${y}-${pad(m+1)}-${pad(d)}`; }
 function esc(x){ return String(x??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmtTL(n){ return (Math.round(n*100)/100).toLocaleString("tr-TR",{maximumFractionDigits:2}) + " ₺"; }
 
-/* ---------- employees ---------- */
+/* ---------- tags and notes ---------- */
+function tagsOf(dk, empId){ const v=(db.marks[dk]||{})[empId]; return !v ? [] : (Array.isArray(v) ? v : [v]); }
+function setTags(dk, empId, list){
+  if (!list.length){ if (db.marks[dk]){ delete db.marks[dk][empId]; if (!Object.keys(db.marks[dk]).length) delete db.marks[dk]; } return; }
+  if (!db.marks[dk]) db.marks[dk] = {};
+  db.marks[dk][empId] = list.length===1 ? list[0] : list;
+}
+function tagText(mk){ return mk.t==="work" ? ((mk.ho?"🏠 ":(mk.os?"📍 ":""))+mk.h+"h") : (TYPES[mk.t]?TYPES[mk.t].label:String(mk.t)); }
+function noteOf(mk){ return (mk && mk.i && db.notes && db.notes[mk.i]) || ""; }
+function setNote(mk, text){
+  text = String(text||"").trim().slice(0,400);
+  if (text){ if (!db.notes) db.notes = {}; if (!mk.i) mk.i = uid(); db.notes[mk.i] = text; }
+  else dropNote(mk);
+}
+function dropNote(mk){ if (!mk || !mk.i) return; if (db.notes){ delete db.notes[mk.i]; if (!Object.keys(db.notes).length) delete db.notes; } delete mk.i; }
+
+/* ---------- v11-20a: resmi tatiller, built in ----------
+   Fixed days hold for every year. The two bayrams move, so their first day is listed per year (Diyanet takvimi);
+   a year that is not listed shows the fixed days only. Half days (arife, 28 Ekim öğleden sonra) are shown, never counted. */
+const HOL_FROM = "2026-11-01";   // automatic counting starts here; earlier months stay exactly as they were entered
+const HOL_FIXED = {"01-01":"Yılbaşı","04-23":"Ulusal Egemenlik ve Çocuk Bayramı","05-01":"Emek ve Dayanışma Günü","05-19":"Atatürk'ü Anma, Gençlik ve Spor Bayramı","07-15":"Demokrasi ve Millî Birlik Günü","08-30":"Zafer Bayramı","10-29":"Cumhuriyet Bayramı"};
+const HOL_HALF = {"10-28":"Cumhuriyet Bayramı arifesi"};
+const HOL_BAYRAM = {2025:["2025-03-30","2025-06-06"], 2026:["2026-03-20","2026-05-27"], 2027:["2027-03-09","2027-05-16"]};   // [Ramazan Bayramı 1. gün, Kurban Bayramı 1. gün]
+function addDays(k, n){ const p=k.split("-").map(Number); return new Date(Date.UTC(p[0],p[1]-1,p[2]+n)).toISOString().slice(0,10); }
+const HOL_MOVING = (()=>{ const m={};
+  for (const y in HOL_BAYRAM){ const b=HOL_BAYRAM[y];
+    m[addDays(b[0],-1)]={n:"Ramazan Bayramı arifesi", half:1};
+    for (let i=0;i<3;i++) m[addDays(b[0],i)]={n:"Ramazan Bayramı "+(i+1)+". gün"};
+    m[addDays(b[1],-1)]={n:"Kurban Bayramı arifesi", half:1};
+    for (let i=0;i<4;i++) m[addDays(b[1],i)]={n:"Kurban Bayramı "+(i+1)+". gün"}; }
+  return m; })();
+function holidayOn(k){   // {n:name, half?:1} or null; a full day wins over a half day when two fall together
+  const md=k.slice(5), list=[];
+  if (HOL_MOVING[k]) list.push(HOL_MOVING[k]);
+  if (HOL_FIXED[md]) list.push({n:HOL_FIXED[md]});
+  if (HOL_HALF[md]) list.push({n:HOL_HALF[md], half:1});
+  if (!list.length) return null;
+  const full=list.filter(h=>!h.half), use=full.length?full:list;
+  return full.length ? {n:use.map(h=>h.n).join(" · ")} : {n:use.map(h=>h.n).join(" · "), half:1};
+}
+function autoHoliday(k){ const h=holidayOn(k); return !!(h && !h.half && k>=HOL_FROM); }   // a full official holiday that counts by itself
+
+/* ---------- employees: the pills pick one, the boxes under them edit the picked one ---------- */
+function empMeta(e){
+  const bits=[e.hours+"h"];
+  if (MODE==="admin"){ const r=parseFloat(e.rate)||0, y=parseFloat(e.yol)||0; if (r>0) bits.push(fmtTL(r)+"/gün"); if (y>0) bits.push("yol "+fmtTL(y)); }
+  return bits.join(" · ");
+}
+const EMP_FIELDS = [["eName","name"],["eHours","hours"],["eRate","rate"],["eYol","yol"]];
+function fillEmpEdit(){
+  const e = db.emps.find(x=>x.id===selEmp);
+  EMP_FIELDS.forEach(([id,f])=>{ const el=document.getElementById(id); if (!el) return;
+    el.disabled = !e;
+    if (document.activeElement===el) return;   // never overwrite a box that is being typed in
+    el.value = !e ? "" : (f==="name" ? e.name : (f==="hours" ? e.hours : (parseFloat(e[f])||""))); });
+}
 function renderEmps(){
   const row = document.getElementById("empRow");
-  if (!db.emps.length){ row.innerHTML = '<span class="muted">No employees yet. Add the first one below.</span>'; return; }
-  row.innerHTML = db.emps.map(e=>`
+  if (!db.emps.length) row.innerHTML = '<span class="muted">No employees yet. Add the first one below.</span>';
+  else {
+    row.innerHTML = db.emps.map(e=>`
     <span class="emp ${e.id===selEmp?"sel":""}" data-id="${e.id}">
-      <span class="dot" style="background:${e.color}"></span>${esc(e.name)} <small>${e.hours}h</small>
+      <span class="dot" style="background:${e.color}"></span>${esc(e.name)} <small>${esc(empMeta(e))}</small>
     </span>`).join("");
-  row.querySelectorAll(".emp").forEach(el=>el.addEventListener("click",()=>{ selEmp = el.dataset.id; renderEmps(); }));
+    row.querySelectorAll(".emp").forEach(el=>el.addEventListener("click",()=>{ selEmp = el.dataset.id; renderEmps(); }));
+  }
+  fillEmpEdit();
 }
+EMP_FIELDS.forEach(([id,f])=>{
+  const el = document.getElementById(id);
+  el.addEventListener("change",()=>{
+    const e = db.emps.find(x=>x.id===selEmp); if (!e || MODE!=="admin") return;
+    if (f==="name"){ const v=el.value.trim(); if (v) e.name = v; }
+    else { const v=parseFloat(el.value);
+      if (f==="hours"){ if (v>0) e.hours = v; }
+      else e[f] = (isFinite(v) && v>0) ? v : 0; }
+    save(); renderEmps(); renderCal(); renderTotals();
+  });
+  el.addEventListener("keydown",ev=>{ if (ev.key==="Enter") el.blur(); });
+});
 document.getElementById("addEmp").addEventListener("click",()=>{
-  const name = document.getElementById("newName").value.trim();
-  const hours = parseFloat(document.getElementById("newHours").value) || 8;
-  const rate = parseFloat(document.getElementById("newRate").value) || 0;
-  const yol = parseFloat(document.getElementById("newYol").value) || 0;
-  if (!name) return alert("Name?");
-  const e = {id:uid(), name, hours, rate, yol, color: COLORS[db.emps.length % COLORS.length]};
+  const e = {id:uid(), name:"Yeni personel", hours:8, rate:0, yol:0, color: COLORS[db.emps.length % COLORS.length]};
   db.emps.push(e); selEmp = e.id;
-  document.getElementById("newName").value = "";
   save(); renderAll();
+  const n = document.getElementById("eName"); n.focus(); n.select();   // type the name straight away
 });
 document.getElementById("delEmp").addEventListener("click",()=>{
   const e = db.emps.find(x=>x.id===selEmp); if (!e) return;
   if (!confirm(`Remove ${e.name} and ALL their marks?`)) return;
   db.emps = db.emps.filter(x=>x.id!==selEmp);
-  for (const k in db.marks){ delete db.marks[k][e.id]; if (!Object.keys(db.marks[k]).length) delete db.marks[k]; }
+  for (const k of Object.keys(db.marks)){ tagsOf(k, e.id).forEach(dropNote); setTags(k, e.id, []); }
   selEmp = db.emps[0] ? db.emps[0].id : null;
-  save(); renderAll();
-});
-document.getElementById("editEmp").addEventListener("click",()=>{
-  const e = db.emps.find(x=>x.id===selEmp); if (!e) return;
-  const name = prompt("Name:", e.name); if (name===null) return;
-  const h = parseFloat(prompt("Default daily hours:", e.hours));
-  const rr = prompt("Günlük net maaş ₺ · daily net salary:", e.rate||0);
-  if (name.trim()) e.name = name.trim();
-  if (h>0) e.hours = h;
-  if (rr!==null && rr!=="" && isFinite(parseFloat(rr))) e.rate = Math.max(0,parseFloat(rr));
-  const yy = prompt("Günlük yol parası ₺ (ofis günleri) · daily transport allowance:", e.yol||0);
-  if (yy!==null && yy!=="" && isFinite(parseFloat(yy))) e.yol = Math.max(0,parseFloat(yy));
   save(); renderAll();
 });
 
@@ -210,18 +282,22 @@ function renderBrushes(){
   const row = document.getElementById("brushRow");
   row.innerHTML = Object.entries(TYPES).map(([k,t])=>
     `<button class="brush ${k===brush?"sel":""}" data-b="${k}">${t.label}${k==="custom"?` (${customH})`:""}</button>`).join("")
-    + `<input type="number" id="chVal" value="${customH}" min="0.5" max="16" step="0.5" style="width:64px;" title="custom hours">`;
+    + `<input type="number" id="chVal" value="${customH}" min="0.5" max="16" step="0.5" style="width:64px;" title="custom hours">`
+    + `<span class="flexspace"></span><button class="ghost ${addArm?"on":""}" id="addArm" aria-pressed="${addArm?"true":"false"}" title="açıkken sıradaki işaret, o günün etiketini değiştirmez, yanına eklenir (8h + 4h gibi); bir işaretten sonra kendiliğinden kapanır · Shift+tık da aynı işi görür">＋ Ek etiket</button>`;
   row.querySelectorAll(".brush").forEach(b=>b.addEventListener("click",()=>{ brush = b.dataset.b; renderBrushes(); }));
   row.querySelector("#chVal").addEventListener("input",e=>{ customH = parseFloat(e.target.value)||4; if (brush==="custom") renderBrushes(); });
+  row.querySelector("#addArm").addEventListener("click",()=>{ addArm = !addArm; renderBrushes(); });
 }
 
 /* ---------- marking ---------- */
-function applyBrush(dateKey, isClick){
+function applyBrush(dateKey){
   if (MODE!=="admin") return;
   if (!selEmp){ alert("Add/select an employee first."); return; }
-  const emp = db.emps.find(e=>e.id===selEmp);
-  if (!db.marks[dateKey]) db.marks[dateKey] = {};
-  const prev = db.marks[dateKey][selEmp];
+  const emp = db.emps.find(e=>e.id===selEmp); if (!emp) return;
+  const st = stroke || {add:addArm, seen:{}};
+  if (st.seen[dateKey]) return;   // once per day per stroke: the calendar is redrawn under the pointer and would fire again
+  st.seen[dateKey] = 1;
+  const cur = tagsOf(dateKey, selEmp);
   let next = null;
   if (brush==="sil")        next = null;
   else if (brush==="full")  next = {t:"work", h:emp.hours};
@@ -230,12 +306,18 @@ function applyBrush(dateKey, isClick){
   else if (brush==="ho")    next = {t:"work", h:emp.hours, ho:1};
   else if (brush==="os")    next = {t:"work", h:emp.hours, os:1};
   else                      next = {t:brush, h:0};
-  // v24e: removal gesture = DRAG THE MARK OFF THE CALENDAR (his call). The click-toggle is gone; clicks only paint.
-  void prev; void isClick;
-  if (next) db.marks[dateKey][selEmp] = next;
-  else { delete db.marks[dateKey][selEmp]; if (!Object.keys(db.marks[dateKey]).length) delete db.marks[dateKey]; }
+  // v24e: removal gesture = DRAG THE MARK OFF THE CALENDAR (his call). Clicks only paint.
+  if (!next){ cur.forEach(dropNote); setTags(dateKey, selEmp, []); }
+  else if (st.add && cur.length){ cur.push(next); setTags(dateKey, selEmp, cur); }   // v11-20a: a further tag for the same person on the same day
+  else {   // replace what was there; a note written on that day stays with the new tag
+    const keep = cur.find(m=>m.i);
+    cur.forEach(m=>{ if (m!==keep) dropNote(m); });
+    if (keep) next.i = keep.i;
+    setTags(dateKey, selEmp, [next]);
+  }
   save(); renderCal(); renderTotals();
 }
+function endStroke(){ stroke = null; if (addArm){ addArm = false; renderBrushes(); } }
 
 /* ---------- calendar ---------- */
 const DOWS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
@@ -246,51 +328,56 @@ function renderCal(){
   const startIdx = (first.getDay()+6)%7; // Monday=0
   const dim = new Date(y,m+1,0).getDate();
   const todayK = key(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+  const admin = MODE==="admin";
   let html = DOWS.map(d=>`<div class="dow">${d}</div>`).join("");
   for (let i=0;i<startIdx;i++) html += `<div class="day out"></div>`;
   for (let d=1; d<=dim; d++){
     const k = key(y,m,d);
     const dow = (startIdx + d - 1) % 7;
     const we = dow>=5;
-    const marks = db.marks[k]||{};
-    const chips = db.emps.filter(e=>marks[e.id]).map(e=>{
-      const mk = marks[e.id];
-      const t = TYPES[mk.t] || null;
-      const txt = mk.t==="work" ? `${mk.ho?"🏠 ":(mk.os?"📍 ":"")}<b>${mk.h}h</b>` : (TYPES[mk.t]?TYPES[mk.t].label:mk.t);
+    const hol = holidayOn(k);
+    const holHtml = hol ? `<div class="hol" title="${esc(hol.n)}${hol.half?" · yarım gün, öğleden sonra":""}">${esc(hol.n)}${hol.half?" ½":""}</div>` : "";
+    const chips = db.emps.map(e=>tagsOf(k, e.id).map((mk,ix)=>{
+      const txt = mk.t==="work" ? `${mk.ho?"🏠 ":(mk.os?"📍 ":"")}<b>${esc(mk.h)}h</b>` : esc(TYPES[mk.t]?TYPES[mk.t].label:mk.t);
       const cls = mk.t==="work" ? (mk.ho?"t-ho":(mk.os?"t-os":"")) : (TYPES[mk.t]?TYPES[mk.t].cls:"");
-      return `<div class="chip ${cls}" data-dk="${k}" data-emp="${e.id}" title="sürükleyip dışarı at = sil · drag off the calendar to delete"><span class="dot" style="background:${e.color}"></span><small>${esc(e.name.split(" ")[0])}</small> ${txt}</div>`;
-    }).join("");
-    html += `<div class="day ${we?"we":""} ${k===todayK?"today":""}" data-k="${k}"><div class="dnum">${d}</div>${chips}</div>`;
+      const note = admin ? noteOf(mk) : "";
+      const tip = admin ? ((note ? "Not: "+note+" · " : "")+"tıkla = not · sürükleyip dışarı at = sil · click = note, drag off the calendar = delete") : "";
+      return `<div class="chip ${cls}" data-dk="${k}" data-emp="${e.id}" data-ix="${ix}" title="${esc(tip)}"><span class="dot" style="background:${e.color}"></span><small>${esc(e.name.split(" ")[0])}</small> ${txt}${note?'<span class="nt">✎</span>':""}</div>`;
+    }).join("")).join("");
+    html += `<div class="day ${we?"we":""} ${hol&&!hol.half?"hday":""} ${k===todayK?"today":""}" data-k="${k}"><div class="dnum">${d}</div>${holHtml}${chips}</div>`;
   }
   document.getElementById("cal").innerHTML = html;
   document.querySelectorAll(".day[data-k]").forEach(el=>{
-    el.addEventListener("mousedown",e=>{ e.preventDefault(); painting=true; applyBrush(el.dataset.k, true); });
-    el.addEventListener("mouseenter",()=>{ if (painting) applyBrush(el.dataset.k, false); });
-    el.addEventListener("touchstart",e=>{ e.preventDefault(); applyBrush(el.dataset.k, true); },{passive:false});
+    el.addEventListener("mousedown",e=>{ e.preventDefault(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur();   // commit a box that was being edited
+      painting=true; stroke={add:(addArm||e.shiftKey), seen:{}}; applyBrush(el.dataset.k); });
+    el.addEventListener("mouseenter",()=>{ if (painting) applyBrush(el.dataset.k); });
+    el.addEventListener("touchstart",e=>{ e.preventDefault(); stroke={add:addArm, seen:{}}; applyBrush(el.dataset.k); endStroke(); },{passive:false});
   });
   document.querySelectorAll(".chip[data-dk]").forEach(ch=>{
     ch.addEventListener("mousedown",e=>{ e.preventDefault(); e.stopPropagation(); dragStart(ch, e.clientX, e.clientY); });
     ch.addEventListener("touchstart",e=>{ e.preventDefault(); e.stopPropagation(); const t=e.touches[0]; dragStart(ch, t.clientX, t.clientY); },{passive:false});
   });
 }
-document.addEventListener("mouseup",()=>painting=false);
+document.addEventListener("mouseup",()=>{ if (painting){ painting=false; endStroke(); } });
 
-/* ---------- v24e: drag a mark off the calendar to delete it ---------- */
+/* ---------- v24e: drag a mark off the calendar to delete it · v11-20a: a plain click on a tag opens its note ---------- */
 let DRAG=null, GHOST=null;
 function calRect(){ return document.getElementById("cal").getBoundingClientRect(); }
-function dragStart(ch,x,y){ if(MODE!=="admin") return; DRAG={dk:ch.dataset.dk, emp:ch.dataset.emp};
-  GHOST=ch.cloneNode(true);
-  GHOST.style.cssText+=";position:fixed;pointer-events:none;z-index:99;opacity:.9;background:var(--panel2);border:1px solid var(--accent);padding:2px 8px;border-radius:6px;transform:translate(-50%,-130%);";
+function dragStart(ch,x,y){ if(MODE!=="admin") return; DRAG={dk:ch.dataset.dk, emp:ch.dataset.emp, ix:+ch.dataset.ix, el:ch, x0:x, y0:y, moved:false}; }
+function dragMove(x,y){ if(!DRAG) return;
+  if(!DRAG.moved){ if(Math.abs(x-DRAG.x0)+Math.abs(y-DRAG.y0)<6) return;   // still a click
+    DRAG.moved=true; GHOST=DRAG.el.cloneNode(true);
+    GHOST.style.cssText+=";position:fixed;pointer-events:none;z-index:99;opacity:.9;background:var(--panel2);border:1px solid var(--accent);padding:2px 8px;border-radius:6px;transform:translate(-50%,-130%);";
+    document.body.appendChild(GHOST); }
   GHOST.style.left=x+"px"; GHOST.style.top=y+"px";
-  document.body.appendChild(GHOST); }
-function dragMove(x,y){ if(!GHOST) return; GHOST.style.left=x+"px"; GHOST.style.top=y+"px";
   const r=calRect(); const out=(x<r.left||x>r.right||y<r.top||y>r.bottom);
   GHOST.style.opacity=out?".45":".9"; GHOST.style.borderColor=out?"var(--bad)":"var(--accent)"; }
 function dragEnd(x,y){ if(!DRAG) return;
+  const d=DRAG; DRAG=null; if(GHOST){ GHOST.remove(); GHOST=null; }
+  if(!d.moved){ openNote(d.dk, d.emp, d.ix, d.el.getBoundingClientRect()); return; }
   const r=calRect(); const out=(x<r.left||x>r.right||y<r.top||y>r.bottom);
-  if(out){ const m=db.marks[DRAG.dk];
-    if(m&&m[DRAG.emp]){ delete m[DRAG.emp]; if(!Object.keys(m).length) delete db.marks[DRAG.dk]; save(); } }
-  DRAG=null; if(GHOST){ GHOST.remove(); GHOST=null; }
+  if(out){ const list=tagsOf(d.dk, d.emp), mk=list[d.ix];
+    if(mk){ dropNote(mk); list.splice(d.ix,1); setTags(d.dk, d.emp, list); save(); trashSound(); } }
   renderCal(); renderTotals(); }
 document.addEventListener("mousemove",e=>{ if(DRAG) dragMove(e.clientX,e.clientY); });
 document.addEventListener("mouseup",e=>{ if(DRAG) dragEnd(e.clientX,e.clientY); });
@@ -299,76 +386,140 @@ document.addEventListener("touchend",e=>{ if(DRAG){ const t=e.changedTouches[0];
 document.getElementById("prevM").addEventListener("click",()=>{ view.setMonth(view.getMonth()-1); renderCal(); renderTotals(); });
 document.getElementById("nextM").addEventListener("click",()=>{ view.setMonth(view.getMonth()+1); renderCal(); renderTotals(); });
 
+/* ---------- v11-20a: the note of a tag (admin only) ---------- */
+let NOTE=null;
+function closeNote(keep){ if(!NOTE) return;
+  const n=NOTE; NOTE=null;
+  if(keep){ const mk=tagsOf(n.dk, n.emp)[n.ix];
+    if(mk && mk.t===n.t && mk.h===n.h){ const now=n.ta.value.trim().slice(0,400); if(now!==noteOf(mk)){ setNote(mk, now); save(); } } }
+  n.back.remove(); n.pop.remove(); renderCal(); }
+function openNote(dk, empId, ix, rect){
+  if(MODE!=="admin") return;
+  closeNote(true);
+  const mk=tagsOf(dk, empId)[ix], e=db.emps.find(x=>x.id===empId); if(!mk||!e) return;
+  const back=document.createElement("div"); back.id="noteBack";
+  const pop=document.createElement("div"); pop.id="notePop"; pop.setAttribute("role","dialog"); pop.setAttribute("aria-label","Not · note");
+  pop.innerHTML=`<div class="row" style="justify-content:space-between;margin-bottom:6px"><b><span class="dot" style="display:inline-block;background:${e.color}"></span> ${esc(e.name)} · ${esc(tagText(mk))}</b><span class="muted">${dk.slice(8)}.${dk.slice(5,7)}.${dk.slice(0,4)}</span></div>
+    <textarea id="noteTxt" maxlength="400" placeholder="Not yaz · write a note" aria-label="Not · note"></textarea>
+    <div class="row" style="margin-top:8px"><button id="noteSave">Kaydet</button><button class="ghost" id="noteDel">Notu sil</button><span class="flexspace"></span><button class="ghost" id="noteNo">Vazgeç</button></div>`;
+  document.body.appendChild(back); document.body.appendChild(pop);
+  const ta=pop.querySelector("#noteTxt"); ta.value=noteOf(mk);
+  NOTE={dk, emp:empId, ix, t:mk.t, h:mk.h, ta, back, pop};
+  // under the tag when there is room, otherwise above it; always inside the window
+  const pw=pop.offsetWidth, ph=pop.offsetHeight, vw=window.innerWidth, vh=window.innerHeight, has=rect&&rect.width;
+  const left=Math.max(8, Math.min(has?rect.left:(vw-pw)/2, vw-pw-8));
+  let top=has?rect.bottom+6:(vh-ph)/2;
+  if(top+ph>vh-8) top=has?rect.top-ph-6:8;
+  top=Math.max(8, Math.min(top, vh-ph-8));
+  pop.style.left=left+"px"; pop.style.top=top+"px";
+  back.addEventListener("mousedown",ev=>{ ev.preventDefault(); closeNote(true); });   // a click beside the note keeps what was typed
+  back.addEventListener("touchstart",ev=>{ ev.preventDefault(); closeNote(true); },{passive:false});
+  pop.querySelector("#noteSave").addEventListener("click",()=>closeNote(true));
+  pop.querySelector("#noteNo").addEventListener("click",()=>closeNote(false));
+  pop.querySelector("#noteDel").addEventListener("click",()=>{ ta.value=""; closeNote(true); });
+  ta.addEventListener("keydown",ev=>{ if(ev.key==="Escape"){ ev.preventDefault(); closeNote(false); } else if(ev.key==="Enter"&&(ev.metaKey||ev.ctrlKey)){ ev.preventDefault(); closeNote(true); } });
+  ta.focus();
+}
+
+/* ---------- v11-20a: a short paper crumple when a tag is dragged off the calendar (made in the browser, no sound file) ---------- */
+let AC=null;
+function buildTrash(ac, t0){
+  const dur=0.38, sr=ac.sampleRate, len=Math.floor(sr*dur), buf=ac.createBuffer(1,len,sr), d=buf.getChannelData(0);
+  let env=0;
+  for(let i=0;i<len;i++){ const p=i/len;
+    if(Math.random() < 0.010*(1-p)+0.0012) env=Math.max(env, (0.35+0.65*Math.random())*(1-p)*(1-p));   // crackles, thinning out
+    env*=0.9972; d[i]=(Math.random()*2-1)*env; }
+  const src=ac.createBufferSource(); src.buffer=buf;
+  const hp=ac.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=700;
+  const bp=ac.createBiquadFilter(); bp.type="bandpass"; bp.Q.value=0.7; bp.frequency.setValueAtTime(4200,t0); bp.frequency.exponentialRampToValueAtTime(1100,t0+dur);
+  const g=ac.createGain(); g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(0.32,t0+0.012); g.gain.setValueAtTime(0.32,t0+dur*0.55); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  src.connect(hp); hp.connect(bp); bp.connect(g); g.connect(ac.destination); src.start(t0); src.stop(t0+dur);
+}
+function sndOn(){ try{ return localStorage.getItem(LS_SND)!=="0"; }catch(e){ return true; } }
+function trashSound(){ if(!sndOn()) return;
+  try{ const C=window.AudioContext||window.webkitAudioContext; if(!C) return; AC=AC||new C(); if(AC.state==="suspended") AC.resume(); buildTrash(AC, AC.currentTime+0.01); }catch(e){} }
+function renderSnd(){ const b=document.getElementById("sndBtn"); if(!b) return; b.textContent=sndOn()?"🔊":"🔇"; b.classList.toggle("on", sndOn()); }
+document.getElementById("sndBtn").addEventListener("click",()=>{ try{ localStorage.setItem(LS_SND, sndOn()?"0":"1"); }catch(e){} renderSnd(); trashSound(); });   // switching it on plays it once
+renderSnd();
+
 /* ---------- totals ---------- */
+function payCfg(){ return Object.assign({izin:1, tatil:1, rapor:0, auto:""}, db.pay||{}); }   // which non-work days are PAID; auto = "yyyy-mm-01" from which calendar holidays pay by themselves
 function monthStats(){
   const y = view.getFullYear(), m = view.getMonth();
   const dim = new Date(y,m+1,0).getDate();
-  const pc = Object.assign({izin:1, tatil:1, rapor:0}, db.pay||{});   // which non-work days are PAID
+  const pc = payCfg();
   return db.emps.map(e=>{
-    let hours=0, workD=0, izin=0, rapor=0, tatil=0, yok=0, targetDays=0, units=0, onsite=0, ho=0, offsite=0;
+    let hours=0, workD=0, izin=0, rapor=0, tatil=0, yok=0, targetDays=0, units=0, onsite=0, ho=0, offsite=0, yolDays=0, tagged=0;
+    const free=[];   // calendar holidays on which this person carries no tag
     for (let d=1; d<=dim; d++){
       const k = key(y,m,d);
       const dow = new Date(y,m,d).getDay(); // 0 Sun
-      const mk = (db.marks[k]||{})[e.id];
-      const isTatil = mk && mk.t==="tatil";
-      if (dow!==0 && !isTatil) targetDays++;
-      if (!mk) continue;
-      if (mk.t==="work"){ hours+=mk.h; workD++; units += mk.h/(e.hours||8); if(mk.ho) ho++; else if(mk.os) offsite++; else onsite++; }   // half day = 0.5 yevmiye, overtime pro-rata; office or off-site day = 1 transport, home office = none
-      else if (mk.t==="izin"){ izin++; if(pc.izin) units++; }
-      else if (mk.t==="rapor"){ rapor++; if(pc.rapor) units++; }
-      else if (mk.t==="tatil"){ tatil++; if(pc.tatil) units++; }
-      else if (mk.t==="yok") yok++;
+      const tags = tagsOf(k, e.id);
+      const auto = autoHoliday(k);
+      if (dow!==0 && !auto && !tags.some(mk=>mk.t==="tatil")) targetDays++;
+      if (!tags.length){ if (auto && dow!==0) free.push(k); continue; }
+      tagged++;
+      let dayH=0, dWork=0, dOn=0, dHo=0, dOs=0;
+      for (const mk of tags){
+        if (mk.t==="work"){ dWork=1; dayH+=mk.h; if(mk.ho) dHo=1; else if(mk.os) dOs=1; else dOn=1; }
+        else if (mk.t==="izin"){ izin++; if(pc.izin) units++; }
+        else if (mk.t==="rapor"){ rapor++; if(pc.rapor) units++; }
+        else if (mk.t==="tatil"){ tatil++; if(pc.tatil) units++; }
+        else if (mk.t==="yok") yok++;
+      }
+      // half day = 0.5 yevmiye, overtime pro-rata, several tags on one day add up (8h + 4h = 1.5).
+      // Transport is per DAY, however many tags: a day with any office or off-site tag = 1, a home-office-only day = none.
+      if (dWork){ hours+=dayH; workD++; units += dayH/(e.hours||8); onsite+=dOn; ho+=dHo; offsite+=dOs; if(dOn||dOs) yolDays++; }
     }
+    const autoHol = tagged ? free : [];   // someone with no mark at all this month gets nothing by default
+    const tatilTags = tatil, autoPaid = pc.auto ? autoHol.filter(k=>k>=pc.auto).length : 0;
+    tatil += autoHol.length;
+    units += autoPaid;
     const rate=Math.max(0,parseFloat(e.rate)||0), yol=Math.max(0,parseFloat(e.yol)||0);
     const osExp=Math.max(0,parseFloat((((db.osexp||{})[`${y}-${pad(m+1)}`]||{})[e.id]))||0);   // v12c: typed per employee per month (no standard rate exists)
-    const yolDays=onsite+offsite, pay=units*rate, transport=yolDays*yol;
-    return {e, hours, workD, izin, rapor, tatil, yok, target: targetDays*e.hours, units, rate, pay, onsite, ho, offsite, yolDays, yol, transport, osExp, total: pay+transport+osExp};
+    const pay=units*rate, transport=yolDays*yol, expense=transport+osExp;
+    return {e, hours, workD, izin, rapor, tatil, yok, target: targetDays*e.hours, units, rate, pay, onsite, ho, offsite, yolDays, yol, transport, osExp, expense, total: pay+expense, autoHol, tatilTags, autoPaid};
   });
 }
-function fmtTL(n){ return (Math.round(n*100)/100).toLocaleString("tr-TR",{maximumFractionDigits:2}) + " ₺"; }
 function renderTotals(){
   const rows = monthStats();
   const t = document.getElementById("totals"), p = document.getElementById("payroll");
-  const pc = Object.assign({izin:1, tatil:1, rapor:0}, db.pay||{});
+  const pc = payCfg();
   const mkey = view.getFullYear()+"-"+pad(view.getMonth()+1), PDM=(db.paid||{})[mkey]||{};   // this month's "ödendi" flags
-  ["payIzin","payTatil","payRapor"].forEach((id,i)=>{ const el=document.getElementById(id); if(el) el.checked=!![pc.izin,pc.tatil,pc.rapor][i]; });
+  ["payIzin","payTatil","payRapor","payAuto"].forEach((id,i)=>{ const el=document.getElementById(id); if(el) el.checked=!![pc.izin,pc.tatil,pc.rapor,pc.auto][i]; });
+  const af=document.getElementById("payAutoFrom"); if(af) af.textContent = pc.auto ? " · "+pc.auto.slice(5,7)+"."+pc.auto.slice(0,4)+" ve sonrası" : "";
+  const hn=document.getElementById("holNote"); if(hn) hn.textContent = HOL_BAYRAM[view.getFullYear()] ? "" : view.getFullYear()+": bayram tarihleri yüklü değil, yalnız sabit resmi tatiller görünür";
   if (!rows.length){ t.innerHTML = ""; p.innerHTML = ""; return; }
   const sum=(f)=>rows.reduce((a,r)=>a+f(r),0);
+  const dm=(k)=>k.slice(8)+"."+k.slice(5,7);
   // 1) attendance
-  t.innerHTML = `<tr><th>Employee</th><th>Hours</th><th>Target</th><th>Diff</th><th>Days</th><th>Ofis</th><th>Evden</th><th>Dış</th><th>İzin</th><th>Rapor</th><th>R.Tatil</th><th>Devamsız</th></tr>` +
+  t.innerHTML = `<tr><th>Employee</th><th>Hours</th><th>Target</th><th>Days</th><th>Ofis</th><th>Evden</th><th>Dış</th><th>İzin</th><th>Rapor</th><th>R.Tatil</th><th>Devamsız</th></tr>` +
     rows.map(r=>{
-      const diff = r.hours - r.target;
+      const unpaid = r.autoHol.length - r.autoPaid;   // calendar holidays that add nothing to the pay (box unticked, or older than the tick)
+      const tip = r.autoHol.length ? `${r.autoHol.length} gün takvimden: ${r.autoHol.map(dm).join(", ")}` + (MODE==="admin" && unpaid ? ` · ${unpaid} tanesi maaşa girmiyor (parantez içinde)` : "") : "";
+      const tatilTxt = (MODE==="admin" && unpaid) ? `${(r.tatilTags+r.autoPaid)||""} <span class="muted">(+${unpaid})</span>` : (r.tatil||"");
       return `<tr><td><span class="dot" style="display:inline-block;background:${r.e.color}"></span> ${esc(r.e.name)}</td>
         <td><b>${r.hours.toFixed(1)}</b></td><td class="muted">${r.target.toFixed(0)}</td>
-        <td class="${diff>=0?"pos":"neg"}">${diff>=0?"+":""}${diff.toFixed(1)}</td>
-        <td>${r.workD}</td><td>${r.onsite||""}</td><td>${r.ho?("🏠 "+r.ho):""}</td><td>${r.offsite?("📍 "+r.offsite):""}</td><td>${r.izin||""}</td><td>${r.rapor||""}</td><td>${r.tatil||""}</td><td>${r.yok||""}</td></tr>`;
+        <td>${r.workD}</td><td>${r.onsite||""}</td><td>${r.ho?("🏠 "+r.ho):""}</td><td>${r.offsite?("📍 "+r.offsite):""}</td><td>${r.izin||""}</td><td>${r.rapor||""}</td><td title="${esc(tip)}">${tatilTxt}</td><td>${r.yok||""}</td></tr>`;
     }).join("") +
-    `<tr><td><b>Total</b></td><td><b>${sum(r=>r.hours).toFixed(1)}</b></td><td colspan="10"></td></tr>`;
+    `<tr><td><b>Total</b></td><td><b>${sum(r=>r.hours).toFixed(1)}</b></td><td colspan="9"></td></tr>`;
   if (MODE!=="admin"){ p.innerHTML=""; return; }   // limited view: attendance only
-  // 2) payroll: Maaş (yevmiye × ₺/gün) + Yol (ofis günü × yol ₺/gün) = Ödenecek
-  p.innerHTML = `<tr><th>Employee</th><th>₺/gün net</th><th>Yevmiye</th><th>Maaş</th><th>Yol ₺/gün</th><th>Yol gün</th><th>Yol</th><th>+ Dış Gider</th><th>Ödenecek</th><th>Ödendi</th></tr>` +
+  // 2) payroll: Ödenecek Maaş (yevmiye × ₺/gün) and Ödenecek Gider (yol günü × yol ₺/gün + Dış Gider), shown apart
+  p.innerHTML = `<tr><th>Employee</th><th>Yevmiye</th><th>Ödenecek Maaş</th><th>Yol gün</th><th>Yol</th><th>+ Dış Gider</th><th>Ödenecek Gider</th><th>Ödendi</th></tr>` +
     rows.map(r=>{
-      const pd = PDM[r.e.id];
-      const brk = `${r.units.toFixed(2)} yevmiye × ${fmtTL(r.rate)} = ${fmtTL(r.pay)} · ${r.yolDays} yol günü (ofis + dış) × ${fmtTL(r.yol)} = ${fmtTL(r.transport)} · + Dış Gider ${fmtTL(r.osExp)} (elle)`;
+      const pd = PDM[r.e.id], on = !!(pd&&pd.on);
+      const brkM = `${r.units.toFixed(2)} yevmiye × ${fmtTL(r.rate)} = ${fmtTL(r.pay)}`;
+      const brkG = `${r.yolDays} yol günü (ofis + dış) × ${fmtTL(r.yol)} = ${fmtTL(r.transport)} · + Dış Gider ${fmtTL(r.osExp)} (elle)`;
       return `<tr><td><span class="dot" style="display:inline-block;background:${r.e.color}"></span> ${esc(r.e.name)}</td>
-        <td><input type="number" data-rate="${r.e.id}" value="${r.rate||""}" min="0" step="10" style="width:84px" placeholder="0" title="günlük net maaş"></td>
-        <td>${r.units?r.units.toFixed(2):""}</td><td>${r.pay?fmtTL(r.pay):""}</td>
-        <td><input type="number" data-yol="${r.e.id}" value="${r.yol||""}" min="0" step="10" style="width:84px" placeholder="0" title="günlük yol parası · ofis günleri için, evden çalışmada 0"></td>
+        <td>${r.units?r.units.toFixed(2):""}</td>
+        <td title="${esc(brkM)}"><b class="${on?"pos":""}">${r.pay?fmtTL(r.pay):""}</b></td>
         <td>${r.yolDays||""}</td><td>${r.transport?fmtTL(r.transport):""}</td>
         <td><input type="number" data-osexp="${r.e.id}" value="${r.osExp||""}" min="0" step="10" style="width:96px" placeholder="0" title="bu ayın Off-Site iş gideri, elle girilir · this month's off-site expenses, typed"></td>
-        <td title="${brk}"><b class="${pd&&pd.on?"pos":""}">${r.total?fmtTL(r.total):""}</b></td>
-        <td><label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" data-paid="${r.e.id}" ${pd&&pd.on?"checked":""} title="bu ayın ödemesi yapıldı · paid for this month">${pd&&pd.on&&pd.at?`<small class="muted">${new Date(pd.at).toLocaleDateString("tr-TR",{day:"2-digit",month:"2-digit"})}</small>`:""}</label></td></tr>`;
+        <td title="${esc(brkG)}"><b class="${on?"pos":""}">${r.expense?fmtTL(r.expense):""}</b></td>
+        <td><label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" data-paid="${r.e.id}" ${on?"checked":""} title="bu ayın ödemesi yapıldı · paid for this month">${on&&pd.at?`<small class="muted">${new Date(pd.at).toLocaleDateString("tr-TR",{day:"2-digit",month:"2-digit"})}</small>`:""}</label></td></tr>`;
     }).join("") +
-    `<tr><td><b>Total</b></td><td></td><td><b>${sum(r=>r.units).toFixed(2)}</b></td><td><b>${fmtTL(sum(r=>r.pay))}</b></td><td></td><td><b>${sum(r=>r.yolDays)||""}</b></td><td><b>${fmtTL(sum(r=>r.transport))}</b></td><td><b>${fmtTL(sum(r=>r.osExp))}</b></td><td><b>${fmtTL(sum(r=>r.total))}</b></td>
-      <td class="muted">${(()=>{ const tot=sum(r=>r.total); if(!tot) return ""; const kal=sum(r=>(PDM[r.e.id]&&PDM[r.e.id].on)?0:r.total); return kal?("kalan "+fmtTL(kal)):"✓ hepsi ödendi"; })()}</td></tr>`;
-  p.querySelectorAll("input[data-rate]").forEach(inp=>inp.addEventListener("change",()=>{
-    const emp=db.emps.find(x=>x.id===inp.dataset.rate); if(!emp) return;
-    emp.rate=Math.max(0,parseFloat(inp.value)||0); save(); renderTotals();
-  }));
-  p.querySelectorAll("input[data-yol]").forEach(inp=>inp.addEventListener("change",()=>{
-    const emp=db.emps.find(x=>x.id===inp.dataset.yol); if(!emp) return;
-    emp.yol=Math.max(0,parseFloat(inp.value)||0); save(); renderTotals();
-  }));
+    `<tr><td><b>Total</b></td><td><b>${sum(r=>r.units).toFixed(2)}</b></td><td><b>${fmtTL(sum(r=>r.pay))}</b></td><td><b>${sum(r=>r.yolDays)||""}</b></td><td><b>${fmtTL(sum(r=>r.transport))}</b></td><td><b>${fmtTL(sum(r=>r.osExp))}</b></td><td><b>${fmtTL(sum(r=>r.expense))}</b></td>
+      <td class="muted">${(()=>{ if(!sum(r=>r.total)) return ""; const open=rows.filter(r=>!(PDM[r.e.id]&&PDM[r.e.id].on)); const km=open.reduce((a,r)=>a+r.pay,0), kg=open.reduce((a,r)=>a+r.expense,0); return (km||kg)?("kalan maaş "+fmtTL(km)+" · gider "+fmtTL(kg)):"✓ hepsi ödendi"; })()}</td></tr>`;
   p.querySelectorAll("input[data-osexp]").forEach(inp=>inp.addEventListener("change",()=>{
     if(!db.osexp) db.osexp={}; if(!db.osexp[mkey]) db.osexp[mkey]={};
     const v=Math.max(0,parseFloat(inp.value)||0);
@@ -384,20 +535,25 @@ function renderTotals(){
 }
 
 /* ---------- export / import ---------- */
+function csvCell(x){ const s=String(x??"").replace(/\s*\r?\n\s*/g," "); return /[;"]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; }
 document.getElementById("csvBtn").addEventListener("click",()=>{
   const y = view.getFullYear(), m = view.getMonth();
   const dim = new Date(y,m+1,0).getDate();
-  let csv = "Employee;" + Array.from({length:dim},(_,i)=>i+1).join(";") + ";TotalHours;Target;RateTL;Yevmiye;SalaryTL;OnsiteDays;HomeOffice;OffSiteDays;OffSiteExpTL;TransportTL;TotalTL;Paid\n";
+  const tr = (v,n)=>String(v.toFixed(n)).replace(".",",");
+  // the first columns keep their old order; the new ones (TransportDays, ExpensesTL, Notes) are added at the end
+  let csv = "Employee;" + Array.from({length:dim},(_,i)=>i+1).join(";") + ";TotalHours;Target;RateTL;Yevmiye;SalaryTL;OnsiteDays;HomeOffice;OffSiteDays;OffSiteExpTL;TransportTL;TotalTL;Paid;TransportDays;ExpensesTL;Notes\n";
   monthStats().forEach(r=>{
-    const cells = [];
+    const cells = [], notes = [];
     for (let d=1; d<=dim; d++){
-      const mk = (db.marks[key(y,m,d)]||{})[r.e.id];
-      cells.push(!mk ? "" : mk.t==="work" ? ((mk.ho?"HO ":(mk.os?"OS ":""))+String(mk.h).replace(".",",")) : TYPES[mk.t].label);
+      const k = key(y,m,d), tags = tagsOf(k, r.e.id);
+      if (!tags.length){ cells.push(r.autoHol.includes(k) ? "R.Tatil (oto)" : ""); continue; }
+      cells.push(tags.map(mk=>mk.t==="work" ? ((mk.ho?"HO ":(mk.os?"OS ":""))+String(mk.h).replace(".",",")) : (TYPES[mk.t]?TYPES[mk.t].label:mk.t)).join("+"));
+      tags.forEach(mk=>{ const n=noteOf(mk); if (n) notes.push(d+": "+n); });
     }
-    csv += `${r.e.name};${cells.join(";")};${String(r.hours.toFixed(1)).replace(".",",")};${r.target};${String(r.rate).replace(".",",")};${String(r.units.toFixed(2)).replace(".",",")};${String(r.pay.toFixed(2)).replace(".",",")};${r.onsite};${r.ho};${r.offsite};${String(r.osExp.toFixed(2)).replace(".",",")};${String(r.transport.toFixed(2)).replace(".",",")};${String(r.total.toFixed(2)).replace(".",",")};${(((db.paid||{})[y+"-"+pad(m+1)]||{})[r.e.id]||{}).on?"EVET":""}\n`;
+    csv += `${csvCell(r.e.name)};${cells.map(csvCell).join(";")};${tr(r.hours,1)};${r.target};${String(r.rate).replace(".",",")};${tr(r.units,2)};${tr(r.pay,2)};${r.onsite};${r.ho};${r.offsite};${tr(r.osExp,2)};${tr(r.transport,2)};${tr(r.total,2)};${(((db.paid||{})[y+"-"+pad(m+1)]||{})[r.e.id]||{}).on?"EVET":""};${r.yolDays};${tr(r.expense,2)};${csvCell(notes.join(" | "))}\n`;
   });
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8"}));
+  a.href = URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"}));
   a.download = `hours-${y}-${pad(m+1)}.csv`; a.click();
 });
 document.getElementById("expBtn").addEventListener("click",()=>{
@@ -419,7 +575,7 @@ function applyMode(){
   const admin=MODE==="admin", lim=MODE==="limited", gate=(MODE==="gate"||MODE==="none");
   show("gate", gate); show("empCard", admin); show("brushCard", admin); show("calCard", admin||lim); show("totCard", admin||lim);
   show("payroll", admin); show("payCfgRow", admin); show("howto", admin);
-  ["saveBtn","refreshBtn","csvBtn","expBtn","impBtn"].forEach(id=>show(id, admin));
+  ["saveBtn","refreshBtn","csvBtn","expBtn","impBtn","sndBtn"].forEach(id=>show(id, admin));
   show("outBtn", !!CUR);
   const g=document.getElementById("gMsg"); if(g) g.textContent = (MODE==="none") ? "Bu hesabın erişimi yok · no access for this account (admin: hq_staff listesine ekle)" : (g.textContent==="…"?"":g.textContent);
   const w=document.getElementById("whoChip"); if(w) w.textContent = (CUR&&CUR.email) ? ("👤 "+CUR.email+(lim?" · sınırlı görünüm · limited view":"")) : "";
@@ -428,11 +584,16 @@ function applyMode(){
   const el=document.getElementById(id); if(!el) return;
   el.addEventListener("change",()=>{ db.pay=Object.assign({izin:1,tatil:1,rapor:0},db.pay||{}); db.pay[k]=el.checked?1:0; save(); renderTotals(); });
 });
+document.getElementById("payAuto").addEventListener("change",ev=>{   // v11-20a: pays from the month on screen when ticked, never backwards
+  db.pay=Object.assign({izin:1,tatil:1,rapor:0},db.pay||{});
+  if(ev.target.checked) db.pay.auto=key(view.getFullYear(),view.getMonth(),1); else delete db.pay.auto;
+  save(); renderTotals();
+});
 applyMode();   // v12d: nothing renders before the session is known
 
 /* ---------- cloud (v2026-08-24a): one jar in Supabase, admin account only, newest wins ----------
    Table: staff_hours (id=1, data jsonb, updated_at) · RLS: admin email only.
-   RESUME-PULL LAW: a PWA resumes from memory, not from boot — pull on every return to the tab. */
+   RESUME-PULL LAW: a PWA resumes from memory, not from boot: pull on every return to the tab. */
 const SUPA_URL="https://efjvfggwnhqkunjvoyjb.supabase.co";
 const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmanZmZ2d3bmhxa3VuanZveWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTA5MDEsImV4cCI6MjA5Nzg4NjkwMX0.A42X5lr8bYarJZVjPmfb45oyVnWYREODF4a6Y7i_tDA";
 const ADMIN_EMAIL="omer_aydin@coffeenutz.net";
