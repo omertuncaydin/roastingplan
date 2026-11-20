@@ -808,7 +808,7 @@ const ZEARLY=(function(){ try{
   if(new URLSearchParams(location.search).get('z')==='1'){ localStorage.setItem('grupal_early_'+SLUG,'1'); return true; }
   return localStorage.getItem('grupal_early_'+SLUG)==='1';
 }catch(e){ return new URLSearchParams(location.search).get('z')==='1'; } })();
-const VERSION='v2026-11-03a';
+const VERSION='v2026-11-20a';
 let PAYURL=null, STATE=null, DEPLINK=null, MINE=null;
 let ENDAT=null, TICKT=null, KEEP=false;   // v07f: KEEP = süresi dolsa da açık tutulan masa (keep_open)
 function tick(){ const el=$('deadline'); if(!el||!ENDAT) return; const left=ENDAT-Date.now();
@@ -2845,11 +2845,11 @@ if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator
 async function startCampaign(){
   if(GREF) await adoptGift(GREF); else if(SREF) await adoptGift(SREF);   // hediye/koltuk linki önce koltuğu cihaza alır, sonra sayfa normal akar
   restoreMine();
-  load(); setInterval(load, 30000);
+  load(); setInterval(()=>{ if(!document.hidden) load(); }, 30000);   // v2026-11-20a: gizli sekme yoklamaz; görünür olunca alttaki satır hemen yükler
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') load(); });
 }
 // v02v MEYDAN MODU: kampanya kartları yok; Meydan kartı + döngü çubuğu + dilek + kanal + grup
-async function startMeydan(){ loadMeydan(); setInterval(loadMeydan, 30000); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') loadMeydan(); }); window.addEventListener('pageshow',e=>{ if(e&&e.persisted) loadMeydan(); }); }   // v11r: Shopify'dan geri (bfcache) → sepet çubuğu/ödenen düşer
+async function startMeydan(){ loadMeydan(); setInterval(()=>{ if(!document.hidden) loadMeydan(); }, 30000); /* v2026-11-20a: gizli sekme yoklamaz; görünür olunca hemen yükler */ document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') loadMeydan(); }); window.addEventListener('pageshow',e=>{ if(e&&e.persisted) loadMeydan(); }); }   // v11r: Shopify'dan geri (bfcache) → sepet çubuğu/ödenen düşer
 async function loadMeydan(){
   try{
     const r=await fetch(API+'/meydan'); const s=await r.json(); if(s.error){ $('title').textContent=t('netErr'); return; }
