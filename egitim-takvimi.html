@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="coffeenutz-turtle.png">
 <style>
 :root{--bg:#1a1410;--panel:#241c16;--panel2:#201a15;--accent:#c98a3c;--ink:#f3ede4;--muted:#a8998a;--line:#3a2f26;--red:#D8453B;--ok:#3c7a5a;
-  --c-roast:#e07b39;--c-bar:#c9a23c;--c-sens:#3c7a5a;--c-q:#D8453B;--c-other:#8a7263}
+  --c-roast:#e07b39;--c-bar:#c9a23c;--c-sens:#3c7a5a;--c-brew:#5596d8;--c-q:#D8453B;--c-other:#8a7263}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:18px;padding-top:calc(18px + env(safe-area-inset-top,0px))}
 .wrap{max-width:860px;margin:0 auto}
@@ -126,8 +126,8 @@ button{font:inherit;cursor:pointer}
 const FEED = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/public-trainings";
 const OFFER = "https://efjvfggwnhqkunjvoyjb.supabase.co/functions/v1/date-offer";
 const WA = "905333321414"; // offer pings land on Ömer's WhatsApp, sent from the visitor's own number
-const OFFER_TRAININGS = ["SCA Barista F+I","SCA Barista Pro","SCA Roasting F+I","SCA Roasting Pro","SCA Sensory F+I","SCA Sensory Pro","Q Grader Sertifikasyon"];
-const APP_VERSION = "v2026-10-16b";
+const OFFER_TRAININGS = ["SCA Barista F+I","SCA Barista Pro","SCA Roasting F+I","SCA Roasting Pro","SCA Sensory F+I","SCA Sensory Pro","SCA Brewing F+I","SCA Brewing Pro","Q Grader Sertifikasyon"];
+const APP_VERSION = "v2026-11-28a";
 const SITE = "https://www.coffeenutz.net";
 const IG = "https://ig.me/m/coffeenutznet"; // opens the DM thread directly, not the profile
 
@@ -164,6 +164,8 @@ const STR = {
   offerWaLead:["Değerlendirip dönüş yapacağız. İstersen sohbeti hemen WhatsApp'tan başlat; önerin mesajda hazır, sadece gönder'e bas:","We will consider it and get back to you. If you like, start the chat on WhatsApp right away; your offer is pre-filled, just hit send:"],
   offerWaBtn:["WhatsApp'tan devam et","Continue on WhatsApp"],
   offerErr:["Gönderilemedi, lütfen tekrar deneyin.","Could not send, please try again."],
+  offerWaOnlyTitle:["Önerini WhatsApp'tan gönder","Send your offer on WhatsApp"],
+  offerWaOnlyLead:["Form bu eğitim için öneriyi şu an kaydedemedi. Önerin mesajda hazır, sadece gönder'e bas:","The form could not save an offer for this training right now. Your offer is ready in the message, just press send:"],
   offerMissing:["Eksik: ","Missing: "],
   register:["Kayıt / Bilgi","Register / Info"],
   dm:["Instagram'dan yazın","DM us on Instagram"],
@@ -171,7 +173,7 @@ const STR = {
   note:["Kontenjan ve fiyat bilgisi için coffeenutz.net'i ziyaret edin veya Instagram'dan yazın. Tarihler değişebilir.","For seats and pricing visit coffeenutz.net or DM us on Instagram. Dates may change."],
   days_tr:["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"],
   days_en:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
-  legRoast:["Roasting","Roasting"], legBar:["Barista","Barista"], legSens:["Sensory","Sensory"], legQ:["Q Grader","Q Grader"], legOther:["Diğer","Other"],
+  legRoast:["Roasting","Roasting"], legBar:["Barista","Barista"], legSens:["Sensory","Sensory"], legBrew:["Brewing","Brewing"], legQ:["Q Grader","Q Grader"], legOther:["Diğer","Other"],
   // admin mode
   adLink:["Yönetici girişi","Admin sign-in"],
   adTitle:["Yönetici girişi","Admin sign-in"],
@@ -230,6 +232,9 @@ const STR = {
   adShopUnavail:["satışta değil","not available"],
   adShopAdd:["Takvime ekle","Add to calendar"],
   adShopNotSelling:["Takvimde var, Shopify'da varyantı yok","On the calendar, no Shopify variant"],
+  adShopOld:["Shopify kontrolü şu eğitimleri kapsamıyor","The Shopify check does not cover"],
+  adShopOldFix:["Supabase'de trainings-admin fonksiyonunun yeni sürümü yayınlanınca kapsar.","It will once the new trainings-admin function is deployed in Supabase."],
+  adOldServer:["Sunucu bu eğitimi henüz tanımıyor. Supabase'de trainings-admin fonksiyonunun yeni sürümünü yayınlayın.","The server does not know this training yet. Deploy the new trainings-admin function in Supabase."],
   stDelivered:["Tamamlandı","Delivered"],
   stCancelled:["İptal edildi","Cancelled"],
 };
@@ -250,6 +255,7 @@ function typeOf(name){
   if (n.includes("roasting")) return "roast";
   if (n.includes("barista")) return "bar";
   if (n.includes("sensory")) return "sens";
+  if (n.includes("brewing")) return "brew";
   if (n.includes("q grader")) return "q";
   return "other";
 }
@@ -308,7 +314,7 @@ function render(){
   document.getElementById("mtitle").textContent = `${monthName(curM)} ${curY}`;
   document.getElementById("dows").innerHTML = (LANG==="en" ? STR.days_en : STR.days_tr).map(d=>`<div>${d}</div>`).join("");
   document.getElementById("legend").innerHTML = [
-    ["roast", t("legRoast")], ["bar", t("legBar")], ["sens", t("legSens")], ["q", t("legQ")], ["other", t("legOther")]
+    ["roast", t("legRoast")], ["bar", t("legBar")], ["sens", t("legSens")], ["brew", t("legBrew")], ["q", t("legQ")], ["other", t("legOther")]
   ].map(([tp,lbl]) => `<button class="lg2${typeFilter.has(tp) ? " on" : ""}" data-tp="${tp}" onclick="toggleType('${tp}')"><i style="background:var(--c-${tp})"></i>${lbl}</button>`).join("");
 
   const first = new Date(curY, curM, 1);
@@ -399,18 +405,22 @@ async function submitOffer(){
   document.getElementById("ofGo").disabled = true;
   try{
     const r = await fetch(OFFER, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload) });
-    if (!r.ok) throw new Error("HTTP " + r.status);
+    // an older date-offer function does not know a newly added course and answers 400 "training": nothing was
+    // saved, so the visitor is handed the WhatsApp message instead of a dead end
+    let unsaved = false;
+    if (r.status === 400){ const j = await r.json().catch(() => ({})); unsaved = j.error === "training"; }
+    if (!r.ok && !unsaved) throw new Error("HTTP " + r.status);
     const waMsg = LANG === "en"
       ? `Hello! I proposed a training date from the calendar: ${payload.date}, ${payload.training}. I am ${payload.name}.` + (payload.note ? ` Note: ${payload.note}` : "")
       : `Merhaba! Eğitim takviminden tarih önerdim: ${payload.date}, ${payload.training}. Ben ${payload.name}.` + (payload.note ? ` Not: ${payload.note}` : "");
     openModal(`
-      <h3>${t("offerWaTitle")}</h3>
-      <p class="meta">${t("offerWaLead")}</p>
+      <h3>${t(unsaved ? "offerWaOnlyTitle" : "offerWaTitle")}</h3>
+      <p class="meta">${t(unsaved ? "offerWaOnlyLead" : "offerWaLead")}</p>
       <div class="foot">
         <a class="cta" href="https://wa.me/${WA}?text=${encodeURIComponent(waMsg)}" target="_blank" rel="noopener">${t("offerWaBtn")}</a>
         <button class="cta ghost" onclick="closeModal()">${t("close")}</button>
       </div>`);
-    toast(t("offerThanks"));
+    if (!unsaved) toast(t("offerThanks"));
   }catch(e){
     document.getElementById("ofGo").disabled = false;
     toast(t("offerErr"));
@@ -431,6 +441,8 @@ const COURSE = { // exact sheet names -> storefront handle, usual length in days
   "SCA Roasting Pro":{ h:"roasting-professional", days:3, cap:4 },
   "SCA Sensory F+I":{ h:"sca-sensory-skills-foundation-intermediate", days:3, cap:4 },
   "SCA Sensory Pro":{ h:"sca-sensory-skills-professional", days:3, cap:4 },
+  "SCA Brewing F+I":{ h:"sca-brewing-foundation-intermediate", days:3, cap:6 },
+  "SCA Brewing Pro":{ h:"sca-brewing-professional", days:3, cap:6 },
   "Q Grader Sertifikasyon":{ h:"q-grader", days:6, cap:6 },
 };
 let ADMIN = null;        // {access_token, refresh_token, expires_at, email}
@@ -516,6 +528,7 @@ function adminErr(e){
   else if (m === "duplicate") toast(LANG === "en" ? "That training already has a class on that start date." : "Bu eğitimin o başlangıç tarihinde zaten bir sınıfı var.");
   else if (m === "has registrations") toast(LANG === "en" ? "Booked students exist: use Cancel class instead." : "Kayıtlı öğrenci var: bunun yerine İptal et kullanın.");
   else if (m === "booked over cap" || m === "booked") toast(t("adBookedOver"));
+  else if (m === "training") toast(t("adOldServer"));
   else toast(t("adErr") + " " + m);
   renderAdmin();
 }
@@ -582,6 +595,7 @@ function shopifyDiff(products, rows){
   const tNow = todayStr();
   const onCal = new Set(rows.filter(r => r.status !== "Cancelled").map(r => r.name + "|" + r.start));
   const inShop = new Set();
+  const checked = new Set(products.map(p => p.course)); // the courses the server looked up in Shopify
   const missing = [];
   products.forEach(p => (p.variants || []).forEach(v => {
     const d = parseVariantDates(v.title);
@@ -590,8 +604,9 @@ function shopifyDiff(products, rows){
     if (d && onCal.has(p.course + "|" + d.start)) return; // already on the calendar
     missing.push({ course:p.course, url:p.url, title:v.title, price:v.price, available:v.available, start:d ? d.start : "", end:d ? d.end : "" });
   }));
-  const notSelling = rows.filter(r => r.status !== "Cancelled" && r.start >= tNow && COURSE[r.name] && !inShop.has(r.name + "|" + r.start));
-  return { missing, notSelling };
+  const notSelling = rows.filter(r => r.status !== "Cancelled" && r.start >= tNow && COURSE[r.name] && checked.has(r.name) && !inShop.has(r.name + "|" + r.start));
+  const uncovered = Object.keys(COURSE).filter(n => !checked.has(n)); // an older trainings-admin does not know these yet
+  return { missing, notSelling, uncovered };
 }
 function fmtPrice(p){
   const s = String(p ?? "").trim(); const n = Number(s);
@@ -623,8 +638,9 @@ function renderAdmin(){
             <div class="meta">${m.start ? esc(m.start) + " → " + esc(m.end) : t("adShopNoDate")}${m.price ? " · " + esc(fmtPrice(m.price)) : ""}${m.available ? "" : " · " + t("adShopUnavail")}</div></div>
           <div class="abtns"><button class="pill on" onclick="addFromShop(${k})">${t("adShopAdd")}</button></div>
         </div>`).join("");
-    } else html += `<p class="meta" id="shopOk">${t("adShopOk")}</p>`;
+    } else if (!d.uncovered.length) html += `<p class="meta" id="shopOk">${t("adShopOk")}</p>`;
     if (d.notSelling.length) html += `<p class="meta" id="shopNotSelling">${t("adShopNotSelling")}: ${d.notSelling.map(r => esc(shortName(r.name)) + " " + esc(r.start)).join(", ")}</p>`;
+    if (d.uncovered.length) html += `<p class="meta" id="shopOld">${t("adShopOld")}: ${d.uncovered.map(n => esc(shortName(n))).join(", ")}. ${t("adShopOldFix")}</p>`;
   } else if (AROWS && SHOPERR) html += `<p class="meta" id="shopErr">${t("adShopErr")}</p>`;
   if (!AROWS) html += `<p class="meta">${t("adLoading")}</p>`;
   else {

@@ -1,6 +1,6 @@
-// CoffeeNutz egitim-takvimi-schema.js  v2026-10-16a
+// CoffeeNutz egitim-takvimi-schema.js  v2026-11-28a
 // Sync-free Course + CourseInstance JSON-LD for coffeenutz.net. Three modes, decided by the URL:
-//   /pages/sca-egitim-takvimi      -> ItemList of all 7 SCA courses with their live cohorts
+//   /pages/sca-egitim-takvimi      -> ItemList of all 9 SCA courses with their live cohorts
 //   /products/<course handle>      -> that single Course with its live cohorts
 //   /pages/<landing handle>        -> language-specific landing page: fills the live next-cohort
 //                                     dates and prices into [data-cn] placeholders, then injects
@@ -15,6 +15,7 @@
 // OutOfStock when Shopify says the whole product is unavailable, omitted otherwise. Cohort offers
 // deep-link to their variant (?variant=id).
 // Replaces: the May-2026 ItemList block and the per-product Course blocks in theme.liquid.
+// v2026-11-28a: SCA Brewing F+I and SCA Brewing Pro added (courses 8 and 9).
 //
 // Include from theme.liquid:
 //   {% if page.handle == 'sca-egitim-takvimi' or page.handle == 'sca-roasting-course-in-english-izmir' or template.name == 'product' %}
@@ -81,8 +82,23 @@
       credential: "SCA Coffee Skills Roasting Professional Digital Certificate",
       prereq: "SCA Coffee Skills Roasting Foundation + Intermediate",
     },
+    "SCA Brewing F+I": {
+      handle: "sca-brewing-foundation-intermediate", code: "SCA-BREWING-FI",
+      name: "SCA Brewing Foundation + Intermediate",
+      trName: "Kahve Demleme Eğitimi (SCA Brewing: Foundation + Intermediate)",
+      description: "3 günlük SCA Brewing Foundation + Intermediate. Öğütme ve demleme yöntemleri, ekstraksiyon ve yoğunluk (TDS) ölçümü, SCA Brewing Control Chart pratiği, demleme suyunun temel özellikleri.",
+      credential: "SCA Coffee Skills Brewing Foundation + Intermediate Digital Certificate",
+    },
+    "SCA Brewing Pro": {
+      handle: "sca-brewing-professional", code: "SCA-BREWING-PRO",
+      name: "SCA Brewing Professional",
+      trName: "Kahve Demleme Eğitimi (SCA Brewing: Professional)",
+      description: "3 günlük SCA Brewing Professional. Foundation + Intermediate'i tamamlamış öğrenciler için ileri seviye ekstraksiyon ve yoğunluk hesapları, su kimyası ve demleme parametrelerinin kontrolü.",
+      credential: "SCA Coffee Skills Brewing Professional Digital Certificate",
+      prereq: "SCA Coffee Skills Brewing Foundation + Intermediate",
+    },
   };
-  const ORDER = ["Q Grader Sertifikasyon", "SCA Barista F+I", "SCA Barista Pro", "SCA Sensory F+I", "SCA Sensory Pro", "SCA Roasting F+I", "SCA Roasting Pro"];
+  const ORDER = ["Q Grader Sertifikasyon", "SCA Barista F+I", "SCA Barista Pro", "SCA Sensory F+I", "SCA Sensory Pro", "SCA Roasting F+I", "SCA Roasting Pro", "SCA Brewing F+I", "SCA Brewing Pro"];
 
   // Language-specific landing pages. Placeholders in the page HTML carry data-cn="..." and get filled live:
   //   next-fi / next-pro (EN date range), next-fi-ru / next-pro-ru (RU), price-fi / price-pro (TRY from Shopify),
@@ -336,7 +352,7 @@
       "@context": "https://schema.org",
       "@type": "ItemList",
       "name": "SCA Eğitim Takvimi, CoffeeNutz İzmir",
-      "description": "CoffeeNutz İzmir SCA Barista, Sensory Skills, Coffee Roasting ve SCA Q Grader eğitim takvimi. Canlı takvim: yeni sınıflar açıldıkça burada görünür.",
+      "description": "CoffeeNutz İzmir SCA Barista, Sensory Skills, Coffee Roasting, Brewing ve SCA Q Grader eğitim takvimi. Canlı takvim: yeni sınıflar açıldıkça burada görünür.",
       "url": PAGE,
       "itemListOrder": "https://schema.org/ItemListOrderAscending",
       "numberOfItems": ORDER.length,
